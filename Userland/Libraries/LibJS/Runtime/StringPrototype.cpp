@@ -181,10 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    auto position = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto position = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (position < 0 || position >= string.length_in_code_units())
         return js_string(vm, String::empty());
 
@@ -197,10 +194,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
     auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    auto position = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto position = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (position < 0 || position >= string.length_in_code_units())
         return js_nan();
 
@@ -213,10 +207,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::code_point_at)
     auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    auto position = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto position = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (position < 0 || position >= string.length_in_code_units())
         return js_undefined();
 
@@ -231,9 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     if (!string.has_value())
         return {};
 
-    auto n = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto n = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     if (n < 0) {
         vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
@@ -279,9 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
-        auto position = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto position = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         start = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
     }
 
@@ -317,9 +304,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 
     size_t end = string_length;
     if (!vm.argument(1).is_undefined()) {
-        auto position = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto position = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         end = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
     }
 
@@ -347,9 +332,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 
     size_t start = 0;
     if (vm.argument_count() > 1) {
-        auto position = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto position = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         start = clamp(position, static_cast<double>(0), static_cast<double>(utf16_string_view.length_in_code_units()));
     }
 
@@ -565,16 +548,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
         return {};
     auto string_length = static_cast<double>(string.length_in_code_units());
 
-    auto start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     auto end = string_length;
-    if (!vm.argument(1).is_undefined()) {
-        end = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(1).is_undefined())
+        end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     size_t final_start = clamp(start, static_cast<double>(0), string_length);
     size_t final_end = clamp(end, static_cast<double>(0), string_length);
@@ -593,9 +570,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return {};
     auto size = string.length_in_code_units();
 
-    auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto int_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(int_start).is_negative_infinity())
         int_start = 0;
     if (int_start < 0)
@@ -603,10 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
 
     auto length = vm.argument(1);
 
-    auto int_length = length.is_undefined() ? size : length.to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto int_length = length.is_undefined() ? size : TRY_OR_DISCARD(length.to_integer_or_infinity(global_object));
     if (Value(int_start).is_positive_infinity() || (int_length <= 0) || Value(int_length).is_positive_infinity())
         return js_string(vm, String::empty());
 
@@ -637,9 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
-        auto position = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto position = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         start = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
     }
 
@@ -655,9 +625,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
         return {};
     auto string_length = static_cast<double>(string.length_in_code_units());
 
-    auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto int_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(int_start).is_negative_infinity())
         int_start = 0;
     else if (int_start < 0)
@@ -667,9 +635,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 
     auto int_end = string_length;
     if (!vm.argument(1).is_undefined()) {
-        int_end = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        int_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         if (Value(int_end).is_negative_infinity())
             int_end = 0;
         else if (int_end < 0)
@@ -762,9 +728,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     auto search_length = search_string.length_in_code_units();
 
     auto position = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
-    double pos = position.is_nan() ? static_cast<double>(INFINITY) : position.to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    double pos = position.is_nan() ? static_cast<double>(INFINITY) : TRY_OR_DISCARD(position.to_integer_or_infinity(global_object));
 
     size_t start = clamp(pos, static_cast<double>(0), static_cast<double>(string_length));
     Optional<size_t> last_index;
@@ -794,9 +758,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
         return {};
     auto length = string.length_in_code_units();
 
-    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_index = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(relative_index).is_infinity())
         return js_undefined();
 

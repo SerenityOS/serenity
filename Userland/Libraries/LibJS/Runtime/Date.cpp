@@ -297,13 +297,13 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
         return js_nan();
 
     // 2. Let h be 𝔽(! ToIntegerOrInfinity(hour)).
-    auto h = hour.to_integer_or_infinity(global_object);
+    auto h = MUST(hour.to_integer_or_infinity(global_object));
     // 3. Let m be 𝔽(! ToIntegerOrInfinity(min)).
-    auto m = min.to_integer_or_infinity(global_object);
+    auto m = MUST(min.to_integer_or_infinity(global_object));
     // 4. Let s be 𝔽(! ToIntegerOrInfinity(sec)).
-    auto s = sec.to_integer_or_infinity(global_object);
+    auto s = MUST(sec.to_integer_or_infinity(global_object));
     // 5. Let milli be 𝔽(! ToIntegerOrInfinity(ms)).
-    auto milli = ms.to_integer_or_infinity(global_object);
+    auto milli = MUST(ms.to_integer_or_infinity(global_object));
     // 6. Let t be ((h * msPerHour + m * msPerMinute) + s * msPerSecond) + milli, performing the arithmetic according to IEEE 754-2019 rules (that is, as if using the ECMAScript operators * and +).
     // NOTE: C++ arithmetic abides by IEEE 754 rules
     auto t = ((h * MS_PER_HOUR + m * MS_PER_MINUTE) + s * MS_PER_SECOND) + milli;
@@ -325,11 +325,11 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
         return js_nan();
 
     // 2. Let y be 𝔽(! ToIntegerOrInfinity(year)).
-    auto y = year.to_integer_or_infinity(global_object);
+    auto y = MUST(year.to_integer_or_infinity(global_object));
     // 3. Let m be 𝔽(! ToIntegerOrInfinity(month)).
-    auto m = month.to_integer_or_infinity(global_object);
+    auto m = MUST(month.to_integer_or_infinity(global_object));
     // 4. Let dt be 𝔽(! ToIntegerOrInfinity(date)).
-    auto dt = date.to_integer_or_infinity(global_object);
+    auto dt = MUST(date.to_integer_or_infinity(global_object));
     // 5. Let ym be y + 𝔽(floor(ℝ(m) / 12)).
     auto ym = Value(y + floor(m / 12));
     // 6. If ym is not finite, return NaN.

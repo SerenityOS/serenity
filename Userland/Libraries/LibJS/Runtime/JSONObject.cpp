@@ -89,7 +89,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     }
 
     if (space.is_number()) {
-        auto space_mv = space.to_integer_or_infinity(global_object);
+        auto space_mv = MUST(space.to_integer_or_infinity(global_object));
         space_mv = min(10, space_mv);
         state.gap = space_mv < 1 ? String::empty() : String::repeated(' ', space_mv);
     } else if (space.is_string()) {

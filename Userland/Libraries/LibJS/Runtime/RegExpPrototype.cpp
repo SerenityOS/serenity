@@ -523,9 +523,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto matched_length = matched.length_in_code_units();
 
         auto position_value = TRY_OR_DISCARD(result.get(vm.names.index));
-        double position = position_value.to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        double position = TRY_OR_DISCARD(position_value.to_integer_or_infinity(global_object));
 
         position = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
 

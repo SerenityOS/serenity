@@ -694,11 +694,7 @@ ThrowCompletionOr<u8> Value::to_u8_clamp(GlobalObject& global_object) const
 // 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
 ThrowCompletionOr<size_t> Value::to_length(GlobalObject& global_object) const
 {
-    auto& vm = global_object.vm();
-
-    auto len = to_integer_or_infinity(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto len = TRY(to_integer_or_infinity(global_object));
     if (len <= 0)
         return 0;
     // FIXME: The spec says that this function's output range is 0 - 2^53-1. But we don't want to overflow the size_t.
@@ -713,9 +709,7 @@ ThrowCompletionOr<size_t> Value::to_index(GlobalObject& global_object) const
 
     if (is_undefined())
         return 0;
-    auto integer_index = to_integer_or_infinity(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto integer_index = TRY(to_integer_or_infinity(global_object));
     if (integer_index < 0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidIndex);
     auto index = MUST(Value(integer_index).to_length(global_object));
@@ -725,9 +719,9 @@ ThrowCompletionOr<size_t> Value::to_index(GlobalObject& global_object) const
 }
 
 // 7.1.5 ToIntegerOrInfinity ( argument ), https://tc39.es/ecma262/#sec-tointegerorinfinity
-double Value::to_integer_or_infinity(GlobalObject& global_object) const
+ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_object) const
 {
-    auto number = TRY_OR_DISCARD(to_number(global_object));
+    auto number = TRY(to_number(global_object));
     if (number.is_nan() || number.as_double() == 0)
         return 0;
     if (number.is_infinity())
