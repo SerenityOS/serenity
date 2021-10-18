@@ -2696,6 +2696,17 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
                 chain.append(OptionalChain::ComputedReference { parse_expression(0), OptionalChain::Mode::Optional });
                 consume(TokenType::BracketClose);
                 break;
+            case TokenType::PrivateIdentifier: {
+                if (!is_private_identifier_valid())
+                    syntax_error(String::formatted("Reference to undeclared private field or method '{}'", m_state.current_token.value()));
+
+                auto start = position();
+                auto private_identifier = consume();
+                chain.append(OptionalChain::PrivateMemberReference {
+                    create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), start, position() }, private_identifier.value()),
+                    OptionalChain::Mode::Optional });
+                break;
+            }
             case TokenType::TemplateLiteralStart:
                 // 13.3.1.1 - Static Semantics: Early Errors
                 // OptionalChain :
@@ -2721,7 +2732,14 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
             chain.append(OptionalChain::Call { parse_arguments(), OptionalChain::Mode::NotOptional });
         } else if (match(TokenType::Period)) {
             consume();
-            if (match_identifier_name()) {
+            if (match(TokenType::PrivateIdentifier)) {
+                auto start = position();
+                auto private_identifier = consume();
+                chain.append(OptionalChain::PrivateMemberReference {
+                    create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), start, position() }, private_identifier.value()),
+                    OptionalChain::Mode::NotOptional,
+                });
+            } else if (match_identifier_name()) {
                 auto start = position();
                 auto identifier = consume();
                 chain.append(OptionalChain::MemberReference {
