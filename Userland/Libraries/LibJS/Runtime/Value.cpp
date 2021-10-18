@@ -771,7 +771,7 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = is_less_than(global_object, false, lhs, rhs);
+    TriState relation = TRY_OR_DISCARD(is_less_than(global_object, false, lhs, rhs));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
@@ -780,7 +780,7 @@ Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = is_less_than(global_object, true, lhs, rhs);
+    TriState relation = TRY_OR_DISCARD(is_less_than(global_object, true, lhs, rhs));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
@@ -789,7 +789,7 @@ Value greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value less_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = is_less_than(global_object, true, lhs, rhs);
+    TriState relation = TRY_OR_DISCARD(is_less_than(global_object, true, lhs, rhs));
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
@@ -798,7 +798,7 @@ Value less_than(GlobalObject& global_object, Value lhs, Value rhs)
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = is_less_than(global_object, false, lhs, rhs);
+    TriState relation = TRY_OR_DISCARD(is_less_than(global_object, false, lhs, rhs));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
@@ -1376,17 +1376,17 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 }
 
 // 7.2.13 IsLessThan ( x, y, LeftFirst ), https://tc39.es/ecma262/#sec-islessthan
-TriState is_less_than(GlobalObject& global_object, bool left_first, Value lhs, Value rhs)
+ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_first, Value lhs, Value rhs)
 {
     Value x_primitive;
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object, Value::PreferredType::Number));
-        y_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object, Value::PreferredType::Number));
+        x_primitive = TRY(lhs.to_primitive(global_object, Value::PreferredType::Number));
+        y_primitive = TRY(rhs.to_primitive(global_object, Value::PreferredType::Number));
     } else {
-        y_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object, Value::PreferredType::Number));
-        x_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object, Value::PreferredType::Number));
+        y_primitive = TRY(lhs.to_primitive(global_object, Value::PreferredType::Number));
+        x_primitive = TRY(rhs.to_primitive(global_object, Value::PreferredType::Number));
     }
 
     if (x_primitive.is_string() && y_primitive.is_string()) {
@@ -1435,8 +1435,8 @@ TriState is_less_than(GlobalObject& global_object, bool left_first, Value lhs, V
             return TriState::False;
     }
 
-    auto x_numeric = TRY_OR_DISCARD(x_primitive.to_numeric(global_object));
-    auto y_numeric = TRY_OR_DISCARD(y_primitive.to_numeric(global_object));
+    auto x_numeric = TRY(x_primitive.to_numeric(global_object));
+    auto y_numeric = TRY(y_primitive.to_numeric(global_object));
 
     if (x_numeric.is_nan() || y_numeric.is_nan())
         return TriState::Unknown;
