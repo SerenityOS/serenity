@@ -58,6 +58,8 @@ public:
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
 
+    RefPtr<DOMTokenList> const& class_list();
+
     DOM::ExceptionOr<bool> matches(StringView selectors) const;
 
     int client_top() const;
@@ -140,6 +142,7 @@ private:
     RefPtr<CSS::StyleProperties> m_specified_css_values;
     HashMap<String, CSS::StyleComputer::CustomPropertyResolutionTuple> m_custom_properties;
 
+    RefPtr<DOMTokenList> m_class_list;
     Vector<FlyString> m_classes;
 
     RefPtr<ShadowRoot> m_shadow_root;
