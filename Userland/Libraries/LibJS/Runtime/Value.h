@@ -422,7 +422,7 @@ Value in(GlobalObject&, Value lhs, Value rhs);
 Value instance_of(GlobalObject&, Value lhs, Value rhs);
 Value ordinary_has_instance(GlobalObject&, Value lhs, Value rhs);
 
-bool is_loosely_equal(GlobalObject&, Value lhs, Value rhs);
+ThrowCompletionOr<bool> is_loosely_equal(GlobalObject&, Value lhs, Value rhs);
 bool is_strictly_equal(Value lhs, Value rhs);
 bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
