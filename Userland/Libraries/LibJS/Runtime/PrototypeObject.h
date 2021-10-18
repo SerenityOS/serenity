@@ -8,6 +8,7 @@
 
 #include <AK/StringView.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -25,17 +26,12 @@ class PrototypeObject : public Object {
 public:
     virtual ~PrototypeObject() override = default;
 
-    static Object* this_object(GlobalObject& global_object)
+    static ThrowCompletionOr<Object*> this_object(GlobalObject& global_object)
     {
         auto& vm = global_object.vm();
-
         auto this_value = vm.this_value(global_object);
-
-        if (!this_value.is_object()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, this_value);
-            return nullptr;
-        }
-
+        if (!this_value.is_object())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value);
         return &this_value.as_object();
     }
 
