@@ -982,9 +982,9 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
 
             // Because they are called with primitive strings, these is_less_than calls
             // should never result in a VM exception.
-            auto x_lt_y_relation = is_less_than(global_object, true, x_string_value, y_string_value);
+            auto x_lt_y_relation = MUST(is_less_than(global_object, true, x_string_value, y_string_value));
             VERIFY(x_lt_y_relation != TriState::Unknown);
-            auto y_lt_x_relation = is_less_than(global_object, true, y_string_value, x_string_value);
+            auto y_lt_x_relation = MUST(is_less_than(global_object, true, y_string_value, x_string_value));
             VERIFY(y_lt_x_relation != TriState::Unknown);
 
             if (x_lt_y_relation == TriState::True) {
