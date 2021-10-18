@@ -127,8 +127,6 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
-    if (vm.exception())
-        return {};
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
     return TRY_OR_DISCARD(supported_locales(global_object, requested_locales, options));
