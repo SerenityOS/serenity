@@ -367,7 +367,7 @@ Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
     }
 }
 
-ImageStyleValue::ImageStyleValue(const AK::URL& url, DOM::Document* document)
+ImageStyleValue::ImageStyleValue(AK::URL const& url, DOM::Document* document)
     : StyleValue(Type::Image)
     , m_url(url)
     , m_document(document)

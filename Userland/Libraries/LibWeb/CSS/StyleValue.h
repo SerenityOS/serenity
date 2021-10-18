@@ -340,10 +340,10 @@ public:
     virtual float to_number() const { return {}; }
     virtual String to_string() const = 0;
 
-    bool operator==(const StyleValue& other) const { return equals(other); }
-    bool operator!=(const StyleValue& other) const { return !(*this == other); }
+    bool operator==(StyleValue const& other) const { return equals(other); }
+    bool operator!=(StyleValue const& other) const { return !(*this == other); }
 
-    virtual bool equals(const StyleValue& other) const
+    virtual bool equals(StyleValue const& other) const
     {
         if (type() != other.type())
             return false;
@@ -679,7 +679,7 @@ public:
     virtual bool has_color() const override { return true; }
     virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
-    virtual bool equals(const StyleValue& other) const override
+    virtual bool equals(StyleValue const& other) const override
     {
         if (type() != other.type())
             return false;
@@ -733,7 +733,7 @@ private:
 // FIXME: Allow for fallback
 class CustomStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<CustomStyleValue> create(const String& custom_property_name)
+    static NonnullRefPtr<CustomStyleValue> create(String const& custom_property_name)
     {
         return adopt_ref(*new CustomStyleValue(custom_property_name));
     }
@@ -741,7 +741,7 @@ public:
     String to_string() const override { return m_custom_property_name; }
 
 private:
-    explicit CustomStyleValue(const String& custom_property_name)
+    explicit CustomStyleValue(String const& custom_property_name)
         : StyleValue(Type::CustomProperty)
         , m_custom_property_name(custom_property_name)
     {
@@ -868,7 +868,7 @@ public:
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
     virtual String to_string() const override;
 
-    virtual bool equals(const StyleValue& other) const override
+    virtual bool equals(StyleValue const& other) const override
     {
         if (type() != other.type())
             return false;
@@ -889,7 +889,7 @@ class ImageStyleValue final
     : public StyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(const AK::URL& url, DOM::Document* document) { return adopt_ref(*new ImageStyleValue(url, document)); }
+    static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url, DOM::Document* document) { return adopt_ref(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
     String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }
@@ -897,7 +897,7 @@ public:
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
 private:
-    ImageStyleValue(const AK::URL&, DOM::Document*);
+    ImageStyleValue(AK::URL const&, DOM::Document*);
 
     // ^ResourceClient
     virtual void resource_did_load() override;
@@ -945,7 +945,7 @@ private:
 
 class LengthStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<LengthStyleValue> create(const Length& length)
+    static NonnullRefPtr<LengthStyleValue> create(Length const& length)
     {
         return adopt_ref(*new LengthStyleValue(length));
     }
@@ -958,15 +958,15 @@ public:
     virtual String to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
 
-    virtual bool equals(const StyleValue& other) const override
+    virtual bool equals(StyleValue const& other) const override
     {
         if (type() != other.type())
             return false;
-        return m_length == static_cast<const LengthStyleValue&>(other).m_length;
+        return m_length == static_cast<LengthStyleValue const&>(other).m_length;
     }
 
 private:
-    explicit LengthStyleValue(const Length& length)
+    explicit LengthStyleValue(Length const& length)
         : StyleValue(Type::Length)
         , m_length(length)
     {
@@ -1082,7 +1082,7 @@ private:
 
 class StringStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<StringStyleValue> create(const String& string)
+    static NonnullRefPtr<StringStyleValue> create(String const& string)
     {
         return adopt_ref(*new StringStyleValue(string));
     }
@@ -1091,7 +1091,7 @@ public:
     String to_string() const override { return m_string; }
 
 private:
-    explicit StringStyleValue(const String& string)
+    explicit StringStyleValue(String const& string)
         : StyleValue(Type::String)
         , m_string(string)
     {
