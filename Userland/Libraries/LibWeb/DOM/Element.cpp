@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
+#include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ExceptionOr.h>
@@ -171,6 +172,8 @@ void Element::parse_attribute(const FlyString& name, const String& value)
         for (auto& new_class : new_classes) {
             m_classes.unchecked_append(new_class);
         }
+        if (m_class_list)
+            m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
         auto parsed_style = parse_css_declaration(CSS::ParsingContext(document()), value);
         if (!parsed_style.is_null()) {
@@ -254,6 +257,13 @@ NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
     }
 
     return properties;
+}
+
+RefPtr<DOMTokenList> const& Element::class_list()
+{
+    if (!m_class_list)
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
+    return m_class_list;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-matches
