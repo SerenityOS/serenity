@@ -27,9 +27,7 @@ static Value get_promise_resolve(GlobalObject& global_object, Value constructor)
     VERIFY(constructor.is_constructor());
     auto& vm = global_object.vm();
 
-    auto promise_resolve = constructor.get(global_object, vm.names.resolve);
-    if (vm.exception())
-        return {};
+    auto promise_resolve = TRY_OR_DISCARD(constructor.get(global_object, vm.names.resolve));
     if (!promise_resolve.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
         return {};
