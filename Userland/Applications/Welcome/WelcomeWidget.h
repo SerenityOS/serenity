@@ -29,6 +29,7 @@ private:
     RefPtr<GUI::Button> m_help_button;
     RefPtr<GUI::Button> m_new_button;
     RefPtr<GUI::Label> m_tip_label;
+    RefPtr<GUI::CheckBox> m_startup_checkbox;
     RefPtr<Web::OutOfProcessWebView> m_web_view;
 
     size_t m_initial_tip_index { 0 };
