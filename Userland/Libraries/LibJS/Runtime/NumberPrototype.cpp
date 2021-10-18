@@ -7,6 +7,7 @@
 
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -45,24 +46,20 @@ NumberPrototype::~NumberPrototype()
 }
 
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue
-static Value this_number_value(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, Value value)
 {
     if (value.is_number())
         return value;
     if (value.is_object() && is<NumberObject>(value.as_object()))
         return static_cast<NumberObject&>(value.as_object()).value_of();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
-    return {};
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
-    auto number_value = this_number_value(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
-
+    auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
     auto fraction_digits = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (!vm.argument(0).is_finite_number()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
@@ -87,10 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
-    auto number_value = this_number_value(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
-
+    auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
     double radix_argument = 10;
     auto argument = vm.argument(0);
     if (!vm.argument(0).is_undefined())
@@ -162,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
-    return this_number_value(global_object, vm.this_value(global_object));
+    return TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
 }
 
 }
