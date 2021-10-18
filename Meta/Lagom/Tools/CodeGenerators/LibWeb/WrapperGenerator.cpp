@@ -2869,6 +2869,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
 #include <LibWeb/Bindings/DOMRectWrapper.h>
 #include <LibWeb/Bindings/DOMStringMapWrapper.h>
+#include <LibWeb/Bindings/DOMTokenListWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>

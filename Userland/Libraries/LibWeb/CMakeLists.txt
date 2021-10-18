@@ -61,6 +61,8 @@ set(SOURCES
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
     DOM/DOMImplementation.cpp
+    DOM/DOMTokenList.cpp
+    DOM/DOMTokenList.idl
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
     DOM/DocumentLoadEventDelayer.cpp
@@ -380,6 +382,7 @@ libweb_js_wrapper(DOM/DocumentFragment)
 libweb_js_wrapper(DOM/DocumentType)
 libweb_js_wrapper(DOM/DOMException)
 libweb_js_wrapper(DOM/DOMImplementation)
+libweb_js_wrapper(DOM/DOMTokenList)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
