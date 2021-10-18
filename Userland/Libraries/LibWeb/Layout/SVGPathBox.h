@@ -19,6 +19,12 @@ public:
     SVG::SVGPathElement& dom_node() { return verify_cast<SVG::SVGPathElement>(SVGGraphicsBox::dom_node()); }
 
     virtual void paint(PaintContext& context, PaintPhase phase) override;
+
+private:
+    virtual bool is_svg_path_box() const final { return true; }
 };
+
+template<>
+inline bool Node::fast_is<SVGPathBox>() const { return is_svg_path_box(); }
 
 }
