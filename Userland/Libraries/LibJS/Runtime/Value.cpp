@@ -1286,7 +1286,7 @@ bool is_strictly_equal(Value lhs, Value rhs)
 }
 
 // 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal
-bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
+ThrowCompletionOr<bool> is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
 
@@ -1346,13 +1346,13 @@ bool is_loosely_equal(GlobalObject& global_object, Value lhs, Value rhs)
 
     // 11. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return IsLooselyEqual(x, ? ToPrimitive(y)).
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
-        auto rhs_primitive = TRY_OR_DISCARD(rhs.to_primitive(global_object));
+        auto rhs_primitive = TRY(rhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs, rhs_primitive);
     }
 
     // 12. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return IsLooselyEqual(? ToPrimitive(x), y).
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || rhs.is_bigint() || rhs.is_symbol())) {
-        auto lhs_primitive = TRY_OR_DISCARD(lhs.to_primitive(global_object));
+        auto lhs_primitive = TRY(lhs.to_primitive(global_object));
         return is_loosely_equal(global_object, lhs_primitive, rhs);
     }
 
