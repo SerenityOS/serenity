@@ -20,7 +20,9 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~StringObject() override;
 
-    const PrimitiveString& primitive_string() const { return m_string; }
+    PrimitiveString const& primitive_string() const { return m_string; }
+    PrimitiveString& primitive_string() { return m_string; }
+
     virtual Value value_of() const override
     {
         return Value(&m_string);

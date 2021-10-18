@@ -12,6 +12,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
@@ -164,15 +165,14 @@ StringPrototype::~StringPrototype()
 }
 
 // thisStringValue ( value ), https://tc39.es/ecma262/#thisstringvalue
-static Value this_string_value(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<PrimitiveString*> this_string_value(GlobalObject& global_object, Value value)
 {
     if (value.is_string())
-        return value;
+        return &value.as_string();
     if (value.is_object() && is<StringObject>(value.as_object()))
-        return static_cast<StringObject&>(value.as_object()).value_of();
+        return &static_cast<StringObject&>(value.as_object()).primitive_string();
     auto& vm = global_object.vm();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "String");
-    return {};
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "String");
 }
 
 // 22.1.3.1 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -431,13 +431,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 // 22.1.3.27 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
-    return this_string_value(global_object, vm.this_value(global_object));
+    return TRY_OR_DISCARD(this_string_value(global_object, vm.this_value(global_object)));
 }
 
 // 22.1.3.32 String.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-string.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::value_of)
 {
-    return this_string_value(global_object, vm.this_value(global_object));
+    return TRY_OR_DISCARD(this_string_value(global_object, vm.this_value(global_object)));
 }
 
 enum class PadPlacement {
