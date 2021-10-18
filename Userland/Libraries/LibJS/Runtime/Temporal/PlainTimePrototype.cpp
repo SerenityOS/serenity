@@ -53,9 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::calendar_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return temporalTime.[[Calendar]].
     return Value(&temporal_time->calendar());
@@ -66,9 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::hour_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISOHour]]).
     return Value(temporal_time->iso_hour());
@@ -79,9 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISOMinute]]).
     return Value(temporal_time->iso_minute());
@@ -92,9 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISOSecond]]).
     return Value(temporal_time->iso_second());
@@ -105,9 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::millisecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISOMillisecond]]).
     return Value(temporal_time->iso_millisecond());
@@ -118,9 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISOMicrosecond]]).
     return Value(temporal_time->iso_microsecond());
@@ -131,9 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return 𝔽(temporalTime.[[ISONanosecond]]).
     return Value(temporal_time->iso_nanosecond());
@@ -144,9 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto temporal_time_like_argument = vm.argument(0);
 
@@ -239,9 +223,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalTime(other).
     auto* other = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));
@@ -279,9 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set temporalDate to ? ToTemporalDate(temporalDate).
     auto* temporal_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
@@ -295,9 +275,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(global_object, global_object.object_prototype());
@@ -332,9 +310,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
@@ -358,9 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
     auto string = temporal_time_to_string(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv);
@@ -372,9 +346,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* temporal_time = TRY_OR_DISCARD(typed_this_object(global_object));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
     auto string = temporal_time_to_string(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv);

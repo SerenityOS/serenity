@@ -95,9 +95,7 @@ DatePrototype::~DatePrototype()
 // 21.4.4.2 Date.prototype.getDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -108,9 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 // 21.4.4.20 Date.prototype.setDate ( date ), https://tc39.es/ecma262/#sec-date.prototype.setdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto& datetime = this_object->datetime();
 
@@ -134,9 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
 // 21.4.4.3 Date.prototype.getDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getday
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -147,9 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 // 21.4.4.4 Date.prototype.getFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -160,9 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 // 21.4.4.21 Date.prototype.setFullYear ( year [ , month [ , date ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto& datetime = this_object->datetime();
 
@@ -205,9 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
 // B.2.4.1 Date.prototype.getYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -218,9 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
 // B.2.4.2 Date.prototype.setYear ( year ), https://tc39.es/ecma262/#sec-date.prototype.setyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto& datetime = this_object->datetime();
 
@@ -247,9 +233,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 // 21.4.4.5 Date.prototype.getHours ( ), https://tc39.es/ecma262/#sec-date.prototype.gethours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -260,9 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 // 21.4.4.22 Date.prototype.setHours ( hour [ , min [ , sec [ , ms ] ] ] ), https://tc39.es/ecma262/#sec-date.prototype.sethours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
@@ -314,9 +296,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
 // 21.4.4.23 Date.prototype.setMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -327,9 +307,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 // 21.4.4.23 Date.prototype.setMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto new_milliseconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
@@ -361,9 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
 // 21.4.4.7 Date.prototype.getMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -374,9 +350,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 // 21.4.4.24 Date.prototype.setMinutes ( min [ , sec [ , ms ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
@@ -421,9 +395,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
 // 21.4.4.8 Date.prototype.getMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -434,9 +406,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 // 21.4.4.25 Date.prototype.setMonth ( month [ , date ] ), https://tc39.es/ecma262/#sec-date.prototype.setmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
@@ -471,9 +441,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
 // 21.4.4.9 Date.prototype.getSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -484,9 +452,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 // 21.4.4.26 Date.prototype.setSeconds ( sec [ , ms ] ), https://tc39.es/ecma262/#sec-date.prototype.setseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<Value> {
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
@@ -524,9 +490,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
 // 21.4.4.10 Date.prototype.getTime ( ), https://tc39.es/ecma262/#sec-date.prototype.gettime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -537,9 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 // 21.4.4.27 Date.prototype.setTime ( time ), https://tc39.es/ecma262/#sec-date.prototype.settime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto new_time_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
     if (!new_time_value.is_finite_number()) {
@@ -564,9 +526,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 // 21.4.4.11 Date.prototype.getTimezoneOffset ( ), https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -578,9 +538,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
 // 21.4.4.12 Date.prototype.getUTCDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -591,9 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
 // 21.4.4.13 Date.prototype.getUTCDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcday
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -604,9 +560,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
 // 21.4.4.14 Date.prototype.getUTCFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -617,9 +571,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
 // 21.4.4.15 Date.prototype.getUTCHours ( ), https://tc39.es/ecma262/#sec-date.prototype.getutchours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -630,9 +582,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
 // 21.4.4.16 Date.prototype.getUTCMilliseconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -643,9 +593,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
 // 21.4.4.18 Date.prototype.getUTCMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -656,9 +604,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
 // 21.4.4.17 Date.prototype.getUTCMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -669,9 +615,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
 // 21.4.4.19 Date.prototype.getUTCSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_nan();
@@ -682,9 +626,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
 // 21.4.4.35 Date.prototype.toDateString ( ), https://tc39.es/ecma262/#sec-date.prototype.todatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -703,9 +645,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_gmt_string)
 // 21.4.4.43 Date.prototype.toUTCString ( ), https://tc39.es/ecma262/#sec-date.prototype.toutcstring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -718,9 +658,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
 // 21.4.4.36 Date.prototype.toISOString ( ), https://tc39.es/ecma262/#sec-date.prototype.toisostring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidTimeValue);
@@ -734,9 +672,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
 // 21.4.4.38 Date.prototype.toLocaleDateString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -749,9 +685,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 // 21.4.4.39 Date.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -764,9 +698,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 // 21.4.4.40 Date.prototype.toLocaleTimeString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -779,9 +711,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 // 21.4.4.42 Date.prototype.toTimeString ( ), https://tc39.es/ecma262/#sec-date.prototype.totimestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -793,9 +723,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 // 21.4.4.41 Date.prototype.toString ( ), https://tc39.es/ecma262/#sec-date.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 {
-    auto* this_object = typed_this_object(global_object);
-    if (!this_object)
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     if (this_object->is_invalid())
         return js_string(vm, "Invalid Date");
@@ -821,9 +749,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
 {
     // 1. Let t be ? thisTimeValue(this value).
-    auto* this_object = typed_this_object(global_object);
-    if (vm.exception())
-        return {};
+    auto* this_object = TRY_OR_DISCARD(typed_this_object(global_object));
     auto t = this_object->value_of();
 
     // 2. Let ns be ? NumberToBigInt(t) × 10^6.

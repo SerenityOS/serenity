@@ -329,9 +329,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
-    auto* regexp_object = typed_this_object(global_object);
-    if (!regexp_object)
-        return {};
+    auto* regexp_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
@@ -674,9 +672,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 {
-    auto* regexp_object = typed_this_object(global_object);
-    if (!regexp_object)
-        return {};
+    auto* regexp_object = TRY_OR_DISCARD(typed_this_object(global_object));
 
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);

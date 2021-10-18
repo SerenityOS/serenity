@@ -35,18 +35,14 @@ GeneratorObjectPrototype::~GeneratorObjectPrototype()
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::next)
 {
-    auto generator_object = typed_this_object(global_object);
-    if (!generator_object)
-        return {};
+    auto* generator_object = TRY_OR_DISCARD(typed_this_object(global_object));
     return generator_object->next_impl(vm, global_object, {});
 }
 
 // 27.5.1.3 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.return
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::return_)
 {
-    auto generator_object = typed_this_object(global_object);
-    if (!generator_object)
-        return {};
+    auto* generator_object = TRY_OR_DISCARD(typed_this_object(global_object));
     generator_object->set_done();
     return generator_object->next_impl(vm, global_object, {});
 }
@@ -54,9 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::return_)
 // 27.5.1.4 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.throw
 JS_DEFINE_NATIVE_FUNCTION(GeneratorObjectPrototype::throw_)
 {
-    auto generator_object = typed_this_object(global_object);
-    if (!generator_object)
-        return {};
+    auto* generator_object = TRY_OR_DISCARD(typed_this_object(global_object));
     return generator_object->next_impl(vm, global_object, vm.argument(0));
 }
 
