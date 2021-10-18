@@ -58,6 +58,24 @@ following options under `Settings -> Editor -> Code Style -> C/C++`:
 
 ## Notes for WSL Users
 
+CLion 2021.2 works nicely with WSL2 on Windows.
+
+### Prerequsites
+
+Before setting up the project in CLion, delete existing `Build/i686` directory with your previous build artifacts.
+If you don't CLion will complain that the project was already configured under different path.
+
+Then you have to recreate the toolchain file using:
+
+`cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686` from the top level in a terminal.
+
+ Now you can follow this guide from the top, opening the project directory under `\\wsl$` path.
+
+### Terminal
+
+> NOTE: the following instructions are deprecated for CLion 2021.2 which recognizes if a project is being run
+> from `\\wsl$` location and sets up correct terminal automatically.
+
 It is possible to set the embedded terminal in CLion to the one that your WSL distribution provides.
 This way you can build and run serenity without leaving the IDE.
 Note that following will only help if you don't use an X-window server to access qemu.
