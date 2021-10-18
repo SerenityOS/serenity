@@ -5,6 +5,7 @@
  */
 
 #include "WelcomeWidget.h"
+#include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -18,6 +19,8 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
+
+    Config::pledge_domains("SystemServer");
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");

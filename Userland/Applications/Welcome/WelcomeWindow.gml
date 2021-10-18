@@ -104,8 +104,8 @@
 
         @GUI::CheckBox{
             name: "startup_checkbox"
-            text: "Show this Welcome Screen next time SerenityOS starts"
-            fixed_width: 315
+            text: "Show Welcome the next time SerenityOS starts"
+            autosize: true
         }
 
         @GUI::Widget
