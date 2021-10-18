@@ -282,10 +282,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                            \
     JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                           \
     {                                                                                             \
-        auto* regexp_object = this_object(global_object);                                         \
-        if (!regexp_object)                                                                       \
-            return {};                                                                            \
-                                                                                                  \
+        auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));                         \
         if (!is<RegExpObject>(regexp_object)) {                                                   \
             if (same_value(regexp_object, global_object.regexp_prototype()))                      \
                 return js_undefined();                                                            \
@@ -302,10 +299,7 @@ JS_ENUMERATE_REGEXP_FLAGS
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     StringBuilder builder(8);
 
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                             \
@@ -321,10 +315,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 // 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     if (!is<RegExpObject>(regexp_object)) {
         if (same_value(regexp_object, global_object.regexp_prototype()))
             return js_string(vm, "(?:)");
@@ -350,10 +341,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto match = regexp_exec(global_object, *regexp_object, move(string));
@@ -366,10 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 // 22.2.5.16 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto source_attr = TRY_OR_DISCARD(regexp_object->get(vm.names.source));
     auto pattern = TRY_OR_DISCARD(source_attr.to_string(global_object));
 
@@ -382,10 +367,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     bool global = TRY_OR_DISCARD(regexp_object->get(vm.names.global)).to_boolean();
@@ -434,10 +416,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 // 22.2.5.8 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
@@ -469,9 +448,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(string_value.to_utf16_string(global_object));
     auto string_view = string.view();
 
@@ -580,10 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 // 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
     auto previous_last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
@@ -608,10 +582,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 // 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
-    auto* regexp_object = this_object(global_object);
-    if (!regexp_object)
-        return {};
-
+    auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
     auto string_view = string.view();
 
