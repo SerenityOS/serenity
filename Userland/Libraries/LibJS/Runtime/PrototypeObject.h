@@ -36,17 +36,12 @@ public:
     }
 
     // Use typed_this_object() when the spec coerces |this| value to an object.
-    static ObjectType* typed_this_object(GlobalObject& global_object)
+    static ThrowCompletionOr<ObjectType*> typed_this_object(GlobalObject& global_object)
     {
         auto& vm = global_object.vm();
-
-        auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-
-        if (!is<ObjectType>(this_object)) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, PrototypeType::display_name());
-            return nullptr;
-        }
-
+        auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+        if (!is<ObjectType>(this_object))
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, PrototypeType::display_name());
         return static_cast<ObjectType*>(this_object);
     }
 

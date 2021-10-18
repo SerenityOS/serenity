@@ -37,9 +37,7 @@ WeakMapPrototype::~WeakMapPrototype()
 // 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {
-    auto* weak_map = typed_this_object(global_object);
-    if (!weak_map)
-        return {};
+    auto* weak_map = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
     if (!value.is_object())
         return Value(false);
@@ -49,9 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 // 24.3.3.3 WeakMap.prototype.get ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 {
-    auto* weak_map = typed_this_object(global_object);
-    if (!weak_map)
-        return {};
+    auto* weak_map = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
     if (!value.is_object())
         return js_undefined();
@@ -65,9 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 // 24.3.3.4 WeakMap.prototype.has ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 {
-    auto* weak_map = typed_this_object(global_object);
-    if (!weak_map)
-        return {};
+    auto* weak_map = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
     if (!value.is_object())
         return Value(false);
@@ -78,9 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 // 24.3.3.5 WeakMap.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-weakmap.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 {
-    auto* weak_map = typed_this_object(global_object);
-    if (!weak_map)
-        return {};
+    auto* weak_map = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
     if (!value.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
