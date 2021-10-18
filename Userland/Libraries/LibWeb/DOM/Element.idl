@@ -20,6 +20,7 @@ interface Element : Node {
 
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
+    [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
 
     boolean matches(DOMString selectors);
 
