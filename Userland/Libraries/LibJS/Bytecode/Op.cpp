@@ -55,58 +55,64 @@ void Store::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = interpreter.accumulator();
 }
 
-static Value abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
+static ThrowCompletionOr<Value> abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
 {
-    return Value(!TRY_OR_DISCARD(is_loosely_equal(global_object, src1, src2)));
+    return Value(!TRY(is_loosely_equal(global_object, src1, src2)));
 }
 
-static Value abstract_equals(GlobalObject& global_object, Value src1, Value src2)
+static ThrowCompletionOr<Value> abstract_equals(GlobalObject& global_object, Value src1, Value src2)
 {
-    return Value(TRY_OR_DISCARD(is_loosely_equal(global_object, src1, src2)));
+    return Value(TRY(is_loosely_equal(global_object, src1, src2)));
 }
 
-static Value typed_inequals(GlobalObject&, Value src1, Value src2)
+static ThrowCompletionOr<Value> typed_inequals(GlobalObject&, Value src1, Value src2)
 {
     return Value(!is_strictly_equal(src1, src2));
 }
 
-static Value typed_equals(GlobalObject&, Value src1, Value src2)
+static ThrowCompletionOr<Value> typed_equals(GlobalObject&, Value src1, Value src2)
 {
     return Value(is_strictly_equal(src1, src2));
 }
 
-#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                            \
-    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const              \
-    {                                                                                     \
-        auto lhs = interpreter.reg(m_lhs_reg);                                            \
-        auto rhs = interpreter.accumulator();                                             \
-        interpreter.accumulator() = op_snake_case(interpreter.global_object(), lhs, rhs); \
-    }                                                                                     \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                 \
-    {                                                                                     \
-        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                          \
+#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                       \
+    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const         \
+    {                                                                                \
+        auto lhs = interpreter.reg(m_lhs_reg);                                       \
+        auto rhs = interpreter.accumulator();                                        \
+        auto result_or_error = op_snake_case(interpreter.global_object(), lhs, rhs); \
+        if (result_or_error.is_error())                                              \
+            return;                                                                  \
+        interpreter.accumulator() = result_or_error.release_value();                 \
+    }                                                                                \
+    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const            \
+    {                                                                                \
+        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                     \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
 
-static Value not_(GlobalObject&, Value value)
+static ThrowCompletionOr<Value> not_(GlobalObject&, Value value)
 {
     return Value(!value.to_boolean());
 }
 
-static Value typeof_(GlobalObject& global_object, Value value)
+static ThrowCompletionOr<Value> typeof_(GlobalObject& global_object, Value value)
 {
-    return js_string(global_object.vm(), value.typeof());
+    return Value(js_string(global_object.vm(), value.typeof()));
 }
 
-#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                              \
-    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const                               \
-    {                                                                                                      \
-        interpreter.accumulator() = op_snake_case(interpreter.global_object(), interpreter.accumulator()); \
-    }                                                                                                      \
-    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                                  \
-    {                                                                                                      \
-        return #OpTitleCase;                                                                               \
+#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                         \
+    void OpTitleCase::execute_impl(Bytecode::Interpreter& interpreter) const                          \
+    {                                                                                                 \
+        auto result_or_error = op_snake_case(interpreter.global_object(), interpreter.accumulator()); \
+        if (result_or_error.is_error())                                                               \
+            return;                                                                                   \
+        interpreter.accumulator() = result_or_error.release_value();                                  \
+    }                                                                                                 \
+    String OpTitleCase::to_string_impl(Bytecode::Executable const&) const                             \
+    {                                                                                                 \
+        return #OpTitleCase;                                                                          \
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
@@ -218,7 +224,10 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
 
 void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_lhs) = add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator());
+    auto result_or_error = add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator());
+    if (result_or_error.is_error())
+        return;
+    interpreter.reg(m_lhs) = result_or_error.release_value();
 }
 
 void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
