@@ -158,8 +158,7 @@ void BrowsingContext::scroll_to_anchor(String const& fragment)
         }
     }
 
-    // FIXME: This is overly aggressive and should be something more like a "update_layout_if_needed()"
-    active_document()->force_layout();
+    active_document()->update_layout();
 
     if (!element || !element->layout_node())
         return;
