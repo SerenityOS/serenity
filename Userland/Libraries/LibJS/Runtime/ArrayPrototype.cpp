@@ -569,9 +569,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
     auto initial_length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
-    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     double actual_start;
 
@@ -584,13 +582,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
     double relative_end;
 
-    if (vm.argument(1).is_undefined() || vm.argument(1).is_empty()) {
+    if (vm.argument(1).is_undefined() || vm.argument(1).is_empty())
         relative_end = (double)initial_length;
-    } else {
-        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        relative_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     double final;
 
@@ -642,9 +637,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
         return Value(-1);
 
     // 4. Let n be ? ToIntegerOrInfinity(fromIndex).
-    auto n = from_index.to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto n = TRY_OR_DISCARD(from_index.to_integer_or_infinity(global_object));
 
     // 5. Assert: If fromIndex is undefined, then n is 0.
     if (from_index.is_undefined())
@@ -1086,13 +1079,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
     double n;
 
     // 4. If fromIndex is present, let n be ? ToIntegerOrInfinity(fromIndex); else let n be len - 1.
-    if (vm.argument_count() >= 2) {
-        n = from_index.to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    } else {
+    if (vm.argument_count() >= 2)
+        n = TRY_OR_DISCARD(from_index.to_integer_or_infinity(global_object));
+    else
         n = (double)length - 1;
-    }
 
     // 5. If n is -∞, return -1𝔽.
     if (Value(n).is_negative_infinity())
@@ -1147,9 +1137,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
         return Value(false);
     u64 from_index = 0;
     if (vm.argument_count() >= 2) {
-        auto from_argument = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto from_argument = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+
         if (Value(from_argument).is_positive_infinity() || from_argument >= length)
             return Value(false);
 
@@ -1435,9 +1424,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
     auto initial_length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
-    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     if (Value(relative_start).is_negative_infinity())
         relative_start = 0;
@@ -1456,9 +1443,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
         actual_delete_count = initial_length - actual_start;
     } else if (vm.argument_count() >= 2) {
         insert_count = vm.argument_count() - 2;
-        auto delete_count = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto delete_count = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         auto temp = max(delete_count, 0);
         actual_delete_count = min(temp, initial_length - actual_start);
     }
@@ -1539,18 +1524,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     double relative_end = length;
 
     if (vm.argument_count() >= 2) {
-        relative_start = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
         if (Value(relative_start).is_negative_infinity())
             relative_start = 0;
     }
 
     // If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     if (vm.argument_count() >= 3 && !vm.argument(2).is_undefined()) {
-        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        relative_end = TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
         if (Value(relative_end).is_negative_infinity())
             relative_end = 0;
     }
@@ -1647,9 +1628,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
 
     double depth = 1;
     if (!vm.argument(0).is_undefined()) {
-        auto depth_num = vm.argument(0).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        auto depth_num = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
         depth = max(depth_num, 0.0);
     }
 
@@ -1701,9 +1680,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
 
-    auto relative_target = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_target = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     double to;
     if (relative_target < 0)
@@ -1711,9 +1688,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
     else
         to = min(relative_target, (double)length);
 
-    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     double from;
     if (relative_start < 0)
@@ -1721,9 +1696,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
     else
         from = min(relative_start, (double)length);
 
-    auto relative_end = vm.argument(2).is_undefined() ? length : vm.argument(2).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_end = vm.argument(2).is_undefined() ? length : TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
 
     double final;
     if (relative_end < 0)
@@ -1772,9 +1745,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
-    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_index = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(relative_index).is_infinity())
         return js_undefined();
     Checked<size_t> index { 0 };

@@ -55,9 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
         return {};
     double radix = 10;
     if (!vm.argument(0).is_undefined()) {
-        radix = vm.argument(0).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
+        radix = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
         if (radix < 2 || radix > 36) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
             return {};

@@ -207,9 +207,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
     if (!typed_array)
         return {};
     auto length = typed_array->array_length();
-    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_index = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(relative_index).is_infinity())
         return js_undefined();
     Checked<size_t> index { 0 };
@@ -253,9 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     else
         value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
 
-    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     u32 k;
     if (Value(relative_start).is_negative_infinity())
@@ -266,13 +262,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         k = min(relative_start, length);
 
     double relative_end;
-    if (vm.argument(2).is_undefined()) {
+    if (vm.argument(2).is_undefined())
         relative_end = length;
-    } else {
-        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        relative_end = TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
 
     u32 final;
     if (Value(relative_end).is_negative_infinity())
@@ -370,9 +363,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
     if (length == 0)
         return Value(false);
 
-    auto n = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -413,9 +404,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
     if (length == 0)
         return Value(-1);
 
-    auto n = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -460,13 +449,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
         return Value(-1);
 
     double n;
-    if (vm.argument_count() > 1) {
-        n = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    } else {
+    if (vm.argument_count() > 1)
+        n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+    else
         n = length - 1;
-    }
 
     if (Value(n).is_negative_infinity())
         return Value(-1);
@@ -691,10 +677,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 
     auto source = vm.argument(0);
 
-    auto target_offset = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto target_offset = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
     if (target_offset < 0) {
         vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
         return {};
@@ -848,9 +831,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
     auto length = typed_array->array_length();
 
-    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     i32 k;
     if (Value(relative_start).is_negative_infinity())
@@ -861,13 +842,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
         k = min(relative_start, length);
 
     double relative_end;
-    if (vm.argument(1).is_undefined()) {
+    if (vm.argument(1).is_undefined())
         relative_end = length;
-    } else {
-        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        relative_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     i32 final;
     if (Value(relative_end).is_negative_infinity())
@@ -1073,9 +1051,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
 
     auto length = typed_array->array_length();
 
-    auto relative_begin = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_begin = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     i32 begin_index;
     if (Value(relative_begin).is_negative_infinity())
@@ -1086,13 +1062,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
         begin_index = min(relative_begin, length);
 
     double relative_end;
-    if (vm.argument(1).is_undefined()) {
+    if (vm.argument(1).is_undefined())
         relative_end = length;
-    } else {
-        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        relative_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     i32 end_index;
     if (Value(relative_end).is_negative_infinity())
@@ -1174,9 +1147,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     auto length = typed_array->array_length();
 
     // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
-    auto relative_target = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_target = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
 
     double to;
     if (Value(relative_target).is_negative_infinity()) {
@@ -1191,9 +1162,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     }
 
     // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
-    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
+    auto relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
 
     double from;
     if (Value(relative_start).is_negative_infinity()) {
@@ -1210,13 +1179,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     double relative_end;
 
     // 12. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
-    if (vm.argument(2).is_undefined()) {
+    if (vm.argument(2).is_undefined())
         relative_end = length;
-    } else {
-        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    else
+        relative_end = TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
 
     double final;
     if (Value(relative_end).is_negative_infinity()) {

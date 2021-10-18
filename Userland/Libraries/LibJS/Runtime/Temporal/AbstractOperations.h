@@ -123,9 +123,7 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_obje
     auto& vm = global_object.vm();
 
     // 1. Let integer be ? ToIntegerOrInfinity(argument).
-    auto integer = argument.to_integer_or_infinity(global_object);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto integer = TRY(argument.to_integer_or_infinity(global_object));
 
     // 2. If integer is −∞ or +∞ , then
     if (Value(integer).is_infinity()) {

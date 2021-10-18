@@ -237,11 +237,11 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
     }
 
     // 7. Set hours to ! ToIntegerOrInfinity(hours).
-    auto hours = Value(js_string(vm, hours_part)).to_integer_or_infinity(global_object);
+    auto hours = MUST(Value(js_string(vm, hours_part)).to_integer_or_infinity(global_object));
     // 8. Set minutes to ! ToIntegerOrInfinity(minutes).
-    auto minutes = Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object);
+    auto minutes = MUST(Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object));
     // 9. Set seconds to ! ToIntegerOrInfinity(seconds).
-    auto seconds = Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object);
+    auto seconds = MUST(Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object));
 
     double nanoseconds;
     // 10. If fraction is not undefined, then
@@ -250,7 +250,7 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
         auto fraction = String::formatted("{}000000000", *fraction_part);
         // b. Let nanoseconds be the String value equal to the substring of fraction consisting of the code units with indices 0 (inclusive) through 9 (exclusive).
         // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-        nanoseconds = Value(js_string(vm, fraction_part->substring_view(0, 9))).to_integer_or_infinity(global_object);
+        nanoseconds = MUST(Value(js_string(vm, fraction_part->substring_view(0, 9))).to_integer_or_infinity(global_object));
     }
     // 11. Else,
     else {

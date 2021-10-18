@@ -63,10 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     if (vm.exception())
         return {};
 
-    auto fraction_digits = vm.argument(0).to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
+    auto fraction_digits = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (!vm.argument(0).is_finite_number()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
         return {};
@@ -96,11 +93,8 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
     double radix_argument = 10;
     auto argument = vm.argument(0);
-    if (!vm.argument(0).is_undefined()) {
-        radix_argument = argument.to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-    }
+    if (!vm.argument(0).is_undefined())
+        radix_argument = TRY_OR_DISCARD(argument.to_integer_or_infinity(global_object));
     int radix = (int)radix_argument;
 
     if (vm.exception() || radix < 2 || radix > 36) {
