@@ -299,7 +299,7 @@ void ViewWidget::resize_window()
     if (!m_bitmap)
         return;
 
-    auto new_size = m_bitmap->size();
+    auto new_size = m_bitmap_rect.size();
 
     if (new_size.width() < 300)
         new_size.set_width(300);
