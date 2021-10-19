@@ -382,58 +382,62 @@ func_defined clean_all || clean_all() {
     done
 }
 addtodb() {
+    if [ -n "$(package_install_state $port $version)" ]; then
+        echo "Note: $port $version already installed."
+        return
+    fi
+    echo "Adding $port $version to database of installed ports..."
+    if [ "${1:-}" = "--auto" ]; then
+        echo "auto $port $version" >> "$packagesdb"
+    else
+        echo "manual $port $version" >> "$packagesdb"
+    fi
+    if [ "${#depends[@]}" -gt 0 ]; then
+        echo "dependency $port ${depends[@]}" >> "$packagesdb"
+    fi
+    echo "Successfully installed $port $version."
+}
+ensure_packagesdb() {
     if [ ! -f "$packagesdb" ]; then
-        echo "Note: $packagesdb does not exist. Creating."
-        mkdir -p "${DESTDIR}/usr/Ports/"
+        mkdir -p "$(dirname $packagesdb)"
         touch "$packagesdb"
     fi
-    if ! grep -E "^(auto|manual) $port $version" "$packagesdb" > /dev/null; then
-        echo "Adding $port $version to database of installed ports..."
-        if [ "${1:-}" = "--auto" ]; then
-            echo "auto $port $version" >> "$packagesdb"
-        else
-            echo "manual $port $version" >> "$packagesdb"
-            if [ ! -z "${dependlist:-}" ]; then
-                echo "dependency $port$dependlist" >> "$packagesdb"
-            fi
-        fi
-        echo "Successfully installed $port $version."
-    else
-        >&2 echo "Warning: $port $version already installed. Not adding to database of installed ports!"
-    fi
+}
+package_install_state() {
+    local port=$1
+    local version=${2:-}
+
+    ensure_packagesdb
+    grep -E "^(auto|manual) $port $version" "$packagesdb" | cut -d' ' -f1
 }
 installdepends() {
     for depend in "${depends[@]}"; do
-        dependlist="${dependlist:-} $depend"
-    done
-    for depend in "${depends[@]}"; do
-        if ! grep "$depend" "$packagesdb" > /dev/null; then
+        if [ -z "$(package_install_state $depend)" ]; then
             (cd "../$depend" && ./package.sh --auto)
         fi
     done
 }
 uninstall() {
-    if grep "^manual $port " "$packagesdb" > /dev/null; then
-        if [ -f plist ]; then
-            for f in `cat plist`; do
-                case $f in
-                    */)
-                        run rmdir "${DESTDIR}/$f" || true
-                        ;;
-                    *)
-                        run rm -rf "${DESTDIR}/$f"
-                        ;;
-                esac
-            done
-            # Without || true, mv will not be executed if you are uninstalling your only remaining port.
-            grep -v "^manual $port " "$packagesdb" > packages.db.tmp || true
-            mv packages.db.tmp "$packagesdb"
-        else
-            >&2 echo "Error: This port does not have a plist yet. Cannot uninstall."
-        fi
-    else
+    if [ "$(package_install_state $port)" != "manual" ]; then
         >&2 echo "Error: $port is not installed. Cannot uninstall."
+        return
+    elif [ ! -f plist ]; then
+        >&2 echo "Error: This port does not have a plist yet. Cannot uninstall."
+        return
     fi
+    for f in `cat plist`; do
+        case $f in
+            */)
+                run rmdir "${DESTDIR}/$f" || true
+                ;;
+            *)
+                run rm -rf "${DESTDIR}/$f"
+                ;;
+        esac
+    done
+    # Without || true, mv will not be executed if you are uninstalling your only remaining port.
+    grep -v "^manual $port " "$packagesdb" > packages.db.tmp || true
+    mv packages.db.tmp "$packagesdb"
 }
 do_installdepends() {
     echo "Installing dependencies of $port..."
