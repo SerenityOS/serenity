@@ -950,7 +950,7 @@ void Object::set_prototype(Object* new_prototype)
         m_shape = shape.create_prototype_transition(new_prototype);
 }
 
-void Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+void Object::define_old_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> completion_getter = {};
     if (getter) {
@@ -970,10 +970,10 @@ void Object::define_native_accessor(PropertyName const& property_name, Function<
             return result;
         };
     }
-    define_new_native_accessor(property_name, move(completion_getter), move(completion_setter), attribute);
+    define_native_accessor(property_name, move(completion_getter), move(completion_setter), attribute);
 }
 
-void Object::define_new_native_accessor(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+void Object::define_native_accessor(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String formatted_property_name;
@@ -1039,7 +1039,7 @@ Value Object::get_without_side_effects(const PropertyName& property_name) const
     return {};
 }
 
-void Object::define_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_old_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto completion_native_function = [native_function = move(native_function), property_name](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         auto result = native_function(vm, global_object);
@@ -1047,10 +1047,10 @@ void Object::define_native_function(PropertyName const& property_name, Function<
             return throw_completion(exception->value());
         return result;
     };
-    define_new_native_function(property_name, move(completion_native_function), length, attribute);
+    define_native_function(property_name, move(completion_native_function), length, attribute);
 }
 
-void Object::define_new_native_function(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_native_function(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String function_name;

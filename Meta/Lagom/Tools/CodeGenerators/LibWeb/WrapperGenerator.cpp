@@ -2732,7 +2732,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
         function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
-    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_old_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -3051,7 +3051,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         }
 
         attribute_generator.append(R"~~~(
-    define_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+    define_old_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
     }
 
@@ -3082,7 +3082,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         }
 
         function_generator.append(R"~~~(
-    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_old_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -3091,7 +3091,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
-    define_native_function("toString", to_string, 0, default_attributes);
+    define_old_native_function("toString", to_string, 0, default_attributes);
 )~~~");
     }
 
@@ -3118,10 +3118,10 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_native_function(vm.names.entries, entries, 0, default_attributes);
-    define_native_function(vm.names.forEach, for_each, 1, default_attributes);
-    define_native_function(vm.names.keys, keys, 0, default_attributes);
-    define_native_function(vm.names.values, values, 0, default_attributes);
+    define_old_native_function(vm.names.entries, entries, 0, default_attributes);
+    define_old_native_function(vm.names.forEach, for_each, 1, default_attributes);
+    define_old_native_function(vm.names.keys, keys, 0, default_attributes);
+    define_old_native_function(vm.names.values, values, 0, default_attributes);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
@@ -3638,7 +3638,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
 
-    define_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_old_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 

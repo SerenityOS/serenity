@@ -63,54 +63,54 @@ void WindowObject::initialize_global_object()
     define_direct_property("window", this, JS::Attribute::Enumerable);
     define_direct_property("frames", this, JS::Attribute::Enumerable);
     define_direct_property("self", this, JS::Attribute::Enumerable);
-    define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor("devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_old_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_old_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
+    define_old_native_accessor("devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
-    define_native_function("alert", alert, 0, attr);
-    define_native_function("confirm", confirm, 0, attr);
-    define_native_function("prompt", prompt, 0, attr);
-    define_native_function("setInterval", set_interval, 1, attr);
-    define_native_function("setTimeout", set_timeout, 1, attr);
-    define_native_function("clearInterval", clear_interval, 1, attr);
-    define_native_function("clearTimeout", clear_timeout, 1, attr);
-    define_native_function("requestAnimationFrame", request_animation_frame, 1, attr);
-    define_native_function("cancelAnimationFrame", cancel_animation_frame, 1, attr);
-    define_native_function("atob", atob, 1, attr);
-    define_native_function("btoa", btoa, 1, attr);
+    define_old_native_function("alert", alert, 0, attr);
+    define_old_native_function("confirm", confirm, 0, attr);
+    define_old_native_function("prompt", prompt, 0, attr);
+    define_old_native_function("setInterval", set_interval, 1, attr);
+    define_old_native_function("setTimeout", set_timeout, 1, attr);
+    define_old_native_function("clearInterval", clear_interval, 1, attr);
+    define_old_native_function("clearTimeout", clear_timeout, 1, attr);
+    define_old_native_function("requestAnimationFrame", request_animation_frame, 1, attr);
+    define_old_native_function("cancelAnimationFrame", cancel_animation_frame, 1, attr);
+    define_old_native_function("atob", atob, 1, attr);
+    define_old_native_function("btoa", btoa, 1, attr);
 
-    define_native_function("queueMicrotask", queue_microtask, 1, attr);
+    define_old_native_function("queueMicrotask", queue_microtask, 1, attr);
 
-    define_native_function("getComputedStyle", get_computed_style, 1, attr);
-    define_native_function("matchMedia", match_media, 1, attr);
-    define_native_function("getSelection", get_selection, 0, attr);
+    define_old_native_function("getComputedStyle", get_computed_style, 1, attr);
+    define_old_native_function("matchMedia", match_media, 1, attr);
+    define_old_native_function("getSelection", get_selection, 0, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_accessor("scrollX", scroll_x_getter, {}, attr);
-    define_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
-    define_native_accessor("scrollY", scroll_y_getter, {}, attr);
-    define_native_accessor("pageYOffset", scroll_y_getter, {}, attr);
+    define_old_native_accessor("scrollX", scroll_x_getter, {}, attr);
+    define_old_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
+    define_old_native_accessor("scrollY", scroll_y_getter, {}, attr);
+    define_old_native_accessor("pageYOffset", scroll_y_getter, {}, attr);
 
-    define_native_function("scroll", scroll, 2, attr);
-    define_native_function("scrollTo", scroll, 2, attr);
-    define_native_function("scrollBy", scroll_by, 2, attr);
+    define_old_native_function("scroll", scroll, 2, attr);
+    define_old_native_function("scrollTo", scroll, 2, attr);
+    define_old_native_function("scrollBy", scroll_by, 2, attr);
 
-    define_native_accessor("screenX", screen_x_getter, {}, attr);
-    define_native_accessor("screenY", screen_y_getter, {}, attr);
-    define_native_accessor("screenLeft", screen_left_getter, {}, attr);
-    define_native_accessor("screenTop", screen_top_getter, {}, attr);
+    define_old_native_accessor("screenX", screen_x_getter, {}, attr);
+    define_old_native_accessor("screenY", screen_y_getter, {}, attr);
+    define_old_native_accessor("screenLeft", screen_left_getter, {}, attr);
+    define_old_native_accessor("screenTop", screen_top_getter, {}, attr);
 
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     // Legacy
-    define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
+    define_old_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
 
     m_location_object = heap().allocate<LocationObject>(*this, *this);
 
@@ -124,7 +124,7 @@ void WindowObject::initialize_global_object()
 
     // HTML::GlobalEventHandlers
 #define __ENUMERATE(attribute, event_name) \
-    define_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
+    define_old_native_accessor(#attribute, attribute##_getter, attribute##_setter, attr);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
