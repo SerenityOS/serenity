@@ -184,11 +184,11 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
 
     // FinishDynamicImport, 5. Perform ! PerformPromiseThen(innerPromise, onFulfilled, onRejected).
     promise->perform_then(
-        NativeFunction::create(global_object, "", [](auto&, auto&) -> Value {
+        NativeFunction::create(global_object, "", [](auto&, auto&) -> ThrowCompletionOr<Value> {
             // Not called because we hardcoded a rejection above.
             TODO();
         }),
-        NativeFunction::create(global_object, "", [reject = make_handle(inner_capability.reject)](auto& vm, auto& global_object) -> Value {
+        NativeFunction::create(global_object, "", [reject = make_handle(inner_capability.reject)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
             auto error = vm.argument(0);
 
             // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « error »).
@@ -214,7 +214,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     auto* on_fulfilled = NativeFunction::create(
         global_object,
         "",
-        [string = move(export_name_string)](auto& vm, auto& global_object) -> Value {
+        [string = move(export_name_string)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
             // 1. Assert: exports is a module namespace exotic object.
             auto& exports = vm.argument(0).as_object();
 
@@ -225,23 +225,21 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
             // 4. Assert: Type(string) is String.
 
             // 5. Let hasOwn be ? HasOwnProperty(exports, string).
-            auto has_own = TRY_OR_DISCARD(exports.has_own_property(string));
+            auto has_own = TRY(exports.has_own_property(string));
 
             // 6. If hasOwn is false, throw a TypeError exception.
-            if (!has_own) {
-                vm.template throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, string);
-                return {};
-            }
+            if (!has_own)
+                return vm.template throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, string);
 
             // 7. Let value be ? Get(exports, string).
-            auto value = TRY_OR_DISCARD(exports.get(string));
+            auto value = TRY(exports.get(string));
 
             // 8. Let realm be f.[[Realm]].
             auto* realm = function->realm();
             VERIFY(realm);
 
             // 9. Return ? GetWrappedValue(realm, value).
-            return TRY_OR_DISCARD(get_wrapped_value(global_object, *realm, value));
+            return get_wrapped_value(global_object, *realm, value);
         });
     on_fulfilled->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
@@ -252,9 +250,8 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
-    auto* throw_type_error = NativeFunction::create(global_object, {}, [](auto& vm, auto& global_object) -> Value {
-        vm.template throw_exception<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
-        return {};
+    auto* throw_type_error = NativeFunction::create(global_object, {}, [](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+        return vm.template throw_completion<TypeError>(global_object, vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().string());
     });
 
     // 17. Return ! PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).

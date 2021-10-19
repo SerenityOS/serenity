@@ -70,7 +70,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ProxyConstructor::revocable)
         return {};
 
     // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/#sec-proxy-revocation-functions
-    auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> Value {
+    auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
         auto& proxy = const_cast<ProxyObject&>(*proxy_handle.cell());
         if (proxy.is_revoked())
             return js_undefined();

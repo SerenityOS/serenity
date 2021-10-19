@@ -442,7 +442,7 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
     auto function = JS::NativeFunction::create(
         global_object,
         name,
-        [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::Value {
+        [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::ThrowCompletionOr<JS::Value> {
             Vector<Wasm::Value> values;
             values.ensure_capacity(type.parameters().size());
 
@@ -453,15 +453,13 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
                 if (result.has_value())
                     values.append(result.release_value());
                 else
-                    return {};
+                    return JS::throw_completion(vm.exception()->value());
             }
 
             auto result = WebAssemblyObject::s_abstract_machine.invoke(address, move(values));
             // FIXME: Use the convoluted mapping of errors defined in the spec.
-            if (result.is_trap()) {
-                vm.throw_exception<JS::TypeError>(global_object, String::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
-                return {};
-            }
+            if (result.is_trap())
+                return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
 
             if (result.values().is_empty())
                 return JS::js_undefined();
@@ -473,7 +471,7 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
             for (auto& entry : result.values())
                 result_values.append(to_js_value(entry, global_object));
 
-            return JS::Array::create_from(global_object, result_values);
+            return JS::Value(JS::Array::create_from(global_object, result_values));
         });
 
     WebAssemblyObject::s_global_cache.function_instances.set(address, function);

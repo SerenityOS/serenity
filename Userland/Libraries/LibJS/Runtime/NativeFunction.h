@@ -15,9 +15,9 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NativeFunction* create(GlobalObject&, const FlyString& name, Function<Value(VM&, GlobalObject&)>);
+    static NativeFunction* create(GlobalObject&, const FlyString& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>);
 
-    explicit NativeFunction(FlyString name, Function<Value(VM&, GlobalObject&)>, Object& prototype);
+    explicit NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object& prototype);
     virtual void initialize(GlobalObject&) override { }
     virtual ~NativeFunction() override;
 
@@ -42,7 +42,7 @@ private:
     virtual bool is_native_function() const final { return true; }
 
     FlyString m_name;
-    Function<Value(VM&, GlobalObject&)> m_native_function;
+    Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> m_native_function;
     Realm* m_realm { nullptr };
 };
 
