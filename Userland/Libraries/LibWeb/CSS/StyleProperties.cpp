@@ -194,25 +194,22 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     return {};
 }
 
-Optional<float> StyleProperties::flex_grow_factor() const
+float StyleProperties::flex_grow() const
 {
     auto value = property(CSS::PropertyID::FlexGrow);
-    if (!value.has_value())
-        return {};
-    if (value.value()->has_number())
-        return value.value()->to_number();
-    return {};
+    if (!value.has_value() || !value.value()->has_number())
+        return 0;
+    return value.value()->to_number();
 }
 
-Optional<float> StyleProperties::flex_shrink_factor() const
+float StyleProperties::flex_shrink() const
 {
     auto value = property(CSS::PropertyID::FlexShrink);
-    if (!value.has_value())
-        return {};
-    if (value.value()->has_number())
-        return value.value()->to_number();
-    return {};
+    if (!value.has_value() || !value.value()->has_number())
+        return 1;
+    return value.value()->to_number();
 }
+
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const
 {
     auto value = property(CSS::PropertyID::JustifyContent);

@@ -531,9 +531,9 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             float max_content_contribution = calculated_main_size(flex_item.box);
             float max_content_flex_fraction = max_content_contribution - flex_item.flex_base_size;
             if (max_content_flex_fraction > 0) {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow_factor().value_or(1), 1.0f);
+                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
             } else {
-                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
+                max_content_flex_fraction /= max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
             }
             flex_item.max_content_flex_fraction = max_content_flex_fraction;
 
@@ -547,9 +547,9 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
         for (auto& flex_item : m_flex_items) {
             auto product = 0;
             if (flex_item.max_content_flex_fraction > 0) {
-                product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow_factor().value_or(1);
+                product = largest_max_content_flex_fraction * flex_item.box.computed_values().flex_grow();
             } else {
-                product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink_factor().value_or(1), 1.0f) * flex_item.flex_base_size;
+                product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
             }
             result += flex_item.flex_base_size + product;
         }
@@ -620,9 +620,9 @@ void FlexFormattingContext::resolve_flexible_lengths(float const main_available_
 
         for (auto& flex_item : flex_line.items) {
             if (used_flex_factor == FlexFactor::FlexGrowFactor)
-                flex_item->flex_factor = flex_item->box.computed_values().flex_grow_factor();
+                flex_item->flex_factor = flex_item->box.computed_values().flex_grow();
             else if (used_flex_factor == FlexFactor::FlexShrinkFactor)
-                flex_item->flex_factor = flex_item->box.computed_values().flex_shrink_factor();
+                flex_item->flex_factor = flex_item->box.computed_values().flex_shrink();
         }
 
         // 6.2. Size inflexible items

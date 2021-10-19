@@ -56,8 +56,8 @@ public:
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
     Optional<CSS::FlexBasisData> flex_basis() const;
-    Optional<float> flex_grow_factor() const;
-    Optional<float> flex_shrink_factor() const;
+    float flex_grow() const;
+    float flex_shrink() const;
     Optional<CSS::AlignItems> align_items() const;
     Optional<float> opacity() const;
     Optional<CSS::JustifyContent> justify_content() const;
