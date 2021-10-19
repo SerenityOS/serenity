@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
 }
 
 // 23.2.2.4 get %TypedArray% [ @@species ], https://tc39.es/ecma262/#sec-get-%typedarray%-@@species
-JS_DEFINE_NATIVE_GETTER(TypedArrayConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

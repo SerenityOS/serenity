@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::to_string)
 }
 
 // 14.3.6 get Intl.Locale.prototype.baseName, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.baseName
-JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::base_name)
 // 14.3.10 get Intl.Locale.prototype.hourCycle, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.hourCycle
 // 14.3.12 get Intl.Locale.prototype.numberingSystem, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numberingSystem
 #define __JS_ENUMERATE(keyword)                                                 \
-    JS_DEFINE_NATIVE_GETTER(LocalePrototype::keyword)                           \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)                         \
     {                                                                           \
         auto* locale_object = TRY_OR_DISCARD(typed_this_object(global_object)); \
         if (!locale_object->has_##keyword())                                    \
@@ -130,7 +130,7 @@ JS_ENUMERATE_LOCALE_KEYWORD_PROPERTIES
 #undef __JS_ENUMERATE
 
 // 14.3.11 get Intl.Locale.prototype.numeric, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.numeric
-JS_DEFINE_NATIVE_GETTER(LocalePrototype::numeric)
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::numeric)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
@@ -141,7 +141,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::numeric)
 }
 
 // 14.3.13 get Intl.Locale.prototype.language, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.language
-JS_DEFINE_NATIVE_GETTER(LocalePrototype::language)
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::language)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
@@ -158,7 +158,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::language)
 }
 
 // 14.3.14 get Intl.Locale.prototype.script, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.script
-JS_DEFINE_NATIVE_GETTER(LocalePrototype::script)
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::script)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_GETTER(LocalePrototype::script)
 }
 
 // 14.3.15 get Intl.Locale.prototype.region, https://tc39.es/ecma402/#sec-Intl.Locale.prototype.region
-JS_DEFINE_NATIVE_GETTER(LocalePrototype::region)
+JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).

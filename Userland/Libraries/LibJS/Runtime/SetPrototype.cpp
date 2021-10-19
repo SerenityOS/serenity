@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 }
 
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size
-JS_DEFINE_NATIVE_GETTER(SetPrototype::size_getter)
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     return Value(set->values().size());

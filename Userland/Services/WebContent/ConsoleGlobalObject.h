@@ -41,7 +41,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // Because $0 is not a nice C++ function name
-    JS_DECLARE_NATIVE_GETTER(inspected_node_getter);
+    JS_DECLARE_NATIVE_FUNCTION(inspected_node_getter);
 
     Web::Bindings::WindowObject* m_window_object;
 };

@@ -71,7 +71,7 @@ Value SetConstructor::construct(FunctionObject& new_target)
 }
 
 // 24.2.2.2 get Set [ @@species ], https://tc39.es/ecma262/#sec-get-set-@@species
-JS_DEFINE_NATIVE_GETTER(SetConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(SetConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }
