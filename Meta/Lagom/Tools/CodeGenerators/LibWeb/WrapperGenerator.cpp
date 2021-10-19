@@ -1435,7 +1435,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     }
 
     function_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
 )~~~");
 
@@ -2551,7 +2551,7 @@ private:
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(@function.name:snakecase@);
 )~~~");
     }
 
@@ -2782,24 +2782,24 @@ private:
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(@function.name:snakecase@);
         )~~~");
     }
 
     if (interface.has_stringifier) {
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
         )~~~");
     }
 
     if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(entries);
-    JS_DECLARE_NATIVE_FUNCTION(for_each);
-    JS_DECLARE_NATIVE_FUNCTION(keys);
-    JS_DECLARE_NATIVE_FUNCTION(values);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(entries);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(keys);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(values);
         )~~~");
     }
 
@@ -2807,12 +2807,12 @@ private:
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
         attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
 )~~~");
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
 )~~~");
         }
     }
@@ -3189,7 +3189,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         }
 
         attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3227,7 +3227,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3279,7 +3279,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
             stringifier_generator.set("attribute.cpp_getter_name", interface.stringifier_attribute->to_snakecase());
 
         stringifier_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::to_string)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3310,7 +3310,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
     if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::entries)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3319,7 +3319,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
     return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::for_each)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3346,7 +3346,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::keys)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3355,7 +3355,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
     return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Key));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::values)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -3545,7 +3545,7 @@ public:
     virtual ~@prototype_class@() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(next);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(next);
 };
 
 } // namespace Web::Bindings
@@ -3652,7 +3652,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
     return &static_cast<@wrapper_class@*>(this_object)->impl();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
+JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::next)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)

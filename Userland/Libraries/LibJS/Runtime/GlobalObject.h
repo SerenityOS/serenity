@@ -76,18 +76,18 @@ protected:
 private:
     virtual bool is_global_object() const final { return true; }
 
-    JS_DECLARE_NATIVE_FUNCTION(gc);
-    JS_DECLARE_NATIVE_FUNCTION(is_nan);
-    JS_DECLARE_NATIVE_FUNCTION(is_finite);
-    JS_DECLARE_NATIVE_FUNCTION(parse_float);
-    JS_DECLARE_NATIVE_FUNCTION(parse_int);
-    JS_DECLARE_NATIVE_FUNCTION(eval);
-    JS_DECLARE_NATIVE_FUNCTION(encode_uri);
-    JS_DECLARE_NATIVE_FUNCTION(decode_uri);
-    JS_DECLARE_NATIVE_FUNCTION(encode_uri_component);
-    JS_DECLARE_NATIVE_FUNCTION(decode_uri_component);
-    JS_DECLARE_NATIVE_FUNCTION(escape);
-    JS_DECLARE_NATIVE_FUNCTION(unescape);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(gc);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_nan);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_finite);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(parse_float);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(parse_int);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(eval);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(encode_uri);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(decode_uri);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(encode_uri_component);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(decode_uri_component);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(escape);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(unescape);
 
     NonnullOwnPtr<Console> m_console;
 

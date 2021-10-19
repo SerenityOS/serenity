@@ -20,10 +20,10 @@ public:
     virtual ~WeakMapPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(delete_);
-    JS_DECLARE_NATIVE_FUNCTION(get);
-    JS_DECLARE_NATIVE_FUNCTION(has);
-    JS_DECLARE_NATIVE_FUNCTION(set);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(delete_);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(get);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(has);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(set);
 };
 
 }

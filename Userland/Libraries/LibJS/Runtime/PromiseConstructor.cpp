@@ -273,7 +273,7 @@ Value PromiseConstructor::construct(FunctionObject& new_target)
 }
 
 // 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -302,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 }
 
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -331,7 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 }
 
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -360,7 +360,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 }
 
 // 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -389,7 +389,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 }
 
 // 27.2.4.6 Promise.reject ( r ), https://tc39.es/ecma262/#sec-promise.reject
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::reject)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto promise_capability = new_promise_capability(global_object, constructor);
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
 }
 
 // 27.2.4.7 Promise.resolve ( x ), https://tc39.es/ecma262/#sec-promise.resolve
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::resolve)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto value = vm.argument(0);
@@ -409,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 }
 
 // 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
-JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

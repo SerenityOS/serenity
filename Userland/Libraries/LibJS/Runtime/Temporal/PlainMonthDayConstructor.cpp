@@ -86,7 +86,7 @@ Value PlainMonthDayConstructor::construct(FunctionObject& new_target)
 }
 
 // 10.2.2 Temporal.PlainMonthDay.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.from
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
 {
     auto item = vm.argument(0);
 

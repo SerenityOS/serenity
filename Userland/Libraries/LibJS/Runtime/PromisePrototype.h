@@ -19,9 +19,9 @@ public:
     virtual ~PromisePrototype() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(then);
-    JS_DECLARE_NATIVE_FUNCTION(catch_);
-    JS_DECLARE_NATIVE_FUNCTION(finally);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(then);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(catch_);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(finally);
 };
 
 }

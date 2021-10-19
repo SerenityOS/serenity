@@ -28,7 +28,7 @@ IteratorPrototype::~IteratorPrototype()
 }
 
 // 27.1.2.1 %IteratorPrototype% [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::symbol_iterator)
+JS_DEFINE_OLD_NATIVE_FUNCTION(IteratorPrototype::symbol_iterator)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     return this_object;

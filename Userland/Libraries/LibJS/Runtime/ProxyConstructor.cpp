@@ -63,7 +63,7 @@ Value ProxyConstructor::construct(FunctionObject&)
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
-JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
     auto* proxy = proxy_create(global_object, vm.argument(0), vm.argument(1));
     if (vm.exception())

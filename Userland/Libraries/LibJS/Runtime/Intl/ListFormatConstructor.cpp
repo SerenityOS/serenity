@@ -97,7 +97,7 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
 }
 
 // 13.3.2 Intl.ListFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat.supportedLocalesOf
-JS_DEFINE_NATIVE_FUNCTION(ListFormatConstructor::supported_locales_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);
     auto options = vm.argument(1);

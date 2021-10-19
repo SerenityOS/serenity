@@ -34,7 +34,7 @@ WeakSetPrototype::~WeakSetPrototype()
 }
 
 // 24.4.3.1 WeakSet.prototype.add ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.add
-JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WeakSetPrototype::add)
 {
     auto* weak_set = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 }
 
 // 24.4.3.3 WeakSet.prototype.delete ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.delete
-JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 {
     auto* weak_set = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
@@ -57,7 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 }
 
 // 24.4.3.4 WeakSet.prototype.has ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.has
-JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::has)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WeakSetPrototype::has)
 {
     auto* weak_set = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);

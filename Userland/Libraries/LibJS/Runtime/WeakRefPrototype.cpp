@@ -29,7 +29,7 @@ WeakRefPrototype::~WeakRefPrototype()
 }
 
 // 26.1.3.2 WeakRef.prototype.deref ( ), https://tc39.es/ecma262/#sec-weak-ref.prototype.deref
-JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WeakRefPrototype::deref)
 {
     auto* weak_ref = TRY_OR_DISCARD(typed_this_object(global_object));
 

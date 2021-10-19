@@ -66,7 +66,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
 }
 
 // 5.3.3 get Temporal.PlainDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendar
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::calendar_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::calendar_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::calendar_getter)
 }
 
 // 5.3.4 get Temporal.PlainDateTime.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -91,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::year_getter)
 }
 
 // 5.3.5 get Temporal.PlainDateTime.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.month
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::month_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_getter)
 }
 
 // 5.3.6 get Temporal.PlainDateTime.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthcode
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_code_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::month_code_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_code_getter)
 }
 
 // 5.3.7 get Temporal.PlainDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::day_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -133,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_getter)
 }
 
 // 5.3.8 get Temporal.PlainDateTime.prototype.hour, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.hour
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::hour_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::hour_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::hour_getter)
 }
 
 // 5.3.9 get Temporal.PlainDateTime.prototype.minute, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.minute
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::minute_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::minute_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::minute_getter)
 }
 
 // 5.3.10 get Temporal.PlainDateTime.prototype.second, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.second
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::second_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::second_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -166,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::second_getter)
 }
 
 // 5.3.11 get Temporal.PlainDateTime.prototype.millisecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.millisecond
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::millisecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::millisecond_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -177,7 +177,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::millisecond_getter)
 }
 
 // 5.3.12 get Temporal.PlainDateTime.prototype.microsecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.microsecond
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::microsecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::microsecond_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::microsecond_getter)
 }
 
 // 5.3.13 get Temporal.PlainDateTime.prototype.nanosecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.nanosecond
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::nanosecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::nanosecond_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -199,7 +199,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::nanosecond_getter)
 }
 
 // 5.3.14 get Temporal.PlainDateTime.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_week_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_week_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_week_getter)
 }
 
 // 5.3.15 get Temporal.PlainDateTime.prototype.dayOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofyear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -227,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_year_getter)
 }
 
 // 5.3.16 get Temporal.PlainDateTime.prototype.weekOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.weekofyear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::week_of_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::week_of_year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -241,7 +241,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::week_of_year_getter)
 }
 
 // 5.3.17 get Temporal.PlainDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinweek
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_week_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_week_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -255,7 +255,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_week_getter)
 }
 
 // 5.3.18 get Temporal.PlainDateTime.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinmonth
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_month_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -269,7 +269,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_month_getter)
 }
 
 // 5.3.19 get Temporal.PlainDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.daysinyear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::days_in_year_getter)
 }
 
 // 5.3.20 get Temporal.PlainDateTime.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.monthsinyear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::months_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::months_in_year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -297,7 +297,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::months_in_year_getter)
 }
 
 // 5.3.21 get Temporal.PlainDateTime.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.inleapyear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::in_leap_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::in_leap_year_getter)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -311,7 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::in_leap_year_getter)
 }
 
 // 15.6.6.2 get Temporal.PlainDateTime.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.era
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::era_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::era_getter)
 {
     // 1. Let plainDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(plainDateTime, [[InitializedTemporalDateTime]]).
@@ -325,7 +325,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::era_getter)
 }
 
 // 15.6.6.3 get Temporal.PlainDateTime.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.erayear
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::era_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::era_year_getter)
 {
     // 1. Let plainDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(plainDateTime, [[InitializedTemporalDateTime]]).
@@ -339,7 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::era_year_getter)
 }
 
 // 5.3.23 Temporal.PlainDateTime.prototype.withPlainTime ( [ plainTimeLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaintime
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_time)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -359,7 +359,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_time)
 }
 
 // 5.3.24 Temporal.PlainDateTime.prototype.withPlainDate ( plainDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaindate
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -376,7 +376,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
 }
 
 // 5.3.25 Temporal.PlainDateTime.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -390,7 +390,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_calendar)
 }
 
 // 5.3.31 Temporal.PlainDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.equals
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::equals)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::equals)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::equals)
 }
 
 // 5.3.35 Temporal.PlainDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainDateTime", "a primitive value");
@@ -419,7 +419,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
 }
 
 // 5.3.37 Temporal.PlainDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -430,7 +430,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
 }
 
 // 5.3.38 Temporal.PlainDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainyearmonth
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -450,7 +450,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_year_month)
 }
 
 // 5.3.39 Temporal.PlainDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplainmonthday
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -470,7 +470,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_month_day)
 }
 
 // 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
@@ -481,7 +481,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
 }
 
 // 5.3.41 Temporal.PlainDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.getisofields
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).

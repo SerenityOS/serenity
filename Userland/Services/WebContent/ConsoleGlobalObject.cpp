@@ -98,7 +98,7 @@ JS::ThrowCompletionOr<JS::MarkedValueList> ConsoleGlobalObject::internal_own_pro
     return m_window_object->internal_own_property_keys();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 

@@ -85,7 +85,7 @@ Value DurationConstructor::construct(FunctionObject& new_target)
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
-JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationConstructor::from)
 {
     auto item = vm.argument(0);
 

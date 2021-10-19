@@ -17,7 +17,7 @@ void WebAssemblyMemoryPrototype::initialize(JS::GlobalObject& global_object)
     define_native_function("grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 {
     auto page_count = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
     return JS::Value(static_cast<u32>(previous_size));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyMemoryObject>(this_object)) {

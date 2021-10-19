@@ -19,7 +19,7 @@ public:
     virtual ~ErrorPrototype() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
 };
 
 #define DECLARE_NATIVE_ERROR_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \

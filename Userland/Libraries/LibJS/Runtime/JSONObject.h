@@ -44,8 +44,8 @@ private:
     static Array* parse_json_array(GlobalObject&, const JsonArray&);
     static Value internalize_json_property(GlobalObject&, Object* holder, PropertyName const& name, FunctionObject& reviver);
 
-    JS_DECLARE_NATIVE_FUNCTION(stringify);
-    JS_DECLARE_NATIVE_FUNCTION(parse);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(stringify);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(parse);
 };
 
 }

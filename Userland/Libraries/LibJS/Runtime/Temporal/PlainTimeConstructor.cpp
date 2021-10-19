@@ -82,7 +82,7 @@ Value PlainTimeConstructor::construct(FunctionObject& new_target)
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from
-JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
 }
 
 // 4.2.3 Temporal.PlainTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare
-JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::compare)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalTime(one).
     auto* one = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));

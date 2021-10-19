@@ -44,12 +44,12 @@ NavigatorObject::~NavigatorObject()
 {
 }
 
-JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
 {
     return JS::js_string(vm, ResourceLoader::the().user_agent());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::cookie_enabled_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NavigatorObject::cookie_enabled_getter)
 {
     // No way of disabling cookies right now :^)
     return JS::Value(true);

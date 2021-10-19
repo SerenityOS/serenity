@@ -289,7 +289,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
-JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
@@ -297,7 +297,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 }
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::parse)
 {
     if (!vm.argument_count())
         return js_nan();
@@ -308,7 +308,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
-JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::utc)
 {
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<i32> {
         return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback;

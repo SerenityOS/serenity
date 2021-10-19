@@ -30,7 +30,7 @@ void RegExpStringIteratorPrototype::initialize(GlobalObject& global_object)
 }
 
 // 22.2.7.2.1 %RegExpStringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next
-JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
+JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
 {
     // For details, see the 'closure' of: https://tc39.es/ecma262/#sec-createregexpstringiterator
     auto* iterator = TRY_OR_DISCARD(typed_this_value(global_object));

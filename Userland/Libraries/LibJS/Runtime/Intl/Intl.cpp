@@ -40,7 +40,7 @@ void Intl::initialize(GlobalObject& global_object)
 }
 
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales
-JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
+JS_DEFINE_OLD_NATIVE_FUNCTION(Intl::get_canonical_locales)
 {
     auto locales = vm.argument(0);
 

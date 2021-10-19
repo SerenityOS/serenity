@@ -154,7 +154,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
 }
 
 // 23.1.3.7 Array.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.filter
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::filter)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -216,7 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
 }
 
 // 23.1.3.12 Array.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.foreach
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::for_each)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
 }
 
 // 23.1.3.18 Array.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.map
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::map)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
 }
 
 // 23.1.3.20 Array.prototype.push ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.push
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::push)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -330,7 +330,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 }
 
 // 23.1.3.31 Array.prototype.unshift ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.unshift
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -364,7 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 }
 
 // 23.1.3.19 Array.prototype.pop ( ), https://tc39.es/ecma262/#sec-array.prototype.pop
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::pop)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -380,7 +380,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 }
 
 // 23.1.3.24 Array.prototype.shift ( ), https://tc39.es/ecma262/#sec-array.prototype.shift
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::shift)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 }
 
 // 23.1.3.30 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto join_function = TRY_OR_DISCARD(this_object->get(vm.names.join));
@@ -417,7 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 }
 
 // 23.1.3.29 Array.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-array.prototype.tolocalestring
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -446,7 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 }
 
 // 23.1.3.15 Array.prototype.join ( separator ), https://tc39.es/ecma262/#sec-array.prototype.join
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::join)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -479,7 +479,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 }
 
 // 23.1.3.1 Array.prototype.concat ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.concat
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -563,7 +563,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 }
 
 // 23.1.3.25 Array.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-array.prototype.slice
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::slice)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -621,7 +621,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 }
 
 // 23.1.3.14 Array.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-array.prototype.indexof
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::index_of)
 {
     auto search_element = vm.argument(0);
     auto from_index = vm.argument(1);
@@ -693,7 +693,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 }
 
 // 23.1.3.21 Array.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-array.prototype.reduce
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::reduce)
 {
     auto callback_function = vm.argument(0);
     auto initial_value = vm.argument(1);
@@ -781,7 +781,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
 }
 
 // 23.1.3.22 Array.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-array.prototype.reduceright
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 {
     auto callback_function = vm.argument(0);
     auto initial_value = vm.argument(1);
@@ -869,7 +869,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 }
 
 // 23.1.3.23 Array.prototype.reverse ( ), https://tc39.es/ecma262/#sec-array.prototype.reverse
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::reverse)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -1017,7 +1017,7 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
 }
 
 // 23.1.3.27 Array.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-array.prototype.sort
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::sort)
 {
     auto callback = vm.argument(0);
     if (!callback.is_undefined() && !callback.is_function()) {
@@ -1061,7 +1061,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 }
 
 // 23.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-array.prototype.lastindexof
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 {
     auto search_element = vm.argument(0);
     auto from_index = vm.argument(1);
@@ -1129,7 +1129,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 }
 
 // 23.1.3.13 Array.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-array.prototype.includes
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::includes)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -1160,7 +1160,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
 }
 
 // 23.1.3.8 Array.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.find
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::find)
 {
     auto predicate = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1201,7 +1201,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
 }
 
 // 23.1.3.9 Array.prototype.findIndex ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.findindex
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::find_index)
 {
     auto predicate = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1242,7 +1242,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
 }
 
 // 1 Array.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlast
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::find_last)
 {
     auto predicate = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1283,7 +1283,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
 }
 
 // 2 Array.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlastindex
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 {
     auto predicate = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1324,7 +1324,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 }
 
 // 23.1.3.26 Array.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.some
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::some)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1371,7 +1371,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
 }
 
 // 23.1.3.5 Array.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.every
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::every)
 {
     auto callback_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1418,7 +1418,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
 }
 
 // 23.1.3.28 Array.prototype.splice ( start, deleteCount, ...items ), https://tc39.es/ecma262#sec-array.prototype.splice
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1514,7 +1514,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 }
 
 // 23.1.3.6 Array.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-array.prototype.fill
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::fill)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1555,7 +1555,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
 }
 
 // 23.1.3.32 Array.prototype.values ( ), https://tc39.es/ecma262/#sec-array.prototype.values
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::values)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1563,7 +1563,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 }
 
 // 23.1.3.16 Array.prototype.entries ( ), https://tc39.es/ecma262/#sec-array.prototype.entries
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::entries)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1571,7 +1571,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
 }
 
 // 23.1.3.16 Array.prototype.keys ( ), https://tc39.es/ecma262/#sec-array.prototype.keys
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::keys)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1620,7 +1620,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
 }
 
 // 23.1.3.10 Array.prototype.flat ( [ depth ] ), https://tc39.es/ecma262/#sec-array.prototype.flat
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -1643,7 +1643,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
 }
 
 // 23.1.3.11 Array.prototype.flatMap ( mapperFunction [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.flatmap
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat_map)
 {
     auto mapper_function = vm.argument(0);
     auto this_arg = vm.argument(1);
@@ -1675,7 +1675,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
 }
 
 // 23.1.3.3 Array.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-array.prototype.copywithin
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));
@@ -1741,7 +1741,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
 }
 
 // 1.1 Array.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-array.prototype.at
-JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::at)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *this_object));

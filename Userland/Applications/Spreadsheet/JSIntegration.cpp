@@ -169,7 +169,7 @@ void SheetGlobalObject::visit_edges(Visitor& visitor)
     }
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -206,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
     return JS::js_string(vm, cell->data());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
     return JS::js_null();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
@@ -276,7 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     return object;
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 {
     if (vm.argument_count() != 0) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected no arguments to current_cell_position()");
@@ -304,7 +304,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     return object;
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::column_index)
 {
     if (vm.argument_count() != 1) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to column_index()");
@@ -337,7 +337,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
     return JS::Value((i32)column_index.value());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
 {
     if (vm.argument_count() != 2) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected exactly two arguments to column_arithmetic()");
@@ -397,7 +397,7 @@ void WorkbookObject::visit_edges(Visitor& visitor)
         visitor.visit(&sheet.global_object());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WorkbookObject::sheet)
 {
     if (vm.argument_count() != 1) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to sheet()");

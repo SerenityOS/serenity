@@ -48,7 +48,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
 }
 
 // 7.3.3 get Temporal.Duration.prototype.years, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::years_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::years_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::years_getter)
 }
 
 // 7.3.4 get Temporal.Duration.prototype.months, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::months_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::months_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::months_getter)
 }
 
 // 7.3.5 get Temporal.Duration.prototype.weeks, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.weeks
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::weeks_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::weeks_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::weeks_getter)
 }
 
 // 7.3.6 get Temporal.Duration.prototype.days, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.days
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::days_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::days_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::days_getter)
 }
 
 // 7.3.7 get Temporal.Duration.prototype.hours, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::hours_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::hours_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::hours_getter)
 }
 
 // 7.3.8 get Temporal.Duration.prototype.minutes, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.minutes
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::minutes_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::minutes_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -114,7 +114,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::minutes_getter)
 }
 
 // 7.3.9 get Temporal.Duration.prototype.seconds, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.seconds
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::seconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::seconds_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -125,7 +125,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::seconds_getter)
 }
 
 // 7.3.10 get Temporal.Duration.prototype.milliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.milliseconds
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::milliseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::milliseconds_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::milliseconds_getter)
 }
 
 // 7.3.11 get Temporal.Duration.prototype.microseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.microseconds
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::microseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::microseconds_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -147,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::microseconds_getter)
 }
 
 // 7.3.12 get Temporal.Duration.prototype.nanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -158,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
 }
 
 // 7.3.13 get Temporal.Duration.prototype.sign, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::sign_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::sign_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::sign_getter)
 }
 
 // 7.3.14 get Temporal.Duration.prototype.blank, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.blank
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::blank_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::blank_getter)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::blank_getter)
 }
 
 // 7.3.15 Temporal.Duration.prototype.with ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.with
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::with)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
 }
 
 // 7.3.16 Temporal.Duration.prototype.negated ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::negated)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::negated)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -272,7 +272,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::negated)
 }
 
 // 7.3.17 Temporal.Duration.prototype.abs ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::abs)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DurationPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.Duration", "a primitive value");

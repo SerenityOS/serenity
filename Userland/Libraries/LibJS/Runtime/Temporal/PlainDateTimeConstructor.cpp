@@ -96,7 +96,7 @@ Value PlainDateTimeConstructor::construct(FunctionObject& new_target)
 }
 
 // 5.2.2 Temporal.PlainDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.from
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
 {
     auto item = vm.argument(0);
 
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
 }
 
 // 5.2.3 Temporal.PlainDateTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.compare
-JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDateTime(one).
     auto* one = TRY_OR_DISCARD(to_temporal_date_time(global_object, vm.argument(0)));

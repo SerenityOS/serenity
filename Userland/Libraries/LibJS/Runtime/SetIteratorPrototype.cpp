@@ -34,7 +34,7 @@ SetIteratorPrototype::~SetIteratorPrototype()
 }
 
 // 24.2.5.2.1 %SetIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%setiteratorprototype%.next
-JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
     auto* set_iterator = TRY_OR_DISCARD(typed_this_value(global_object));
     if (set_iterator->done())

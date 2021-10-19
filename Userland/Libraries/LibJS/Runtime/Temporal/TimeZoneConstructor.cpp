@@ -79,7 +79,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
-JS_DEFINE_NATIVE_FUNCTION(TimeZoneConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZoneConstructor::from)
 {
     auto item = vm.argument(0);
 

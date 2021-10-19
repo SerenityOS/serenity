@@ -19,7 +19,7 @@ public:
     virtual ~Intl() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(get_canonical_locales);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(get_canonical_locales);
 };
 
 }

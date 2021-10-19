@@ -16,7 +16,7 @@ void WebAssemblyInstancePrototype::initialize(JS::GlobalObject& global_object)
     define_native_accessor("exports", exports_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)
 {
     auto this_value = vm.this_value(global_object);
     auto* this_object = TRY_OR_DISCARD(this_value.to_object(global_object));

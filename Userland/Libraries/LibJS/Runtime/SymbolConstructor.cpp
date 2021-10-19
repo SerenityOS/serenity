@@ -55,14 +55,14 @@ Value SymbolConstructor::construct(FunctionObject&)
 }
 
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
-JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     auto description = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     return global_object.vm().get_global_symbol(description);
 }
 
 // 20.4.2.6 Symbol.keyFor ( sym ), https://tc39.es/ecma262/#sec-symbol.keyfor
-JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
     if (!argument.is_symbol()) {

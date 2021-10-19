@@ -130,125 +130,125 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
 }
 
 // 25.3.4.5 DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_big_int_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_big_int_64)
 {
     return get_view_value<i64>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.6 DataView.prototype.getBigUint64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_big_uint_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_big_uint_64)
 {
     return get_view_value<u64>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.7 DataView.prototype.getFloat32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_float_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_float_32)
 {
     return get_view_value<float>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.8 DataView.prototype.getFloat64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_float_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_float_64)
 {
     return get_view_value<double>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.9 DataView.prototype.getInt8 ( byteOffset ), https://tc39.es/ecma262/#sec-dataview.prototype.getint8
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_int_8)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_8)
 {
     return get_view_value<i8>(global_object, vm.argument(0), Value(true));
 }
 
 // 25.3.4.10 DataView.prototype.getInt16 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getint16
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_int_16)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_16)
 {
     return get_view_value<i16>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.11 DataView.prototype.getInt32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getint32
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_int_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_32)
 {
     return get_view_value<i32>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.12 DataView.prototype.getUint8 ( byteOffset ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint8
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_uint_8)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_8)
 {
     return get_view_value<u8>(global_object, vm.argument(0), Value(true));
 }
 
 // 25.3.4.13 DataView.prototype.getUint16 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint16
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_uint_16)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_16)
 {
     return get_view_value<u16>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.14 DataView.prototype.getUint32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint32
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::get_uint_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_32)
 {
     return get_view_value<u32>(global_object, vm.argument(0), vm.argument(1));
 }
 
 // 25.3.4.15 DataView.prototype.setBigInt64 ( byteOffset, value [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_big_int_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_big_int_64)
 {
     return set_view_value<i64>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_big_uint_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_big_uint_64)
 {
     return set_view_value<u64>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_float_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_float_32)
 {
     return set_view_value<float>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_float_64)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_float_64)
 {
     return set_view_value<double>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_int_8)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_int_8)
 {
     return set_view_value<i8>(global_object, vm.argument(0), Value(true), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_int_16)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_int_16)
 {
     return set_view_value<i16>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_int_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_int_32)
 {
     return set_view_value<i32>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_8)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_uint_8)
 {
     return set_view_value<u8>(global_object, vm.argument(0), Value(true), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_16)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_uint_16)
 {
     return set_view_value<u16>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::set_uint_32)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::set_uint_32)
 {
     return set_view_value<u32>(global_object, vm.argument(0), vm.argument(2), vm.argument(1));
 }
 
 // 25.3.4.1 get DataView.prototype.buffer, https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::buffer_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::buffer_getter)
 {
     auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     return data_view->viewed_array_buffer();
 }
 
 // 25.3.4.2 get DataView.prototype.byteLength, https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
 {
     auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached()) {
@@ -259,7 +259,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
 }
 
 // 25.3.4.3 get DataView.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset
-JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
 {
     auto* data_view = TRY_OR_DISCARD(typed_this_value(global_object));
     if (data_view->viewed_array_buffer()->is_detached()) {

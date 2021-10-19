@@ -20,16 +20,16 @@ public:
     virtual ~PlainMonthDayPrototype() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
-    JS_DECLARE_NATIVE_FUNCTION(month_code_getter);
-    JS_DECLARE_NATIVE_FUNCTION(day_getter);
-    JS_DECLARE_NATIVE_FUNCTION(equals);
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_NATIVE_FUNCTION(to_json);
-    JS_DECLARE_NATIVE_FUNCTION(value_of);
-    JS_DECLARE_NATIVE_FUNCTION(to_plain_date);
-    JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(calendar_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(month_code_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(day_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(equals);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_json);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(value_of);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_plain_date);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(get_iso_fields);
 };
 
 }

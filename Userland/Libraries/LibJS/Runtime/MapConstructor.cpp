@@ -83,7 +83,7 @@ Value MapConstructor::construct(FunctionObject& new_target)
 }
 
 // 24.1.2.2 get Map [ @@species ], https://tc39.es/ecma262/#sec-get-map-@@species
-JS_DEFINE_NATIVE_FUNCTION(MapConstructor::symbol_species_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(MapConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

@@ -88,7 +88,7 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
 }
 
 // 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 }
 
 // 9.2.3 Temporal.PlainYearMonth.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
 {
     // 1. Set one to ? ToTemporalYearMonth(one).
     auto* one = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(0)));

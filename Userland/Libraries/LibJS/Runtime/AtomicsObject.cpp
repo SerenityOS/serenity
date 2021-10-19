@@ -162,7 +162,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
 }
 
 // 25.4.3 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::add)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -180,7 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 }
 
 // 25.4.4 Atomics.and ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.and
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::and_)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -278,7 +278,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
 }
 
 // 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -294,7 +294,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
 }
 
 // 25.4.6 Atomics.exchange ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.exchange
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::exchange)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 }
 
 // 25.4.7 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 {
     auto size = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
     if (size == 1)
@@ -327,7 +327,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
 }
 
 // 25.4.8 Atomics.load ( typedArray, index ), https://tc39.es/ecma262/#sec-atomics.load
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::load)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -346,7 +346,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
 }
 
 // 25.4.9 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::or_)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -364,7 +364,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 }
 
 // 25.4.10 Atomics.store ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.store
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::store)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -391,7 +391,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 }
 
 // 25.4.11 Atomics.sub ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.sub
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::sub)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)
@@ -409,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 }
 
 // 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor
-JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(AtomicsObject::xor_)
 {
     auto* typed_array = typed_array_from(global_object, vm.argument(0));
     if (!typed_array)

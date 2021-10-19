@@ -114,21 +114,21 @@ static Array* get_own_property_keys(GlobalObject& global_object, Value value, Ge
 }
 
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
     // 1. Return ? GetOwnPropertyKeys(O, string).
     return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String);
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
     // 1. Return ? GetOwnPropertyKeys(O, symbol).
     return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol);
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
@@ -138,7 +138,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 }
 
 // 20.1.2.21 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
     auto proto = vm.argument(1);
 
@@ -170,7 +170,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 }
 
 // 20.1.2.14 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -179,7 +179,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
 }
 
 // 20.1.2.15 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
 }
 
 // 20.1.2.16 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -197,7 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
 }
 
 // 20.1.2.18 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -212,7 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
 }
 
 // 20.1.2.6 Object.freeze ( O ), https://tc39.es/ecma262/#sec-object.freeze
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::freeze)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
 }
 
 // 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 {
     auto iterable = TRY_OR_DISCARD(require_object_coercible(global_object, vm.argument(0)));
 
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 }
 
 // 20.1.2.20 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::seal)
 {
     auto argument = vm.argument(0);
     if (!argument.is_object())
@@ -275,7 +275,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 }
 
 // 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto key = TRY_OR_DISCARD(vm.argument(1).to_property_key(global_object));
@@ -284,7 +284,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 }
 
 // 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 {
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
@@ -315,7 +315,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 }
 
 // 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::define_property)
 {
     if (!vm.argument(0).is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
@@ -328,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
 }
 
 // 20.1.2.3 Object.defineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-object.defineproperties
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::define_properties)
 {
     auto object = vm.argument(0);
     auto properties = vm.argument(1);
@@ -344,13 +344,13 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
 }
 
 // 20.1.2.13 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::is)
 {
     return Value(same_value(vm.argument(0), vm.argument(1)));
 }
 
 // 20.1.2.17 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Key));
@@ -358,7 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 }
 
 // 20.1.2.22 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::values)
 {
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::Value));
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 }
 
 // 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto name_list = TRY_OR_DISCARD(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
@@ -374,7 +374,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 }
 
 // 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::create)
 {
     auto proto = vm.argument(0);
     auto properties = vm.argument(1);
@@ -399,7 +399,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 }
 
 // 1 Object.hasOwn ( O, P ), https://tc39.es/proposal-accessible-object-hasownproperty/#sec-object.hasown
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
     // 1. Let obj be ? ToObject(O).
     auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
@@ -412,7 +412,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 }
 
 // 20.1.2.1 Object.assign ( target, ...sources ), https://tc39.es/ecma262/#sec-object.assign
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::assign)
 {
     // 1. Let to be ? ToObject(target).
     auto* to = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));

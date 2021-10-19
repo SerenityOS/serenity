@@ -69,7 +69,7 @@ Value InstantConstructor::construct(FunctionObject& new_target)
 }
 
 // 8.2.2 Temporal.Instant.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.from
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::from)
 {
     auto item = vm.argument(0);
 
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
 }
 
 // 8.2.3 Temporal.Instant.fromEpochSeconds ( epochSeconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 {
     // 1. Set epochSeconds to ? ToNumber(epochSeconds).
     auto epoch_seconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 }
 
 // 8.2.4 Temporal.Instant.fromEpochMilliseconds ( epochMilliseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
 {
     // 1. Set epochMilliseconds to ? ToNumber(epochMilliseconds).
     auto epoch_milliseconds_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
 }
 
 // 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmicroseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 {
     // 1. Set epochMicroseconds to ? ToBigInt(epochMicroseconds).
     auto* epoch_microseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 }
 
 // 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 {
     // 1. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
     auto* epoch_nanoseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
@@ -167,7 +167,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 }
 
 // 8.2.7 Temporal.Instant.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.instant.compare
-JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::compare)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantConstructor::compare)
 {
     // 1. Set one to ? ToTemporalInstant(one).
     auto* one = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));

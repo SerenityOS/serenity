@@ -63,7 +63,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 {
     // 1. Let calendar be the this value.
     auto calendar = vm.this_value(global_object);
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
 // NOTE: This is the minimum dateFromFields implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -102,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 
 // 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
 // NOTE: This is the minimum yearMonthFromFields implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -130,7 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 
 // 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
 // NOTE: This is the minimum monthDayFromFields implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -158,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 
 // 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
 // NOTE: This is the minimum dateAdd implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_add)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -194,7 +194,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 
 // 12.4.8 Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateuntil
 // NOTE: This is the minimum dateUntil implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_until)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -224,7 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
 
 // 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
 // NOTE: This is the minimum year implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -246,7 +246,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
 
 // 12.4.10 Temporal.Calendar.prototype.month ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.month
 // NOTE: This is the minimum month implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -276,7 +276,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
 
 // 12.4.11 Temporal.Calendar.prototype.monthCode ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthcode
 // NOTE: This is the minimum monthCode implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_code)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -298,7 +298,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
 // NOTE: This is the minimum day implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -320,7 +320,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
 
 // 12.4.13 Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofweek
 // NOTE: This is the minimum dayOfWeek implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -338,7 +338,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 
 // 12.4.14 Temporal.Calendar.prototype.dayOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofyear
 // NOTE: This is the minimum dayOfYear implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 
 // 12.4.15 Temporal.Calendar.prototype.weekOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.weekofyear
 // NOTE: This is the minimum weekOfYear implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -374,7 +374,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 
 // 12.4.16 Temporal.Calendar.prototype.daysInWeek ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinweek
 // NOTE: This is the minimum daysInWeek implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -392,7 +392,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 
 // 12.4.16 Temporal.Calendar.prototype.daysInMonth ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinweek
 // NOTE: This is the minimum daysInMonth implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -414,7 +414,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 
 // 12.4.18 Temporal.Calendar.prototype.daysInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinyear
 // NOTE: This is the minimum daysInYear implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -436,7 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 
 // 12.4.19 Temporal.Calendar.prototype.monthsInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthsinyear
 // NOTE: This is the minimum monthsInYear implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -458,7 +458,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 
 // 12.4.20 Temporal.Calendar.prototype.inLeapYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.inleapyear
 // NOTE: This is the minimum inLeapYear implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 
 // 12.4.21 Temporal.Calendar.prototype.fields ( fields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.fields
 // NOTE: This is the minimum fields implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
 {
     auto fields = vm.argument(0);
 
@@ -556,7 +556,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 
 // 12.4.22 Temporal.Calendar.prototype.mergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.mergefields
 // NOTE: This is the minimum mergeFields implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -576,7 +576,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::to_string)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
@@ -587,7 +587,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 }
 
 // 12.4.24 Temporal.Calendar.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::to_json)
 {
     // 1. Let calendar be the this value.
     auto calendar = vm.this_value(global_object);
@@ -597,7 +597,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::era)
 {
     auto temporal_date_like = vm.argument(0);
 
@@ -625,7 +625,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
 }
 
 // 15.6.2.7 Temporal.Calendar.prototype.eraYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.erayear
-JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::era_year)
 {
     auto temporal_date_like = vm.argument(0);
 
