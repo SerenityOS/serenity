@@ -64,9 +64,9 @@
     } __testjs_register_##fn {};
 
 #define TESTJS_GLOBAL_FUNCTION(function, exposed_name, ...)                    \
-    JS_DECLARE_OLD_NATIVE_FUNCTION(function);                                  \
+    JS_DECLARE_NATIVE_FUNCTION(function);                                      \
     __TESTJS_REGISTER_GLOBAL_FUNCTION(#exposed_name, function, ##__VA_ARGS__); \
-    JS_DEFINE_OLD_NATIVE_FUNCTION(function)
+    JS_DEFINE_NATIVE_FUNCTION(function)
 
 #define TESTJS_MAIN_HOOK()                  \
     struct __TestJS_main_hook {             \
@@ -120,7 +120,7 @@ extern bool g_run_bytecode;
 extern bool g_dump_bytecode;
 extern String g_currently_running_test;
 struct FunctionWithLength {
-    JS::Value (*function)(JS::VM&, JS::GlobalObject&);
+    JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&, JS::GlobalObject&);
     size_t length { 0 };
 };
 extern HashMap<String, FunctionWithLength> s_exposed_global_functions;
@@ -191,7 +191,7 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
-        define_old_native_function(
+        define_native_function(
             entry.key, [fn = entry.value.function](auto& vm, auto& global_object) {
                 return fn(vm, global_object);
             },

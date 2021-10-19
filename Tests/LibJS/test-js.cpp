@@ -18,7 +18,7 @@ TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 
 TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
-    auto source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto source = TRY(vm.argument(0).to_string(global_object));
     auto parser = JS::Parser(JS::Lexer(source));
     parser.parse_program();
     return JS::Value(!parser.has_errors());
@@ -32,22 +32,18 @@ TESTJS_GLOBAL_FUNCTION(run_queued_promise_jobs, runQueuedPromiseJobs)
 
 TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
 {
-    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    if (!is<JS::WeakSet>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakSet");
-        return {};
-    }
+    auto* object = TRY(vm.argument(0).to_object(global_object));
+    if (!is<JS::WeakSet>(object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakSet");
     auto* weak_set = static_cast<JS::WeakSet*>(object);
     return JS::Value(weak_set->values().size());
 }
 
 TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
 {
-    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    if (!is<JS::WeakMap>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakMap");
-        return {};
-    }
+    auto* object = TRY(vm.argument(0).to_object(global_object));
+    if (!is<JS::WeakMap>(object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "WeakMap");
     auto* weak_map = static_cast<JS::WeakMap*>(object);
     return JS::Value(weak_map->values().size());
 }
@@ -55,10 +51,8 @@ TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
 TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
 {
     auto argument = vm.argument(0);
-    if (!argument.is_string()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAString, argument.to_string_without_side_effects());
-        return {};
-    }
+    if (!argument.is_string())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAString, argument.to_string_without_side_effects());
 
     auto& variable_name = argument.as_string();
 
@@ -66,21 +60,17 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     auto outer_environment = vm.execution_context_stack().last_matching([&](auto& execution_context) {
         return execution_context->lexical_environment != nullptr;
     });
-    if (!outer_environment.has_value()) {
-        vm.throw_exception<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
-        return {};
-    }
+    if (!outer_environment.has_value())
+        return vm.throw_completion<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
 
     auto reference = vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment);
 
     auto value = reference.get_value(global_object);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return JS::throw_completion(exception->value());
 
-    if (!value.is_object()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
-        return {};
-    }
+    if (!value.is_object())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
 
     vm.heap().uproot_cell(&value.as_object());
     reference.delete_(global_object);
