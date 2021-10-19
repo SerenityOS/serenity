@@ -501,12 +501,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_grow());
     case CSS::PropertyID::FlexShrink:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_shrink());
-    case CSS::PropertyID::Opacity: {
-        auto maybe_opacity = layout_node.computed_values().opacity();
-        if (!maybe_opacity.has_value())
-            return {};
-        return NumericStyleValue::create_float(maybe_opacity.release_value());
-    }
+    case CSS::PropertyID::Opacity:
+        return NumericStyleValue::create_float(layout_node.computed_values().opacity());
     case CSS::PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::BoxShadow: {
