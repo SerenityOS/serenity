@@ -40,7 +40,7 @@ TESTJS_MAIN_HOOK()
 
 TESTJS_GLOBAL_FUNCTION(load_local_page, loadLocalPage)
 {
-    auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto name = TRY(vm.argument(0).to_string(global_object));
 
     // Clear the hooks
     before_initial_load_hooks.clear();
@@ -59,8 +59,7 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
     auto function = vm.argument(0);
     if (!function.is_function()) {
         dbgln("afterInitialPageLoad argument is not a function");
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
-        return {};
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
     after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {
@@ -74,8 +73,7 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
     auto function = vm.argument(0);
     if (!function.is_function()) {
         dbgln("beforeInitialPageLoad argument is not a function");
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
-        return {};
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
     }
 
     before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {

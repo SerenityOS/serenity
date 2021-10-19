@@ -13,16 +13,14 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
-    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
-    if (file.is_error()) {
-        vm.throw_exception<JS::TypeError>(global_object, file.error().string());
-        return {};
-    }
+    if (file.is_error())
+        return vm.throw_completion<JS::TypeError>(global_object, file.error().string());
     auto contents = file.value()->read_all();
     auto array = JS::Uint8Array::create(global_object, contents.size());
     contents.span().copy_to(array->data());
-    return array;
+    return JS::Value(array);
 }
 
 class WebAssemblyModule final : public JS::Object {
@@ -93,11 +91,9 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
-    auto* object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    if (!is<JS::Uint8Array>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Expected a Uint8Array argument to parse_webassembly_module");
-        return {};
-    }
+    auto* object = TRY(vm.argument(0).to_object(global_object));
+    if (!is<JS::Uint8Array>(object))
+        return vm.throw_completion<JS::TypeError>(global_object, "Expected a Uint8Array argument to parse_webassembly_module");
     auto& array = static_cast<JS::Uint8Array&>(*object);
     InputMemoryStream stream { array.data() };
     ScopeGuard handle_stream_error {
@@ -106,15 +102,11 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
         }
     };
     auto result = Wasm::Module::parse(stream);
-    if (result.is_error()) {
-        vm.throw_exception<JS::SyntaxError>(global_object, Wasm::parse_error_to_string(result.error()));
-        return {};
-    }
+    if (result.is_error())
+        return vm.throw_completion<JS::SyntaxError>(global_object, Wasm::parse_error_to_string(result.error()));
 
-    if (stream.handle_any_error()) {
-        vm.throw_exception<JS::SyntaxError>(global_object, "Binary stream contained errors");
-        return {};
-    }
+    if (stream.handle_any_error())
+        return vm.throw_completion<JS::SyntaxError>(global_object, "Binary stream contained errors");
 
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> imports;
     auto import_value = vm.argument(1);
@@ -132,22 +124,18 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
         }
     }
 
-    return WebAssemblyModule::create(global_object, result.release_value(), imports);
+    return JS::Value(WebAssemblyModule::create(global_object, result.release_value(), imports));
 }
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 {
-    auto* lhs = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    if (!is<JS::TypedArrayBase>(lhs)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Expected a TypedArray");
-        return {};
-    }
+    auto* lhs = TRY(vm.argument(0).to_object(global_object));
+    if (!is<JS::TypedArrayBase>(lhs))
+        return vm.throw_completion<JS::TypeError>(global_object, "Expected a TypedArray");
     auto& lhs_array = static_cast<JS::TypedArrayBase&>(*lhs);
-    auto* rhs = TRY_OR_DISCARD(vm.argument(1).to_object(global_object));
-    if (!is<JS::TypedArrayBase>(rhs)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Expected a TypedArray");
-        return {};
-    }
+    auto* rhs = TRY(vm.argument(1).to_object(global_object));
+    if (!is<JS::TypedArrayBase>(rhs))
+        return vm.throw_completion<JS::TypeError>(global_object, "Expected a TypedArray");
     auto& rhs_array = static_cast<JS::TypedArrayBase&>(*rhs);
     return JS::Value(lhs_array.viewed_array_buffer()->buffer() == rhs_array.viewed_array_buffer()->buffer());
 }
