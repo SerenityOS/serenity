@@ -1,7 +1,7 @@
 diff a/mk/platform/SerenityOS.mk b/mk/platform/SerenityOS.mk
 --- a/mk/platform/SerenityOS.mk
 +++ b/mk/platform/SerenityOS.mk
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,37 @@
 +# Variable definitions for the SerenityOS operating system.
 +
 +ECHO_N?=	${ECHO} -n
@@ -39,6 +39,3 @@ diff a/mk/platform/SerenityOS.mk b/mk/platform/SerenityOS.mk
 +_STRIPFLAG_INSTALL?=	${_INSTALL_UNSTRIPPED:D:U-s}	# install(1) option to strip
 +
 +_OPSYS_CAN_CHECK_SHLIBS=	yes
-+
-+# XXX: Something's very wrong here, defaults.mk seems to get included before bsd-check-vars.mk and USE_TOOLS isn't fully initialized...
-+USE_TOOLS+=	awk cat cmp diff echo find id grep rm sed test touch true
