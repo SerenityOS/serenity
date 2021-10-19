@@ -33,8 +33,8 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_direct_property("platform", js_string(heap, "SerenityOS"), attr);
     define_direct_property("product", js_string(heap, "Gecko"), attr);
 
-    define_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
-    define_native_accessor("cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_old_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+    define_old_native_accessor("cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 
     // FIXME: Reflect actual connectivity status.
     define_direct_property("onLine", JS::Value(true), attr);

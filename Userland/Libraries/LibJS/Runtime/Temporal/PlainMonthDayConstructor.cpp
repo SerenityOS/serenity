@@ -31,7 +31,7 @@ void PlainMonthDayConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
+    define_old_native_function(vm.names.from, from, 1, attr);
 }
 
 // 10.1.1 Temporal.PlainMonthDay ( isoMonth, isoDay [ , calendarLike [ , referenceISOYear ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday

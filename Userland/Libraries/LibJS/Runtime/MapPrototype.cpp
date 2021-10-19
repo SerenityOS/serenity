@@ -22,17 +22,17 @@ void MapPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function(vm.names.clear, clear, 0, attr);
-    define_native_function(vm.names.delete_, delete_, 1, attr);
-    define_native_function(vm.names.entries, entries, 0, attr);
-    define_native_function(vm.names.forEach, for_each, 1, attr);
-    define_native_function(vm.names.get, get, 1, attr);
-    define_native_function(vm.names.has, has, 1, attr);
-    define_native_function(vm.names.keys, keys, 0, attr);
-    define_native_function(vm.names.set, set, 2, attr);
-    define_native_function(vm.names.values, values, 0, attr);
+    define_old_native_function(vm.names.clear, clear, 0, attr);
+    define_old_native_function(vm.names.delete_, delete_, 1, attr);
+    define_old_native_function(vm.names.entries, entries, 0, attr);
+    define_old_native_function(vm.names.forEach, for_each, 1, attr);
+    define_old_native_function(vm.names.get, get, 1, attr);
+    define_old_native_function(vm.names.has, has, 1, attr);
+    define_old_native_function(vm.names.keys, keys, 0, attr);
+    define_old_native_function(vm.names.set, set, 2, attr);
+    define_old_native_function(vm.names.values, values, 0, attr);
 
-    define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), attr);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Map.as_string()), Attribute::Configurable);

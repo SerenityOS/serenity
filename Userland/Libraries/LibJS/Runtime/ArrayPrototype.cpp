@@ -38,42 +38,42 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     Array::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function(vm.names.filter, filter, 1, attr);
-    define_native_function(vm.names.forEach, for_each, 1, attr);
-    define_native_function(vm.names.map, map, 1, attr);
-    define_native_function(vm.names.pop, pop, 0, attr);
-    define_native_function(vm.names.push, push, 1, attr);
-    define_native_function(vm.names.shift, shift, 0, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.unshift, unshift, 1, attr);
-    define_native_function(vm.names.join, join, 1, attr);
-    define_native_function(vm.names.concat, concat, 1, attr);
-    define_native_function(vm.names.slice, slice, 2, attr);
-    define_native_function(vm.names.indexOf, index_of, 1, attr);
-    define_native_function(vm.names.reduce, reduce, 1, attr);
-    define_native_function(vm.names.reduceRight, reduce_right, 1, attr);
-    define_native_function(vm.names.reverse, reverse, 0, attr);
-    define_native_function(vm.names.sort, sort, 1, attr);
-    define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
-    define_native_function(vm.names.includes, includes, 1, attr);
-    define_native_function(vm.names.find, find, 1, attr);
-    define_native_function(vm.names.findIndex, find_index, 1, attr);
-    define_native_function(vm.names.findLast, find_last, 1, attr);
-    define_native_function(vm.names.findLastIndex, find_last_index, 1, attr);
-    define_native_function(vm.names.some, some, 1, attr);
-    define_native_function(vm.names.every, every, 1, attr);
-    define_native_function(vm.names.splice, splice, 2, attr);
-    define_native_function(vm.names.fill, fill, 1, attr);
-    define_native_function(vm.names.values, values, 0, attr);
-    define_native_function(vm.names.flat, flat, 0, attr);
-    define_native_function(vm.names.flatMap, flat_map, 1, attr);
-    define_native_function(vm.names.at, at, 1, attr);
-    define_native_function(vm.names.keys, keys, 0, attr);
-    define_native_function(vm.names.entries, entries, 0, attr);
-    define_native_function(vm.names.copyWithin, copy_within, 2, attr);
+    define_old_native_function(vm.names.filter, filter, 1, attr);
+    define_old_native_function(vm.names.forEach, for_each, 1, attr);
+    define_old_native_function(vm.names.map, map, 1, attr);
+    define_old_native_function(vm.names.pop, pop, 0, attr);
+    define_old_native_function(vm.names.push, push, 1, attr);
+    define_old_native_function(vm.names.shift, shift, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_old_native_function(vm.names.unshift, unshift, 1, attr);
+    define_old_native_function(vm.names.join, join, 1, attr);
+    define_old_native_function(vm.names.concat, concat, 1, attr);
+    define_old_native_function(vm.names.slice, slice, 2, attr);
+    define_old_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_old_native_function(vm.names.reduce, reduce, 1, attr);
+    define_old_native_function(vm.names.reduceRight, reduce_right, 1, attr);
+    define_old_native_function(vm.names.reverse, reverse, 0, attr);
+    define_old_native_function(vm.names.sort, sort, 1, attr);
+    define_old_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_old_native_function(vm.names.includes, includes, 1, attr);
+    define_old_native_function(vm.names.find, find, 1, attr);
+    define_old_native_function(vm.names.findIndex, find_index, 1, attr);
+    define_old_native_function(vm.names.findLast, find_last, 1, attr);
+    define_old_native_function(vm.names.findLastIndex, find_last_index, 1, attr);
+    define_old_native_function(vm.names.some, some, 1, attr);
+    define_old_native_function(vm.names.every, every, 1, attr);
+    define_old_native_function(vm.names.splice, splice, 2, attr);
+    define_old_native_function(vm.names.fill, fill, 1, attr);
+    define_old_native_function(vm.names.values, values, 0, attr);
+    define_old_native_function(vm.names.flat, flat, 0, attr);
+    define_old_native_function(vm.names.flatMap, flat_map, 1, attr);
+    define_old_native_function(vm.names.at, at, 1, attr);
+    define_old_native_function(vm.names.keys, keys, 0, attr);
+    define_old_native_function(vm.names.entries, entries, 0, attr);
+    define_old_native_function(vm.names.copyWithin, copy_within, 2, attr);
 
-    // Use define_direct_property here instead of define_native_function so that
+    // Use define_direct_property here instead of define_old_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
     // 23.1.3.33 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator

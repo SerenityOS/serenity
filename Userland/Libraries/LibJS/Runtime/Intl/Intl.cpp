@@ -36,7 +36,7 @@ void Intl::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.Locale, global_object.intl_locale_constructor(), attr);
     define_direct_property(vm.names.NumberFormat, global_object.intl_number_format_constructor(), attr);
 
-    define_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
+    define_old_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
 }
 
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales

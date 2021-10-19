@@ -30,57 +30,57 @@ void DatePrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.getDate, get_date, 0, attr);
-    define_native_function(vm.names.setDate, set_date, 1, attr);
-    define_native_function(vm.names.getDay, get_day, 0, attr);
-    define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
-    define_native_function(vm.names.setFullYear, set_full_year, 3, attr);
-    define_native_function(vm.names.getYear, get_year, 0, attr);
-    define_native_function(vm.names.setYear, set_year, 1, attr);
-    define_native_function(vm.names.getHours, get_hours, 0, attr);
-    define_native_function(vm.names.setHours, set_hours, 4, attr);
-    define_native_function(vm.names.getMilliseconds, get_milliseconds, 0, attr);
-    define_native_function(vm.names.setMilliseconds, set_milliseconds, 1, attr);
-    define_native_function(vm.names.getMinutes, get_minutes, 0, attr);
-    define_native_function(vm.names.setMinutes, set_minutes, 3, attr);
-    define_native_function(vm.names.getMonth, get_month, 0, attr);
-    define_native_function(vm.names.setMonth, set_month, 2, attr);
-    define_native_function(vm.names.getSeconds, get_seconds, 0, attr);
-    define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
-    define_native_function(vm.names.getTime, get_time, 0, attr);
-    define_native_function(vm.names.setTime, set_time, 1, attr);
-    define_native_function(vm.names.getTimezoneOffset, get_timezone_offset, 0, attr);
-    define_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
-    define_native_function(vm.names.setUTCDate, set_date, 1, attr); // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
-    define_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
-    define_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
-    define_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr); // FIXME: see above
-    define_native_function(vm.names.getUTCHours, get_utc_hours, 0, attr);
-    define_native_function(vm.names.setUTCHours, set_hours, 4, attr); // FIXME: see above
-    define_native_function(vm.names.getUTCMilliseconds, get_utc_milliseconds, 0, attr);
-    define_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
-    define_native_function(vm.names.getUTCMinutes, get_utc_minutes, 0, attr);
-    define_native_function(vm.names.setUTCMinutes, set_minutes, 3, attr); // FIXME: see above
-    define_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
-    define_native_function(vm.names.setUTCMonth, set_month, 2, attr); // FIXME: see above
-    define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
-    define_native_function(vm.names.setUTCSeconds, set_seconds, 2, attr); // FIXME: see above
-    define_native_function(vm.names.toDateString, to_date_string, 0, attr);
-    define_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
-    define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
-    define_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toLocaleTimeString, to_locale_time_string, 0, attr);
-    define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 1, attr);
-    define_native_function(vm.names.toTemporalInstant, to_temporal_instant, 0, attr);
+    define_old_native_function(vm.names.getDate, get_date, 0, attr);
+    define_old_native_function(vm.names.setDate, set_date, 1, attr);
+    define_old_native_function(vm.names.getDay, get_day, 0, attr);
+    define_old_native_function(vm.names.getFullYear, get_full_year, 0, attr);
+    define_old_native_function(vm.names.setFullYear, set_full_year, 3, attr);
+    define_old_native_function(vm.names.getYear, get_year, 0, attr);
+    define_old_native_function(vm.names.setYear, set_year, 1, attr);
+    define_old_native_function(vm.names.getHours, get_hours, 0, attr);
+    define_old_native_function(vm.names.setHours, set_hours, 4, attr);
+    define_old_native_function(vm.names.getMilliseconds, get_milliseconds, 0, attr);
+    define_old_native_function(vm.names.setMilliseconds, set_milliseconds, 1, attr);
+    define_old_native_function(vm.names.getMinutes, get_minutes, 0, attr);
+    define_old_native_function(vm.names.setMinutes, set_minutes, 3, attr);
+    define_old_native_function(vm.names.getMonth, get_month, 0, attr);
+    define_old_native_function(vm.names.setMonth, set_month, 2, attr);
+    define_old_native_function(vm.names.getSeconds, get_seconds, 0, attr);
+    define_old_native_function(vm.names.setSeconds, set_seconds, 2, attr);
+    define_old_native_function(vm.names.getTime, get_time, 0, attr);
+    define_old_native_function(vm.names.setTime, set_time, 1, attr);
+    define_old_native_function(vm.names.getTimezoneOffset, get_timezone_offset, 0, attr);
+    define_old_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
+    define_old_native_function(vm.names.setUTCDate, set_date, 1, attr); // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
+    define_old_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
+    define_old_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
+    define_old_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr); // FIXME: see above
+    define_old_native_function(vm.names.getUTCHours, get_utc_hours, 0, attr);
+    define_old_native_function(vm.names.setUTCHours, set_hours, 4, attr); // FIXME: see above
+    define_old_native_function(vm.names.getUTCMilliseconds, get_utc_milliseconds, 0, attr);
+    define_old_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
+    define_old_native_function(vm.names.getUTCMinutes, get_utc_minutes, 0, attr);
+    define_old_native_function(vm.names.setUTCMinutes, set_minutes, 3, attr); // FIXME: see above
+    define_old_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
+    define_old_native_function(vm.names.setUTCMonth, set_month, 2, attr); // FIXME: see above
+    define_old_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
+    define_old_native_function(vm.names.setUTCSeconds, set_seconds, 2, attr); // FIXME: see above
+    define_old_native_function(vm.names.toDateString, to_date_string, 0, attr);
+    define_old_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
+    define_old_native_function(vm.names.toISOString, to_iso_string, 0, attr);
+    define_old_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
+    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_old_native_function(vm.names.toLocaleTimeString, to_locale_time_string, 0, attr);
+    define_old_native_function(vm.names.toTimeString, to_time_string, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.toJSON, to_json, 1, attr);
+    define_old_native_function(vm.names.toTemporalInstant, to_temporal_instant, 0, attr);
 
     // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
-    define_native_function(*vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
+    define_old_native_function(*vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // Aliases.
-    define_native_function(vm.names.valueOf, get_time, 0, attr);
+    define_old_native_function(vm.names.valueOf, get_time, 0, attr);
 
     // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
     // The function object that is the initial value of Date.prototype.toGMTString

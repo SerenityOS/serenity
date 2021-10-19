@@ -28,7 +28,7 @@ void ConsoleGlobalObject::initialize_global_object()
     Base::initialize_global_object();
 
     // $0 magic variable
-    define_native_accessor("$0", inspected_node_getter, nullptr, 0);
+    define_old_native_accessor("$0", inspected_node_getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)

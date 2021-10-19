@@ -25,23 +25,23 @@ void LocalePrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.maximize, maximize, 0, attr);
-    define_native_function(vm.names.minimize, minimize, 0, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.maximize, maximize, 0, attr);
+    define_old_native_function(vm.names.minimize, minimize, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.Locale"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.baseName, base_name, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.calendar, calendar, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.caseFirst, case_first, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.baseName, base_name, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.calendar, calendar, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.caseFirst, case_first, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.collation, collation, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.hourCycle, hour_cycle, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.numberingSystem, numbering_system, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.numeric, numeric, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.language, language, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.script, script, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.region, region, {}, Attribute::Configurable);
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize

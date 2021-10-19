@@ -22,14 +22,14 @@ void SetPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function(vm.names.add, add, 1, attr);
-    define_native_function(vm.names.clear, clear, 0, attr);
-    define_native_function(vm.names.delete_, delete_, 1, attr);
-    define_native_function(vm.names.entries, entries, 0, attr);
-    define_native_function(vm.names.forEach, for_each, 1, attr);
-    define_native_function(vm.names.has, has, 1, attr);
-    define_native_function(vm.names.values, values, 0, attr);
-    define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
+    define_old_native_function(vm.names.add, add, 1, attr);
+    define_old_native_function(vm.names.clear, clear, 0, attr);
+    define_old_native_function(vm.names.delete_, delete_, 1, attr);
+    define_old_native_function(vm.names.entries, entries, 0, attr);
+    define_old_native_function(vm.names.forEach, for_each, 1, attr);
+    define_old_native_function(vm.names.has, has, 1, attr);
+    define_old_native_function(vm.names.values, values, 0, attr);
+    define_old_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
 

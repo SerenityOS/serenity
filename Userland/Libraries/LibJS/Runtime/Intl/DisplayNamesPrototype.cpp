@@ -28,8 +28,8 @@ void DisplayNamesPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DisplayNames"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.of, of, 1, attr);
-    define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_old_native_function(vm.names.of, of, 1, attr);
+    define_old_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
 // 12.4.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of

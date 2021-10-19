@@ -37,10 +37,10 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.number_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.isFinite, is_finite, 1, attr);
-    define_native_function(vm.names.isInteger, is_integer, 1, attr);
-    define_native_function(vm.names.isNaN, is_nan, 1, attr);
-    define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
+    define_old_native_function(vm.names.isFinite, is_finite, 1, attr);
+    define_old_native_function(vm.names.isInteger, is_integer, 1, attr);
+    define_old_native_function(vm.names.isNaN, is_nan, 1, attr);
+    define_old_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
     define_direct_property(vm.names.parseInt, global_object.get_without_side_effects(vm.names.parseInt), attr);
     define_direct_property(vm.names.parseFloat, global_object.get_without_side_effects(vm.names.parseFloat), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);

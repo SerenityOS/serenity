@@ -36,9 +36,9 @@ void NumberPrototype::initialize(GlobalObject& object)
     auto& vm = this->vm();
     Object::initialize(object);
     u8 attr = Attribute::Configurable | Attribute::Writable;
-    define_native_function(vm.names.toFixed, to_fixed, 1, attr);
-    define_native_function(vm.names.toString, to_string, 1, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_old_native_function(vm.names.toFixed, to_fixed, 1, attr);
+    define_old_native_function(vm.names.toString, to_string, 1, attr);
+    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 NumberPrototype::~NumberPrototype()

@@ -26,7 +26,7 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, js_string(vm, "Error"), attr);
     define_direct_property(vm.names.message, js_string(vm, ""), attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring

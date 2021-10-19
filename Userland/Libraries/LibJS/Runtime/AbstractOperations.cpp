@@ -823,7 +823,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
             // 1. Let g be MakeArgGetter(name, env).
             // 2. Let p be MakeArgSetter(name, env).
             // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
-            object->parameter_map().define_native_accessor(
+            object->parameter_map().define_old_native_accessor(
                 PropertyName { index },
                 [&environment, name](VM&, GlobalObject& global_object_getter) -> Value {
                     return MUST(environment.get_binding_value(global_object_getter, name, false));

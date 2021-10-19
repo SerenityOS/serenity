@@ -26,8 +26,8 @@ void CSSNamespace::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
     u8 attr = JS::Attribute::Enumerable;
-    define_native_function("escape", escape, 1, attr);
-    define_native_function("supports", supports, 2, attr);
+    define_old_native_function("escape", escape, 1, attr);
+    define_old_native_function("supports", supports, 2, attr);
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-css-escape

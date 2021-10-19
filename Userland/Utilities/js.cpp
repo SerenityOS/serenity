@@ -941,11 +941,11 @@ void ReplObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("exit", exit_interpreter, 0, attr);
-    define_native_function("help", repl_help, 0, attr);
-    define_native_function("load", load_file, 1, attr);
-    define_native_function("save", save_to_file, 1, attr);
-    define_native_function("loadJSON", load_json, 1, attr);
+    define_old_native_function("exit", exit_interpreter, 0, attr);
+    define_old_native_function("help", repl_help, 0, attr);
+    define_old_native_function("load", load_file, 1, attr);
+    define_old_native_function("save", save_to_file, 1, attr);
+    define_old_native_function("loadJSON", load_json, 1, attr);
 }
 
 JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -992,8 +992,8 @@ void ScriptObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("load", load_file, 1, attr);
-    define_native_function("loadJSON", load_json, 1, attr);
+    define_old_native_function("load", load_file, 1, attr);
+    define_old_native_function("loadJSON", load_json, 1, attr);
 }
 
 JS_DEFINE_OLD_NATIVE_FUNCTION(ScriptObject::load_file)

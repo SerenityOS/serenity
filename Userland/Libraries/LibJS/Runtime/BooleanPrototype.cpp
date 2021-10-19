@@ -22,8 +22,8 @@ void BooleanPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     BooleanObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 BooleanPrototype::~BooleanPrototype()
