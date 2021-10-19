@@ -30,6 +30,13 @@ SecretString SecretString::take_ownership(ByteBuffer&& buffer)
 SecretString::SecretString(ByteBuffer&& buffer)
     : m_secure_buffer(move(buffer))
 {
+    // SecretString is currently only used to provide the character data to invocations to crypt(),
+    // which requires a NUL-terminated string. To ensure this operation avoids a buffer overrun,
+    // append a NUL terminator here if there isn't already one.
+    if (m_secure_buffer.is_empty() || (m_secure_buffer[m_secure_buffer.size() - 1] != 0)) {
+        u8 nul = '\0';
+        m_secure_buffer.append(&nul, 1);
+    }
 }
 
 SecretString::~SecretString()
