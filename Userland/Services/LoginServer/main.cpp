@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     char const* auto_login = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "userame");
+    args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "username");
     args_parser.parse(argc, argv);
 
     if (!auto_login) {
