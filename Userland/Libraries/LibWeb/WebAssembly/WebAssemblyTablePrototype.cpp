@@ -13,10 +13,10 @@ namespace Web::Bindings {
 void WebAssemblyTablePrototype::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
-    define_native_accessor("length", length_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_native_function("grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_native_function("get", get, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_native_function("set", set, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_old_native_accessor("length", length_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_old_native_function("grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_old_native_function("get", get, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_old_native_function("set", set, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
 JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)

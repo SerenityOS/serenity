@@ -28,8 +28,8 @@ void PlainTimeConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_plain_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.from, from, 1, attr);
-    define_native_function(vm.names.compare, compare, 2, attr);
+    define_old_native_function(vm.names.from, from, 1, attr);
+    define_old_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }

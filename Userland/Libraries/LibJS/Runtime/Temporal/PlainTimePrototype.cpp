@@ -29,23 +29,23 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     // 4.3.2 Temporal.PlainTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainTime"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.hour, hour_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.minute, minute_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.second, second_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.millisecond, millisecond_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.microsecond, microsecond_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.hour, hour_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.minute, minute_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.second, second_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.millisecond, millisecond_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.microsecond, microsecond_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.with, with, 1, attr);
-    define_native_function(vm.names.equals, equals, 1, attr);
-    define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
-    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
-    define_native_function(vm.names.toString, to_string, 0, attr);
-    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_old_native_function(vm.names.with, with, 1, attr);
+    define_old_native_function(vm.names.equals, equals, 1, attr);
+    define_old_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
+    define_old_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
+    define_old_native_function(vm.names.toString, to_string, 0, attr);
+    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_old_native_function(vm.names.toJSON, to_json, 0, attr);
+    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 // 4.3.3 get Temporal.PlainTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.calendar

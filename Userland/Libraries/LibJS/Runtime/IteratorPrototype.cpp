@@ -20,7 +20,7 @@ void IteratorPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Enumerable;
-    define_native_function(*vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_old_native_function(*vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
 IteratorPrototype::~IteratorPrototype()

@@ -27,24 +27,24 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     // 7.3.2 Temporal.Duration.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Duration"), Attribute::Configurable);
 
-    define_native_accessor(vm.names.years, years_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.weeks, weeks_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.days, days_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.hours, hours_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.minutes, minutes_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.seconds, seconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
-    define_native_accessor(vm.names.blank, blank_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.years, years_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.weeks, weeks_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.days, days_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.hours, hours_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.minutes, minutes_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.seconds, seconds_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
+    define_old_native_accessor(vm.names.blank, blank_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.with, with, 1, attr);
-    define_native_function(vm.names.negated, negated, 0, attr);
-    define_native_function(vm.names.abs, abs, 0, attr);
-    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_old_native_function(vm.names.with, with, 1, attr);
+    define_old_native_function(vm.names.negated, negated, 0, attr);
+    define_old_native_function(vm.names.abs, abs, 0, attr);
+    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 // 7.3.3 get Temporal.Duration.prototype.years, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years

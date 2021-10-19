@@ -23,7 +23,7 @@ void MapIteratorPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
 
-    define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
+    define_old_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Map Iterator"), Attribute::Configurable);
 }
 

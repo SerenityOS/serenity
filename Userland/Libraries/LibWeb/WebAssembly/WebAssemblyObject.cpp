@@ -35,9 +35,9 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     Object::initialize(global_object);
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function("validate", validate, 1, attr);
-    define_native_function("compile", compile, 1, attr);
-    define_native_function("instantiate", instantiate, 1, attr);
+    define_old_native_function("validate", validate, 1, attr);
+    define_old_native_function("compile", compile, 1, attr);
+    define_old_native_function("instantiate", instantiate, 1, attr);
 
     auto& vm = global_object.vm();
 

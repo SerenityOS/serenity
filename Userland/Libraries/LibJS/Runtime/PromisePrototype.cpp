@@ -27,9 +27,9 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.then, then, 2, attr);
-    define_native_function(vm.names.catch_, catch_, 1, attr);
-    define_native_function(vm.names.finally, finally, 1, attr);
+    define_old_native_function(vm.names.then, then, 2, attr);
+    define_old_native_function(vm.names.catch_, catch_, 1, attr);
+    define_old_native_function(vm.names.finally, finally, 1, attr);
 
     // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Promise.as_string()), Attribute::Configurable);
