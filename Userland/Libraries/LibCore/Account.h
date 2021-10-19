@@ -45,7 +45,7 @@ public:
 
     // Setters only affect in-memory copy of password.
     // You must call sync to apply changes.
-    void set_password(const char* password);
+    void set_password(SecretString const& password);
     void set_password_enabled(bool enabled);
     void set_home_directory(const char* home_directory) { m_home_directory = home_directory; }
     void set_uid(uid_t uid) { m_uid = uid; }
