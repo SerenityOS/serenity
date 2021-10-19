@@ -301,22 +301,22 @@ RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const
         return CSS::IdentifierStyleValue::create(CSS::ValueID::Fine);
     // FIXME: aspect-ratio
     if (name.equals_ignoring_case("color"sv))
-        return CSS::NumericStyleValue::create(32);
+        return CSS::NumericStyleValue::create_integer(32);
     if (name.equals_ignoring_case("color-gamut"sv))
         return CSS::IdentifierStyleValue::create(CSS::ValueID::Srgb);
     if (name.equals_ignoring_case("color-index"sv))
-        return CSS::NumericStyleValue::create(0);
+        return CSS::NumericStyleValue::create_integer(0);
     // FIXME: device-aspect-ratio
     // FIXME: device-height
     // FIXME: device-width
     if (name.equals_ignoring_case("grid"sv))
-        return CSS::NumericStyleValue::create(0);
+        return CSS::NumericStyleValue::create_integer(0);
     if (name.equals_ignoring_case("height"sv))
         return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_height()));
     if (name.equals_ignoring_case("hover"sv))
         return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
     if (name.equals_ignoring_case("monochrome"sv))
-        return CSS::NumericStyleValue::create(0);
+        return CSS::NumericStyleValue::create_integer(0);
     if (name.equals_ignoring_case("hover"sv))
         return CSS::IdentifierStyleValue::create(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
     if (name.equals_ignoring_case("overflow-block"sv))

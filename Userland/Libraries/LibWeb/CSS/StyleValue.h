@@ -333,11 +333,13 @@ public:
     virtual bool has_identifier() const { return false; }
     virtual bool has_length() const { return false; }
     virtual bool has_number() const { return false; }
+    virtual bool has_integer() const { return false; }
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
     virtual Length to_length() const { return {}; }
-    virtual float to_number() const { return {}; }
+    virtual float to_number() const { return 0; }
+    virtual float to_integer() const { return 0; }
     virtual String to_string() const = 0;
 
     bool operator==(StyleValue const& other) const { return equals(other); }
@@ -1021,37 +1023,60 @@ private:
 
 class NumericStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<NumericStyleValue> create(float value)
+    static NonnullRefPtr<NumericStyleValue> create_float(float value)
     {
         return adopt_ref(*new NumericStyleValue(value));
     }
 
-    virtual bool has_length() const override { return m_value == 0; }
+    static NonnullRefPtr<NumericStyleValue> create_integer(i64 value)
+    {
+        return adopt_ref(*new NumericStyleValue(value));
+    }
+
+    virtual bool has_length() const override { return to_number() == 0; }
     virtual Length to_length() const override { return Length(0, Length::Type::Px); }
 
     virtual bool has_number() const override { return true; }
-    virtual float to_number() const override { return m_value; }
+    virtual float to_number() const override
+    {
+        return m_value.visit(
+            [](float value) { return value; },
+            [](i64 value) { return (float)value; });
+    }
 
-    float value() const { return m_value; }
-    // FIXME: Store integer values separately
-    i64 int_value() const { return roundf(m_value); }
-    String to_string() const override { return String::formatted("{}", m_value); }
+    virtual bool has_integer() const override { return m_value.has<i64>(); }
+    virtual float to_integer() const override { return m_value.get<i64>(); }
+
+    String to_string() const override
+    {
+        return m_value.visit(
+            [](float value) {
+                return String::formatted("{}", value);
+            },
+            [](i64 value) {
+                return String::formatted("{}", value);
+            });
+    }
 
     virtual bool equals(StyleValue const& other) const override
     {
         if (type() != other.type())
             return false;
-        return m_value == static_cast<NumericStyleValue const&>(other).m_value;
+        if (has_integer() != other.has_integer())
+            return false;
+        if (has_integer())
+            return m_value.get<i64>() == static_cast<NumericStyleValue const&>(other).m_value.get<i64>();
+        return m_value.get<float>() == static_cast<NumericStyleValue const&>(other).m_value.get<float>();
     }
 
 private:
-    explicit NumericStyleValue(float value)
+    explicit NumericStyleValue(Variant<float, i64> value)
         : StyleValue(Type::Numeric)
-        , m_value(value)
+        , m_value(move(value))
     {
     }
 
-    float m_value { 0 };
+    Variant<float, i64> m_value { (i64)0 };
 };
 
 class OverflowStyleValue final : public StyleValue {

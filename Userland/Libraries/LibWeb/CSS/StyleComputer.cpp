@@ -665,8 +665,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         default:
             break;
         }
-    } else if (font_weight->is_numeric()) {
-        int font_weight_integer = roundf(static_cast<NumericStyleValue const&>(*font_weight).value());
+    } else if (font_weight->has_integer()) {
+        int font_weight_integer = font_weight->to_integer();
         if (font_weight_integer <= Gfx::FontWeight::Regular)
             weight = Gfx::FontWeight::Regular;
         else if (font_weight_integer <= Gfx::FontWeight::Bold)
