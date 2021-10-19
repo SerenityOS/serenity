@@ -489,14 +489,20 @@ int main(int argc, char** argv)
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
     NonnullRefPtrVector<Service> services;
-    auto config = (user)
-        ? Core::ConfigFile::open_for_app("SystemServer")
-        : Core::ConfigFile::open_for_system("SystemServer");
-    for (auto name : config->groups()) {
-        auto service = Service::construct(*config, name);
-        if (service->is_enabled())
-            services.append(service);
-    }
+
+    auto load_services_from_config_file = [&](NonnullRefPtr<Core::ConfigFile> const& config) {
+        for (auto name : config->groups()) {
+            auto service = Service::construct(*config, name);
+            if (service->is_enabled())
+                services.append(service);
+        }
+    };
+
+    if (user) {
+        load_services_from_config_file(Core::ConfigFile::open_for_app("SystemServer"));
+        load_services_from_config_file(Core::ConfigFile::open_for_system("SystemServer.user"));
+    } else
+        load_services_from_config_file(Core::ConfigFile::open_for_system("SystemServer"));
 
     // After we've set them all up, activate them!
     dbgln("Activating {} services...", services.size());
