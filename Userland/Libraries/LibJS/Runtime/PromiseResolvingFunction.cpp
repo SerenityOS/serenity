@@ -32,7 +32,7 @@ void PromiseResolvingFunction::initialize(GlobalObject& global_object)
 
 Value PromiseResolvingFunction::call()
 {
-    return m_native_function(vm(), global_object(), m_promise, m_already_resolved);
+    return TRY_OR_DISCARD(m_native_function(vm(), global_object(), m_promise, m_already_resolved));
 }
 
 void PromiseResolvingFunction::visit_edges(Cell::Visitor& visitor)
