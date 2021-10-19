@@ -26,7 +26,7 @@ public:
         this->socket().set_blocking(true);
 
         if (!this->socket().connect(Core::SocketAddress::local(address))) {
-            perror("connect");
+            perror(String::formatted("Connecting to {} failed", address).characters());
             VERIFY_NOT_REACHED();
         }
 
