@@ -184,17 +184,16 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     NonnullRefPtr document = *m_frame.active_document();
-
-    // TODO: Allow selecting element behind if one on top has pointer-events set to none.
-    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
-    auto pointer_events = result.layout_node->computed_values().pointer_events();
-    if (pointer_events == CSS::PointerEvents::None)
-        return false;
-
     RefPtr<DOM::Node> node;
 
     {
+        // TODO: Allow selecting element behind if one on top has pointer-events set to none.
+        auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
         if (!result.layout_node)
+            return false;
+
+        auto pointer_events = result.layout_node->computed_values().pointer_events();
+        if (pointer_events == CSS::PointerEvents::None)
             return false;
 
         node = result.layout_node->dom_node();
