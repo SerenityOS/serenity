@@ -346,7 +346,8 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
             return true;
 )~~~");
                         } else if (type_name == "number" || type_name == "integer") {
-                            // FIXME: Handle integers separately
+                            auto test_generator = property_generator.fork();
+                            test_generator.set("numbertype", type_name);
                             StringView min_value;
                             StringView max_value;
                             if (!type_args.is_empty()) {
@@ -355,17 +356,17 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                                 min_value = type_args.substring_view(1, comma_index - 1);
                                 max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
                             }
-                            property_generator.append(R"~~~(
-        if (style_value.has_number())~~~");
+                            test_generator.append(R"~~~(
+        if (style_value.has_@numbertype@())~~~");
                             if (!min_value.is_empty()) {
-                                property_generator.set("minvalue", min_value);
-                                property_generator.append(" && (style_value.to_number() >= (float)@minvalue@)");
+                                test_generator.set("minvalue", min_value);
+                                test_generator.append(" && (style_value.to_@numbertype@() >= @minvalue@)");
                             }
                             if (!max_value.is_empty()) {
-                                property_generator.set("maxvalue", max_value);
-                                property_generator.append(" && (style_value.to_number() <= (float)@maxvalue@)");
+                                test_generator.set("maxvalue", max_value);
+                                test_generator.append(" && (style_value.to_@numbertype@() <= @maxvalue@)");
                             }
-                            property_generator.append(R"~~~()
+                            test_generator.append(R"~~~()
             return true;
 )~~~");
                         } else if (type_name == "string") {
