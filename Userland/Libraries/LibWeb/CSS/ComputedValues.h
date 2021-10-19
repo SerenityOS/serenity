@@ -30,7 +30,7 @@ public:
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
-    static CSS::AlignItems align_items() { return CSS::AlignItems::FlexStart; }
+    static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
     static CSS::BoxSizing box_sizing() { return CSS::BoxSizing::ContentBox; }
     static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
