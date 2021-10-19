@@ -121,7 +121,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        target_account.set_password(new_password.value().characters());
+        target_account.set_password(new_password.value());
     }
 
     if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {

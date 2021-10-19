@@ -188,9 +188,9 @@ bool Account::login() const
     return true;
 }
 
-void Account::set_password(const char* password)
+void Account::set_password(SecretString const& password)
 {
-    m_password_hash = crypt(password, get_salt().characters());
+    m_password_hash = crypt(password.characters(), get_salt().characters());
 }
 
 void Account::set_password_enabled(bool enabled)
