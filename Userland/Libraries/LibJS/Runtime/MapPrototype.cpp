@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 }
 
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size
-JS_DEFINE_NATIVE_GETTER(MapPrototype::size_getter)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::size_getter)
 {
     auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
     return Value(map->entries().size());

@@ -560,7 +560,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
-JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_x_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_x_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -569,7 +569,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_x_getter)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrolly
-JS_DEFINE_NATIVE_GETTER(WindowObject::scroll_y_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_y_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -704,7 +704,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
     return wrap(global_object, impl->associated_document().history());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::screen_left_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_left_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -712,7 +712,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::screen_left_getter)
     return JS::Value(impl->screen_x());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::screen_top_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_top_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -720,7 +720,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::screen_top_getter)
     return JS::Value(impl->screen_y());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::screen_x_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_x_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -728,7 +728,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::screen_x_getter)
     return JS::Value(impl->screen_x());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::screen_y_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)

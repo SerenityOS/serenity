@@ -188,7 +188,7 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
 }
 
 // 23.2.3.18 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
-JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::length_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 {
     auto typed_array = typed_array_from_this(global_object);
     if (!typed_array)
@@ -620,7 +620,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
-JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::buffer_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
@@ -631,7 +631,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::buffer_getter)
 }
 
 // 23.2.3.2 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
-JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_length_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
@@ -644,7 +644,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_length_getter)
 }
 
 // 23.2.3.3 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
-JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_offset_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)

@@ -53,7 +53,7 @@ static ThrowCompletionOr<Symbol*> this_symbol_value(GlobalObject& global_object,
 }
 
 // 20.4.3.2 get Symbol.prototype.description, https://tc39.es/ecma262/#sec-symbol.prototype.description
-JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
+JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 {
     auto* symbol = TRY_OR_DISCARD(this_symbol_value(global_object, vm.this_value(global_object)));
     auto& description = symbol->raw_description();
