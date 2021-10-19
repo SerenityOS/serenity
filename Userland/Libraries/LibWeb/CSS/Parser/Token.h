@@ -105,7 +105,7 @@ public:
         VERIFY(m_type == Type::Number);
         return m_value.string_view();
     }
-    int to_integer() const
+    i64 to_integer() const
     {
         VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
         return number_string_value().to_int().value();
@@ -122,7 +122,7 @@ public:
         VERIFY(m_type == Type::Dimension);
         return m_value.string_view();
     }
-    int dimension_value_int() const { return dimension_value().to_int().value(); }
+    i64 dimension_value_int() const { return dimension_value().to_int().value(); }
 
     NumberType number_type() const
     {

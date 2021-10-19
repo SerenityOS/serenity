@@ -469,7 +469,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_z_index = layout_node.computed_values().z_index();
         if (!maybe_z_index.has_value())
             return {};
-        return NumericStyleValue::create(maybe_z_index.release_value());
+        return NumericStyleValue::create_integer(maybe_z_index.release_value());
     }
     case CSS::PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().text_align()));
@@ -501,19 +501,19 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_grow_factor = layout_node.computed_values().flex_grow_factor();
         if (!maybe_grow_factor.has_value())
             return {};
-        return NumericStyleValue::create(maybe_grow_factor.release_value());
+        return NumericStyleValue::create_float(maybe_grow_factor.release_value());
     }
     case CSS::PropertyID::FlexShrink: {
         auto maybe_shrink_factor = layout_node.computed_values().flex_shrink_factor();
         if (!maybe_shrink_factor.has_value())
             return {};
-        return NumericStyleValue::create(maybe_shrink_factor.release_value());
+        return NumericStyleValue::create_float(maybe_shrink_factor.release_value());
     }
     case CSS::PropertyID::Opacity: {
         auto maybe_opacity = layout_node.computed_values().opacity();
         if (!maybe_opacity.has_value())
             return {};
-        return NumericStyleValue::create(maybe_opacity.release_value());
+        return NumericStyleValue::create_float(maybe_opacity.release_value());
     }
     case CSS::PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().justify_content()));

@@ -116,8 +116,8 @@ Optional<int> StyleProperties::z_index() const
 
     if (value->has_auto())
         return 0;
-    if (value->is_numeric())
-        return value->as_numeric().int_value();
+    if (value->has_integer())
+        return value->to_integer();
     return {};
 }
 
