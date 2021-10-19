@@ -2060,11 +2060,11 @@ RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleCompo
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
         if (number.m_number_type == Token::NumberType::Integer) {
-            return NumericStyleValue::create(number.to_integer());
+            return NumericStyleValue::create_integer(number.to_integer());
         } else {
             auto float_value = try_parse_float(number.m_value.string_view());
             if (float_value.has_value())
-                return NumericStyleValue::create(float_value.value());
+                return NumericStyleValue::create_float(float_value.value());
         }
     }
 
@@ -2626,11 +2626,11 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
 
         switch (value->to_identifier()) {
         case ValueID::Auto: {
-            auto one = NumericStyleValue::create(1);
+            auto one = NumericStyleValue::create_integer(1);
             return FlexStyleValue::create(one, one, IdentifierStyleValue::create(ValueID::Auto));
         }
         case ValueID::None: {
-            auto zero = NumericStyleValue::create(0);
+            auto zero = NumericStyleValue::create_integer(0);
             return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
         }
         default:
