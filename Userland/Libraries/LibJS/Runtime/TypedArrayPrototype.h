@@ -20,10 +20,10 @@ public:
     virtual ~TypedArrayPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-    JS_DECLARE_NATIVE_GETTER(buffer_getter);
-    JS_DECLARE_NATIVE_GETTER(byte_length_getter);
-    JS_DECLARE_NATIVE_GETTER(byte_offset_getter);
+    JS_DECLARE_NATIVE_FUNCTION(length_getter);
+    JS_DECLARE_NATIVE_FUNCTION(buffer_getter);
+    JS_DECLARE_NATIVE_FUNCTION(byte_length_getter);
+    JS_DECLARE_NATIVE_FUNCTION(byte_offset_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_string_tag_getter);
     JS_DECLARE_NATIVE_FUNCTION(at);
     JS_DECLARE_NATIVE_FUNCTION(every);

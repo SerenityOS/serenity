@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 }
 
 // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
-JS_DEFINE_NATIVE_GETTER(ArrayConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

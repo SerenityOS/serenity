@@ -280,7 +280,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
 // 22.2.5.14 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.17 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                            \
-    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                           \
+    JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                         \
     {                                                                                             \
         auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));                         \
         if (!is<RegExpObject>(regexp_object)) {                                                   \
@@ -297,7 +297,7 @@ JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 {
     auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     StringBuilder builder(8);
@@ -313,7 +313,7 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 }
 
 // 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
     auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     if (!is<RegExpObject>(regexp_object)) {

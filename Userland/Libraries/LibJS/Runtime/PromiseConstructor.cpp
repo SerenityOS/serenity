@@ -409,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 }
 
 // 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
-JS_DEFINE_NATIVE_GETTER(PromiseConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

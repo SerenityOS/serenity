@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 }
 
 // 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
-JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 {
     auto* array_buffer_object = TRY_OR_DISCARD(typed_this_value(global_object));
     // FIXME: Check for shared buffer

@@ -28,7 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(has);
     JS_DECLARE_NATIVE_FUNCTION(values);
 
-    JS_DECLARE_NATIVE_GETTER(size_getter);
+    JS_DECLARE_NATIVE_FUNCTION(size_getter);
 };
 
 }
