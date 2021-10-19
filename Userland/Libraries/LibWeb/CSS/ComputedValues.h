@@ -34,6 +34,8 @@ public:
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
     static CSS::BoxSizing box_sizing() { return CSS::BoxSizing::ContentBox; }
     static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
+    static float flex_grow() { return 0.0f; }
+    static float flex_shrink() { return 1.0f; }
 };
 
 struct BorderData {
@@ -78,8 +80,8 @@ public:
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
     FlexBasisData const& flex_basis() const { return m_noninherited.flex_basis; }
-    Optional<float> const& flex_grow_factor() const { return m_noninherited.flex_grow_factor; }
-    Optional<float> const& flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
+    float flex_grow() const { return m_noninherited.flex_grow; }
+    float flex_shrink() const { return m_noninherited.flex_shrink; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     Optional<float> const& opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
@@ -174,8 +176,9 @@ protected:
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
         CSS::FlexWrap flex_wrap { InitialValues::flex_wrap() };
         CSS::FlexBasisData flex_basis {};
-        Optional<float> flex_grow_factor;
-        Optional<float> flex_shrink_factor;
+        float flex_grow { InitialValues::flex_grow() };
+        float flex_shrink { InitialValues::flex_shrink() };
+        ;
         CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
@@ -230,8 +233,8 @@ public:
     void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
     void set_flex_wrap(CSS::FlexWrap value) { m_noninherited.flex_wrap = value; }
     void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
-    void set_flex_grow_factor(Optional<float> value) { m_noninherited.flex_grow_factor = value; }
-    void set_flex_shrink_factor(Optional<float> value) { m_noninherited.flex_shrink_factor = value; }
+    void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
+    void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }

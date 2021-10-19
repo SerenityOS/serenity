@@ -497,18 +497,10 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             VERIFY_NOT_REACHED();
         }
         break;
-    case CSS::PropertyID::FlexGrow: {
-        auto maybe_grow_factor = layout_node.computed_values().flex_grow_factor();
-        if (!maybe_grow_factor.has_value())
-            return {};
-        return NumericStyleValue::create_float(maybe_grow_factor.release_value());
-    }
-    case CSS::PropertyID::FlexShrink: {
-        auto maybe_shrink_factor = layout_node.computed_values().flex_shrink_factor();
-        if (!maybe_shrink_factor.has_value())
-            return {};
-        return NumericStyleValue::create_float(maybe_shrink_factor.release_value());
-    }
+    case CSS::PropertyID::FlexGrow:
+        return NumericStyleValue::create_float(layout_node.computed_values().flex_grow());
+    case CSS::PropertyID::FlexShrink:
+        return NumericStyleValue::create_float(layout_node.computed_values().flex_shrink());
     case CSS::PropertyID::Opacity: {
         auto maybe_opacity = layout_node.computed_values().opacity();
         if (!maybe_opacity.has_value())
