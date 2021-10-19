@@ -75,6 +75,8 @@ repository. It will also build a disk image and start SerenityOS using QEMU.
 Note that the `anon` user is able to become `root` without a password by default, as a development convenience.
 To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
 
+By default the `anon` user account's password is: `foo`
+
 If you want to test whether your code changes compile without running the VM you can use
 `Meta/serenity.sh build`. The `serenity.sh` script also provides a number of other commands. Run the script without
 arguments for a list.
