@@ -77,7 +77,7 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
 }
 
 // 3.2.2 Temporal.PlainDate.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from
-JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
     auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
 }
 
 // 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindate-constructor
-JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::compare)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainDateConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDate(one).
     auto* one = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));

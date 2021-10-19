@@ -19,8 +19,8 @@ public:
     virtual ~BooleanPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_NATIVE_FUNCTION(value_of);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(value_of);
 };
 
 }

@@ -56,7 +56,7 @@ Value TypedArrayConstructor::construct(FunctionObject&)
 }
 
 // 23.2.2.1 %TypedArray%.from ( source [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.from
-JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayConstructor::from)
 {
     auto constructor = vm.this_value(global_object);
     if (!constructor.is_constructor()) {
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 }
 
 // 23.2.2.2 %TypedArray%.of ( ...items ), https://tc39.es/ecma262/#sec-%typedarray%.of
-JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayConstructor::of)
 {
     auto length = vm.argument_count();
     auto constructor = vm.this_value(global_object);
@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
 }
 
 // 23.2.2.4 get %TypedArray% [ @@species ], https://tc39.es/ecma262/#sec-get-%typedarray%-@@species
-JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::symbol_species_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

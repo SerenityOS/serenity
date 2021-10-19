@@ -65,7 +65,7 @@ Value ArrayBufferConstructor::construct(FunctionObject& new_target)
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
-JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 {
     auto arg = vm.argument(0);
     if (!arg.is_object())
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 }
 
 // 25.1.4.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
-JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

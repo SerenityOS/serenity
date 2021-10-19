@@ -43,7 +43,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
 }
 
 // 10.3.3 get Temporal.PlainMonthDay.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendar
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -54,7 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 }
 
 // 10.3.4 get Temporal.PlainMonthDay.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.monthcode
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
 }
 
 // 10.3.5 get Temporal.PlainMonthDay.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 }
 
 // 10.3.7 Temporal.PlainMonthDay.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::equals)
 }
 
 // 10.3.8 Temporal.PlainMonthDay.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_string)
 
 // 10.3.9 Temporal.PlainMonthDay.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_locale_string)
 }
 
 // 10.3.10 Temporal.PlainMonthDay.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_json)
 }
 
 // 10.3.11 Temporal.PlainMonthDay.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainMonthDay", "a primitive value");
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::value_of)
 }
 
 // 10.3.12 Temporal.PlainMonthDay.prototype.toPlainDate ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.toplaindate
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
 {
     auto item = vm.argument(0);
 
@@ -214,7 +214,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
 }
 
 // 10.3.13 Temporal.PlainMonthDay.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.getisofields
-JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
 {
     // 1. Let monthDay be the this value.
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).

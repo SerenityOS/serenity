@@ -117,7 +117,7 @@ Value DisplayNamesConstructor::construct(FunctionObject& new_target)
 }
 
 // 12.3.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf
-JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);
     auto options = vm.argument(1);

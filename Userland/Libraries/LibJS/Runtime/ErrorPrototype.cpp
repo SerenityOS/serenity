@@ -30,7 +30,7 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object()) {

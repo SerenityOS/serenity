@@ -20,7 +20,7 @@ public:
     virtual ~WeakRefPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(deref);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(deref);
 };
 
 }

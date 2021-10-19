@@ -39,7 +39,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
 }
 
 // 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
 {
     // 1. Let timeZone be the this value.
     auto time_zone = vm.this_value(global_object);
@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
 }
 
 // 11.4.4 Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetnanosecondsfor
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 }
 
 // 11.4.5 Temporal.TimeZone.prototype.getOffsetStringFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetstringfor
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 }
 
 // 11.4.6 Temporal.TimeZone.prototype.getPlainDateTimeFor ( instant [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getplaindatetimefor
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 {
     // 1. Let timeZone be the this value.
     auto time_zone = vm.this_value(global_object);
@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
@@ -109,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 }
 
 // 11.4.12 Temporal.TimeZone.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZonePrototype::to_json)
 {
     // 1. Let timeZone be the this value.
     auto time_zone = vm.this_value(global_object);

@@ -32,7 +32,7 @@ MapIteratorPrototype::~MapIteratorPrototype()
 }
 
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next
-JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
+JS_DEFINE_OLD_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {
     auto* map_iterator = TRY_OR_DISCARD(typed_this_value(global_object));
     if (map_iterator->done())

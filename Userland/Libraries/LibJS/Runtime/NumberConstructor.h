@@ -24,10 +24,10 @@ public:
 private:
     virtual bool has_constructor() const override { return true; }
 
-    JS_DECLARE_NATIVE_FUNCTION(is_finite);
-    JS_DECLARE_NATIVE_FUNCTION(is_integer);
-    JS_DECLARE_NATIVE_FUNCTION(is_nan);
-    JS_DECLARE_NATIVE_FUNCTION(is_safe_integer);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_finite);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_integer);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_nan);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(is_safe_integer);
 };
 
 }

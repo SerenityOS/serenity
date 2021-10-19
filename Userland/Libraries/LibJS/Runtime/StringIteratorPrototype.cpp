@@ -33,7 +33,7 @@ StringIteratorPrototype::~StringIteratorPrototype()
 }
 
 // 22.1.5.1.1 %StringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
-JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
+JS_DEFINE_OLD_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
     auto* iterator = TRY_OR_DISCARD(typed_this_value(global_object));
     if (iterator->done())

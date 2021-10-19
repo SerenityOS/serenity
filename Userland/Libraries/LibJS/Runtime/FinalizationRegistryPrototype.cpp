@@ -33,7 +33,7 @@ FinalizationRegistryPrototype::~FinalizationRegistryPrototype()
 }
 
 // @STAGE 2@ FinalizationRegistry.prototype.cleanupSome ( [ callback ] ), https://github.com/tc39/proposal-cleanup-some/blob/master/spec/finalization-registry.html
-JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
+JS_DEFINE_OLD_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 {
     auto* finalization_registry = TRY_OR_DISCARD(typed_this_object(global_object));
 
@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 }
 
 // 26.2.3.2 FinalizationRegistry.prototype.register ( target, heldValue [ , unregisterToken ] ), https://tc39.es/ecma262/#sec-finalization-registry.prototype.register
-JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 {
     auto* finalization_registry = TRY_OR_DISCARD(typed_this_object(global_object));
 
@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 }
 
 // 26.2.3.3 FinalizationRegistry.prototype.unregister ( unregisterToken ), https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister
-JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
+JS_DEFINE_OLD_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
 {
     auto* finalization_registry = TRY_OR_DISCARD(typed_this_object(global_object));
 

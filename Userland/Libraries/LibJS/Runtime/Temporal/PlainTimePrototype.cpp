@@ -49,7 +49,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
 }
 
 // 4.3.3 get Temporal.PlainTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.calendar
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::calendar_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::calendar_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::calendar_getter)
 }
 
 // 4.3.4 get Temporal.PlainTime.prototype.hour, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.hour
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::hour_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::hour_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::hour_getter)
 }
 
 // 4.3.5 get Temporal.PlainTime.prototype.minute, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.minute
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
 }
 
 // 4.3.6 get Temporal.PlainTime.prototype.second, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
 }
 
 // 4.3.7 get Temporal.PlainTime.prototype.millisecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.millisecond
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::millisecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::millisecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::millisecond_getter)
 }
 
 // 4.3.8 get Temporal.PlainTime.prototype.microsecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.microsecond
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
 }
 
 // 4.3.9 get Temporal.PlainTime.prototype.nanosecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 }
 
 // 4.3.12 Temporal.PlainTime.prototype.with ( temporalTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::with)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -219,7 +219,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
 }
 
 // 4.3.16 Temporal.PlainTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.equals
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::equals)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
 }
 
 // 4.3.17 Temporal.PlainTime.prototype.toPlainDateTime ( temporalDate ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.toplaindatetime
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -271,7 +271,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
 }
 
 // 4.3.19 Temporal.PlainTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.getisofields
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -306,7 +306,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
 }
 
 // 4.3.20 Temporal.PlainTime.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::to_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -330,7 +330,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
 }
 
 // 4.3.21 Temporal.PlainTime.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tolocalestring
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -342,7 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
 }
 
 // 4.3.22 Temporal.PlainTime.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::to_json)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
 }
 
 // 4.3.23 Temporal.PlainTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainTime", "a primitive value");

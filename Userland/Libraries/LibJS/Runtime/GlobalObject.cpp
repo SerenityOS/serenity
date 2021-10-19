@@ -329,7 +329,7 @@ void GlobalObject::set_associated_realm(Badge<Realm>, Realm& realm)
     m_associated_realm = &realm;
 }
 
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::gc)
 {
 #ifdef __serenity__
     dbgln("Forced garbage collection requested!");
@@ -339,19 +339,19 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 }
 
 // 19.2.3 isNaN ( number ), https://tc39.es/ecma262/#sec-isnan-number
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::is_nan)
 {
     return Value(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).is_nan());
 }
 
 // 19.2.2 isFinite ( number ), https://tc39.es/ecma262/#sec-isfinite-number
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
     return Value(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).is_finite_number());
 }
 
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (vm.argument(0).is_number())
         return vm.argument(0);
@@ -366,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 }
 
 // 19.2.5 parseInt ( string, radix ), https://tc39.es/ecma262/#sec-parseint-string-radix
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
     auto input_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
 
@@ -424,7 +424,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 }
 
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::eval)
 {
     return TRY_OR_DISCARD(perform_eval(vm.argument(0), global_object, CallerMode::NonStrict, EvalMode::Indirect));
 }
@@ -499,7 +499,7 @@ static String decode(JS::GlobalObject& global_object, const String& string, Stri
 }
 
 // 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto encoded = encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv);
@@ -509,7 +509,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 }
 
 // 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode(global_object, uri_string, ";/?:@&=+$,#"sv);
@@ -519,7 +519,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 }
 
 // 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto encoded = encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv);
@@ -529,7 +529,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 }
 
 // 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode(global_object, uri_string, ""sv);
@@ -539,7 +539,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 }
 
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::escape)
 {
     auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     StringBuilder escaped;
@@ -557,7 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
+JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::unescape)
 {
     auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     ssize_t length = string.length();

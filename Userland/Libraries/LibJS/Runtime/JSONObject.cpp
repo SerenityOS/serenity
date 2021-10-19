@@ -112,7 +112,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
-JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
+JS_DEFINE_OLD_NATIVE_FUNCTION(JSONObject::stringify)
 {
     if (!vm.argument_count())
         return js_undefined();
@@ -375,7 +375,7 @@ String JSONObject::quote_json_string(String string)
 }
 
 // 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
-JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
+JS_DEFINE_OLD_NATIVE_FUNCTION(JSONObject::parse)
 {
     auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto reviver = vm.argument(1);

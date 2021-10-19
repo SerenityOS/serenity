@@ -67,7 +67,7 @@ Value StringConstructor::construct(FunctionObject& new_target)
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
-JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
+JS_DEFINE_OLD_NATIVE_FUNCTION(StringConstructor::raw)
 {
     auto* cooked = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
     auto raw_value = TRY_OR_DISCARD(cooked->get(vm.names.raw));
@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
-JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
+JS_DEFINE_OLD_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
     Vector<u16, 1> string;
     string.ensure_capacity(vm.argument_count());
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
-JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
+JS_DEFINE_OLD_NATIVE_FUNCTION(StringConstructor::from_code_point)
 {
     Vector<u16, 1> string;
     string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.

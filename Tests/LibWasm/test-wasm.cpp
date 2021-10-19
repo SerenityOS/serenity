@@ -62,8 +62,8 @@ public:
     ~WebAssemblyModule() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(get_export);
-    JS_DECLARE_NATIVE_FUNCTION(wasm_invoke);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(get_export);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(wasm_invoke);
 
     static HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& spec_test_namespace()
     {
@@ -159,7 +159,7 @@ void WebAssemblyModule::initialize(JS::GlobalObject& global_object)
     define_native_function("invoke", wasm_invoke, 1, JS::default_attributes);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
     auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto this_value = vm.this_value(global_object);
@@ -193,7 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
     return {};
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 {
     auto address = static_cast<unsigned long>(TRY_OR_DISCARD(vm.argument(0).to_double(global_object)));
     Wasm::FunctionAddress function_address { address };

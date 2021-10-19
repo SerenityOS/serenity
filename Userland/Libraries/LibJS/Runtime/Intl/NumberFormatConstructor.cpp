@@ -65,7 +65,7 @@ Value NumberFormatConstructor::construct(FunctionObject& new_target)
 }
 
 // 15.3.2 Intl.NumberFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.numberformat.supportedlocalesof
-JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);
     auto options = vm.argument(1);

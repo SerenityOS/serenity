@@ -45,7 +45,7 @@ SetPrototype::~SetPrototype()
 }
 
 // 24.2.3.1 Set.prototype.add ( value ), https://tc39.es/ecma262/#sec-set.prototype.add
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::add)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     auto value = vm.argument(0);
@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 }
 
 // 24.2.3.2 Set.prototype.clear ( ), https://tc39.es/ecma262/#sec-set.prototype.clear
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::clear)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     set->values().clear();
@@ -64,14 +64,14 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 }
 
 // 24.2.3.4 Set.prototype.delete ( value ), https://tc39.es/ecma262/#sec-set.prototype.delete
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::delete_)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     return Value(set->values().remove(vm.argument(0)));
 }
 
 // 24.2.3.5 Set.prototype.entries ( ), https://tc39.es/ecma262/#sec-set.prototype.entries
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::entries)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
 
@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 }
 
 // 24.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-set.prototype.foreach
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::for_each)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     if (!vm.argument(0).is_function()) {
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 }
 
 // 24.2.3.7 Set.prototype.has ( value ), https://tc39.es/ecma262/#sec-set.prototype.has
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::has)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     auto& values = set->values();
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 }
 
 // 24.2.3.10 Set.prototype.values ( ), https://tc39.es/ecma262/#sec-set.prototype.values
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::values)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
 
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 }
 
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size
-JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
     auto* set = TRY_OR_DISCARD(typed_this_object(global_object));
     return Value(set->values().size());

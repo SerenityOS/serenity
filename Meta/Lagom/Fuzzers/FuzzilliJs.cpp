@@ -125,7 +125,7 @@ public:
     virtual void initialize_global_object() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(fuzzilli);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(fuzzilli);
 };
 
 TestRunnerGlobalObject::TestRunnerGlobalObject()
@@ -136,7 +136,7 @@ TestRunnerGlobalObject::~TestRunnerGlobalObject()
 {
 }
 
-JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
+JS_DEFINE_OLD_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
 {
     if (!vm.argument_count())
         return JS::js_undefined();
