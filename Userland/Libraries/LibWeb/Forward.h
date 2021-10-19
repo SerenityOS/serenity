@@ -242,6 +242,7 @@ class BlockFormattingContext;
 class Box;
 class ButtonBox;
 class CheckBox;
+class FlexFormattingContext;
 class FormattingContext;
 class InitialContainingBlock;
 class InlineFormattingContext;
