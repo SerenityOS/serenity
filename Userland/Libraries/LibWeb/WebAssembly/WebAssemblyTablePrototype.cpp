@@ -19,7 +19,7 @@ void WebAssemblyTablePrototype::initialize(JS::GlobalObject& global_object)
     define_native_function("set", set, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 {
     auto delta = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
 
@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
     return JS::Value(static_cast<u32>(initial_size));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
 {
     auto index = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
 
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
     return to_js_value(wasm_value, global_object);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
 {
     auto index = TRY_OR_DISCARD(vm.argument(0).to_u32(global_object));
 
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::length_getter)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
     if (!is<WebAssemblyTableObject>(this_object)) {

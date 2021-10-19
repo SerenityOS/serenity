@@ -35,7 +35,7 @@ ArrayBufferPrototype::~ArrayBufferPrototype()
 }
 
 // 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
-JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
     auto* array_buffer_object = TRY_OR_DISCARD(typed_this_value(global_object));
     // FIXME: Check for shared buffer
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 }
 
 // 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
-JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 {
     auto* array_buffer_object = TRY_OR_DISCARD(typed_this_value(global_object));
     // FIXME: Check for shared buffer

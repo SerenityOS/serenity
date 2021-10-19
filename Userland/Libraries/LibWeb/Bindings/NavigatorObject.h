@@ -21,8 +21,8 @@ public:
     virtual ~NavigatorObject() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(user_agent_getter);
-    JS_DECLARE_NATIVE_FUNCTION(cookie_enabled_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(user_agent_getter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(cookie_enabled_getter);
 };
 
 }

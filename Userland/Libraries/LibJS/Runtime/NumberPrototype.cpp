@@ -57,7 +57,7 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
-JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
     auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
     auto fraction_digits = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
     auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
     double radix_argument = 10;
@@ -154,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 }
 
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
     return TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
 }

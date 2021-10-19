@@ -34,7 +34,7 @@ void ListFormatPrototype::initialize(GlobalObject& global_object)
 }
 
 // 13.4.3 Intl.ListFormat.prototype.format ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.format
-JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::format)
 {
     auto list = vm.argument(0);
 
@@ -51,7 +51,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 }
 
 // 13.4.4 Intl.ListFormat.prototype.formatToParts ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.formatToParts
-JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 {
     auto list = vm.argument(0);
 
@@ -67,7 +67,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 }
 
 // 13.4.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions
-JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 {
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).

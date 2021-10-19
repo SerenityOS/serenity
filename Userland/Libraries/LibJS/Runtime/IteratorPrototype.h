@@ -19,7 +19,7 @@ public:
     virtual ~IteratorPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(symbol_iterator);
 };
 
 }

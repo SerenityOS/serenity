@@ -53,7 +53,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
 }
 
 // 8.3.4 get Temporal.Instant.prototype.epochMilliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 }
 
 // 8.3.5 get Temporal.Instant.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmicroseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
 }
 
 // 8.3.6 get Temporal.Instant.prototype.epochNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 }
 
 // 8.3.7 Temporal.Instant.prototype.add ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::add)
 {
     auto temporal_duration_like = vm.argument(0);
 
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::subtract)
 {
     auto temporal_duration_like = vm.argument(0);
 
@@ -156,7 +156,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::until)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -200,7 +200,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
 }
 
 // 8.3.10 Temporal.Instant.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::since)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 }
 
 // 8.3.11 Temporal.Instant.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::round)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -321,7 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 }
 
 // 8.3.12 Temporal.Instant.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::equals)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -339,7 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
 }
 
 // 8.3.13 Temporal.Instant.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -377,7 +377,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
 
 // 8.3.14 Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -388,7 +388,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
 }
 
 // 8.3.15 Temporal.Instant.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_json)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
@@ -399,7 +399,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.Instant", "a primitive value");
@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::value_of)
 }
 
 // 8.3.17 Temporal.Instant.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetime
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
 {
     auto item = vm.argument(0);
 
@@ -453,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
 }
 
 // 8.3.18 Temporal.Instant.prototype.toZonedDateTimeISO ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso
-JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
+JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
 {
     auto item = vm.argument(0);
 

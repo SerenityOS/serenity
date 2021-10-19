@@ -89,7 +89,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
 }
 
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
-JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
 {
     auto constructor = vm.this_value(global_object);
 
@@ -200,14 +200,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 }
 
 // 23.1.2.2 Array.isArray ( arg ), https://tc39.es/ecma262/#sec-array.isarray
-JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
     return Value(TRY_OR_DISCARD(value.is_array(global_object)));
 }
 
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
-JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto this_value = vm.this_value(global_object);
     Value array;
@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 }
 
 // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
-JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }

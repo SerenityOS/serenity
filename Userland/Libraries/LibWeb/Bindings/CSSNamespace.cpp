@@ -31,7 +31,7 @@ void CSSNamespace::initialize(JS::GlobalObject& global_object)
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-css-escape
-JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CSSNamespace::escape)
 {
     if (!vm.argument_count()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "CSS.escape");
@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
 }
 
 // https://www.w3.org/TR/css-conditional-3/#dom-css-supports
-JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::supports)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CSSNamespace::supports)
 {
     if (!vm.argument_count()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "CSS.supports");

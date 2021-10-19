@@ -30,7 +30,7 @@ void ShadowRealmPrototype::initialize(GlobalObject& global_object)
 }
 
 // 3.4.1 ShadowRealm.prototype.evaluate ( sourceText ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.evaluate
-JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::evaluate)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ShadowRealmPrototype::evaluate)
 {
     auto source_text = vm.argument(0);
 
@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::evaluate)
 }
 
 // 3.4.2 ShadowRealm.prototype.importValue ( specifier, exportName ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue
-JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::import_value)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ShadowRealmPrototype::import_value)
 {
     auto specifier = vm.argument(0);
     auto export_name = vm.argument(1);

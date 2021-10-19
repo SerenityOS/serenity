@@ -33,7 +33,7 @@ void DisplayNamesPrototype::initialize(GlobalObject& global_object)
 }
 
 // 12.4.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of
-JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 {
     auto code = vm.argument(0);
 
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 }
 
 // 12.4.4 Intl.DisplayNames.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.resolvedOptions
-JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
+JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 {
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).

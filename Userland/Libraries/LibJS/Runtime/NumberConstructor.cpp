@@ -105,25 +105,25 @@ Value NumberConstructor::construct(FunctionObject& new_target)
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite
-JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_finite)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberConstructor::is_finite)
 {
     return Value(vm.argument(0).is_finite_number());
 }
 
 // 21.1.2.3 Number.isInteger ( number ), https://tc39.es/ecma262/#sec-number.isinteger
-JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_integer)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberConstructor::is_integer)
 {
     return Value(vm.argument(0).is_integral_number());
 }
 
 // 21.1.2.4 Number.isNaN ( number ), https://tc39.es/ecma262/#sec-number.isnan
-JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_nan)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberConstructor::is_nan)
 {
     return Value(vm.argument(0).is_nan());
 }
 
 // 21.1.2.5 Number.isSafeInteger ( number ), https://tc39.es/ecma262/#sec-number.issafeinteger
-JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_safe_integer)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberConstructor::is_safe_integer)
 {
     if (!vm.argument(0).is_number())
         return Value(false);

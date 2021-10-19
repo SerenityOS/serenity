@@ -77,11 +77,11 @@ public:
     virtual ~ReplObject() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
-    JS_DECLARE_NATIVE_FUNCTION(repl_help);
-    JS_DECLARE_NATIVE_FUNCTION(load_file);
-    JS_DECLARE_NATIVE_FUNCTION(save_to_file);
-    JS_DECLARE_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(exit_interpreter);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(repl_help);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(save_to_file);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(load_json);
 };
 
 class ScriptObject final : public JS::GlobalObject {
@@ -93,8 +93,8 @@ public:
     virtual ~ScriptObject() override = default;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(load_file);
-    JS_DECLARE_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(load_json);
 };
 
 static bool s_dump_ast = false;
@@ -948,7 +948,7 @@ void ReplObject::initialize_global_object()
     define_native_function("loadJSON", load_json, 1, attr);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!vm.argument_count())
         return JS::Value(false);
@@ -960,14 +960,14 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
     return JS::Value(false);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
     if (!vm.argument_count())
         exit(0);
     exit(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::repl_help)
 {
     outln("REPL commands:");
     outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
@@ -977,12 +977,12 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::load_file)
 {
     return load_file_impl(vm, global_object);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::load_json)
 {
     return load_json_impl(vm, global_object);
 }
@@ -996,12 +996,12 @@ void ScriptObject::initialize_global_object()
     define_native_function("loadJSON", load_json, 1, attr);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ScriptObject::load_file)
 {
     return load_file_impl(vm, global_object);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ScriptObject::load_json)
 {
     return load_json_impl(vm, global_object);
 }

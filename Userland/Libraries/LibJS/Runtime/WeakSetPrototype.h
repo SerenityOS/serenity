@@ -20,9 +20,9 @@ public:
     virtual ~WeakSetPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(add);
-    JS_DECLARE_NATIVE_FUNCTION(delete_);
-    JS_DECLARE_NATIVE_FUNCTION(has);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(add);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(delete_);
+    JS_DECLARE_OLD_NATIVE_FUNCTION(has);
 };
 
 }

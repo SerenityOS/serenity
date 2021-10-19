@@ -179,7 +179,7 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
     return &static_cast<WindowObject*>(this_object)->impl();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::alert)
 {
     // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#simple-dialogs
     // Note: This method is defined using two overloads, instead of using an optional argument,
@@ -195,7 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::confirm)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -206,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
     return JS::Value(impl->confirm(message));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::prompt)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -224,7 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::set_interval)
 {
     // FIXME: Ideally this would share more code with setTimeout() using the "timer initialization steps"
     // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::set_timeout)
 {
     // FIXME: Ideally this would share more code with setInterval() using the "timer initialization steps"
     // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
@@ -297,7 +297,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
     return JS::Value(timer_id);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::clear_timeout)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -311,7 +311,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::clear_interval)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -325,7 +325,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::request_animation_frame)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -342,7 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
     return JS::Value(impl->request_animation_frame(*static_cast<JS::FunctionObject*>(callback_object)));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::queue_microtask)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -375,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::atob)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     return JS::js_string(vm, decoder->to_utf8(decoded));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::btoa)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -419,7 +419,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-top
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::top_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -435,7 +435,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::parent_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -454,7 +454,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
     return impl->wrapper();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::document_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -462,7 +462,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
     return wrap(global_object, impl->associated_document());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::performance_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -470,7 +470,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)
     return wrap(global_object, impl->performance());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::screen_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -478,7 +478,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_getter)
     return wrap(global_object, impl->screen());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::event_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -488,12 +488,12 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_setter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::event_setter)
 {
     REPLACEABLE_PROPERTY_SETTER(WindowObject, event);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::crypto_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::crypto_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -501,7 +501,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::crypto_getter)
     return wrap(global_object, impl->crypto());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::inner_width_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -509,7 +509,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)
     return JS::Value(impl->inner_width());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_height_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::inner_height_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -517,7 +517,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_height_getter)
     return JS::Value(impl->inner_height());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -525,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::device_pixel_ratio_getter)
     return JS::Value(impl->device_pixel_ratio());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::get_computed_style)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -539,7 +539,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_computed_style)
     return wrap(global_object, impl->get_computed_style(static_cast<ElementWrapper*>(object)->impl()));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::get_selection)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -550,7 +550,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::get_selection)
     return wrap(global_object, *selection);
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::match_media)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -560,7 +560,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::match_media)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_x_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::scroll_x_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -569,7 +569,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_x_getter)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrolly
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_y_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::scroll_y_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -591,7 +591,7 @@ static void perform_a_scroll(Page& page, double x, double y, ScrollBehavior)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scroll
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::scroll)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -645,7 +645,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll)
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollby
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::scroll_by)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -696,7 +696,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::scroll_by)
     return JS::js_undefined();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::history_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -704,7 +704,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::history_getter)
     return wrap(global_object, impl->associated_document().history());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_left_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::screen_left_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -712,7 +712,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_left_getter)
     return JS::Value(impl->screen_x());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_top_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::screen_top_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -720,7 +720,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_top_getter)
     return JS::Value(impl->screen_y());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_x_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::screen_x_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -728,7 +728,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_x_getter)
     return JS::Value(impl->screen_x());
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -737,7 +737,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 }
 
 #define __ENUMERATE(attribute, event_name)                                   \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_getter)              \
+    JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::attribute##_getter)          \
     {                                                                        \
         auto* impl = impl_from(vm, global_object);                           \
         if (!impl)                                                           \
@@ -747,7 +747,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
             return JS::js_null();                                            \
         return retval.callback.cell();                                       \
     }                                                                        \
-    JS_DEFINE_NATIVE_FUNCTION(WindowObject::attribute##_setter)              \
+    JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::attribute##_setter)          \
     {                                                                        \
         auto* impl = impl_from(vm, global_object);                           \
         if (!impl)                                                           \

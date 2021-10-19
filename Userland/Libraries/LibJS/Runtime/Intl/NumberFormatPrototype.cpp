@@ -31,7 +31,7 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
 }
 
 // 15.4.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
-JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
+JS_DEFINE_OLD_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
 {
     // 1. Let nf be the this value.
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then

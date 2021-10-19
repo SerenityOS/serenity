@@ -50,7 +50,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
 }
 
 // 9.3.3 get Temporal.PlainYearMonth.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendar
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
 }
 
 // 9.3.4 get Temporal.PlainYearMonth.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
 }
 
 // 9.3.5 get Temporal.PlainYearMonth.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -89,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
 }
 
 // 9.3.6 get Temporal.PlainYearMonth.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthCode
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
 }
 
 // 9.3.7 get Temporal.PlainYearMonth.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
 }
 
 // 9.3.8 get Temporal.PlainYearMonth.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinmonth
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -131,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_month_getter)
 }
 
 // 9.3.9 get Temporal.PlainYearMonth.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.monthsinyear
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::months_in_year_getter)
 }
 
 // 9.3.10 get Temporal.PlainYearMonth.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.inleapyear
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -159,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
 }
 
 // 15.6.9.2 get Temporal.PlainYearMonth.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.era
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
 {
     // 1. Let plainYearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_getter)
 }
 
 // 15.6.9.3 get Temporal.PlainYearMonth.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.erayear
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
 {
     // 1. Let plainYearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(plainYearMonth, [[InitializedTemporalYearMonth]]).
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
 }
 
 // 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -213,7 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::equals)
 }
 
 // 9.3.17 Temporal.PlainYearMonth.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_string)
 
 // 9.3.18 Temporal.PlainYearMonth.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -242,7 +242,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_locale_string)
 }
 
 // 9.3.19 Temporal.PlainYearMonth.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.tojson
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
@@ -253,7 +253,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_json)
 }
 
 // 9.3.20 Temporal.PlainYearMonth.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainYearMonth", "a primitive value");
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
 }
 
 // 9.3.21 Temporal.PlainYearMonth.prototype.toPlainDate ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.toplaindate
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
 {
     auto item = vm.argument(0);
 
@@ -319,7 +319,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
 }
 
 // 9.3.22 Temporal.PlainYearMonth.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.getisofields
-JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
 {
     // 1. Let yearMonth be the this value.
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).

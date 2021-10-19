@@ -66,13 +66,13 @@ Value BigIntConstructor::construct(FunctionObject&)
 }
 
 // 21.2.2.1 BigInt.asIntN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asintn
-JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
+JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 {
     TODO();
 }
 
 // 21.2.2.2 BigInt.asUintN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asuintn
-JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
+JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
     TODO();
 }

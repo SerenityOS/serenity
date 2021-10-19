@@ -48,7 +48,7 @@ static ThrowCompletionOr<BigInt*> this_bigint_value(GlobalObject& global_object,
 }
 
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
     auto* bigint = TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
     double radix = 10;
@@ -63,13 +63,13 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
-JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
     return to_string(vm, global_object);
 }
 
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
     return TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
 }

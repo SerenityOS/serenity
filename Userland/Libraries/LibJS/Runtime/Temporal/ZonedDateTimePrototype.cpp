@@ -74,7 +74,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
 }
 
 // 6.3.3 get Temporal.ZonedDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendar
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::calendar_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::calendar_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::calendar_getter)
 }
 
 // 6.3.4 get Temporal.ZonedDateTime.prototype.timeZone, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.timezone
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::time_zone_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::time_zone_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::time_zone_getter)
 }
 
 // 6.3.5 get Temporal.ZonedDateTime.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.year
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::year_getter)
 }
 
 // 6.3.6 get Temporal.ZonedDateTime.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.month
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_getter)
 }
 
 // 6.3.7 get Temporal.ZonedDateTime.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthcode
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -165,7 +165,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
 }
 
 // 6.3.8 get Temporal.ZonedDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
 }
 
 // 6.3.9 get Temporal.ZonedDateTime.prototype.hour, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hour
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -211,7 +211,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hour_getter)
 }
 
 // 6.3.10 get Temporal.ZonedDateTime.prototype.minute, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.minute
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -234,7 +234,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::minute_getter)
 }
 
 // 6.3.11 get Temporal.ZonedDateTime.prototype.second, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.second
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::second_getter)
 }
 
 // 6.3.12 get Temporal.ZonedDateTime.prototype.millisecond, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.millisecond
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -280,7 +280,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::millisecond_getter)
 }
 
 // 6.3.13 get Temporal.ZonedDateTime.prototype.microsecond, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.microsecond
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -303,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::microsecond_getter)
 }
 
 // 6.3.14 get Temporal.ZonedDateTime.prototype.nanosecond, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.nanosecond
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -326,7 +326,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::nanosecond_getter)
 }
 
 // 6.3.15 get Temporal.ZonedDateTime.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochseconds
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_seconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_seconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_seconds_getter)
 }
 
 // 6.3.16 get Temporal.ZonedDateTime.prototype.epochMilliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmilliseconds
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -360,7 +360,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
 }
 
 // 6.3.17 get Temporal.ZonedDateTime.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmicroseconds
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -377,7 +377,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
 }
 
 // 6.3.18 get Temporal.ZonedDateTime.prototype.epochNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochnanoseconds
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_nanoseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_nanoseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -388,7 +388,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_nanoseconds_getter)
 }
 
 // 6.3.19 get Temporal.ZonedDateTime.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.dayofweek
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -411,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
 }
 
 // 6.3.20 get Temporal.ZonedDateTime.prototype.dayOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.dayofyear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -434,7 +434,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_year_getter)
 }
 
 // 6.3.21 get Temporal.ZonedDateTime.prototype.weekOfYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.weekofyear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -457,7 +457,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
 }
 
 // 6.3.23 get Temporal.ZonedDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinweek
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_week_getter)
 }
 
 // 6.3.24 get Temporal.ZonedDateTime.prototype.daysInMonth, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinmonth
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -503,7 +503,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
 }
 
 // 6.3.25 get Temporal.ZonedDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinyear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -526,7 +526,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
 }
 
 // 6.3.26 get Temporal.ZonedDateTime.prototype.monthsInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.monthsinyear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -549,7 +549,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::months_in_year_getter)
 }
 
 // 6.3.27 get Temporal.ZonedDateTime.prototype.inLeapYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.inleapyear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -572,7 +572,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::in_leap_year_getter)
 }
 
 // 6.3.28 get Temporal.ZonedDateTime.prototype.offsetNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offsetnanoseconds
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -589,7 +589,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
 }
 
 // 6.3.29 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -604,7 +604,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
 }
 
 // 15.6.10.2 get Temporal.ZonedDateTime.prototype.era, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.era
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -627,7 +627,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_getter)
 }
 
 // 15.6.10.3 get Temporal.ZonedDateTime.prototype.eraYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.erayear
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -650,7 +650,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
@@ -658,7 +658,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
 }
 
 // 6.3.46 Temporal.ZonedDateTime.prototype.toInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -669,7 +669,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
 }
 
 // 6.3.47 Temporal.ZonedDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindate
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -692,7 +692,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date)
 }
 
 // 6.3.48 Temporal.ZonedDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaintime
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -715,7 +715,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
 }
 
 // 6.3.49 Temporal.ZonedDateTime.prototype.toPlainDateTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplaindatetime
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -732,7 +732,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
 }
 
 // 6.3.50 Temporal.ZonedDateTime.prototype.toPlainYearMonth ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainyearmonth
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -761,7 +761,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
 }
 
 // 6.3.51 Temporal.ZonedDateTime.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toplainmonthday
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
@@ -790,7 +790,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
 }
 
 // 6.3.52 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields
-JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
+JS_DEFINE_OLD_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
 {
     // 1. Let zonedDateTime be the this value.
     // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).

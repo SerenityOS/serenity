@@ -53,7 +53,7 @@ static ThrowCompletionOr<Symbol*> this_symbol_value(GlobalObject& global_object,
 }
 
 // 20.4.3.2 get Symbol.prototype.description, https://tc39.es/ecma262/#sec-symbol.prototype.description
-JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 {
     auto* symbol = TRY_OR_DISCARD(this_symbol_value(global_object, vm.this_value(global_object)));
     auto& description = symbol->raw_description();
@@ -63,20 +63,20 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 }
 
 // 20.4.3.3 Symbol.prototype.toString ( ), https://tc39.es/ecma262/#sec-symbol.prototype.tostring
-JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* symbol = TRY_OR_DISCARD(this_symbol_value(global_object, vm.this_value(global_object)));
     return js_string(vm, symbol->to_string());
 }
 
 // 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof
-JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolPrototype::value_of)
 {
     return TRY_OR_DISCARD(this_symbol_value(global_object, vm.this_value(global_object)));
 }
 
 // 20.4.3.5 Symbol.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive
-JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::symbol_to_primitive)
+JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolPrototype::symbol_to_primitive)
 {
     // The hint argument is ignored.
     return TRY_OR_DISCARD(this_symbol_value(global_object, vm.this_value(global_object)));

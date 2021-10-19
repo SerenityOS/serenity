@@ -64,9 +64,9 @@
     } __testjs_register_##fn {};
 
 #define TESTJS_GLOBAL_FUNCTION(function, exposed_name, ...)                    \
-    JS_DECLARE_NATIVE_FUNCTION(function);                                      \
+    JS_DECLARE_OLD_NATIVE_FUNCTION(function);                                  \
     __TESTJS_REGISTER_GLOBAL_FUNCTION(#exposed_name, function, ##__VA_ARGS__); \
-    JS_DEFINE_NATIVE_FUNCTION(function)
+    JS_DEFINE_OLD_NATIVE_FUNCTION(function)
 
 #define TESTJS_MAIN_HOOK()                  \
     struct __TestJS_main_hook {             \

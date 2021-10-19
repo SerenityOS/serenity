@@ -63,7 +63,7 @@ Value CalendarConstructor::construct(FunctionObject& new_target)
 }
 
 // 12.3.2 Temporal.Calendar.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from
-JS_DEFINE_NATIVE_FUNCTION(CalendarConstructor::from)
+JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarConstructor::from)
 {
     auto item = vm.argument(0);
 
