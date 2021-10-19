@@ -201,8 +201,7 @@ void GlobalObject::initialize_global_object()
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(global_object(), {}, [](VM& vm, GlobalObject& global_object) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
-        return Value();
+        return vm.throw_completion<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
     });
     m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
     m_throw_type_error_function->define_direct_property(vm.names.name, js_string(vm, ""), 0);

@@ -26,17 +26,15 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
     } promise_capability_functions;
 
     // 27.2.1.5.1 GetCapabilitiesExecutor Functions, https://tc39.es/ecma262/#sec-getcapabilitiesexecutor-functions
-    auto* executor = NativeFunction::create(global_object, "", [&promise_capability_functions](auto& vm, auto& global_object) -> Value {
+    auto* executor = NativeFunction::create(global_object, "", [&promise_capability_functions](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         auto resolve = vm.argument(0);
         auto reject = vm.argument(1);
         // No idea what other engines say here.
         if (!promise_capability_functions.resolve.is_undefined()) {
-            vm.template throw_exception<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
-            return {};
+            return vm.template throw_completion<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
         }
         if (!promise_capability_functions.reject.is_undefined()) {
-            vm.template throw_exception<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
-            return {};
+            return vm.template throw_completion<TypeError>(global_object, ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
         }
         promise_capability_functions.resolve = resolve;
         promise_capability_functions.reject = reject;

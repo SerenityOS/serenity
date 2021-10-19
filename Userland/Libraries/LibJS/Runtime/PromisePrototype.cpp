@@ -69,35 +69,35 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::finally)
         catch_finally = on_finally;
     } else {
         // 27.2.5.3.1 Then Finally Functions, https://tc39.es/ecma262/#sec-thenfinallyfunctions
-        auto* then_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> Value {
+        auto* then_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
-            auto result = TRY_OR_DISCARD(vm.call(on_finally, js_undefined()));
+            auto result = TRY(vm.call(on_finally, js_undefined()));
             auto* promise = promise_resolve(global_object, constructor, result);
-            if (vm.exception())
-                return {};
-            auto* value_thunk = NativeFunction::create(global_object, "", [value](auto&, auto&) -> Value {
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
+            auto* value_thunk = NativeFunction::create(global_object, "", [value](auto&, auto&) -> ThrowCompletionOr<Value> {
                 return value;
             });
-            return TRY_OR_DISCARD(Value(promise).invoke(global_object, vm.names.then, value_thunk));
+            return TRY(Value(promise).invoke(global_object, vm.names.then, value_thunk));
         });
         then_finally_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
         // 27.2.5.3.2 Catch Finally Functions, https://tc39.es/ecma262/#sec-catchfinallyfunctions
-        auto* catch_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> Value {
+        auto* catch_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
             auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
-            auto result = TRY_OR_DISCARD(vm.call(on_finally, js_undefined()));
+            auto result = TRY(vm.call(on_finally, js_undefined()));
             auto* promise = promise_resolve(global_object, constructor, result);
-            if (vm.exception())
-                return {};
-            auto* thrower = NativeFunction::create(global_object, "", [reason](auto& vm, auto& global_object) -> Value {
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
+            auto* thrower = NativeFunction::create(global_object, "", [reason](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
                 vm.throw_exception(global_object, reason);
-                return {};
+                return throw_completion(reason);
             });
-            return TRY_OR_DISCARD(Value(promise).invoke(global_object, vm.names.then, thrower));
+            return TRY(Value(promise).invoke(global_object, vm.names.then, thrower));
         });
         catch_finally_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 

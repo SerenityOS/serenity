@@ -72,7 +72,7 @@ static void set_iterator_record_complete(GlobalObject& global_object, Object& it
     MUST(iterator_record.set(vm.names.done, Value(true), Object::ShouldThrowExceptions::No));
 }
 
-using EndOfElementsCallback = Function<Value(PromiseValueList&)>;
+using EndOfElementsCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&)>;
 using InvokeElementFunctionCallback = Function<void(PromiseValueList&, RemainingElements&, Value, size_t)>;
 
 static Value perform_promise_common(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
@@ -99,7 +99,7 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
                 return {};
 
             if (--remaining_elements_count->value == 0)
-                return end_of_list(*values);
+                return TRY_OR_DISCARD(end_of_list(*values));
             return result_capability.promise;
         }
 
@@ -130,14 +130,12 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
-        [&](PromiseValueList& values) -> Value {
+        [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             auto values_array = Array::create_from(global_object, values.values());
 
-            (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
-            if (vm.exception())
-                return {};
+            TRY(vm.call(*result_capability.resolve, js_undefined(), values_array));
 
-            return result_capability.promise;
+            return Value(result_capability.promise);
         },
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
@@ -154,14 +152,12 @@ static Value perform_promise_all_settled(GlobalObject& global_object, Object& it
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
-        [&](PromiseValueList& values) -> Value {
+        [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             auto values_array = Array::create_from(global_object, values.values());
 
-            (void)vm.call(*result_capability.resolve, js_undefined(), values_array);
-            if (vm.exception())
-                return {};
+            TRY(vm.call(*result_capability.resolve, js_undefined(), values_array));
 
-            return result_capability.promise;
+            return Value(result_capability.promise);
         },
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             auto* on_fulfilled = PromiseAllSettledResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
@@ -181,14 +177,14 @@ static Value perform_promise_any(GlobalObject& global_object, Object& iterator_r
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
-        [&](PromiseValueList& errors) -> Value {
+        [&](PromiseValueList& errors) -> ThrowCompletionOr<Value> {
             auto errors_array = Array::create_from(global_object, errors.values());
 
             auto* error = AggregateError::create(global_object);
             MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
             vm.throw_exception(global_object, error);
-            return {};
+            return throw_completion(error);
         },
         [&](PromiseValueList& errors, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             auto* on_rejected = PromiseAnyRejectElementFunction::create(global_object, index, errors, result_capability, remaining_elements_count);
@@ -205,8 +201,8 @@ static Value perform_promise_race(GlobalObject& global_object, Object& iterator_
 
     return perform_promise_common(
         global_object, iterator_record, constructor, result_capability, promise_resolve,
-        [&](PromiseValueList&) -> Value {
-            return result_capability.promise;
+        [&](PromiseValueList&) -> ThrowCompletionOr<Value> {
+            return Value(result_capability.promise);
         },
         [&](PromiseValueList&, RemainingElements&, Value next_promise, size_t) {
             (void)next_promise.invoke(global_object, vm.names.then, result_capability.resolve, result_capability.reject);

@@ -25,7 +25,7 @@ class PromiseResolvingFunction final : public NativeFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    using FunctionType = Function<Value(VM&, GlobalObject&, Promise&, AlreadyResolved&)>;
+    using FunctionType = Function<ThrowCompletionOr<Value>(VM&, GlobalObject&, Promise&, AlreadyResolved&)>;
 
     static PromiseResolvingFunction* create(GlobalObject&, Promise&, AlreadyResolved&, FunctionType);
 
