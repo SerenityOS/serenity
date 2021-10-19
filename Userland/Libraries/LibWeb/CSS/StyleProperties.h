@@ -59,7 +59,7 @@ public:
     float flex_grow() const;
     float flex_shrink() const;
     Optional<CSS::AlignItems> align_items() const;
-    Optional<float> opacity() const;
+    float opacity() const;
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;

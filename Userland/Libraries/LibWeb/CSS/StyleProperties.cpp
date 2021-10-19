@@ -121,11 +121,11 @@ Optional<int> StyleProperties::z_index() const
     return {};
 }
 
-Optional<float> StyleProperties::opacity() const
+float StyleProperties::opacity() const
 {
     auto maybe_value = property(CSS::PropertyID::Opacity);
     if (!maybe_value.has_value())
-        return {};
+        return 1.0f;
     auto& value = maybe_value.value();
 
     if (value->has_number())
@@ -137,7 +137,7 @@ Optional<float> StyleProperties::opacity() const
             return clamp(length.raw_value() / 100.0f, 0.0f, 1.0f);
     }
 
-    return {};
+    return 1.0f;
 }
 
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const

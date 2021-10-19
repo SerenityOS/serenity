@@ -36,6 +36,7 @@ public:
     static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
     static float flex_grow() { return 0.0f; }
     static float flex_shrink() { return 1.0f; }
+    static float opacity() { return 1.0f; }
 };
 
 struct BorderData {
@@ -83,7 +84,7 @@ public:
     float flex_grow() const { return m_noninherited.flex_grow; }
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
-    Optional<float> const& opacity() const { return m_noninherited.opacity; }
+    float opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Optional<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
@@ -183,7 +184,7 @@ protected:
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
-        Optional<float> opacity;
+        float opacity { InitialValues::opacity() };
         Optional<BoxShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
@@ -236,7 +237,7 @@ public:
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
-    void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
+    void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
