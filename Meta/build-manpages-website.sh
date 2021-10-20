@@ -32,24 +32,60 @@ for md_file in "${MAN_DIR}"*/*.md; do
     section_number="${section#man}"
     filename="${relative_path#*/}"
     name="${filename%.md}"
-    pandoc -f gfm -t html5 -s --lua-filter=Meta/convert-markdown-links.lua --metadata title="${name}(${section_number}) - SerenityOS man pages" -o "output/${section}/${name}.html" "${md_file}"
+    pandoc -f gfm -t html5 -s \
+        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+        --lua-filter=Meta/convert-markdown-links.lua \
+        --metadata title="${name}(${section_number}) - SerenityOS man pages" \
+        -o "output/${section}/${name}.html" \
+        "${md_file}"
 done
 
-# Generate man page listings
+# Generate man page listings through pandoc
 for d in output/*/; do
     section=$(basename "$d")
     section_number="${section#man}"
-    echo "<!DOCTYPE html><html><head><title>Section ${section_number} - SerenityOS man pages</title></head><body>" > "${d}/index.html"
-    for f in "$d"/*; do
-        filename=$(basename "$f")
-        name="${filename%.html}"
-        if [[ "$filename" == "index.html" ]]; then
-            continue
-        fi
-        echo "<a href=\"${filename}\"><p>${name}(${section_number})</p></a>" >> "${d}/index.html"
-    done
-    echo "</body></html>" >> "$d/index.html"
+    pandoc -f gfm -t html5 -s \
+        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+        --metadata title="Section ${section_number} - SerenityOS man pages" \
+        -o "output/${section}/index.html" \
+        <(
+            for f in "$d"/*; do
+                filename=$(basename "$f")
+                name="${filename%.html}"
+                if [[ "$filename" == "index.html" ]]; then
+                    continue
+                fi
+                echo "- [${name}](${filename})"
+            done
+        )
 done
 
+# Generate man page listings through pandoc
+for d in output/*/; do
+    section=$(basename "$d")
+    section_number="${section#man}"
+    pandoc -f gfm -t html5 -s \
+        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+        --metadata title="Section ${section_number} - SerenityOS man pages" \
+        -o "output/${section}/index.html" \
+        <(
+            for f in "$d"/*; do
+                filename=$(basename "$f")
+                name="${filename%.html}"
+                if [[ "$filename" == "index.html" ]]; then
+                    continue
+                fi
+                echo "- [${name}](${filename})"
+            done
+        )
+done
+
+# Generate main landing page listings through pandoc
+pandoc -f gfm -t html5 -s \
+    -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+    --metadata title="SerenityOS man pages" \
+    -o output/index.html \
+    Meta/Websites/man.serenityos.org/index.md
+
 # Copy pre-made files
-cp -R Meta/Websites/man.serenityos.org/* output/
+cp Meta/Websites/man.serenityos.org/banner.png output/
