@@ -57,14 +57,12 @@ Value WeakSetConstructor::construct(FunctionObject& new_target)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
         return {};
     }
-    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
-        if (vm.exception())
-            return IterationDecision::Break;
-        auto result = vm.call(adder.as_function(), Value(weak_set), iterator_value);
-        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
-    });
-    if (vm.exception())
+
+    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+        TRY(vm.call(adder.as_function(), Value(weak_set), iterator_value));
         return {};
+    }));
+
     return weak_set;
 }
 

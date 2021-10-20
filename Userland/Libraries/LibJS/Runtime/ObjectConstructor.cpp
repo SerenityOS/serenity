@@ -232,31 +232,19 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 
     auto* object = Object::create(global_object, global_object.object_prototype());
 
-    get_iterator_values(global_object, iterable, [&](Value iterator_value) {
-        if (vm.exception())
-            return IterationDecision::Break;
-        if (!iterator_value.is_object()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
-            return IterationDecision::Break;
-        }
-        auto key_or_error = iterator_value.as_object().get(0);
-        if (key_or_error.is_error())
-            return IterationDecision::Break;
-        auto key = key_or_error.release_value();
-        auto value_or_error = iterator_value.as_object().get(1);
-        if (value_or_error.is_error())
-            return IterationDecision::Break;
-        auto value = value_or_error.release_value();
-        auto property_key_or_error = key.to_property_key(global_object);
-        if (property_key_or_error.is_error())
-            return IterationDecision::Break;
-        auto result_or_error = object->create_data_property_or_throw(property_key_or_error.release_value(), value);
-        if (result_or_error.is_error())
-            return IterationDecision::Break;
-        return IterationDecision::Continue;
-    });
-    if (vm.exception())
+    TRY_OR_DISCARD(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
+        if (!iterator_value.is_object())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+
+        auto key = TRY(iterator_value.as_object().get(0));
+        auto value = TRY(iterator_value.as_object().get(1));
+
+        auto property_key = TRY(key.to_property_key(global_object));
+        MUST(object->create_data_property_or_throw(property_key, value));
+
         return {};
+    }));
+
     return object;
 }
 
