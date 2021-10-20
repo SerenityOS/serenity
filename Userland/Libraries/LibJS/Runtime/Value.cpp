@@ -337,11 +337,11 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
     auto& vm = global_object.vm();
     switch (m_type) {
     case Type::Undefined:
-        return { "undefined"sv };
+        return "undefined"sv;
     case Type::Null:
-        return { "null"sv };
+        return "null"sv;
     case Type::Boolean:
-        return { m_value.as_bool ? "true"sv : "false"sv };
+        return m_value.as_bool ? "true"sv : "false"sv;
     case Type::Int32:
         return String::number(m_value.as_i32);
     case Type::Double:
@@ -563,8 +563,8 @@ ThrowCompletionOr<StringOrSymbol> Value::to_property_key(GlobalObject& global_ob
 {
     auto key = TRY(to_primitive(global_object, PreferredType::String));
     if (key.is_symbol())
-        return StringOrSymbol { &key.as_symbol() };
-    return StringOrSymbol { TRY(key.to_string(global_object)) };
+        return &key.as_symbol();
+    return TRY(key.to_string(global_object));
 }
 
 ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) const

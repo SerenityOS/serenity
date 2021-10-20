@@ -657,7 +657,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlNumberIsNaNOrOutOfRange, value, minimum, maximum);
 
     // 4. Return floor(value).
-    return { floor(value.as_double()) };
+    return floor(value.as_double());
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption

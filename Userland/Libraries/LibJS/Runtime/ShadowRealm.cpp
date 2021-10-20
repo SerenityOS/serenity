@@ -272,7 +272,7 @@ ThrowCompletionOr<Value> get_wrapped_value(GlobalObject& global_object, Realm& c
             return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmWrappedValueNonFunctionObject, value);
 
         // b. Return ! WrappedFunctionCreate(callerRealm, value).
-        return { WrappedFunction::create(global_object, caller_realm, value.as_function()) };
+        return WrappedFunction::create(global_object, caller_realm, value.as_function());
     }
 
     // 3. Return value.

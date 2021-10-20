@@ -35,7 +35,7 @@ void GlobalEnvironment::visit_edges(Cell::Visitor& visitor)
 ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(GlobalObject&) const
 {
     // 1. Return envRec.[[GlobalThisValue]].
-    return { m_global_this_value };
+    return m_global_this_value;
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n

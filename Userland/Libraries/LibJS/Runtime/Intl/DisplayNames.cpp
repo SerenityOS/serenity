@@ -117,7 +117,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         // c. Set code to CanonicalizeUnicodeLocaleId(code).
         // d. Return code.
         auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
-        return { js_string(vm, move(canonicalized_tag)) };
+        return js_string(vm, move(canonicalized_tag));
     }
 
     // 2. If type is "region", then
@@ -128,7 +128,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
 
         // b. Let code be the result of mapping code to upper case as described in 6.1.
         // c. Return code.
-        return { js_string(vm, code.to_uppercase_string()) };
+        return js_string(vm, code.to_uppercase_string());
     }
 
     // 3. If type is "script", then
@@ -139,7 +139,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
 
         // b. Let code be the result of mapping the first character in code to upper case, and mapping the second, third, and fourth character in code to lower case, as described in 6.1.
         // c. Return code.
-        return { js_string(vm, code.to_titlecase_string()) };
+        return js_string(vm, code.to_titlecase_string());
     }
 
     // 4. Assert: type is "currency".
@@ -151,7 +151,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
 
     // 6. Let code be the result of mapping code to upper case as described in 6.1.
     // 7. Return code.
-    return { js_string(vm, code.to_uppercase_string()) };
+    return js_string(vm, code.to_uppercase_string());
 }
 
 }
