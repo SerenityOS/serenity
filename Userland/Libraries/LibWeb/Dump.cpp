@@ -177,8 +177,24 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff(" {}floating{}", floating_color_on, color_off);
         if (box.is_inline_block())
             builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
-        if (box.computed_values().display().is_flex_inside())
-            builder.appendff(" {}flex-container{}", flex_color_on, color_off);
+        if (box.computed_values().display().is_flex_inside()) {
+            StringView direction;
+            switch (box.computed_values().flex_direction()) {
+            case CSS::FlexDirection::Column:
+                direction = "column"sv;
+                break;
+            case CSS::FlexDirection::ColumnReverse:
+                direction = "column-reverse"sv;
+                break;
+            case CSS::FlexDirection::Row:
+                direction = "row"sv;
+                break;
+            case CSS::FlexDirection::RowReverse:
+                direction = "row-reverse"sv;
+                break;
+            }
+            builder.appendff(" {}flex-container({}){}", flex_color_on, direction, color_off);
+        }
         if (box.is_flex_item())
             builder.appendff(" {}flex-item{}", flex_color_on, color_off);
 
