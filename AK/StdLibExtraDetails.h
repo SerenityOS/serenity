@@ -491,6 +491,9 @@ template<typename T, unsigned ExpectedSize>
 using AssertSize = __AssertSize<T, ExpectedSize, sizeof(T)>;
 
 template<typename T>
+inline constexpr bool IsPOD = __is_pod(T);
+
+template<typename T>
 inline constexpr bool IsTrivial = __is_trivial(T);
 
 template<typename T>
@@ -589,6 +592,7 @@ using AK::Detail::IsLvalueReference;
 using AK::Detail::IsMoveAssignable;
 using AK::Detail::IsMoveConstructible;
 using AK::Detail::IsNullPointer;
+using AK::Detail::IsPOD;
 using AK::Detail::IsPointer;
 using AK::Detail::IsRvalueReference;
 using AK::Detail::IsSame;
