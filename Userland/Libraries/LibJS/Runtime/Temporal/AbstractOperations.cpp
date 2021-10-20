@@ -57,9 +57,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
         // b. If next is not false, then
         if (next) {
             // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = iterator_value(global_object, *iterator_result);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto next_value = TRY(iterator_value(global_object, *iterator_result));
             // ii. If Type(nextValue) is not an element of elementTypes, then
             if (auto type = to_option_type(next_value); !type.has_value() || !element_types.contains_slow(*type)) {
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).

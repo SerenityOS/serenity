@@ -292,9 +292,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
         // b. If next is not false, then
         if (next != nullptr) {
             // i. Let nextValue be ? IteratorValue(next).
-            auto next_value = iterator_value(global_object, *next);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto next_value = TRY(iterator_value(global_object, *next));
 
             // ii. If Type(nextValue) is not String, then
             if (!next_value.is_string()) {
