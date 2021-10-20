@@ -72,7 +72,7 @@ static bool iterator_record_is_complete(GlobalObject& global_object, Object& ite
     // FIXME: Create a native iterator structure with the [[Done]] internal slot. For now, temporarily clear
     //        the exception so we can access the "done" property on the iterator object.
     TemporaryClearException clear_exception(vm);
-    return iterator_complete(global_object, iterator_record);
+    return MUST(iterator_complete(global_object, iterator_record));
 }
 
 static void set_iterator_record_complete(GlobalObject& global_object, Object& iterator_record)

@@ -149,9 +149,10 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
             return;
         auto* iterator_result = iterator_result_or_error.release_value();
 
-        auto complete = iterator_complete(global_object, *iterator_result);
-        if (vm.exception())
+        auto complete_or_error = iterator_complete(global_object, *iterator_result);
+        if (complete_or_error.is_error())
             return;
+        auto complete = complete_or_error.release_value();
 
         if (complete) {
             interpreter.accumulator() = array;
@@ -506,7 +507,13 @@ void IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
     if (iterator_result_or_error.is_error())
         return;
     auto* iterator_result = iterator_result_or_error.release_value();
-    interpreter.accumulator() = Value(iterator_complete(interpreter.global_object(), *iterator_result));
+
+    auto complete_or_error = iterator_complete(interpreter.global_object(), *iterator_result);
+    if (complete_or_error.is_error())
+        return;
+    auto complete = complete_or_error.release_value();
+
+    interpreter.accumulator() = Value(complete);
 }
 
 void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const

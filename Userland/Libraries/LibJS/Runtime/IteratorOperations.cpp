@@ -57,12 +57,12 @@ ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value)
 }
 
 // 7.4.3 IteratorComplete ( iterResult ), https://tc39.es/ecma262/#sec-iteratorcomplete
-bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
+ThrowCompletionOr<bool> iterator_complete(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
 
     // 1. Return ! ToBoolean(? Get(iterResult, "done")).
-    return TRY_OR_DISCARD(iterator_result.get(vm.names.done)).to_boolean();
+    return TRY(iterator_result.get(vm.names.done)).to_boolean();
 }
 
 // 7.4.4 IteratorValue ( iterResult ), https://tc39.es/ecma262/#sec-iteratorvalue
@@ -77,13 +77,8 @@ Value iterator_value(GlobalObject& global_object, Object& iterator_result)
 // 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
 ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Object& iterator)
 {
-    auto& vm = global_object.vm();
-
     auto* result = TRY(iterator_next(iterator));
-
-    auto done = iterator_complete(global_object, *result);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto done = TRY(iterator_complete(global_object, *result));
 
     if (done)
         return nullptr;
