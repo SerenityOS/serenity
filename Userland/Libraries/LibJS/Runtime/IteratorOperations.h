@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/Optional.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -28,10 +29,7 @@ void iterator_close(Object& iterator);
 Object* create_iterator_result_object(GlobalObject&, Value value, bool done);
 MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
-enum class CloseOnAbrupt {
-    No,
-    Yes
-};
-void get_iterator_values(GlobalObject&, Value value, Function<IterationDecision(Value)> callback, Value method = {}, CloseOnAbrupt close_on_abrupt = CloseOnAbrupt::Yes);
+using IteratorValueCallback = Function<Optional<Completion>(Value)>;
+Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method = {});
 
 }

@@ -251,13 +251,11 @@ static void argument_list_evaluation(Interpreter& interpreter, GlobalObject& glo
         if (vm.exception())
             return;
         if (argument.is_spread) {
-            get_iterator_values(global_object, value, [&](Value iterator_value) {
-                if (vm.exception())
-                    return IterationDecision::Break;
+            auto result = get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
                 list.append(iterator_value);
-                return IterationDecision::Continue;
+                return {};
             });
-            if (vm.exception())
+            if (result.is_error())
                 return;
         } else {
             list.append(value);
@@ -871,29 +869,24 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         interpreter.vm().running_execution_context().lexical_environment = old_environment;
     });
 
-    get_iterator_values(global_object, rhs_result, [&](Value value) {
-        auto result = for_of_head_state.execute_head(interpreter, global_object, value);
-        if (result.is_error())
-            return IterationDecision::Break;
+    TRY_OR_DISCARD(get_iterator_values(global_object, rhs_result, [&](Value value) -> Optional<Completion> {
+        TRY(for_of_head_state.execute_head(interpreter, global_object, value));
         last_value = m_body->execute(interpreter, global_object).value_or(last_value);
         interpreter.vm().running_execution_context().lexical_environment = old_environment;
-        if (interpreter.exception())
-            return IterationDecision::Break;
+        if (auto* exception = interpreter.exception())
+            return throw_completion(exception->value());
         if (interpreter.vm().should_unwind()) {
             if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
                 interpreter.vm().stop_unwind();
             } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
                 interpreter.vm().stop_unwind();
-                return IterationDecision::Break;
+                return normal_completion(last_value);
             } else {
-                return IterationDecision::Break;
+                return normal_completion(last_value);
             }
         }
-        return IterationDecision::Continue;
-    });
-
-    if (interpreter.exception())
         return {};
+    }));
 
     return last_value;
 }
@@ -2885,12 +2878,10 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 return {};
 
             if (is<SpreadExpression>(*element)) {
-                get_iterator_values(global_object, value, [&](Value iterator_value) {
+                TRY_OR_DISCARD(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
                     array->indexed_properties().put(index++, iterator_value, default_attributes);
-                    return IterationDecision::Continue;
-                });
-                if (interpreter.exception())
                     return {};
+                }));
                 continue;
             }
         }

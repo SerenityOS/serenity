@@ -59,14 +59,12 @@ Value SetConstructor::construct(FunctionObject& new_target)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of Set");
         return {};
     }
-    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
-        if (vm.exception())
-            return IterationDecision::Break;
-        (void)vm.call(adder.as_function(), Value(set), iterator_value);
-        return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
-    });
-    if (vm.exception())
+
+    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+        TRY(vm.call(adder.as_function(), Value(set), iterator_value));
         return {};
+    }));
+
     return set;
 }
 

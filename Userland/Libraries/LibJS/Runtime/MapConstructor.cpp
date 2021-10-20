@@ -59,26 +59,18 @@ Value MapConstructor::construct(FunctionObject& new_target)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
         return {};
     }
-    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
-        if (vm.exception())
-            return IterationDecision::Break;
-        if (!iterator_value.is_object()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
-            return IterationDecision::Break;
-        }
-        auto key_or_error = iterator_value.as_object().get(0);
-        if (key_or_error.is_error())
-            return IterationDecision::Break;
-        auto key = key_or_error.release_value();
-        auto value_or_error = iterator_value.as_object().get(1);
-        if (value_or_error.is_error())
-            return IterationDecision::Break;
-        auto value = value_or_error.release_value();
-        (void)vm.call(adder.as_function(), Value(map), key, value);
-        return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
-    });
-    if (vm.exception())
+
+    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+        if (!iterator_value.is_object())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+
+        auto key = TRY(iterator_value.as_object().get(0));
+        auto value = TRY(iterator_value.as_object().get(1));
+        TRY(vm.call(adder.as_function(), Value(map), key, value));
+
         return {};
+    }));
+
     return map;
 }
 
