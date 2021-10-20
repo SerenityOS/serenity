@@ -134,6 +134,15 @@ public:
             VERIFY(!value.is_empty());
     }
 
+    // Allows implicit construction of ThrowCompletionOr<T> from a type U if T(U) is a supported constructor.
+    // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
+    // Disabled for POD types to avoid weird conversion shenanigans.
+    template<typename WrappedValueType>
+    ThrowCompletionOr(WrappedValueType value) requires(!IsPOD<ValueType>)
+        : m_value(move(value))
+    {
+    }
+
     [[nodiscard]] bool is_throw_completion() const { return m_throw_completion.has_value(); }
     Completion const& throw_completion() const { return *m_throw_completion; }
 
