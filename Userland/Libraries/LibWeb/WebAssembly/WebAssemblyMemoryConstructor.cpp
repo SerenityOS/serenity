@@ -21,38 +21,33 @@ WebAssemblyMemoryConstructor::~WebAssemblyMemoryConstructor()
 {
 }
 
-JS::Value WebAssemblyMemoryConstructor::call()
+JS::ThrowCompletionOr<JS::Value> WebAssemblyMemoryConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Memory");
-    return {};
+    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Memory");
 }
 
-JS::Value WebAssemblyMemoryConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto descriptor = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
-    auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
+    auto descriptor = TRY(vm.argument(0).to_object(global_object));
+    auto initial_value = TRY(descriptor->get("initial"));
+    auto maximum_value = TRY(descriptor->get("maximum"));
 
-    if (initial_value.is_empty()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Number");
-        return {};
-    }
+    if (initial_value.is_empty())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Number");
 
-    auto initial = TRY_OR_DISCARD(initial_value.to_u32(global_object));
+    auto initial = TRY(initial_value.to_u32(global_object));
 
     Optional<u32> maximum;
 
     if (!maximum_value.is_empty())
-        maximum = TRY_OR_DISCARD(maximum_value.to_u32(global_object));
+        maximum = TRY(maximum_value.to_u32(global_object));
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::MemoryType { Wasm::Limits { initial, maximum } });
-    if (!address.has_value()) {
-        vm.throw_exception<JS::TypeError>(global_object, "Wasm Memory allocation failed");
-        return {};
-    }
+    if (!address.has_value())
+        return vm.throw_completion<JS::TypeError>(global_object, "Wasm Memory allocation failed");
 
     return vm.heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, *address);
 }

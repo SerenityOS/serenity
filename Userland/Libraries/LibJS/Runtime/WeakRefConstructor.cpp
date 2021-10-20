@@ -33,25 +33,22 @@ WeakRefConstructor::~WeakRefConstructor()
 }
 
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
-Value WeakRefConstructor::call()
+ThrowCompletionOr<Value> WeakRefConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakRef);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakRef);
 }
 
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
-Value WeakRefConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> WeakRefConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     auto target = vm.argument(0);
-    if (!target.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
-        return {};
-    }
-    return TRY_OR_DISCARD(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object()));
+    if (!target.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
+    return TRY(ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object()));
 }
 
 }

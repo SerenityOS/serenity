@@ -247,15 +247,14 @@ void LocaleConstructor::initialize(GlobalObject& global_object)
 }
 
 // 14.1.3 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale
-Value LocaleConstructor::call()
+ThrowCompletionOr<Value> LocaleConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    vm().throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.Locale");
-    return {};
+    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.Locale");
 }
 
 // 14.1.3 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale
-Value LocaleConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -273,15 +272,13 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     //     a. Append [[Numeric]] as the last element of internalSlotsList.
 
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
-    auto* locale = TRY_OR_DISCARD(ordinary_create_from_constructor<Locale>(global_object, new_target, &GlobalObject::intl_locale_prototype));
+    auto* locale = TRY(ordinary_create_from_constructor<Locale>(global_object, new_target, &GlobalObject::intl_locale_prototype));
 
     String tag;
 
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
-    if (!tag_value.is_string() && !tag_value.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrString, "tag"sv);
-        return {};
-    }
+    if (!tag_value.is_string() && !tag_value.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrString, "tag"sv);
 
     // 8. If Type(tag) is Object and tag has an [[InitializedLocale]] internal slot, then
     if (tag_value.is_object() && is<Locale>(tag_value.as_object())) {
@@ -292,17 +289,17 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag = TRY_OR_DISCARD(tag_value.to_string(global_object));
+        tag = TRY(tag_value.to_string(global_object));
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
-    auto* options = TRY_OR_DISCARD(coerce_options_to_object(global_object, options_value));
+    auto* options = TRY(coerce_options_to_object(global_object, options_value));
 
     // 11. Set tag to ? ApplyOptionsToTag(tag, options).
-    if (auto applied_tag = apply_options_to_tag(global_object, tag, *options); applied_tag.has_value())
-        tag = applied_tag.release_value();
-    else
-        return {};
+    auto applied_tag = apply_options_to_tag(global_object, tag, *options);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    tag = applied_tag.release_value();
 
     // 12. Let opt be a new Record.
     LocaleAndKeys opt {};
@@ -312,44 +309,44 @@ Value LocaleConstructor::construct(FunctionObject& new_target)
     //     a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 15. Set opt.[[ca]] to calendar.
     opt.ca = get_string_option(global_object, *options, vm.names.calendar, Unicode::is_type_identifier);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 16. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
     // 17. If collation is not undefined, then
     //     a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 18. Set opt.[[co]] to collation.
     opt.co = get_string_option(global_object, *options, vm.names.collation, Unicode::is_type_identifier);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
     opt.hc = get_string_option(global_object, *options, vm.names.hourCycle, nullptr, { "h11"sv, "h12"sv, "h23"sv, "h24"sv });
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 21. Let kf be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 22. Set opt.[[kf]] to kf.
     opt.kf = get_string_option(global_object, *options, vm.names.caseFirst, nullptr, { "upper"sv, "lower"sv, "false"sv });
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
-    auto kn = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
+    auto kn = TRY(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
 
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.
     if (!kn.is_undefined())
-        opt.kn = TRY_OR_DISCARD(kn.to_string(global_object));
+        opt.kn = TRY(kn.to_string(global_object));
 
     // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
     // 27. If numberingSystem is not undefined, then
     //     a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
     // 28. Set opt.[[nu]] to numberingSystem.
     opt.nu = get_string_option(global_object, *options, vm.names.numberingSystem, Unicode::is_type_identifier);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
     auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);

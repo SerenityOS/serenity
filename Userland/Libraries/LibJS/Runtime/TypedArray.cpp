@@ -434,15 +434,14 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
-    Value ConstructorName::call()                                                                                                      \
+    ThrowCompletionOr<Value> ConstructorName::call()                                                                                   \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ClassName);                          \
-        return {};                                                                                                                     \
+        return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ClassName);                  \
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
-    Value ConstructorName::construct(FunctionObject& new_target)                                                                       \
+    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                                                  \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         if (vm.argument_count() == 0)                                                                                                  \
@@ -451,27 +450,25 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         auto first_argument = vm.argument(0);                                                                                          \
         if (first_argument.is_object()) {                                                                                              \
             auto* typed_array = ClassName::create(global_object(), 0, new_target);                                                     \
-            if (vm.exception())                                                                                                        \
-                return {};                                                                                                             \
+            if (auto* exception = vm.exception())                                                                                      \
+                return throw_completion(exception->value());                                                                           \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
-                TRY_OR_DISCARD(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));               \
+                TRY(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));                          \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
                 /* NOTE: I added the padding below to not reindent 150+ lines for a single line change. If you edit this, and the   */ \
                 /*       width happens to change anyway, feel free to remove it.                                                    */ \
-                TRY_OR_DISCARD(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, /*             */ \
+                TRY(initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, /*                        */ \
                     vm.argument(1), vm.argument(2)));                                                                                  \
             } else {                                                                                                                   \
-                auto iterator = TRY_OR_DISCARD(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));          \
+                auto iterator = TRY(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));                     \
                 if (iterator) {                                                                                                        \
-                    auto values = TRY_OR_DISCARD(iterable_to_list(global_object(), first_argument, iterator));                         \
-                    TRY_OR_DISCARD(initialize_typed_array_from_list(global_object(), *typed_array, values));                           \
+                    auto values = TRY(iterable_to_list(global_object(), first_argument, iterator));                                    \
+                    TRY(initialize_typed_array_from_list(global_object(), *typed_array, values));                                      \
                 } else {                                                                                                               \
-                    TRY_OR_DISCARD(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object())); \
+                    TRY(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object()));            \
                 }                                                                                                                      \
-                if (vm.exception())                                                                                                    \
-                    return {};                                                                                                         \
             }                                                                                                                          \
             return typed_array;                                                                                                        \
         }                                                                                                                              \
@@ -482,20 +479,16 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             if (error.value().is_object() && is<RangeError>(error.value().as_object())) {                                              \
                 /* Re-throw more specific RangeError */                                                                                \
                 vm.clear_exception();                                                                                                  \
-                vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                              \
+                return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                      \
             }                                                                                                                          \
-            return {};                                                                                                                 \
+            return error;                                                                                                              \
         }                                                                                                                              \
         auto array_length = array_length_or_error.release_value();                                                                     \
-        if (array_length > NumericLimits<i32>::max() / sizeof(Type)) {                                                                 \
-            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
-            return {};                                                                                                                 \
-        }                                                                                                                              \
+        if (array_length > NumericLimits<i32>::max() / sizeof(Type))                                                                   \
+            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                          \
         /* FIXME: What is the best/correct behavior here? */                                                                           \
-        if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type))) {                                                 \
-            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
-            return {};                                                                                                                 \
-        }                                                                                                                              \
+        if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                                   \
+            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                          \
         return ClassName::create(global_object(), array_length, new_target);                                                           \
     }
 

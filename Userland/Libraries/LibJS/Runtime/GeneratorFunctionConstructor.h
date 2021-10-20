@@ -19,8 +19,8 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~GeneratorFunctionConstructor() override;
 
-    virtual Value call() override;
-    virtual Value construct(FunctionObject& new_target) override;
+    virtual ThrowCompletionOr<Value> call() override;
+    virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;
 
 private:
     bool has_constructor() const override { return true; }

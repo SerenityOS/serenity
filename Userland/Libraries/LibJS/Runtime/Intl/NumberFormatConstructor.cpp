@@ -35,14 +35,14 @@ void NumberFormatConstructor::initialize(GlobalObject& global_object)
 }
 
 // 15.2.1 Intl.NumberFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.numberformat
-Value NumberFormatConstructor::call()
+ThrowCompletionOr<Value> NumberFormatConstructor::call()
 {
     // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 15.2.1 Intl.NumberFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.numberformat
-Value NumberFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -51,10 +51,10 @@ Value NumberFormatConstructor::construct(FunctionObject& new_target)
     auto options = vm.argument(1);
 
     // 2. Let numberFormat be ? OrdinaryCreateFromConstructor(newTarget, "%NumberFormat.prototype%", « [[InitializedNumberFormat]], [[Locale]], [[DataLocale]], [[NumberingSystem]], [[Style]], [[Unit]], [[UnitDisplay]], [[Currency]], [[CurrencyDisplay]], [[CurrencySign]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[Notation]], [[CompactDisplay]], [[UseGrouping]], [[SignDisplay]], [[BoundFormat]] »).
-    auto* number_format = TRY_OR_DISCARD(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
+    auto* number_format = TRY(ordinary_create_from_constructor<NumberFormat>(global_object, new_target, &GlobalObject::intl_number_format_prototype));
 
     // 3. Perform ? InitializeNumberFormat(numberFormat, locales, options).
-    TRY_OR_DISCARD(initialize_number_format(global_object, *number_format, locales, options));
+    TRY(initialize_number_format(global_object, *number_format, locales, options));
 
     // 4. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Let this be the this value.

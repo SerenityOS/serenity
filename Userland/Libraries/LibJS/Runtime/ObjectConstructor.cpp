@@ -62,23 +62,23 @@ ObjectConstructor::~ObjectConstructor()
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
-Value ObjectConstructor::call()
+ThrowCompletionOr<Value> ObjectConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
-Value ObjectConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ObjectConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     if (&new_target != this)
-        return TRY_OR_DISCARD(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
+        return TRY(ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype));
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(global_object, global_object.object_prototype());
-    return TRY_OR_DISCARD(value.to_object(global_object));
+    return value.to_object(global_object);
 }
 
 enum class GetOwnPropertyKeysType {

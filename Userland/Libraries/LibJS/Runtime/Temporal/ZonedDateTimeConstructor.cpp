@@ -32,39 +32,36 @@ void ZonedDateTimeConstructor::initialize(GlobalObject& global_object)
 }
 
 // 6.1.1 Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime
-Value ZonedDateTimeConstructor::call()
+ThrowCompletionOr<Value> ZonedDateTimeConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.ZonedDateTime");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.ZonedDateTime");
 }
 
 // 6.1.1 Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime
-Value ZonedDateTimeConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
+    auto* epoch_nanoseconds = TRY(vm.argument(0).to_bigint(global_object));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
-        return {};
-    }
+    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
-    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, vm.argument(1)));
+    auto* time_zone = TRY(to_temporal_time_zone(global_object, vm.argument(1)));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, vm.argument(2)));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, vm.argument(2)));
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
+    return TRY(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
 }
 
 }

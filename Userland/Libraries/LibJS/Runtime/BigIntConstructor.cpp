@@ -40,7 +40,7 @@ BigIntConstructor::~BigIntConstructor()
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
-Value BigIntConstructor::call()
+ThrowCompletionOr<Value> BigIntConstructor::call()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -48,21 +48,20 @@ Value BigIntConstructor::call()
     auto value = vm.argument(0);
 
     // 2. Let prim be ? ToPrimitive(value, number).
-    auto primitive = TRY_OR_DISCARD(value.to_primitive(global_object, Value::PreferredType::Number));
+    auto primitive = TRY(value.to_primitive(global_object, Value::PreferredType::Number));
 
     // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
     if (primitive.is_number())
         return number_to_bigint(global_object, primitive);
 
     // 4. Otherwise, return ? ToBigInt(value).
-    return TRY_OR_DISCARD(value.to_bigint(global_object));
+    return TRY(value.to_bigint(global_object));
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
-Value BigIntConstructor::construct(FunctionObject&)
+ThrowCompletionOr<Object*> BigIntConstructor::construct(FunctionObject&)
 {
-    vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "BigInt");
-    return {};
+    return vm().throw_completion<TypeError>(global_object(), ErrorType::NotAConstructor, "BigInt");
 }
 
 // 21.2.2.1 BigInt.asIntN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asintn

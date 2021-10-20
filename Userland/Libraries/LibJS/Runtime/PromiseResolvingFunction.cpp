@@ -30,9 +30,9 @@ void PromiseResolvingFunction::initialize(GlobalObject& global_object)
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
 }
 
-Value PromiseResolvingFunction::call()
+ThrowCompletionOr<Value> PromiseResolvingFunction::call()
 {
-    return TRY_OR_DISCARD(m_native_function(vm(), global_object(), m_promise, m_already_resolved));
+    return m_native_function(vm(), global_object(), m_promise, m_already_resolved);
 }
 
 void PromiseResolvingFunction::visit_edges(Cell::Visitor& visitor)

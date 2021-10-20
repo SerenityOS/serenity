@@ -8,6 +8,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -66,20 +67,21 @@ RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(Glo
 }
 
 // 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
-Value FunctionConstructor::call()
+ThrowCompletionOr<Value> FunctionConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
-Value FunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_target)
 {
+    auto& vm = this->vm();
     auto function = create_dynamic_function_node(global_object(), new_target, FunctionKind::Regular);
-    if (!function)
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     OwnPtr<Interpreter> local_interpreter;
-    Interpreter* interpreter = vm().interpreter_if_exists();
+    Interpreter* interpreter = vm.interpreter_if_exists();
 
     if (!interpreter) {
         local_interpreter = Interpreter::create_with_existing_realm(*realm());
@@ -87,7 +89,11 @@ Value FunctionConstructor::construct(FunctionObject& new_target)
     }
 
     VM::InterpreterExecutionScope scope(*interpreter);
-    return function->execute(*interpreter, global_object());
+    auto result = function->execute(*interpreter, global_object());
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    VERIFY(result.is_object() && is<ECMAScriptFunctionObject>(result.as_object()));
+    return &result.as_object();
 }
 
 }

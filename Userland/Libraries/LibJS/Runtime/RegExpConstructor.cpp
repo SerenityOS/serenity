@@ -34,7 +34,7 @@ RegExpConstructor::~RegExpConstructor()
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
-Value RegExpConstructor::call()
+ThrowCompletionOr<Value> RegExpConstructor::call()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -42,19 +42,19 @@ Value RegExpConstructor::call()
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = TRY_OR_DISCARD(pattern.is_regexp(global_object));
+    bool pattern_is_regexp = TRY(pattern.is_regexp(global_object));
 
     if (pattern_is_regexp && flags.is_undefined()) {
-        auto pattern_constructor = TRY_OR_DISCARD(pattern.as_object().get(vm.names.constructor));
+        auto pattern_constructor = TRY(pattern.as_object().get(vm.names.constructor));
         if (same_value(this, pattern_constructor))
             return pattern;
     }
 
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
-Value RegExpConstructor::construct(FunctionObject&)
+ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -62,7 +62,7 @@ Value RegExpConstructor::construct(FunctionObject&)
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    bool pattern_is_regexp = TRY_OR_DISCARD(pattern.is_regexp(global_object));
+    bool pattern_is_regexp = TRY(pattern.is_regexp(global_object));
 
     Value pattern_value;
     Value flags_value;
@@ -76,10 +76,10 @@ Value RegExpConstructor::construct(FunctionObject&)
         else
             flags_value = flags;
     } else if (pattern_is_regexp) {
-        pattern_value = TRY_OR_DISCARD(pattern.as_object().get(vm.names.source));
+        pattern_value = TRY(pattern.as_object().get(vm.names.source));
 
         if (flags.is_undefined()) {
-            flags_value = TRY_OR_DISCARD(pattern.as_object().get(vm.names.flags));
+            flags_value = TRY(pattern.as_object().get(vm.names.flags));
         } else {
             flags_value = flags;
         }
@@ -88,7 +88,10 @@ Value RegExpConstructor::construct(FunctionObject&)
         flags_value = flags;
     }
 
-    return regexp_create(global_object, pattern_value, flags_value);
+    auto* regexp = regexp_create(global_object, pattern_value, flags_value);
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return regexp;
 }
 
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species

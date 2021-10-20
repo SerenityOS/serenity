@@ -28,25 +28,25 @@ void ErrorConstructor::initialize(GlobalObject& global_object)
 }
 
 // 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
-Value ErrorConstructor::call()
+ThrowCompletionOr<Value> ErrorConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
-Value ErrorConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* error = TRY_OR_DISCARD(ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype));
+    auto* error = TRY(ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype));
 
     if (!vm.argument(0).is_undefined()) {
-        auto message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+        auto message = TRY(vm.argument(0).to_string(global_object));
         MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
     }
 
-    TRY_OR_DISCARD(error->install_error_cause(vm.argument(1)));
+    TRY(error->install_error_cause(vm.argument(1)));
 
     return error;
 }
@@ -72,26 +72,26 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
     ConstructorName::~ConstructorName() { }                                                                      \
                                                                                                                  \
     /* 20.5.6.1.1 NativeError ( message ), https://tc39.es/ecma262/#sec-nativeerror */                           \
-    Value ConstructorName::call()                                                                                \
+    ThrowCompletionOr<Value> ConstructorName::call()                                                             \
     {                                                                                                            \
-        return construct(*this);                                                                                 \
+        return TRY(construct(*this));                                                                            \
     }                                                                                                            \
                                                                                                                  \
     /* 20.5.6.1.1 NativeError ( message ), https://tc39.es/ecma262/#sec-nativeerror */                           \
-    Value ConstructorName::construct(FunctionObject& new_target)                                                 \
+    ThrowCompletionOr<Object*> ConstructorName::construct(FunctionObject& new_target)                            \
     {                                                                                                            \
         auto& vm = this->vm();                                                                                   \
         auto& global_object = this->global_object();                                                             \
                                                                                                                  \
-        auto* error = TRY_OR_DISCARD(ordinary_create_from_constructor<ClassName>(                                \
+        auto* error = TRY(ordinary_create_from_constructor<ClassName>(                                           \
             global_object, new_target, &GlobalObject::snake_name##_prototype));                                  \
                                                                                                                  \
         if (!vm.argument(0).is_undefined()) {                                                                    \
-            auto message = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));                              \
+            auto message = TRY(vm.argument(0).to_string(global_object));                                         \
             MUST(error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message))); \
         }                                                                                                        \
                                                                                                                  \
-        TRY_OR_DISCARD(error->install_error_cause(vm.argument(1)));                                              \
+        TRY(error->install_error_cause(vm.argument(1)));                                                         \
                                                                                                                  \
         return error;                                                                                            \
     }

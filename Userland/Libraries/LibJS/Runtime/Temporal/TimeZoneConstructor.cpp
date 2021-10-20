@@ -32,31 +32,30 @@ void TimeZoneConstructor::initialize(GlobalObject& global_object)
 }
 
 // 11.2.1 Temporal.TimeZone ( identifier ), https://tc39.es/proposal-temporal/#sec-temporal.timezone
-Value TimeZoneConstructor::call()
+ThrowCompletionOr<Value> TimeZoneConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.TimeZone");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.TimeZone");
 }
 
 // 11.2.1 Temporal.TimeZone ( identifier ), https://tc39.es/proposal-temporal/#sec-temporal.timezone
-Value TimeZoneConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Set identifier to ? ToString(identifier).
-    auto identifier = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto identifier = TRY(vm.argument(0).to_string(global_object));
 
     String canonical;
 
     // 3. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
     if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
         // a. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(identifier).
-        auto offset_nanoseconds = TRY_OR_DISCARD(parse_time_zone_offset_string(global_object, identifier));
+        auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, identifier));
 
         // b. Let canonical be ! FormatTimeZoneOffsetString(offsetNanoseconds).
         canonical = format_time_zone_offset_string(offset_nanoseconds);
@@ -66,8 +65,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
         // a. If ! IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
-            return {};
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
         }
 
         // b. Let canonical be ! CanonicalizeTimeZoneName(identifier).
@@ -75,7 +73,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
     }
 
     // 5. Return ? CreateTemporalTimeZone(canonical, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_time_zone(global_object, canonical, &new_target));
+    return TRY(create_temporal_time_zone(global_object, canonical, &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
