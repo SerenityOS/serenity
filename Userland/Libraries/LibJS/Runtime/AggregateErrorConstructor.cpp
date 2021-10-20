@@ -51,9 +51,7 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
 
     TRY_OR_DISCARD(aggregate_error->install_error_cause(vm.argument(2)));
 
-    auto errors_list = iterable_to_list(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
+    auto errors_list = TRY_OR_DISCARD(iterable_to_list(global_object, vm.argument(0)));
 
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(global_object, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 

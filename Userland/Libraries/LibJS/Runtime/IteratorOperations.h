@@ -27,7 +27,7 @@ ThrowCompletionOr<bool> iterator_complete(GlobalObject&, Object& iterator_result
 ThrowCompletionOr<Value> iterator_value(GlobalObject&, Object& iterator_result);
 Completion iterator_close(Object& iterator, Completion completion);
 Object* create_iterator_result_object(GlobalObject&, Value value, bool done);
-MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
+ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
 Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method = {});

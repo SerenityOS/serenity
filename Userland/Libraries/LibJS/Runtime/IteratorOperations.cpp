@@ -147,19 +147,19 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
 }
 
 // 7.4.10 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
-MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
+ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
 {
     auto& vm = global_object.vm();
     MarkedValueList values(vm.heap());
 
-    (void)get_iterator_values(
+    TRY(get_iterator_values(
         global_object, iterable, [&](auto value) -> Optional<Completion> {
             values.append(value);
             return {};
         },
-        method);
+        method));
 
-    return values;
+    return { move(values) };
 }
 
 Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method)
