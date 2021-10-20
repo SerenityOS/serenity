@@ -18,7 +18,7 @@ fi
 for d in "${MAN_DIR}"*/; do
     dir_name=$(basename "$d")
     section="${dir_name/man}"
-    mkdir -p "output/${section}"
+    mkdir -p "output/${dir_name}"
 done
 
 # Convert markdown to html
@@ -26,26 +26,27 @@ done
 # If you're here because your local results are different from the website:
 # Check that your pandoc version matches the pandoc-version specified in manpages.yaml.
 
-find "${MAN_DIR}" -iname '*.md' -type f -exec sh -c '\
-    relative_path="$(realpath --relative-to="${MAN_DIR}" $0)" \
-    && stripped_path="${relative_path#man}" \
-    && section="${stripped_path%%/*}" \
-    && filename="${stripped_path#*/}" \
-    && name="${filename%.md}" \
-    && pandoc -f gfm -t html5 -s --lua-filter=Meta/convert-markdown-links.lua --metadata title="${name}(${section}) - SerenityOS man pages" -o "output/${section}/${name}.html" "${0}" \
-' {} \;
+for md_file in "${MAN_DIR}"*/*.md; do
+    relative_path="$(realpath --relative-to="${MAN_DIR}" "${md_file}")"
+    section="${relative_path%%/*}"
+    section_number="${section#man}"
+    filename="${relative_path#*/}"
+    name="${filename%.md}"
+    pandoc -f gfm -t html5 -s --lua-filter=Meta/convert-markdown-links.lua --metadata title="${name}(${section_number}) - SerenityOS man pages" -o "output/${section}/${name}.html" "${md_file}"
+done
 
 # Generate man page listings
 for d in output/*/; do
     section=$(basename "$d")
-    echo "<!DOCTYPE html><html><head><title>Section ${section} - SerenityOS man pages</title></head><body>" > "${d}/index.html"
+    section_number="${section#man}"
+    echo "<!DOCTYPE html><html><head><title>Section ${section_number} - SerenityOS man pages</title></head><body>" > "${d}/index.html"
     for f in "$d"/*; do
         filename=$(basename "$f")
         name="${filename%.html}"
         if [[ "$filename" == "index.html" ]]; then
             continue
         fi
-        echo "<a href=\"${filename}\"><p>${name}(${section})</p></a>" >> "${d}/index.html"
+        echo "<a href=\"${filename}\"><p>${name}(${section_number})</p></a>" >> "${d}/index.html"
     done
     echo "</body></html>" >> "$d/index.html"
 done
