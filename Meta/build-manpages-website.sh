@@ -64,9 +64,20 @@ done
 for d in output/*/; do
     section=$(basename "$d")
     section_number="${section#man}"
+    case "${section_number}" in
+        1) section_title="User Programs";;
+        2) section_title="System Calls";;
+        3) section_title="Library Functions";;
+        4) section_title="Special Files";;
+        5) section_title="User Programs";;
+        6) section_title="Games";; # TODO: Populate this section
+        7) section_title="Miscellanea";;
+        8) section_title="Sysadmin Tools";;
+        *) section_title="SerenityOS man pages"; echo "WARNING: Unrecognized section ${section_number}?!";;
+    esac
     pandoc -f gfm -t html5 -s \
         -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
-        --metadata title="Section ${section_number} - SerenityOS man pages" \
+        --metadata title="Section ${section_number} - ${section_title}" \
         -o "output/${section}/index.html" \
         <(
             for f in "$d"/*; do
