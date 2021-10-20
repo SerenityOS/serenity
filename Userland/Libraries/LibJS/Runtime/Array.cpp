@@ -159,7 +159,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property
 {
     auto& vm = this->vm();
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
-        return { PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false } };
+        return PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false };
 
     return Object::internal_get_own_property(property_name);
 }

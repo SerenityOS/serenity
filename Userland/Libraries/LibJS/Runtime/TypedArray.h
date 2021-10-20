@@ -216,12 +216,12 @@ public:
                     return Optional<PropertyDescriptor> {};
 
                 // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
-                return { PropertyDescriptor {
+                return PropertyDescriptor {
                     .value = value,
                     .writable = true,
                     .enumerable = true,
                     .configurable = true,
-                } };
+                };
             }
         }
 

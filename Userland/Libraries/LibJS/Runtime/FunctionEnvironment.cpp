@@ -43,7 +43,7 @@ ThrowCompletionOr<Value> FunctionEnvironment::get_super_base() const
     // 3. Assert: Type(home) is Object.
 
     // 4. Return ? home.[[GetPrototypeOf]]().
-    return { TRY(home_object->internal_get_prototype_of()) };
+    return TRY(home_object->internal_get_prototype_of());
 }
 
 // 9.1.1.3.2 HasThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding

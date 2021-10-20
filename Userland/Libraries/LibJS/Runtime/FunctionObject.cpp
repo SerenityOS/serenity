@@ -33,9 +33,9 @@ BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> argume
         case Value::Type::Null:
             if (vm.in_strict_mode())
                 return bound_this_value;
-            return { &global_object() };
+            return &global_object();
         default:
-            return { TRY(bound_this_value.to_object(global_object())) };
+            return TRY(bound_this_value.to_object(global_object()));
         }
     };
     auto bound_this_object = TRY_OR_DISCARD(get_bound_this_object());
