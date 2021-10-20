@@ -20,7 +20,7 @@ enum class IteratorHint {
 };
 
 ThrowCompletionOr<Object*> get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
-Object* iterator_next(Object& iterator, Value value = {});
+ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value = {});
 Object* iterator_step(GlobalObject&, Object& iterator);
 bool iterator_complete(GlobalObject&, Object& iterator_result);
 Value iterator_value(GlobalObject&, Object& iterator_result);
