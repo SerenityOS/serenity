@@ -238,7 +238,6 @@
     M(BadArgCountOne, "{}() needs one argument")                                                                                        \
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
-    M(FixmeAddAnErrorString, "FIXME: Add a string for this error.")                                                                     \
     M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")
 
 namespace JS {
