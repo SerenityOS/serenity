@@ -174,7 +174,7 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
             return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_double(), property.as_string());
 
         // b. Return floor(ℝ(value)).
-        return { static_cast<NumberType>(floor(value.as_double())) };
+        return static_cast<NumberType>(floor(value.as_double()));
     }
 
     // 4. Assert: Type(value) is String.
@@ -185,7 +185,7 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
         return vm.template throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property.as_string());
 
     // 6. Return value.
-    return { value.as_string().string() };
+    return value.as_string().string();
 }
 
 // 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
@@ -430,7 +430,7 @@ ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject& glob
     }
 
     // 5. Return smallestUnit.
-    return { smallest_unit };
+    return smallest_unit;
 }
 
 // 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange
@@ -871,7 +871,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     // 4. If id is undefined, then
     if (!id_part.has_value()) {
         // a. Return "iso8601".
-        return { "iso8601"sv };
+        return "iso8601"sv;
     }
 
     // 5. If ! IsBuiltinCalendar(id) is false, then
@@ -881,7 +881,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     }
 
     // 6. Return id.
-    return { id_part.value() };
+    return id_part.value();
 }
 
 // 13.38 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring

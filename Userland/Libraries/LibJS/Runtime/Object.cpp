@@ -676,7 +676,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
     descriptor.configurable = attributes.is_configurable();
 
     // 9. Return D.
-    return { descriptor };
+    return descriptor;
 }
 
 // 10.1.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc
