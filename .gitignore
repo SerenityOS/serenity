@@ -23,6 +23,7 @@ compile_commands.json
 .clangd
 .idea/
 cmake-build-debug/
+output/
 run-local.sh
 sync-local.sh
 .vim/

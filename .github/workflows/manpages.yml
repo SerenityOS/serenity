@@ -6,9 +6,6 @@ on:
       - "Base/usr/share/man/**"
       - "Meta/Websites/man.serenityos.org/**"
 
-env:
-  MAN_DIR: ${{ github.workspace }}/Base/usr/share/man/
-
 jobs:
   convert_using_pandoc:
     runs-on: ubuntu-20.04
@@ -18,48 +15,8 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v1
         with:
           pandoc-version: '2.13'
-      - name: Prepare output directories
-        run: |
-          for d in $MAN_DIR*/; do
-            dir_name=$(basename "$d")
-            section="${dir_name/man}"
-            mkdir -p "output/${section}"
-          done
-      - name: Convert markdown to html
-        run: |
-          cat << EOF > link-fixup.lua
-          function Link(el)
-            el.target = string.gsub(el.target, "%.md", ".html") -- fixup .md to .html links
-            el.target = string.gsub(el.target, "man", "", 1) -- fixup man1/???.html to 1/???.html links
-            return el
-          end
-          EOF
-          find $MAN_DIR -iname '*.md' -type f -exec sh -c '\
-            relative_path="$(realpath --relative-to=$MAN_DIR $0)" \
-            && stripped_path="${relative_path#man}" \
-            && section="${stripped_path%%/*}" \
-            && filename="${stripped_path#*/}" \
-            && name="${filename%.md}" \
-            && pandoc -f gfm -t html5 -s --lua-filter=link-fixup.lua --metadata title="${name}(${section}) - SerenityOS man pages" -o "output/${section}/${name}.html" "${0}" \
-          ' {} \;
-      - name: Generate man page listings
-        run: |
-          for d in output/*/; do
-            section=$(basename "$d")
-            echo "<!DOCTYPE html><html><head><title>Section ${section} - SerenityOS man pages</title></head><body>" > "${d}/index.html"
-            for f in $d/*; do
-              filename=$(basename "$f")
-              name="${filename%.html}"
-              if [[ "$filename" == "index.html" ]]; then
-                 continue
-              fi
-              echo "<a href=\"${filename}\"><p>${name}(${section})</p></a>" >> "${d}/index.html"
-            done
-            echo "</body></html>" >> "$d/index.html"
-          done
-      - name: Copy pre-made files
-        run: |
-          cp -R Meta/Websites/man.serenityos.org/* output/
+      - name: Actually build website
+        run: ./Meta/build-manpages-website.sh
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
