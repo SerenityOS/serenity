@@ -97,6 +97,11 @@ public:
         return scope_pusher;
     }
 
+    static ScopePusher static_init_block_scope(Parser& parser, ScopeNode& node)
+    {
+        return ScopePusher(parser, &node, true);
+    }
+
     void add_declaration(NonnullRefPtr<Declaration> declaration)
     {
         if (declaration->is_lexical_declaration()) {
@@ -957,6 +962,24 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     break;
                 }
                 property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, name);
+            } else if (match(TokenType::CurlyOpen) && is_static) {
+                auto static_start = push_start();
+                consume(TokenType::CurlyOpen);
+
+                auto static_init_block = create_ast_node<FunctionBody>({ m_state.current_token.filename(), rule_start.position(), position() });
+
+                TemporaryChange break_context_rollback(m_state.in_break_context, false);
+                TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
+                TemporaryChange function_context_rollback(m_state.in_function_context, false);
+                TemporaryChange generator_function_context_rollback(m_state.in_generator_function_context, false);
+                TemporaryChange in_class_field_initializer_rollback(m_state.in_class_field_initializer, true);
+
+                ScopePusher static_init_scope = ScopePusher::static_init_block_scope(*this, *static_init_block);
+                parse_statement_list(static_init_block);
+
+                consume(TokenType::CurlyClose);
+                elements.append(create_ast_node<StaticInitializer>({ m_state.current_token.filename(), static_start.position(), position() }, move(static_init_block), static_init_scope.contains_direct_call_to_eval()));
+                continue;
             } else {
                 expected("property key");
             }
