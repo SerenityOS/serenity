@@ -18,8 +18,8 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~DataViewConstructor() override;
 
-    virtual Value call() override;
-    virtual Value construct(FunctionObject&) override;
+    virtual ThrowCompletionOr<Value> call() override;
+    virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

@@ -31,27 +31,27 @@ void AggregateErrorConstructor::initialize(GlobalObject& global_object)
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message ), https://tc39.es/ecma262/#sec-aggregate-error
-Value AggregateErrorConstructor::call()
+ThrowCompletionOr<Value> AggregateErrorConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message ), https://tc39.es/ecma262/#sec-aggregate-error
-Value AggregateErrorConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> AggregateErrorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* aggregate_error = TRY_OR_DISCARD(ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype));
+    auto* aggregate_error = TRY(ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype));
 
     if (!vm.argument(1).is_undefined()) {
-        auto message = TRY_OR_DISCARD(vm.argument(1).to_string(global_object));
+        auto message = TRY(vm.argument(1).to_string(global_object));
         MUST(aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message)));
     }
 
-    TRY_OR_DISCARD(aggregate_error->install_error_cause(vm.argument(2)));
+    TRY(aggregate_error->install_error_cause(vm.argument(2)));
 
-    auto errors_list = TRY_OR_DISCARD(iterable_to_list(global_object, vm.argument(0)));
+    auto errors_list = TRY(iterable_to_list(global_object, vm.argument(0)));
 
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(global_object, errors_list), .writable = true, .enumerable = false, .configurable = true }));
 

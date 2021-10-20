@@ -43,16 +43,15 @@ TypedArrayConstructor::~TypedArrayConstructor()
 }
 
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
-Value TypedArrayConstructor::call()
+ThrowCompletionOr<Value> TypedArrayConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
-Value TypedArrayConstructor::construct(FunctionObject&)
+ThrowCompletionOr<Object*> TypedArrayConstructor::construct(FunctionObject&)
 {
-    vm().throw_exception<TypeError>(global_object(), ErrorType::ClassIsAbstract, "TypedArray");
-    return {};
+    return vm().throw_completion<TypeError>(global_object(), ErrorType::ClassIsAbstract, "TypedArray");
 }
 
 // 23.2.2.1 %TypedArray%.from ( source [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.from

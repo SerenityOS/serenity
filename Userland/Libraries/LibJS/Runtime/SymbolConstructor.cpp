@@ -40,18 +40,17 @@ SymbolConstructor::~SymbolConstructor()
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
-Value SymbolConstructor::call()
+ThrowCompletionOr<Value> SymbolConstructor::call()
 {
     if (vm().argument(0).is_undefined())
         return js_symbol(heap(), {}, false);
-    return js_symbol(heap(), TRY_OR_DISCARD(vm().argument(0).to_string(global_object())), false);
+    return js_symbol(heap(), TRY(vm().argument(0).to_string(global_object())), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
-Value SymbolConstructor::construct(FunctionObject&)
+ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 {
-    vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
-    return {};
+    return vm().throw_completion<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
 }
 
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for

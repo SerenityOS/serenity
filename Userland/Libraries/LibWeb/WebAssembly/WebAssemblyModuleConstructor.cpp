@@ -23,22 +23,21 @@ WebAssemblyModuleConstructor::~WebAssemblyModuleConstructor()
 {
 }
 
-JS::Value WebAssemblyModuleConstructor::call()
+JS::ThrowCompletionOr<JS::Value> WebAssemblyModuleConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
-    return {};
+    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
 }
 
-JS::Value WebAssemblyModuleConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* buffer_object = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
+    auto* buffer_object = TRY(vm.argument(0).to_object(global_object));
     auto result = parse_module(global_object, buffer_object);
     if (result.is_error()) {
         vm.throw_exception(global_object, result.error());
-        return {};
+        return JS::throw_completion(result.error());
     }
 
     return heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result.release_value());

@@ -26,7 +26,7 @@ PromiseReactionJob::PromiseReactionJob(PromiseReaction& reaction, Value argument
 }
 
 // 27.2.2.1 NewPromiseReactionJob ( reaction, argument ), https://tc39.es/ecma262/#sec-newpromisereactionjob
-Value PromiseReactionJob::call()
+ThrowCompletionOr<Value> PromiseReactionJob::call()
 {
     auto& vm = this->vm();
     auto& promise_capability = m_reaction.capability();
@@ -64,11 +64,11 @@ Value PromiseReactionJob::call()
         vm.stop_unwind();
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
-        return TRY_OR_DISCARD(vm.call(*reject_function, js_undefined(), handler_result));
+        return vm.call(*reject_function, js_undefined(), handler_result);
     } else {
         auto* resolve_function = promise_capability.value().resolve;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's resolve function @ {}", this, resolve_function);
-        return TRY_OR_DISCARD(vm.call(*resolve_function, js_undefined(), handler_result));
+        return vm.call(*resolve_function, js_undefined(), handler_result);
     }
 }
 
@@ -94,7 +94,7 @@ PromiseResolveThenableJob::PromiseResolveThenableJob(Promise& promise_to_resolve
 }
 
 // 27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then ), https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
-Value PromiseResolveThenableJob::call()
+ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
 {
     auto& vm = this->vm();
     auto [resolve_function, reject_function] = m_promise_to_resolve.create_resolving_functions();

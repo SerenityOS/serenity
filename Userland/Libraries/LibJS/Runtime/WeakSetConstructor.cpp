@@ -34,31 +34,28 @@ WeakSetConstructor::~WeakSetConstructor()
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
-Value WeakSetConstructor::call()
+ThrowCompletionOr<Value> WeakSetConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
-Value WeakSetConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> WeakSetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* weak_set = TRY_OR_DISCARD(ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype));
+    auto* weak_set = TRY(ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_set;
 
-    auto adder = TRY_OR_DISCARD(weak_set->get(vm.names.add));
-    if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
-        return {};
-    }
+    auto adder = TRY(weak_set->get(vm.names.add));
+    if (!adder.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
 
-    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         TRY(vm.call(adder.as_function(), Value(weak_set), iterator_value));
         return {};
     }));

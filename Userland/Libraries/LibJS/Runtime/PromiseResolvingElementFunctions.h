@@ -46,7 +46,7 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~PromiseResolvingElementFunction() override = default;
 
-    virtual Value call() override;
+    virtual ThrowCompletionOr<Value> call() override;
 
 protected:
     explicit PromiseResolvingElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);

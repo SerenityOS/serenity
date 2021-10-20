@@ -180,7 +180,7 @@ static DatetimeAndMilliseconds now()
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
-Value DateConstructor::call()
+ThrowCompletionOr<Value> DateConstructor::call()
 {
     auto [datetime, milliseconds] = JS::now();
     auto* date = Date::create(global_object(), datetime, milliseconds, false);
@@ -188,20 +188,20 @@ Value DateConstructor::call()
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
-Value DateConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     if (vm.argument_count() == 0) {
         auto [datetime, milliseconds] = JS::now();
-        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+        return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
     }
 
-    auto create_invalid_date = [&global_object, &new_target]() -> Date* {
+    auto create_invalid_date = [&global_object, &new_target]() -> ThrowCompletionOr<Date*> {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
         auto milliseconds = static_cast<i16>(0);
-        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true));
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true);
     };
 
     if (vm.argument_count() == 1) {
@@ -209,19 +209,18 @@ Value DateConstructor::construct(FunctionObject& new_target)
         if (value.is_string())
             value = parse_date_string(value.as_string().string());
         else
-            value = TRY_OR_DISCARD(value.to_number(global_object));
+            value = TRY(value.to_number(global_object));
 
-        if (!value.is_finite_number()) {
-            return create_invalid_date();
-        }
+        if (!value.is_finite_number())
+            return TRY(create_invalid_date());
 
         // A timestamp since the epoch, in UTC.
         double value_as_double = value.as_double();
         if (value_as_double > Date::time_clip)
-            return create_invalid_date();
+            return TRY(create_invalid_date());
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
-        return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+        return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
     }
 
     // A date/time in components, in local time.
@@ -229,46 +228,39 @@ Value DateConstructor::construct(FunctionObject& new_target)
         return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
     };
 
-    auto year_value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
-    if (!year_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto year_value = TRY(vm.argument(0).to_number(global_object));
+    if (!year_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto year = year_value.as_i32();
 
-    auto month_index_value = TRY_OR_DISCARD(vm.argument(1).to_number(global_object));
-    if (!month_index_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto month_index_value = TRY(vm.argument(1).to_number(global_object));
+    if (!month_index_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto month_index = month_index_value.as_i32();
 
-    auto day_value = TRY_OR_DISCARD(arg_or(2, 1));
-    if (!day_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto day_value = TRY(arg_or(2, 1));
+    if (!day_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto day = day_value.as_i32();
 
-    auto hours_value = TRY_OR_DISCARD(arg_or(3, 0));
-    if (!hours_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto hours_value = TRY(arg_or(3, 0));
+    if (!hours_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto hours = hours_value.as_i32();
 
-    auto minutes_value = TRY_OR_DISCARD(arg_or(4, 0));
-    if (!minutes_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto minutes_value = TRY(arg_or(4, 0));
+    if (!minutes_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto minutes = minutes_value.as_i32();
 
-    auto seconds_value = TRY_OR_DISCARD(arg_or(5, 0));
-    if (!seconds_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto seconds_value = TRY(arg_or(5, 0));
+    if (!seconds_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto seconds = seconds_value.as_i32();
 
-    auto milliseconds_value = TRY_OR_DISCARD(arg_or(6, 0));
-    if (!milliseconds_value.is_finite_number()) {
-        return create_invalid_date();
-    }
+    auto milliseconds_value = TRY(arg_or(6, 0));
+    if (!milliseconds_value.is_finite_number())
+        return TRY(create_invalid_date());
     auto milliseconds = milliseconds_value.as_i32();
 
     seconds += milliseconds / 1000;
@@ -284,8 +276,8 @@ Value DateConstructor::construct(FunctionObject& new_target)
     auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
     auto time = datetime.timestamp() * 1000.0 + milliseconds;
     if (time > Date::time_clip)
-        return create_invalid_date();
-    return TRY_OR_DISCARD(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
+        return TRY(create_invalid_date());
+    return TRY(ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false));
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
