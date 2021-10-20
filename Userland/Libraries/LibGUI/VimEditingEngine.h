@@ -71,6 +71,8 @@ public:
         Unknown,
         // Document. Anything non-negative is counted as G while anything else is gg.
         Document,
+        // Paragraph. Block of code or prose separated by blank line.
+        Paragraph,
         // Lines.
         Line,
         // A sequence of letters, digits and underscores, or a sequence of other
@@ -120,6 +122,7 @@ public:
 
 private:
     void calculate_document_range(TextEditor&);
+    void calculate_paragraph_range(TextEditor&);
     void calculate_line_range(TextEditor&, bool normalize_for_position);
     void calculate_word_range(VimCursor&, int amount, bool normalize_for_position);
     void calculate_WORD_range(VimCursor&, int amount, bool normalize_for_position);

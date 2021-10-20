@@ -204,6 +204,28 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         m_is_complete = true;
         break;
 
+    // } means the first separate blank line below cursor.
+    case KeyCode::Key_RightBrace:
+        m_unit = Unit::Paragraph;
+
+        if (m_amount == 0)
+            m_amount = 1;
+
+        m_is_complete = true;
+        break;
+
+    // { means the first separate blank line above cursor.
+    case KeyCode::Key_LeftBrace:
+        m_unit = Unit::Paragraph;
+
+        if (m_amount == 0)
+            m_amount = -1;
+        else
+            m_amount = -m_amount;
+
+        m_is_complete = true;
+        break;
+
     // j, down or + operates on this line and amount line(s) after.
     case KeyCode::Key_J:
     case KeyCode::Key_Down:
@@ -391,6 +413,10 @@ Optional<TextRange> VimMotion::get_range(VimEditingEngine& engine, bool normaliz
         calculate_document_range(editor);
         break;
     }
+    case Unit::Paragraph: {
+        calculate_paragraph_range(editor);
+        break;
+    }
     case Unit::Line: {
         calculate_line_range(editor, normalize_for_position);
         break;
@@ -457,6 +483,38 @@ void VimMotion::calculate_document_range(TextEditor& editor)
     } else {
         m_start_line = 0;
         m_start_column = 0;
+    }
+}
+
+void VimMotion::calculate_paragraph_range(TextEditor& editor)
+{
+    bool skipping_initial_empty_lines = editor.document().line(m_end_line).is_empty();
+    if (m_amount > 0) {
+        // Move to next separate blank line below current position.
+        while (m_end_line < editor.line_count() - 1) {
+            m_end_line++;
+            if (editor.document().line(m_end_line).is_empty()) {
+                if (!skipping_initial_empty_lines && m_amount == 1)
+                    break;
+                else
+                    m_amount--;
+            } else {
+                skipping_initial_empty_lines = false;
+            }
+        }
+    } else {
+        // Move to next separate blank line above current position.
+        while (m_end_line != 0) {
+            m_end_line--;
+            if (editor.document().line(m_end_line).is_empty()) {
+                if (!skipping_initial_empty_lines && m_amount == -1)
+                    break;
+                else
+                    m_amount++;
+            } else {
+                skipping_initial_empty_lines = false;
+            }
+        }
     }
 }
 
@@ -971,13 +1029,6 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_up(event);
                 switch_to_insert_mode();
                 return true;
-            // FIXME: Integrate these into vim motions too.
-            case (KeyCode::Key_LeftBrace):
-                move_to_previous_empty_lines_block();
-                return true;
-            case (KeyCode::Key_RightBrace):
-                move_to_next_empty_lines_block();
-                return true;
             case (KeyCode::Key_J): {
                 // Looks a bit strange, but join without a repeat, with 1 as the repeat or 2 as the repeat all join the current and next lines
                 auto amount = (m_motion.amount() > 2) ? (m_motion.amount() - 1) : 1;
@@ -1363,45 +1414,5 @@ void VimEditingEngine::put_after()
         move_one_left();
     }
 }
-
-void VimEditingEngine::move_to_previous_empty_lines_block()
-{
-    VERIFY(!m_editor.is_null());
-    size_t line_idx = m_editor->cursor().line();
-    bool skipping_initial_empty_lines = true;
-    while (line_idx > 0) {
-        if (m_editor->document().line(line_idx).is_empty()) {
-            if (!skipping_initial_empty_lines)
-                break;
-        } else {
-            skipping_initial_empty_lines = false;
-        }
-        line_idx--;
-    }
-
-    TextPosition new_cursor = { line_idx, 0 };
-
-    m_editor->set_cursor(new_cursor);
-};
-
-void VimEditingEngine::move_to_next_empty_lines_block()
-{
-    VERIFY(!m_editor.is_null());
-    size_t line_idx = m_editor->cursor().line();
-    bool skipping_initial_empty_lines = true;
-    while (line_idx < m_editor->line_count() - 1) {
-        if (m_editor->document().line(line_idx).is_empty()) {
-            if (!skipping_initial_empty_lines)
-                break;
-        } else {
-            skipping_initial_empty_lines = false;
-        }
-        line_idx++;
-    }
-
-    TextPosition new_cursor = { line_idx, 0 };
-
-    m_editor->set_cursor(new_cursor);
-};
 
 }
