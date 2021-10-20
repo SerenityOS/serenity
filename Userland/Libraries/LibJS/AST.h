@@ -1013,6 +1013,7 @@ public:
     enum class ElementKind {
         Method,
         Field,
+        StaticInitializer,
     };
 
     virtual ElementKind class_element_kind() const = 0;
@@ -1023,6 +1024,7 @@ public:
         ECMAScriptFunctionObject* initializer { nullptr };
     };
 
+    // We use the Completion also as a ClassStaticBlockDefinition Record.
     using ClassValue = Variant<ClassFieldDefinition, Completion>;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const = 0;
 
@@ -1080,6 +1082,25 @@ public:
 private:
     NonnullRefPtr<Expression> m_key;
     RefPtr<Expression> m_initializer;
+};
+
+class StaticInitializer final : public ClassElement {
+public:
+    StaticInitializer(SourceRange source_range, NonnullRefPtr<FunctionBody> function_body, bool contains_direct_call_to_eval)
+        : ClassElement(source_range, true)
+        , m_function_body(move(function_body))
+        , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
+    {
+    }
+
+    virtual ElementKind class_element_kind() const override { return ElementKind::StaticInitializer; }
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, GlobalObject&, Object& home_object) const override;
+
+    virtual void dump(int indent) const override;
+
+private:
+    NonnullRefPtr<FunctionBody> m_function_body;
+    bool m_contains_direct_call_to_eval { false };
 };
 
 class SuperExpression final : public Expression {
