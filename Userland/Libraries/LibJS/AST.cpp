@@ -1244,6 +1244,18 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     };
 }
 
+// 15.7.11 Runtime Semantics: ClassStaticBlockDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation
+ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_evaluation(Interpreter& interpreter, GlobalObject& global_object, Object& home_object) const
+{
+    auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
+
+    // Note: The function bodyFunction is never directly accessible to ECMAScript code.
+    auto* body_function = ECMAScriptFunctionObject::create(global_object, "", *m_function_body, {}, 0, lexical_environment, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
+    body_function->set_home_object(&home_object);
+
+    return ClassValue { normal_completion(body_function) };
+}
+
 Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -1364,8 +1376,10 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
     prototype->define_direct_property(vm.names.constructor, class_constructor, Attribute::Writable | Attribute::Configurable);
 
+    using StaticElement = Variant<ClassElement::ClassFieldDefinition, ECMAScriptFunctionObject*>;
+
     Vector<ClassElement::ClassFieldDefinition> instance_fields;
-    Vector<ClassElement::ClassFieldDefinition> static_fields;
+    Vector<StaticElement> static_elements;
 
     // FIXME: Do things with private methods, and fields here
     for (auto const& element : m_elements) {
@@ -1375,12 +1389,16 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
         if (auto* class_field_definition_ptr = element_value.get_pointer<ClassElement::ClassFieldDefinition>()) {
             if (element.is_static())
-                static_fields.append(move(*class_field_definition_ptr));
+                static_elements.append(move(*class_field_definition_ptr));
             else
                 instance_fields.append(move(*class_field_definition_ptr));
+        } else if (element.class_element_kind() == ClassElement::ElementKind::StaticInitializer) {
+            // We use Completion to hold the ClassStaticBlockDefinition Record.
+            VERIFY(element_value.has<Completion>() && element_value.get<Completion>().has_value());
+            auto element_object = element_value.get<Completion>().value();
+            VERIFY(is<ECMAScriptFunctionObject>(element_object.as_object()));
+            static_elements.append(static_cast<ECMAScriptFunctionObject*>(&element_object.as_object()));
         }
-
-        // FIXME: Else if element is class static block
     }
 
     vm.running_execution_context().lexical_environment = environment;
@@ -1393,17 +1411,22 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
     for (auto& field : instance_fields)
         class_constructor->add_field(field.name, field.initializer);
 
-    for (auto& field : static_fields) {
-        Value field_value = js_undefined();
-        if (field.initializer)
-            field_value = TRY(interpreter.vm().call(*field.initializer, class_constructor_value));
+    for (auto& element : static_elements) {
+        TRY(element.visit(
+            [&](ClassElement::ClassFieldDefinition const& field) -> ThrowCompletionOr<void> {
+                Value field_value = js_undefined();
+                if (field.initializer)
+                    field_value = TRY(call(global_object, field.initializer, class_constructor_value));
 
-        // FIXME: Handle private static fields
-
-        TRY(class_constructor->create_data_property_or_throw(field.name, field_value));
+                TRY(class_constructor->create_data_property_or_throw(field.name, field_value));
+                return {};
+            },
+            [&](ECMAScriptFunctionObject* static_block_function) -> ThrowCompletionOr<void> {
+                // We discard any value returned here.
+                TRY(call(global_object, static_block_function, class_constructor_value));
+                return {};
+            }));
     }
-
-    // FIXME: Run static initializers
 
     return Value(class_constructor);
 }
@@ -1687,6 +1710,12 @@ void ClassField::dump(int indent) const
         outln("(Initializer)");
         m_initializer->dump(indent + 1);
     }
+}
+
+void StaticInitializer::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_function_body->dump(indent + 1);
 }
 
 void StringLiteral::dump(int indent) const
