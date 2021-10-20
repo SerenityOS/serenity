@@ -123,9 +123,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
         size_t k = 0;
         while (true) {
             if (k >= MAX_ARRAY_LIKE_INDEX) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
-                iterator_close(*iterator);
-                return {};
+                auto error = vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                return TRY_OR_DISCARD(iterator_close(*iterator, move(error)));
             }
 
             auto* next = TRY_OR_DISCARD(iterator_step(global_object, *iterator));
@@ -139,20 +138,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
             Value mapped_value;
             if (map_fn) {
                 auto mapped_value_or_error = vm.call(*map_fn, this_arg, next_value, Value(k));
-                if (mapped_value_or_error.is_error()) {
-                    iterator_close(*iterator);
-                    return {};
-                }
+                if (mapped_value_or_error.is_error())
+                    return TRY_OR_DISCARD(iterator_close(*iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
             } else {
                 mapped_value = next_value;
             }
 
             auto result_or_error = array_object.create_data_property_or_throw(k, mapped_value);
-            if (result_or_error.is_error()) {
-                iterator_close(*iterator);
-                return {};
-            }
+            if (result_or_error.is_error())
+                return TRY_OR_DISCARD(iterator_close(*iterator, result_or_error.release_error()));
 
             ++k;
         }

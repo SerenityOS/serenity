@@ -302,11 +302,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
     auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_all(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (vm.exception()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record))
-            iterator_close(*iterator_record);
+    if (auto* exception = vm.exception()) {
+        // FIXME: Once perform_promise_all returns a throw completion, pass that to iterator_close() instead.
+        auto result_error = throw_completion(exception->value());
 
-        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        if (!iterator_record_is_complete(global_object, *iterator_record)) {
+            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+            result_error = iterator_close(*iterator_record, move(result_error));
+        }
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result_error, promise_capability);
         return abrupt.value();
     }
 
@@ -332,11 +337,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_all_settled(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (vm.exception()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record))
-            iterator_close(*iterator_record);
+    if (auto* exception = vm.exception()) {
+        // FIXME: Once perform_promise_all_settled returns a throw completion, pass that to iterator_close() instead.
+        auto result_error = throw_completion(exception->value());
 
-        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        if (!iterator_record_is_complete(global_object, *iterator_record)) {
+            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+            result_error = iterator_close(*iterator_record, move(result_error));
+        }
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result_error, promise_capability);
         return abrupt.value();
     }
 
@@ -362,11 +372,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
     auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_any(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (vm.exception()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record))
-            iterator_close(*iterator_record);
+    if (auto* exception = vm.exception()) {
+        // FIXME: Once perform_promise_any returns a throw completion, pass that to iterator_close() instead.
+        auto result_error = throw_completion(exception->value());
 
-        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        if (!iterator_record_is_complete(global_object, *iterator_record)) {
+            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+            result_error = iterator_close(*iterator_record, move(result_error));
+        }
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result_error, promise_capability);
         return abrupt.value();
     }
 
@@ -392,11 +407,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
     auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_race(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (vm.exception()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record))
-            iterator_close(*iterator_record);
+    if (auto* exception = vm.exception()) {
+        // FIXME: Once perform_promise_race returns a throw completion, pass that to iterator_close() instead.
+        auto result_error = throw_completion(exception->value());
 
-        auto abrupt = if_abrupt_reject_promise(global_object, result, promise_capability);
+        if (!iterator_record_is_complete(global_object, *iterator_record)) {
+            TemporaryClearException clear_exception(vm);
+            result_error = iterator_close(*iterator_record, move(result_error)); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+        }
+
+        auto abrupt = if_abrupt_reject_promise(global_object, result_error, promise_capability);
         return abrupt.value();
     }
 

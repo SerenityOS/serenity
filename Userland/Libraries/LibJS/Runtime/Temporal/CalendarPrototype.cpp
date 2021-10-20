@@ -513,31 +513,28 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {
             // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-            vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
+            auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            iterator_close(*iterator_record);
-            return {};
+            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
         }
 
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            iterator_close(*iterator_record);
-            return {};
+            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
         if (!next_value.as_string().string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
+            auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            iterator_close(*iterator_record);
-            return {};
+            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
         }
 
         // v. Append nextValue to the end of the List fieldNames.
