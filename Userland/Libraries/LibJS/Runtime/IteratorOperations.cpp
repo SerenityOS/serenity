@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 
 namespace JS {
 
@@ -87,45 +88,52 @@ ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Object& it
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
-void iterator_close(Object& iterator)
+Completion iterator_close(Object& iterator, Completion completion)
 {
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
 
-    // Emulates `completion` behavior
-    auto* completion_exception = vm.exception();
-    vm.clear_exception();
-    auto unwind_until = vm.unwind_until();
-    auto unwind_until_label = vm.unwind_until_label();
-    vm.stop_unwind();
-    auto restore_completion = [&]() {
-        if (completion_exception)
-            vm.set_exception(*completion_exception);
-        if (unwind_until != ScopeType::None)
-            vm.unwind(unwind_until, unwind_until_label);
-    };
+    // The callers of iterator_close() are often in an exceptional state.
+    // Temporarily clear that exception for invocation(s) to Call.
+    TemporaryClearException clear_exception(vm);
 
-    auto return_method_or_error = Value(&iterator).get_method(global_object, vm.names.return_);
-    Value result;
-    if (!return_method_or_error.is_error()) { // If innerResult.[[Type]] is normal, then
-        auto return_method = return_method_or_error.release_value();
+    // 3. Let innerResult be GetMethod(iterator, "return").
+    auto inner_result_or_error = Value(&iterator).get_method(global_object, vm.names.return_);
+    Value inner_result;
+
+    // 4. If innerResult.[[Type]] is normal, then
+    if (!inner_result_or_error.is_error()) {
+        // a. Let return be innerResult.[[Value]].
+        auto* return_method = inner_result_or_error.release_value();
+
+        // b. If return is undefined, return Completion(completion).
         if (!return_method)
-            return restore_completion(); // If return is undefined, return Completion(completion).
+            return completion;
+
+        vm.stop_unwind();
+
+        // c. Set innerResult to Call(return, iterator).
         auto result_or_error = vm.call(*return_method, &iterator);
         if (result_or_error.is_error())
-            return_method_or_error = result_or_error.release_error();
+            inner_result_or_error = result_or_error.release_error();
         else
-            result = result_or_error.release_value();
+            inner_result = result_or_error.release_value();
     }
-    if (completion_exception)
-        return restore_completion(); // If completion.[[Type]] is throw, return Completion(completion).
-    if (return_method_or_error.is_error())
-        return; // If innerResult.[[Type]] is throw, return Completion(innerResult).
-    if (!result.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
-        return; // If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
-    }
-    restore_completion(); // Return Completion(completion).
+
+    // 5. If completion.[[Type]] is throw, return Completion(completion).
+    if (completion.is_error())
+        return completion;
+
+    // 6. If innerResult.[[Type]] is throw, return Completion(innerResult).
+    if (inner_result_or_error.is_error())
+        return inner_result_or_error.release_error();
+
+    // 7. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
+    if (!inner_result.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
+
+    // 8. Return Completion(completion).
+    return completion;
 }
 
 // 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
@@ -165,10 +173,8 @@ Completion get_iterator_values(GlobalObject& global_object, Value iterable, Iter
 
         auto next_value = TRY(iterator_value(global_object, *next_object));
 
-        if (auto completion = callback(next_value); completion.has_value()) {
-            iterator_close(*iterator);
-            return completion.release_value();
-        }
+        if (auto completion = callback(next_value); completion.has_value())
+            return iterator_close(*iterator, completion.release_value());
     }
 }
 

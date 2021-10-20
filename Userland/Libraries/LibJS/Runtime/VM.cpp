@@ -202,11 +202,13 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         auto result = iterator_binding_initialization(*target, iterator, iterator_done, environment, global_object);
 
         if (!iterator_done) {
-            // FIXME: Iterator close should take result and potentially return that. This logic should achieve the same until that is possible.
-            iterator_close(*iterator);
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+            // iterator_close() always returns a Completion, which ThrowCompletionOr will interpret as a throw
+            // completion. So only return the result of iterator_close() if it is indeed a throw completion.
+            auto completion = result.is_throw_completion() ? result.release_error() : normal_completion({});
+            if (completion = iterator_close(*iterator, move(completion)); completion.is_error())
+                return completion.release_error();
         }
+
         return result;
     }
 }

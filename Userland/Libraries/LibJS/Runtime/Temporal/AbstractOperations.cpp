@@ -63,8 +63,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
                 // 1. Let completion be ThrowCompletion(a newly created TypeError object).
                 auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::IterableToListOfTypeInvalidValue, next_value.to_string_without_side_effects());
                 // 2. Return ? IteratorClose(iteratorRecord, completion).
-                iterator_close(*iterator_record);
-                return completion;
+                return iterator_close(*iterator_record, move(completion));
             }
             // iii. Append nextValue to the end of the List values.
             values.append(next_value);

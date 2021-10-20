@@ -25,7 +25,7 @@ ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value = {});
 ThrowCompletionOr<Object*> iterator_step(GlobalObject&, Object& iterator);
 ThrowCompletionOr<bool> iterator_complete(GlobalObject&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(GlobalObject&, Object& iterator_result);
-void iterator_close(Object& iterator);
+Completion iterator_close(Object& iterator, Completion completion);
 Object* create_iterator_result_object(GlobalObject&, Value value, bool done);
 MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
