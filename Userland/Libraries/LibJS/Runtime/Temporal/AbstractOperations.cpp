@@ -41,9 +41,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
     auto& heap = global_object.heap();
 
     // 1. Let iteratorRecord be ? GetIterator(items, sync).
-    auto iterator_record = get_iterator(global_object, items, IteratorHint::Sync);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto iterator_record = TRY(get_iterator(global_object, items, IteratorHint::Sync));
 
     // 2. Let values be a new empty List.
     MarkedValueList values(heap);

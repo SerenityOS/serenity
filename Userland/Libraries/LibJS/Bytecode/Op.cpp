@@ -478,7 +478,10 @@ void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = get_iterator(interpreter.global_object(), interpreter.accumulator());
+    auto iterator_or_error = get_iterator(interpreter.global_object(), interpreter.accumulator());
+    if (iterator_or_error.is_error())
+        return;
+    interpreter.accumulator() = iterator_or_error.release_value();
 }
 
 void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const

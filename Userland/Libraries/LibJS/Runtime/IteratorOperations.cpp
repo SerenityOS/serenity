@@ -12,24 +12,23 @@
 namespace JS {
 
 // 7.4.1 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
-Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Value method)
+ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Value method)
 {
     auto& vm = global_object.vm();
     if (method.is_empty()) {
         if (hint == IteratorHint::Async)
             TODO();
-        auto object = TRY_OR_DISCARD(value.to_object(global_object));
-        method = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_iterator()));
+        auto object = TRY(value.to_object(global_object));
+        method = TRY(object->get(*vm.well_known_symbol_iterator()));
     }
-    if (!method.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
-        return nullptr;
-    }
-    auto iterator = TRY_OR_DISCARD(vm.call(method.as_function(), value));
-    if (!iterator.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
-        return nullptr;
-    }
+
+    if (!method.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
+
+    auto iterator = TRY(vm.call(method.as_function(), value));
+    if (!iterator.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
+
     return &iterator.as_object();
 }
 
@@ -170,9 +169,10 @@ void get_iterator_values(GlobalObject& global_object, Value value, Function<Iter
 {
     auto& vm = global_object.vm();
 
-    auto iterator = get_iterator(global_object, value, IteratorHint::Sync, method);
-    if (!iterator)
+    auto iterator_or_error = get_iterator(global_object, value, IteratorHint::Sync, method);
+    if (iterator_or_error.is_error())
         return;
+    auto* iterator = iterator_or_error.release_value();
 
     while (true) {
         auto next_object = iterator_next(*iterator);
