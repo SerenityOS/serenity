@@ -728,7 +728,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     for (auto& key : target_nonconfigurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
         if (!unchecked_result_keys.contains_slow(key))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysSkippedNonconfigurableProperty, key.to_string_without_side_effects());
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -744,7 +744,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     for (auto& key : target_configurable_keys) {
         // a. If key is not an element of uncheckedResultKeys, throw a TypeError exception.
         if (!unchecked_result_keys.contains_slow(key))
-            return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNonExtensibleSkippedProperty, key.to_string_without_side_effects());
 
         // b. Remove key from uncheckedResultKeys.
         unchecked_result_keys.remove_first_matching([&](auto& value) {
@@ -754,7 +754,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
 
     // 22. If uncheckedResultKeys is not empty, throw a TypeError exception.
     if (!unchecked_result_keys.is_empty())
-        return vm.throw_completion<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNonExtensibleNewProperty, unchecked_result_keys[0].to_string_without_side_effects());
 
     // 23. Return trapResult.
     return { move(trap_result) };
