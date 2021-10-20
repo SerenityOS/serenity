@@ -117,11 +117,12 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
             return result_capability.promise;
         }
 
-        auto next_value = iterator_value(global_object, *next);
-        if (vm.exception()) {
+        auto next_value_or_error = iterator_value(global_object, *next);
+        if (next_value_or_error.is_throw_completion()) {
             set_iterator_record_complete(global_object, iterator_record);
             return {};
         }
+        auto next_value = next_value_or_error.release_value();
 
         values->values().append(js_undefined());
 
