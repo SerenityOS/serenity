@@ -128,10 +128,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
                 return {};
             }
 
-            auto next = iterator_step(global_object, *iterator);
-            if (vm.exception())
-                return {};
-
+            auto* next = TRY_OR_DISCARD(iterator_step(global_object, *iterator));
             if (!next) {
                 TRY_OR_DISCARD(array_object.set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
                 return array;

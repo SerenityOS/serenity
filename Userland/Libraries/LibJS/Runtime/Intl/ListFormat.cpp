@@ -287,9 +287,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
     // 5. Repeat, while next is not false,
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        next = iterator_step(global_object, *iterator_record);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        next = TRY(iterator_step(global_object, *iterator_record));
 
         // b. If next is not false, then
         if (next != nullptr) {

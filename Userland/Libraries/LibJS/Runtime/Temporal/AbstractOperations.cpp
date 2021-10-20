@@ -51,9 +51,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list_of_type(GlobalObject& global
     // 4. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* iterator_result = iterator_step(global_object, *iterator_record);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* iterator_result = TRY(iterator_step(global_object, *iterator_record));
         next = iterator_result;
 
         // b. If next is not false, then

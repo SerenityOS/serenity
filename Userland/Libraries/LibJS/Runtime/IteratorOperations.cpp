@@ -75,15 +75,15 @@ Value iterator_value(GlobalObject& global_object, Object& iterator_result)
 }
 
 // 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
-Object* iterator_step(GlobalObject& global_object, Object& iterator)
+ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Object& iterator)
 {
     auto& vm = global_object.vm();
 
-    auto result = TRY_OR_DISCARD(iterator_next(iterator));
+    auto* result = TRY(iterator_next(iterator));
 
     auto done = iterator_complete(global_object, *result);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     if (done)
         return nullptr;

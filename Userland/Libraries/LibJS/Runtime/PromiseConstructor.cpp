@@ -100,11 +100,12 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
     size_t index = 0;
 
     while (true) {
-        auto* next = iterator_step(global_object, iterator_record);
-        if (vm.exception()) {
+        auto next_or_error = iterator_step(global_object, iterator_record);
+        if (next_or_error.is_throw_completion()) {
             set_iterator_record_complete(global_object, iterator_record);
             return {};
         }
+        auto* next = next_or_error.release_value();
 
         if (!next) {
             set_iterator_record_complete(global_object, iterator_record);
