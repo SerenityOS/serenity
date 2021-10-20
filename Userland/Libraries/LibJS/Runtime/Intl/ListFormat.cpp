@@ -276,9 +276,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global
     }
 
     // 2. Let iteratorRecord be ? GetIterator(iterable).
-    auto* iterator_record = get_iterator(global_object, iterable);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* iterator_record = TRY(get_iterator(global_object, iterable));
 
     // 3. Let list be a new empty List.
     Vector<String> list;

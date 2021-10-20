@@ -37,16 +37,29 @@ static Value get_promise_resolve(GlobalObject& global_object, Value constructor)
 }
 
 // 27.2.1.1.1 IfAbruptRejectPromise ( value, capability ), https://tc39.es/ecma262/#sec-ifabruptrejectpromise
-static Optional<Value> if_abrupt_reject_promise(GlobalObject& global_object, Value, PromiseCapability capability)
+template<typename ValueType>
+static Optional<Value> if_abrupt_reject_promise(GlobalObject& global_object, ValueType const& value_or_error, PromiseCapability capability)
 {
     auto& vm = global_object.vm();
 
-    if (auto* exception = vm.exception()) {
-        vm.clear_exception();
-        vm.stop_unwind();
+    // FIXME: This is temporary multi-type support. When all callers to this method are transformed
+    //        to use ThrowCompletionOr, the 'else' clause (and template) can be dropped.
+    if constexpr (requires { value_or_error.is_throw_completion(); }) {
+        if (value_or_error.is_throw_completion()) {
+            vm.clear_exception();
+            vm.stop_unwind();
 
-        (void)vm.call(*capability.reject, js_undefined(), exception->value());
-        return capability.promise;
+            (void)vm.call(*capability.reject, js_undefined(), value_or_error.throw_completion().value());
+            return capability.promise;
+        }
+    } else {
+        if (auto* exception = vm.exception()) {
+            vm.clear_exception();
+            vm.stop_unwind();
+
+            (void)vm.call(*capability.reject, js_undefined(), exception->value());
+            return capability.promise;
+        }
     }
 
     return {};
@@ -281,9 +294,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
     if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
         return abrupt.value();
 
-    auto iterator_record = get_iterator(global_object, vm.argument(0));
-    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+    auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_all(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (vm.exception()) {
@@ -310,9 +324,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
         return abrupt.value();
 
-    auto iterator_record = get_iterator(global_object, vm.argument(0));
-    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+    auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_all_settled(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (vm.exception()) {
@@ -339,9 +354,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
     if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
         return abrupt.value();
 
-    auto iterator_record = get_iterator(global_object, vm.argument(0));
-    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+    auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_any(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (vm.exception()) {
@@ -368,9 +384,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
     if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
         return abrupt.value();
 
-    auto iterator_record = get_iterator(global_object, vm.argument(0));
-    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record, promise_capability); abrupt.has_value())
+    auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
+    if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto* iterator_record = iterator_record_or_error.release_value();
 
     auto result = perform_promise_race(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (vm.exception()) {

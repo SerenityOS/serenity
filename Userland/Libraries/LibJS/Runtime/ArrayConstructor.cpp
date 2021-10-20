@@ -116,10 +116,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
         } else {
             array = Array::create(global_object, 0);
         }
-        auto iterator = get_iterator(global_object, items, IteratorHint::Sync, using_iterator);
-        if (vm.exception())
-            return {};
 
+        auto iterator = TRY_OR_DISCARD(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
         auto& array_object = array.as_object();
 
         size_t k = 0;

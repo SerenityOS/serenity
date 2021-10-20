@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -18,7 +19,7 @@ enum class IteratorHint {
     Async,
 };
 
-Object* get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
+ThrowCompletionOr<Object*> get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
 Object* iterator_next(Object& iterator, Value value = {});
 Object* iterator_step(GlobalObject&, Object& iterator);
 bool iterator_complete(GlobalObject&, Object& iterator_result);
