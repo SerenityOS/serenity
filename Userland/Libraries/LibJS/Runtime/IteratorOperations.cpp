@@ -34,29 +34,24 @@ ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value
 }
 
 // 7.4.2 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
-Object* iterator_next(Object& iterator, Value value)
+ThrowCompletionOr<Object*> iterator_next(Object& iterator, Value value)
 {
     // FIXME: Implement using iterator records, not ordinary objects
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
 
-    auto next_method = TRY_OR_DISCARD(iterator.get(vm.names.next));
-
-    if (!next_method.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
-        return nullptr;
-    }
+    auto next_method = TRY(iterator.get(vm.names.next));
+    if (!next_method.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
 
     Value result;
     if (value.is_empty())
-        result = TRY_OR_DISCARD(vm.call(next_method.as_function(), &iterator));
+        result = TRY(vm.call(next_method.as_function(), &iterator));
     else
-        result = TRY_OR_DISCARD(vm.call(next_method.as_function(), &iterator, value));
+        result = TRY(vm.call(next_method.as_function(), &iterator, value));
 
-    if (!result.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextBadReturn);
-        return nullptr;
-    }
+    if (!result.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IterableNextBadReturn);
 
     return &result.as_object();
 }
@@ -84,9 +79,7 @@ Object* iterator_step(GlobalObject& global_object, Object& iterator)
 {
     auto& vm = global_object.vm();
 
-    auto result = iterator_next(iterator);
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(iterator_next(iterator));
 
     auto done = iterator_complete(global_object, *result);
     if (vm.exception())
@@ -176,9 +169,10 @@ void get_iterator_values(GlobalObject& global_object, Value value, Function<Iter
     auto* iterator = iterator_or_error.release_value();
 
     while (true) {
-        auto next_object = iterator_next(*iterator);
-        if (!next_object)
+        auto next_object_or_error = iterator_next(*iterator);
+        if (next_object_or_error.is_error())
             return;
+        auto* next_object = next_object_or_error.release_value();
 
         auto done_property_or_error = next_object->get(vm.names.done);
         if (done_property_or_error.is_error())
