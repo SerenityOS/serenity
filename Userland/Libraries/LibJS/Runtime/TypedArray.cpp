@@ -465,9 +465,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             } else {                                                                                                                   \
                 auto iterator = TRY_OR_DISCARD(first_argument.get_method(global_object(), *vm.well_known_symbol_iterator()));          \
                 if (iterator) {                                                                                                        \
-                    auto values = iterable_to_list(global_object(), first_argument, iterator);                                         \
-                    if (vm.exception())                                                                                                \
-                        return {};                                                                                                     \
+                    auto values = TRY_OR_DISCARD(iterable_to_list(global_object(), first_argument, iterator));                         \
                     TRY_OR_DISCARD(initialize_typed_array_from_list(global_object(), *typed_array, values));                           \
                 } else {                                                                                                               \
                     TRY_OR_DISCARD(initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object())); \
