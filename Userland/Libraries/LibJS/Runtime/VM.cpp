@@ -359,12 +359,12 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
             auto* array = Array::create(global_object, 0);
             while (!iterator_done) {
-                auto next_object = iterator_next(*iterator);
-                if (!next_object) {
+                auto next_object_or_error = iterator_next(*iterator);
+                if (next_object_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    VERIFY(exception());
-                    return JS::throw_completion(exception()->value());
+                    return JS::throw_completion(next_object_or_error.release_error().value());
                 }
+                auto* next_object = next_object_or_error.release_value();
 
                 auto done_property = TRY(next_object->get(names.done));
                 if (done_property.to_boolean()) {
@@ -378,12 +378,12 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             value = array;
 
         } else if (!iterator_done) {
-            auto next_object = iterator_next(*iterator);
-            if (!next_object) {
+            auto next_object_or_error = iterator_next(*iterator);
+            if (next_object_or_error.is_throw_completion()) {
                 iterator_done = true;
-                VERIFY(exception());
-                return JS::throw_completion(exception()->value());
+                return JS::throw_completion(next_object_or_error.release_error().value());
             }
+            auto* next_object = next_object_or_error.release_value();
 
             auto done_property = TRY(next_object->get(names.done));
             if (done_property.to_boolean()) {
