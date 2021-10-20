@@ -134,7 +134,6 @@ void NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& global_object = interpreter.global_object();
-    auto& vm = interpreter.vm();
     auto iterator_or_error = interpreter.accumulator().to_object(global_object);
     if (iterator_or_error.is_error())
         return;
@@ -159,9 +158,10 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
             return;
         }
 
-        auto value = iterator_value(global_object, *iterator_result);
-        if (vm.exception())
+        auto value_or_error = iterator_value(global_object, *iterator_result);
+        if (value_or_error.is_error())
             return;
+        auto value = value_or_error.release_value();
 
         MUST(array->create_data_property_or_throw(index, value));
         index++;
@@ -522,7 +522,13 @@ void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
     if (iterator_result_or_error.is_error())
         return;
     auto* iterator_result = iterator_result_or_error.release_value();
-    interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
+
+    auto value_or_error = iterator_value(interpreter.global_object(), *iterator_result);
+    if (value_or_error.is_error())
+        return;
+    auto value = value_or_error.release_value();
+
+    interpreter.accumulator() = value;
 }
 
 void NewClass::execute_impl(Bytecode::Interpreter&) const

@@ -508,9 +508,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
             break;
 
         // i. Let nextValue be ? IteratorValue(next).
-        auto next_value = iterator_value(global_object, *next);
-        if (vm.exception())
-            return {};
+        auto next_value = TRY_OR_DISCARD(iterator_value(global_object, *next));
 
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {

@@ -66,12 +66,12 @@ ThrowCompletionOr<bool> iterator_complete(GlobalObject& global_object, Object& i
 }
 
 // 7.4.4 IteratorValue ( iterResult ), https://tc39.es/ecma262/#sec-iteratorvalue
-Value iterator_value(GlobalObject& global_object, Object& iterator_result)
+ThrowCompletionOr<Value> iterator_value(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
 
     // 1. Return ? Get(iterResult, "value").
-    return TRY_OR_DISCARD(iterator_result.get(vm.names.value));
+    return TRY(iterator_result.get(vm.names.value));
 }
 
 // 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
