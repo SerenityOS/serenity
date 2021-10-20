@@ -1,5 +1,6 @@
 serenity_component(
     LoginServer
+    REQUIRED
     TARGETS LoginServer
 )
 
