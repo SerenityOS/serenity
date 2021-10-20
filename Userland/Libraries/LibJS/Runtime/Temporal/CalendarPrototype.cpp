@@ -492,9 +492,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let iteratorRecord be ? Getiterator(fields, sync).
-    auto* iterator_record = get_iterator(global_object, fields, IteratorHint::Sync);
-    if (vm.exception())
-        return {};
+    auto* iterator_record = TRY_OR_DISCARD(get_iterator(global_object, fields, IteratorHint::Sync));
 
     // 5. Let fieldNames be a new empty List.
     auto field_names = MarkedValueList { vm.heap() };

@@ -196,12 +196,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
         TRY(property_binding_initialization(*target, value, environment, global_object));
         return {};
     } else {
-        auto* iterator = get_iterator(global_object, value);
-        if (!iterator) {
-            VERIFY(exception());
-            return JS::throw_completion(exception()->value());
-        }
-
+        auto* iterator = TRY(get_iterator(global_object, value));
         auto iterator_done = false;
 
         auto result = iterator_binding_initialization(*target, iterator, iterator_done, environment, global_object);
