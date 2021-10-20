@@ -40,15 +40,14 @@ ArrayBufferConstructor::~ArrayBufferConstructor()
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-Value ArrayBufferConstructor::call()
+ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-Value ArrayBufferConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto byte_length_or_error = vm.argument(0).to_index(global_object());
@@ -57,11 +56,11 @@ Value ArrayBufferConstructor::construct(FunctionObject& new_target)
         if (error.value().is_object() && is<RangeError>(error.value().as_object())) {
             // Re-throw more specific RangeError
             vm.clear_exception();
-            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
+            return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
         }
-        return {};
+        return error;
     }
-    return TRY_OR_DISCARD(allocate_array_buffer(global_object(), new_target, byte_length_or_error.release_value()));
+    return TRY(allocate_array_buffer(global_object(), new_target, byte_length_or_error.release_value()));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview

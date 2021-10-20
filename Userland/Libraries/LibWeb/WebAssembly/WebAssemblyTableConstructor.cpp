@@ -23,23 +23,20 @@ WebAssemblyTableConstructor::~WebAssemblyTableConstructor()
 {
 }
 
-JS::Value WebAssemblyTableConstructor::call()
+JS::ThrowCompletionOr<JS::Value> WebAssemblyTableConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Table");
-    return {};
+    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Table");
 }
 
-JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto descriptor = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
-    auto element_value = TRY_OR_DISCARD(descriptor->get("element"));
-    if (!element_value.is_string()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
-        return {};
-    }
+    auto descriptor = TRY(vm.argument(0).to_object(global_object));
+    auto element_value = TRY(descriptor->get("element"));
+    if (!element_value.is_string())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
     auto& element = element_value.as_string().string();
 
     Optional<Wasm::ValueType> reference_type;
@@ -48,27 +45,23 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
     else if (element == "externref"sv)
         reference_type = Wasm::ValueType(Wasm::ValueType::ExternReference);
 
-    if (!reference_type.has_value()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element);
-        return {};
-    }
+    if (!reference_type.has_value())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::InvalidHint, element);
 
-    auto initial_value = TRY_OR_DISCARD(descriptor->get("initial"));
-    auto maximum_value = TRY_OR_DISCARD(descriptor->get("maximum"));
+    auto initial_value = TRY(descriptor->get("initial"));
+    auto maximum_value = TRY(descriptor->get("maximum"));
 
-    auto initial = TRY_OR_DISCARD(initial_value.to_u32(global_object));
+    auto initial = TRY(initial_value.to_u32(global_object));
 
     Optional<u32> maximum;
 
     if (!maximum_value.is_undefined())
-        maximum = TRY_OR_DISCARD(maximum_value.to_u32(global_object));
+        maximum = TRY(maximum_value.to_u32(global_object));
 
-    if (maximum.has_value() && maximum.value() < initial) {
-        vm.throw_exception<JS::RangeError>(global_object, "maximum should be larger than or equal to initial");
-        return {};
-    }
+    if (maximum.has_value() && maximum.value() < initial)
+        return vm.throw_completion<JS::RangeError>(global_object, "maximum should be larger than or equal to initial");
 
-    auto value_value = TRY_OR_DISCARD(descriptor->get("value"));
+    auto value_value = TRY(descriptor->get("value"));
     auto reference_value = [&]() -> Optional<Wasm::Value> {
         if (value_value.is_undefined())
             return Wasm::Value(*reference_type, 0ull);
@@ -76,16 +69,14 @@ JS::Value WebAssemblyTableConstructor::construct(FunctionObject&)
         return to_webassembly_value(value_value, *reference_type, global_object);
     }();
 
-    if (!reference_value.has_value())
-        return {};
+    if (auto* exception = vm.exception())
+        return JS::throw_completion(exception->value());
 
     auto& reference = reference_value->value().get<Wasm::Reference>();
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::TableType { *reference_type, Wasm::Limits { initial, maximum } });
-    if (!address.has_value()) {
-        vm.throw_exception<JS::TypeError>(global_object, "Wasm Table allocation failed");
-        return {};
-    }
+    if (!address.has_value())
+        return vm.throw_completion<JS::TypeError>(global_object, "Wasm Table allocation failed");
 
     auto& table = *WebAssemblyObject::s_abstract_machine.store().get(*address);
     for (auto& element : table.elements())

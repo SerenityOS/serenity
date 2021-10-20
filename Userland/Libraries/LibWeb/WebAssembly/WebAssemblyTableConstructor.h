@@ -18,8 +18,8 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~WebAssemblyTableConstructor() override;
 
-    virtual JS::Value call() override;
-    virtual JS::Value construct(JS::FunctionObject& new_target) override;
+    virtual JS::ThrowCompletionOr<JS::Value> call() override;
+    virtual JS::ThrowCompletionOr<JS::Object*> construct(JS::FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

@@ -35,50 +35,47 @@ void PlainTimeConstructor::initialize(GlobalObject& global_object)
 }
 
 // 4.1.1 Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime
-Value PlainTimeConstructor::call()
+ThrowCompletionOr<Value> PlainTimeConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainTime");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainTime");
 }
 
 // 4.1.1 Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime
-Value PlainTimeConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Let hour be ? ToIntegerThrowOnInfinity(hour).
-    auto hour = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime));
+    auto hour = TRY(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidPlainTime));
 
     // 3. Let minute be ? ToIntegerThrowOnInfinity(hour).
-    auto minute = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime));
+    auto minute = TRY(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidPlainTime));
 
     // 4. Let second be ? ToIntegerThrowOnInfinity(hour).
-    auto second = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime));
+    auto second = TRY(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidPlainTime));
 
     // 5. Let millisecond be ? ToIntegerThrowOnInfinity(hour).
-    auto millisecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime));
+    auto millisecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidPlainTime));
 
     // 6. Let microsecond be ? ToIntegerThrowOnInfinity(hour).
-    auto microsecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime));
+    auto microsecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidPlainTime));
 
     // 7. Let nanosecond be ? ToIntegerThrowOnInfinity(hour).
-    auto nanosecond = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime));
+    auto nanosecond = TRY(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidPlainTime));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalTime will immediately check that these values are valid
     // ISO values (for hours: 0 - 23, for minutes and seconds: 0 - 59, milliseconds, microseconds, and nanoseconds: 0 - 999) all of which
     // are subsets of this check.
-    if (!AK::is_within_range<u8>(hour) || !AK::is_within_range<u8>(minute) || !AK::is_within_range<u8>(second) || !AK::is_within_range<u16>(millisecond) || !AK::is_within_range<u16>(microsecond) || !AK::is_within_range<u16>(nanosecond)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
-        return {};
-    }
+    if (!AK::is_within_range<u8>(hour) || !AK::is_within_range<u8>(minute) || !AK::is_within_range<u8>(second) || !AK::is_within_range<u16>(millisecond) || !AK::is_within_range<u16>(microsecond) || !AK::is_within_range<u16>(nanosecond))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
     // 8. Return ? CreateTemporalTime(hour, minute, second, millisecond, microsecond, nanosecond, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
+    return TRY(create_temporal_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, &new_target));
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from

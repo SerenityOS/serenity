@@ -510,8 +510,8 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
         virtual void initialize(GlobalObject&) override;                                    \
         virtual ~ConstructorName() override;                                                \
                                                                                             \
-        virtual Value call() override;                                                      \
-        virtual Value construct(FunctionObject& new_target) override;                       \
+        virtual ThrowCompletionOr<Value> call() override;                                   \
+        virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;  \
                                                                                             \
     private:                                                                                \
         virtual bool has_constructor() const override { return true; }                      \

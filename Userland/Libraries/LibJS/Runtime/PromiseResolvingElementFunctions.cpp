@@ -28,7 +28,7 @@ void PromiseResolvingElementFunction::initialize(GlobalObject& global_object)
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
 }
 
-Value PromiseResolvingElementFunction::call()
+ThrowCompletionOr<Value> PromiseResolvingElementFunction::call()
 {
     if (m_already_called)
         return js_undefined();

@@ -34,54 +34,53 @@ void DurationConstructor::initialize(GlobalObject& global_object)
 }
 
 // 7.1.1 Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ , minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration
-Value DurationConstructor::call()
+ThrowCompletionOr<Value> DurationConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Duration");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Duration");
 }
 
 // 7.1.1 Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ , minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration
-Value DurationConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> DurationConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Let y be ? ToIntegerThrowOnInfinity(years).
-    auto y = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidDuration));
+    auto y = TRY(to_integer_throw_on_infinity(global_object, vm.argument(0), ErrorType::TemporalInvalidDuration));
 
     // 3. Let mo be ? ToIntegerThrowOnInfinity(months).
-    auto mo = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidDuration));
+    auto mo = TRY(to_integer_throw_on_infinity(global_object, vm.argument(1), ErrorType::TemporalInvalidDuration));
 
     // 4. Let w be ? ToIntegerThrowOnInfinity(weeks).
-    auto w = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidDuration));
+    auto w = TRY(to_integer_throw_on_infinity(global_object, vm.argument(2), ErrorType::TemporalInvalidDuration));
 
     // 5. Let d be ? ToIntegerThrowOnInfinity(days).
-    auto d = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidDuration));
+    auto d = TRY(to_integer_throw_on_infinity(global_object, vm.argument(3), ErrorType::TemporalInvalidDuration));
 
     // 6. Let h be ? ToIntegerThrowOnInfinity(hours).
-    auto h = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidDuration));
+    auto h = TRY(to_integer_throw_on_infinity(global_object, vm.argument(4), ErrorType::TemporalInvalidDuration));
 
     // 7. Let m be ? ToIntegerThrowOnInfinity(minutes).
-    auto m = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidDuration));
+    auto m = TRY(to_integer_throw_on_infinity(global_object, vm.argument(5), ErrorType::TemporalInvalidDuration));
 
     // 8. Let s be ? ToIntegerThrowOnInfinity(seconds).
-    auto s = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(6), ErrorType::TemporalInvalidDuration));
+    auto s = TRY(to_integer_throw_on_infinity(global_object, vm.argument(6), ErrorType::TemporalInvalidDuration));
 
     // 9. Let ms be ? ToIntegerThrowOnInfinity(milliseconds).
-    auto ms = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(7), ErrorType::TemporalInvalidDuration));
+    auto ms = TRY(to_integer_throw_on_infinity(global_object, vm.argument(7), ErrorType::TemporalInvalidDuration));
 
     // 10. Let mis be ? ToIntegerThrowOnInfinity(microseconds).
-    auto mis = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidDuration));
+    auto mis = TRY(to_integer_throw_on_infinity(global_object, vm.argument(8), ErrorType::TemporalInvalidDuration));
 
     // 11. Let ns be ? ToIntegerThrowOnInfinity(nanoseconds).
-    auto ns = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, vm.argument(9), ErrorType::TemporalInvalidDuration));
+    auto ns = TRY(to_integer_throw_on_infinity(global_object, vm.argument(9), ErrorType::TemporalInvalidDuration));
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
+    return TRY(create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target));
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from

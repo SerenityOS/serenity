@@ -48,18 +48,20 @@ ProxyConstructor::~ProxyConstructor()
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
-Value ProxyConstructor::call()
+ThrowCompletionOr<Value> ProxyConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Proxy);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Proxy);
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
-Value ProxyConstructor::construct(FunctionObject&)
+ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    return proxy_create(global_object(), vm.argument(0), vm.argument(1));
+    auto* proxy = proxy_create(global_object(), vm.argument(0), vm.argument(1));
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
+    return proxy;
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable

@@ -37,17 +37,16 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
-Value PlainYearMonthConstructor::call()
+ThrowCompletionOr<Value> PlainYearMonthConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainYearMonth");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.PlainYearMonth");
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
-Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> PlainYearMonthConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -64,27 +63,25 @@ Value PlainYearMonthConstructor::construct(FunctionObject& new_target)
     }
 
     // 3. Let y be ? ToIntegerThrowOnInfinity(isoYear).
-    auto y = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_year, ErrorType::TemporalInvalidPlainYearMonth));
+    auto y = TRY(to_integer_throw_on_infinity(global_object, iso_year, ErrorType::TemporalInvalidPlainYearMonth));
 
     // 4. Let m be ? ToIntegerThrowOnInfinity(isoMonth).
-    auto m = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainYearMonth));
+    auto m = TRY(to_integer_throw_on_infinity(global_object, iso_month, ErrorType::TemporalInvalidPlainYearMonth));
 
     // 5. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
-    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar_with_iso_default(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, calendar_like));
 
     // 6. Let ref be ? ToIntegerThrowOnInfinity(referenceISODay).
-    auto ref = TRY_OR_DISCARD(to_integer_throw_on_infinity(global_object, reference_iso_day, ErrorType::TemporalInvalidPlainYearMonth));
+    auto ref = TRY(to_integer_throw_on_infinity(global_object, reference_iso_day, ErrorType::TemporalInvalidPlainYearMonth));
 
     // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
     // This does not change the exposed behavior as the call to CreateTemporalYearMonth will immediately check that these values are valid
     // ISO values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
-    if (!AK::is_within_range<i32>(y) || !AK::is_within_range<u8>(m) || !AK::is_within_range<u8>(ref)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
-        return {};
-    }
+    if (!AK::is_within_range<i32>(y) || !AK::is_within_range<u8>(m) || !AK::is_within_range<u8>(ref))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
     // 7. Return ? CreateTemporalYearMonth(y, m, calendar, ref, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_year_month(global_object, y, m, *calendar, ref, &new_target));
+    return TRY(create_temporal_year_month(global_object, y, m, *calendar, ref, &new_target));
 }
 
 // 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from

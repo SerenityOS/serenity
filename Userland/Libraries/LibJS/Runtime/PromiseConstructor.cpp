@@ -251,26 +251,23 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
-Value PromiseConstructor::call()
+ThrowCompletionOr<Value> PromiseConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Promise);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Promise);
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
-Value PromiseConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     auto executor = vm.argument(0);
-    if (!executor.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::PromiseExecutorNotAFunction);
-        return {};
-    }
+    if (!executor.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::PromiseExecutorNotAFunction);
 
-    auto* promise = TRY_OR_DISCARD(ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype));
+    auto* promise = TRY(ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype));
 
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
@@ -278,7 +275,7 @@ Value PromiseConstructor::construct(FunctionObject& new_target)
     if (auto* exception = vm.exception()) {
         vm.clear_exception();
         vm.stop_unwind();
-        (void)vm.call(reject_function, js_undefined(), exception->value());
+        TRY(vm.call(reject_function, js_undefined(), exception->value()));
     }
     return promise;
 }

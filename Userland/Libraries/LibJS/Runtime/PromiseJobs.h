@@ -22,7 +22,7 @@ public:
     explicit PromiseReactionJob(PromiseReaction&, Value argument, Object& prototype);
     virtual ~PromiseReactionJob() override = default;
 
-    virtual Value call() override;
+    virtual ThrowCompletionOr<Value> call() override;
 
 private:
     virtual void visit_edges(Visitor&) override;
@@ -40,7 +40,7 @@ public:
     explicit PromiseResolveThenableJob(Promise&, Value thenable, JobCallback then, Object& prototype);
     virtual ~PromiseResolveThenableJob() override = default;
 
-    virtual Value call() override;
+    virtual ThrowCompletionOr<Value> call() override;
 
 private:
     virtual void visit_edges(Visitor&) override;

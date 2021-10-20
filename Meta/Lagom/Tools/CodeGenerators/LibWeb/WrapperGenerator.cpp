@@ -940,8 +940,14 @@ static bool is_wrappable_type(IDL::Type const& type)
     return false;
 }
 
+enum class ReturnType {
+    Completion,
+    Value,
+    Void,
+};
+
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, ReturnType return_type, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -957,10 +963,21 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
 
-    if (return_void)
-        scoped_generator.set("return_statement", "return;");
-    else
+    switch (return_type) {
+    case ReturnType::Completion:
+        scoped_generator.set("return_statement", "return JS::throw_completion(vm.exception()->value());");
+        scoped_generator.set("try_macro", "TRY");
+        break;
+    case ReturnType::Value:
         scoped_generator.set("return_statement", "return {};");
+        scoped_generator.set("try_macro", "TRY_OR_DISCARD");
+        break;
+    case ReturnType::Void:
+        scoped_generator.set("return_statement", "return;");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
@@ -1080,7 +1097,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name == "double") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    double @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_double(global_object));
+    double @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
@@ -1094,7 +1111,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
-        @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_double(global_object));
+        @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
@@ -1136,15 +1153,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
     } else if (parameter.type->name == "unsigned long") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_u32(global_object));
+    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_u32(global_object));
 )~~~");
     } else if (parameter.type->name == "unsigned short") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_u16(global_object));
+    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_u16(global_object));
 )~~~");
     } else if (parameter.type->name == "long") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY_OR_DISCARD(@js_name@@js_suffix@.to_i32(global_object));
+    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_i32(global_object));
 )~~~");
     } else if (parameter.type->name == "EventHandler") {
         // x.onfoo = function() { ... }
@@ -1236,7 +1253,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
                 auto member_value_name = String::formatted("{}_value", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
-                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, return_void, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, return_type, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
                 dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
@@ -1253,7 +1270,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 }
 
 template<typename FunctionType>
-static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function)
+static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function, ReturnType return_type)
 {
     auto argument_count_check_generator = generator.fork();
     argument_count_check_generator.set("function.name", function.name);
@@ -1269,15 +1286,27 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
         argument_count_check_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", function.length()));
     }
 
+    switch (return_type) {
+    case ReturnType::Completion:
+        argument_count_check_generator.set("return_statement", "return JS::throw_completion(vm.exception()->value());");
+        break;
+    case ReturnType::Value:
+        argument_count_check_generator.set("return_statement", "return {};");
+        break;
+    default:
+        // 'Void' not used here.
+        VERIFY_NOT_REACHED();
+    }
+
     argument_count_check_generator.append(R"~~~(
     if (vm.argument_count() < @function.nargs@) {
         vm.throw_exception<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
-        return {};
+        @return_statement@
     }
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries, bool return_void = false)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries, ReturnType return_type)
 {
     auto arguments_generator = generator.fork();
 
@@ -1294,7 +1323,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_type, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
         ++argument_index;
     }
 
@@ -1447,10 +1476,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
     }
 
-    generate_argument_count_check(generator, function);
+    generate_argument_count_check(generator, function, ReturnType::Value);
 
     StringBuilder arguments_builder;
-    generate_arguments(generator, function.parameters, arguments_builder, dictionaries);
+    generate_arguments(generator, function.parameters, arguments_builder, dictionaries, ReturnType::Value);
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
@@ -2039,7 +2068,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
 
             // 4. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, true);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, ReturnType::Void);
 
             // 5. If operation was defined without an identifier, then:
             if (interface.named_property_setter->name.is_empty()) {
@@ -2097,7 +2126,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
             // 5. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, true);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, ReturnType::Void);
 
             // 6. If operation was defined without an identifier, then:
             if (interface.indexed_property_setter->name.is_empty()) {
@@ -2540,8 +2569,8 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@constructor_class@() override;
 
-    virtual JS::Value call() override;
-    virtual JS::Value construct(JS::FunctionObject& new_target) override;
+    virtual JS::ThrowCompletionOr<JS::Value> call() override;
+    virtual JS::ThrowCompletionOr<JS::Object*> construct(JS::FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }
@@ -2644,13 +2673,12 @@ namespace Web::Bindings {
 {
 }
 
-JS::Value @constructor_class@::call()
+JS::ThrowCompletionOr<JS::Value> @constructor_class@::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "@name@");
-    return {};
+    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "@name@");
 }
 
-JS::Value @constructor_class@::construct(FunctionObject&)
+JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject&)
 {
 )~~~");
 
@@ -2658,8 +2686,7 @@ JS::Value @constructor_class@::construct(FunctionObject&)
         // No constructor
         generator.set("constructor.length", "0");
         generator.append(R"~~~(
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "@name@");
-    return {};
+    return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "@name@");
 )~~~");
     } else if (interface.constructors.size() == 1) {
         // Single constructor
@@ -2675,10 +2702,10 @@ JS::Value @constructor_class@::construct(FunctionObject&)
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
-            generate_argument_count_check(generator, constructor);
+            generate_argument_count_check(generator, constructor, ReturnType::Completion);
 
             StringBuilder arguments_builder;
-            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries);
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries, ReturnType::Completion);
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
@@ -2691,7 +2718,7 @@ JS::Value @constructor_class@::construct(FunctionObject&)
         }
         generator.append(R"~~~(
     if (should_return_empty(impl))
-        return JS::Value();
+        return JS::throw_completion(vm.exception()->value());
     return wrap(global_object, *impl.release_value());
 )~~~");
     } else {
@@ -3236,7 +3263,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, false, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, ReturnType::Value, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name != "boolean") {

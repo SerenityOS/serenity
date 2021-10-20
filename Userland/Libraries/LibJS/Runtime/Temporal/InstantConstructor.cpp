@@ -39,33 +39,30 @@ void InstantConstructor::initialize(GlobalObject& global_object)
 }
 
 // 8.1.1 Temporal.Instant ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant
-Value InstantConstructor::call()
+ThrowCompletionOr<Value> InstantConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Instant");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Instant");
 }
 
 // 8.1.1 Temporal.Instant ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant
-Value InstantConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> InstantConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Let epochNanoseconds be ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
+    auto* epoch_nanoseconds = TRY(vm.argument(0).to_bigint(global_object));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
-        return {};
-    }
+    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_instant(global_object, *epoch_nanoseconds, &new_target));
+    return TRY(create_temporal_instant(global_object, *epoch_nanoseconds, &new_target));
 }
 
 // 8.2.2 Temporal.Instant.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.from

@@ -32,7 +32,7 @@ BooleanConstructor::~BooleanConstructor()
 }
 
 // 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value
-Value BooleanConstructor::call()
+ThrowCompletionOr<Value> BooleanConstructor::call()
 {
     auto& vm = this->vm();
 
@@ -41,13 +41,13 @@ Value BooleanConstructor::call()
 }
 
 // 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value
-Value BooleanConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> BooleanConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     auto b = vm.argument(0).to_boolean();
-    return TRY_OR_DISCARD(ordinary_create_from_constructor<BooleanObject>(global_object, new_target, &GlobalObject::boolean_prototype, b));
+    return TRY(ordinary_create_from_constructor<BooleanObject>(global_object, new_target, &GlobalObject::boolean_prototype, b));
 }
 
 }

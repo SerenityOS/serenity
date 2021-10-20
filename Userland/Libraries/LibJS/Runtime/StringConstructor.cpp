@@ -43,17 +43,17 @@ StringConstructor::~StringConstructor()
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
-Value StringConstructor::call()
+ThrowCompletionOr<Value> StringConstructor::call()
 {
     if (!vm().argument_count())
         return js_string(heap(), "");
     if (vm().argument(0).is_symbol())
         return js_string(heap(), vm().argument(0).as_symbol().to_string());
-    return TRY_OR_DISCARD(vm().argument(0).to_primitive_string(global_object()));
+    return TRY(vm().argument(0).to_primitive_string(global_object()));
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
-Value StringConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> StringConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = global_object().vm();
 
@@ -61,8 +61,8 @@ Value StringConstructor::construct(FunctionObject& new_target)
     if (!vm.argument_count())
         primitive_string = js_string(vm, "");
     else
-        primitive_string = TRY_OR_DISCARD(vm.argument(0).to_primitive_string(global_object()));
-    auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype));
+        primitive_string = TRY(vm.argument(0).to_primitive_string(global_object()));
+    auto* prototype = TRY(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype));
     return StringObject::create(global_object(), *primitive_string, *prototype);
 }
 

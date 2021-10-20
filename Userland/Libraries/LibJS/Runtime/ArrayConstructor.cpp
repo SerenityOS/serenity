@@ -45,17 +45,17 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
-Value ArrayConstructor::call()
+ThrowCompletionOr<Value> ArrayConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
-Value ArrayConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
 
-    auto* proto = TRY_OR_DISCARD(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype));
+    auto* proto = TRY(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype));
 
     if (vm.argument_count() == 0)
         return Array::create(global_object(), 0, proto);
@@ -69,18 +69,16 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
             int_length = 1;
         } else {
             int_length = MUST(length.to_u32(global_object()));
-            if (int_length != length.as_double()) {
-                vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
-                return {};
-            }
+            if (int_length != length.as_double())
+                return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "array");
         }
-        TRY_OR_DISCARD(array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes));
+        TRY(array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes));
         return array;
     }
 
     auto* array = Array::create(global_object(), vm.argument_count(), proto);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     for (size_t k = 0; k < vm.argument_count(); ++k)
         MUST(array->create_data_property_or_throw(k, vm.argument(k)));

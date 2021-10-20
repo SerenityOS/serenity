@@ -34,31 +34,28 @@ WeakMapConstructor::~WeakMapConstructor()
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
-Value WeakMapConstructor::call()
+ThrowCompletionOr<Value> WeakMapConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakMap);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakMap);
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
-Value WeakMapConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> WeakMapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* weak_map = TRY_OR_DISCARD(ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype));
+    auto* weak_map = TRY(ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype));
 
     if (vm.argument(0).is_nullish())
         return weak_map;
 
-    auto adder = TRY_OR_DISCARD(weak_map->get(vm.names.set));
-    if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of WeakMap");
-        return {};
-    }
+    auto adder = TRY(weak_map->get(vm.names.set));
+    if (!adder.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of WeakMap");
 
-    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 

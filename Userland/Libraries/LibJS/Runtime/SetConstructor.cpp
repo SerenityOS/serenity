@@ -36,31 +36,28 @@ SetConstructor::~SetConstructor()
 }
 
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
-Value SetConstructor::call()
+ThrowCompletionOr<Value> SetConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Set);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Set);
 }
 
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
-Value SetConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* set = TRY_OR_DISCARD(ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype));
+    auto* set = TRY(ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype));
 
     if (vm.argument(0).is_nullish())
         return set;
 
-    auto adder = TRY_OR_DISCARD(set->get(vm.names.add));
-    if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of Set");
-        return {};
-    }
+    auto adder = TRY(set->get(vm.names.add));
+    if (!adder.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of Set");
 
-    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         TRY(vm.call(adder.as_function(), Value(set), iterator_value));
         return {};
     }));

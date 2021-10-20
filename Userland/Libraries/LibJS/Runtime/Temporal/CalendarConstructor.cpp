@@ -32,34 +32,32 @@ void CalendarConstructor::initialize(GlobalObject& global_object)
 }
 
 // 12.2.1 Temporal.Calendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal.calendar
-Value CalendarConstructor::call()
+ThrowCompletionOr<Value> CalendarConstructor::call()
 {
     auto& vm = this->vm();
 
     // 1. If NewTarget is undefined, then
     // a. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Calendar");
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Temporal.Calendar");
 }
 
 // 12.2.1 Temporal.Calendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal.calendar
-Value CalendarConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     // 2. Set id to ? ToString(id).
-    auto identifier = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto identifier = TRY(vm.argument(0).to_string(global_object));
 
     // 3. If ! IsBuiltinCalendar(id) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Throw a RangeError exception.
-        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
-        return {};
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
     }
 
     // 4. Return ? CreateTemporalCalendar(id, NewTarget).
-    return TRY_OR_DISCARD(create_temporal_calendar(global_object, identifier, &new_target));
+    return TRY(create_temporal_calendar(global_object, identifier, &new_target));
 }
 
 // 12.3.2 Temporal.Calendar.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from

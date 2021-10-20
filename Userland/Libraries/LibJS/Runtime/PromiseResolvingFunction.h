@@ -33,7 +33,7 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~PromiseResolvingFunction() override = default;
 
-    virtual Value call() override;
+    virtual ThrowCompletionOr<Value> call() override;
 
 private:
     virtual void visit_edges(Visitor&) override;

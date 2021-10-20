@@ -33,25 +33,23 @@ FinalizationRegistryConstructor::~FinalizationRegistryConstructor()
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback
-Value FinalizationRegistryConstructor::call()
+ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback
-Value FinalizationRegistryConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> FinalizationRegistryConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
     auto cleanup_callback = vm.argument(0);
-    if (!cleanup_callback.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
-        return {};
-    }
-    return TRY_OR_DISCARD(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function()));
+    if (!cleanup_callback.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
+
+    return TRY(ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function()));
 }
 
 }

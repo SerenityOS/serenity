@@ -36,15 +36,14 @@ void ListFormatConstructor::initialize(GlobalObject& global_object)
 }
 
 // 13.2.1 Intl.ListFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat
-Value ListFormatConstructor::call()
+ThrowCompletionOr<Value> ListFormatConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
-    vm().throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.ListFormat");
-    return {};
+    return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.ListFormat");
 }
 
 // 13.2.1 Intl.ListFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat
-Value ListFormatConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> ListFormatConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -53,19 +52,19 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     auto options_value = vm.argument(1);
 
     // 2. Let listFormat be ? OrdinaryCreateFromConstructor(NewTarget, "%ListFormat.prototype%", « [[InitializedListFormat]], [[Locale]], [[Type]], [[Style]], [[Templates]] »).
-    auto* list_format = TRY_OR_DISCARD(ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype));
+    auto* list_format = TRY(ordinary_create_from_constructor<ListFormat>(global_object, new_target, &GlobalObject::intl_list_format_prototype));
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locale_value));
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locale_value));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(Temporal::get_options_object(global_object, options_value));
+    auto* options = TRY(Temporal::get_options_object(global_object, options_value));
 
     // 5. Let opt be a new Record.
     LocaleOptions opt {};
 
     // 6. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
+    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 7. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
@@ -79,13 +78,13 @@ Value ListFormatConstructor::construct(FunctionObject& new_target)
     list_format->set_locale(move(result.locale));
 
     // 11. Let type be ? GetOption(options, "type", "string", « "conjunction", "disjunction", "unit" », "conjunction").
-    auto type = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.type, Value::Type::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
+    auto type = TRY(get_option(global_object, *options, vm.names.type, Value::Type::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
     list_format->set_type(type.as_string().string());
 
     // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
-    auto style = TRY_OR_DISCARD(get_option(global_object, *options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
+    auto style = TRY(get_option(global_object, *options, vm.names.style, Value::Type::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
     list_format->set_style(style.as_string().string());

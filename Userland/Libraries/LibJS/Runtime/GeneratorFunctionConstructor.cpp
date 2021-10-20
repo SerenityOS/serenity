@@ -37,17 +37,17 @@ GeneratorFunctionConstructor::~GeneratorFunctionConstructor()
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
-Value GeneratorFunctionConstructor::call()
+ThrowCompletionOr<Value> GeneratorFunctionConstructor::call()
 {
-    return construct(*this);
+    return TRY(construct(*this));
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
-Value GeneratorFunctionConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto function = FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator);
-    if (!function)
-        return {};
+    if (auto* exception = vm().exception())
+        return throw_completion(exception->value());
 
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);

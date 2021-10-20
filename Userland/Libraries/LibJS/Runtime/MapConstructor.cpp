@@ -36,31 +36,28 @@ MapConstructor::~MapConstructor()
 }
 
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
-Value MapConstructor::call()
+ThrowCompletionOr<Value> MapConstructor::call()
 {
     auto& vm = this->vm();
-    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Map);
-    return {};
+    return vm.throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Map);
 }
 
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
-Value MapConstructor::construct(FunctionObject& new_target)
+ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
-    auto* map = TRY_OR_DISCARD(ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype));
+    auto* map = TRY(ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype));
 
     if (vm.argument(0).is_nullish())
         return map;
 
-    auto adder = TRY_OR_DISCARD(map->get(vm.names.set));
-    if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
-        return {};
-    }
+    auto adder = TRY(map->get(vm.names.set));
+    if (!adder.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
 
-    TRY_OR_DISCARD(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 

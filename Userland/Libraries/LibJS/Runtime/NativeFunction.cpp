@@ -113,8 +113,6 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     vm.pop_execution_context();
 
     // 12. Return result.
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
     return result;
 }
 
@@ -179,17 +177,15 @@ ThrowCompletionOr<Object*> NativeFunction::internal_construct(MarkedValueList ar
     vm.pop_execution_context();
 
     // 12. Return result.
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return &result.as_object();
+    return result;
 }
 
-Value NativeFunction::call()
+ThrowCompletionOr<Value> NativeFunction::call()
 {
-    return TRY_OR_DISCARD(m_native_function(vm(), global_object()));
+    return m_native_function(vm(), global_object());
 }
 
-Value NativeFunction::construct(FunctionObject&)
+ThrowCompletionOr<Object*> NativeFunction::construct(FunctionObject&)
 {
     // Needs to be overridden if [[Construct]] is needed.
     VERIFY_NOT_REACHED();
