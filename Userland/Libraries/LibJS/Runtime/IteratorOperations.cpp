@@ -143,50 +143,32 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
 {
     auto& vm = global_object.vm();
     MarkedValueList values(vm.heap());
-    get_iterator_values(
-        global_object, iterable, [&](auto value) {
-            if (vm.exception())
-                return IterationDecision::Break;
+
+    (void)get_iterator_values(
+        global_object, iterable, [&](auto value) -> Optional<Completion> {
             values.append(value);
-            return IterationDecision::Continue;
+            return {};
         },
-        method, CloseOnAbrupt::No);
+        method);
+
     return values;
 }
 
-void get_iterator_values(GlobalObject& global_object, Value value, Function<IterationDecision(Value)> callback, Value method, CloseOnAbrupt close_on_abrupt)
+Completion get_iterator_values(GlobalObject& global_object, Value iterable, IteratorValueCallback callback, Value method)
 {
-    auto& vm = global_object.vm();
-
-    auto iterator_or_error = get_iterator(global_object, value, IteratorHint::Sync, method);
-    if (iterator_or_error.is_error())
-        return;
-    auto* iterator = iterator_or_error.release_value();
+    auto* iterator = TRY(get_iterator(global_object, iterable, IteratorHint::Sync, method));
 
     while (true) {
-        auto next_object_or_error = iterator_next(*iterator);
-        if (next_object_or_error.is_error())
-            return;
-        auto* next_object = next_object_or_error.release_value();
+        auto* next_object = TRY(iterator_step(global_object, *iterator));
+        if (!next_object)
+            return {};
 
-        auto done_property_or_error = next_object->get(vm.names.done);
-        if (done_property_or_error.is_error())
-            return;
+        auto next_value = TRY(iterator_value(global_object, *next_object));
 
-        if (done_property_or_error.release_value().to_boolean())
-            return;
-
-        auto next_value_or_error = next_object->get(vm.names.value);
-        if (next_value_or_error.is_error())
-            return;
-
-        auto result = callback(next_value_or_error.release_value());
-        if (result == IterationDecision::Break) {
-            if (close_on_abrupt == CloseOnAbrupt::Yes)
-                iterator_close(*iterator);
-            return;
+        if (auto completion = callback(next_value); completion.has_value()) {
+            iterator_close(*iterator);
+            return completion.release_value();
         }
-        VERIFY(result == IterationDecision::Continue);
     }
 }
 
