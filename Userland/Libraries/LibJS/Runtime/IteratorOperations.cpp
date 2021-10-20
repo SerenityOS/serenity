@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 
@@ -18,8 +19,8 @@ ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value
     if (method.is_empty()) {
         if (hint == IteratorHint::Async)
             TODO();
-        auto object = TRY(value.to_object(global_object));
-        method = TRY(object->get(*vm.well_known_symbol_iterator()));
+
+        method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
     }
 
     if (!method.is_function())
