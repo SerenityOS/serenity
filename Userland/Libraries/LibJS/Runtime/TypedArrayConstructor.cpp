@@ -79,9 +79,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     auto using_iterator = TRY_OR_DISCARD(source.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
-        auto values = iterable_to_list(global_object, source, using_iterator);
-        if (vm.exception())
-            return {};
+        auto values = TRY_OR_DISCARD(iterable_to_list(global_object, source, using_iterator));
 
         MarkedValueList arguments(vm.heap());
         arguments.empend(values.size());
