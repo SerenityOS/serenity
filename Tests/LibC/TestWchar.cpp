@@ -580,3 +580,36 @@ TEST_CASE(mbtowc)
     ret = mbtowc(nullptr, "\xe2\x84\xa2\xe2\x84\xa2", 6);
     EXPECT_EQ(ret, 3);
 }
+
+TEST_CASE(mblen)
+{
+    int ret = 0;
+
+    // Ensure that we can parse normal ASCII characters.
+    ret = mblen("Hello", 5);
+    EXPECT_EQ(ret, 1);
+
+    // Try two three-byte codepoints (™™), only one of which should be consumed.
+    ret = mblen("\xe2\x84\xa2\xe2\x84\xa2", 6);
+    EXPECT_EQ(ret, 3);
+
+    // Try a null character, which should return 0.
+    ret = mblen("\x00\x00", 2);
+    EXPECT_EQ(ret, 0);
+
+    // Try an incomplete multibyte character.
+    ret = mblen("\xe2\x84", 2);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(errno, EILSEQ);
+
+    // Ask if we support shift states and reset the internal state in the process.
+    ret = mblen(nullptr, 2);
+    EXPECT_EQ(ret, 0); // We don't support shift states.
+    ret = mblen("\x00", 1);
+    EXPECT_EQ(ret, 0); // No error likely means that the state is working again.
+
+    // Try an invalid multibyte sequence.
+    ret = mblen("\xff", 1);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(errno, EILSEQ);
+}
