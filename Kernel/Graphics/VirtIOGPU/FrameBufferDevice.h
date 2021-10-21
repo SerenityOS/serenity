@@ -29,7 +29,7 @@ public:
     virtual void deactivate_writes();
     virtual void activate_writes();
 
-    bool try_to_set_resolution(size_t width, size_t height);
+    KResult try_to_set_resolution(size_t width, size_t height);
     void clear_to_black(Buffer&);
 
     size_t width() const { return display_info().rect.width; }

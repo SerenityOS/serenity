@@ -45,7 +45,7 @@ Console::Console(RefPtr<FrameBufferDevice> const& framebuffer_device)
 void Console::set_resolution(size_t width, size_t height, size_t)
 {
     auto did_set_resolution = m_framebuffer_device->try_to_set_resolution(width, height);
-    VERIFY(did_set_resolution);
+    VERIFY(!did_set_resolution.is_error());
 }
 
 void Console::flush(size_t x, size_t y, size_t width, size_t height)
