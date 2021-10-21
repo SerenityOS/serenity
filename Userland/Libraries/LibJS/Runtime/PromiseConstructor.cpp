@@ -272,10 +272,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
 
     auto result = perform_promise_all(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (result.is_error()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record)) {
-            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+        if (!iterator_record_is_complete(global_object, *iterator_record))
             result = iterator_close(*iterator_record, result.release_error());
-        }
 
         TRY_OR_REJECT(vm, promise_capability, result);
     }
@@ -297,10 +295,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 
     auto result = perform_promise_all_settled(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (result.is_error()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record)) {
-            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+        if (!iterator_record_is_complete(global_object, *iterator_record))
             result = iterator_close(*iterator_record, result.release_error());
-        }
 
         TRY_OR_REJECT(vm, promise_capability, result);
     }
@@ -322,10 +318,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
 
     auto result = perform_promise_any(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (result.is_error()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record)) {
-            TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+        if (!iterator_record_is_complete(global_object, *iterator_record))
             result = iterator_close(*iterator_record, result.release_error());
-        }
 
         TRY_OR_REJECT(vm, promise_capability, result);
     }
@@ -347,10 +341,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
 
     auto result = perform_promise_race(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
     if (result.is_error()) {
-        if (!iterator_record_is_complete(global_object, *iterator_record)) {
-            TemporaryClearException clear_exception(vm);
-            result = iterator_close(*iterator_record, result.release_error()); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
-        }
+        if (!iterator_record_is_complete(global_object, *iterator_record))
+            result = iterator_close(*iterator_record, result.release_error());
 
         TRY_OR_REJECT(vm, promise_capability, result);
     }
