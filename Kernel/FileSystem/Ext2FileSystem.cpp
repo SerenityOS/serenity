@@ -633,7 +633,7 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
     return list;
 }
 
-void Ext2FS::free_inode(Ext2FSInode& inode)
+KResult Ext2FS::free_inode(Ext2FSInode& inode)
 {
     MutexLocker locker(m_lock);
     VERIFY(inode.m_raw_inode.i_links_count == 0);
@@ -642,11 +642,8 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     // Mark all blocks used by this inode as free.
     for (auto block_index : inode.compute_block_list_with_meta_blocks()) {
         VERIFY(block_index <= super_block().s_blocks_count);
-        if (block_index.value()) {
-            if (auto result = set_block_allocation_state(block_index, false); result.is_error()) {
-                dbgln("Ext2FS[{}]::free_inode(): Failed to deallocate block {} for inode {}", fsid(), block_index, inode.index());
-            }
-        }
+        if (block_index.value())
+            TRY(set_block_allocation_state(block_index, false));
     }
 
     // If the inode being freed is a directory, update block group directory counter.
@@ -660,12 +657,12 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     // NOTE: After this point, the inode metadata is wiped.
     memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
     inode.m_raw_inode.i_dtime = kgettimeofday().to_truncated_seconds();
-    if (auto result = write_ext2_inode(inode.index(), inode.m_raw_inode); result.is_error())
-        dbgln("Ext2FS[{}]::free_inode(): Failed to write inode {}: {}", fsid(), inode.index(), result.error());
+    TRY(write_ext2_inode(inode.index(), inode.m_raw_inode));
 
     // Mark the inode as free.
-    if (auto result = set_inode_allocation_state(inode.index(), false); result.is_error())
-        dbgln("Ext2FS[{}]::free_inode(): Failed to free inode {}: {}", fsid(), inode.index(), result.error());
+    TRY(set_inode_allocation_state(inode.index(), false));
+
+    return KSuccess;
 }
 
 void Ext2FS::flush_block_group_descriptor_table()
@@ -736,8 +733,10 @@ Ext2FSInode::Ext2FSInode(Ext2FS& fs, InodeIndex index)
 
 Ext2FSInode::~Ext2FSInode()
 {
-    if (m_raw_inode.i_links_count == 0)
-        fs().free_inode(*this);
+    if (m_raw_inode.i_links_count == 0) {
+        // Alas, we have nowhere to propagate any errors that occur here.
+        (void)fs().free_inode(*this);
+    }
 }
 
 u64 Ext2FSInode::size() const

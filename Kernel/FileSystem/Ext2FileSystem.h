@@ -145,7 +145,7 @@ private:
     KResult set_block_allocation_state(BlockIndex, bool);
 
     void uncache_inode(InodeIndex);
-    void free_inode(Ext2FSInode&);
+    KResult free_inode(Ext2FSInode&);
 
     struct BlockListShape {
         unsigned direct_blocks { 0 };
