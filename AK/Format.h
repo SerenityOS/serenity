@@ -595,7 +595,7 @@ struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>>
 struct FormatString {
 };
 template<>
-struct Formatter<FormatString> : Formatter<String> {
+struct Formatter<FormatString> : Formatter<StringView> {
     template<typename... Parameters>
     void format(FormatBuilder& builder, StringView fmtstr, const Parameters&... parameters)
     {
