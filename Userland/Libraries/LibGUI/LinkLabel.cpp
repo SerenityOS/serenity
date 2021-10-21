@@ -21,7 +21,6 @@ namespace GUI {
 LinkLabel::LinkLabel(String text)
     : Label(move(text))
 {
-    set_override_cursor(Gfx::StandardCursor::Hand);
     set_foreground_role(Gfx::ColorRole::Link);
     set_focus_policy(FocusPolicy::TabFocus);
     setup_actions();
@@ -37,13 +36,29 @@ void LinkLabel::setup_actions()
     m_copy_action = CommonActions::make_copy_action([this](auto&) { Clipboard::the().set_plain_text(text()); }, this);
 }
 
+void LinkLabel::set_hovered(bool hover)
+{
+    if (hover == m_hovered)
+        return;
+
+    m_hovered = hover;
+    set_override_cursor(hover ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::None);
+    update();
+}
+
+void LinkLabel::mousemove_event(MouseEvent& event)
+{
+    static const int extra_target_width = 3;
+    set_hovered(event.position().x() <= font().width(text()) + extra_target_width);
+}
+
 void LinkLabel::mousedown_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Left)
         return;
 
     Label::mousedown_event(event);
-    if (on_click) {
+    if (m_hovered && on_click) {
         on_click();
     }
 }
@@ -69,18 +84,10 @@ void LinkLabel::paint_event(PaintEvent& event)
         painter.draw_focus_rect(text_rect(), palette().focus_outline());
 }
 
-void LinkLabel::enter_event(Core::Event& event)
-{
-    Label::enter_event(event);
-    m_hovered = true;
-    update();
-}
-
 void LinkLabel::leave_event(Core::Event& event)
 {
     Label::leave_event(event);
-    m_hovered = false;
-    update();
+    set_hovered(false);
 }
 
 void LinkLabel::did_change_text()
