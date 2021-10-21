@@ -29,11 +29,13 @@ Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildli
     # Or as a handy rebuild-rerun line:
     ninja FuzzJs && ./Fuzzers/FuzzJs
 
+(Note that we require clang >= 12, so depending on your package manager you may need to specify `clang++-12` and `clang-12` instead.)
+
 Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in the current directory.
 
 clang emits different warnings than gcc, so you may have to remove `-Werror` in CMakeLists.txt and Meta/Lagom/CMakeLists.txt.
 
-Fuzzers work better if you give them a fuzz corpus, e.g. `./Fuzzers/FuzzBMP ../Base/res/html/misc/bmpsuite_files/rgba32-61754.bmp` Pay attention that LLVM also likes creating new files, don't blindly commit them (yet)!
+Fuzzers work better if you give them a fuzz corpus, e.g. `./Fuzzers/FuzzBMPLoader ../Base/res/html/misc/bmpsuite_files/rgba32-61754.bmp` Pay attention that LLVM also likes creating new files, don't blindly commit them (yet)!
 
 To run several fuzz jobs in parallel, pass `-jobs=24 -workers=24`.
 
