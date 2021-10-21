@@ -251,7 +251,7 @@ expression :: evaluate expression?
             | '(' list_expression ')' expression?
 
 evaluate :: '$' '(' pipe_sequence ')'
-          | '$' expression          {eval / dynamic resolve}
+          | '$' [lookahead != '('] expression          {eval / dynamic resolve}
 
 string_composite :: string string_composite?
                   | variable string_composite?

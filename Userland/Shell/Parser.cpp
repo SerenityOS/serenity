@@ -1166,8 +1166,10 @@ RefPtr<AST::Node> Parser::parse_expression()
         if (auto immediate = parse_immediate_expression())
             return read_concat(immediate.release_nonnull());
 
-        if (auto inline_exec = parse_evaluate())
+        auto inline_exec = parse_evaluate();
+        if (inline_exec && !inline_exec->is_syntax_error())
             return read_concat(inline_exec.release_nonnull());
+        return inline_exec;
     }
 
     if (starting_char == '#')
