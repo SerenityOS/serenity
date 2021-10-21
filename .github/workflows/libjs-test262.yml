@@ -65,12 +65,20 @@ jobs:
       - name: Create build directory
         run: |
           mkdir -p libjs-test262/Build/UCD
+          mkdir -p libjs-test262/Build/CLDR
 
       - name: UnicodeData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+
+      - name: UnicodeLocale cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/CLDR
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
       - name: Build libjs-test262-runner and test-js
