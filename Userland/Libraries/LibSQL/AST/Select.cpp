@@ -34,9 +34,15 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
         }
         context.result = SQLResult::construct();
         AK::NonnullRefPtr<TupleDescriptor> descriptor = AK::adopt_ref(*new TupleDescriptor);
+        Tuple tuple(descriptor);
         for (auto& row : context.database->select_all(*table)) {
             context.current_row = &row;
-            Tuple tuple(descriptor);
+            if (where_clause()) {
+                auto where_result = where_clause()->evaluate(context);
+                if (!where_result)
+                    continue;
+            }
+            tuple.clear();
             for (auto& col : columns) {
                 auto value = col.expression()->evaluate(context);
                 tuple.append(value);
