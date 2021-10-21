@@ -19,10 +19,10 @@ public:
 private:
     explicit LinkLabel(String text = {});
 
+    virtual void mousemove_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
-    virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
@@ -31,6 +31,7 @@ private:
 
     void update_tooltip_if_needed();
     void setup_actions();
+    void set_hovered(bool);
 
     RefPtr<Menu> m_context_menu;
     RefPtr<Action> m_open_action;
