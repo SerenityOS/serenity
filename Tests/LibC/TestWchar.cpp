@@ -441,6 +441,45 @@ TEST_CASE(mbsrtowcs)
     EXPECT_EQ(src, nullptr);
 }
 
+TEST_CASE(mbsnrtowcs)
+{
+    mbstate_t state = {};
+    const char good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
+    const char* src;
+    size_t ret = 0;
+
+    // Convert nothing.
+    src = good_chars;
+    ret = mbsnrtowcs(nullptr, &src, 0, 0, &state);
+    EXPECT_EQ(ret, 0ul);
+    EXPECT_EQ(src, good_chars);
+
+    // Convert one full wide character.
+    src = good_chars;
+    ret = mbsnrtowcs(nullptr, &src, 4, 0, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(src, good_chars + 4);
+
+    // Encounter a null character.
+    src = good_chars;
+    ret = mbsnrtowcs(nullptr, &src, 10, 0, &state);
+    EXPECT_EQ(ret, 2ul);
+    EXPECT_EQ(src, nullptr);
+
+    // Convert an incomplete character.
+    // Make sure that we point past the last processed byte.
+    src = good_chars;
+    ret = mbsnrtowcs(nullptr, &src, 6, 0, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(src, good_chars + 6);
+    EXPECT_EQ(mbsinit(&state), 0);
+
+    // Finish converting the incomplete character.
+    ret = mbsnrtowcs(nullptr, &src, 2, 0, &state);
+    EXPECT_EQ(ret, 1ul);
+    EXPECT_EQ(src, good_chars + 8);
+}
+
 TEST_CASE(wcslcpy)
 {
     auto buf = static_cast<wchar_t*>(malloc(8 * sizeof(wchar_t)));
