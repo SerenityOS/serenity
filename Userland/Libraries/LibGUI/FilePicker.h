@@ -61,7 +61,7 @@ private:
 
     struct CommonLocationButton {
         String path;
-        Button& button;
+        size_t tray_item_index { 0 };
     };
 
     RefPtr<MultiView> m_view;
