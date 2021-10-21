@@ -52,7 +52,7 @@ private:
             set_exclusive(true);
         set_action(action);
         set_tooltip(tooltip(action));
-        set_focus_policy(FocusPolicy::TabFocus);
+        set_focus_policy(FocusPolicy::NoFocus);
         if (action.icon())
             set_icon(action.icon());
         else
