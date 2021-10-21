@@ -130,7 +130,7 @@ jobs:
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/CLDR
+          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: Create build environment with extra debug options
         # Build the entire project with all available debug options turned on, to prevent code rot.
