@@ -24,12 +24,12 @@ public:
 private:
     virtual bool has_constructor() const override { return true; }
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_epoch_seconds);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_epoch_milliseconds);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_epoch_microseconds);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_epoch_nanoseconds);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(compare);
+    JS_DECLARE_NATIVE_FUNCTION(from);
+    JS_DECLARE_NATIVE_FUNCTION(from_epoch_seconds);
+    JS_DECLARE_NATIVE_FUNCTION(from_epoch_milliseconds);
+    JS_DECLARE_NATIVE_FUNCTION(from_epoch_microseconds);
+    JS_DECLARE_NATIVE_FUNCTION(from_epoch_nanoseconds);
+    JS_DECLARE_NATIVE_FUNCTION(compare);
 };
 
 }
