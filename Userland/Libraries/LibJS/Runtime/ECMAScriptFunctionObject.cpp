@@ -697,7 +697,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         return normal_completion(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame()));
     } else {
-        VERIFY(m_kind != FunctionKind::Generator);
+        if (m_kind != FunctionKind::Regular)
+            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Non regular function execution in AST interpreter");
         OwnPtr<Interpreter> local_interpreter;
         Interpreter* ast_interpreter = vm.interpreter_if_exists();
 

@@ -3371,11 +3371,11 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declarat
     m_functions_hoistable_with_annexB_extension.append(move(declaration));
 }
 
-Value ImportStatement::execute(Interpreter& interpreter, GlobalObject&) const
+Value ImportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     dbgln("Modules are not fully supported yet!");
-    TODO();
+    interpreter.vm().throw_exception<InternalError>(global_object, ErrorType::NotImplemented, "'import' in modules");
     return {};
 }
 
