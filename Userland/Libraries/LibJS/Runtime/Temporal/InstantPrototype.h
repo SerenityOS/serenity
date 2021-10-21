@@ -20,22 +20,22 @@ public:
     virtual ~InstantPrototype() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(epoch_seconds_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(epoch_milliseconds_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(epoch_microseconds_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(epoch_nanoseconds_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(add);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(subtract);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(until);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(since);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(round);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(equals);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_json);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(value_of);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_zoned_date_time);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_zoned_date_time_iso);
+    JS_DECLARE_NATIVE_FUNCTION(epoch_seconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(epoch_milliseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(epoch_microseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(epoch_nanoseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(add);
+    JS_DECLARE_NATIVE_FUNCTION(subtract);
+    JS_DECLARE_NATIVE_FUNCTION(until);
+    JS_DECLARE_NATIVE_FUNCTION(since);
+    JS_DECLARE_NATIVE_FUNCTION(round);
+    JS_DECLARE_NATIVE_FUNCTION(equals);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_json);
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
+    JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time_iso);
 };
 
 }
