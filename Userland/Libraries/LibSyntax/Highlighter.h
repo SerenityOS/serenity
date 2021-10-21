@@ -16,6 +16,7 @@ namespace Syntax {
 
 enum class Language {
     Cpp,
+    CSS,
     GML,
     HTML,
     INI,
