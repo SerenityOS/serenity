@@ -103,5 +103,7 @@ private:
     Utf8View m_utf8_view;
     AK::Utf8CodePointIterator m_utf8_iterator;
     AK::Utf8CodePointIterator m_prev_utf8_iterator;
+    Token::Position m_position;
+    Token::Position m_prev_position;
 };
 }
