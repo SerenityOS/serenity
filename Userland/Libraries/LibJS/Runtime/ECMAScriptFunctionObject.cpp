@@ -402,7 +402,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             [&](auto const& param) {
                 Value argument_value;
                 if (parameter.is_rest) {
-                    auto* array = Array::create(global_object(), 0);
+                    auto* array = MUST(Array::create(global_object(), 0));
                     for (size_t rest_index = i; rest_index < execution_context_arguments.size(); ++rest_index)
                         array->indexed_properties().append(execution_context_arguments[rest_index]);
                     argument_value = move(array);

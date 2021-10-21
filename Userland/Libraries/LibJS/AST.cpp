@@ -2867,7 +2867,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto* array = Array::create(global_object, 0);
+    auto* array = MUST(Array::create(global_object, 0));
     array->indexed_properties();
     size_t index = 0;
     for (auto& element : m_elements) {
@@ -2939,7 +2939,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     }
     auto& tag_function = tag.as_function();
     auto& expressions = m_template_literal->expressions();
-    auto* strings = Array::create(global_object, 0);
+    auto* strings = MUST(Array::create(global_object, 0));
     MarkedValueList arguments(vm.heap());
     arguments.append(strings);
     for (size_t i = 0; i < expressions.size(); ++i) {
@@ -2955,7 +2955,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
         }
     }
 
-    auto* raw_strings = Array::create(global_object, 0);
+    auto* raw_strings = MUST(Array::create(global_object, 0));
     for (auto& raw_string : m_template_literal->raw_strings()) {
         auto value = raw_string.execute(interpreter, global_object);
         if (vm.exception())

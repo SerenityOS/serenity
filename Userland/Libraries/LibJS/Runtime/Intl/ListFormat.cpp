@@ -237,7 +237,7 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
     auto parts = create_parts_from_list(list_format, list);
 
     // 2. Let result be ArrayCreate(0).
-    auto result = Array::create(global_object, 0);
+    auto* result = MUST(Array::create(global_object, 0));
 
     // 3. Let n be 0.
     size_t n = 0;

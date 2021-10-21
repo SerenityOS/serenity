@@ -109,12 +109,8 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
 
     auto is_array = TRY_OR_DISCARD(Value(&original_array).is_array(global_object));
 
-    if (!is_array) {
-        auto array = Array::create(global_object, length);
-        if (vm.exception())
-            return {};
-        return array;
-    }
+    if (!is_array)
+        return TRY_OR_DISCARD(Array::create(global_object, length));
 
     auto constructor = TRY_OR_DISCARD(original_array.get(vm.names.constructor));
     if (constructor.is_constructor()) {
@@ -133,12 +129,8 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
             constructor = js_undefined();
     }
 
-    if (constructor.is_undefined()) {
-        auto array = Array::create(global_object, length);
-        if (vm.exception())
-            return {};
-        return array;
-    }
+    if (constructor.is_undefined())
+        return TRY_OR_DISCARD(Array::create(global_object, length));
 
     if (!constructor.is_constructor()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());

@@ -19,7 +19,7 @@ class Array : public Object {
     JS_OBJECT(Array, Object);
 
 public:
-    static Array* create(GlobalObject&, size_t length, Object* prototype = nullptr);
+    static ThrowCompletionOr<Array*> create(GlobalObject&, size_t length, Object* prototype = nullptr);
     static Array* create_from(GlobalObject&, Vector<Value> const&);
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
@@ -46,7 +46,7 @@ public:
     [[nodiscard]] bool length_is_writable() const { return m_length_writable; };
 
 private:
-    bool set_length(PropertyDescriptor const&);
+    ThrowCompletionOr<bool> set_length(PropertyDescriptor const&);
 
     bool m_length_writable { true };
 };

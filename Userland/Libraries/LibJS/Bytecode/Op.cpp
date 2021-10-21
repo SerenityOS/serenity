@@ -139,7 +139,7 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
         return;
     auto* iterator = iterator_or_error.release_value();
 
-    auto array = Array::create(global_object, 0);
+    auto* array = MUST(Array::create(global_object, 0));
     size_t index = 0;
 
     while (true) {
