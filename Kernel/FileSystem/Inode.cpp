@@ -41,14 +41,14 @@ void Inode::sync_all()
 
     for (auto& inode : inodes) {
         VERIFY(inode.is_metadata_dirty());
-        inode.flush_metadata();
+        (void)inode.flush_metadata();
     }
 }
 
 void Inode::sync()
 {
     if (is_metadata_dirty())
-        flush_metadata();
+        (void)flush_metadata();
     fs().flush_writes();
 }
 
@@ -103,7 +103,7 @@ void Inode::will_be_destroyed()
 {
     MutexLocker locker(m_inode_lock);
     if (m_metadata_dirty)
-        flush_metadata();
+        (void)flush_metadata();
 }
 
 KResult Inode::set_atime(time_t)

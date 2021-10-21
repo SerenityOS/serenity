@@ -70,8 +70,9 @@ KResultOr<NonnullRefPtr<Inode>> DevTmpFSInode::lookup(StringView)
     VERIFY_NOT_REACHED();
 }
 
-void DevTmpFSInode::flush_metadata()
+KResult DevTmpFSInode::flush_metadata()
 {
+    return KSuccess;
 }
 
 KResultOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)

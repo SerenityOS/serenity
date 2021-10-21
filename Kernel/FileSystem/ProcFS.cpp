@@ -70,8 +70,9 @@ ProcFSInode::~ProcFSInode()
 {
 }
 
-void ProcFSInode::flush_metadata()
+KResult ProcFSInode::flush_metadata()
 {
+    return KSuccess;
 }
 
 KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)

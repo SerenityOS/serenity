@@ -81,7 +81,7 @@ public:
     virtual KResult increment_link_count();
     virtual KResult decrement_link_count();
 
-    virtual void flush_metadata() = 0;
+    virtual KResult flush_metadata() = 0;
 
     void will_be_destroyed();
 

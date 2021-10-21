@@ -148,8 +148,9 @@ InodeMetadata SysFSInode::metadata() const
     return metadata;
 }
 
-void SysFSInode::flush_metadata()
+KResult SysFSInode::flush_metadata()
 {
+    return KSuccess;
 }
 
 KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
