@@ -32,32 +32,32 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Instant"), Attribute::Configurable);
 
-    define_old_native_accessor(vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
-    define_old_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
-    define_old_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
-    define_old_native_accessor(vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.add, add, 1, attr);
-    define_old_native_function(vm.names.subtract, subtract, 1, attr);
-    define_old_native_function(vm.names.until, until, 1, attr);
-    define_old_native_function(vm.names.since, since, 1, attr);
-    define_old_native_function(vm.names.round, round, 1, attr);
-    define_old_native_function(vm.names.equals, equals, 1, attr);
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_old_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_old_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
-    define_old_native_function(vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
+    define_native_function(vm.names.add, add, 1, attr);
+    define_native_function(vm.names.subtract, subtract, 1, attr);
+    define_native_function(vm.names.until, until, 1, attr);
+    define_native_function(vm.names.since, since, 1, attr);
+    define_native_function(vm.names.round, round, 1, attr);
+    define_native_function(vm.names.equals, equals, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
+    define_native_function(vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
@@ -70,11 +70,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
 }
 
 // 8.3.4 get Temporal.Instant.prototype.epochMilliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
@@ -87,11 +87,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 }
 
 // 8.3.5 get Temporal.Instant.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmicroseconds
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
@@ -104,11 +104,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
 }
 
 // 8.3.6 get Temporal.Instant.prototype.epochNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
@@ -118,76 +118,76 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 }
 
 // 8.3.7 Temporal.Instant.prototype.add ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::add)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
 {
     auto temporal_duration_like = vm.argument(0);
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
+    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
-    auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
+    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds));
 
     // 5. Return ! CreateTemporalInstant(ns).
     return MUST(create_temporal_instant(global_object, *ns));
 }
 
 // 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::subtract)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
 {
     auto temporal_duration_like = vm.argument(0);
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
-    auto duration = TRY_OR_DISCARD(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
+    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv }));
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
-    auto* ns = TRY_OR_DISCARD(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
+    auto* ns = TRY(add_instant(global_object, instant->nanoseconds(), -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds));
 
     // 5. Return ! CreateTemporalInstant(ns).
     return MUST(create_temporal_instant(global_object, *ns));
 }
 
 // 8.3.9 Temporal.Instant.prototype.until ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.until
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::until)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
+    auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, *maximum, false));
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
 
     // 12. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
@@ -196,42 +196,42 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::until)
     auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 8.3.10 Temporal.Instant.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.since
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::since)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto* other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
+    auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
-    auto smallest_unit = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
 
     // 6. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("second", smallestUnit).
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY_OR_DISCARD(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 10. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
 
     // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
-    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, *maximum, false));
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, *maximum, false));
 
     // 12. Let roundedNs be ! DifferenceInstant(other.[[Nanoseconds]], instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
@@ -240,39 +240,37 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::since)
     auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return TRY_OR_DISCARD(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
+    return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 8.3.11 Temporal.Instant.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::round)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. If options is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
     }
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
-    auto smallest_unit_value = TRY_OR_DISCARD(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
+    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
 
     // 6. If smallestUnit is undefined, throw a RangeError exception.
-    if (!smallest_unit_value.has_value()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
-        return {};
-    }
+    if (!smallest_unit_value.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
+
     // At this point smallest_unit_value can only be a string
     auto& smallest_unit = *smallest_unit_value;
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
-    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
 
     double maximum;
     // 8. If smallestUnit is "hour", then
@@ -309,26 +307,26 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::round)
     }
 
     // 14. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, true).
-    auto rounding_increment = TRY_OR_DISCARD(to_temporal_rounding_increment(global_object, *options, maximum, true));
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum, true));
 
     // 15. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
     auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, rounding_mode);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 16. Return ! CreateTemporalInstant(roundedNs).
     return MUST(create_temporal_instant(global_object, *rounded_ns));
 }
 
 // 8.3.12 Temporal.Instant.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::equals)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Set other to ? ToTemporalInstant(other).
-    auto other = TRY_OR_DISCARD(to_temporal_instant(global_object, vm.argument(0)));
+    auto other = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. If instant.[[Nanoseconds]] ≠ other.[[Nanoseconds]], return false.
     if (instant->nanoseconds().big_integer() != other->nanoseconds().big_integer())
@@ -339,132 +337,128 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::equals)
 }
 
 // 8.3.13 Temporal.Instant.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(0)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let timeZone be ? Get(options, "timeZone").
-    auto time_zone = TRY_OR_DISCARD(options->get(vm.names.timeZone));
+    auto time_zone = TRY(options->get(vm.names.timeZone));
 
     // 5. If timeZone is not undefined, then
     if (!time_zone.is_undefined()) {
         // a. Set timeZone to ? ToTemporalTimeZone(timeZone).
-        time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, time_zone));
+        time_zone = TRY(to_temporal_time_zone(global_object, time_zone));
     }
 
     // 6. Let precision be ? ToSecondsStringPrecision(options).
-    auto precision = TRY_OR_DISCARD(to_seconds_string_precision(global_object, *options));
+    auto precision = TRY(to_seconds_string_precision(global_object, *options));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY_OR_DISCARD(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
     // 8. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
     auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), precision.increment, precision.unit, rounding_mode);
-    if (vm.exception())
-        return {};
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 9. Let roundedInstant be ! CreateTemporalInstant(roundedNs).
     auto* rounded_instant = MUST(create_temporal_instant(global_object, *rounded_ns));
 
     // 10. Return ? TemporalInstantToString(roundedInstant, timeZone, precision.[[Precision]]).
-    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision)));
+    return js_string(vm, TRY(temporal_instant_to_string(global_object, *rounded_instant, time_zone, precision.precision)));
 }
 
 // 8.3.14 Temporal.Instant.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tolocalestring
 // NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_locale_string)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
+    return js_string(vm, TRY(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.15 Temporal.Instant.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tojson
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_json)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_json)
 {
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Return ? TemporalInstantToString(instant, undefined, "auto").
-    return js_string(vm, TRY_OR_DISCARD(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
+    return js_string(vm, TRY(temporal_instant_to_string(global_object, *instant, js_undefined(), "auto"sv)));
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::value_of)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::value_of)
 {
     // 1. Throw a TypeError exception.
-    vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.Instant", "a primitive value");
-    return {};
+    return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.Instant", "a primitive value");
 }
 
 // 8.3.17 Temporal.Instant.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetime
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time)
 {
     auto item = vm.argument(0);
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, item);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, item);
     }
 
     // 4. Let calendarLike be ? Get(item, "calendar").
-    auto calendar_like = TRY_OR_DISCARD(item.as_object().get(vm.names.calendar));
+    auto calendar_like = TRY(item.as_object().get(vm.names.calendar));
 
     // 5. If calendarLike is undefined, then
     if (calendar_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.calendar.as_string());
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.calendar.as_string());
     }
 
     // 6. Let calendar be ? ToTemporalCalendar(calendarLike).
-    auto* calendar = TRY_OR_DISCARD(to_temporal_calendar(global_object, calendar_like));
+    auto* calendar = TRY(to_temporal_calendar(global_object, calendar_like));
 
     // 7. Let temporalTimeZoneLike be ? Get(item, "timeZone").
-    auto temporal_time_zone_like = TRY_OR_DISCARD(item.as_object().get(vm.names.timeZone));
+    auto temporal_time_zone_like = TRY(item.as_object().get(vm.names.timeZone));
 
     // 8. If temporalTimeZoneLike is undefined, then
     if (temporal_time_zone_like.is_undefined()) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.timeZone.as_string());
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, vm.names.timeZone.as_string());
     }
 
     // 9. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
-    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, temporal_time_zone_like));
+    auto* time_zone = TRY(to_temporal_time_zone(global_object, temporal_time_zone_like));
 
     // 10. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
-    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
+    return TRY(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
 }
 
 // 8.3.18 Temporal.Instant.prototype.toZonedDateTimeISO ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.tozoneddatetimeiso
-JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
 {
     auto item = vm.argument(0);
 
     // 1. Let instant be the this value.
     // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
-    auto* instant = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* instant = TRY(typed_this_object(global_object));
 
     // 3. If Type(item) is Object, then
     if (item.is_object()) {
         // a. Let timeZoneProperty be ? Get(item, "timeZone").
-        auto time_zone_property = TRY_OR_DISCARD(item.as_object().get(vm.names.timeZone));
+        auto time_zone_property = TRY(item.as_object().get(vm.names.timeZone));
 
         // b. If timeZoneProperty is not undefined, then
         if (!time_zone_property.is_undefined()) {
@@ -474,13 +468,13 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(InstantPrototype::to_zoned_date_time_iso)
     }
 
     // 4. Let timeZone be ? ToTemporalTimeZone(item).
-    auto* time_zone = TRY_OR_DISCARD(to_temporal_time_zone(global_object, item));
+    auto* time_zone = TRY(to_temporal_time_zone(global_object, item));
 
     // 5. Let calendar be ! GetISO8601Calendar().
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 6. Return ? CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
-    return TRY_OR_DISCARD(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
+    return TRY(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, *calendar));
 }
 
 }
