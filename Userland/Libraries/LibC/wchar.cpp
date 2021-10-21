@@ -488,7 +488,7 @@ int wcwidth(wchar_t wc)
     return 1;
 }
 
-size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
+size_t wcsnrtombs(char* dest, const wchar_t** src, size_t nwc, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
 
@@ -496,7 +496,8 @@ size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
         ps = &_anonymous_state;
 
     size_t written = 0;
-    while (true) {
+    size_t read = 0;
+    while (read < nwc) {
         size_t ret = 0;
         char buf[MB_LEN_MAX];
 
@@ -526,8 +527,11 @@ size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
         }
 
         *src += 1;
+        read += 1;
         written += ret;
     }
+
+    return written;
 }
 
 size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
@@ -573,10 +577,15 @@ int wmemcmp(const wchar_t* s1, const wchar_t* s2, size_t n)
     return 0;
 }
 
-size_t wcsnrtombs(char*, const wchar_t**, size_t, size_t, mbstate_t*)
+size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
 {
-    dbgln("FIXME: Implement wcsnrtombs()");
-    TODO();
+    static mbstate_t anonymous_state = {};
+
+    if (ps == nullptr)
+        ps = &anonymous_state;
+
+    // SIZE_MAX is as close as we are going to get to "unlimited".
+    return wcsnrtombs(dest, src, SIZE_MAX, len, ps);
 }
 
 size_t mbsnrtowcs(wchar_t*, const char**, size_t, size_t, mbstate_t*)
