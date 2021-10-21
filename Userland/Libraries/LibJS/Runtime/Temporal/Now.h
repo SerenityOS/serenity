@@ -20,15 +20,15 @@ public:
     virtual ~Now() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(time_zone);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(instant);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(plain_date_time);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(plain_date_time_iso);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(zoned_date_time);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(zoned_date_time_iso);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(plain_date);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(plain_date_iso);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(plain_time_iso);
+    JS_DECLARE_NATIVE_FUNCTION(time_zone);
+    JS_DECLARE_NATIVE_FUNCTION(instant);
+    JS_DECLARE_NATIVE_FUNCTION(plain_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(plain_date_time_iso);
+    JS_DECLARE_NATIVE_FUNCTION(zoned_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(zoned_date_time_iso);
+    JS_DECLARE_NATIVE_FUNCTION(plain_date);
+    JS_DECLARE_NATIVE_FUNCTION(plain_date_iso);
+    JS_DECLARE_NATIVE_FUNCTION(plain_time_iso);
 };
 
 TimeZone* system_time_zone(GlobalObject&);
