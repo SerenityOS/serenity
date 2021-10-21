@@ -872,10 +872,24 @@ lldiv_t lldiv(long long numerator, long long denominator)
 
 int mblen(char const* s, size_t n)
 {
-    // FIXME: Implement locale support
-    if (!s)
+    // POSIX: Equivalent to mbtowc(NULL, s, n), but we mustn't change the state of mbtowc.
+    static mbstate_t internal_state = {};
+
+    // Reset the internal state and ask whether we have shift states.
+    if (s == nullptr) {
+        internal_state = {};
         return 0;
-    return (MB_CUR_MAX > n) ? n : MB_CUR_MAX;
+    }
+
+    size_t ret = mbrtowc(nullptr, s, n, &internal_state);
+
+    // Incomplete characters get returned as illegal sequence.
+    if (ret == -2ul) {
+        errno = EILSEQ;
+        return -1;
+    }
+
+    return ret;
 }
 
 size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n)
