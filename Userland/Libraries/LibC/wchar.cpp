@@ -300,10 +300,14 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     return consumed_bytes;
 }
 
-size_t mbrlen(const char*, size_t, mbstate_t*)
+size_t mbrlen(const char* s, size_t n, mbstate_t* ps)
 {
-    dbgln("FIXME: Implement mbrlen()");
-    TODO();
+    static mbstate_t anonymous_state = {};
+
+    if (ps == nullptr)
+        ps = &anonymous_state;
+
+    return mbrtowc(nullptr, s, n, ps);
 }
 
 size_t wcrtomb(char* s, wchar_t wc, mbstate_t*)

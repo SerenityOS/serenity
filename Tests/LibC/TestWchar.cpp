@@ -439,3 +439,38 @@ TEST_CASE(wcslcpy)
     ret = wcslcpy(nullptr, L"abc", 0);
     EXPECT_EQ(ret, 3ul);
 }
+
+TEST_CASE(mbrlen)
+{
+    size_t ret = 0;
+    mbstate_t state = {};
+
+    // Ensure that we can parse normal ASCII characters.
+    ret = mbrlen("Hello", 5, &state);
+    EXPECT_EQ(ret, 1ul);
+
+    // Try two three-byte codepoints (™™), only one of which should be consumed.
+    ret = mbrlen("\xe2\x84\xa2\xe2\x84\xa2", 6, &state);
+    EXPECT_EQ(ret, 3ul);
+
+    // Try a null character, which should return 0 and reset the state to the initial state.
+    ret = mbrlen("\x00\x00", 2, &state);
+    EXPECT_EQ(ret, 0ul);
+    EXPECT_NE(mbsinit(&state), 0);
+
+    // Try an incomplete multibyte character.
+    ret = mbrlen("\xe2\x84", 2, &state);
+    EXPECT_EQ(ret, -2ul);
+    EXPECT_EQ(mbsinit(&state), 0);
+
+    // Finish the previous multibyte character.
+    ret = mbrlen("\xa2", 1, &state);
+    EXPECT_EQ(ret, 1ul);
+
+    // Try an invalid multibyte sequence.
+    // Reset the state afterwards because the effects are undefined.
+    ret = mbrlen("\xff", 1, &state);
+    EXPECT_EQ(ret, -1ul);
+    EXPECT_EQ(errno, EILSEQ);
+    state = {};
+}
