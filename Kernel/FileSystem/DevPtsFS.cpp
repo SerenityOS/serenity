@@ -145,8 +145,9 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     });
 }
 
-void DevPtsFSInode::flush_metadata()
+KResult DevPtsFSInode::flush_metadata()
 {
+    return KSuccess;
 }
 
 KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)

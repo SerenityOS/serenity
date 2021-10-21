@@ -773,7 +773,7 @@ InodeMetadata Ext2FSInode::metadata() const
     return metadata;
 }
 
-void Ext2FSInode::flush_metadata()
+KResult Ext2FSInode::flush_metadata()
 {
     MutexLocker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::flush_metadata(): Flushing inode", identifier());
@@ -786,6 +786,7 @@ void Ext2FSInode::flush_metadata()
         }
     }
     set_metadata_dirty(false);
+    return KSuccess;
 }
 
 KResultOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const

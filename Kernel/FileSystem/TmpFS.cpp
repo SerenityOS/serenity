@@ -216,7 +216,7 @@ void TmpFSInode::notify_watchers()
     set_metadata_dirty(false);
 }
 
-void TmpFSInode::flush_metadata()
+KResult TmpFSInode::flush_metadata()
 {
     // We don't really have any metadata that could become dirty.
     // The only reason we even call set_metadata_dirty() is
@@ -224,6 +224,7 @@ void TmpFSInode::flush_metadata()
     // switched to a different mechanism, we can stop ever marking
     // our metadata as dirty at all.
     set_metadata_dirty(false);
+    return KSuccess;
 }
 
 KResult TmpFSInode::chmod(mode_t mode)

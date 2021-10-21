@@ -822,9 +822,10 @@ InodeMetadata Plan9FSInode::metadata() const
     return metadata;
 }
 
-void Plan9FSInode::flush_metadata()
+KResult Plan9FSInode::flush_metadata()
 {
     // Do nothing.
+    return KSuccess;
 }
 
 KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const

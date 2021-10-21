@@ -499,8 +499,9 @@ KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
     return inode.release_nonnull();
 }
 
-void ISO9660Inode::flush_metadata()
+KResult ISO9660Inode::flush_metadata()
 {
+    return KSuccess;
 }
 
 KResultOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
