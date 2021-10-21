@@ -53,6 +53,9 @@ public:
     bool is_minimizable() const { return m_minimizable; }
     void set_minimizable(bool minimizable) { m_minimizable = minimizable; }
 
+    bool is_closeable() const { return m_closeable; }
+    void set_closeable(bool closeable) { m_closeable = closeable; }
+
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     bool has_alpha_channel() const { return m_has_alpha_channel; }
@@ -269,6 +272,7 @@ private:
     bool m_resizable { true };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
+    bool m_closeable { true };
     bool m_maximized_when_windowless { false };
     bool m_fullscreen { false };
     bool m_frameless { false };

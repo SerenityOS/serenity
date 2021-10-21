@@ -71,7 +71,7 @@ WindowFrame::WindowFrame(Window& window)
 
 void WindowFrame::window_was_constructed(Badge<Window>)
 {
-    {
+    if (m_window.is_closeable()) {
         auto button = make<Button>(*this, [this](auto&) {
             m_window.handle_window_menu_action(WindowMenuAction::Close);
         });
@@ -113,7 +113,8 @@ void WindowFrame::set_button_icons()
     if (m_window.is_frameless())
         return;
 
-    m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
+    if (m_window.is_closeable())
+        m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
     if (m_window.is_minimizable())
         m_minimize_button->set_icon(s_minimize_icon);
     if (m_window.is_resizable())

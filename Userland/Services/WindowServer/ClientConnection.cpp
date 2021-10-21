@@ -481,7 +481,7 @@ Window* ClientConnection::window_from_id(i32 window_id)
 }
 
 void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
-    bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool resizable,
+    bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool closeable, bool resizable,
     bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
     float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
     Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type,
@@ -506,7 +506,7 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
         return;
     }
 
-    auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, frameless, resizable, fullscreen, accessory, parent_window);
+    auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, closeable, frameless, resizable, fullscreen, accessory, parent_window);
 
     window->set_forced_shadow(forced_shadow);
 
