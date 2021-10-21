@@ -534,7 +534,7 @@ size_t wcsnrtombs(char* dest, const wchar_t** src, size_t nwc, size_t len, mbsta
     return written;
 }
 
-size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
+size_t mbsnrtowcs(wchar_t* dst, const char** src, size_t nms, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
 
@@ -543,8 +543,21 @@ size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
 
     size_t written = 0;
     while (written < len || !dst) {
+        // End of source buffer, no incomplete character.
+        // src continues to point to the next byte.
+        if (nms == 0) {
+            return written;
+        }
+
         // Convert next multibyte to wchar.
-        size_t ret = mbrtowc(dst, *src, MB_LEN_MAX, ps);
+        size_t ret = mbrtowc(dst, *src, nms, ps);
+
+        // Multibyte sequence is incomplete.
+        if (ret == -2ul) {
+            // Point just past the last processed byte.
+            *src += nms;
+            return written;
+        }
 
         // Multibyte sequence is invalid.
         if (ret == -1ul) {
@@ -559,6 +572,7 @@ size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
         }
 
         *src += ret;
+        nms -= ret;
         written += 1;
         if (dst)
             dst += 1;
@@ -588,9 +602,14 @@ size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
     return wcsnrtombs(dest, src, SIZE_MAX, len, ps);
 }
 
-size_t mbsnrtowcs(wchar_t*, const char**, size_t, size_t, mbstate_t*)
+size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
 {
-    dbgln("FIXME: Implement mbsnrtowcs()");
-    TODO();
+    static mbstate_t anonymous_state = {};
+
+    if (ps == nullptr)
+        ps = &anonymous_state;
+
+    // SIZE_MAX is as close as we are going to get to "unlimited".
+    return mbsnrtowcs(dst, src, SIZE_MAX, len, ps);
 }
 }
