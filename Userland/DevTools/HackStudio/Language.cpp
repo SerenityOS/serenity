@@ -18,6 +18,8 @@ Language language_from_file_extension(const String& extension)
         return Language::JavaScript;
     if (extension == "html" || extension == "htm")
         return Language::HTML;
+    if (extension == "css")
+        return Language::CSS;
     if (extension == "gml")
         return Language::GML;
     if (extension == "ini")
@@ -60,6 +62,8 @@ String language_name_from_file_extension(const String& extension)
         return "Markdown";
     if (extension == "html" || extension == "htm")
         return "HTML";
+    if (extension == "css")
+        return "CSS";
     if (extension == "sql")
         return "SQL";
     if (extension == "txt")
