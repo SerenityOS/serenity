@@ -49,6 +49,72 @@ Value ChainedExpression::evaluate(ExecutionContext& context) const
     return ret;
 }
 
+Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
+{
+    Value lhs_value = lhs()->evaluate(context);
+    Value rhs_value = rhs()->evaluate(context);
+    switch (type()) {
+    case BinaryOperator::Concatenate: {
+        if (lhs_value.type() != SQLType::Text) {
+            VERIFY_NOT_REACHED();
+        }
+        AK::StringBuilder builder;
+        builder.append(lhs_value.to_string());
+        builder.append(rhs_value.to_string());
+        return Value(builder.to_string());
+    }
+    case BinaryOperator::Multiplication:
+        return lhs_value.multiply(rhs_value);
+    case BinaryOperator::Division:
+        return lhs_value.divide(rhs_value);
+    case BinaryOperator::Modulo:
+        return lhs_value.modulo(rhs_value);
+    case BinaryOperator::Plus:
+        return lhs_value.add(rhs_value);
+    case BinaryOperator::Minus:
+        return lhs_value.subtract(rhs_value);
+    case BinaryOperator::ShiftLeft:
+        return lhs_value.shift_left(rhs_value);
+    case BinaryOperator::ShiftRight:
+        return lhs_value.shift_right(rhs_value);
+    case BinaryOperator::BitwiseAnd:
+        return lhs_value.bitwise_and(rhs_value);
+    case BinaryOperator::BitwiseOr:
+        return lhs_value.bitwise_or(rhs_value);
+    case BinaryOperator::LessThan:
+        return Value(lhs_value.compare(rhs_value) < 0);
+    case BinaryOperator::LessThanEquals:
+        return Value(lhs_value.compare(rhs_value) <= 0);
+    case BinaryOperator::GreaterThan:
+        return Value(lhs_value.compare(rhs_value) > 0);
+    case BinaryOperator::GreaterThanEquals:
+        return Value(lhs_value.compare(rhs_value) >= 0);
+    case BinaryOperator::Equals:
+        return Value(lhs_value.compare(rhs_value) == 0);
+    case BinaryOperator::NotEquals:
+        return Value(lhs_value.compare(rhs_value) != 0);
+    case BinaryOperator::And: {
+        auto lhs_bool_maybe = lhs_value.to_bool();
+        auto rhs_bool_maybe = rhs_value.to_bool();
+        if (!lhs_bool_maybe.has_value() || !rhs_bool_maybe.has_value()) {
+            // TODO Error handling
+            VERIFY_NOT_REACHED();
+        }
+        return Value(lhs_bool_maybe.value() && rhs_bool_maybe.value());
+    }
+    case BinaryOperator::Or: {
+        auto lhs_bool_maybe = lhs_value.to_bool();
+        auto rhs_bool_maybe = rhs_value.to_bool();
+        if (!lhs_bool_maybe.has_value() || !rhs_bool_maybe.has_value()) {
+            // TODO Error handling
+            VERIFY_NOT_REACHED();
+        }
+        return Value(lhs_bool_maybe.value() || rhs_bool_maybe.value());
+    }
+    }
+    VERIFY_NOT_REACHED();
+}
+
 Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
 {
     Value expression_value = NestedExpression::evaluate(context);
