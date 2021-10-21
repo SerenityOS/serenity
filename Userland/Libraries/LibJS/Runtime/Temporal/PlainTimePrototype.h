@@ -20,21 +20,21 @@ public:
     virtual ~PlainTimePrototype() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(calendar_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(hour_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(minute_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(second_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(millisecond_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(microsecond_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(nanosecond_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(with);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(equals);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_plain_date_time);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(get_iso_fields);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_json);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(value_of);
+    JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hour_getter);
+    JS_DECLARE_NATIVE_FUNCTION(minute_getter);
+    JS_DECLARE_NATIVE_FUNCTION(second_getter);
+    JS_DECLARE_NATIVE_FUNCTION(millisecond_getter);
+    JS_DECLARE_NATIVE_FUNCTION(microsecond_getter);
+    JS_DECLARE_NATIVE_FUNCTION(nanosecond_getter);
+    JS_DECLARE_NATIVE_FUNCTION(with);
+    JS_DECLARE_NATIVE_FUNCTION(equals);
+    JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_json);
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
 }
