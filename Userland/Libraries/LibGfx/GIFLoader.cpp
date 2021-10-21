@@ -266,16 +266,15 @@ static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
 
 static void clear_rect(Bitmap& bitmap, const IntRect& rect, Color color)
 {
-    if (rect.is_empty())
+    auto intersection_rect = rect.intersected(bitmap.rect());
+    if (intersection_rect.is_empty())
         return;
 
-    VERIFY(bitmap.rect().contains(rect));
-
-    RGBA32* dst = bitmap.scanline(rect.top()) + rect.left();
+    RGBA32* dst = bitmap.scanline(intersection_rect.top()) + intersection_rect.left();
     const size_t dst_skip = bitmap.pitch() / sizeof(RGBA32);
 
-    for (int i = rect.height() - 1; i >= 0; --i) {
-        fast_u32_fill(dst, color.value(), rect.width());
+    for (int i = intersection_rect.height() - 1; i >= 0; --i) {
+        fast_u32_fill(dst, color.value(), intersection_rect.width());
         dst += dst_skip;
     }
 }
