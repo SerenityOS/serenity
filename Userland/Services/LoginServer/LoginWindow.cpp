@@ -16,6 +16,8 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     resize(413, 170);
     center_on_screen();
     set_resizable(false);
+    set_minimizable(false);
+    set_closeable(false);
     set_icon(GUI::Icon::default_icon("ladyball").bitmap_for_size(16));
 
     auto& widget = set_main_widget<GUI::Widget>();
