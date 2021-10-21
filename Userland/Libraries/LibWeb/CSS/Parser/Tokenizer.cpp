@@ -241,7 +241,10 @@ Vector<Token> Tokenizer::parse()
 {
     Vector<Token> tokens;
     for (;;) {
+        auto token_start = m_position;
         auto token = consume_a_token();
+        token.m_start_position = token_start;
+        token.m_end_position = m_position;
         tokens.append(token);
 
         if (token.is(Token::Type::EndOfFile)) {
@@ -256,8 +259,18 @@ u32 Tokenizer::next_code_point()
         return TOKENIZER_EOF;
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:d}", *m_prev_utf8_iterator);
-    return *m_prev_utf8_iterator;
+    auto code_point = *m_prev_utf8_iterator;
+
+    m_prev_position = m_position;
+    if (is_newline(code_point)) {
+        m_position.line++;
+        m_position.column = 0;
+    } else {
+        m_position.column++;
+    }
+
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:d}", code_point);
+    return code_point;
 }
 
 u32 Tokenizer::peek_code_point(size_t offset) const
@@ -579,6 +592,7 @@ void Tokenizer::consume_as_much_whitespace_as_possible()
 void Tokenizer::reconsume_current_input_code_point()
 {
     m_utf8_iterator = m_prev_utf8_iterator;
+    m_position = m_prev_position;
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
