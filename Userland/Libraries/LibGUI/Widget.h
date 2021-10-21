@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/FocusPolicy.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
 #include <LibGfx/Color.h>
@@ -44,15 +45,6 @@ enum class VerticalDirection {
     Up,
     Down
 };
-
-enum class FocusPolicy {
-    NoFocus = 0,
-    TabFocus = 0x1,
-    ClickFocus = 0x2,
-    StrongFocus = TabFocus | ClickFocus,
-};
-
-AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
 
 enum class AllowCallback {
     No,
