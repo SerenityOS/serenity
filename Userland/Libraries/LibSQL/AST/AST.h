@@ -490,6 +490,7 @@ public:
     }
 
     BinaryOperator type() const { return m_type; }
+    virtual Value evaluate(ExecutionContext&) const override;
 
 private:
     BinaryOperator m_type;
