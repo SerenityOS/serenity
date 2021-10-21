@@ -364,6 +364,32 @@ TEST_CASE(wcsrtombs)
     EXPECT_EQ(src, nullptr);
 }
 
+TEST_CASE(wcsnrtombs)
+{
+    mbstate_t state = {};
+    const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
+    const wchar_t* src;
+    size_t ret = 0;
+
+    // Convert nothing.
+    src = good_chars;
+    ret = wcsnrtombs(nullptr, &src, 0, 0, &state);
+    EXPECT_EQ(ret, 0ul);
+    EXPECT_EQ(src, good_chars);
+
+    // Convert one wide char.
+    src = good_chars;
+    ret = wcsnrtombs(nullptr, &src, 1, 0, &state);
+    EXPECT_EQ(ret, 4ul);
+    EXPECT_EQ(src, good_chars + 1);
+
+    // Encounter a null character.
+    src = good_chars;
+    ret = wcsnrtombs(nullptr, &src, 4, 0, &state);
+    EXPECT_EQ(ret, 8ul);
+    EXPECT_EQ(src, nullptr);
+}
+
 TEST_CASE(mbsrtowcs)
 {
     mbstate_t state = {};
