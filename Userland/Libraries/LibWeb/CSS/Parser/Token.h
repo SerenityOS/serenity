@@ -56,6 +56,12 @@ public:
         Number,
     };
 
+    struct Position {
+        size_t line { 0 };
+        size_t column { 0 };
+    };
+
+    Type type() const { return m_type; }
     bool is(Type type) const { return m_type == type; }
 
     StringView ident() const
@@ -136,6 +142,9 @@ public:
 
     String to_debug_string() const;
 
+    Position const& start_position() const { return m_start_position; }
+    Position const& end_position() const { return m_end_position; }
+
 private:
     Type m_type { Type::Invalid };
 
@@ -143,6 +152,9 @@ private:
     StringBuilder m_unit;
     HashType m_hash_type { HashType::Unrestricted };
     NumberType m_number_type { NumberType::Integer };
+
+    Position m_start_position;
+    Position m_end_position;
 };
 
 }
