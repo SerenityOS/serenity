@@ -18,15 +18,9 @@
             fixed_height: 24
         }
 
-        @GUI::Frame {
-            name: "common_locations_frame"
+        @GUI::Tray {
+            name: "common_locations_tray"
             fixed_width: 95
-            fill_with_background_color: true
-
-            layout: @GUI::VerticalBoxLayout {
-                margins: [2]
-                spacing: 0
-            }
         }
 
         @GUI::Label {

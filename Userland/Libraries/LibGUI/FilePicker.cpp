@@ -24,6 +24,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
+#include <LibGUI/Tray.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
@@ -219,8 +220,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         }
     };
 
-    auto& common_locations_frame = *widget.find_descendant_of_type_named<Frame>("common_locations_frame");
-    common_locations_frame.set_background_role(Gfx::ColorRole::Tray);
     m_model->on_directory_change_error = [&](int, char const* error_string) {
         m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
         m_view->set_active_widget(m_error_label);
@@ -229,31 +228,24 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         m_view->view_as_table_action().set_enabled(false);
         m_view->view_as_columns_action().set_enabled(false);
     };
+
+    auto& common_locations_tray = *widget.find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
     m_model->on_complete = [&] {
         m_view->set_active_widget(&m_view->current_view());
-        for (auto location_button : m_common_location_buttons)
-            location_button.button.set_checked(m_model->root_path() == location_button.path);
+        for (auto& location_button : m_common_location_buttons)
+            common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);
 
         m_view->view_as_icons_action().set_enabled(true);
         m_view->view_as_table_action().set_enabled(true);
         m_view->view_as_columns_action().set_enabled(true);
     };
 
+    common_locations_tray.on_item_activation = [this](String const& path) {
+        set_path(path);
+    };
     for (auto& location : CommonLocationsProvider::common_locations()) {
-        String path = location.path;
-        auto& button = common_locations_frame.add<GUI::Button>();
-        button.set_button_style(Gfx::ButtonStyle::Tray);
-        button.set_foreground_role(Gfx::ColorRole::TrayText);
-        button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        button.set_text(location.name);
-        button.set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
-        button.set_fixed_height(22);
-        button.set_checkable(true);
-        button.set_exclusive(true);
-        button.on_click = [this, path](auto) {
-            set_path(path);
-        };
-        m_common_location_buttons.append({ path, button });
+        auto index = common_locations_tray.add_item(location.name, FileIconProvider::icon_for_path(location.path).bitmap_for_size(16), location.path);
+        m_common_location_buttons.append({ location.path, index });
     }
 
     m_location_textbox->set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
@@ -298,8 +290,9 @@ void FilePicker::set_path(const String& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
         GUI::MessageBox::show(this, String::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-        for (auto location_button : m_common_location_buttons)
-            location_button.button.set_checked(m_model->root_path() == location_button.path);
+        auto& common_locations_tray = *find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
+        for (auto& location_button : m_common_location_buttons)
+            common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);
         return;
     }
 
