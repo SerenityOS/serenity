@@ -26,7 +26,7 @@ void TimeZoneConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_time_zone_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -77,12 +77,12 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(TimeZoneConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(TimeZoneConstructor::from)
 {
     auto item = vm.argument(0);
 
     // 1. Return ? ToTemporalTimeZone(item).
-    return TRY_OR_DISCARD(to_temporal_time_zone(global_object, item));
+    return TRY(to_temporal_time_zone(global_object, item));
 }
 
 }
