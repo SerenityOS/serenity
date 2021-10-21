@@ -98,6 +98,9 @@ public:
     bool is_minimizable() const { return m_type == WindowType::Normal && m_minimizable; }
     void set_minimizable(bool);
 
+    bool is_closeable() const { return m_closeable; }
+    void set_closeable(bool);
+
     bool is_resizable() const { return m_resizable && !m_fullscreen; }
     void set_resizable(bool);
 
@@ -378,7 +381,7 @@ public:
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
 private:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
@@ -414,6 +417,7 @@ private:
     bool m_has_alpha_channel { false };
     bool m_modal { false };
     bool m_minimizable { false };
+    bool m_closeable { false };
     bool m_frameless { false };
     bool m_forced_shadow { false };
     bool m_resizable { false };

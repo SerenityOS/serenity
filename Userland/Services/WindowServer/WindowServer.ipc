@@ -32,6 +32,7 @@ endpoint WindowServer
         bool has_alpha_channel,
         bool modal,
         bool minimizable,
+        bool closeable,
         bool resizable,
         bool fullscreen,
         bool frameless,

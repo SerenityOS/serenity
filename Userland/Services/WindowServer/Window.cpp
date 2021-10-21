@@ -87,12 +87,13 @@ Window::Window(Core::Object& parent, WindowType type)
     WindowManager::the().add_window(*this);
 }
 
-Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
+Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
     : Core::Object(&client)
     , m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
     , m_minimizable(minimizable)
+    , m_closeable(closeable)
     , m_frameless(frameless)
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
@@ -282,6 +283,8 @@ void Window::update_window_menu_items()
     m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);
 
+    m_window_menu_close_item->set_enabled(m_closeable);
+
     m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
 
     if (m_window_menu_pin_item)
@@ -333,6 +336,14 @@ void Window::set_minimizable(bool minimizable)
     m_minimizable = minimizable;
     update_window_menu_items();
     // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
+}
+
+void Window::set_closeable(bool closeable)
+{
+    if (m_closeable == closeable)
+        return;
+    m_closeable = closeable;
+    update_window_menu_items();
 }
 
 void Window::set_taskbar_rect(const Gfx::IntRect& rect)

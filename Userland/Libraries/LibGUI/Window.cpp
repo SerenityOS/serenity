@@ -142,6 +142,7 @@ void Window::show()
         m_has_alpha_channel,
         m_modal,
         m_minimizable,
+        m_closeable,
         m_resizable,
         m_fullscreen,
         m_frameless,
