@@ -32,8 +32,8 @@ void PlainYearMonthConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
-    define_old_native_function(vm.names.compare, compare, 2, attr);
+    define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth
@@ -85,36 +85,36 @@ ThrowCompletionOr<Object*> PlainYearMonthConstructor::construct(FunctionObject& 
 }
 
 // 9.2.2 Temporal.PlainYearMonth.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     auto item = vm.argument(0);
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalYearMonth]] internal slot, then
     if (item.is_object() && is<PlainYearMonth>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, *options));
 
         auto& plain_year_month_object = static_cast<PlainYearMonth&>(item.as_object());
 
         // b. Return ? CreateTemporalYearMonth(item.[[ISOYear]], item.[[ISOMonth]], item.[[Calendar]], item.[[ISODay]]).
-        return TRY_OR_DISCARD(create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day()));
+        return TRY(create_temporal_year_month(global_object, plain_year_month_object.iso_year(), plain_year_month_object.iso_month(), plain_year_month_object.calendar(), plain_year_month_object.iso_day()));
     }
 
     // 3. Return ? ToTemporalYearMonth(item, options).
-    return TRY_OR_DISCARD(to_temporal_year_month(global_object, item, options));
+    return TRY(to_temporal_year_month(global_object, item, options));
 }
 
 // 9.2.3 Temporal.PlainYearMonth.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.compare
-JS_DEFINE_OLD_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::compare)
 {
     // 1. Set one to ? ToTemporalYearMonth(one).
-    auto* one = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_year_month(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalYearMonth(one).
-    auto* two = TRY_OR_DISCARD(to_temporal_year_month(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_year_month(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]])).
     return Value(compare_iso_date(one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day()));
