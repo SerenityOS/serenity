@@ -72,6 +72,7 @@
     M(NotAnObjectOrString, "{} is neither an object nor a string")                                                                      \
     M(NotAString, "{} is not a string")                                                                                                 \
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
+    M(NotImplemented, "TODO({} is not implemented in LibJS)")                                                                           \
     M(NotIterable, "{} is not iterable")                                                                                                \
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
     M(NotUndefined, "{} is not undefined")                                                                                              \
