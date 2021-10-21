@@ -34,150 +34,144 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Calendar"), Attribute::Configurable);
 
-    define_old_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.dateFromFields, date_from_fields, 1, attr);
-    define_old_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
-    define_old_native_function(vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
-    define_old_native_function(vm.names.dateAdd, date_add, 2, attr);
-    define_old_native_function(vm.names.dateUntil, date_until, 2, attr);
-    define_old_native_function(vm.names.year, year, 1, attr);
-    define_old_native_function(vm.names.month, month, 1, attr);
-    define_old_native_function(vm.names.monthCode, month_code, 1, attr);
-    define_old_native_function(vm.names.day, day, 1, attr);
-    define_old_native_function(vm.names.dayOfWeek, day_of_week, 1, attr);
-    define_old_native_function(vm.names.dayOfYear, day_of_year, 1, attr);
-    define_old_native_function(vm.names.weekOfYear, week_of_year, 1, attr);
-    define_old_native_function(vm.names.daysInWeek, days_in_week, 1, attr);
-    define_old_native_function(vm.names.daysInMonth, days_in_month, 1, attr);
-    define_old_native_function(vm.names.daysInYear, days_in_year, 1, attr);
-    define_old_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
-    define_old_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
-    define_old_native_function(vm.names.fields, fields, 1, attr);
-    define_old_native_function(vm.names.mergeFields, merge_fields, 2, attr);
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(vm.names.toJSON, to_json, 0, attr);
-    define_old_native_function(vm.names.era, era, 1, attr);
-    define_old_native_function(vm.names.eraYear, era_year, 1, attr);
+    define_native_function(vm.names.dateFromFields, date_from_fields, 1, attr);
+    define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 1, attr);
+    define_native_function(vm.names.monthDayFromFields, month_day_from_fields, 1, attr);
+    define_native_function(vm.names.dateAdd, date_add, 2, attr);
+    define_native_function(vm.names.dateUntil, date_until, 2, attr);
+    define_native_function(vm.names.year, year, 1, attr);
+    define_native_function(vm.names.month, month, 1, attr);
+    define_native_function(vm.names.monthCode, month_code, 1, attr);
+    define_native_function(vm.names.day, day, 1, attr);
+    define_native_function(vm.names.dayOfWeek, day_of_week, 1, attr);
+    define_native_function(vm.names.dayOfYear, day_of_year, 1, attr);
+    define_native_function(vm.names.weekOfYear, week_of_year, 1, attr);
+    define_native_function(vm.names.daysInWeek, days_in_week, 1, attr);
+    define_native_function(vm.names.daysInMonth, days_in_month, 1, attr);
+    define_native_function(vm.names.daysInYear, days_in_year, 1, attr);
+    define_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
+    define_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
+    define_native_function(vm.names.fields, fields, 1, attr);
+    define_native_function(vm.names.mergeFields, merge_fields, 2, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
+    define_native_function(vm.names.era, era, 1, attr);
+    define_native_function(vm.names.eraYear, era_year, 1, attr);
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::id_getter)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 {
     // 1. Let calendar be the this value.
     auto calendar = vm.this_value(global_object);
 
     // 2. Return ? ToString(calendar).
-    return js_string(vm, TRY_OR_DISCARD(calendar.to_string(global_object)));
+    return { js_string(vm, TRY(calendar.to_string(global_object))) };
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
 // NOTE: This is the minimum dateFromFields implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
-    if (!fields.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
-        return {};
-    }
+    if (!fields.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISODateFromFields(fields, options).
-    auto result = TRY_OR_DISCARD(iso_date_from_fields(global_object, fields.as_object(), *options));
+    auto result = TRY(iso_date_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return TRY_OR_DISCARD(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
+    return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
 // 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
 // NOTE: This is the minimum yearMonthFromFields implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
-    if (!fields.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
-        return {};
-    }
+    if (!fields.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOYearMonthFromFields(fields, options).
-    auto result = TRY_OR_DISCARD(iso_year_month_from_fields(global_object, fields.as_object(), *options));
+    auto result = TRY(iso_year_month_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[ReferenceISODay]]).
-    return TRY_OR_DISCARD(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.reference_iso_day));
+    return TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.reference_iso_day));
 }
 
 // 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
 // NOTE: This is the minimum monthDayFromFields implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
-    if (!fields.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
-        return {};
-    }
+    if (!fields.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOMonthDayFromFields(fields, options).
-    auto result = TRY_OR_DISCARD(iso_month_day_from_fields(global_object, fields.as_object(), *options));
+    auto result = TRY(iso_month_day_from_fields(global_object, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, result.[[ReferenceISOYear]]).
-    return TRY_OR_DISCARD(create_temporal_month_day(global_object, result.month, result.day, *calendar, result.reference_iso_year));
+    return TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, result.reference_iso_year));
 }
 
 // 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
 // NOTE: This is the minimum dateAdd implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_add)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Set date to ? ToTemporalDate(date).
-    auto* date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    auto* date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Set duration to ? ToTemporalDuration(duration).
-    auto* duration = TRY_OR_DISCARD(to_temporal_duration(global_object, vm.argument(1)));
+    auto* duration = TRY(to_temporal_duration(global_object, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
+    auto overflow = TRY(to_temporal_overflow(global_object, *options));
 
     // FIXME: Narrowing conversion from 'double' to 'i64'
     auto* nanoseconds = js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds()));
@@ -186,49 +180,49 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto balance_result = MUST(balance_duration(global_object, duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *nanoseconds, "day"sv));
 
     // 9. Let result be ? AddISODate(date.[[ISOYear]], date.[[ISOMonth]], date.[[ISODay]], duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], overflow).
-    auto result = TRY_OR_DISCARD(add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result.days, overflow));
+    auto result = TRY(add_iso_date(global_object, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result.days, overflow));
 
     // 10. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return TRY_OR_DISCARD(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
+    return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
 // 12.4.8 Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateuntil
 // NOTE: This is the minimum dateUntil implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::date_until)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Set one to ? ToTemporalDate(one).
-    auto* one = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Set two to ? ToTemporalDate(two).
-    auto* two = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_date(global_object, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(2)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" », "auto", "day").
-    auto largest_unit = TRY_OR_DISCARD(to_largest_temporal_unit(global_object, *options, { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv }, "auto"sv, "day"sv));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv }, "auto"sv, "day"sv));
 
     // 8. Let result be ! DifferenceISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], largestUnit).
     auto result = difference_iso_date(global_object, one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day(), largest_unit);
 
     // 9. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
-    return TRY_OR_DISCARD(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
+    return TRY(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
 }
 
 // 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
 // NOTE: This is the minimum year implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -237,7 +231,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return ! ISOYear(temporalDateLike).
@@ -246,11 +240,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::year)
 
 // 12.4.10 Temporal.Calendar.prototype.month ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.month
 // NOTE: This is the minimum month implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -260,14 +254,13 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month)
     // 4. If Type(temporalDateLike) is Object and temporalDateLike has an [[InitializedTemporalMonthDay]] internal slot, then
     if (temporal_date_like.is_object() && is<PlainMonthDay>(temporal_date_like.as_object())) {
         // a. Throw a TypeError exception.
-        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalAmbiguousMonthOfPlainMonthDay);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalAmbiguousMonthOfPlainMonthDay);
     }
 
     // 5. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 6. Return ! ISOMonth(temporalDateLike).
@@ -276,11 +269,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month)
 
 // 12.4.11 Temporal.Calendar.prototype.monthCode ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthcode
 // NOTE: This is the minimum monthCode implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_code)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -289,7 +282,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_code)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainMonthDay>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return ! ISOMonthCode(temporalDateLike).
@@ -298,11 +291,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::month_code)
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
 // NOTE: This is the minimum day implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -311,7 +304,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalMonthDay]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainMonthDay>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return ! ISODay(temporalDateLike).
@@ -320,17 +313,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day)
 
 // 12.4.13 Temporal.Calendar.prototype.dayOfWeek ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofweek
 // NOTE: This is the minimum dayOfWeek implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-    auto* temporal_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Return 𝔽(! ToISODayOfWeek(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
     return Value(to_iso_day_of_week(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
@@ -338,17 +331,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 
 // 12.4.14 Temporal.Calendar.prototype.dayOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofyear
 // NOTE: This is the minimum dayOfYear implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-    auto* temporal_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
     return Value(to_iso_day_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
@@ -356,17 +349,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 
 // 12.4.15 Temporal.Calendar.prototype.weekOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.weekofyear
 // NOTE: This is the minimum weekOfYear implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-    auto* temporal_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
     return Value(to_iso_week_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
@@ -374,17 +367,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 
 // 12.4.16 Temporal.Calendar.prototype.daysInWeek ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinweek
 // NOTE: This is the minimum daysInWeek implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-    [[maybe_unused]] auto* temporal_date = TRY_OR_DISCARD(to_temporal_date(global_object, vm.argument(0)));
+    [[maybe_unused]] auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
 
     // 5. Return 7𝔽.
     return Value(7);
@@ -392,11 +385,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 
 // 12.4.16 Temporal.Calendar.prototype.daysInMonth ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinweek
 // NOTE: This is the minimum daysInMonth implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -405,7 +398,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slots, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return 𝔽(! ISODaysInMonth(temporalDateLike.[[ISOYear]], temporalDateLike.[[ISOMonth]])).
@@ -414,11 +407,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 
 // 12.4.18 Temporal.Calendar.prototype.daysInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.daysinyear
 // NOTE: This is the minimum daysInYear implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -427,7 +420,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return 𝔽(! ISODaysInYear(temporalDateLike.[[ISOYear]])).
@@ -436,11 +429,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 
 // 12.4.19 Temporal.Calendar.prototype.monthsInYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthsinyear
 // NOTE: This is the minimum monthsInYear implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -449,7 +442,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Perform ? ToTemporalDate(temporalDateLike).
-        (void)TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        (void)TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return 12𝔽.
@@ -458,11 +451,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 
 // 12.4.20 Temporal.Calendar.prototype.inLeapYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.inleapyear
 // NOTE: This is the minimum inLeapYear implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -471,7 +464,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 5. Return ! IsISOLeapYear(temporalDateLike.[[ISOYear]]).
@@ -480,19 +473,19 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 
 // 12.4.21 Temporal.Calendar.prototype.fields ( fields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.fields
 // NOTE: This is the minimum fields implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 {
     auto fields = vm.argument(0);
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let iteratorRecord be ? Getiterator(fields, sync).
-    auto* iterator_record = TRY_OR_DISCARD(get_iterator(global_object, fields, IteratorHint::Sync));
+    auto* iterator_record = TRY(get_iterator(global_object, fields, IteratorHint::Sync));
 
     // 5. Let fieldNames be a new empty List.
     auto field_names = MarkedValueList { vm.heap() };
@@ -501,14 +494,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
     // 7. Repeat, while next is not false,
     while (true) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* next = TRY_OR_DISCARD(iterator_step(global_object, *iterator_record));
+        auto* next = TRY(iterator_step(global_object, *iterator_record));
 
         // b. If next is not false, then
         if (!next)
             break;
 
         // i. Let nextValue be ? IteratorValue(next).
-        auto next_value = TRY_OR_DISCARD(iterator_value(global_object, *next));
+        auto next_value = TRY(iterator_value(global_object, *next));
 
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {
@@ -516,7 +509,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
+            return TRY(iterator_close(*iterator_record, move(completion)));
         }
 
         // iii. If fieldNames contains nextValue, then
@@ -525,7 +518,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDuplicateCalendarField, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
+            return TRY(iterator_close(*iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
@@ -534,7 +527,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().string());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY_OR_DISCARD(iterator_close(*iterator_record, move(completion)));
+            return TRY(iterator_close(*iterator_record, move(completion)));
         }
 
         // v. Append nextValue to the end of the List fieldNames.
@@ -547,59 +540,59 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::fields)
 
 // 12.4.22 Temporal.Calendar.prototype.mergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.mergefields
 // NOTE: This is the minimum mergeFields implementation for engines without ECMA-402.
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Set fields to ? ToObject(fields).
-    auto* fields = TRY_OR_DISCARD(vm.argument(0).to_object(global_object));
+    auto* fields = TRY(vm.argument(0).to_object(global_object));
 
     // 5. Set additionalFields to ? ToObject(additionalFields).
-    auto* additional_fields = TRY_OR_DISCARD(vm.argument(1).to_object(global_object));
+    auto* additional_fields = TRY(vm.argument(1).to_object(global_object));
 
     // 6. Return ? DefaultMergeFields(fields, additionalFields).
-    return TRY_OR_DISCARD(default_merge_fields(global_object, *fields, *additional_fields));
+    return TRY(default_merge_fields(global_object, *fields, *additional_fields));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. Return calendar.[[Identifier]].
     return js_string(vm, calendar->identifier());
 }
 
 // 12.4.24 Temporal.Calendar.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tojson
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::to_json)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
 {
     // 1. Let calendar be the this value.
     auto calendar = vm.this_value(global_object);
 
     // 2. Return ? ToString(calendar).
-    return js_string(vm, TRY_OR_DISCARD(calendar.to_string(global_object)));
+    return js_string(vm, TRY(calendar.to_string(global_object)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::era)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
 {
     auto temporal_date_like = vm.argument(0);
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 4. If calendar.[[Identifier]] is "iso8601", then
@@ -616,18 +609,18 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::era)
 }
 
 // 15.6.2.7 Temporal.Calendar.prototype.eraYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.erayear
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarPrototype::era_year)
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
 {
     auto temporal_date_like = vm.argument(0);
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* calendar = TRY(typed_this_object(global_object));
 
     // 3. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
-        temporal_date_like = TRY_OR_DISCARD(to_temporal_date(global_object, temporal_date_like));
+        temporal_date_like = TRY(to_temporal_date(global_object, temporal_date_like));
     }
 
     // 4. If calendar.[[Identifier]] is "iso8601", then

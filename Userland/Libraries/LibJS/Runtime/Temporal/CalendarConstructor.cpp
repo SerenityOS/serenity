@@ -26,7 +26,7 @@ void CalendarConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_calendar_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -61,12 +61,12 @@ ThrowCompletionOr<Object*> CalendarConstructor::construct(FunctionObject& new_ta
 }
 
 // 12.3.2 Temporal.Calendar.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(CalendarConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(CalendarConstructor::from)
 {
     auto item = vm.argument(0);
 
     // 1. Return ? ToTemporalCalendar(item).
-    return TRY_OR_DISCARD(to_temporal_calendar(global_object, item));
+    return TRY(to_temporal_calendar(global_object, item));
 }
 
 }
