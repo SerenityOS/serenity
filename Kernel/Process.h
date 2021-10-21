@@ -981,9 +981,9 @@ inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const
 }
 
 template<>
-struct AK::Formatter<Kernel::Process> : AK::Formatter<String> {
+struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const Kernel::Process& value)
     {
-        return AK::Formatter<String>::format(builder, String::formatted("{}({})", value.name(), value.pid().value()));
+        return AK::Formatter<FormatString>::format(builder, "{}({})", value.name(), value.pid().value());
     }
 };
