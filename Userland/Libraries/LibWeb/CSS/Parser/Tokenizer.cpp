@@ -490,13 +490,7 @@ String Tokenizer::consume_a_name()
 Token Tokenizer::consume_a_url_token()
 {
     auto token = create_new_token(Token::Type::Url);
-    for (;;) {
-        if (!is_whitespace(peek_code_point())) {
-            break;
-        }
-
-        (void)next_code_point();
-    }
+    consume_as_much_whitespace_as_possible();
 
     for (;;) {
 
@@ -512,13 +506,8 @@ Token Tokenizer::consume_a_url_token()
         }
 
         if (is_whitespace(input)) {
-            for (;;) {
-                if (!is_whitespace(peek_code_point())) {
-                    break;
-                }
-
-                input = next_code_point();
-            }
+            consume_as_much_whitespace_as_possible();
+            input = peek_code_point();
 
             if (is_eof(input)) {
                 log_parse_error();
@@ -576,6 +565,13 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
             [[maybe_unused]] auto cp = consume_escaped_code_point();
         }
 
+        (void)next_code_point();
+    }
+}
+
+void Tokenizer::consume_as_much_whitespace_as_possible()
+{
+    while (is_whitespace(peek_code_point())) {
         (void)next_code_point();
     }
 }
@@ -763,13 +759,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_whitespace(input)) {
         dbgln_if(CSS_TOKENIZER_DEBUG, "is whitespace");
-
-        auto next = peek_code_point();
-        while (is_whitespace(next)) {
-            (void)next_code_point();
-            next = peek_code_point();
-        }
-
+        consume_as_much_whitespace_as_possible();
         return create_new_token(Token::Type::Whitespace);
     }
 
