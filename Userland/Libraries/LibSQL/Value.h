@@ -56,6 +56,7 @@ public:
     explicit Value(String const&);
     explicit Value(char const*);
     explicit Value(int);
+    explicit Value(u32);
     explicit Value(double);
     explicit Value(bool);
 
@@ -84,9 +85,10 @@ public:
 
     void assign(Value const& other_value);
     void assign(String const& string_value);
-    void assign(int const& int_value);
-    void assign(double const& double_value);
-    void assign(bool const& bool_value);
+    void assign(int int_value);
+    void assign(u32 unsigned_int_value);
+    void assign(double double_value);
+    void assign(bool bool_value);
     void assign(Vector<Value> const& values);
 
     Value& operator=(Value const& other);
@@ -115,6 +117,16 @@ public:
     bool operator<=(Value const&) const;
     bool operator>(Value const&) const;
     bool operator>=(Value const&) const;
+
+    Value add(Value const&) const;
+    Value subtract(Value const&) const;
+    Value multiply(Value const&) const;
+    Value divide(Value const&) const;
+    Value modulo(Value const&) const;
+    Value shift_left(Value const&) const;
+    Value shift_right(Value const&) const;
+    Value bitwise_or(Value const&) const;
+    Value bitwise_and(Value const&) const;
 
     [[nodiscard]] TupleElementDescriptor descriptor() const
     {
