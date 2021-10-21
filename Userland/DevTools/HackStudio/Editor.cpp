@@ -30,6 +30,7 @@
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
+#include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
@@ -593,6 +594,9 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
     switch (document.language()) {
     case Language::Cpp:
         set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
+        break;
+    case Language::CSS:
+        set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
         break;
     case Language::GML:
         set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
