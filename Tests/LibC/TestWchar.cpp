@@ -539,3 +539,44 @@ TEST_CASE(mbrlen)
     EXPECT_EQ(errno, EILSEQ);
     state = {};
 }
+
+TEST_CASE(mbtowc)
+{
+    int ret = 0;
+    wchar_t wc = 0;
+
+    // Ensure that we can parse normal ASCII characters.
+    ret = mbtowc(&wc, "Hello", 5);
+    EXPECT_EQ(ret, 1);
+    EXPECT_EQ(wc, 'H');
+
+    // Try two three-byte codepoints (™™), only one of which should be consumed.
+    ret = mbtowc(&wc, "\xe2\x84\xa2\xe2\x84\xa2", 6);
+    EXPECT_EQ(ret, 3);
+    EXPECT_EQ(wc, 0x2122);
+
+    // Try a null character, which should return 0.
+    ret = mbtowc(&wc, "\x00\x00", 2);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(wc, 0);
+
+    // Try an incomplete multibyte character.
+    ret = mbtowc(&wc, "\xe2\x84", 2);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(errno, EILSEQ);
+
+    // Ask if we support shift states and reset the internal state in the process.
+    ret = mbtowc(nullptr, nullptr, 2);
+    EXPECT_EQ(ret, 0); // We don't support shift states.
+    ret = mbtowc(nullptr, "\x00", 1);
+    EXPECT_EQ(ret, 0); // No error likely means that the state is working again.
+
+    // Try an invalid multibyte sequence.
+    ret = mbtowc(&wc, "\xff", 1);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(errno, EILSEQ);
+
+    // Try a successful conversion, but without target address.
+    ret = mbtowc(nullptr, "\xe2\x84\xa2\xe2\x84\xa2", 6);
+    EXPECT_EQ(ret, 3);
+}

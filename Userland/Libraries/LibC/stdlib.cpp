@@ -884,19 +884,26 @@ size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n)
     return mbsrtowcs(pwcs, &s, n, &state);
 }
 
-int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
+int mbtowc(wchar_t* pwc, const char* s, size_t n)
 {
-    // FIXME: This needs a real implementation.
-    if (wch && data) {
-        *wch = *data;
-        return 1;
+    static mbstate_t internal_state = {};
+
+    // Reset the internal state and ask whether we have shift states.
+    if (s == nullptr) {
+        internal_state = {};
+        return 0;
     }
 
-    if (!wch && data) {
-        return 1;
+    size_t ret = mbrtowc(pwc, s, n, &internal_state);
+
+    // Incomplete characters get returned as illegal sequence.
+    // Internal state is undefined, so don't bother with resetting.
+    if (ret == -2ul) {
+        errno = EILSEQ;
+        return -1;
     }
 
-    return 0;
+    return ret;
 }
 
 int wctomb(char* s, wchar_t wc)
