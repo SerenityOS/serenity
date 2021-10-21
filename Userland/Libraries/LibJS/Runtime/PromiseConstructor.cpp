@@ -22,16 +22,14 @@
 namespace JS {
 
 // 27.2.4.1.1 GetPromiseResolve ( promiseConstructor ), https://tc39.es/ecma262/#sec-getpromiseresolve
-static Value get_promise_resolve(GlobalObject& global_object, Value constructor)
+static ThrowCompletionOr<Value> get_promise_resolve(GlobalObject& global_object, Value constructor)
 {
     VERIFY(constructor.is_constructor());
     auto& vm = global_object.vm();
 
-    auto promise_resolve = TRY_OR_DISCARD(constructor.get(global_object, vm.names.resolve));
-    if (!promise_resolve.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
-        return {};
-    }
+    auto promise_resolve = TRY(constructor.get(global_object, vm.names.resolve));
+    if (!promise_resolve.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, promise_resolve.to_string_without_side_effects());
 
     return promise_resolve;
 }
@@ -289,9 +287,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
     if (vm.exception())
         return {};
 
-    auto promise_resolve = get_promise_resolve(global_object, constructor);
-    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+    auto promise_resolve_or_error = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto promise_resolve = promise_resolve_or_error.release_value();
 
     auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
     if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
@@ -324,9 +323,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     if (vm.exception())
         return {};
 
-    auto promise_resolve = get_promise_resolve(global_object, constructor);
-    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+    auto promise_resolve_or_error = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto promise_resolve = promise_resolve_or_error.release_value();
 
     auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
     if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
@@ -359,9 +359,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
     if (vm.exception())
         return {};
 
-    auto promise_resolve = get_promise_resolve(global_object, constructor);
-    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+    auto promise_resolve_or_error = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto promise_resolve = promise_resolve_or_error.release_value();
 
     auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
     if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
@@ -394,9 +395,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
     if (vm.exception())
         return {};
 
-    auto promise_resolve = get_promise_resolve(global_object, constructor);
-    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve, promise_capability); abrupt.has_value())
+    auto promise_resolve_or_error = get_promise_resolve(global_object, constructor);
+    if (auto abrupt = if_abrupt_reject_promise(global_object, promise_resolve_or_error, promise_capability); abrupt.has_value())
         return abrupt.value();
+    auto promise_resolve = promise_resolve_or_error.release_value();
 
     auto iterator_record_or_error = get_iterator(global_object, vm.argument(0));
     if (auto abrupt = if_abrupt_reject_promise(global_object, iterator_record_or_error, promise_capability); abrupt.has_value())
