@@ -98,6 +98,7 @@ set(SOURCES
     TextEditor.cpp
     Toolbar.cpp
     ToolbarContainer.cpp
+    Tray.cpp
     TreeView.cpp
     UndoStack.cpp
     ValueSlider.cpp
