@@ -85,6 +85,12 @@ Value::Value(int integer)
     assign(integer);
 }
 
+Value::Value(u32 unsigned_integer)
+    : Value(SQLType::Integer)
+{
+    assign(unsigned_integer);
+}
+
 Value::Value(double dbl)
     : Value(SQLType::Float)
 {
@@ -225,17 +231,22 @@ void Value::assign(String const& string_value)
     m_impl.visit([&](auto& impl) { impl.assign_string(string_value); });
 }
 
-void Value::assign(int const& int_value)
+void Value::assign(int int_value)
 {
     m_impl.visit([&](auto& impl) { impl.assign_int(int_value); });
 }
 
-void Value::assign(double const& double_value)
+void Value::assign(u32 unsigned_int_value)
+{
+    m_impl.visit([&](auto& impl) { impl.assign_int(unsigned_int_value); });
+}
+
+void Value::assign(double double_value)
 {
     m_impl.visit([&](auto& impl) { impl.assign_double(double_value); });
 }
 
-void Value::assign(bool const& bool_value)
+void Value::assign(bool bool_value)
 {
     m_impl.visit([&](auto& impl) { impl.assign_bool(bool_value); });
 }
@@ -375,6 +386,138 @@ bool Value::operator>(Value const& other) const
 bool Value::operator>=(Value const& other) const
 {
     return compare(other) >= 0;
+}
+
+Value Value::add(Value const& other) const
+{
+    if (auto double_maybe = to_double(); double_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value(double_maybe.value() + other_double_maybe.value());
+        if (auto int_maybe = other.to_int(); int_maybe.has_value())
+            return Value(double_maybe.value() + (double)int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value(other_double_maybe.value() + (double)int_maybe.value());
+        if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
+            return Value(int_maybe.value() + other_int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+Value Value::subtract(Value const& other) const
+{
+    if (auto double_maybe = to_double(); double_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value(double_maybe.value() - other_double_maybe.value());
+        if (auto int_maybe = other.to_int(); int_maybe.has_value())
+            return Value(double_maybe.value() - (double)int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value((double)int_maybe.value() - other_double_maybe.value());
+        if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
+            return Value(int_maybe.value() - other_int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+Value Value::multiply(Value const& other) const
+{
+    if (auto double_maybe = to_double(); double_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value(double_maybe.value() * other_double_maybe.value());
+        if (auto int_maybe = other.to_int(); int_maybe.has_value())
+            return Value(double_maybe.value() * (double)int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value((double)int_maybe.value() * other_double_maybe.value());
+        if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
+            return Value(int_maybe.value() * other_int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+Value Value::divide(Value const& other) const
+{
+    if (auto double_maybe = to_double(); double_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value(double_maybe.value() / other_double_maybe.value());
+        if (auto int_maybe = other.to_int(); int_maybe.has_value())
+            return Value(double_maybe.value() / (double)int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+
+    if (auto int_maybe = to_double(); int_maybe.has_value()) {
+        if (auto other_double_maybe = other.to_double(); other_double_maybe.has_value())
+            return Value((double)int_maybe.value() / other_double_maybe.value());
+        if (auto other_int_maybe = other.to_int(); other_int_maybe.has_value())
+            return Value(int_maybe.value() / other_int_maybe.value());
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+Value Value::modulo(Value const& other) const
+{
+    auto int_maybe_1 = to_int();
+    auto int_maybe_2 = other.to_int();
+    if (!int_maybe_1.has_value() || !int_maybe_2.has_value()) {
+        // TODO Error handling
+        VERIFY_NOT_REACHED();
+    }
+    return Value(int_maybe_1.value() % int_maybe_2.value());
+}
+
+Value Value::shift_left(Value const& other) const
+{
+    auto u32_maybe = to_u32();
+    auto num_bytes_maybe = other.to_int();
+    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value()) {
+        // TODO Error handling
+        VERIFY_NOT_REACHED();
+    }
+    return Value(u32_maybe.value() << num_bytes_maybe.value());
+}
+
+Value Value::shift_right(Value const& other) const
+{
+    auto u32_maybe = to_u32();
+    auto num_bytes_maybe = other.to_int();
+    if (!u32_maybe.has_value() || !num_bytes_maybe.has_value()) {
+        // TODO Error handling
+        VERIFY_NOT_REACHED();
+    }
+    return Value(u32_maybe.value() >> num_bytes_maybe.value());
+}
+
+Value Value::bitwise_or(Value const& other) const
+{
+    auto u32_maybe_1 = to_u32();
+    auto u32_maybe_2 = other.to_u32();
+    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value()) {
+        // TODO Error handling
+        VERIFY_NOT_REACHED();
+    }
+    return Value(u32_maybe_1.value() | u32_maybe_2.value());
+}
+
+Value Value::bitwise_and(Value const& other) const
+{
+    auto u32_maybe_1 = to_u32();
+    auto u32_maybe_2 = other.to_u32();
+    if (!u32_maybe_1.has_value() || !u32_maybe_2.has_value()) {
+        // TODO Error handling
+        VERIFY_NOT_REACHED();
+    }
+    return Value(u32_maybe_1.value() & u32_maybe_2.value());
 }
 
 void Value::serialize(Serializer& serializer) const
