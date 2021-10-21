@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -322,6 +323,7 @@ Token Tokenizer::create_value_token(Token::Type type, u32 value)
     return token;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-escaped-code-point
 u32 Tokenizer::consume_escaped_code_point()
 {
     auto input = next_code_point();
@@ -360,6 +362,7 @@ u32 Tokenizer::consume_escaped_code_point()
     return input;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-ident-like-token
 Token Tokenizer::consume_an_ident_like_token()
 {
     auto string = consume_a_name();
@@ -394,6 +397,7 @@ Token Tokenizer::consume_an_ident_like_token()
     return create_value_token(Token::Type::Ident, string);
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-number
 CSSNumber Tokenizer::consume_a_number()
 {
     StringBuilder repr;
@@ -455,6 +459,7 @@ CSSNumber Tokenizer::consume_a_number()
     return { repr.to_string(), type };
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-name
 String Tokenizer::consume_a_name()
 {
     StringBuilder result;
@@ -550,6 +555,7 @@ Token Tokenizer::consume_a_url_token()
     }
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-remnants-of-bad-url
 void Tokenizer::consume_the_remnants_of_a_bad_url()
 {
     for (;;) {
@@ -579,6 +585,7 @@ void Tokenizer::reconsume_current_input_code_point()
     m_utf8_iterator = m_prev_utf8_iterator;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
 Token Tokenizer::consume_a_numeric_token()
 {
     auto number = consume_a_number();
@@ -608,12 +615,13 @@ Token Tokenizer::consume_a_numeric_token()
     return token;
 }
 
-bool Tokenizer::starts_with_a_number() const
+bool Tokenizer::would_start_a_number() const
 {
-    return starts_with_a_number(peek_triplet());
+    return would_start_a_number(peek_triplet());
 }
 
-bool Tokenizer::starts_with_a_number(U32Triplet values)
+// https://www.w3.org/TR/css-syntax-3/#starts-with-a-number
+bool Tokenizer::would_start_a_number(U32Triplet values)
 {
     if (is_plus_sign(values.first) || is_hyphen_minus(values.first)) {
         if (is_ascii_digit(values.second))
@@ -634,6 +642,7 @@ bool Tokenizer::starts_with_a_number(U32Triplet values)
     return false;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#starts-with-a-valid-escape
 bool Tokenizer::is_valid_escape_sequence(U32Twin values)
 {
     if (!is_reverse_solidus(values.first)) {
@@ -652,6 +661,7 @@ bool Tokenizer::would_start_an_identifier()
     return would_start_an_identifier(peek_triplet());
 }
 
+// https://www.w3.org/TR/css-syntax-3/#would-start-an-identifier
 bool Tokenizer::would_start_an_identifier(U32Triplet values)
 {
     if (is_hyphen_minus(values.first)) {
@@ -673,6 +683,7 @@ bool Tokenizer::would_start_an_identifier(U32Triplet values)
     return false;
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-string-token
 Token Tokenizer::consume_string_token(u32 ending_code_point)
 {
     auto token = create_new_token(Token::Type::String);
@@ -711,6 +722,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     }
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-comment
 void Tokenizer::consume_comments()
 {
 start:
@@ -738,6 +750,7 @@ start:
     }
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-token
 Token Tokenizer::consume_a_token()
 {
     consume_comments();
@@ -803,7 +816,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_plus_sign(input)) {
         dbgln_if(CSS_TOKENIZER_DEBUG, "is plus sign");
-        if (starts_with_a_number()) {
+        if (would_start_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }
@@ -818,7 +831,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_hyphen_minus(input)) {
         dbgln_if(CSS_TOKENIZER_DEBUG, "is hyphen minus");
-        if (starts_with_a_number()) {
+        if (would_start_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }
@@ -841,7 +854,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_full_stop(input)) {
         dbgln_if(CSS_TOKENIZER_DEBUG, "is full stop");
-        if (starts_with_a_number()) {
+        if (would_start_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }

@@ -95,8 +95,8 @@ private:
     [[nodiscard]] static bool is_valid_escape_sequence(U32Twin);
     [[nodiscard]] bool would_start_an_identifier();
     [[nodiscard]] bool would_start_an_identifier(U32Triplet);
-    [[nodiscard]] bool starts_with_a_number() const;
-    [[nodiscard]] static bool starts_with_a_number(U32Triplet);
+    [[nodiscard]] bool would_start_a_number() const;
+    [[nodiscard]] static bool would_start_a_number(U32Triplet);
 
     String m_decoded_input;
     Utf8View m_utf8_view;
