@@ -58,11 +58,11 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
     auto* proto = TRY(get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype));
 
     if (vm.argument_count() == 0)
-        return Array::create(global_object(), 0, proto);
+        return MUST(Array::create(global_object(), 0, proto));
 
     if (vm.argument_count() == 1) {
         auto length = vm.argument(0);
-        auto* array = Array::create(global_object(), 0, proto);
+        auto* array = MUST(Array::create(global_object(), 0, proto));
         size_t int_length;
         if (!length.is_number()) {
             MUST(array->create_data_property_or_throw(0, length));
@@ -76,9 +76,7 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
         return array;
     }
 
-    auto* array = Array::create(global_object(), vm.argument_count(), proto);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* array = TRY(Array::create(global_object(), vm.argument_count(), proto));
 
     for (size_t k = 0; k < vm.argument_count(); ++k)
         MUST(array->create_data_property_or_throw(k, vm.argument(k)));
@@ -112,7 +110,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
             if (vm.exception())
                 return {};
         } else {
-            array = Array::create(global_object, 0);
+            array = MUST(Array::create(global_object, 0));
         }
 
         auto iterator = TRY_OR_DISCARD(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
@@ -163,9 +161,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
         if (vm.exception())
             return {};
     } else {
-        array = Array::create(global_object, length);
-        if (vm.exception())
-            return {};
+        array = TRY_OR_DISCARD(Array::create(global_object, length));
     }
 
     auto& array_object = array.as_object();
@@ -204,9 +200,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::of)
         if (vm.exception())
             return {};
     } else {
-        array = Array::create(global_object, vm.argument_count());
-        if (vm.exception())
-            return {};
+        array = TRY_OR_DISCARD(Array::create(global_object, vm.argument_count()));
     }
     auto& array_object = array.as_object();
     for (size_t k = 0; k < vm.argument_count(); ++k)

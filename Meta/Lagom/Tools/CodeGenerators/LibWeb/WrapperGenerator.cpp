@@ -1375,7 +1375,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         auto& sequence_generic_type = verify_cast<IDL::ParameterizedType>(type);
 
         scoped_generator.append(R"~~~(
-    auto* new_array@recursion_depth@ = JS::Array::create(global_object, 0);
+    auto* new_array@recursion_depth@ = MUST(JS::Array::create(global_object, 0));
 
     for (size_t i@recursion_depth@ = 0; i@recursion_depth@ < @value@.size(); ++i@recursion_depth@) {
         auto& element@recursion_depth@ = @value@.at(i@recursion_depth@);

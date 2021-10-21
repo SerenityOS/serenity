@@ -14,13 +14,11 @@
 namespace JS {
 
 // 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
-Array* Array::create(GlobalObject& global_object, size_t length, Object* prototype)
+ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t length, Object* prototype)
 {
     auto& vm = global_object.vm();
-    if (length > NumericLimits<u32>::max()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
-        return nullptr;
-    }
+    if (length > NumericLimits<u32>::max())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
     if (!prototype)
         prototype = global_object.array_prototype();
     auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
@@ -34,7 +32,7 @@ Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elem
     // 1. Assert: elements is a List whose elements are all ECMAScript language values.
 
     // 2. Let array be ! ArrayCreate(0).
-    auto* array = Array::create(global_object, 0);
+    auto* array = MUST(Array::create(global_object, 0));
 
     // 3. Let n be 0.
     // 4. For each element e of elements, do
@@ -59,7 +57,7 @@ Array::~Array()
 }
 
 // 10.4.2.4 ArraySetLength ( A, Desc ), https://tc39.es/ecma262/#sec-arraysetlength
-bool Array::set_length(PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_descriptor)
 {
     auto& global_object = this->global_object();
     auto& vm = this->vm();
@@ -72,14 +70,12 @@ bool Array::set_length(PropertyDescriptor const& property_descriptor)
     size_t new_length = indexed_properties().array_like_size();
     if (property_descriptor.value.has_value()) {
         // 3. Let newLen be ? ToUint32(Desc.[[Value]]).
-        new_length = TRY_OR_DISCARD(property_descriptor.value->to_u32(global_object));
+        new_length = TRY(property_descriptor.value->to_u32(global_object));
         // 4. Let numberLen be ? ToNumber(Desc.[[Value]]).
-        auto number_length = TRY_OR_DISCARD(property_descriptor.value->to_number(global_object));
+        auto number_length = TRY(property_descriptor.value->to_number(global_object));
         // 5. If newLen is not the same value as numberLen, throw a RangeError exception.
-        if (new_length != number_length.as_double()) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
-            return {};
-        }
+        if (new_length != number_length.as_double())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidLength, "array");
     }
 
     // 6. Set newLenDesc.[[Value]] to newLen.
@@ -175,10 +171,7 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& 
     // 2. If P is "length", then
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string()) {
         // a. Return ? ArraySetLength(A, Desc).
-        auto success = set_length(property_descriptor);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        return success;
+        return set_length(property_descriptor);
     }
 
     // 3. Else if P is an array index, then

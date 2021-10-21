@@ -20,7 +20,7 @@ NavigatorObject::NavigatorObject(JS::GlobalObject& global_object)
 void NavigatorObject::initialize(JS::GlobalObject& global_object)
 {
     auto& heap = this->heap();
-    auto* languages = JS::Array::create(global_object, 0);
+    auto* languages = MUST(JS::Array::create(global_object, 0));
     languages->indexed_properties().append(js_string(heap, "en-US"));
 
     // FIXME: All of these should be in Navigator's prototype and be native accessors

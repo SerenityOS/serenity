@@ -666,7 +666,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::split)
 
     auto string = TRY_OR_DISCARD(object.to_utf16_string(global_object));
 
-    auto* array = Array::create(global_object, 0);
+    auto* array = MUST(Array::create(global_object, 0));
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();

@@ -120,9 +120,7 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
 
     auto& vm = global_object.vm();
 
-    auto* array = Array::create(global_object, indices.size());
-    if (vm.exception())
-        return {};
+    auto* array = TRY_OR_DISCARD(Array::create(global_object, indices.size()));
 
     auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
 
@@ -206,9 +204,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     if (global || sticky)
         TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
 
-    auto* array = Array::create(global_object, result.n_named_capture_groups + 1);
-    if (vm.exception())
-        return {};
+    auto* array = TRY_OR_DISCARD(Array::create(global_object, result.n_named_capture_groups + 1));
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<FlyString, Match> group_names;
@@ -379,9 +375,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-    auto* array = Array::create(global_object, 0);
-    if (vm.exception())
-        return {};
+    auto* array = MUST(Array::create(global_object, 0));
 
     bool unicode = TRY_OR_DISCARD(regexp_object->get(vm.names.unicode)).to_boolean();
 
@@ -599,7 +593,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     if (vm.exception())
         return {};
     auto* splitter = TRY_OR_DISCARD(splitter_value.to_object(global_object));
-    auto* array = Array::create(global_object, 0);
+    auto* array = MUST(Array::create(global_object, 0));
     size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
