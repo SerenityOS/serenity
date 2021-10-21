@@ -91,6 +91,7 @@ private:
     [[nodiscard]] Token consume_a_url_token();
     void consume_the_remnants_of_a_bad_url();
     void consume_comments();
+    void consume_as_much_whitespace_as_possible();
     void reconsume_current_input_code_point();
     [[nodiscard]] static bool is_valid_escape_sequence(U32Twin);
     [[nodiscard]] bool would_start_an_identifier();
