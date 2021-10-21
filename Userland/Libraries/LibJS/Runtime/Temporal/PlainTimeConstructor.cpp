@@ -28,8 +28,8 @@ void PlainTimeConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_plain_time_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
-    define_old_native_function(vm.names.compare, compare, 2, attr);
+    define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -79,13 +79,13 @@ ThrowCompletionOr<Object*> PlainTimeConstructor::construct(FunctionObject& new_t
 }
 
 // 4.2.2 Temporal.PlainTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimeConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY_OR_DISCARD(get_options_object(global_object, vm.argument(1)));
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY_OR_DISCARD(to_temporal_overflow(global_object, *options));
+    auto overflow = TRY(to_temporal_overflow(global_object, *options));
 
     auto item = vm.argument(0);
 
@@ -93,21 +93,21 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimeConstructor::from)
     if (item.is_object() && is<PlainTime>(item.as_object())) {
         auto& plain_time = static_cast<PlainTime&>(item.as_object());
         // a. Return ? CreateTemporalTime(item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]]).
-        return TRY_OR_DISCARD(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
+        return TRY(create_temporal_time(global_object, plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond()));
     }
 
     // 4. Return ? ToTemporalTime(item, overflow).
-    return TRY_OR_DISCARD(to_temporal_time(global_object, item, overflow));
+    return TRY(to_temporal_time(global_object, item, overflow));
 }
 
 // 4.2.3 Temporal.PlainTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.compare
-JS_DEFINE_OLD_NATIVE_FUNCTION(PlainTimeConstructor::compare)
+JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::compare)
 {
     // 1. Set one to ? ToTemporalTime(one).
-    auto* one = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(0)));
+    auto* one = TRY(to_temporal_time(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalTime(two).
-    auto* two = TRY_OR_DISCARD(to_temporal_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_time(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareTemporalTime(one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_temporal_time(one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));
