@@ -28,7 +28,7 @@ void DurationConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_duration_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -84,7 +84,7 @@ ThrowCompletionOr<Object*> DurationConstructor::construct(FunctionObject& new_ta
 }
 
 // 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(DurationConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
 {
     auto item = vm.argument(0);
 
@@ -93,11 +93,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(DurationConstructor::from)
         auto& duration = static_cast<Duration&>(item.as_object());
 
         // a. Return ? CreateTemporalDuration(item.[[Years]], item.[[Months]], item.[[Weeks]], item.[[Days]], item.[[Hours]], item.[[Minutes]], item.[[Seconds]], item.[[Milliseconds]], item.[[Microseconds]], item.[[Nanoseconds]]).
-        return TRY_OR_DISCARD(create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds()));
+        return TRY(create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds()));
     }
 
     // 2. Return ? ToTemporalDuration(item).
-    return TRY_OR_DISCARD(to_temporal_duration(global_object, item));
+    return TRY(to_temporal_duration(global_object, item));
 }
 
 }
