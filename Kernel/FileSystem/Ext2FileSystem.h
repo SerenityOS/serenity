@@ -122,7 +122,7 @@ private:
     u64 blocks_per_group() const;
     u64 inode_size() const;
 
-    bool write_ext2_inode(InodeIndex, const ext2_inode&);
+    KResult write_ext2_inode(InodeIndex, ext2_inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     bool flush_super_block();

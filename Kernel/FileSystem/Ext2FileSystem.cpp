@@ -660,7 +660,8 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     // NOTE: After this point, the inode metadata is wiped.
     memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
     inode.m_raw_inode.i_dtime = kgettimeofday().to_truncated_seconds();
-    write_ext2_inode(inode.index(), inode.m_raw_inode);
+    if (auto result = write_ext2_inode(inode.index(), inode.m_raw_inode); result.is_error())
+        dbgln("Ext2FS[{}]::free_inode(): Failed to write inode {}: {}", fsid(), inode.index(), result.error());
 
     // Mark the inode as free.
     if (auto result = set_inode_allocation_state(inode.index(), false); result.is_error())
@@ -777,7 +778,7 @@ KResult Ext2FSInode::flush_metadata()
 {
     MutexLocker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::flush_metadata(): Flushing inode", identifier());
-    fs().write_ext2_inode(index(), m_raw_inode);
+    TRY(fs().write_ext2_inode(index(), m_raw_inode));
     if (is_directory()) {
         // Unless we're about to go away permanently, invalidate the lookup cache.
         if (m_raw_inode.i_links_count != 0) {
@@ -1247,18 +1248,14 @@ u64 Ext2FS::blocks_per_group() const
     return EXT2_BLOCKS_PER_GROUP(&super_block());
 }
 
-bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
+KResult Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode const& e2inode)
 {
     BlockIndex block_index;
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
-        return false;
+        return EINVAL;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)&e2inode));
-    if (auto result = write_block(block_index, buffer, inode_size(), offset); result.is_error()) {
-        // FIXME: Propagate errors.
-        return false;
-    }
-    return true;
+    return write_block(block_index, buffer, inode_size(), offset);
 }
 
 auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> KResultOr<Vector<BlockIndex>>
@@ -1537,8 +1534,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     auto inode_id = TRY(allocate_inode());
 
     dbgln_if(EXT2_DEBUG, "Ext2FS: writing initial metadata for inode {}", inode_id.value());
-    auto success = write_ext2_inode(inode_id, e2inode);
-    VERIFY(success);
+    TRY(write_ext2_inode(inode_id, e2inode));
 
     auto new_inode = TRY(get_inode({ fsid(), inode_id }));
 
