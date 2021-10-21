@@ -15,12 +15,12 @@
 
         @GUI::TextBox {
             name: "username"
-            placeholder: "username"
+            placeholder: "Username"
         }
 
         @GUI::PasswordBox {
             name: "password"
-            placeholder: "password"
+            placeholder: "Password"
         }
 
         @GUI::Widget {
