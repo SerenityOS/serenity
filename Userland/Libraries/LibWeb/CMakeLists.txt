@@ -49,6 +49,7 @@ set(SOURCES
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp
     CSS/Supports.cpp
+    CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
     Cookie/ParsedCookie.cpp
