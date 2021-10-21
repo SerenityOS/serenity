@@ -69,9 +69,9 @@ static void set_iterator_record_complete(GlobalObject& global_object, Object& it
 }
 
 using EndOfElementsCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&)>;
-using InvokeElementFunctionCallback = Function<void(PromiseValueList&, RemainingElements&, Value, size_t)>;
+using InvokeElementFunctionCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&, RemainingElements&, Value, size_t)>;
 
-static Value perform_promise_common(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
+static ThrowCompletionOr<Value> perform_promise_common(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
 {
     auto& vm = global_object.vm();
 
@@ -86,43 +86,38 @@ static Value perform_promise_common(GlobalObject& global_object, Object& iterato
         auto next_or_error = iterator_step(global_object, iterator_record);
         if (next_or_error.is_throw_completion()) {
             set_iterator_record_complete(global_object, iterator_record);
-            return {};
+            return next_or_error.release_error();
         }
         auto* next = next_or_error.release_value();
 
         if (!next) {
             set_iterator_record_complete(global_object, iterator_record);
-            if (vm.exception())
-                return {};
 
             if (--remaining_elements_count->value == 0)
-                return TRY_OR_DISCARD(end_of_list(*values));
+                return TRY(end_of_list(*values));
             return result_capability.promise;
         }
 
         auto next_value_or_error = iterator_value(global_object, *next);
         if (next_value_or_error.is_throw_completion()) {
             set_iterator_record_complete(global_object, iterator_record);
-            return {};
+            return next_value_or_error.release_error();
         }
         auto next_value = next_value_or_error.release_value();
 
         values->values().append(js_undefined());
 
-        auto next_promise = TRY_OR_DISCARD(vm.call(promise_resolve.as_function(), constructor, next_value));
+        auto next_promise = TRY(vm.call(promise_resolve.as_function(), constructor, next_value));
 
         ++remaining_elements_count->value;
 
-        invoke_element_function(*values, *remaining_elements_count, next_promise, index);
-        if (vm.exception())
-            return {};
-
+        TRY(invoke_element_function(*values, *remaining_elements_count, next_promise, index));
         ++index;
     }
 }
 
 // 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
-static Value perform_promise_all(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
 
@@ -139,12 +134,12 @@ static Value perform_promise_all(GlobalObject& global_object, Object& iterator_r
             auto* on_fulfilled = PromiseAllResolveElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
             on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
-            (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
+            return next_promise.invoke(global_object, vm.names.then, on_fulfilled, result_capability.reject);
         });
 }
 
 // 27.2.4.2.1 PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseallsettled
-static Value perform_promise_all_settled(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all_settled(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
 
@@ -164,12 +159,12 @@ static Value perform_promise_all_settled(GlobalObject& global_object, Object& it
             auto* on_rejected = PromiseAllSettledRejectElementFunction::create(global_object, index, values, result_capability, remaining_elements_count);
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
-            (void)next_promise.invoke(global_object, vm.names.then, on_fulfilled, on_rejected);
+            return next_promise.invoke(global_object, vm.names.then, on_fulfilled, on_rejected);
         });
 }
 
 // 27.2.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseany
-static Value perform_promise_any(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_any(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
 
@@ -188,12 +183,12 @@ static Value perform_promise_any(GlobalObject& global_object, Object& iterator_r
             auto* on_rejected = PromiseAnyRejectElementFunction::create(global_object, index, errors, result_capability, remaining_elements_count);
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
-            (void)next_promise.invoke(global_object, vm.names.then, result_capability.resolve, on_rejected);
+            return next_promise.invoke(global_object, vm.names.then, result_capability.resolve, on_rejected);
         });
 }
 
 // 27.2.4.5.1 PerformPromiseRace ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiserace
-static Value perform_promise_race(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_race(GlobalObject& global_object, Object& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
 {
     auto& vm = global_object.vm();
 
@@ -203,7 +198,7 @@ static Value perform_promise_race(GlobalObject& global_object, Object& iterator_
             return Value(result_capability.promise);
         },
         [&](PromiseValueList&, RemainingElements&, Value next_promise, size_t) {
-            (void)next_promise.invoke(global_object, vm.names.then, result_capability.resolve, result_capability.reject);
+            return next_promise.invoke(global_object, vm.names.then, result_capability.resolve, result_capability.reject);
         });
 }
 
@@ -276,19 +271,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
 
     auto result = perform_promise_all(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (auto* exception = vm.exception()) {
-        // FIXME: Once perform_promise_all returns a throw completion, pass that to iterator_close() instead.
-        auto result_error = throw_completion(exception->value());
-
+    if (result.is_error()) {
         if (!iterator_record_is_complete(global_object, *iterator_record)) {
             TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
-            result_error = iterator_close(*iterator_record, move(result_error));
+            result = iterator_close(*iterator_record, result.release_error());
         }
 
-        TRY_OR_REJECT(vm, promise_capability, result_error);
+        TRY_OR_REJECT(vm, promise_capability, result);
     }
 
-    return result;
+    return result.release_value();
 }
 
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
@@ -304,19 +296,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
 
     auto result = perform_promise_all_settled(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (auto* exception = vm.exception()) {
-        // FIXME: Once perform_promise_all_settled returns a throw completion, pass that to iterator_close() instead.
-        auto result_error = throw_completion(exception->value());
-
+    if (result.is_error()) {
         if (!iterator_record_is_complete(global_object, *iterator_record)) {
             TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
-            result_error = iterator_close(*iterator_record, move(result_error));
+            result = iterator_close(*iterator_record, result.release_error());
         }
 
-        TRY_OR_REJECT(vm, promise_capability, result_error);
+        TRY_OR_REJECT(vm, promise_capability, result);
     }
 
-    return result;
+    return result.release_value();
 }
 
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
@@ -332,19 +321,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
 
     auto result = perform_promise_any(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (auto* exception = vm.exception()) {
-        // FIXME: Once perform_promise_any returns a throw completion, pass that to iterator_close() instead.
-        auto result_error = throw_completion(exception->value());
-
+    if (result.is_error()) {
         if (!iterator_record_is_complete(global_object, *iterator_record)) {
             TemporaryClearException clear_exception(vm); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
-            result_error = iterator_close(*iterator_record, move(result_error));
+            result = iterator_close(*iterator_record, result.release_error());
         }
 
-        TRY_OR_REJECT(vm, promise_capability, result_error);
+        TRY_OR_REJECT(vm, promise_capability, result);
     }
 
-    return result;
+    return result.release_value();
 }
 
 // 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
@@ -360,19 +346,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
 
     auto result = perform_promise_race(global_object, *iterator_record, constructor, promise_capability, promise_resolve);
-    if (auto* exception = vm.exception()) {
-        // FIXME: Once perform_promise_race returns a throw completion, pass that to iterator_close() instead.
-        auto result_error = throw_completion(exception->value());
-
+    if (result.is_error()) {
         if (!iterator_record_is_complete(global_object, *iterator_record)) {
             TemporaryClearException clear_exception(vm);
-            result_error = iterator_close(*iterator_record, move(result_error)); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
+            result = iterator_close(*iterator_record, result.release_error()); // iterator_close() may invoke vm.call(), which VERIFYs no exception.
         }
 
-        TRY_OR_REJECT(vm, promise_capability, result_error);
+        TRY_OR_REJECT(vm, promise_capability, result);
     }
 
-    return result;
+    return result.release_value();
 }
 
 // 27.2.4.6 Promise.reject ( r ), https://tc39.es/ecma262/#sec-promise.reject
