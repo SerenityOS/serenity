@@ -610,7 +610,9 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
 
 void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams& params)
 {
-    return Formatter<String>::format(builder, String::vformatted(fmtstr, params));
+    StringBuilder string_builder;
+    AK::vformat(string_builder, fmtstr, params);
+    return Formatter<StringView>::format(builder, string_builder.string_view());
 }
 
 template<typename T>
