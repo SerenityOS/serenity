@@ -403,14 +403,14 @@ void page_fault_handler(TrapFrame* trap)
         if (current_thread) {
             auto& current_process = current_thread->process();
             if (current_process.is_user_process()) {
-                (void)current_process.try_set_coredump_property("fault_address", String::formatted("{:p}", fault_address));
-                (void)current_process.try_set_coredump_property("fault_type", fault.type() == PageFault::Type::PageNotPresent ? "NotPresent" : "ProtectionViolation");
-                String fault_access;
+                (void)current_process.try_set_coredump_property("fault_address"sv, String::formatted("{:p}", fault_address));
+                (void)current_process.try_set_coredump_property("fault_type"sv, fault.type() == PageFault::Type::PageNotPresent ? "NotPresent"sv : "ProtectionViolation"sv);
+                StringView fault_access;
                 if (fault.is_instruction_fetch())
-                    fault_access = "Execute";
+                    fault_access = "Execute"sv;
                 else
-                    fault_access = fault.access() == PageFault::Access::Read ? "Read" : "Write";
-                (void)current_process.try_set_coredump_property("fault_access", fault_access);
+                    fault_access = fault.access() == PageFault::Access::Read ? "Read"sv : "Write"sv;
+                (void)current_process.try_set_coredump_property("fault_access"sv, fault_access);
             }
         }
 
