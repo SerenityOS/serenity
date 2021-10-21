@@ -114,10 +114,10 @@ void FrameBufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, 
     m_gpu.flush_displayed_image(dirty_rect, buffer.resource_id);
 }
 
-bool FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
+KResult FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
 {
     if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
-        return false;
+        return EINVAL;
 
     auto& info = display_info();
 
@@ -130,10 +130,7 @@ bool FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
         .height = (u32)height,
     };
 
-    // FIXME: Would be nice to be able to return KResultOr here.
-    if (auto result = create_framebuffer(); result.is_error())
-        return false;
-    return true;
+    return create_framebuffer();
 }
 
 void FrameBufferDevice::set_buffer(int buffer_index)
@@ -161,8 +158,7 @@ KResult FrameBufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspa
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
         TRY(copy_from_user(&resolution, user_resolution));
-        if (!try_to_set_resolution(resolution.width, resolution.height))
-            return EINVAL;
+        TRY(try_to_set_resolution(resolution.width, resolution.height));
         resolution.pitch = pitch();
         return copy_to_user(user_resolution, &resolution);
     }
