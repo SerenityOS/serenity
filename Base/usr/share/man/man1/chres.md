@@ -19,6 +19,6 @@ $ chres <width> <height> [scale factor]
 $ chres 1920 1080 2
 ```
 
-## Files
+## IPC Sockets
 
-* `/tmp/portal/window` to communicate with WindowServer
+* `window` (system) - communicate with WindowServer

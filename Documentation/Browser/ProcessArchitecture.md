@@ -30,7 +30,7 @@ This process can decode images (PNG, JPEG, BMP, ICO, PBM, etc.) into bitmaps. Ea
 
 ### How processes are spawned
 
-To get a fresh **WebContent** process, anyone with the suitable file system permissions can spawn one by connecting to the socket at `/tmp/portal/webcontent`. This socket is managed by **SystemServer** and will spawn a new instance of **WebContent** for every connection.
+To get a fresh **WebContent** process, anyone with the suitable file system permissions can spawn one by connecting to the `webcontent` user socket. This socket is managed by **SystemServer** and will spawn a new instance of **WebContent** for every connection.
 
 The same basic concept applies to **RequestServer** and **ImageDecoder** as well, except that those services are spawned by **WebContent** as needed, not by **Browser**.
 

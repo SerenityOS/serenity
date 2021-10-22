@@ -12,7 +12,7 @@ SerenityOS structures audio into three groups of responsibilities: Audio drivers
 
 AudioServer is responsible for handling userland audio clients and talking to the hardware. For this reason, no userland application should ever need to write to `/dev/audio` directly, except for special cases in which AudioServer is not present.
 
-As with all system servers, AudioServer provides an IPC interface on `/tmp/portal/audio`. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source of information. Audio clients send audio buffers with the standard audio format (see [audio](../man4/audio.md)) to the server. They can then query the state of these buffers, pause buffer playback or clear the playing buffers. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or the main volume and mute state.
+As with all system servers, AudioServer provides an IPC interface in `audio` user socket. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source of information. Audio clients send audio buffers with the standard audio format (see [audio](../man4/audio.md)) to the server. They can then query the state of these buffers, pause buffer playback or clear the playing buffers. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or the main volume and mute state.
 
 In reverse, AudioServer has "event" calls that the client receives. These are: A client buffer finished playing (useful for queuing the next buffer), various mixer states changed (main volume, main mute, client volume).
 
@@ -58,7 +58,10 @@ Although the sample rate can change at any time, it is considered a rarely-chang
 
 * [/dev/audio](../man4/audio.md)
 * AudioApplet and AudioServer have settings which are managed by ConfigServer.
-* `/tmp/portal/audio`: AudioServer's IPC socket
+
+## IPC Sockets
+
+* `audio` (user): AudioServer's IPC socket
 
 ## See also
 
