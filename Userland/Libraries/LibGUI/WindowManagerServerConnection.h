@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/IPCSockets.h>
 #include <LibIPC/ServerConnection.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowManagerClientEndpoint.h>
@@ -22,7 +23,7 @@ public:
 
 private:
     WindowManagerServerConnection()
-        : IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, "/tmp/portal/wm")
+        : IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, Core::IPCSockets::system_socket("wm"))
     {
     }
 

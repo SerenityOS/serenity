@@ -8,6 +8,7 @@
 
 #include <LibAudio/ClientConnection.h>
 #include <LibConfig/Client.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -216,14 +217,13 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    if (unveil("/tmp/portal/config", "rw") < 0) {
-        perror("unveil");
+
+    if (Core::IPCSockets::unveil_user_socket("config").is_error()) {
         return 1;
     }
-    if (unveil("/tmp/portal/audio", "rw") < 0) {
-        perror("unveil");
+
+    if (Core::IPCSockets::unveil_user_socket("audio").is_error())
         return 1;
-    }
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;

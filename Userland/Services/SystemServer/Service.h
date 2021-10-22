@@ -36,7 +36,7 @@ private:
     /// SocketDescriptor describes the details of a single socket that was
     /// requested by a service.
     struct SocketDescriptor {
-        /// The path of the socket.
+        /// The path of the socket. It is resolved from socket name basing on
         String path;
         /// File descriptor of the socket. -1 if the socket hasn't been opened.
         int fd { -1 };

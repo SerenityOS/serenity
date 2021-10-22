@@ -17,6 +17,7 @@
 #include <AK/NumberFormat.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -158,10 +159,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/config", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("config").is_error())
         return 1;
-    }
 
     unveil(nullptr, nullptr);
 

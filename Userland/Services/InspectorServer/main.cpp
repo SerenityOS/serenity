@@ -7,6 +7,7 @@
 #include "InspectableProcess.h"
 #include <InspectorServer/ClientConnection.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 
@@ -20,7 +21,7 @@ int main(int, char**)
         return 1;
     }
 
-    bool ok = server->take_over_from_system_server("/tmp/portal/inspector");
+    bool ok = server->take_over_from_system_server(Core::IPCSockets::user_socket("inspector"));
     VERIFY(ok);
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
@@ -34,7 +35,7 @@ int main(int, char**)
     };
 
     auto inspectables_server = Core::LocalServer::construct();
-    if (!inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"))
+    if (!inspectables_server->take_over_from_system_server(Core::IPCSockets::user_socket("inspectables")))
         VERIFY_NOT_REACHED();
 
     inspectables_server->on_ready_to_accept = [&] {

@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/EventLoop.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <WebContent/ClientConnection.h>
@@ -20,18 +21,10 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
-    if (unveil("/tmp/portal/request", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("request").is_error())
         return 1;
-    }
-    if (unveil("/tmp/portal/image", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("image").is_error())
         return 1;
-    }
-    if (unveil("/tmp/portal/websocket", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;

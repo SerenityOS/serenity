@@ -12,6 +12,7 @@
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>
 #include <LibDesktop/AppFile.h>
@@ -225,10 +226,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("launch").is_error())
         return 1;
-    }
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

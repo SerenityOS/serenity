@@ -9,6 +9,7 @@
 #include <ConfigServer/ConfigClientEndpoint.h>
 #include <ConfigServer/ConfigServerEndpoint.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
 #include <LibIPC/ServerConnection.h>
@@ -36,7 +37,7 @@ public:
 
 private:
     explicit Client()
-        : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, "/tmp/portal/config")
+        : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, Core::IPCSockets::user_socket("config"))
     {
     }
 

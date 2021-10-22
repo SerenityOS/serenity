@@ -13,6 +13,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
@@ -76,20 +77,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/image", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("image").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("webcontent").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/request", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("request").is_error())
         return 1;
-    }
 
     unveil(nullptr, nullptr);
 

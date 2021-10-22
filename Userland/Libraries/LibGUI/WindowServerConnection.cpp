@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -41,7 +42,7 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
 }
 
 WindowServerConnection::WindowServerConnection()
-    : IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, "/tmp/portal/window")
+    : IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, Core::IPCSockets::system_socket("window").characters())
 {
     // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.

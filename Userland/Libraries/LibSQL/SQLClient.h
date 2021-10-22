@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/IPCSockets.h>
 #include <LibIPC/ServerConnection.h>
 #include <SQLServer/SQLClientEndpoint.h>
 #include <SQLServer/SQLServerEndpoint.h>
@@ -28,7 +29,7 @@ class SQLClient
 
 private:
     SQLClient()
-        : IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, "/tmp/portal/sql")
+        : IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, Core::IPCSockets::user_socket("sql"))
     {
     }
 

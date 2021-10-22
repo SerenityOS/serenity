@@ -8,6 +8,7 @@
 
 #include <InspectorServer/InspectorClientEndpoint.h>
 #include <InspectorServer/InspectorServerEndpoint.h>
+#include <LibCore/IPCSockets.h>
 #include <LibIPC/ServerConnection.h>
 
 namespace Inspector {
@@ -22,7 +23,7 @@ public:
 
 private:
     InspectorServerClient()
-        : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, "/tmp/portal/inspector")
+        : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, Core::IPCSockets::user_socket("inspector"))
     {
     }
 };

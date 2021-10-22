@@ -6,6 +6,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -290,11 +291,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("filesystemaccess").is_error())
         return 1;
-    }
 
+    // FIXME: Hardcoded 'anon'
     if (unveil("/home/anon/Documents/3D Models/teapot.obj", "r") < 0) {
         perror("unveil");
         return 1;
@@ -521,6 +521,7 @@ int main(int argc, char** argv)
 
     window->show();
 
+    // FIXME: Hardcoded 'anon'
     auto filename = argc > 1 ? argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
     if (widget.load_path(filename)) {
         auto canonical_path = Core::File::absolute_path(filename);

@@ -10,6 +10,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
@@ -43,10 +44,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("webcontent").is_error())
         return 1;
-    }
 
     // For writing temporary files when exporting.
     if (unveil("/tmp", "crw") < 0) {

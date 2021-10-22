@@ -7,6 +7,7 @@
 
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ServerConnection.h>
@@ -19,8 +20,9 @@ class ClipboardServerConnection final
     C_OBJECT(ClipboardServerConnection);
 
 private:
+    // FIXME: Clipboard should not be a system socket, but this breaks LoginServer.
     ClipboardServerConnection()
-        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")
+        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, Core::IPCSockets::system_socket("clipboard"))
     {
     }
 

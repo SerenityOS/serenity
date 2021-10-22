@@ -18,6 +18,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         return 1;
     }
 
+    // FIXME: Hardcoded 'anon'
     if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
         perror("mkdir");
         return 1;

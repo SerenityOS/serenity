@@ -5,13 +5,14 @@
  */
 
 #include <AK/FileStream.h>
+#include <LibCore/IPCSockets.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
 namespace Protocol {
 
 RequestClient::RequestClient()
-    : IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, "/tmp/portal/request")
+    : IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, Core::IPCSockets::user_socket("request"))
 {
 }
 

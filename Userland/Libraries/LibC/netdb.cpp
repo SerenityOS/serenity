@@ -72,7 +72,7 @@ static int connect_to_lookup_server()
 
     sockaddr_un address {
         AF_LOCAL,
-        "/tmp/portal/lookup"
+        "/tmp/portal/system/lookup"
     };
 
     if (connect(fd, (const sockaddr*)&address, sizeof(address)) < 0) {

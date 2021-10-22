@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -54,15 +55,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("launch").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("webcontent").is_error())
         return 1;
-    }
 
     unveil(nullptr, nullptr);
 

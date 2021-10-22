@@ -9,6 +9,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -40,20 +41,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/clipboard", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_system_socket("clipboard").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("filesystemaccess").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/image", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("image").is_error())
         return 1;
-    }
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

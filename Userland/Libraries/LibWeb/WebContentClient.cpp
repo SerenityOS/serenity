@@ -7,12 +7,13 @@
 #include "WebContentClient.h"
 #include "OutOfProcessWebView.h"
 #include <AK/Debug.h>
+#include <LibCore/IPCSockets.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
 namespace Web {
 
 WebContentClient::WebContentClient(OutOfProcessWebView& view)
-    : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, "/tmp/portal/webcontent")
+    : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, Core::IPCSockets::user_socket("webcontent"))
     , m_view(view)
 {
 }

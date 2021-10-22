@@ -9,6 +9,7 @@
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
 #include <LibIPC/ServerConnection.h>
@@ -39,7 +40,7 @@ protected:
 
 private:
     explicit Client()
-        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, "/tmp/portal/filesystemaccess")
+        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, Core::IPCSockets::user_socket("filesystemaccess"))
     {
     }
 

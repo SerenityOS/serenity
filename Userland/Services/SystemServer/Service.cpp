@@ -37,6 +37,8 @@ void Service::setup_socket(SocketDescriptor& socket)
     auto ok = Core::File::ensure_parent_directories(socket.path);
     VERIFY(ok);
 
+    dbgln_if(SERVICE_DEBUG, "Socket path is {}", socket.path);
+
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
     // after forking off the process.
@@ -49,6 +51,7 @@ void Service::setup_socket(SocketDescriptor& socket)
 
     if (m_account.has_value()) {
         auto& account = m_account.value();
+        dbgln_if(SERVICE_DEBUG, "fchown socket to {}, {}", account.uid(), account.gid());
         if (fchown(socket_fd, account.uid(), account.gid()) < 0) {
             perror("fchown");
             VERIFY_NOT_REACHED();
@@ -324,23 +327,23 @@ Service::Service(SystemServer const& server, const Core::ConfigFile& config, Str
     String socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
     if (!socket_entry.is_null()) {
-        Vector<String> socket_paths = socket_entry.split(',');
+        Vector<String> socket_names = socket_entry.split(',');
         Vector<String> socket_perms = socket_permissions_entry.split(',');
-        m_sockets.ensure_capacity(socket_paths.size());
+        m_sockets.ensure_capacity(socket_names.size());
 
         // Need i here to iterate along with all other vectors.
-        for (unsigned i = 0; i < socket_paths.size(); i++) {
-            String& path = socket_paths.at(i);
+        for (unsigned i = 0; i < socket_names.size(); i++) {
+            String& name = socket_names.at(i);
 
             // Socket path (plus NUL) must fit into the structs sent to the Kernel.
-            VERIFY(path.length() < UNIX_PATH_MAX);
+            VERIFY(name.length() < UNIX_PATH_MAX);
 
             // This is done so that the last permission repeats for every other
             // socket. So you can define a single permission, and have it
             // be applied for every socket.
             mode_t permissions = strtol(socket_perms.at(min(socket_perms.size() - 1, (long unsigned)i)).characters(), nullptr, 8) & 0777;
 
-            m_sockets.empend(path, -1, permissions);
+            m_sockets.empend(String::formatted("{}/{}", m_server.socket_directory(), name), -1, permissions);
         }
     }
 

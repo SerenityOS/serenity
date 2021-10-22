@@ -16,6 +16,7 @@
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
@@ -305,7 +306,7 @@ bool connect_to_inspector_server()
 {
 #ifdef __serenity__
     auto socket = Core::LocalSocket::construct();
-    if (!socket->connect(SocketAddress::local("/tmp/portal/inspectables")))
+    if (!socket->connect(SocketAddress::local(Core::IPCSockets::user_socket("inspectables"))))
         return false;
     s_inspector_server_connection = InspectorServerConnection::construct(move(socket));
     return true;

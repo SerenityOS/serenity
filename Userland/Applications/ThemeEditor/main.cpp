@@ -10,6 +10,7 @@
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/IPCSockets.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -132,10 +133,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("filesystemaccess").is_error())
         return 1;
-    }
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");

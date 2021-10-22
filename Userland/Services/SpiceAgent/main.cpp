@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibCore/StandardPaths.h"
 #include "SpiceAgent.h"
 #include <AK/Format.h>
 #include <LibC/fcntl.h>
 #include <LibC/unistd.h>
+#include <LibCore/IPCSockets.h>
 #include <LibIPC/ServerConnection.h>
 
 static constexpr auto SPICE_DEVICE = "/dev/hvc0p1";
@@ -25,10 +27,8 @@ int main()
         perror("unveil");
         return 1;
     }
-    if (unveil("/tmp/portal/clipboard", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("clipboard").is_error())
         return 1;
-    }
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;

@@ -7,6 +7,7 @@
 
 #include "HexEditorWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/IPCSockets.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
@@ -44,10 +45,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("filesystemaccess").is_error())
         return 1;
-    }
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

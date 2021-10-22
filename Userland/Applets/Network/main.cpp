@@ -6,6 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ImageWidget.h>
@@ -169,10 +170,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (unveil("/tmp/portal/notify", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("notify").is_error())
         return 1;
-    }
 
     if (unveil("/proc/net/adapters", "r") < 0) {
         perror("unveil");

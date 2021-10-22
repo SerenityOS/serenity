@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/IPCSockets.h>
 #include <LibProtocol/WebSocket.h>
 #include <LibProtocol/WebSocketClient.h>
 
 namespace Protocol {
 
 WebSocketClient::WebSocketClient()
-    : IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, "/tmp/portal/websocket")
+    : IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, Core::IPCSockets::user_socket("websocket"))
 {
 }
 

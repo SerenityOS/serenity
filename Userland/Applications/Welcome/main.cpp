@@ -6,6 +6,7 @@
 
 #include "WelcomeWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -32,10 +33,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("webcontent").is_error())
         return 1;
-    }
 
     if (unveil("/bin/Help", "x") < 0) {
         perror("unveil");

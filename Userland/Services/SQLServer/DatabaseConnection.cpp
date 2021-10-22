@@ -39,6 +39,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
     s_connections.set(m_connection_id, *this);
     deferred_invoke([this]() {
+        // FIXME: Hardcoded 'anon'
         m_database = SQL::Database::construct(String::formatted("/home/anon/sql/{}.db", m_database_name));
         m_accept_statements = true;
         auto client_connection = ClientConnection::client_connection_for(m_client_id);

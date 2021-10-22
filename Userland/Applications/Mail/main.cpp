@@ -6,6 +6,7 @@
 
 #include "MailWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -35,15 +36,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_user_socket("webcontent").is_error())
         return 1;
-    }
 
-    if (unveil("/tmp/portal/lookup", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_system_socket("lookup").is_error())
         return 1;
-    }
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

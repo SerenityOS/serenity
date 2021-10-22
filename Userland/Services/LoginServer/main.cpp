@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "errno_numbers.h"
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <Services/LoginServer/LoginWindow.h>
 #include <errno.h>
@@ -13,20 +15,39 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static bool create_portal_directory(Core::Account const& account)
+{
+    String directory_name = "/tmp/portal/user"sv;
+    dbgln("creating portal directory {}", directory_name);
+    if (mkdir(directory_name.characters(), 0700) < 0) {
+        if (errno != EEXIST) {
+            dbgln("failed to create user portal directory: {}", strerror(errno));
+            return false;
+        }
+    }
+    if (chown(directory_name.characters(), account.uid(), account.gid()) < 0) {
+        dbgln("failed to change ownership of portal directory: {}", strerror(errno));
+        return false;
+    }
+    return true;
+}
+
 static void child_process(Core::Account const& account)
 {
-    if (!account.login()) {
-        dbgln("failed to switch users: {}", strerror(errno));
-        exit(1);
-    }
-
-    setenv("HOME", account.home_directory().characters(), true);
     pid_t rc = setsid();
     if (rc == -1) {
         dbgln("failed to setsid: {}", strerror(errno));
         exit(1);
     }
     dbgln("login with sid={}", rc);
+    VERIFY(create_portal_directory(account));
+
+    if (!account.login()) {
+        dbgln("failed to switch users: {}", strerror(errno));
+        exit(1);
+    }
+
+    setenv("HOME", account.home_directory().characters(), true);
 
     execlp("/bin/SystemServer", "SystemServer", "--user", nullptr);
     dbgln("failed to exec SystemServer --user: {}", strerror(errno));
@@ -46,6 +67,8 @@ static void login(Core::Account const& account, LoginWindow& window)
     if (rc != 0)
         dbgln("SystemServer exited with non-zero status: {}", rc);
 
+    auto result = Core::File::remove("/tmp/portal/user"sv, Core::File::RecursionMode::Allowed, false);
+    VERIFY(!result.is_error());
     window.show();
 }
 
@@ -53,7 +76,7 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd rpath exec proc id", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath cpath exec proc id chown", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -84,6 +107,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal", "rc") < 0) {
         perror("unveil");
         return 1;
     }

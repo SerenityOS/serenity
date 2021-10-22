@@ -5,12 +5,13 @@
  */
 
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/IPCSockets.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace ImageDecoderClient {
 
 Client::Client()
-    : IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, "/tmp/portal/image")
+    : IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, Core::IPCSockets::user_socket("image"))
 {
 }
 

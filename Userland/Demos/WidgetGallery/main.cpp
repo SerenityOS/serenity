@@ -30,6 +30,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // FIXME: Hardcoded 'anon'
     if (unveil("/home/anon", "r") < 0) {
         perror("unveil");
         return 1;

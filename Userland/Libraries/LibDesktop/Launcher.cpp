@@ -8,6 +8,7 @@
 #include <AK/URL.h>
 #include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
+#include <LibCore/IPCSockets.h>
 #include <LibDesktop/Launcher.h>
 #include <LibIPC/ServerConnection.h>
 #include <stdlib.h>
@@ -40,7 +41,7 @@ class LaunchServerConnection final
     C_OBJECT(LaunchServerConnection)
 private:
     LaunchServerConnection()
-        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
+        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, Core::IPCSockets::user_socket("launch"))
     {
     }
 };

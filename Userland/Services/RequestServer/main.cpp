@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/IPCSockets.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibTLS/Certificate.h>
@@ -34,8 +35,7 @@ int main(int, char**)
         perror("pledge");
         return 1;
     }
-    if (unveil("/tmp/portal/lookup", "rw") < 0) {
-        perror("unveil");
+    if (Core::IPCSockets::unveil_system_socket("lookup").is_error()) {
         return 1;
     }
     if (unveil(nullptr, nullptr) < 0) {

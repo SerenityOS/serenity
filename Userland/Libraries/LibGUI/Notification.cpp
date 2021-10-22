@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/IPCSockets.h>
 #include <LibGUI/Notification.h>
 #include <LibIPC/ServerConnection.h>
 #include <NotificationServer/NotificationClientEndpoint.h>
@@ -26,7 +27,7 @@ public:
 
 private:
     explicit NotificationServerConnection(Notification* notification)
-        : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, "/tmp/portal/notify")
+        : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, Core::IPCSockets::user_socket("notify"))
         , m_notification(notification)
     {
     }

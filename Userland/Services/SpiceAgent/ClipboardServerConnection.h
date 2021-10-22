@@ -7,6 +7,7 @@
 #include <AK/Function.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
+#include <LibCore/IPCSockets.h>
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ServerConnection.h>
 
@@ -23,8 +24,9 @@ public:
     void set_bitmap(Gfx::Bitmap const& bitmap);
 
 private:
+    // FIXME: This should be a user socket, but this breaks LoginServer.
     ClipboardServerConnection()
-        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")
+        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, Core::IPCSockets::system_socket("clipboard"))
     {
     }
     virtual void clipboard_data_changed(String const&) override

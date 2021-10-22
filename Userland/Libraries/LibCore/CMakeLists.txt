@@ -13,6 +13,7 @@ set(SOURCES
     File.cpp
     GetPassword.cpp
     IODevice.cpp
+    IPCSockets.cpp
     LocalServer.cpp
     LocalSocket.cpp
     LockFile.cpp

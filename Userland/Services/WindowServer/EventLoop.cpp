@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
+#include <LibCore/IPCSockets.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/EventLoop.h>
@@ -25,9 +26,9 @@ EventLoop::EventLoop()
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    bool ok = m_window_server->take_over_from_system_server("/tmp/portal/window");
+    bool ok = m_window_server->take_over_from_system_server(Core::IPCSockets::system_socket("window"));
     VERIFY(ok);
-    ok = m_wm_server->take_over_from_system_server("/tmp/portal/wm");
+    ok = m_wm_server->take_over_from_system_server(Core::IPCSockets::system_socket("wm"));
     VERIFY(ok);
 
     m_window_server->on_ready_to_accept = [this] {

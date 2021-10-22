@@ -86,6 +86,7 @@ WelcomeWidget::~WelcomeWidget()
 
 void WelcomeWidget::open_and_parse_tips_file()
 {
+    // FIXME: Hardcoded 'anon'
     auto file = Core::File::construct("/home/anon/Documents/tips.txt");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         m_tip_label->set_text("~/Documents/tips.txt has gone missing!");
@@ -108,6 +109,7 @@ void WelcomeWidget::open_and_parse_tips_file()
 
 void WelcomeWidget::open_and_parse_readme_file()
 {
+    // FIXME: Hardcoded 'anon'
     auto file = Core::File::construct("/home/anon/README.md");
     if (!file->open(Core::OpenMode::ReadOnly))
         return;
@@ -115,6 +117,7 @@ void WelcomeWidget::open_and_parse_readme_file()
     auto document = Markdown::Document::parse(file->read_all());
     if (document) {
         auto html = document->render_to_html();
+        // FIXME: Hardcoded 'anon'
         m_web_view->load_html(html, URL::create_with_file_protocol("/home/anon/README.md"));
     }
 }

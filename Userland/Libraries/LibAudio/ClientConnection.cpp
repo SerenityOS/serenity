@@ -6,11 +6,12 @@
 
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
+#include <LibCore/IPCSockets.h>
 
 namespace Audio {
 
 ClientConnection::ClientConnection()
-    : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, "/tmp/portal/audio")
+    : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, Core::IPCSockets::user_socket("audio"))
 {
 }
 
