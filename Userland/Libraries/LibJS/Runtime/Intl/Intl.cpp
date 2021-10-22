@@ -36,16 +36,16 @@ void Intl::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.Locale, global_object.intl_locale_constructor(), attr);
     define_direct_property(vm.names.NumberFormat, global_object.intl_number_format_constructor(), attr);
 
-    define_old_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
+    define_native_function(vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
 }
 
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales
-JS_DEFINE_OLD_NATIVE_FUNCTION(Intl::get_canonical_locales)
+JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
 {
     auto locales = vm.argument(0);
 
     // 1. Let ll be ? CanonicalizeLocaleList(locales).
-    auto locale_list = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
+    auto locale_list = TRY(canonicalize_locale_list(global_object, locales));
 
     MarkedValueList marked_locale_list { vm.heap() };
     marked_locale_list.ensure_capacity(locale_list.size());
