@@ -175,7 +175,10 @@ public:
     {
         this->for_each_chunk([&](auto chunk) {
             auto base_ptr = align_up_to(chunk + sizeof(typename Allocator::ChunkHeader), alignof(T));
-            FlatPtr end_offset = this->m_chunk_size - sizeof(typename Allocator::ChunkHeader);
+            // Compute the offset of the first byte *after* this chunk:
+            FlatPtr end_offset = base_ptr + this->m_chunk_size - chunk;
+            // Compute the offset of the first byte *after* the last valid object, in case the end of the chunk does not align with the end of an object:
+            end_offset = (end_offset / sizeof(T)) * sizeof(T);
             if (chunk == this->m_current_chunk)
                 end_offset = this->m_byte_offset_into_current_chunk;
             for (; base_ptr - chunk < end_offset; base_ptr += sizeof(T))
