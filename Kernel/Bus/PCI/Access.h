@@ -48,7 +48,7 @@ private:
     void enumerate_device(int type, u8 bus, u8 device, bool recursive);
 
     explicit Access(AccessType);
-    bool scan_pci_domains(PhysicalAddress mcfg);
+    bool search_pci_domains_from_acpi_mcfg_table(PhysicalAddress mcfg);
     Vector<Capability> get_capabilities(Address);
     Optional<u8> get_capabilities_pointer(Address address);
 
