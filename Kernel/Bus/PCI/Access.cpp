@@ -309,6 +309,7 @@ UNMAP_AFTER_INIT void Access::rescan_hardware_with_memory_addressing()
 {
     MutexLocker locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
+    VERIFY(!m_domains.is_empty());
     VERIFY(m_access_type == AccessType::Memory);
     for (u32 domain = 0; domain < m_domains.size(); domain++) {
         dbgln_if(PCI_DEBUG, "PCI: Scan memory mapped domain {}", domain);
