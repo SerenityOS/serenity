@@ -37,6 +37,7 @@ set(LIBTEST_BASED_SOURCES
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
     TestKernelUnveil.cpp
+    TestMemoryDeviceMmap.cpp
     TestMunMap.cpp
     TestProcFS.cpp
 )
