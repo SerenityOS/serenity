@@ -130,6 +130,7 @@ protected:
 
         VERIFY(m_current_chunk);
         auto& old_header = *(ChunkHeader*)m_current_chunk;
+        VERIFY(old_header.magic == chunk_magic);
         VERIFY(old_header.next_chunk == 0);
         old_header.next_chunk = (FlatPtr)new_chunk;
         m_current_chunk = (FlatPtr)new_chunk;
