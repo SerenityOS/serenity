@@ -92,11 +92,6 @@ static bool mount_all()
         const char* fstype = parts[2].characters();
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
-        if (strcmp(mountpoint, "/") == 0) {
-            dbgln("Skipping mounting root");
-            continue;
-        }
-
         const char* filename = parts[0].characters();
 
         int fd = get_source_fd(filename);
