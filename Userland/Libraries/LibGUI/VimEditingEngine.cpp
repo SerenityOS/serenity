@@ -1295,6 +1295,7 @@ void VimEditingEngine::switch_to_visual_mode()
     m_selection_start_position = m_editor->cursor();
     m_editor->selection().set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
     m_editor->did_update_selection();
+    m_editor->update();
     m_motion.reset();
 }
 
@@ -1313,6 +1314,7 @@ void VimEditingEngine::update_selection_on_cursor_move()
 
     m_editor->selection().set(start, end);
     m_editor->did_update_selection();
+    m_editor->update();
 }
 
 void VimEditingEngine::clamp_cursor_position()
@@ -1329,6 +1331,7 @@ void VimEditingEngine::clear_visual_mode_data()
     if (m_editor->has_selection()) {
         m_editor->selection().clear();
         m_editor->did_update_selection();
+        m_editor->update();
         clamp_cursor_position();
     }
     m_selection_start_position = {};
