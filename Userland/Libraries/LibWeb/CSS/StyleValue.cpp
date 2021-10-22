@@ -367,13 +367,19 @@ Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
     }
 }
 
-ImageStyleValue::ImageStyleValue(AK::URL const& url, DOM::Document* document)
+ImageStyleValue::ImageStyleValue(AK::URL const& url)
     : StyleValue(Type::Image)
     , m_url(url)
-    , m_document(document)
 {
-    // FIXME: This doesn't work right without a document.
-    auto request = LoadRequest::create_for_url_on_page(url, document ? document->page() : nullptr);
+}
+
+void ImageStyleValue::load_bitmap(DOM::Document& document)
+{
+    if (m_bitmap)
+        return;
+
+    m_document = &document;
+    auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
