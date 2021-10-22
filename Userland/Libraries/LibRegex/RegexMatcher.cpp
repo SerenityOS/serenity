@@ -333,13 +333,12 @@ public:
 
     ALWAYS_INLINE void append(T value)
     {
-        auto new_node = m_allocator.allocate();
-        VERIFY(new_node);
-        auto node_ptr = new (new_node) Node { move(value), nullptr, nullptr };
+        auto node_ptr = m_allocator.allocate(move(value));
+        VERIFY(node_ptr);
 
         if (!m_first) {
-            m_first = new_node;
-            m_last = new_node;
+            m_first = node_ptr;
+            m_last = node_ptr;
             return;
         }
 
