@@ -8,6 +8,12 @@ If you want to bring the comfortable Serenity classes with you to another system
 
 *Lagom* is a Swedish word that means "just the right amount." ([Wikipedia](https://en.wikipedia.org/wiki/Lagom))
 
+## How to build
+
+Lagom libraries and test executables can be build using the main Serenity build script located in `serenity/Meta`: `./serenity.sh build lagom`.
+
+Output libraries and test executables are located in `serenity/Meta/build` directory.
+
 ## Fuzzing
 
 Lagom can be used to fuzz parts of SerenityOS's code base. Fuzzers can be run locally, and they also run continuously on OSS-Fuzz.
