@@ -180,13 +180,16 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, VirtualRange const& range) const
 {
     VERIFY(!m_reserved_memory_ranges.is_empty());
+    // Note: Guard against overflow in case someone tries to mmap on the edge of
+    // the RAM
+    if (start_address.offset_addition_would_overflow(range.size()))
+        return false;
+    auto end_address = start_address.offset(range.size());
     for (auto& current_range : m_reserved_memory_ranges) {
-        if (!(current_range.start <= start_address))
+        if (current_range.start > start_address)
             continue;
-        if (!(current_range.start.offset(current_range.length) > start_address))
+        if (current_range.start.offset(current_range.length) < end_address)
             continue;
-        if (current_range.length < range.size())
-            return false;
         return true;
     }
     return false;

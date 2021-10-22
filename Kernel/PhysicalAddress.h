@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Checked.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
 
@@ -30,6 +31,7 @@ public:
     }
 
     [[nodiscard]] PhysicalAddress offset(PhysicalPtr o) const { return PhysicalAddress(m_address + o); }
+    [[nodiscard]] bool offset_addition_would_overflow(PhysicalPtr o) const { return Checked<PhysicalPtr>::addition_would_overflow(m_address, o); }
     [[nodiscard]] PhysicalPtr get() const { return m_address; }
     void set(PhysicalPtr address) { m_address = address; }
     void mask(PhysicalPtr m) { m_address &= m; }
