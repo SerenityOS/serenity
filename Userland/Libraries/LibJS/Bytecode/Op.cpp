@@ -9,6 +9,7 @@
 #include <AK/HashTable.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
@@ -342,10 +343,14 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
         }
         if (m_type == CallType::Call) {
             auto return_value_or_error = interpreter.vm().call(function, this_value, move(argument_values));
-            if (!return_value_or_error.is_error())
-                return_value = return_value_or_error.release_value();
+            if (return_value_or_error.is_error())
+                return;
+            return_value = return_value_or_error.release_value();
         } else {
-            return_value = interpreter.vm().construct(function, function, move(argument_values));
+            auto return_value_or_error = construct(interpreter.global_object(), function, move(argument_values));
+            if (return_value_or_error.is_error())
+                return;
+            return_value = return_value_or_error.release_value();
         }
     }
 

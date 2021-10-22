@@ -422,10 +422,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     MarkedValueList arguments(vm.heap());
     arguments.append(regexp_object);
     arguments.append(js_string(vm, move(flags)));
-    auto matcher_value = vm.construct(*constructor, *constructor, move(arguments));
-    if (vm.exception())
-        return {};
-    auto* matcher = TRY_OR_DISCARD(matcher_value.to_object(global_object));
+    auto* matcher = TRY_OR_DISCARD(construct(global_object, *constructor, move(arguments)));
     auto last_index_value = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
     auto last_index = TRY_OR_DISCARD(last_index_value.to_length(global_object));
 
@@ -589,10 +586,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     MarkedValueList arguments(vm.heap());
     arguments.append(regexp_object);
     arguments.append(js_string(vm, move(new_flags)));
-    auto splitter_value = vm.construct(*constructor, *constructor, move(arguments));
-    if (vm.exception())
-        return {};
-    auto* splitter = TRY_OR_DISCARD(splitter_value.to_object(global_object));
+    auto* splitter = TRY_OR_DISCARD(construct(global_object, *constructor, move(arguments)));
     auto* array = MUST(Array::create(global_object, 0));
     size_t array_length = 0;
 

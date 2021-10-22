@@ -483,12 +483,6 @@ ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScr
     return {};
 }
 
-// NOTE: This is a leftover from the old world of vm.call() and vm.construct(). Replace all uses with plain construct() and remove this.
-Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
-{
-    return TRY_OR_DISCARD(JS::construct(function.global_object(), function, move(arguments), &new_target));
-}
-
 void VM::throw_exception(Exception& exception)
 {
     set_exception(exception);
