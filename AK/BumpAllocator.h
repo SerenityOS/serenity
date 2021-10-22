@@ -51,12 +51,6 @@ public:
         return (void*)aligned_ptr;
     }
 
-    template<typename T>
-    T* allocate()
-    {
-        return (T*)allocate(sizeof(T), alignof(T));
-    }
-
     void deallocate_all()
     {
         if (!m_head_chunk)
@@ -160,9 +154,13 @@ public:
         destroy_all();
     }
 
-    T* allocate()
+    template<typename... Args>
+    T* allocate(Args&&... args)
     {
-        return Allocator::template allocate<T>();
+        auto ptr = (T*)Allocator::allocate(sizeof(T), alignof(T));
+        if (!ptr)
+            return nullptr;
+        return new (ptr) T { forward<Args>(args)... };
     }
 
     void deallocate_all()
