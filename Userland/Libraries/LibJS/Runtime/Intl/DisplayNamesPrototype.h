@@ -20,8 +20,8 @@ public:
     virtual ~DisplayNamesPrototype() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(of);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(resolved_options);
+    JS_DECLARE_NATIVE_FUNCTION(of);
+    JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 
 }

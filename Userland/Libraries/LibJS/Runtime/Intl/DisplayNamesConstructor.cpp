@@ -31,7 +31,7 @@ void DisplayNamesConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.intl_display_names_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
@@ -112,7 +112,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
 }
 
 // 12.3.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf
-JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
+JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
@@ -121,10 +121,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
     // No-op, availability of each requested locale is checked via Unicode::is_locale_available()
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY_OR_DISCARD(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(global_object, requested_locales, options));
 }
 
 }
