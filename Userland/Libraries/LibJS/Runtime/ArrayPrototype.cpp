@@ -1538,40 +1538,34 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::keys)
 }
 
 // 23.1.3.10.1 FlattenIntoArray ( target, source, sourceLen, start, depth [ , mapperFunction [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-flattenintoarray
-static size_t flatten_into_array(GlobalObject& global_object, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, FunctionObject* mapper_func = {}, Value this_arg = {})
+static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, FunctionObject* mapper_func = {}, Value this_arg = {})
 {
     VERIFY(!mapper_func || (!this_arg.is_empty() && depth == 1));
     auto& vm = global_object.vm();
 
     for (size_t j = 0; j < array_length; ++j) {
-        auto value_exists = TRY_OR_DISCARD(array.has_property(j));
+        auto value_exists = TRY(array.has_property(j));
 
         if (!value_exists)
             continue;
-        auto value = TRY_OR_DISCARD(array.get(j));
+        auto value = TRY(array.get(j));
 
         if (mapper_func)
-            value = TRY_OR_DISCARD(vm.call(*mapper_func, this_arg, value, Value(j), &array));
+            value = TRY(vm.call(*mapper_func, this_arg, value, Value(j), &array));
 
-        if (depth > 0 && TRY_OR_DISCARD(value.is_array(global_object))) {
-            if (vm.did_reach_stack_space_limit()) {
-                vm.throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
-                return {};
-            }
+        if (depth > 0 && TRY(value.is_array(global_object))) {
+            if (vm.did_reach_stack_space_limit())
+                return vm.throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
 
-            auto length = TRY_OR_DISCARD(length_of_array_like(global_object, value.as_object()));
-            target_index = flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1);
-            if (vm.exception())
-                return {};
+            auto length = TRY(length_of_array_like(global_object, value.as_object()));
+            target_index = TRY(flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1));
             continue;
         }
 
-        if (target_index >= MAX_ARRAY_LIKE_INDEX) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::InvalidIndex);
-            return {};
-        }
+        if (target_index >= MAX_ARRAY_LIKE_INDEX)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::InvalidIndex);
 
-        TRY_OR_DISCARD(new_array.create_data_property_or_throw(target_index, value));
+        TRY(new_array.create_data_property_or_throw(target_index, value));
 
         ++target_index;
     }
@@ -1593,9 +1587,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat)
 
     auto* new_array = TRY_OR_DISCARD(array_species_create(global_object, *this_object, 0));
 
-    flatten_into_array(global_object, *new_array, *this_object, length, 0, depth);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(flatten_into_array(global_object, *new_array, *this_object, length, 0, depth));
     return new_array;
 }
 
@@ -1621,9 +1613,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat_map)
     auto* array = TRY_OR_DISCARD(array_species_create(global_object, *object, 0));
 
     // 5. Perform ? FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg).
-    flatten_into_array(global_object, *array, *object, source_length, 0, 1, &mapper_function.as_function(), this_arg);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(flatten_into_array(global_object, *array, *object, source_length, 0, 1, &mapper_function.as_function(), this_arg));
 
     // 6. Return A.
     return array;
