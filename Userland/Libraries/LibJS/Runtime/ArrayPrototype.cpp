@@ -882,12 +882,12 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedValueList& arr_to_sort)
+static ThrowCompletionOr<void> array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedValueList& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
     if (arr_to_sort.size() <= 1)
-        return;
+        return {};
 
     MarkedValueList left(vm.heap());
     MarkedValueList right(vm.heap());
@@ -903,12 +903,8 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
         }
     }
 
-    array_merge_sort(vm, global_object, compare_func, left);
-    if (vm.exception())
-        return;
-    array_merge_sort(vm, global_object, compare_func, right);
-    if (vm.exception())
-        return;
+    TRY(array_merge_sort(vm, global_object, compare_func, left));
+    TRY(array_merge_sort(vm, global_object, compare_func, right));
 
     arr_to_sort.clear();
 
@@ -927,16 +923,8 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
         } else if (y.is_undefined()) {
             comparison_result = -1;
         } else if (compare_func) {
-            auto call_result_or_error = vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]);
-            if (call_result_or_error.is_error())
-                return;
-            auto call_result = call_result_or_error.release_value();
-
-            auto number_or_error = call_result.to_number(global_object);
-            if (number_or_error.is_error())
-                return;
-            auto number = number_or_error.release_value();
-
+            auto call_result = TRY(vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]));
+            auto number = TRY(call_result.to_number(global_object));
             if (number.is_nan())
                 comparison_result = 0;
             else
@@ -946,15 +934,9 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
             // the Abstract Relational Comparison in line once iterating over code points, rather
             // than calling it twice after creating two primitive strings.
 
-            auto x_string_or_error = x.to_primitive_string(global_object);
-            if (x_string_or_error.is_error())
-                return;
-            auto x_string = x_string_or_error.release_value();
+            auto x_string = TRY(x.to_primitive_string(global_object));
 
-            auto y_string_or_error = y.to_primitive_string(global_object);
-            if (y_string_or_error.is_error())
-                return;
-            auto y_string = y_string_or_error.release_value();
+            auto y_string = TRY(y.to_primitive_string(global_object));
 
             auto x_string_value = Value(x_string);
             auto y_string_value = Value(y_string);
@@ -993,6 +975,8 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject
         arr_to_sort.append(right[right_index]);
         right_index++;
     }
+
+    return {};
 }
 
 // 23.1.3.27 Array.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-array.prototype.sort
@@ -1023,9 +1007,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::sort)
     // to be stable. FIXME: when initially scanning through the array, maintain a flag
     // for if an unstable sort would be indistinguishable from a stable sort (such as just
     // just strings or numbers), and in that case use quick sort instead for better performance.
-    array_merge_sort(vm, global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(array_merge_sort(vm, global_object, callback.is_undefined() ? nullptr : &callback.as_function(), items));
 
     for (size_t j = 0; j < items.size(); ++j)
         TRY_OR_DISCARD(object->set(j, items[j], Object::ShouldThrowExceptions::Yes));
