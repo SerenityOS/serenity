@@ -102,6 +102,10 @@ if [ -f mnt/bin/utmpupdate ]; then
     chown 0:$utmp_gid mnt/bin/utmpupdate
     chmod 2755 mnt/bin/utmpupdate
 fi
+if [ -f mnt/usr/Tests/Kernel/TestMemoryDeviceMmap ]; then
+    chown 0:0 mnt/usr/Tests/Kernel/TestMemoryDeviceMmap
+    chmod 4755 mnt/usr/Tests/Kernel/TestMemoryDeviceMmap
+fi
 
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
