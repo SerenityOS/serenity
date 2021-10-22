@@ -136,6 +136,7 @@ private:
     String computed_title() const;
 
     Gfx::IntRect constrained_render_rect_to_screen(const Gfx::IntRect&) const;
+    Gfx::IntRect leftmost_titlebar_button_rect() const;
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;

@@ -245,8 +245,7 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 void WindowFrame::paint_tool_window_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_tool_window_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), palette, leftmost_button_rect);
+    Gfx::WindowTheme::current().paint_tool_window_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), palette, leftmost_titlebar_button_rect());
 }
 
 void WindowFrame::paint_menubar(Gfx::Painter& painter)
@@ -281,8 +280,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_button_rect, menu_row_count(), m_window.is_modified());
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_titlebar_button_rect(), menu_row_count(), m_window.is_modified());
 
     if (m_window.menubar().has_menus() && m_window.should_show_menubar())
         paint_menubar(painter);
@@ -527,6 +525,16 @@ Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(const Gfx::IntRect& 
     if (m_window.is_maximized() || m_window.tiled() != WindowTileType::None)
         return render_rect.intersected(Screen::closest_to_rect(rect()).rect());
     return render_rect;
+}
+
+Gfx::IntRect WindowFrame::leftmost_titlebar_button_rect() const
+{
+    if (!m_buttons.is_empty())
+        return m_buttons.last().relative_rect();
+
+    auto rect = titlebar_rect();
+    rect.translate_by(rect.width(), 0);
+    return rect;
 }
 
 Gfx::IntRect WindowFrame::render_rect() const
