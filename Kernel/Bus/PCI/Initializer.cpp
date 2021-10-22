@@ -19,8 +19,9 @@ namespace PCI {
 
 static bool test_pci_io();
 
-UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type(PCIAccessLevel boot_determined)
+UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type()
 {
+    auto boot_determined = kernel_command_line().pci_access_level();
     if (!ACPI::is_enabled() || !ACPI::Parser::the()->find_table("MCFG").has_value())
         return PCIAccessLevel::IOAddressing;
 
@@ -35,9 +36,7 @@ UNMAP_AFTER_INIT static PCIAccessLevel detect_optimal_access_type(PCIAccessLevel
 
 UNMAP_AFTER_INIT void initialize()
 {
-    auto boot_determined = kernel_command_line().pci_access_level();
-
-    switch (detect_optimal_access_type(boot_determined)) {
+    switch (detect_optimal_access_type()) {
     case PCIAccessLevel::MemoryAddressing: {
         auto mcfg = ACPI::Parser::the()->find_table("MCFG");
         VERIFY(mcfg.has_value());
