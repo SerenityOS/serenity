@@ -11,6 +11,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 
@@ -38,6 +39,21 @@ KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringVie
         all_custodies.prepend(*custody);
         return custody;
     });
+}
+
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<RootCustody>> RootCustody::try_create(Badge<VirtualFileSystem>, Inode& root_inode)
+{
+    return all_custodies().with_exclusive([&](auto& all_custodies) -> KResultOr<NonnullRefPtr<RootCustody>> {
+        auto name_kstring = TRY(KString::try_create(""sv));
+        auto custody = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RootCustody(move(name_kstring), root_inode)));
+        all_custodies.prepend(*custody);
+        return custody;
+    });
+}
+
+UNMAP_AFTER_INIT RootCustody::RootCustody(NonnullOwnPtr<KString> name, Inode& inode)
+    : Custody(nullptr, move(name), inode, 0)
+{
 }
 
 bool Custody::unref() const

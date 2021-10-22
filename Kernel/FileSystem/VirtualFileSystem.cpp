@@ -25,7 +25,6 @@ namespace Kernel {
 
 static Singleton<VirtualFileSystem> s_the;
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
-static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 
 UNMAP_AFTER_INIT void VirtualFileSystem::initialize()
 {
@@ -86,6 +85,11 @@ KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
         return ENODEV;
 
     mount->set_flags(new_flags);
+    // Note: Because the root custody is persistent (we create it only once),
+    // we need to set mount flags on it directly.
+    if (mount_point.root_custody()) {
+        m_root_custody->set_mount_flags({}, new_flags);
+    }
     return KSuccess;
 }
 
@@ -115,7 +119,7 @@ KResult VirtualFileSystem::mount_root(FileSystem& fs)
         return EEXIST;
     }
 
-    Mount mount { fs, nullptr, root_mount_flags };
+    Mount mount { fs, nullptr, 0 };
 
     auto& root_inode = fs.root_inode();
     if (!root_inode.is_directory()) {
@@ -130,7 +134,7 @@ KResult VirtualFileSystem::mount_root(FileSystem& fs)
         mounts.append(move(mount));
     });
 
-    m_root_custody = TRY(Custody::try_create(nullptr, "", *m_root_inode, root_mount_flags));
+    m_root_custody = TRY(RootCustody::try_create({}, *m_root_inode));
     return KSuccess;
 }
 

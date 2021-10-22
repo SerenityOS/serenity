@@ -26,8 +26,9 @@ public:
 
     static KResultOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
-    ~Custody();
+    virtual ~Custody();
 
+    virtual bool root_custody() const { return false; }
     Custody* parent() { return m_parent.ptr(); }
     Custody const* parent() const { return m_parent.ptr(); }
     Inode& inode() { return *m_inode; }
@@ -39,18 +40,33 @@ public:
     int mount_flags() const { return m_mount_flags; }
     bool is_readonly() const;
 
-private:
+protected:
     Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode&, int mount_flags);
 
+private:
     RefPtr<Custody> m_parent;
     NonnullOwnPtr<KString> m_name;
     NonnullRefPtr<Inode> m_inode;
+
+protected:
     int m_mount_flags { 0 };
 
+private:
     mutable IntrusiveListNode<Custody> m_all_custodies_list_node;
 
 public:
     using AllCustodiesList = IntrusiveList<&Custody::m_all_custodies_list_node>;
+};
+
+class RootCustody final : public Custody {
+public:
+    static KResultOr<NonnullRefPtr<RootCustody>> try_create(Badge<VirtualFileSystem>, Inode&);
+
+    virtual bool root_custody() const { return true; }
+    void set_mount_flags(Badge<VirtualFileSystem>, int mount_flags) { m_mount_flags = mount_flags; }
+
+private:
+    RootCustody(NonnullOwnPtr<KString> name, Inode&);
 };
 
 }

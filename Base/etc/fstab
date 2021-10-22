@@ -1,7 +1,8 @@
 # There's no entry for the root filesystem. The actual logic for mounting root 
 # is in the kernel.
 
-# Remount /bin, /root, and /home while adding the appropriate permissions.
+# Remount /, /bin, /root, and /home while adding the appropriate permissions.
+/	/	bind	bind,remount,nodev,ro,nosuid
 /bin	/bin	bind	bind,nodev,ro
 /etc	/etc	bind	bind,nodev,nosuid
 /home	/home	bind	bind,nodev,nosuid

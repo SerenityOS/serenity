@@ -14,6 +14,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <Kernel/API/KResult.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -91,7 +92,7 @@ private:
     Mount* find_mount_for_guest(InodeIdentifier);
 
     RefPtr<Inode> m_root_inode;
-    RefPtr<Custody> m_root_custody;
+    RefPtr<RootCustody> m_root_custody;
 
     MutexProtected<Vector<Mount, 16>> m_mounts;
 };
