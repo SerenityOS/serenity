@@ -342,14 +342,12 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
     if (!arguments.is_empty())
         first_argument = arguments[0];
     // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-    auto new_typed_array = vm.construct(constructor, constructor, move(arguments));
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* new_typed_array = TRY(construct(global_object, constructor, move(arguments)));
 
     // 2. Perform ? ValidateTypedArray(newTypedArray).
-    if (!new_typed_array.is_object() || !new_typed_array.as_object().is_typed_array())
+    if (!new_typed_array->is_typed_array())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
-    auto& typed_array = static_cast<TypedArrayBase&>(new_typed_array.as_object());
+    auto& typed_array = *static_cast<TypedArrayBase*>(new_typed_array);
     TRY(validate_typed_array(global_object, typed_array));
 
     // 3. If argumentList is a List of a single Number, then

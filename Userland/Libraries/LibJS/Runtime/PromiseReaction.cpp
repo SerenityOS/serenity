@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -45,15 +46,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
 
     MarkedValueList arguments(vm.heap());
     arguments.append(executor);
-    auto promise = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
-    if (vm.exception())
-        return {};
-
-    // I'm not sure if we could VERIFY(promise.is_object()) instead - the spec doesn't have this check...
-    if (!promise.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, promise.to_string_without_side_effects());
-        return {};
-    }
+    auto* promise = TRY_OR_DISCARD(construct(global_object, constructor.as_function(), move(arguments)));
 
     if (!promise_capability_functions.resolve.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, promise_capability_functions.resolve.to_string_without_side_effects());
@@ -65,7 +58,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
     }
 
     return {
-        &promise.as_object(),
+        promise,
         &promise_capability_functions.resolve.as_function(),
         &promise_capability_functions.reject.as_function(),
     };

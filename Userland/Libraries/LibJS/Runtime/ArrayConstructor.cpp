@@ -104,17 +104,13 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
     auto items = vm.argument(0);
     auto using_iterator = TRY_OR_DISCARD(items.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
-        Value array;
-        if (constructor.is_constructor()) {
-            array = vm.construct(constructor.as_function(), constructor.as_function(), {});
-            if (vm.exception())
-                return {};
-        } else {
+        Object* array;
+        if (constructor.is_constructor())
+            array = TRY_OR_DISCARD(JS::construct(global_object, constructor.as_function(), {}));
+        else
             array = MUST(Array::create(global_object, 0));
-        }
 
         auto iterator = TRY_OR_DISCARD(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
-        auto& array_object = array.as_object();
 
         size_t k = 0;
         while (true) {
@@ -125,7 +121,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
 
             auto* next = TRY_OR_DISCARD(iterator_step(global_object, *iterator));
             if (!next) {
-                TRY_OR_DISCARD(array_object.set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
+                TRY_OR_DISCARD(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
                 return array;
             }
 
@@ -141,7 +137,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
                 mapped_value = next_value;
             }
 
-            auto result_or_error = array_object.create_data_property_or_throw(k, mapped_value);
+            auto result_or_error = array->create_data_property_or_throw(k, mapped_value);
             if (result_or_error.is_error())
                 return TRY_OR_DISCARD(iterator_close(*iterator, result_or_error.release_error()));
 
@@ -153,18 +149,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *array_like));
 
-    Value array;
+    Object* array;
     if (constructor.is_constructor()) {
         MarkedValueList arguments(vm.heap());
         arguments.empend(length);
-        array = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
-        if (vm.exception())
-            return {};
+        array = TRY_OR_DISCARD(JS::construct(global_object, constructor.as_function(), move(arguments)));
     } else {
         array = TRY_OR_DISCARD(Array::create(global_object, length));
     }
-
-    auto& array_object = array.as_object();
 
     for (size_t k = 0; k < length; ++k) {
         auto k_value = TRY_OR_DISCARD(array_like->get(k));
@@ -173,10 +165,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
             mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
-        TRY_OR_DISCARD(array_object.create_data_property_or_throw(k, mapped_value));
+        TRY_OR_DISCARD(array->create_data_property_or_throw(k, mapped_value));
     }
 
-    TRY_OR_DISCARD(array_object.set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
+    TRY_OR_DISCARD(array->set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
 
     return array;
 }
@@ -192,20 +184,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::is_array)
 JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto this_value = vm.this_value(global_object);
-    Value array;
+    Object* array;
     if (this_value.is_constructor()) {
         MarkedValueList arguments(vm.heap());
         arguments.empend(vm.argument_count());
-        array = vm.construct(this_value.as_function(), this_value.as_function(), move(arguments));
-        if (vm.exception())
-            return {};
+        array = TRY_OR_DISCARD(JS::construct(global_object, this_value.as_function(), move(arguments)));
     } else {
         array = TRY_OR_DISCARD(Array::create(global_object, vm.argument_count()));
     }
-    auto& array_object = array.as_object();
     for (size_t k = 0; k < vm.argument_count(); ++k)
-        TRY_OR_DISCARD(array_object.create_data_property_or_throw(k, vm.argument(k)));
-    TRY_OR_DISCARD(array_object.set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));
+        TRY_OR_DISCARD(array->create_data_property_or_throw(k, vm.argument(k)));
+    TRY_OR_DISCARD(array->set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));
     return array;
 }
 
