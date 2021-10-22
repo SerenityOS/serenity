@@ -34,12 +34,12 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.array_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.from, from, 1, attr);
-    define_old_native_function(vm.names.isArray, is_array, 1, attr);
-    define_old_native_function(vm.names.of, of, 0, attr);
+    define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.isArray, is_array, 1, attr);
+    define_native_function(vm.names.of, of, 0, attr);
 
     // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
-    define_old_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -85,53 +85,51 @@ ThrowCompletionOr<Object*> ArrayConstructor::construct(FunctionObject& new_targe
 }
 
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
     auto constructor = vm.this_value(global_object);
 
     FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
         auto callback = vm.argument(1);
-        if (!callback.is_function()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
-            return {};
-        }
+        if (!callback.is_function())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
         map_fn = &callback.as_function();
     }
 
     auto this_arg = vm.argument(2);
 
     auto items = vm.argument(0);
-    auto using_iterator = TRY_OR_DISCARD(items.get_method(global_object, *vm.well_known_symbol_iterator()));
+    auto using_iterator = TRY(items.get_method(global_object, *vm.well_known_symbol_iterator()));
     if (using_iterator) {
         Object* array;
         if (constructor.is_constructor())
-            array = TRY_OR_DISCARD(JS::construct(global_object, constructor.as_function(), {}));
+            array = TRY(JS::construct(global_object, constructor.as_function(), {}));
         else
             array = MUST(Array::create(global_object, 0));
 
-        auto iterator = TRY_OR_DISCARD(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
+        auto iterator = TRY(get_iterator(global_object, items, IteratorHint::Sync, using_iterator));
 
         size_t k = 0;
         while (true) {
             if (k >= MAX_ARRAY_LIKE_INDEX) {
                 auto error = vm.throw_completion<TypeError>(global_object, ErrorType::ArrayMaxSize);
-                return TRY_OR_DISCARD(iterator_close(*iterator, move(error)));
+                return TRY(iterator_close(*iterator, move(error)));
             }
 
-            auto* next = TRY_OR_DISCARD(iterator_step(global_object, *iterator));
+            auto* next = TRY(iterator_step(global_object, *iterator));
             if (!next) {
-                TRY_OR_DISCARD(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
+                TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
                 return array;
             }
 
-            auto next_value = TRY_OR_DISCARD(iterator_value(global_object, *next));
+            auto next_value = TRY(iterator_value(global_object, *next));
 
             Value mapped_value;
             if (map_fn) {
                 auto mapped_value_or_error = vm.call(*map_fn, this_arg, next_value, Value(k));
                 if (mapped_value_or_error.is_error())
-                    return TRY_OR_DISCARD(iterator_close(*iterator, mapped_value_or_error.release_error()));
+                    return TRY(iterator_close(*iterator, mapped_value_or_error.release_error()));
                 mapped_value = mapped_value_or_error.release_value();
             } else {
                 mapped_value = next_value;
@@ -139,7 +137,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
 
             auto result_or_error = array->create_data_property_or_throw(k, mapped_value);
             if (result_or_error.is_error())
-                return TRY_OR_DISCARD(iterator_close(*iterator, result_or_error.release_error()));
+                return TRY(iterator_close(*iterator, result_or_error.release_error()));
 
             ++k;
         }
@@ -147,59 +145,59 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array_like = MUST(items.to_object(global_object));
 
-    auto length = TRY_OR_DISCARD(length_of_array_like(global_object, *array_like));
+    auto length = TRY(length_of_array_like(global_object, *array_like));
 
     Object* array;
     if (constructor.is_constructor()) {
         MarkedValueList arguments(vm.heap());
         arguments.empend(length);
-        array = TRY_OR_DISCARD(JS::construct(global_object, constructor.as_function(), move(arguments)));
+        array = TRY(JS::construct(global_object, constructor.as_function(), move(arguments)));
     } else {
-        array = TRY_OR_DISCARD(Array::create(global_object, length));
+        array = TRY(Array::create(global_object, length));
     }
 
     for (size_t k = 0; k < length; ++k) {
-        auto k_value = TRY_OR_DISCARD(array_like->get(k));
+        auto k_value = TRY(array_like->get(k));
         Value mapped_value;
         if (map_fn)
-            mapped_value = TRY_OR_DISCARD(vm.call(*map_fn, this_arg, k_value, Value(k)));
+            mapped_value = TRY(vm.call(*map_fn, this_arg, k_value, Value(k)));
         else
             mapped_value = k_value;
-        TRY_OR_DISCARD(array->create_data_property_or_throw(k, mapped_value));
+        TRY(array->create_data_property_or_throw(k, mapped_value));
     }
 
-    TRY_OR_DISCARD(array->set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
+    TRY(array->set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
 
     return array;
 }
 
 // 23.1.2.2 Array.isArray ( arg ), https://tc39.es/ecma262/#sec-array.isarray
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::is_array)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
-    return Value(TRY_OR_DISCARD(value.is_array(global_object)));
+    return Value(TRY(value.is_array(global_object)));
 }
 
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::of)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto this_value = vm.this_value(global_object);
     Object* array;
     if (this_value.is_constructor()) {
         MarkedValueList arguments(vm.heap());
         arguments.empend(vm.argument_count());
-        array = TRY_OR_DISCARD(JS::construct(global_object, this_value.as_function(), move(arguments)));
+        array = TRY(JS::construct(global_object, this_value.as_function(), move(arguments)));
     } else {
-        array = TRY_OR_DISCARD(Array::create(global_object, vm.argument_count()));
+        array = TRY(Array::create(global_object, vm.argument_count()));
     }
     for (size_t k = 0; k < vm.argument_count(); ++k)
-        TRY_OR_DISCARD(array->create_data_property_or_throw(k, vm.argument(k)));
-    TRY_OR_DISCARD(array->set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));
+        TRY(array->create_data_property_or_throw(k, vm.argument(k)));
+    TRY(array->set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes));
     return array;
 }
 
 // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }
