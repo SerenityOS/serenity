@@ -29,7 +29,7 @@ void NumberFormatConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.intl_number_format_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+    define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
@@ -65,7 +65,7 @@ ThrowCompletionOr<Object*> NumberFormatConstructor::construct(FunctionObject& ne
 }
 
 // 15.3.2 Intl.NumberFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.numberformat.supportedlocalesof
-JS_DEFINE_OLD_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
+JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
@@ -73,10 +73,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
     // 1. Let availableLocales be %NumberFormat%.[[AvailableLocales]].
 
     // 2. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY_OR_DISCARD(canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales));
 
     // 3. Return ? SupportedLocales(availableLocales, requestedLocales, options).
-    return TRY_OR_DISCARD(supported_locales(global_object, requested_locales, options));
+    return TRY(supported_locales(global_object, requested_locales, options));
 }
 
 }
