@@ -6,6 +6,7 @@
  */
 
 #include "Service.h"
+#include "SystemServer.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
@@ -13,7 +14,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -482,9 +482,9 @@ int main(int argc, char** argv)
         determine_system_mode();
     }
 
-    Core::EventLoop event_loop;
+    SystemServer::initialize(user ? SystemServer::Mode::User : SystemServer::Mode::System);
 
-    event_loop.register_signal(SIGCHLD, sigchld_handler);
+    SystemServer::the().register_signal(SIGCHLD, sigchld_handler);
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
@@ -492,7 +492,7 @@ int main(int argc, char** argv)
 
     auto load_services_from_config_file = [&](NonnullRefPtr<Core::ConfigFile> const& config) {
         for (auto name : config->groups()) {
-            auto service = Service::construct(*config, name);
+            auto service = Service::construct(SystemServer::the(), *config, name);
             if (service->is_enabled())
                 services.append(service);
         }
@@ -509,5 +509,5 @@ int main(int argc, char** argv)
     for (auto& service : services)
         service.activate();
 
-    return event_loop.exec();
+    return SystemServer::the().exec();
 }

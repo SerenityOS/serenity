@@ -7,6 +7,7 @@ serenity_component(
 set(SOURCES
     main.cpp
     Service.cpp
+    SystemServer.cpp
 )
 
 serenity_bin(SystemServer)

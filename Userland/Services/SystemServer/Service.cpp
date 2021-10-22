@@ -5,6 +5,7 @@
  */
 
 #include "Service.h"
+#include "SystemServer.h"
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
@@ -280,8 +281,9 @@ void Service::did_exit(int exit_code)
     activate();
 }
 
-Service::Service(const Core::ConfigFile& config, StringView name)
+Service::Service(SystemServer const& server, const Core::ConfigFile& config, StringView name)
     : Core::Object(nullptr)
+    , m_server(server)
 {
     VERIFY(config.has_group(name));
 

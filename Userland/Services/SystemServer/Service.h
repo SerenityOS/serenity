@@ -13,6 +13,8 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 
+class SystemServer;
+
 class Service final : public Core::Object {
     C_OBJECT(Service)
 
@@ -27,7 +29,7 @@ public:
     void save_to(JsonObject&);
 
 private:
-    Service(const Core::ConfigFile&, StringView name);
+    Service(SystemServer const&, Core::ConfigFile const&, StringView name);
 
     void spawn(int socket_fd = -1);
 
@@ -82,6 +84,8 @@ private:
     // How many times we have tried to restart this service, only counting those
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
+
+    SystemServer const& m_server;
 
     void setup_socket(SocketDescriptor&);
     void setup_sockets();
