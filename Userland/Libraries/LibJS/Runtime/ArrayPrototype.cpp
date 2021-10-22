@@ -103,20 +103,20 @@ ArrayPrototype::~ArrayPrototype()
 }
 
 // 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate
-static Object* array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
+static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
 {
     auto& vm = global_object.vm();
 
-    auto is_array = TRY_OR_DISCARD(Value(&original_array).is_array(global_object));
+    auto is_array = TRY(Value(&original_array).is_array(global_object));
 
     if (!is_array)
-        return TRY_OR_DISCARD(Array::create(global_object, length));
+        return TRY(Array::create(global_object, length));
 
-    auto constructor = TRY_OR_DISCARD(original_array.get(vm.names.constructor));
+    auto constructor = TRY(original_array.get(vm.names.constructor));
     if (constructor.is_constructor()) {
         auto& constructor_function = constructor.as_function();
         auto* this_realm = vm.current_realm();
-        auto* constructor_realm = TRY_OR_DISCARD(get_function_realm(global_object, constructor_function));
+        auto* constructor_realm = TRY(get_function_realm(global_object, constructor_function));
         if (constructor_realm != this_realm) {
             if (&constructor_function == constructor_realm->global_object().array_constructor())
                 constructor = js_undefined();
@@ -124,22 +124,20 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
     }
 
     if (constructor.is_object()) {
-        constructor = TRY_OR_DISCARD(constructor.as_object().get(*vm.well_known_symbol_species()));
+        constructor = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
         if (constructor.is_null())
             constructor = js_undefined();
     }
 
     if (constructor.is_undefined())
-        return TRY_OR_DISCARD(Array::create(global_object, length));
+        return TRY(Array::create(global_object, length));
 
-    if (!constructor.is_constructor()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
-        return {};
-    }
+    if (!constructor.is_constructor())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(length));
-    return TRY_OR_DISCARD(construct(global_object, constructor.as_function(), move(arguments)));
+    return TRY(construct(global_object, constructor.as_function(), move(arguments)));
 }
 
 // 23.1.3.7 Array.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.filter
@@ -161,9 +159,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::filter)
     }
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
-    auto* array = array_species_create(global_object, *object, 0);
-    if (vm.exception())
-        return {};
+    auto* array = TRY_OR_DISCARD(array_species_create(global_object, *object, 0));
 
     // 5. Let k be 0.
     size_t k = 0;
@@ -268,9 +264,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::map)
     }
 
     // 4. Let A be ? ArraySpeciesCreate(O, len).
-    auto* array = array_species_create(global_object, *object, length);
-    if (vm.exception())
-        return {};
+    auto* array = TRY_OR_DISCARD(array_species_create(global_object, *object, length));
 
     // 5. Let k be 0.
     // 6. Repeat, while k < len,
@@ -472,9 +466,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
     auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto* new_array = array_species_create(global_object, *this_object, 0);
-    if (vm.exception())
-        return {};
+    auto* new_array = TRY_OR_DISCARD(array_species_create(global_object, *this_object, 0));
 
     size_t n = 0;
 
@@ -587,9 +579,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::slice)
 
     auto count = max(final - actual_start, 0.0);
 
-    auto* new_array = array_species_create(global_object, *this_object, count);
-    if (vm.exception())
-        return {};
+    auto* new_array = TRY_OR_DISCARD(array_species_create(global_object, *this_object, count));
 
     size_t index = 0;
     size_t k = actual_start;
@@ -1444,9 +1434,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::splice)
         return {};
     }
 
-    auto* removed_elements = array_species_create(global_object, *this_object, actual_delete_count);
-    if (vm.exception())
-        return {};
+    auto* removed_elements = TRY_OR_DISCARD(array_species_create(global_object, *this_object, actual_delete_count));
 
     for (u64 i = 0; i < actual_delete_count; ++i) {
         auto from = actual_start + i;
@@ -1621,9 +1609,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat)
         depth = max(depth_num, 0.0);
     }
 
-    auto* new_array = array_species_create(global_object, *this_object, 0);
-    if (vm.exception())
-        return {};
+    auto* new_array = TRY_OR_DISCARD(array_species_create(global_object, *this_object, 0));
 
     flatten_into_array(global_object, *new_array, *this_object, length, 0, depth);
     if (vm.exception())
@@ -1650,9 +1636,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayPrototype::flat_map)
     }
 
     // 4. Let A be ? ArraySpeciesCreate(O, 0).
-    auto* array = array_species_create(global_object, *object, 0);
-    if (vm.exception())
-        return {};
+    auto* array = TRY_OR_DISCARD(array_species_create(global_object, *object, 0));
 
     // 5. Perform ? FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg).
     flatten_into_array(global_object, *array, *object, source_length, 0, 1, &mapper_function.as_function(), this_arg);
