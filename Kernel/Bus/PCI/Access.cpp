@@ -42,14 +42,14 @@ UNMAP_AFTER_INIT bool Access::initialize_for_memory_access(PhysicalAddress mcfg_
 
     InterruptDisabler disabler;
     auto* access = new Access(Access::AccessType::Memory);
-    if (!access->scan_pci_domains(mcfg_table))
+    if (!access->search_pci_domains_from_acpi_mcfg_table(mcfg_table))
         return false;
     access->rescan_hardware();
     dbgln_if(PCI_DEBUG, "PCI: MMIO access initialised.");
     return true;
 }
 
-UNMAP_AFTER_INIT bool Access::scan_pci_domains(PhysicalAddress mcfg_table)
+UNMAP_AFTER_INIT bool Access::search_pci_domains_from_acpi_mcfg_table(PhysicalAddress mcfg_table)
 {
     auto checkup_region_or_error = MM.allocate_kernel_region(mcfg_table.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Memory::Region::Access::ReadWrite);
     if (checkup_region_or_error.is_error())
