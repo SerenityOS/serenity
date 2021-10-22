@@ -1753,6 +1753,7 @@ void WindowManager::set_active_window(Window* new_active_window, bool make_input
     if (new_active_window) {
         window_stack.set_active_window(new_active_window);
         notify_new_active_window(*new_active_window);
+        reevaluate_hovered_window(new_active_window);
     }
 
     // Window shapes may have changed (e.g. shadows for inactive/active windows)
