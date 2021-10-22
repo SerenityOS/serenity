@@ -218,6 +218,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     auto bgimage = specified_style.property(CSS::PropertyID::BackgroundImage);
     if (bgimage.has_value() && bgimage.value()->is_image()) {
         m_background_image = bgimage.value()->as_image();
+        m_background_image->load_bitmap(document());
     }
 
     computed_values.set_box_sizing(specified_style.box_sizing());
