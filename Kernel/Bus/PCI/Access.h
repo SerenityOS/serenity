@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
 
@@ -82,7 +83,7 @@ private:
 
     // General Data-members
     mutable Mutex m_access_lock;
-    mutable Mutex m_scan_lock;
+    mutable Spinlock m_scan_lock;
     Bitmap m_enumerated_buses;
     AccessType m_access_type;
     Vector<DeviceIdentifier> m_device_identifiers;
