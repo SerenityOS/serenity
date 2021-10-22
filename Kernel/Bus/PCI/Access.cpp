@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_memory_access(PhysicalAddress mcfg_
     auto* access = new Access(Access::AccessType::Memory);
     if (!access->search_pci_domains_from_acpi_mcfg_table(mcfg_table))
         return false;
-    access->rescan_hardware();
+    access->rescan_hardware_with_memory_addressing();
     dbgln_if(PCI_DEBUG, "PCI: MMIO access initialised.");
     return true;
 }
@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_io_access()
         return false;
     }
     auto* access = new Access(Access::AccessType::IO);
-    access->rescan_hardware();
+    access->rescan_hardware_with_io_addressing();
     dbgln_if(PCI_DEBUG, "PCI: IO access initialised.");
     return true;
 }
@@ -305,37 +305,11 @@ u32 Access::read32_field(Address address, u32 field)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT void Access::rescan_hardware()
+UNMAP_AFTER_INIT void Access::rescan_hardware_with_memory_addressing()
 {
     MutexLocker locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
-    if (m_access_type == AccessType::IO) {
-        dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
-
-        // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
-        // bridge, recursively scan it too.
-        m_enumerated_buses.set(0, true);
-        enumerate_bus(-1, 0, true);
-
-        // Handle Multiple PCI host bridges on slot 0, device 0.
-        // If we happen to miss some PCI buses because they are not reachable through
-        // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
-        if ((read8_field(Address(), PCI::RegisterOffset::HEADER_TYPE) & 0x80) != 0) {
-            for (int bus = 1; bus < 256; ++bus) {
-                if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
-                    continue;
-                if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::CLASS) != 0x6)
-                    continue;
-                if (m_enumerated_buses.get(bus))
-                    continue;
-                enumerate_bus(-1, bus, false);
-                m_enumerated_buses.set(bus, true);
-            }
-        }
-        return;
-    }
     VERIFY(m_access_type == AccessType::Memory);
-
     for (u32 domain = 0; domain < m_domains.size(); domain++) {
         dbgln_if(PCI_DEBUG, "PCI: Scan memory mapped domain {}", domain);
         // Single PCI host controller.
@@ -350,6 +324,49 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
                 break;
             enumerate_bus(-1, function, false);
         }
+    }
+}
+
+UNMAP_AFTER_INIT void Access::rescan_hardware_with_io_addressing()
+{
+    MutexLocker locker(m_scan_lock);
+    VERIFY(m_device_identifiers.is_empty());
+    VERIFY(m_access_type == AccessType::IO);
+    dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
+
+    // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
+    // bridge, recursively scan it too.
+    m_enumerated_buses.set(0, true);
+    enumerate_bus(-1, 0, true);
+
+    // Handle Multiple PCI host bridges on slot 0, device 0.
+    // If we happen to miss some PCI buses because they are not reachable through
+    // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
+    if ((read8_field(Address(), PCI::RegisterOffset::HEADER_TYPE) & 0x80) != 0) {
+        for (int bus = 1; bus < 256; ++bus) {
+            if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::VENDOR_ID) == PCI::none_value)
+                continue;
+            if (read16_field(Address(0, 0, 0, bus), PCI::RegisterOffset::CLASS) != 0x6)
+                continue;
+            if (m_enumerated_buses.get(bus))
+                continue;
+            enumerate_bus(-1, bus, false);
+            m_enumerated_buses.set(bus, true);
+        }
+    }
+}
+
+UNMAP_AFTER_INIT void Access::rescan_hardware()
+{
+    switch (m_access_type) {
+    case AccessType::IO:
+        rescan_hardware_with_io_addressing();
+        break;
+    case AccessType::Memory:
+        rescan_hardware_with_memory_addressing();
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
