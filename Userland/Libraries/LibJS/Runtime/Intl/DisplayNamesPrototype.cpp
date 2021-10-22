@@ -28,25 +28,25 @@ void DisplayNamesPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DisplayNames"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.of, of, 1, attr);
-    define_old_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_native_function(vm.names.of, of, 1, attr);
+    define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
 // 12.4.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of
-JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesPrototype::of)
+JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 {
     auto code = vm.argument(0);
 
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* display_names = TRY(typed_this_object(global_object));
 
     // 3. Let code be ? ToString(code).
-    auto code_string = TRY_OR_DISCARD(code.to_string(global_object));
+    auto code_string = TRY(code.to_string(global_object));
     code = js_string(vm, move(code_string));
 
     // 4. Let code be ? CanonicalCodeForDisplayNames(displayNames.[[Type]], code).
-    code = TRY_OR_DISCARD(canonical_code_for_display_names(global_object, display_names->type(), code.as_string().string()));
+    code = TRY(canonical_code_for_display_names(global_object, display_names->type(), code.as_string().string()));
 
     // 5. Let fields be displayNames.[[Fields]].
     // 6. If fields has a field [[<code>]], return fields.[[<code>]].
@@ -81,11 +81,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 }
 
 // 12.4.4 Intl.DisplayNames.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.resolvedOptions
-JS_DEFINE_OLD_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
+JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 {
     // 1. Let displayNames be this value.
     // 2. Perform ? RequireInternalSlot(displayNames, [[InitializedDisplayNames]]).
-    auto* display_names = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* display_names = TRY(typed_this_object(global_object));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
