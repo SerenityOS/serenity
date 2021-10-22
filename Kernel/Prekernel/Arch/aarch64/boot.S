@@ -24,9 +24,12 @@ start:
   // Clear BSS.
   ldr x14, =start_of_bss
   ldr x15, =size_of_bss_divided_by_8
+  tst x15, x15
+  beq Linit
 Lbss_clear_loop:
   str xzr, [x14], #8
   subs x15, x15, #1
   bne Lbss_clear_loop
 
+Linit:
   b init
