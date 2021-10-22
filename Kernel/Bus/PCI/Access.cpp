@@ -8,7 +8,6 @@
 #include <AK/HashTable.h>
 #include <Kernel/API/KResult.h>
 #include <Kernel/Arch/x86/IO.h>
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
@@ -40,7 +39,6 @@ UNMAP_AFTER_INIT bool Access::initialize_for_memory_access(PhysicalAddress mcfg_
     if (Access::is_initialized())
         return false;
 
-    InterruptDisabler disabler;
     auto* access = new Access(Access::AccessType::Memory);
     if (!access->search_pci_domains_from_acpi_mcfg_table(mcfg_table))
         return false;
@@ -307,7 +305,8 @@ u32 Access::read32_field(Address address, u32 field)
 
 UNMAP_AFTER_INIT void Access::rescan_hardware_with_memory_addressing()
 {
-    MutexLocker locker(m_scan_lock);
+    MutexLocker locker(m_access_lock);
+    SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     VERIFY(!m_domains.is_empty());
     VERIFY(m_access_type == AccessType::Memory);
@@ -330,7 +329,8 @@ UNMAP_AFTER_INIT void Access::rescan_hardware_with_memory_addressing()
 
 UNMAP_AFTER_INIT void Access::rescan_hardware_with_io_addressing()
 {
-    MutexLocker locker(m_scan_lock);
+    MutexLocker locker(m_access_lock);
+    SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
     VERIFY(m_access_type == AccessType::IO);
     dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
@@ -456,7 +456,7 @@ UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, bool recursive)
 
 void Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) const
 {
-    MutexLocker locker(m_scan_lock);
+    MutexLocker locker(m_access_lock);
     VERIFY(!m_device_identifiers.is_empty());
     for (auto& device_identifier : m_device_identifiers) {
         callback(device_identifier);
