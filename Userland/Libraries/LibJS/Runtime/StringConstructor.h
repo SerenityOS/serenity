@@ -24,9 +24,9 @@ public:
 private:
     virtual bool has_constructor() const override { return true; }
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(raw);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_char_code);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(from_code_point);
+    JS_DECLARE_NATIVE_FUNCTION(raw);
+    JS_DECLARE_NATIVE_FUNCTION(from_char_code);
+    JS_DECLARE_NATIVE_FUNCTION(from_code_point);
 };
 
 }
