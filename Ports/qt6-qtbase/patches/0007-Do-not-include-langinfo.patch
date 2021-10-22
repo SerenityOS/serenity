@@ -11,17 +11,15 @@ diff --git a/src/corelib/kernel/qcoreapplication.cpp b/src/corelib/kernel/qcorea
 index 23a39916..e04875b4 100644
 --- a/src/corelib/kernel/qcoreapplication.cpp
 +++ b/src/corelib/kernel/qcoreapplication.cpp
-@@ -103,7 +103,9 @@
- 
+@@ -106,7 +106,7 @@
+
  #ifdef Q_OS_UNIX
  #  include <locale.h>
--#  include <langinfo.h>
-+# ifndef Q_OS_SERENITY
-+#   include <langinfo.h>
-+# endif
+-#  ifndef Q_OS_INTEGRITY
++#  if !defined(Q_OS_INTEGRITY) && !defined(Q_OS_SERENITY)
+ #    include <langinfo.h>
+ #  endif
  #  include <unistd.h>
- #  include <sys/types.h>
- #endif
 -- 
 2.31.1
 

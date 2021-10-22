@@ -1,0 +1,141 @@
+From b095dea1c29ee189ffa3be1d724f6cef7db74242 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Sat, 23 Oct 2021 00:24:40 +0200
+Subject: [PATCH] Fix build with Qt 6.2.0
+
+---
+ configure.cmake                                          | 1 +
+ examples/gui/analogclock/CMakeLists.txt                  | 1 +
+ mkspecs/serenity-g++/qplatformdefs.h                     | 4 +++-
+ src/corelib/global/qglobal.h                             | 1 +
+ src/platformsupport/devicediscovery/CMakeLists.txt       | 1 +
+ src/platformsupport/devicediscovery/qdevicediscovery_p.h | 2 ++
+ src/plugins/platforms/serenity/qserenityscreen.h         | 2 ++
+ src/plugins/platforms/serenity/qserenitystring.h         | 2 ++
+ src/plugins/platforms/serenity/qserenitywindow.h         | 2 ++
+ 9 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/configure.cmake b/configure.cmake
+index 5705e376..41ccb236 100644
+--- a/configure.cmake
++++ b/configure.cmake
+@@ -572,6 +572,7 @@ qt_feature("c++20" PUBLIC
+ qt_feature_config("c++20" QMAKE_PUBLIC_QT_CONFIG)
+ qt_feature("c++2a" PUBLIC
+     LABEL "C++20"
++    AUTODETECT ON
+     CONDITION QT_FEATURE_cxx20
+ )
+ qt_feature_config("c++2a" QMAKE_PUBLIC_QT_CONFIG)
+diff --git a/examples/gui/analogclock/CMakeLists.txt b/examples/gui/analogclock/CMakeLists.txt
+index 20bedf5a..083ca504 100644
+--- a/examples/gui/analogclock/CMakeLists.txt
++++ b/examples/gui/analogclock/CMakeLists.txt
+@@ -3,6 +3,7 @@
+ cmake_minimum_required(VERSION 3.16)
+ project(analogclock LANGUAGES CXX)
+ 
++add_definitions(-D_GLIBCXX_HAVE_MBSTATE_T)
+ 
+ set(CMAKE_INCLUDE_CURRENT_DIR ON)
+ 
+diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
+index 082d8a0c..e674a2f1 100644
+--- a/mkspecs/serenity-g++/qplatformdefs.h
++++ b/mkspecs/serenity-g++/qplatformdefs.h
+@@ -42,6 +42,8 @@
+ 
+ // Get Qt defines/settings
+ 
++#define _GLIBCXX_HAVE_MBSTATE_T 1
++
+ #include "qglobal.h"
+ 
+ // Set any POSIX/XOPEN defines at the top of this file to turn on specific APIs
+@@ -84,6 +86,6 @@
+ #define CODESET 0
+ 
+ // TODO used in qprocess_unix.cpp
+-#define FIONREAD      0x541B
++// #define FIONREAD      0x541B
+ 
+ #endif // QPLATFORMDEFS_H
+diff --git a/src/corelib/global/qglobal.h b/src/corelib/global/qglobal.h
+index de4b9817..a2c288dc 100644
+--- a/src/corelib/global/qglobal.h
++++ b/src/corelib/global/qglobal.h
+@@ -134,6 +134,7 @@
+ 
+ #ifdef __cplusplus
+ 
++#define _GLIBCXX_HAVE_MBSTATE_T 1
+ #include <algorithm>
+ 
+ #if !defined(QT_NAMESPACE) || defined(Q_MOC_RUN) /* user namespace */
+diff --git a/src/platformsupport/devicediscovery/CMakeLists.txt b/src/platformsupport/devicediscovery/CMakeLists.txt
+index e9b87d81..f67a6a54 100644
+--- a/src/platformsupport/devicediscovery/CMakeLists.txt
++++ b/src/platformsupport/devicediscovery/CMakeLists.txt
+@@ -12,6 +12,7 @@ qt_internal_add_module(DeviceDiscoverySupportPrivate
+         qdevicediscovery_p.h
+     DEFINES
+         QT_NO_CAST_FROM_ASCII
++        _GLIBCXX_HAVE_MBSTATE_T
+     PUBLIC_LIBRARIES
+         Qt::CorePrivate
+ )
+diff --git a/src/platformsupport/devicediscovery/qdevicediscovery_p.h b/src/platformsupport/devicediscovery/qdevicediscovery_p.h
+index f1f50e97..097b9597 100644
+--- a/src/platformsupport/devicediscovery/qdevicediscovery_p.h
++++ b/src/platformsupport/devicediscovery/qdevicediscovery_p.h
+@@ -51,6 +51,8 @@
+ // We mean it.
+ //
+ 
++#define _GLIBCXX_HAVE_MBSTATE_T 1
++
+ #include <QObject>
+ #include <QSocketNotifier>
+ #include <QStringList>
+diff --git a/src/plugins/platforms/serenity/qserenityscreen.h b/src/plugins/platforms/serenity/qserenityscreen.h
+index b0089d9e..39e62aff 100644
+--- a/src/plugins/platforms/serenity/qserenityscreen.h
++++ b/src/plugins/platforms/serenity/qserenityscreen.h
+@@ -40,6 +40,8 @@
+ #ifndef QPLATFORMSCREEN_SERENITY_H
+ #define QPLATFORMSCREEN_SERENITY_H
+ 
++#define AK_DONT_REPLACE_STD
++
+ #include <qpa/qplatformscreen.h>
+ 
+ QT_BEGIN_NAMESPACE
+diff --git a/src/plugins/platforms/serenity/qserenitystring.h b/src/plugins/platforms/serenity/qserenitystring.h
+index b155a523..014dafba 100644
+--- a/src/plugins/platforms/serenity/qserenitystring.h
++++ b/src/plugins/platforms/serenity/qserenitystring.h
+@@ -1,6 +1,8 @@
+ #ifndef QSERENITYSTRING_H
+ #define QSERENITYSTRING_H
+ 
++#define AK_DONT_REPLACE_STD
++
+ #include <AK/String.h>
+ #include <QString>
+ 
+diff --git a/src/plugins/platforms/serenity/qserenitywindow.h b/src/plugins/platforms/serenity/qserenitywindow.h
+index f4c657ab..1bffe964 100644
+--- a/src/plugins/platforms/serenity/qserenitywindow.h
++++ b/src/plugins/platforms/serenity/qserenitywindow.h
+@@ -40,6 +40,8 @@
+ #ifndef QPLATFORMWINDOW_SERENITY_H
+ #define QPLATFORMWINDOW_SERENITY_H
+ 
++#define AK_DONT_REPLACE_STD
++
+ #include <qpa/qplatformwindow.h>
+ 
+ #include <LibCore/EventLoop.h>
+-- 
+2.33.1
+

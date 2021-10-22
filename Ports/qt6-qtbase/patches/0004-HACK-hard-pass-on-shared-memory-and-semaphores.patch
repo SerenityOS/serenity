@@ -33,29 +33,6 @@ index 1c585f5b..a96d8206 100644
  )
  qt_feature_definition("systemsemaphore" "QT_NO_SYSTEMSEMAPHORE" NEGATE VALUE "1")
  qt_feature("xmlstream" PUBLIC
-diff --git a/src/corelib/configure.json b/src/corelib/configure.json
-index 9c8615cf..5b7e68c0 100644
---- a/src/corelib/configure.json
-+++ b/src/corelib/configure.json
-@@ -783,7 +783,7 @@
-             "purpose": "Provides access to a shared memory segment.",
-             "section": "Kernel",
-             "condition": [
--                "config.android || config.win32 || (!config.vxworks && (tests.ipc_sysv || tests.ipc_posix))"
-+                "false"
-             ],
-             "output": [ "publicFeature", "feature" ]
-         },
-@@ -798,8 +798,7 @@
-             "purpose": "Provides a general counting system semaphore.",
-             "section": "Kernel",
-             "condition": [
--                "!config.integrity && !config.vxworks && !config.rtems",
--                "config.android || config.win32 || tests.ipc_sysv || tests.ipc_posix"
-+                "false"
-             ],
-             "output": [ "publicFeature", "feature" ]
-         },
 diff --git a/src/corelib/kernel/qcore_unix_p.h b/src/corelib/kernel/qcore_unix_p.h
 index abe9bb37..c43e6d06 100644
 --- a/src/corelib/kernel/qcore_unix_p.h

@@ -1,0 +1,20 @@
+--- qtbase-everywhere-src-6.2.0/src/corelib/configure.cmake.orig	2021-10-16 10:39:58.958770525 +0200
++++ qtbase-everywhere-src-6.2.0/src/corelib/configure.cmake	2021-10-16 10:40:05.525713892 +0200
+@@ -951,7 +951,7 @@
+     CONDITION QT_FEATURE_journald OR QT_FEATURE_syslog OR ( QNX AND QT_FEATURE_slog2 )
+ )
+ qt_configure_add_report_entry(
+-    TYPE ERROR
++    TYPE NOTE
+     MESSAGE "C++11 <random> is required and is missing or failed to compile."
+     CONDITION NOT TEST_cxx11_random
+ )
+@@ -961,7 +961,7 @@
+     CONDITION INPUT_doubleconversion STREQUAL 'no' AND NOT TEST_xlocalescanprint
+ )
+ qt_configure_add_report_entry(
+-    TYPE ERROR
++    TYPE NOTE
+     MESSAGE "detected a std::atomic implementation that fails for function pointers.  Please apply the patch corresponding to your Standard Library vendor, found in qtbase/config.tests/atomicfptr"
+     CONDITION NOT TEST_atomicfptr
+ )
