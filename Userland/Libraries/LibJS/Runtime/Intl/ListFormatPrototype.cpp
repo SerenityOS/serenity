@@ -28,22 +28,22 @@ void ListFormatPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.ListFormat"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.format, format, 1, attr);
-    define_old_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
-    define_old_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+    define_native_function(vm.names.format, format, 1, attr);
+    define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
+    define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
 // 13.4.3 Intl.ListFormat.prototype.format ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.format
-JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::format)
+JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
 {
     auto list = vm.argument(0);
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(global_object));
 
     // 3. Let stringList be ? StringListFromIterable(list).
-    auto string_list = TRY_OR_DISCARD(string_list_from_iterable(global_object, list));
+    auto string_list = TRY(string_list_from_iterable(global_object, list));
 
     // 4. Return FormatList(lf, stringList).
     auto formatted = format_list(*list_format, string_list);
@@ -51,27 +51,27 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::format)
 }
 
 // 13.4.4 Intl.ListFormat.prototype.formatToParts ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.formatToParts
-JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
+JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
 {
     auto list = vm.argument(0);
 
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(global_object));
 
     // 3. Let stringList be ? StringListFromIterable(list).
-    auto string_list = TRY_OR_DISCARD(string_list_from_iterable(global_object, list));
+    auto string_list = TRY(string_list_from_iterable(global_object, list));
 
     // 4. Return FormatListToParts(lf, stringList).
     return format_list_to_parts(global_object, *list_format, string_list);
 }
 
 // 13.4.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions
-JS_DEFINE_OLD_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
+JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
 {
     // 1. Let lf be the this value.
     // 2. Perform ? RequireInternalSlot(lf, [[InitializedListFormat]]).
-    auto* list_format = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* list_format = TRY(typed_this_object(global_object));
 
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
