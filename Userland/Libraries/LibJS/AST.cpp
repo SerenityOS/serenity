@@ -283,7 +283,7 @@ Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_obje
         return {};
 
     auto& function = callee_value.as_function();
-    return vm.construct(function, function, move(arg_list));
+    return TRY_OR_DISCARD(construct(global_object, function, move(arg_list)));
 }
 
 void CallExpression::throw_type_error_for_callee(Interpreter& interpreter, GlobalObject& global_object, Value callee_value, StringView call_type) const
@@ -372,11 +372,7 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
     }
 
     // 6. Let result be ? Construct(func, argList, newTarget).
-    auto& function = new_target.as_function();
-
-    auto result = vm.construct(static_cast<FunctionObject&>(*func), function, move(arg_list));
-    if (vm.exception())
-        return {};
+    auto* result = TRY_OR_DISCARD(construct(global_object, static_cast<FunctionObject&>(*func), move(arg_list), &new_target.as_function()));
 
     // 7. Let thisER be GetThisEnvironment().
     auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(interpreter.vm()));
@@ -389,8 +385,7 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
     [[maybe_unused]] auto& f = this_er.function_object();
 
     // 11. Perform ? InitializeInstanceElements(result, F).
-    VERIFY(result.is_object());
-    TRY_OR_DISCARD(vm.initialize_instance_elements(result.as_object(), f));
+    TRY_OR_DISCARD(vm.initialize_instance_elements(*result, f));
 
     // 12. Return result.
     return result;

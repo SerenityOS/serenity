@@ -68,15 +68,13 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(new_length));
-    auto new_array_buffer = vm.construct(*constructor, *constructor, move(arguments));
-    if (vm.exception())
-        return {};
+    auto* new_array_buffer = TRY_OR_DISCARD(construct(global_object, *constructor, move(arguments)));
 
-    if (!new_array_buffer.is_object() || !is<ArrayBuffer>(new_array_buffer.as_object())) {
+    if (!is<ArrayBuffer>(new_array_buffer)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
         return {};
     }
-    auto* new_array_buffer_object = static_cast<ArrayBuffer*>(&new_array_buffer.as_object());
+    auto* new_array_buffer_object = static_cast<ArrayBuffer*>(new_array_buffer);
 
     // FIXME: Check for shared buffer
     if (new_array_buffer_object->is_detached()) {

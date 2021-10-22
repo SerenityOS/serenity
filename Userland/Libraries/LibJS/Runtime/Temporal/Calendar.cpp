@@ -71,10 +71,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
     // 2. Return ? Construct(%Temporal.Calendar%, « id »).
     MarkedValueList arguments(vm.heap());
     arguments.append(js_string(vm, identifier));
-    auto calendar = vm.construct(*global_object.temporal_calendar_constructor(), *global_object.temporal_calendar_constructor(), move(arguments));
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return static_cast<Calendar*>(&calendar.as_object());
+    return static_cast<Calendar*>(TRY(construct(global_object, *global_object.temporal_calendar_constructor(), move(arguments))));
 }
 
 // 12.1.4 GetISO8601Calendar ( )

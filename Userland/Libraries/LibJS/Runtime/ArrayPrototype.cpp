@@ -139,10 +139,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
 
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(length));
-    auto result = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
-    if (vm.exception())
-        return {};
-    return &result.as_object();
+    return TRY_OR_DISCARD(construct(global_object, constructor.as_function(), move(arguments)));
 }
 
 // 23.1.3.7 Array.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.filter

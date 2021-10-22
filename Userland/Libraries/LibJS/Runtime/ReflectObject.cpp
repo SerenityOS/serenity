@@ -95,7 +95,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ReflectObject::construct)
     auto args = TRY_OR_DISCARD(create_list_from_array_like(global_object, arguments_list));
 
     // 5. Return ? Construct(target, args, newTarget).
-    return vm.construct(target.as_function(), new_target.as_function(), move(args));
+    return TRY_OR_DISCARD(JS::construct(global_object, target.as_function(), move(args), &new_target.as_function()));
 }
 
 // 28.1.3 Reflect.defineProperty ( target, propertyKey, attributes ), https://tc39.es/ecma262/#sec-reflect.defineproperty
