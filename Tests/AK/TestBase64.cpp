@@ -27,6 +27,14 @@ TEST_CASE(test_decode)
     decode_equal("Zm9vYmFy", "foobar");
 }
 
+TEST_CASE(test_decode_nocrash)
+{
+    // Any output is fine, we only check that we don't crash here.
+    decode_base64(StringView("asdf\xffqwer"));
+    decode_base64(StringView("asdf\x80qwer"));
+    // TODO: Handle decoding failure.
+}
+
 TEST_CASE(test_encode)
 {
     auto encode_equal = [&](const char* input, const char* expected) {

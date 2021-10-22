@@ -61,7 +61,7 @@ ByteBuffer decode_base64(const StringView& input)
                 *is_padding = true;
             return 0;
         }
-        return table[input[offset]];
+        return table[static_cast<unsigned char>(input[offset])];
     };
 
     Vector<u8> output;
