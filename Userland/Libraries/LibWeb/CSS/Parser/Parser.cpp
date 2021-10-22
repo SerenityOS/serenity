@@ -34,7 +34,7 @@ static void log_parse_error(const SourceLocation& location = SourceLocation::cur
 
 namespace Web::CSS {
 
-ParsingContext::ParsingContext(DOM::Document& document)
+ParsingContext::ParsingContext(DOM::Document const& document)
     : m_document(&document)
 {
 }
@@ -3888,8 +3888,7 @@ RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringV
     auto integer = string.to_int();
     if (integer.has_value())
         return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
-    // FIXME: The const_cast is a hack.
-    return parse_css_value(CSS::ParsingContext(const_cast<DOM::Document&>(document)), string);
+    return parse_css_value(CSS::ParsingContext(document), string);
 }
 
 }

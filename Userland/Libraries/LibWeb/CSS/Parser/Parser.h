@@ -36,18 +36,18 @@ enum class PropertyID;
 class ParsingContext {
 public:
     ParsingContext() = default;
-    explicit ParsingContext(DOM::Document&);
+    explicit ParsingContext(DOM::Document const&);
     explicit ParsingContext(DOM::ParentNode&);
 
     bool in_quirks_mode() const;
-    DOM::Document* document() const { return m_document; }
+    DOM::Document const* document() const { return m_document; }
     AK::URL complete_url(String const&) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
 
 private:
-    DOM::Document* m_document { nullptr };
+    DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
 };
 
