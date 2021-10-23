@@ -30,7 +30,7 @@ public:
         , m_client_id(client_id)
     {
         VERIFY(this->socket().is_connected());
-        this->socket().on_ready_to_read = [this] { this->drain_messages_from_peer(); };
+        this->socket().on_ready_to_read = [this] { this->drain_messages_from_peer(ServerEndpoint::static_magic()); };
     }
 
     virtual ~ClientConnection() override

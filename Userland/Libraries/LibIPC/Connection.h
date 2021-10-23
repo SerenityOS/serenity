@@ -46,9 +46,12 @@ protected:
 
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
+    virtual void try_parse_messages(Vector<u8> const& bytes, size_t& index) = 0;
 
     void wait_for_socket_to_become_readable();
     Result<Vector<u8>, bool> read_as_much_as_possible_from_socket_without_blocking();
+    bool drain_messages_from_peer(u32 local_endpoint_magic);
+
     void post_message(MessageBuffer);
     void handle_messages(u32 local_endpoint_magic);
 
@@ -70,7 +73,7 @@ public:
     {
         m_notifier->on_ready_to_read = [this] {
             NonnullRefPtr protect = *this;
-            drain_messages_from_peer();
+            drain_messages_from_peer(LocalEndpoint::static_magic());
             handle_messages(LocalEndpoint::static_magic());
         };
     }
@@ -117,17 +120,14 @@ protected:
 
             wait_for_socket_to_become_readable();
 
-            if (!drain_messages_from_peer())
+            if (!drain_messages_from_peer(LocalEndpoint::static_magic()))
                 break;
         }
         return {};
     }
 
-    bool drain_messages_from_peer()
+    virtual void try_parse_messages(Vector<u8> const& bytes, size_t& index) override
     {
-        auto bytes = TRY(read_as_much_as_possible_from_socket_without_blocking());
-
-        size_t index = 0;
         u32 message_size = 0;
         for (; index + sizeof(message_size) < bytes.size(); index += message_size) {
             memcpy(&message_size, bytes.data() + index, sizeof(message_size));
@@ -144,30 +144,6 @@ protected:
                 break;
             }
         }
-
-        if (index < bytes.size()) {
-            // Sometimes we might receive a partial message. That's okay, just stash away
-            // the unprocessed bytes and we'll prepend them to the next incoming message
-            // in the next run of this function.
-            auto remaining_bytes_result = ByteBuffer::copy(bytes.span().slice(index));
-            if (!remaining_bytes_result.has_value()) {
-                dbgln("{}::drain_messages_from_peer: Failed to allocate buffer", *this);
-                return false;
-            }
-            if (!m_unprocessed_bytes.is_empty()) {
-                dbgln("{}::drain_messages_from_peer: Already have unprocessed bytes", *this);
-                shutdown();
-                return false;
-            }
-            m_unprocessed_bytes = remaining_bytes_result.release_value();
-        }
-
-        if (!m_unprocessed_messages.is_empty()) {
-            deferred_invoke([this] {
-                handle_messages(LocalEndpoint::static_magic());
-            });
-        }
-        return true;
     }
 };
 
