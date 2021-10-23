@@ -108,6 +108,7 @@ private:
     Vector<QueuedEvent, 64> m_queued_events;
     static pid_t s_pid;
 
+    bool m_destroying { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
 

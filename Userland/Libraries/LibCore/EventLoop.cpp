@@ -293,6 +293,8 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
 
 EventLoop::~EventLoop()
 {
+    m_destroying = true;
+
     // NOTE: Pop the main event loop off of the stack when destroyed.
     if (this == s_main_event_loop) {
         s_event_loop_stack->take_last();
@@ -428,8 +430,18 @@ void EventLoop::pump(WaitMode mode)
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
+    if (m_destroying) {
+        // We are being called while we're destructing the EventLoop!
+        // This may happen when m_queued_events is being destroyed and one of the
+        // Event destructors ends up calling a code path that leads to another event
+        // being posted, most likely a deferred invocation. We can't really append this
+        // event, and we also can't really invoke it right here as events are supposed
+        // to be asynchronous. So, just discard it.
+        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) discard event={} for receiver={} during destruction", m_queued_events.size(), event, receiver);
+        return;
+    }
     Threading::MutexLocker lock(m_private->lock);
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receiver={}, event={}", m_queued_events.size(), receiver, event);
     m_queued_events.empend(receiver, move(event));
 }
 
