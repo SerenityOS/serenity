@@ -903,11 +903,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     return new_array;
 }
 
-static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedValueList& arr_to_sort)
+static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedValueList& arr_to_sort)
 {
     auto& vm = global_object.vm();
     if (arr_to_sort.size() <= 1)
-        return;
+        return {};
 
     MarkedValueList left(vm.heap());
     MarkedValueList right(vm.heap());
@@ -923,12 +923,8 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
         }
     }
 
-    typed_array_merge_sort(global_object, compare_function, buffer, left);
-    if (vm.exception())
-        return;
-    typed_array_merge_sort(global_object, compare_function, buffer, right);
-    if (vm.exception())
-        return;
+    TRY(typed_array_merge_sort(global_object, compare_function, buffer, left));
+    TRY(typed_array_merge_sort(global_object, compare_function, buffer, right));
 
     arr_to_sort.clear();
 
@@ -942,20 +938,12 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
         double comparison_result;
 
         if (compare_function) {
-            auto result_or_error = vm.call(*compare_function, js_undefined(), x, y);
-            if (result_or_error.is_error())
-                return;
-            auto result = result_or_error.release_value();
+            auto result = TRY(vm.call(*compare_function, js_undefined(), x, y));
 
-            auto value_or_error = result.to_number(global_object);
-            if (value_or_error.is_error())
-                return;
-            auto value = value_or_error.release_value();
+            auto value = TRY(result.to_number(global_object));
 
-            if (buffer.is_detached()) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-                return;
-            }
+            if (buffer.is_detached())
+                return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
             if (value.is_nan())
                 comparison_result = 0;
@@ -997,6 +985,8 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
         arr_to_sort.append(right[right_index]);
         right_index++;
     }
+
+    return {};
 }
 
 // 23.2.3.27 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
@@ -1024,9 +1014,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         }
     }
 
-    typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items);
-    if (vm.exception())
-        return {};
+    TRY_OR_DISCARD(typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items));
 
     u32 j;
     for (j = 0; j < items.size(); ++j)
