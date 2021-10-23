@@ -160,7 +160,7 @@ static void for_each_item_from_last(VM& vm, GlobalObject& global_object, const S
 }
 
 // 23.2.4.1 TypedArraySpeciesCreate ( exemplar, argumentList ), https://tc39.es/ecma262/#typedarray-species-create
-static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedValueList arguments)
+static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedValueList arguments)
 {
     auto& vm = global_object.vm();
 
@@ -175,14 +175,12 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
 
     VERIFY(typed_array_default_constructor);
 
-    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, exemplar, *typed_array_default_constructor));
+    auto* constructor = TRY(species_constructor(global_object, exemplar, *typed_array_default_constructor));
 
-    auto* result = TRY_OR_DISCARD(typed_array_create(global_object, *constructor, move(arguments)));
+    auto* result = TRY(typed_array_create(global_object, *constructor, move(arguments)));
 
-    if (result->content_type() != exemplar.content_type()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
-        return nullptr;
-    }
+    if (result->content_type() != exemplar.content_type())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
 
     return result;
 }
@@ -859,9 +857,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
     MarkedValueList arguments(vm.heap());
     arguments.empend(count);
-    auto new_array = typed_array_species_create(global_object, *typed_array, move(arguments));
-    if (vm.exception())
-        return {};
+    auto* new_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     if (count > 0) {
         if (typed_array->viewed_array_buffer()->is_detached()) {
@@ -1089,7 +1085,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     arguments.empend(typed_array->viewed_array_buffer());
     arguments.empend(begin_byte_offset.value());
     arguments.empend(new_length);
-    return typed_array_species_create(global_object, *typed_array, move(arguments));
+    return TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
 }
 
 // 23.2.3.23 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
@@ -1356,9 +1352,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
     MarkedValueList arguments(vm.heap());
     arguments.empend(captured);
-    auto* filter_array = typed_array_species_create(global_object, *typed_array, move(arguments));
-    if (vm.exception())
-        return {};
+    auto* filter_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     // 10. Let n be 0.
     size_t index = 0;
@@ -1396,9 +1390,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
     // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
     MarkedValueList arguments(vm.heap());
     arguments.empend(initial_length);
-    auto* return_array = typed_array_species_create(global_object, *typed_array, move(arguments));
-    if (vm.exception())
-        return {};
+    auto* return_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     auto this_value = vm.argument(1);
 
