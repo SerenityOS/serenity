@@ -37,7 +37,7 @@ public:
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
 
-    bool framebuffer_devices_allowed() const { return m_framebuffer_devices_allowed; }
+    bool framebuffer_devices_allowed() const;
     bool framebuffer_devices_exist() const;
 
     Spinlock& main_vga_lock() { return m_main_vga_lock; }
@@ -54,7 +54,6 @@ private:
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
     RefPtr<VGACompatibleAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
-    const bool m_framebuffer_devices_allowed;
 
     Spinlock m_main_vga_lock;
 };

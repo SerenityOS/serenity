@@ -38,6 +38,8 @@ List of options:
 
 * **`disable_virtio`** - If present on the command line, virtio devices will not be detected, and initialized on boot.
 
+* **`fbdev`** - This parameter expects **`on`** or **`off`**.
+
 * **`force_pio`** - If present on the command line, the IDE controllers will be force into PIO mode when initialized IDE Channels on boot.
 
 * **`hpet`** - This parameter expects one of the following values. **`periodic`** - The High Precision Event Timer should
@@ -68,7 +70,3 @@ List of options:
 ## See also
 
 * [`SystemServer`(7)](../man7/SystemServer.md).
-
-
-
-

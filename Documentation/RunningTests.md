@@ -114,6 +114,6 @@ lines will boot SerenityOS in self-test mode, run tests, and exit.
 
 ```sh
 export SERENITY_RUN=ci
-export SERENITY_KERNEL_CMDLINE="boot_mode=self-test"
+export SERENITY_KERNEL_CMDLINE="fbdev=off boot_mode=self-test"
 ninja run
 ```
