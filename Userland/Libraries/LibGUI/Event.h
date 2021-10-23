@@ -346,6 +346,19 @@ public:
 
     String to_string() const;
 
+    bool is_arrow_key() const
+    {
+        switch (m_key) {
+        case KeyCode::Key_Up:
+        case KeyCode::Key_Down:
+        case KeyCode::Key_Left:
+        case KeyCode::Key_Right:
+            return true;
+        default:
+            return false;
+        }
+    }
+
 private:
     friend class WindowServerConnection;
     KeyCode m_key { KeyCode::Key_Invalid };
