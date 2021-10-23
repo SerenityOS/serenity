@@ -340,12 +340,12 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::index_of)
     return index.has_value() ? Value(*index) : Value(-1);
 }
 
-static Optional<String> resolve_best_locale(GlobalObject& global_object, Value locales)
+static ThrowCompletionOr<String> resolve_best_locale(GlobalObject& global_object, Value locales)
 {
     // For details on these steps, see https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
 
     // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY_OR_DISCARD(Intl::canonicalize_locale_list(global_object, locales));
+    auto requested_locales = TRY(Intl::canonicalize_locale_list(global_object, locales));
 
     Optional<Unicode::LocaleID> requested_locale;
 
@@ -383,11 +383,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
     if (!string.has_value())
         return {};
 
-    auto locale = resolve_best_locale(global_object, vm.argument(0));
-    if (!locale.has_value())
-        return {};
+    auto locale = TRY_OR_DISCARD(resolve_best_locale(global_object, vm.argument(0)));
 
-    auto lowercase = Unicode::to_unicode_lowercase_full(*string, *locale);
+    auto lowercase = Unicode::to_unicode_lowercase_full(*string, locale);
     return js_string(vm, move(lowercase));
 }
 
@@ -398,11 +396,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
     if (!string.has_value())
         return {};
 
-    auto locale = resolve_best_locale(global_object, vm.argument(0));
-    if (!locale.has_value())
-        return {};
+    auto locale = TRY_OR_DISCARD(resolve_best_locale(global_object, vm.argument(0)));
 
-    auto uppercase = Unicode::to_unicode_uppercase_full(*string, *locale);
+    auto uppercase = Unicode::to_unicode_uppercase_full(*string, locale);
     return js_string(vm, move(uppercase));
 }
 
