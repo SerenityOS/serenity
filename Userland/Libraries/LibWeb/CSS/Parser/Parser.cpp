@@ -2214,7 +2214,7 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
                     float h = maybe_h.value();
                     float s = maybe_s.value() / 100.0f;
                     float l = maybe_l.value() / 100.0f;
-                    return Color::from_hsl(h, s, l);
+                    return Color::from_hsl(static_cast<double>(h), static_cast<double>(s), static_cast<double>(l));
                 }
             }
         } else if (function.name().equals_ignoring_case("hsla")) {
@@ -2240,7 +2240,7 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
                     float s = maybe_s.value() / 100.0f;
                     float l = maybe_l.value() / 100.0f;
                     float a = maybe_a.value();
-                    return Color::from_hsla(h, s, l, a);
+                    return Color::from_hsla(static_cast<double>(h), static_cast<double>(s), static_cast<double>(l), static_cast<double>(a));
                 }
             }
         }
