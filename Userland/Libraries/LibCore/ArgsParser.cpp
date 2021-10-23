@@ -174,6 +174,16 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
 
 void ArgsParser::print_usage(FILE* file, const char* argv0)
 {
+    char const* env_preference = getenv("ARGSPARSER_EMIT_MARKDOWN");
+    if (env_preference != nullptr && env_preference[0] == '1' && env_preference[1] == 0) {
+        print_usage_markdown(file, argv0);
+    } else {
+        print_usage_terminal(file, argv0);
+    }
+}
+
+void ArgsParser::print_usage_terminal(FILE* file, const char* argv0)
+{
     out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
 
     for (auto& opt : m_options) {
@@ -239,6 +249,79 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
         out(file, "\t\033[1m{}\033[0m", arg.name);
         if (arg.help_string)
             out(file, "\t{}", arg.help_string);
+        outln(file);
+    }
+}
+
+void ArgsParser::print_usage_markdown(FILE* file, const char* argv0)
+{
+    outln(file, "## Name\n\n{}", argv0);
+
+    out(file, "\n## Synopsis\n\n```sh\n$ {}", argv0);
+    for (auto& opt : m_options) {
+        if (opt.long_name != nullptr && (!strcmp(opt.long_name, "help") || !strcmp(opt.long_name, "version")))
+            continue;
+        if (opt.requires_argument)
+            out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
+        else
+            out(file, " [{}]", opt.name_for_display());
+    }
+    for (auto& arg : m_positional_args) {
+        bool required = arg.min_values > 0;
+        bool repeated = arg.max_values > 1;
+
+        if (required && repeated)
+            out(file, " <{}...>", arg.name);
+        else if (required && !repeated)
+            out(file, " <{}>", arg.name);
+        else if (!required && repeated)
+            out(file, " [{}...]", arg.name);
+        else if (!required && !repeated)
+            out(file, " [{}]", arg.name);
+    }
+    outln(file, "\n```");
+
+    if (m_general_help != nullptr && m_general_help[0] != '\0') {
+        outln(file, "\n## Description\n\n{}", m_general_help);
+    }
+
+    if (!m_options.is_empty())
+        outln(file, "\n## Options:\n");
+    for (auto& opt : m_options) {
+        auto print_argument = [&]() {
+            if (opt.value_name != nullptr) {
+                if (opt.requires_argument)
+                    out(file, " {}", opt.value_name);
+                else
+                    out(file, " [{}]", opt.value_name);
+            }
+        };
+        out(file, "* ");
+        if (opt.short_name != '\0') {
+            out(file, "`-{}", opt.short_name);
+            print_argument();
+            out(file, "`");
+        }
+        if (opt.short_name != '\0' && opt.long_name != nullptr)
+            out(file, ", ");
+        if (opt.long_name != nullptr) {
+            out(file, "`--{}", opt.long_name);
+            print_argument();
+            out(file, "`");
+        }
+
+        if (opt.help_string != nullptr)
+            out(file, ": {}", opt.help_string);
+        outln(file);
+    }
+
+    if (!m_positional_args.is_empty())
+        outln(file, "\n## Arguments:\n");
+
+    for (auto& arg : m_positional_args) {
+        out(file, "* `{}`", arg.name);
+        if (arg.help_string != nullptr)
+            out(file, ": {}", arg.help_string);
         outln(file);
     }
 }
