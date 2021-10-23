@@ -149,4 +149,36 @@ Result<Vector<u8>, bool> ConnectionBase::read_as_much_as_possible_from_socket_wi
     return bytes;
 }
 
+bool ConnectionBase::drain_messages_from_peer(u32 local_endpoint_magic)
+{
+    auto bytes = TRY(read_as_much_as_possible_from_socket_without_blocking());
+
+    size_t index = 0;
+    try_parse_messages(bytes, index);
+
+    if (index < bytes.size()) {
+        // Sometimes we might receive a partial message. That's okay, just stash away
+        // the unprocessed bytes and we'll prepend them to the next incoming message
+        // in the next run of this function.
+        auto remaining_bytes_result = ByteBuffer::copy(bytes.span().slice(index));
+        if (!remaining_bytes_result.has_value()) {
+            dbgln("{}::drain_messages_from_peer: Failed to allocate buffer", static_cast<Core::Object const&>(*this));
+            return false;
+        }
+        if (!m_unprocessed_bytes.is_empty()) {
+            dbgln("{}::drain_messages_from_peer: Already have unprocessed bytes", static_cast<Core::Object const&>(*this));
+            shutdown();
+            return false;
+        }
+        m_unprocessed_bytes = remaining_bytes_result.release_value();
+    }
+
+    if (!m_unprocessed_messages.is_empty()) {
+        deferred_invoke([this, local_endpoint_magic] {
+            handle_messages(local_endpoint_magic);
+        });
+    }
+    return true;
+}
+
 }
