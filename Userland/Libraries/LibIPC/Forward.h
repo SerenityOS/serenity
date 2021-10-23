@@ -13,5 +13,6 @@ class Dictionary;
 class Encoder;
 class Message;
 class File;
+class Stub;
 
 }
