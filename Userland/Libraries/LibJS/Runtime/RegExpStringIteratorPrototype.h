@@ -21,7 +21,7 @@ public:
     virtual void initialize(GlobalObject&) override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(next);
+    JS_DECLARE_NATIVE_FUNCTION(next);
 };
 
 }
