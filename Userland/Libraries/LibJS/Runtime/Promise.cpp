@@ -19,16 +19,16 @@
 namespace JS {
 
 // 27.2.4.7.1 PromiseResolve ( C, x ), https://tc39.es/ecma262/#sec-promise-resolve
-Object* promise_resolve(GlobalObject& global_object, Object& constructor, Value value)
+ThrowCompletionOr<Object*> promise_resolve(GlobalObject& global_object, Object& constructor, Value value)
 {
     auto& vm = global_object.vm();
     if (value.is_object() && is<Promise>(value.as_object())) {
-        auto value_constructor = TRY_OR_DISCARD(value.as_object().get(vm.names.constructor));
+        auto value_constructor = TRY(value.as_object().get(vm.names.constructor));
         if (same_value(value_constructor, &constructor))
             return &static_cast<Promise&>(value.as_object());
     }
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, &constructor));
-    [[maybe_unused]] auto result = TRY_OR_DISCARD(vm.call(*promise_capability.resolve, js_undefined(), value));
+    auto promise_capability = TRY(new_promise_capability(global_object, &constructor));
+    (void)TRY(vm.call(*promise_capability.resolve, js_undefined(), value));
     return promise_capability.promise;
 }
 
