@@ -293,6 +293,11 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
 
 EventLoop::~EventLoop()
 {
+    // NOTE: Pop the main event loop off of the stack when destroyed.
+    if (this == s_main_event_loop) {
+        s_event_loop_stack->take_last();
+        s_main_event_loop = nullptr;
+    }
 }
 
 bool connect_to_inspector_server()
