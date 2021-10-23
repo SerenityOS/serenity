@@ -113,7 +113,7 @@ UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled() const
 
 UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 {
-    return lookup("vmmouse"sv).value_or("on") == "on"sv;
+    return lookup("vmmouse"sv).value_or("on"sv) == "on"sv;
 }
 
 UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
