@@ -35,7 +35,11 @@ ByteBuffer decode_pem(ReadonlyBytes data)
                 break;
             }
             auto b64decoded = decode_base64(lexer.consume_line().trim_whitespace(TrimMode::Right));
-            if (!decoded.try_append(b64decoded.data(), b64decoded.size())) {
+            if (!b64decoded.has_value()) {
+                dbgln("Failed to decode PEM, likely bad Base64");
+                return {};
+            }
+            if (!decoded.try_append(b64decoded.value().data(), b64decoded.value().size())) {
                 dbgln("Failed to decode PEM, likely OOM condition");
                 return {};
             }

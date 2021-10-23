@@ -386,11 +386,15 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::atob)
     }
     auto string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
     auto decoded = decode_base64(StringView(string));
+    if (!decoded.has_value()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::InvalidFormat, "Base64");
+        return {};
+    }
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
     auto decoder = TextCodec::decoder_for("windows-1252");
     VERIFY(decoder);
-    return JS::js_string(vm, decoder->to_utf8(decoded));
+    return JS::js_string(vm, decoder->to_utf8(decoded.value()));
 }
 
 JS_DEFINE_OLD_NATIVE_FUNCTION(WindowObject::btoa)

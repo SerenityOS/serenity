@@ -113,7 +113,11 @@ int main(int argc, char** argv)
                 }
                 auto base64_data = line.substring(8);
                 auto buffer = decode_base64(base64_data);
-                socket->send(buffer, false);
+                if (buffer.has_value()) {
+                    socket->send(buffer.value(), false);
+                } else {
+                    outln("Could not send message : Base64 string contains an invalid character.");
+                }
                 continue;
             }
             if (line == ".exit") {

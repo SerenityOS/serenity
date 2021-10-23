@@ -493,7 +493,7 @@ void MailWidget::selected_email_to_load()
     if (selected_alternative_encoding.equals_ignoring_case("7bit") || selected_alternative_encoding.equals_ignoring_case("8bit")) {
         decoded_data = encoded_data;
     } else if (selected_alternative_encoding.equals_ignoring_case("base64")) {
-        decoded_data = decode_base64(encoded_data);
+        decoded_data = decode_base64(encoded_data).value_or(ByteBuffer());
     } else if (selected_alternative_encoding.equals_ignoring_case("quoted-printable")) {
         decoded_data = IMAP::decode_quoted_printable(encoded_data);
     } else {

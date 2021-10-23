@@ -153,10 +153,18 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
             url.data_payload());
 
         ByteBuffer data;
-        if (url.data_payload_is_base64())
-            data = decode_base64(url.data_payload());
-        else
+        if (url.data_payload_is_base64()) {
+            auto data_maybe = decode_base64(url.data_payload());
+            if (!data_maybe.has_value()) {
+                auto error_message = "Base64 data contains an invalid character"sv;
+                log_failure(request, error_message);
+                error_callback(error_message, {});
+                return;
+            }
+            data = data_maybe.value();
+        } else {
             data = url.data_payload().to_byte_buffer();
+        }
 
         log_success(request);
         deferred_invoke([data = move(data), success_callback = move(success_callback)] {
