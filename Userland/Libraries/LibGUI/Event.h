@@ -230,9 +230,9 @@ private:
 
 class MultiPaintEvent final : public Event {
 public:
-    explicit MultiPaintEvent(const Vector<Gfx::IntRect, 32>& rects, const Gfx::IntSize& window_size)
+    explicit MultiPaintEvent(Vector<Gfx::IntRect, 32> rects, Gfx::IntSize const& window_size)
         : Event(Event::MultiPaint)
-        , m_rects(rects)
+        , m_rects(move(rects))
         , m_window_size(window_size)
     {
     }
