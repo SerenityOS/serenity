@@ -46,18 +46,18 @@ TEST_CASE(iswctype)
 
     // Test that valid properties are wired to the correct implementation.
     for (unsigned int i = 0; i < sizeof(test_chars) / sizeof(test_chars[0]); i++) {
-        EXPECT_EQ(iswctype(test_chars[i], wctype("alnum")), iswalnum(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("alpha")), iswalpha(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("blank")), iswblank(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("cntrl")), iswcntrl(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("digit")), iswdigit(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("graph")), iswgraph(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("lower")), iswlower(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("print")), iswprint(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("punct")), iswpunct(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("space")), iswspace(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("upper")), iswupper(test_chars[i]));
-        EXPECT_EQ(iswctype(test_chars[i], wctype("xdigit")), iswxdigit(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("alnum")), iswalnum(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("alpha")), iswalpha(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("blank")), iswblank(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("cntrl")), iswcntrl(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("digit")), iswdigit(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("graph")), iswgraph(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("lower")), iswlower(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("print")), iswprint(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("punct")), iswpunct(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("space")), iswspace(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("upper")), iswupper(test_chars[i]));
+        EXPECT_EQ_TRUTH(iswctype(test_chars[i], wctype("xdigit")), iswxdigit(test_chars[i]));
     }
 
     // Test that invalid properties always return zero.
