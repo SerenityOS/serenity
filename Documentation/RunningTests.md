@@ -110,7 +110,8 @@ the serial debug output to `./debug.log` so that both stdout of the tests and th
 captured.
 
 To run with CI's TestRunner system server entry, SerenityOS needs booted in self-test mode. Running the following shell
-lines will boot SerenityOS in self-test mode, run tests, and exit.
+lines will boot SerenityOS in self-test mode, run tests, and exit. Note that CI also sets `panic=shutdown` to terminate qemu;
+the default value `halt` keeps qemu around, which allows you to inspect the state.
 
 ```sh
 export SERENITY_RUN=ci

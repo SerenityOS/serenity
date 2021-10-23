@@ -33,9 +33,13 @@ void __panic(const char* file, unsigned int line, const char* function)
 
     critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace(PrintToScreen::Yes);
-    if (kernel_command_line().boot_mode() == BootMode::SelfTest)
+    switch (kernel_command_line().panic_mode()) {
+    case PanicMode::Shutdown:
         __shutdown();
-    else
+    case PanicMode::Halt:
+        [[fallthrough]];
+    default:
         Processor::halt();
+    }
 }
 }
