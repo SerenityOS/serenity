@@ -70,6 +70,15 @@ void AbstractButton::set_checked(bool checked, AllowCallback allow_callback)
             set_focus(true);
     }
 
+    if (is_exclusive() && parent_widget()) {
+        // In a group of exclusive checkable buttons, only the currently checked button is focusable.
+        parent_widget()->for_each_child_of_type<GUI::AbstractButton>([&](auto& button) {
+            if (button.is_exclusive() && button.is_checkable())
+                button.set_focus_policy(button.is_checked() ? GUI::FocusPolicy::StrongFocus : GUI::FocusPolicy::NoFocus);
+            return IterationDecision::Continue;
+        });
+    }
+
     update();
     if (on_checked && allow_callback == AllowCallback::Yes)
         on_checked(checked);
@@ -169,6 +178,31 @@ void AbstractButton::keydown_event(KeyEvent& event)
         m_being_pressed = m_being_keyboard_pressed = false;
         update();
         event.accept();
+        return;
+    }
+
+    // Arrow keys switch the currently checked option within an exclusive group of checkable buttons.
+    if (event.is_arrow_key() && !event.modifiers() && is_exclusive() && is_checkable() && parent_widget()) {
+        event.accept();
+        Vector<GUI::AbstractButton&> exclusive_siblings;
+        size_t this_index = 0;
+        parent_widget()->for_each_child_of_type<GUI::AbstractButton>([&](auto& sibling) {
+            if (&sibling == this) {
+                VERIFY(is_enabled());
+                this_index = exclusive_siblings.size();
+            }
+            if (sibling.is_exclusive() && sibling.is_checkable() && sibling.is_enabled())
+                exclusive_siblings.append(sibling);
+            return IterationDecision::Continue;
+        });
+        if (exclusive_siblings.size() <= 1)
+            return;
+        size_t new_checked_index;
+        if (event.key() == KeyCode::Key_Left || event.key() == KeyCode::Key_Up)
+            new_checked_index = this_index == 0 ? exclusive_siblings.size() - 1 : this_index - 1;
+        else
+            new_checked_index = this_index == exclusive_siblings.size() - 1 ? 0 : this_index + 1;
+        exclusive_siblings[new_checked_index].set_checked(true);
         return;
     }
     Widget::keydown_event(event);
