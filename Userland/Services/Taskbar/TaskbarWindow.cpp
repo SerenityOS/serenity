@@ -110,17 +110,21 @@ void TaskbarWindow::show_desktop_button_clicked(unsigned)
 
 void TaskbarWindow::create_quick_launch_bar()
 {
+    auto config = Core::ConfigFile::open_for_app("Taskbar");
+    constexpr const char* quick_launch = "QuickLaunch";
+
+    auto keys = config->keys(quick_launch);
+    if (keys.is_empty())
+        return;
+
     auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
     quick_launch_bar.set_shrink_to_fit(true);
     quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
     quick_launch_bar.layout()->set_spacing(0);
     quick_launch_bar.set_frame_thickness(0);
 
-    auto config = Core::ConfigFile::open_for_app("Taskbar");
-    constexpr const char* quick_launch = "QuickLaunch";
-
     // FIXME: Core::ConfigFile does not keep the order of the entries.
-    for (auto& name : config->keys(quick_launch)) {
+    for (auto& name : keys) {
         auto af_name = config->read_entry(quick_launch, name);
         auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, af_name);
         auto af = Desktop::AppFile::open(af_path);
