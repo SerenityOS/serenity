@@ -25,7 +25,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-String g_boot_mode = "graphical";
+String g_system_mode = "graphical";
 
 static void sigchld_handler(int)
 {
@@ -51,31 +51,33 @@ static void sigchld_handler(int)
     }
 }
 
-static void parse_boot_mode()
+static void determine_system_mode()
 {
-    auto f = Core::File::construct("/proc/cmdline");
+    auto f = Core::File::construct("/proc/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Failed to read command line: {}", f->error_string());
+        dbgln("Failed to read system_mode: {}", f->error_string());
+        // Continue to assume "graphical".
         return;
     }
-    const String cmdline = String::copy(f->read_all(), Chomp);
-    dbgln("Read command line: {}", cmdline);
+    const String system_mode = String::copy(f->read_all(), Chomp);
+    if (f->error()) {
+        dbgln("Failed to read system_mode: {}", f->error_string());
+        // Continue to assume "graphical".
+        return;
+    }
+
+    g_system_mode = system_mode;
+    dbgln("Read system_mode: {}", g_system_mode);
 
     // FIXME: Support more than one framebuffer detection
     struct stat file_state;
     int rc = lstat("/dev/fb0", &file_state);
-    if (rc < 0) {
-        for (auto& part : cmdline.split_view(' ')) {
-            auto pair = part.split_view('=', 2);
-            if (pair.size() == 2 && pair[0] == "boot_mode")
-                g_boot_mode = pair[1];
-        }
-        // We could boot into self-test which is not graphical too.
-        if (g_boot_mode == "self-test")
-            return;
-        g_boot_mode = "text";
+    if (rc < 0 && g_system_mode == "graphical") {
+        g_system_mode = "text";
+    } else if (rc == 0 && g_system_mode == "text") {
+        dbgln("WARNING: Text mode with framebuffers won't work as expected! Consider using 'fbdev=off'.");
     }
-    dbgln("Booting in {} mode", g_boot_mode);
+    dbgln("System in {} mode", g_system_mode);
 }
 
 static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
@@ -477,7 +479,7 @@ int main(int argc, char** argv)
 
     if (!user) {
         create_tmp_coredump_directory();
-        parse_boot_mode();
+        determine_system_mode();
     }
 
     Core::EventLoop event_loop;

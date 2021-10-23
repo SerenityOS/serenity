@@ -30,7 +30,7 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
                     is specified tests matching it.
                 All other TARGETs: $NAME test [TARGET]
                     Runs the built image in QEMU in self-test mode, by passing
-                    boot_mode=self-test to the Kernel
+                    system_mode=self-test to the Kernel
     delete:     Removes the build environment for TARGET
     recreate:   Deletes and re-creates the build environment for TARGET
     rebuild:    Deletes and re-creates the build environment, and compiles for TARGET
@@ -360,7 +360,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                 build_target image
                 # In contrast to CI, we don't set 'panic=shutdown' here,
                 # in case the user wants to inspect qemu some more.
-                export SERENITY_KERNEL_CMDLINE="fbdev=off boot_mode=self-test"
+                export SERENITY_KERNEL_CMDLINE="fbdev=off system_mode=self-test"
                 export SERENITY_RUN="ci"
                 build_target run
             fi

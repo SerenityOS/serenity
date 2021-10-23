@@ -21,9 +21,6 @@ List of options:
 * **`ahci_reset_mode`** - This parameter expects one of the following values. **`controller`** - Reset just the AHCI controller on boot.
    **`none`** - Don't perform any AHCI reset.  **`complete`** - Reset the AHCI controller, and all AHCI ports on boot.
 
-* **`boot_mode`** - This parameter expects one of the following values: **`text`** - Boots the system in text only mode.
-   **`self-test`** - Boots the system in self-test, validation mode. **`graphical`** - Boots the system in the normal graphical mode.
-
 * **`boot_prof`** - If present on the command line, global system profiling will be enabled
    as soon as possible during the boot sequence. Allowing you to profile startup of all applications.
 
@@ -61,6 +58,11 @@ List of options:
   use [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) mode
   for handling interrupts instead of [PIC](https://en.wikipedia.org/wiki/Programmable_interrupt_controller) mode.
   This parameter defaults to **`off`**.
+
+* **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/proc/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
+  - **`graphical`** (default) - Boots the system in the normal graphical mode.
+  - **`self-test`** - Boots the system in self-test, validation mode.
+  - **`text`** - Boots the system in text only mode. (You may need to also set **`fbdev=off`**.)
 
 * **`time`** - This parameter expects one of the following values. **`modern`** - This configures the system to attempt
   to use High Precision Event Timer (HPET) on boot. **`legacy`** - Configures the system to use the legacy programmable interrupt

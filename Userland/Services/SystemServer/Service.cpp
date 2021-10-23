@@ -405,6 +405,6 @@ void Service::save_to(JsonObject& json)
 
 bool Service::is_enabled() const
 {
-    extern String g_boot_mode;
-    return m_boot_modes.contains_slow(g_boot_mode);
+    extern String g_system_mode;
+    return m_boot_modes.contains_slow(g_system_mode);
 }
