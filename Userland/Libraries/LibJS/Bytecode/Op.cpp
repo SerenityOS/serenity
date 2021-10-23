@@ -184,7 +184,10 @@ void NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
     auto source = interpreter.current_executable().get_string(m_source_index);
     auto flags = interpreter.current_executable().get_string(m_flags_index);
 
-    interpreter.accumulator() = regexp_create(interpreter.global_object(), js_string(interpreter.vm(), source), js_string(interpreter.vm(), flags));
+    auto regexp_or_error = regexp_create(interpreter.global_object(), js_string(interpreter.vm(), source), js_string(interpreter.vm(), flags));
+    if (regexp_or_error.is_error())
+        return;
+    interpreter.accumulator() = regexp_or_error.value();
 }
 
 void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
