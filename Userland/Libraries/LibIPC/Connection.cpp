@@ -10,10 +10,11 @@
 
 namespace IPC {
 
-ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
+ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
     , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
+    , m_local_endpoint_magic(local_endpoint_magic)
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
 }
@@ -83,11 +84,11 @@ void ConnectionBase::shutdown()
     die();
 }
 
-void ConnectionBase::handle_messages(u32 local_endpoint_magic)
+void ConnectionBase::handle_messages()
 {
     auto messages = move(m_unprocessed_messages);
     for (auto& message : messages) {
-        if (message.endpoint_magic() == local_endpoint_magic)
+        if (message.endpoint_magic() == m_local_endpoint_magic)
             if (auto response = m_local_stub.handle(message))
                 post_message(*response);
     }
@@ -149,7 +150,7 @@ Result<Vector<u8>, bool> ConnectionBase::read_as_much_as_possible_from_socket_wi
     return bytes;
 }
 
-bool ConnectionBase::drain_messages_from_peer(u32 local_endpoint_magic)
+bool ConnectionBase::drain_messages_from_peer()
 {
     auto bytes = TRY(read_as_much_as_possible_from_socket_without_blocking());
 
@@ -174,14 +175,14 @@ bool ConnectionBase::drain_messages_from_peer(u32 local_endpoint_magic)
     }
 
     if (!m_unprocessed_messages.is_empty()) {
-        deferred_invoke([this, local_endpoint_magic] {
-            handle_messages(local_endpoint_magic);
+        deferred_invoke([this] {
+            handle_messages();
         });
     }
     return true;
 }
 
-OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id, u32 local_endpoint_magic)
+OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id)
 {
     for (;;) {
         // Double check we don't already have the event waiting for us.
@@ -198,7 +199,7 @@ OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32
             break;
 
         wait_for_socket_to_become_readable();
-        if (!drain_messages_from_peer(local_endpoint_magic))
+        if (!drain_messages_from_peer())
             break;
     }
     return {};
