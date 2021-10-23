@@ -32,16 +32,14 @@ BigInt* js_bigint(VM& vm, Crypto::SignedBigInteger big_integer)
 }
 
 // 21.2.1.1.1 NumberToBigInt ( number ), https://tc39.es/ecma262/#sec-numbertobigint
-BigInt* number_to_bigint(GlobalObject& global_object, Value number)
+ThrowCompletionOr<BigInt*> number_to_bigint(GlobalObject& global_object, Value number)
 {
     VERIFY(number.is_number());
     auto& vm = global_object.vm();
 
     // 1. If IsIntegralNumber(number) is false, throw a RangeError exception.
-    if (!number.is_integral_number()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::BigIntFromNonIntegral);
-        return {};
-    }
+    if (!number.is_integral_number())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::BigIntFromNonIntegral);
 
     // 2. Return the BigInt value that represents ℝ(number).
     return js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)number.as_double()));
