@@ -154,9 +154,9 @@ void DateConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.now, now, 0, attr);
-    define_old_native_function(vm.names.parse, parse, 1, attr);
-    define_old_native_function(vm.names.UTC, utc, 1, attr);
+    define_native_function(vm.names.now, now, 0, attr);
+    define_native_function(vm.names.parse, parse, 1, attr);
+    define_native_function(vm.names.UTC, utc, 1, attr);
 
     define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
 }
@@ -281,7 +281,7 @@ ThrowCompletionOr<Object*> DateConstructor::construct(FunctionObject& new_target
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
-JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::now)
+JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
@@ -289,36 +289,36 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::now)
 }
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
-JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::parse)
+JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 {
     if (!vm.argument_count())
         return js_nan();
 
-    auto date_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto date_string = TRY(vm.argument(0).to_string(global_object));
 
     return parse_date_string(date_string);
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
-JS_DEFINE_OLD_NATIVE_FUNCTION(DateConstructor::utc)
+JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) -> ThrowCompletionOr<i32> {
         return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback;
     };
-    int year = TRY_OR_DISCARD(vm.argument(0).to_i32(global_object));
+    int year = TRY(vm.argument(0).to_i32(global_object));
     if (year >= 0 && year <= 99)
         year += 1900;
 
     struct tm tm = {};
     tm.tm_year = year - 1900;
-    tm.tm_mon = TRY_OR_DISCARD(arg_or(1, 0)); // 0-based in both tm and JavaScript
-    tm.tm_mday = TRY_OR_DISCARD(arg_or(2, 1));
-    tm.tm_hour = TRY_OR_DISCARD(arg_or(3, 0));
-    tm.tm_min = TRY_OR_DISCARD(arg_or(4, 0));
-    tm.tm_sec = TRY_OR_DISCARD(arg_or(5, 0));
+    tm.tm_mon = TRY(arg_or(1, 0)); // 0-based in both tm and JavaScript
+    tm.tm_mday = TRY(arg_or(2, 1));
+    tm.tm_hour = TRY(arg_or(3, 0));
+    tm.tm_min = TRY(arg_or(4, 0));
+    tm.tm_sec = TRY(arg_or(5, 0));
     // timegm() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
 
-    int milliseconds = TRY_OR_DISCARD(arg_or(6, 0));
+    int milliseconds = TRY(arg_or(6, 0));
     return Value(1000.0 * timegm(&tm) + milliseconds);
 }
 
