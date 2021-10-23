@@ -59,7 +59,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
 
     define_old_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
-    // 23.2.3.29 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
+    // 23.2.3.30 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
     define_direct_property(vm.names.toString, global_object().array_prototype()->get_without_side_effects(vm.names.toString), attr);
 }
 
@@ -187,7 +187,7 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
     return result;
 }
 
-// 23.2.3.18 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
+// 23.2.3.19 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 {
     auto typed_array = typed_array_from_this(global_object);
@@ -200,7 +200,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
     return Value(typed_array->array_length());
 }
 
-// 4.1 %TypedArray%.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-%typedarray%.prototype.at
+// 23.2.3.1 %TypedArray%.prototype.at ( index ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.at
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -222,7 +222,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::at)
     return TRY_OR_DISCARD(typed_array->get(index.value()));
 }
 
-// 23.2.3.7 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
+// 23.2.3.8 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::every)
 {
     auto result = true;
@@ -236,7 +236,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::every)
     return Value(result);
 }
 
-// 23.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
+// 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
     auto typed_array = validate_typed_array_from_this(global_object);
@@ -286,7 +286,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     return typed_array;
 }
 
-// 23.2.3.10 %TypedArray%.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
+// 23.2.3.11 %TypedArray%.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find)
 {
     auto result = js_undefined();
@@ -300,7 +300,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find)
     return result;
 }
 
-// 23.2.3.11 %TypedArray%.prototype.findIndex ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex
+// 23.2.3.12 %TypedArray%.prototype.findIndex ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
 {
     auto result_index = -1;
@@ -342,7 +342,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
     return Value(result_index);
 }
 
-// 23.2.3.12 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
+// 23.2.3.13 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 {
     for_each_item(vm, global_object, "forEach", [](auto, auto, auto) {
@@ -351,7 +351,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
     return js_undefined();
 }
 
-// 23.2.3.13 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
+// 23.2.3.14 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 {
     auto typed_array = validate_typed_array_from_this(global_object);
@@ -392,7 +392,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::includes)
     return Value(false);
 }
 
-// 23.2.3.14 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
+// 23.2.3.15 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 {
     auto typed_array = validate_typed_array_from_this(global_object);
@@ -436,7 +436,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
     return Value(-1);
 }
 
-// 23.2.3.17 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
+// 23.2.3.18 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 {
     auto typed_array = validate_typed_array_from_this(global_object);
@@ -481,7 +481,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     return Value(-1);
 }
 
-// 23.2.3.20 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
+// 23.2.3.21 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -517,7 +517,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     return accumulator;
 }
 
-// 23.2.3.21 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
+// 23.2.3.22 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -553,7 +553,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     return accumulator;
 }
 
-// 23.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
+// 23.2.3.26 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::some)
 {
     auto result = false;
@@ -567,7 +567,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::some)
     return Value(result);
 }
 
-// 23.2.3.15 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
+// 23.2.3.16 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::join)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -592,7 +592,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::join)
     return js_string(vm, builder.to_string());
 }
 
-// 23.2.3.16 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
+// 23.2.3.17 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -601,7 +601,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::keys)
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
 }
 
-// 23.2.3.30 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
+// 23.2.3.31 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -610,7 +610,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::values)
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Value);
 }
 
-// 23.2.3.6 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
+// 23.2.3.7 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -619,7 +619,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::entries)
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::KeyAndValue);
 }
 
-// 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
+// 23.2.3.2 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -630,7 +630,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
     return Value(array_buffer);
 }
 
-// 23.2.3.2 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
+// 23.2.3.3 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -643,7 +643,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
     return Value(typed_array->byte_length());
 }
 
-// 23.2.3.3 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
+// 23.2.3.4 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -656,7 +656,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
     return Value(typed_array->byte_offset());
 }
 
-// 23.2.3.32 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
+// 23.2.3.33 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 {
     auto this_value = vm.this_value(global_object);
@@ -668,7 +668,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
     return js_string(vm, static_cast<TypedArrayBase&>(this_object).element_name());
 }
 
-// 23.2.3.23 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
+// 23.2.3.24 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -822,7 +822,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
     return js_undefined();
 }
 
-// 23.2.3.24 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
+// 23.2.3.25 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
@@ -1003,7 +1003,7 @@ static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* 
     }
 }
 
-// 23.2.3.26 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
+// 23.2.3.27 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 {
     auto compare_fn = vm.argument(0);
@@ -1042,7 +1042,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     return typed_array;
 }
 
-// 23.2.3.27 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
+// 23.2.3.28 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
 {
     auto* typed_array = typed_array_from_this(global_object);
@@ -1092,7 +1092,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     return typed_array_species_create(global_object, *typed_array, move(arguments));
 }
 
-// 23.2.3.22 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
+// 23.2.3.23 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 {
     // 1. Let O be the this value.
@@ -1134,7 +1134,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
     return typed_array;
 }
 
-// 23.2.3.5 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
+// 23.2.3.6 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 {
     // 1. Let O be the this value.
@@ -1306,7 +1306,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     return typed_array;
 }
 
-// 23.2.3.9 %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter
+// 23.2.3.10 %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 {
     // 1. Let O be the this value.
@@ -1376,7 +1376,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     return filter_array;
 }
 
-// 23.2.3.19 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
+// 23.2.3.20 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
 {
     // 1. Let O be the this value.
@@ -1422,7 +1422,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
     return return_array;
 }
 
-// 23.2.3.28 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
+// 23.2.3.29 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
 JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 {
     auto* typed_array = validate_typed_array_from_this(global_object);
