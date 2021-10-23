@@ -25,39 +25,39 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     Object::initialize(object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_old_native_accessor(vm.names.length, length_getter, nullptr, Attribute::Configurable);
-    define_old_native_accessor(vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
-    define_old_native_accessor(vm.names.byteLength, byte_length_getter, nullptr, Attribute::Configurable);
-    define_old_native_accessor(vm.names.byteOffset, byte_offset_getter, nullptr, Attribute::Configurable);
-    define_old_native_function(vm.names.at, at, 1, attr);
-    define_old_native_function(vm.names.every, every, 1, attr);
-    define_old_native_function(vm.names.fill, fill, 1, attr);
-    define_old_native_function(vm.names.find, find, 1, attr);
-    define_old_native_function(vm.names.findIndex, find_index, 1, attr);
-    define_old_native_function(vm.names.findLast, find_last, 1, attr);
-    define_old_native_function(vm.names.findLastIndex, find_last_index, 1, attr);
-    define_old_native_function(vm.names.forEach, for_each, 1, attr);
-    define_old_native_function(vm.names.includes, includes, 1, attr);
-    define_old_native_function(vm.names.indexOf, index_of, 1, attr);
-    define_old_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
-    define_old_native_function(vm.names.reduce, reduce, 1, attr);
-    define_old_native_function(vm.names.reduceRight, reduce_right, 1, attr);
-    define_old_native_function(vm.names.some, some, 1, attr);
-    define_old_native_function(vm.names.join, join, 1, attr);
-    define_old_native_function(vm.names.keys, keys, 0, attr);
-    define_old_native_function(vm.names.values, values, 0, attr);
-    define_old_native_function(vm.names.entries, entries, 0, attr);
-    define_old_native_function(vm.names.set, set, 1, attr);
-    define_old_native_function(vm.names.slice, slice, 2, attr);
-    define_old_native_function(vm.names.sort, sort, 1, attr);
-    define_old_native_function(vm.names.subarray, subarray, 2, attr);
-    define_old_native_function(vm.names.reverse, reverse, 0, attr);
-    define_old_native_function(vm.names.copyWithin, copy_within, 2, attr);
-    define_old_native_function(vm.names.filter, filter, 1, attr);
-    define_old_native_function(vm.names.map, map, 1, attr);
-    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_accessor(vm.names.length, length_getter, nullptr, Attribute::Configurable);
+    define_native_accessor(vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
+    define_native_accessor(vm.names.byteLength, byte_length_getter, nullptr, Attribute::Configurable);
+    define_native_accessor(vm.names.byteOffset, byte_offset_getter, nullptr, Attribute::Configurable);
+    define_native_function(vm.names.at, at, 1, attr);
+    define_native_function(vm.names.every, every, 1, attr);
+    define_native_function(vm.names.fill, fill, 1, attr);
+    define_native_function(vm.names.find, find, 1, attr);
+    define_native_function(vm.names.findIndex, find_index, 1, attr);
+    define_native_function(vm.names.findLast, find_last, 1, attr);
+    define_native_function(vm.names.findLastIndex, find_last_index, 1, attr);
+    define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.includes, includes, 1, attr);
+    define_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.names.reduce, reduce, 1, attr);
+    define_native_function(vm.names.reduceRight, reduce_right, 1, attr);
+    define_native_function(vm.names.some, some, 1, attr);
+    define_native_function(vm.names.join, join, 1, attr);
+    define_native_function(vm.names.keys, keys, 0, attr);
+    define_native_function(vm.names.values, values, 0, attr);
+    define_native_function(vm.names.entries, entries, 0, attr);
+    define_native_function(vm.names.set, set, 1, attr);
+    define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.sort, sort, 1, attr);
+    define_native_function(vm.names.subarray, subarray, 2, attr);
+    define_native_function(vm.names.reverse, reverse, 0, attr);
+    define_native_function(vm.names.copyWithin, copy_within, 2, attr);
+    define_native_function(vm.names.filter, filter, 1, attr);
+    define_native_function(vm.names.map, map, 1, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
 
-    define_old_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
     // 23.2.3.30 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
     define_direct_property(vm.names.toString, global_object().array_prototype()->get_without_side_effects(vm.names.toString), attr);
@@ -67,96 +67,74 @@ TypedArrayPrototype::~TypedArrayPrototype()
 {
 }
 
-static TypedArrayBase* typed_array_from_this(GlobalObject& global_object)
+static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(GlobalObject& global_object)
 {
     auto this_value = global_object.vm().this_value(global_object);
     return typed_array_from(global_object, this_value);
 }
 
-static TypedArrayBase* validate_typed_array_from_this(GlobalObject& global_object)
+static ThrowCompletionOr<TypedArrayBase*> validate_typed_array_from_this(GlobalObject& global_object)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return nullptr;
+    auto* typed_array = TRY(typed_array_from_this(global_object));
 
-    TRY_OR_DISCARD(validate_typed_array(global_object, *typed_array));
+    TRY(validate_typed_array(global_object, *typed_array));
 
     return typed_array;
 }
 
-static FunctionObject* callback_from_args(GlobalObject& global_object, const String& name)
+static ThrowCompletionOr<FunctionObject*> callback_from_args(GlobalObject& global_object, const String& name)
 {
     auto& vm = global_object.vm();
-    if (vm.argument_count() < 1) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayPrototypeOneArg, name);
-        return nullptr;
-    }
+    if (vm.argument_count() < 1)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TypedArrayPrototypeOneArg, name);
     auto callback = vm.argument(0);
-    if (!callback.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
-        return nullptr;
-    }
+    if (!callback.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
     return &callback.as_function();
 }
 
-static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return;
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto initial_length = typed_array->array_length();
 
-    auto* callback_function = callback_from_args(global_object, name);
-    if (!callback_function)
-        return;
+    auto* callback_function = TRY(callback_from_args(global_object, name));
 
     auto this_value = vm.argument(1);
 
     for (size_t i = 0; i < initial_length; ++i) {
-        auto value_or_error = typed_array->get(i);
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
+        auto value = TRY(typed_array->get(i));
 
-        auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (callback_result_or_error.is_error())
-            return;
-        auto callback_result = callback_result_or_error.release_value();
+        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
     }
+
+    return {};
 }
 
-static void for_each_item_from_last(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return;
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto initial_length = typed_array->array_length();
 
-    auto* callback_function = callback_from_args(global_object, name);
-    if (!callback_function)
-        return;
+    auto* callback_function = TRY(callback_from_args(global_object, name));
 
     auto this_value = vm.argument(1);
 
     for (ssize_t i = (ssize_t)initial_length - 1; i >= 0; --i) {
-        auto value_or_error = typed_array->get(i);
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
+        auto value = TRY(typed_array->get(i));
 
-        auto callback_result_or_error = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
-        if (callback_result_or_error.is_error())
-            return;
-        auto callback_result = callback_result_or_error.release_value();
+        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
 
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
     }
+
+    return {};
 }
 
 // 23.2.4.1 TypedArraySpeciesCreate ( exemplar, argumentList ), https://tc39.es/ecma262/#typedarray-species-create
@@ -186,11 +164,9 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(GlobalObjec
 }
 
 // 23.2.3.19 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 {
-    auto typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
     if (array_buffer->is_detached())
@@ -199,13 +175,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 }
 
 // 23.2.3.1 %TypedArray%.prototype.at ( index ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.at
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::at)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
     auto length = typed_array->array_length();
-    auto relative_index = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(global_object));
     if (Value(relative_index).is_infinity())
         return js_undefined();
     Checked<size_t> index { 0 };
@@ -217,11 +191,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return TRY_OR_DISCARD(typed_array->get(index.value()));
+    return TRY(typed_array->get(index.value()));
 }
 
 // 23.2.3.8 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::every)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
 {
     auto result = true;
     for_each_item(vm, global_object, "every", [&](auto, auto, auto callback_result) {
@@ -235,21 +209,19 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::every)
 }
 
 // 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::fill)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
-    auto typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
     Value value;
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-        value = TRY_OR_DISCARD(vm.argument(0).to_bigint(global_object));
+        value = TRY(vm.argument(0).to_bigint(global_object));
     else
-        value = TRY_OR_DISCARD(vm.argument(0).to_number(global_object));
+        value = TRY(vm.argument(0).to_number(global_object));
 
-    auto relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     u32 k;
     if (Value(relative_start).is_negative_infinity())
@@ -263,7 +235,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     if (vm.argument(2).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(2).to_integer_or_infinity(global_object));
 
     u32 final;
     if (Value(relative_end).is_negative_infinity())
@@ -273,19 +245,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     else
         final = min(relative_end, length);
 
-    if (typed_array->viewed_array_buffer()->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return {};
-    }
+    if (typed_array->viewed_array_buffer()->is_detached())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
     for (; k < final; ++k)
-        TRY_OR_DISCARD(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
+        TRY(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
 
     return typed_array;
 }
 
 // 23.2.3.11 %TypedArray%.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find)
 {
     auto result = js_undefined();
     for_each_item(vm, global_object, "find", [&](auto, auto value, auto callback_result) {
@@ -299,7 +269,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find)
 }
 
 // 23.2.3.12 %TypedArray%.prototype.findIndex ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
 {
     auto result_index = -1;
     for_each_item(vm, global_object, "findIndex", [&](auto index, auto, auto callback_result) {
@@ -313,7 +283,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
 }
 
 // 4 %TypedArray%.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-%typedarray%.prototype.findlast
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
 {
     auto result = js_undefined();
     for_each_item_from_last(vm, global_object, "findLast", [&](auto, auto value, auto callback_result) {
@@ -327,7 +297,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
 }
 
 // 5 %TypedArray%.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-%typedarray%.prototype.findlastindex
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
 {
     auto result_index = -1;
     for_each_item_from_last(vm, global_object, "findLastIndex", [&](auto index, auto, auto callback_result) {
@@ -341,7 +311,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
 }
 
 // 23.2.3.13 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 {
     for_each_item(vm, global_object, "forEach", [](auto, auto, auto) {
         return IterationDecision::Continue;
@@ -350,18 +320,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 }
 
 // 23.2.3.14 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::includes)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 {
-    auto typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
     if (length == 0)
         return Value(false);
 
-    auto n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+    auto n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -391,18 +359,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 }
 
 // 23.2.3.15 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 {
-    auto typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
     if (length == 0)
         return Value(-1);
 
-    auto n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+    auto n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     auto value_n = Value(n);
     if (value_n.is_positive_infinity())
@@ -435,11 +401,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 }
 
 // 23.2.3.18 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 {
-    auto typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
@@ -448,7 +412,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 
     double n;
     if (vm.argument_count() > 1)
-        n = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+        n = TRY(vm.argument(1).to_integer_or_infinity(global_object));
     else
         n = length - 1;
 
@@ -480,22 +444,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 }
 
 // 23.2.3.21 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
-    auto* callback_function = callback_from_args(global_object, vm.names.reduce.as_string());
-    if (!callback_function)
-        return {};
+    auto* callback_function = TRY(callback_from_args(global_object, vm.names.reduce.as_string()));
 
-    if (length == 0 && vm.argument_count() <= 1) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReduceNoInitial);
-        return {};
-    }
+    if (length == 0 && vm.argument_count() <= 1)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
 
     u32 k = 0;
     Value accumulator;
@@ -509,29 +467,23 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     for (; k < length; ++k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
 }
 
 // 23.2.3.22 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
-    auto* callback_function = callback_from_args(global_object, vm.names.reduce.as_string());
-    if (!callback_function)
-        return {};
+    auto* callback_function = TRY(callback_from_args(global_object, vm.names.reduce.as_string()));
 
-    if (length == 0 && vm.argument_count() <= 1) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReduceNoInitial);
-        return {};
-    }
+    if (length == 0 && vm.argument_count() <= 1)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ReduceNoInitial);
 
     i32 k = (i32)length - 1;
     Value accumulator;
@@ -545,14 +497,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     for (; k >= 0; --k) {
         auto k_value = MUST(typed_array->get(k));
 
-        accumulator = TRY_OR_DISCARD(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+        accumulator = TRY(vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
     }
 
     return accumulator;
 }
 
 // 23.2.3.26 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::some)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
 {
     auto result = false;
     for_each_item(vm, global_object, "some", [&](auto, auto, auto callback_result) {
@@ -566,24 +518,22 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::some)
 }
 
 // 23.2.3.16 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::join)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
     auto length = typed_array->array_length();
     String separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+        separator = TRY(vm.argument(0).to_string(global_object));
 
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = TRY_OR_DISCARD(typed_array->get(i));
+        auto value = TRY(typed_array->get(i));
         if (value.is_nullish())
             continue;
-        auto string = TRY_OR_DISCARD(value.to_string(global_object));
+        auto string = TRY(value.to_string(global_object));
         builder.append(string);
     }
 
@@ -591,49 +541,39 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::join)
 }
 
 // 23.2.3.17 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::keys)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
 }
 
 // 23.2.3.31 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::values)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Value);
 }
 
 // 23.2.3.7 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::entries)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::KeyAndValue);
 }
 
 // 23.2.3.2 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
     return Value(array_buffer);
 }
 
 // 23.2.3.3 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
     if (array_buffer->is_detached())
@@ -642,11 +582,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 }
 
 // 23.2.3.4 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
     if (array_buffer->is_detached())
@@ -655,7 +593,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 }
 
 // 23.2.3.33 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object())
@@ -667,55 +605,41 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 }
 
 // 23.2.3.24 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
 
     auto source = vm.argument(0);
 
-    auto target_offset = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
-    if (target_offset < 0) {
-        vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
-        return {};
-    }
+    auto target_offset = TRY(vm.argument(1).to_integer_or_infinity(global_object));
+    if (target_offset < 0)
+        return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
 
     if (source.is_object() && is<TypedArrayBase>(source.as_object())) {
         auto& source_typed_array = static_cast<TypedArrayBase&>(source.as_object());
         // 23.2.3.23.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
         auto target_buffer = typed_array->viewed_array_buffer();
-        if (target_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-            return {};
-        }
+        if (target_buffer->is_detached())
+            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         auto target_length = typed_array->array_length();
         auto target_byte_offset = typed_array->byte_offset();
 
         auto source_buffer = source_typed_array.viewed_array_buffer();
-        if (source_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-            return {};
-        }
+        if (source_buffer->is_detached())
+            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         auto source_length = source_typed_array.array_length();
         auto source_byte_offset = source_typed_array.byte_offset();
 
-        if (isinf(target_offset)) {
-            vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
-            return {};
-        }
+        if (isinf(target_offset))
+            return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
 
         Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
-        if (checked.has_overflow() || checked.value() > target_length) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
-            return {};
-        }
+        if (checked.has_overflow() || checked.value() > target_length)
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
 
-        if (typed_array->content_type() != source_typed_array.content_type()) {
-            vm.throw_exception<JS::TypeError>(global_object, "Copy between arrays of different content types is prohibited");
-            return {};
-        }
+        if (typed_array->content_type() != source_typed_array.content_type())
+            return vm.throw_completion<JS::TypeError>(global_object, "Copy between arrays of different content types is prohibited");
 
         size_t source_byte_index;
         bool same = false;
@@ -730,19 +654,15 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
         Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
         checked_target_byte_index *= typed_array->element_size();
         checked_target_byte_index += target_byte_offset;
-        if (checked_target_byte_index.has_overflow()) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target byte index");
-            return {};
-        }
+        if (checked_target_byte_index.has_overflow())
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target byte index");
         auto target_byte_index = checked_target_byte_index.value();
 
         Checked<size_t> checked_limit(source_length);
         checked_limit *= typed_array->element_size();
         checked_limit += target_byte_index;
-        if (checked_limit.has_overflow()) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target limit");
-            return {};
-        }
+        if (checked_limit.has_overflow())
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target limit");
         auto limit = checked_limit.value();
 
         if (source_typed_array.element_size() == typed_array->element_size()) {
@@ -759,58 +679,46 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
     } else {
         // 23.2.3.23.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
         auto target_buffer = typed_array->viewed_array_buffer();
-        if (target_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-            return {};
-        }
+        if (target_buffer->is_detached())
+            return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         auto target_length = typed_array->array_length();
         auto target_byte_offset = typed_array->byte_offset();
 
-        auto src = TRY_OR_DISCARD(source.to_object(global_object));
-        auto source_length = TRY_OR_DISCARD(length_of_array_like(global_object, *src));
+        auto src = TRY(source.to_object(global_object));
+        auto source_length = TRY(length_of_array_like(global_object, *src));
 
-        if (isinf(target_offset)) {
-            vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
-            return {};
-        }
+        if (isinf(target_offset))
+            return vm.throw_completion<JS::RangeError>(global_object, "Invalid target offset");
 
         Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
-        if (checked.has_overflow() || checked.value() > target_length) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
-            return {};
-        }
+        if (checked.has_overflow() || checked.value() > target_length)
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
 
         Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
         checked_target_byte_index *= typed_array->element_size();
         checked_target_byte_index += target_byte_offset;
-        if (checked_target_byte_index.has_overflow()) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target byte index");
-            return {};
-        }
+        if (checked_target_byte_index.has_overflow())
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target byte index");
         auto target_byte_index = checked_target_byte_index.value();
 
         Checked<size_t> checked_limit(source_length);
         checked_limit *= typed_array->element_size();
         checked_limit += target_byte_index;
-        if (checked_limit.has_overflow()) {
-            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target limit");
-            return {};
-        }
+        if (checked_limit.has_overflow())
+            return vm.throw_completion<JS::RangeError>(global_object, "Overflow in target limit");
 
         auto limit = checked_limit.value();
         auto k = 0;
         while (target_byte_index < limit) {
-            auto value = TRY_OR_DISCARD(src->get(k));
+            auto value = TRY(src->get(k));
             if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
-                value = TRY_OR_DISCARD(value.to_bigint(global_object));
+                value = TRY(value.to_bigint(global_object));
             else
-                value = TRY_OR_DISCARD(value.to_number(global_object));
+                value = TRY(value.to_number(global_object));
 
-            if (target_buffer->is_detached()) {
-                vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-                return {};
-            }
+            if (target_buffer->is_detached())
+                return vm.throw_completion<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
             typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
             ++k;
@@ -821,15 +729,13 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::set)
 }
 
 // 23.2.3.25 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
-    auto relative_start = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_start = TRY(vm.argument(0).to_integer_or_infinity(global_object));
 
     i32 k;
     if (Value(relative_start).is_negative_infinity())
@@ -843,7 +749,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     if (vm.argument(1).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     i32 final;
     if (Value(relative_end).is_negative_infinity())
@@ -857,13 +763,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
     MarkedValueList arguments(vm.heap());
     arguments.empend(count);
-    auto* new_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
+    auto* new_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     if (count > 0) {
-        if (typed_array->viewed_array_buffer()->is_detached()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-            return {};
-        }
+        if (typed_array->viewed_array_buffer()->is_detached())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
         if (typed_array->element_name() != new_array->element_name()) {
             for (i32 n = 0; k < final; ++k, ++n) {
@@ -990,52 +894,46 @@ static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_objec
 }
 
 // 23.2.3.27 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::sort)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 {
     auto compare_fn = vm.argument(0);
-    if (!compare_fn.is_undefined() && !compare_fn.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
-        return {};
-    }
+    if (!compare_fn.is_undefined() && !compare_fn.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
 
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
     MarkedValueList items(vm.heap());
     for (u32 k = 0; k < length; ++k) {
-        auto k_present = TRY_OR_DISCARD(typed_array->has_property(k));
+        auto k_present = TRY(typed_array->has_property(k));
 
         if (k_present) {
-            auto k_value = TRY_OR_DISCARD(typed_array->get(k));
+            auto k_value = TRY(typed_array->get(k));
             items.append(k_value);
         }
     }
 
-    TRY_OR_DISCARD(typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items));
+    TRY(typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items));
 
     u32 j;
     for (j = 0; j < items.size(); ++j)
-        TRY_OR_DISCARD(typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes));
+        TRY(typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes));
 
     for (; j < length; ++j)
-        TRY_OR_DISCARD(typed_array->delete_property_or_throw(j));
+        TRY(typed_array->delete_property_or_throw(j));
 
     return typed_array;
 }
 
 // 23.2.3.28 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
 {
-    auto* typed_array = typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
-    auto relative_begin = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_begin = TRY(vm.argument(0).to_integer_or_infinity(global_object));
 
     i32 begin_index;
     if (Value(relative_begin).is_negative_infinity())
@@ -1049,7 +947,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     if (vm.argument(1).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     i32 end_index;
     if (Value(relative_end).is_negative_infinity())
@@ -1073,17 +971,15 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     arguments.empend(typed_array->viewed_array_buffer());
     arguments.empend(begin_byte_offset.value());
     arguments.empend(new_length);
-    return TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
+    return TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 }
 
 // 23.2.3.23 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
@@ -1119,19 +1015,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 }
 
 // 23.2.3.6 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
     // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
-    auto relative_target = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
+    auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(global_object));
 
     double to;
     if (Value(relative_target).is_negative_infinity()) {
@@ -1146,7 +1040,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     }
 
     // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
-    auto relative_start = TRY_OR_DISCARD(vm.argument(1).to_integer_or_infinity(global_object));
+    auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(global_object));
 
     double from;
     if (Value(relative_start).is_negative_infinity()) {
@@ -1166,7 +1060,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
     if (vm.argument(2).is_undefined())
         relative_end = length;
     else
-        relative_end = TRY_OR_DISCARD(vm.argument(2).to_integer_or_infinity(global_object));
+        relative_end = TRY(vm.argument(2).to_integer_or_infinity(global_object));
 
     double final;
     if (Value(relative_end).is_negative_infinity()) {
@@ -1191,10 +1085,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
         auto buffer = typed_array->viewed_array_buffer();
 
         // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-        if (buffer->is_detached()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-            return {};
-        }
+        if (buffer->is_detached())
+            return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
         // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
         // e. Let elementSize be the Element Size value specified in Table 64 for typedArrayName.
@@ -1291,21 +1183,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 }
 
 // 23.2.3.10 %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     // 3. Let len be O.[[ArrayLength]].
     auto initial_length = typed_array->array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-    auto* callback_function = callback_from_args(global_object, "filter");
-    if (!callback_function)
-        return {};
+    auto* callback_function = TRY(callback_from_args(global_object, "filter"));
 
     // 5. Let kept be a new empty List.
     MarkedValueList kept(vm.heap());
@@ -1323,7 +1211,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
         auto value = MUST(typed_array->get(i));
 
         // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
-        auto callback_result = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
+        auto callback_result = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array)).to_boolean();
 
         // d. If selected is true, then
         if (callback_result) {
@@ -1340,7 +1228,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
     MarkedValueList arguments(vm.heap());
     arguments.empend(captured);
-    auto* filter_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
+    auto* filter_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     // 10. Let n be 0.
     size_t index = 0;
@@ -1359,26 +1247,22 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 }
 
 // 23.2.3.20 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     // 3. Let len be O.[[ArrayLength]].
     auto initial_length = typed_array->array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-    auto* callback_function = callback_from_args(global_object, "map");
-    if (!callback_function)
-        return {};
+    auto* callback_function = TRY(callback_from_args(global_object, "map"));
 
     // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
     MarkedValueList arguments(vm.heap());
     arguments.empend(initial_length);
-    auto* return_array = TRY_OR_DISCARD(typed_array_species_create(global_object, *typed_array, move(arguments)));
+    auto* return_array = TRY(typed_array_species_create(global_object, *typed_array, move(arguments)));
 
     auto this_value = vm.argument(1);
 
@@ -1390,10 +1274,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
         auto value = MUST(typed_array->get(i));
 
         // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
-        auto mapped_value = TRY_OR_DISCARD(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
+        auto mapped_value = TRY(vm.call(*callback_function, this_value, value, Value((i32)i), typed_array));
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
-        TRY_OR_DISCARD(return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes));
+        TRY(return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes));
 
         // e. Set k to k + 1.
     }
@@ -1403,11 +1287,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::map)
 }
 
 // 23.2.3.29 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
-JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 {
-    auto* typed_array = validate_typed_array_from_this(global_object);
-    if (!typed_array)
-        return {};
+    auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
     auto length = typed_array->array_length();
 
@@ -1415,11 +1297,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     for (u32 k = 0; k < length; ++k) {
         if (k > 0)
             builder.append(','); // NOTE: Until we implement ECMA-402 (Intl) this is implementation specific.
-        auto value = TRY_OR_DISCARD(typed_array->get(k));
+        auto value = TRY(typed_array->get(k));
         if (value.is_nullish())
             continue;
-        auto locale_string_result = TRY_OR_DISCARD(value.invoke(global_object, vm.names.toLocaleString));
-        auto string = TRY_OR_DISCARD(locale_string_result.to_string(global_object));
+        auto locale_string_result = TRY(value.invoke(global_object, vm.names.toLocaleString));
+        auto string = TRY(locale_string_result.to_string(global_object));
         builder.append(string);
     }
     return js_string(vm, builder.to_string());
