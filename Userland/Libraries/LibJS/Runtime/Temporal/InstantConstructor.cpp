@@ -87,9 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
     auto epoch_seconds_value = TRY(vm.argument(0).to_number(global_object));
 
     // 2. Set epochSeconds to ? NumberToBigInt(epochSeconds).
-    auto* epoch_seconds = number_to_bigint(global_object, epoch_seconds_value);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* epoch_seconds = TRY(number_to_bigint(global_object, epoch_seconds_value));
 
     // 3. Let epochNanoseconds be epochSeconds × 10^9ℤ.
     auto* epoch_nanoseconds = js_bigint(vm, epoch_seconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000'000 }));
@@ -109,9 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     auto epoch_milliseconds_value = TRY(vm.argument(0).to_number(global_object));
 
     // 2. Set epochMilliseconds to ? NumberToBigInt(epochMilliseconds).
-    auto* epoch_milliseconds = number_to_bigint(global_object, epoch_milliseconds_value);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto* epoch_milliseconds = TRY(number_to_bigint(global_object, epoch_milliseconds_value));
 
     // 3. Let epochNanoseconds be epochMilliseconds × 10^6ℤ.
     auto* epoch_nanoseconds = js_bigint(vm, epoch_milliseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));

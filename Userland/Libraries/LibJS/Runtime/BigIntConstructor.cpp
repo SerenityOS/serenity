@@ -52,7 +52,7 @@ ThrowCompletionOr<Value> BigIntConstructor::call()
 
     // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
     if (primitive.is_number())
-        return number_to_bigint(global_object, primitive);
+        return TRY(number_to_bigint(global_object, primitive));
 
     // 4. Otherwise, return ? ToBigInt(value).
     return TRY(value.to_bigint(global_object));
