@@ -1,0 +1,25 @@
+diff --git a/desktop_version/src/main.cpp b/desktop_version/src/main.cpp
+index 52c6e59..72caece 100644
+--- a/desktop_version/src/main.cpp
++++ b/desktop_version/src/main.cpp
+@@ -482,12 +482,14 @@ int main(int argc, char *argv[])
+         VVV_exit(1);
+     }
+ 
+-    SDL_Init(
+-        SDL_INIT_VIDEO |
+-        SDL_INIT_AUDIO |
+-        SDL_INIT_JOYSTICK |
+-        SDL_INIT_GAMECONTROLLER
+-    );
++    if (SDL_Init(
++        SDL_INIT_VIDEO
++    ) < 0)
++    {
++        printf("SDL Video Engine could not be initialized: %s\n", SDL_GetError());
++        return 0;
++    }
++
+     if (SDL_IsTextInputActive() == SDL_TRUE)
+     {
+         SDL_StopTextInput();

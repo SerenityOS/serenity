@@ -1,0 +1,13 @@
+diff --git a/desktop_version/CMakeLists.txt b/desktop_version/CMakeLists.txt
+index 2284245..87577de 100644
+--- a/desktop_version/CMakeLists.txt
++++ b/desktop_version/CMakeLists.txt
+@@ -27,7 +27,7 @@ endif()
+ if(${CMAKE_VERSION} VERSION_LESS "3.1.3")
+     message(WARNING "Your CMake version is too old; set -std=c90 -std=c++98 yourself!")
+ else()
+-    set(CMAKE_C_STANDARD 90)
++    set(CMAKE_C_STANDARD 99)
+     set(CMAKE_C_EXTENSIONS OFF)
+ 
+     set(CMAKE_CXX_STANDARD 98)

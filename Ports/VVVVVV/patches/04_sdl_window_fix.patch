@@ -1,0 +1,67 @@
+diff --git a/desktop_version/src/Screen.cpp b/desktop_version/src/Screen.cpp
+index 57c066e..21edd60 100644
+--- a/desktop_version/src/Screen.cpp
++++ b/desktop_version/src/Screen.cpp
+@@ -45,27 +45,45 @@ void Screen::init(const ScreenSettings& settings)
+     filterSubrect.w = 318;
+     filterSubrect.h = 238;
+ 
+-    SDL_SetHintWithPriority(
+-        SDL_HINT_RENDER_SCALE_QUALITY,
+-        isFiltered ? "linear" : "nearest",
+-        SDL_HINT_OVERRIDE
+-    );
+-    SDL_SetHintWithPriority(
+-        SDL_HINT_RENDER_VSYNC,
+-        vsync ? "1" : "0",
+-        SDL_HINT_OVERRIDE
+-    );
++    // SDL_SetHintWithPriority(
++    //     SDL_HINT_RENDER_SCALE_QUALITY,
++    //     isFiltered ? "linear" : "nearest",
++    //     SDL_HINT_OVERRIDE
++    // );
++    // SDL_SetHintWithPriority(
++    //     SDL_HINT_RENDER_VSYNC,
++    //     vsync ? "1" : "0",
++    //     SDL_HINT_OVERRIDE
++    // );
+ 
+     // Uncomment this next line when you need to debug -flibit
+     // SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "software", SDL_HINT_OVERRIDE);
+-    SDL_CreateWindowAndRenderer(
+-        640,
+-        480,
+-        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI,
+-        &m_window,
+-        &m_renderer
++    // SDL_CreateWindowAndRenderer(
++    //     640,
++    //     480,
++    //     SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI,
++    //     &m_window,
++    //     &m_renderer
++    // );
++    m_window = SDL_CreateWindow(
++        "VVVVVV",
++	SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
++        640, 480,
++        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
+     );
+-    SDL_SetWindowTitle(m_window, "VVVVVV");
++
++    if (m_window == NULL)
++    {
++        fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
++        exit(1);
++    }
++
++    m_renderer = SDL_CreateRenderer(m_window, -1, 0);
++    if (m_renderer == NULL)
++    {
++        fprintf(stderr, "Could not create renderer: %s\n", SDL_GetError());
++        exit(1);
++    }
+ 
+     LoadIcon();
+ 

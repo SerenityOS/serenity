@@ -1,0 +1,14 @@
+diff --git a/third_party/tinyxml2/tinyxml2.cpp b/third_party/tinyxml2/tinyxml2.cpp
+index 1606ce0..3599222 100644
+--- a/third_party/tinyxml2/tinyxml2.cpp
++++ b/third_party/tinyxml2/tinyxml2.cpp
+@@ -103,6 +103,9 @@ distribution.
+ #if defined(_WIN64)
+ 	#define TIXML_FSEEK _fseeki64
+ 	#define TIXML_FTELL _ftelli64
++#elif defined(__serenity__)
++	#define TIXML_FSEEK fseeko
++	#define TIXML_FTELL ftello
+ #elif defined(__APPLE__) || (__FreeBSD__) || (__OpenBSD__)
+ 	#define TIXML_FSEEK fseeko
+ 	#define TIXML_FTELL ftello
