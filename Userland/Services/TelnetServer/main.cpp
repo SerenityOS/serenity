@@ -135,7 +135,9 @@ int main(int argc, char** argv)
         run_command(ptm_fd, command);
 
         auto client = Client::create(id, move(client_socket), ptm_fd);
-        client->on_exit = [&clients, id] { clients.remove(id); };
+        client->on_exit = [&clients, id] {
+            Core::deferred_invoke([&clients, id] { clients.remove(id); });
+        };
         clients.set(id, client);
     };
 
