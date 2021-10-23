@@ -11,12 +11,13 @@ if [ "$#" -eq "0" ]; then
             '*.sh' \
             ':!:Ports' \
             ':!:Userland/Shell/Tests' \
-            ':!:Base/home/anon/tests'
+            ':!:Base/home/anon/tests' \
+            ':!:Base/root/generate_manpages.sh'
     )
 else
     files=()
     for file in "$@"; do
-        if [[ "${file}" == *".sh" ]]; then
+        if [[ "${file}" == *".sh" && "${file}" != "Base/root/generate_manpages.sh" ]]; then
             files+=("${file}")
         fi
     done
