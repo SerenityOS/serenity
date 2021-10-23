@@ -19,6 +19,7 @@ RadioButton::RadioButton(String text)
     : AbstractButton(move(text))
 {
     set_exclusive(true);
+    set_checkable(true);
     set_min_width(32);
     set_fixed_height(22);
 }
