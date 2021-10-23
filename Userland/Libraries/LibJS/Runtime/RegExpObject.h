@@ -33,7 +33,7 @@ public:
     RegExpObject(Object& prototype);
     RegExpObject(Regex<ECMA262> regex, String pattern, String flags, Object& prototype);
 
-    RegExpObject* regexp_initialize(GlobalObject&, Value pattern, Value flags);
+    ThrowCompletionOr<RegExpObject*> regexp_initialize(GlobalObject&, Value pattern, Value flags);
     String escape_regexp_pattern() const;
 
     virtual void initialize(GlobalObject&) override;
