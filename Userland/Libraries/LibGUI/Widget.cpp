@@ -616,6 +616,22 @@ void Widget::update(const Gfx::IntRect& rect)
         window->update(bound_by_widget.translated(window_relative_rect().location()));
 }
 
+void Widget::repaint()
+{
+    if (rect().is_empty())
+        return;
+    repaint(rect());
+}
+
+void Widget::repaint(Gfx::IntRect const& rect)
+{
+    auto* window = this->window();
+    if (!window)
+        return;
+    update(rect);
+    window->flush_pending_paints_immediately();
+}
+
 Gfx::IntRect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
