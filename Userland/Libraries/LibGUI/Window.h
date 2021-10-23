@@ -202,6 +202,8 @@ public:
 
     Menu& add_menu(String name);
 
+    void flush_pending_paints_immediately();
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

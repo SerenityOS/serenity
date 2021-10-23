@@ -136,8 +136,13 @@ public:
     Gfx::IntRect rect() const { return { 0, 0, width(), height() }; }
     Gfx::IntSize size() const { return m_relative_rect.size(); }
 
+    // Invalidate the widget (or an area thereof), causing a repaint to happen soon.
     void update();
     void update(const Gfx::IntRect&);
+
+    // Repaint the widget (or an area thereof) immediately.
+    void repaint();
+    void repaint(Gfx::IntRect const&);
 
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);

@@ -1204,4 +1204,14 @@ void Window::set_modified(bool modified)
     WindowServerConnection::the().async_set_window_modified(m_window_id, modified);
 }
 
+void Window::flush_pending_paints_immediately()
+{
+    if (!m_window_id)
+        return;
+    if (m_pending_paint_event_rects.is_empty())
+        return;
+    MultiPaintEvent paint_event(move(m_pending_paint_event_rects), size());
+    handle_multi_paint_event(paint_event);
+}
+
 }
