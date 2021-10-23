@@ -1,6 +1,7 @@
 set(SOURCES
     BlockQuote.cpp
     CodeBlock.cpp
+    CommentBlock.cpp
     ContainerBlock.cpp
     Document.cpp
     Heading.cpp
