@@ -82,6 +82,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // 23.1.3.35 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With proposal, https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
+    MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.fill, Value(true)));
