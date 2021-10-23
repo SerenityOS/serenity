@@ -51,7 +51,11 @@ int main(int argc, char** argv)
 
     if (decode) {
         auto decoded = decode_base64(StringView(buffer));
-        fwrite(decoded.data(), sizeof(u8), decoded.size(), stdout);
+        if (!decoded.has_value()) {
+            warnln("base64: invalid input");
+            return 1;
+        }
+        fwrite(decoded.value().data(), sizeof(u8), decoded.value().size(), stdout);
         return 0;
     }
 
