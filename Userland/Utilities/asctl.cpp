@@ -107,8 +107,8 @@ int main(int argc, char** argv)
                     warnln("Error: {} is not an integer volume", arguments[i - 1]);
                     return 1;
                 }
-                if (volume.value() < 0 || volume.value() > 100) {
-                    warnln("Error: {} is not between 0 and 100", arguments[i - 1]);
+                if (volume.value() < 0 || volume.value() > 150) {
+                    warnln("Error: {} is not between 0 and 150", arguments[i - 1]);
                     return 1;
                 }
                 values_to_set.set(AudioVariable::Volume, volume.value());
