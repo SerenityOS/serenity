@@ -142,7 +142,7 @@ int main(int argc, char** argv)
         Config::write_bool("KeyboardSettings", "StartupEnable", "NumLock", num_lock_checkbox.is_checked());
 
         if (quit)
-            app->quit();
+            Core::deferred_invoke([&] { app->quit(); });
     };
 
     auto& bottom_widget = root_widget.add<GUI::Widget>();
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     cancel_button.set_text("Cancel");
     cancel_button.set_fixed_width(60);
     cancel_button.on_click = [&](auto) {
-        app->quit();
+        Core::deferred_invoke([&] { app->quit(); });
     };
 
     auto& apply_button = bottom_widget.add<GUI::Button>();
