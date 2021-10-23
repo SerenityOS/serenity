@@ -442,18 +442,18 @@ enum class PadPlacement {
 };
 
 // 22.1.3.16.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
-static Value pad_string(GlobalObject& global_object, Utf16String string, PadPlacement placement)
+static ThrowCompletionOr<Value> pad_string(GlobalObject& global_object, Utf16String string, PadPlacement placement)
 {
     auto& vm = global_object.vm();
     auto string_length = string.length_in_code_units();
 
-    auto max_length = TRY_OR_DISCARD(vm.argument(0).to_length(global_object));
+    auto max_length = TRY(vm.argument(0).to_length(global_object));
     if (max_length <= string_length)
         return js_string(vm, move(string));
 
     Utf16String fill_string(Vector<u16, 1> { 0x20 });
     if (!vm.argument(1).is_undefined()) {
-        fill_string = TRY_OR_DISCARD(vm.argument(1).to_utf16_string(global_object));
+        fill_string = TRY(vm.argument(1).to_utf16_string(global_object));
         if (fill_string.is_empty())
             return js_string(vm, move(string));
     }
@@ -478,18 +478,14 @@ static Value pad_string(GlobalObject& global_object, Utf16String string, PadPlac
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
     auto string = utf16_string_from(vm, global_object);
-    if (vm.exception())
-        return {};
-    return pad_string(global_object, move(string), PadPlacement::Start);
+    return TRY_OR_DISCARD(pad_string(global_object, move(string), PadPlacement::Start));
 }
 
 // 22.1.3.15 String.prototype.padEnd ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padend
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
     auto string = utf16_string_from(vm, global_object);
-    if (vm.exception())
-        return {};
-    return pad_string(global_object, move(string), PadPlacement::End);
+    return TRY_OR_DISCARD(pad_string(global_object, move(string), PadPlacement::End));
 }
 
 static Utf8View const whitespace_characters = Utf8View("\x09\x0A\x0B\x0C\x0D\x20\xC2\xA0\xE1\x9A\x80\xE2\x80\x80\xE2\x80\x81\xE2\x80\x82\xE2\x80\x83\xE2\x80\x84\xE2\x80\x85\xE2\x80\x86\xE2\x80\x87\xE2\x80\x88\xE2\x80\x89\xE2\x80\x8A\xE2\x80\xAF\xE2\x81\x9F\xE3\x80\x80\xE2\x80\xA8\xE2\x80\xA9\xEF\xBB\xBF"sv);
