@@ -682,7 +682,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::compile)
         flags_value = flags;
     }
 
-    return regexp_object->regexp_initialize(global_object, pattern_value, flags_value);
+    return TRY_OR_DISCARD(regexp_object->regexp_initialize(global_object, pattern_value, flags_value));
 }
 
 }

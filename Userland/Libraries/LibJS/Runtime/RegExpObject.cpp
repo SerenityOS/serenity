@@ -140,7 +140,7 @@ void RegExpObject::initialize(GlobalObject& global_object)
 }
 
 // 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
-RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value pattern, Value flags)
+ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(GlobalObject& global_object, Value pattern, Value flags)
 {
     auto& vm = global_object.vm();
 
@@ -148,7 +148,7 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
     if (flags.is_undefined()) {
         f = String::empty();
     } else {
-        f = TRY_OR_DISCARD(flags.to_string(global_object));
+        f = TRY(flags.to_string(global_object));
     }
 
     String original_pattern;
@@ -158,28 +158,24 @@ RegExpObject* RegExpObject::regexp_initialize(GlobalObject& global_object, Value
         original_pattern = String::empty();
         parsed_pattern = String::empty();
     } else {
-        original_pattern = TRY_OR_DISCARD(pattern.to_string(global_object));
+        original_pattern = TRY(pattern.to_string(global_object));
         bool unicode = f.find('u').has_value();
         parsed_pattern = parse_regex_pattern(original_pattern, unicode);
     }
 
     auto parsed_flags_or_error = regex_flags_from_string(f);
-    if (parsed_flags_or_error.is_error()) {
-        vm.throw_exception(global_object, SyntaxError::create(global_object, parsed_flags_or_error.release_error()));
-        return {};
-    }
+    if (parsed_flags_or_error.is_error())
+        return vm.throw_completion<SyntaxError>(global_object, parsed_flags_or_error.release_error());
 
     Regex<ECMA262> regex(move(parsed_pattern), parsed_flags_or_error.release_value());
-    if (regex.parser_result.error != regex::Error::NoError) {
-        vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpCompileError, regex.error_string());
-        return {};
-    }
+    if (regex.parser_result.error != regex::Error::NoError)
+        return vm.throw_completion<SyntaxError>(global_object, ErrorType::RegExpCompileError, regex.error_string());
 
     m_pattern = move(original_pattern);
     m_flags = move(f);
     m_regex = move(regex);
 
-    TRY_OR_DISCARD(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
+    TRY(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
     return this;
 }
@@ -197,7 +193,7 @@ String RegExpObject::escape_regexp_pattern() const
 RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
 {
     auto* regexp_object = RegExpObject::create(global_object);
-    return regexp_object->regexp_initialize(global_object, pattern, flags);
+    return TRY_OR_DISCARD(regexp_object->regexp_initialize(global_object, pattern, flags));
 }
 
 }
