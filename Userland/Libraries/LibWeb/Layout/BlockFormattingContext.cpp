@@ -589,7 +589,8 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         auto& overflow_data = icb.ensure_overflow_data();
         overflow_data.scrollable_overflow_rect = viewport_rect.to_type<float>();
-        overflow_data.scrollable_overflow_rect.set_size(right_edge, bottom_edge);
+        // NOTE: The edges are *within* the rectangle, so we add 1 to get the width and height.
+        overflow_data.scrollable_overflow_rect.set_size(right_edge + 1, bottom_edge + 1);
     } else {
         icb.clear_overflow_data();
     }
