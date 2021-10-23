@@ -295,6 +295,7 @@ RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const
 {
     // FIXME: Many of these should be dependent on the hardware
 
+    // MEDIAQUERIES-4 properties - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
     if (name.equals_ignoring_case("any-hover"sv))
         return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
     if (name.equals_ignoring_case("any-pointer"sv))
@@ -331,6 +332,22 @@ RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const
         return CSS::IdentifierStyleValue::create(CSS::ValueID::Fast);
     if (name.equals_ignoring_case("width"sv))
         return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_width()));
+
+    // MEDIAQUERIES-5 properties - https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
+    if (name.equals_ignoring_case("prefers-color-scheme")) {
+        if (auto* page = this->page()) {
+            switch (page->preferred_color_scheme()) {
+            case CSS::PreferredColorScheme::Light:
+                return CSS::IdentifierStyleValue::create(CSS::ValueID::Light);
+            case CSS::PreferredColorScheme::Dark:
+                return CSS::IdentifierStyleValue::create(CSS::ValueID::Dark);
+            case CSS::PreferredColorScheme::Auto:
+            default:
+                return CSS::IdentifierStyleValue::create(page->palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
+            }
+        }
+    }
+
     return {};
 }
 
