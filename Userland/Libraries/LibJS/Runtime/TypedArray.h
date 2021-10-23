@@ -20,7 +20,7 @@ namespace JS {
 
 class TypedArrayBase;
 
-TypedArrayBase* typed_array_from(GlobalObject&, Value);
+ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject&, Value);
 ThrowCompletionOr<void> validate_typed_array(GlobalObject&, TypedArrayBase&);
 
 class TypedArrayBase : public Object {
