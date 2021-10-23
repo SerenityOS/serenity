@@ -72,9 +72,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::finally)
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
             auto result = TRY(vm.call(on_finally, js_undefined()));
-            auto* promise = promise_resolve(global_object, constructor, result);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto* promise = TRY(promise_resolve(global_object, constructor, result));
             auto* value_thunk = NativeFunction::create(global_object, "", [value](auto&, auto&) -> ThrowCompletionOr<Value> {
                 return value;
             });
@@ -88,9 +86,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::finally)
             auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
             auto result = TRY(vm.call(on_finally, js_undefined()));
-            auto* promise = promise_resolve(global_object, constructor, result);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            auto* promise = TRY(promise_resolve(global_object, constructor, result));
             auto* thrower = NativeFunction::create(global_object, "", [reason](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
                 vm.throw_exception(global_object, reason);
                 return throw_completion(reason);
