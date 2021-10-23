@@ -23,11 +23,12 @@ RefPtr<SQL::SQLResult> execute(NonnullRefPtr<SQL::Database> database, String con
     auto parser = SQL::AST::Parser(SQL::AST::Lexer(sql));
     auto statement = parser.next_statement();
     EXPECT(!parser.has_errors());
-    if (parser.has_errors()) {
+    if (parser.has_errors())
         outln("{}", parser.errors()[0].to_string());
-    }
     SQL::AST::ExecutionContext context { database };
     auto result = statement->execute(context);
+    if (result->error().code != SQL::SQLErrorCode::NoError)
+        outln("{}", result->error().to_string());
     return result;
 }
 
@@ -145,6 +146,68 @@ TEST_CASE(select_from_table)
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->has_results());
     EXPECT_EQ(result->results().size(), 5u);
+}
+
+TEST_CASE(select_with_column_names)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_1', 42 ), ( 'Test_2', 43 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 2);
+    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_3', 44 ), ( 'Test_4', 45 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 2);
+    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 1);
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 5u);
+    EXPECT_EQ(result->results()[0].size(), 1u);
+}
+
+TEST_CASE(select_with_nonexisting_column_name)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database, "SELECT Bogus FROM TestSchema.TestTable;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::ColumnDoesNotExist);
+}
+
+TEST_CASE(select_with_where)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable WHERE IntColumn > 44;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 2u);
+    for (auto& row : result->results()) {
+        EXPECT(row[1].to_int().value() > 44);
+    }
 }
 
 }
