@@ -562,7 +562,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::substring)
     return js_string(vm, string.substring_view(from, to - from));
 }
 
-// B.2.3.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
+// B.2.2.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::substr)
 {
     auto string = utf16_string_from(vm, global_object);
@@ -962,7 +962,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::search)
     return TRY_OR_DISCARD(Value(rx).invoke(global_object, *vm.well_known_symbol_search(), js_string(vm, move(string))));
 }
 
-// B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
+// B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
 static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
 {
     auto& vm = global_object.vm();
@@ -987,79 +987,79 @@ static Value create_html(GlobalObject& global_object, Value string, const String
     return js_string(vm, builder.build());
 }
 
-// B.2.3.2 String.prototype.anchor ( name ), https://tc39.es/ecma262/#sec-string.prototype.anchor
+// B.2.2.2 String.prototype.anchor ( name ), https://tc39.es/ecma262/#sec-string.prototype.anchor
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::anchor)
 {
     return create_html(global_object, vm.this_value(global_object), "a", "name", vm.argument(0));
 }
 
-// B.2.3.3 String.prototype.big ( ), https://tc39.es/ecma262/#sec-string.prototype.big
+// B.2.2.3 String.prototype.big ( ), https://tc39.es/ecma262/#sec-string.prototype.big
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::big)
 {
     return create_html(global_object, vm.this_value(global_object), "big", String::empty(), Value());
 }
 
-// B.2.3.4 String.prototype.blink ( ), https://tc39.es/ecma262/#sec-string.prototype.blink
+// B.2.2.4 String.prototype.blink ( ), https://tc39.es/ecma262/#sec-string.prototype.blink
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::blink)
 {
     return create_html(global_object, vm.this_value(global_object), "blink", String::empty(), Value());
 }
 
-// B.2.3.5 String.prototype.bold ( ), https://tc39.es/ecma262/#sec-string.prototype.bold
+// B.2.2.5 String.prototype.bold ( ), https://tc39.es/ecma262/#sec-string.prototype.bold
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::bold)
 {
     return create_html(global_object, vm.this_value(global_object), "b", String::empty(), Value());
 }
 
-// B.2.3.6 String.prototype.fixed ( ), https://tc39.es/ecma262/#sec-string.prototype.fixed
+// B.2.2.6 String.prototype.fixed ( ), https://tc39.es/ecma262/#sec-string.prototype.fixed
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::fixed)
 {
     return create_html(global_object, vm.this_value(global_object), "tt", String::empty(), Value());
 }
 
-// B.2.3.7 String.prototype.fontcolor ( color ), https://tc39.es/ecma262/#sec-string.prototype.fontcolor
+// B.2.2.7 String.prototype.fontcolor ( color ), https://tc39.es/ecma262/#sec-string.prototype.fontcolor
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::fontcolor)
 {
     return create_html(global_object, vm.this_value(global_object), "font", "color", vm.argument(0));
 }
 
-// B.2.3.8 String.prototype.fontsize ( size ), https://tc39.es/ecma262/#sec-string.prototype.fontsize
+// B.2.2.8 String.prototype.fontsize ( size ), https://tc39.es/ecma262/#sec-string.prototype.fontsize
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::fontsize)
 {
     return create_html(global_object, vm.this_value(global_object), "font", "size", vm.argument(0));
 }
 
-// B.2.3.9 String.prototype.italics ( ), https://tc39.es/ecma262/#sec-string.prototype.italics
+// B.2.2.9 String.prototype.italics ( ), https://tc39.es/ecma262/#sec-string.prototype.italics
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::italics)
 {
     return create_html(global_object, vm.this_value(global_object), "i", String::empty(), Value());
 }
 
-// B.2.3.10 String.prototype.link ( url ), https://tc39.es/ecma262/#sec-string.prototype.link
+// B.2.2.10 String.prototype.link ( url ), https://tc39.es/ecma262/#sec-string.prototype.link
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::link)
 {
     return create_html(global_object, vm.this_value(global_object), "a", "href", vm.argument(0));
 }
 
-// B.2.3.11 String.prototype.small ( ), https://tc39.es/ecma262/#sec-string.prototype.small
+// B.2.2.11 String.prototype.small ( ), https://tc39.es/ecma262/#sec-string.prototype.small
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::small)
 {
     return create_html(global_object, vm.this_value(global_object), "small", String::empty(), Value());
 }
 
-// B.2.3.12 String.prototype.strike ( ), https://tc39.es/ecma262/#sec-string.prototype.strike
+// B.2.2.12 String.prototype.strike ( ), https://tc39.es/ecma262/#sec-string.prototype.strike
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::strike)
 {
     return create_html(global_object, vm.this_value(global_object), "strike", String::empty(), Value());
 }
 
-// B.2.3.13 String.prototype.sub ( ), https://tc39.es/ecma262/#sec-string.prototype.sub
+// B.2.2.13 String.prototype.sub ( ), https://tc39.es/ecma262/#sec-string.prototype.sub
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::sub)
 {
     return create_html(global_object, vm.this_value(global_object), "sub", String::empty(), Value());
 }
 
-// B.2.3.14 String.prototype.sup ( ), https://tc39.es/ecma262/#sec-string.prototype.sup
+// B.2.2.14 String.prototype.sup ( ), https://tc39.es/ecma262/#sec-string.prototype.sup
 JS_DEFINE_OLD_NATIVE_FUNCTION(StringPrototype::sup)
 {
     return create_html(global_object, vm.this_value(global_object), "sup", String::empty(), Value());
