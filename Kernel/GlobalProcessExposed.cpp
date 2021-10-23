@@ -706,6 +706,19 @@ private:
         return KSuccess;
     }
 };
+class ProcFSSystemMode final : public ProcFSGlobalInformation {
+public:
+    static NonnullRefPtr<ProcFSSystemMode> must_create();
+
+private:
+    ProcFSSystemMode();
+    virtual KResult try_generate(KBufferBuilder& builder) override
+    {
+        TRY(builder.append(kernel_command_line().system_mode()));
+        TRY(builder.append('\n'));
+        return KSuccess;
+    }
+};
 
 class ProcFSProfile final : public ProcFSGlobalInformation {
 public:
@@ -793,6 +806,10 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCommandLine> ProcFSCommandLine::must_create
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSCommandLine).release_nonnull();
 }
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemMode> ProcFSSystemMode::must_create()
+{
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSSystemMode).release_nonnull();
+}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSProfile> ProcFSProfile::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
@@ -855,6 +872,10 @@ UNMAP_AFTER_INIT ProcFSCommandLine::ProcFSCommandLine()
     : ProcFSGlobalInformation("cmdline"sv)
 {
 }
+UNMAP_AFTER_INIT ProcFSSystemMode::ProcFSSystemMode()
+    : ProcFSGlobalInformation("system_mode"sv)
+{
+}
 UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
     : ProcFSGlobalInformation("profile"sv)
 {
@@ -895,6 +916,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSDevices::must_create());
     directory->m_components.append(ProcFSUptime::must_create());
     directory->m_components.append(ProcFSCommandLine::must_create());
+    directory->m_components.append(ProcFSSystemMode::must_create());
     directory->m_components.append(ProcFSProfile::must_create());
     directory->m_components.append(ProcFSKernelBase::must_create());
 

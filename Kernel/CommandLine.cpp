@@ -39,8 +39,13 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     s_the = new CommandLine(s_cmd_line);
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
     // Validate the modes the user passed in.
-    (void)s_the->boot_mode(Validate::Yes);
     (void)s_the->panic_mode(Validate::Yes);
+    if (s_the->contains("boot_mode"sv)) {
+        // I know, we don't do legacy, but even though I eliminated 'boot_mode' from the codebase, there
+        // is a good chance that someone's still using it. Let's be nice and tell them where to look.
+        // TODO: Remove this in 2022.
+        PANIC("'boot_mode' is now split into panic=[halt|shutdown], fbdev=[on|off], and system_mode=[graphical|text|selftest].");
+    }
 }
 
 UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_bootloader)
@@ -199,20 +204,9 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
     PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
 }
 
-BootMode CommandLine::boot_mode(Validate should_validate) const
+StringView CommandLine::system_mode() const
 {
-    const auto boot_mode = lookup("boot_mode"sv).value_or("graphical"sv);
-    if (boot_mode == "no-fbdev"sv) {
-        return BootMode::NoFramebufferDevices;
-    } else if (boot_mode == "self-test"sv) {
-        return BootMode::SelfTest;
-    } else if (boot_mode == "graphical"sv) {
-        return BootMode::Graphical;
-    }
-
-    if (should_validate == Validate::Yes)
-        PANIC("Unknown BootMode: {}", boot_mode);
-    return BootMode::Unknown;
+    return lookup("system_mode"sv).value_or("graphical"sv);
 }
 
 PanicMode CommandLine::panic_mode(Validate should_validate) const
