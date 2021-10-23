@@ -27,38 +27,38 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.then, then, 2, attr);
-    define_old_native_function(vm.names.catch_, catch_, 1, attr);
-    define_old_native_function(vm.names.finally, finally, 1, attr);
+    define_native_function(vm.names.then, then, 2, attr);
+    define_native_function(vm.names.catch_, catch_, 1, attr);
+    define_native_function(vm.names.finally, finally, 1, attr);
 
     // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Promise.as_string()), Attribute::Configurable);
 }
 
 // 27.2.5.4 Promise.prototype.then ( onFulfilled, onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.then
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::then)
+JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 {
-    auto* promise = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* promise = TRY(typed_this_object(global_object));
     auto on_fulfilled = vm.argument(0);
     auto on_rejected = vm.argument(1);
-    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
-    auto result_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));
+    auto result_capability = TRY(new_promise_capability(global_object, constructor));
     return promise->perform_then(on_fulfilled, on_rejected, result_capability);
 }
 
 // 27.2.5.1 Promise.prototype.catch ( onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.catch
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::catch_)
+JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 {
     auto this_value = vm.this_value(global_object);
     auto on_rejected = vm.argument(0);
-    return TRY_OR_DISCARD(this_value.invoke(global_object, vm.names.then, js_undefined(), on_rejected));
+    return TRY(this_value.invoke(global_object, vm.names.then, js_undefined(), on_rejected));
 }
 
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::finally)
+JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 {
-    auto* promise = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
+    auto* promise = TRY(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));
     Value then_finally;
     Value catch_finally;
     auto on_finally = vm.argument(0);
@@ -98,7 +98,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::finally)
         then_finally = Value(then_finally_function);
         catch_finally = Value(catch_finally_function);
     }
-    return TRY_OR_DISCARD(Value(promise).invoke(global_object, vm.names.then, then_finally, catch_finally));
+    return TRY(Value(promise).invoke(global_object, vm.names.then, then_finally, catch_finally));
 }
 
 }
