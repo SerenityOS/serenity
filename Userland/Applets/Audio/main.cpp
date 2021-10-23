@@ -87,13 +87,31 @@ public:
         m_slider->set_max(100);
         m_slider->set_page_step(5);
         m_slider->set_step(5);
-        m_slider->set_value(m_slider->max() - m_audio_volume);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
         m_slider->on_change = [&](int value) {
             m_audio_volume = m_slider->max() - value;
-            double volume = clamp(static_cast<double>(m_audio_volume) / m_slider->max(), 0.0, 1.0);
+            double volume = clamp(static_cast<double>(m_audio_volume) / 100, 0.0, 1.5);
             m_audio_client->set_main_mix_volume(volume);
             update();
+        };
+        if (m_audio_volume > 100) {
+            m_audio_volume_raised = true;
+            m_slider->set_max(150);
+        }
+        m_slider->set_value(m_slider->max() - m_audio_volume);
+
+        m_volume_raised_box = m_root_container->add<GUI::CheckBox>("\u2B06");
+        m_volume_raised_box->set_fixed_size(27, 16);
+        m_volume_raised_box->set_checked(m_audio_volume_raised);
+        m_volume_raised_box->set_tooltip(m_audio_volume_raised ? "Volume raised" : "Volume normal");
+        m_volume_raised_box->on_checked = [&](bool is_audio_volume_raised) {
+            if (is_audio_volume_raised)
+                m_slider->set_max(150);
+            else
+                m_slider->set_max(100);
+            m_audio_client->set_main_mix_volume(1.0);
+            m_volume_raised_box->set_tooltip(is_audio_volume_raised ? "Volume raised" : "Volume normal");
+            GUI::Application::the()->hide_tooltip();
         };
 
         m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
@@ -187,7 +205,7 @@ private:
     void reposition_slider_window()
     {
         auto applet_rect = window()->applet_rect_on_screen();
-        m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 106, 50, 100);
+        m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 126, 50, 120);
     }
 
     struct VolumeBitmapPair {
@@ -199,11 +217,13 @@ private:
     Vector<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
     bool m_audio_muted { false };
+    bool m_audio_volume_raised { false };
     int m_audio_volume { 100 };
 
     RefPtr<GUI::Slider> m_slider;
     RefPtr<GUI::Window> m_slider_window;
     RefPtr<GUI::CheckBox> m_mute_box;
+    RefPtr<GUI::CheckBox> m_volume_raised_box;
     RefPtr<GUI::CheckBox> m_percent_box;
     RefPtr<GUI::Label> m_root_container;
 };
