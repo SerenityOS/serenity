@@ -39,12 +39,16 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
             context.current_row = &row;
             if (where_clause()) {
                 auto where_result = where_clause()->evaluate(context);
+                if (context.result->has_error())
+                    return context.result;
                 if (!where_result)
                     continue;
             }
             tuple.clear();
             for (auto& col : columns) {
                 auto value = col.expression()->evaluate(context);
+                if (context.result->has_error())
+                    return context.result;
                 tuple.append(value);
             }
             context.result->append(tuple);

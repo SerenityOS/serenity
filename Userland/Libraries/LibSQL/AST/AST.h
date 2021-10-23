@@ -437,12 +437,31 @@ private:
     String m_column_name;
 };
 
+#define __enum_UnaryOperator(S) \
+    S(Minus, "-")               \
+    S(Plus, "+")                \
+    S(BitwiseNot, "~")          \
+    S(Not, "NOT")
+
 enum class UnaryOperator {
-    Minus,
-    Plus,
-    BitwiseNot,
-    Not,
+#undef __UnaryOperator
+#define __UnaryOperator(code, name) code,
+    __enum_UnaryOperator(__UnaryOperator)
+#undef __UnaryOperator
 };
+
+constexpr char const* UnaryOperator_name(UnaryOperator op)
+{
+    switch (op) {
+#undef __UnaryOperator
+#define __UnaryOperator(code, name) \
+    case UnaryOperator::code:       \
+        return name;
+        __enum_UnaryOperator(__UnaryOperator)
+#undef __UnaryOperator
+            default : VERIFY_NOT_REACHED();
+    }
+}
 
 class UnaryOperatorExpression : public NestedExpression {
 public:
@@ -459,27 +478,46 @@ private:
     UnaryOperator m_type;
 };
 
+// Note: These are in order of highest-to-lowest operator precedence.
+#define __enum_BinaryOperator(S) \
+    S(Concatenate, "||")         \
+    S(Multiplication, "*")       \
+    S(Division, "/")             \
+    S(Modulo, "%")               \
+    S(Plus, "+")                 \
+    S(Minus, "-")                \
+    S(ShiftLeft, "<<")           \
+    S(ShiftRight, ">>")          \
+    S(BitwiseAnd, "&")           \
+    S(BitwiseOr, "|")            \
+    S(LessThan, "<")             \
+    S(LessThanEquals, "<=")      \
+    S(GreaterThan, ">")          \
+    S(GreaterThanEquals, ">=")   \
+    S(Equals, "=")               \
+    S(NotEquals, "!=")           \
+    S(And, "and")                \
+    S(Or, "or")
+
 enum class BinaryOperator {
-    // Note: These are in order of highest-to-lowest operator precedence.
-    Concatenate,
-    Multiplication,
-    Division,
-    Modulo,
-    Plus,
-    Minus,
-    ShiftLeft,
-    ShiftRight,
-    BitwiseAnd,
-    BitwiseOr,
-    LessThan,
-    LessThanEquals,
-    GreaterThan,
-    GreaterThanEquals,
-    Equals,
-    NotEquals,
-    And,
-    Or,
+#undef __BinaryOperator
+#define __BinaryOperator(code, name) code,
+    __enum_BinaryOperator(__BinaryOperator)
+#undef __BinaryOperator
 };
+
+constexpr char const* BinaryOperator_name(BinaryOperator op)
+{
+    switch (op) {
+#undef __BinaryOperator
+#define __BinaryOperator(code, name) \
+    case BinaryOperator::code:       \
+        return name;
+        __enum_BinaryOperator(__BinaryOperator)
+#undef __BinaryOperator
+            default : VERIFY_NOT_REACHED();
+    }
+}
 
 class BinaryOperatorExpression : public NestedDoubleExpression {
 public:

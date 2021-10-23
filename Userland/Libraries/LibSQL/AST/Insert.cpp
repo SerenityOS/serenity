@@ -44,6 +44,7 @@ RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
 
     Vector<Row> inserted_rows;
     inserted_rows.ensure_capacity(m_chained_expressions.size());
+    context.result = SQLResult::construct();
     for (auto& row_expr : m_chained_expressions) {
         for (auto& column_def : table_def->columns()) {
             if (!m_column_names.contains_slow(column_def.name())) {
@@ -51,6 +52,8 @@ RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
             }
         }
         auto row_value = row_expr.evaluate(context);
+        if (context.result->has_error())
+            return context.result;
         VERIFY(row_value.type() == SQLType::Tuple);
         auto values = row_value.to_vector().value();
 
@@ -76,6 +79,7 @@ RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
 
     for (auto& inserted_row : inserted_rows) {
         context.database->insert(inserted_row);
+        // FIXME Error handling
     }
 
     return SQLResult::construct(SQLCommand::Insert, 0, m_chained_expressions.size(), 0);

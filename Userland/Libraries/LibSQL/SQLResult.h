@@ -41,21 +41,25 @@ constexpr char const* command_tag(SQLCommand command)
     }
 }
 
-#define ENUMERATE_SQL_ERRORS(S)                                   \
-    S(NoError, "No error")                                        \
-    S(DatabaseUnavailable, "Database Unavailable")                \
-    S(StatementUnavailable, "Statement with id '{}' Unavailable") \
-    S(SyntaxError, "Syntax Error")                                \
-    S(DatabaseDoesNotExist, "Database '{}' does not exist")       \
-    S(SchemaDoesNotExist, "Schema '{}' does not exist")           \
-    S(SchemaExists, "Schema '{}' already exist")                  \
-    S(TableDoesNotExist, "Table '{}' does not exist")             \
-    S(ColumnDoesNotExist, "Column '{}' does not exist")           \
-    S(TableExists, "Table '{}' already exist")                    \
-    S(InvalidType, "Invalid type '{}'")                           \
-    S(InvalidDatabaseName, "Invalid database name '{}'")          \
-    S(InvalidValueType, "Invalid type for attribute '{}'")        \
-    S(InvalidNumberOfValues, "Number of values does not match number of columns")
+#define ENUMERATE_SQL_ERRORS(S)                                                          \
+    S(NoError, "No error")                                                               \
+    S(DatabaseUnavailable, "Database Unavailable")                                       \
+    S(StatementUnavailable, "Statement with id '{}' Unavailable")                        \
+    S(SyntaxError, "Syntax Error")                                                       \
+    S(DatabaseDoesNotExist, "Database '{}' does not exist")                              \
+    S(SchemaDoesNotExist, "Schema '{}' does not exist")                                  \
+    S(SchemaExists, "Schema '{}' already exist")                                         \
+    S(TableDoesNotExist, "Table '{}' does not exist")                                    \
+    S(ColumnDoesNotExist, "Column '{}' does not exist")                                  \
+    S(TableExists, "Table '{}' already exist")                                           \
+    S(InvalidType, "Invalid type '{}'")                                                  \
+    S(InvalidDatabaseName, "Invalid database name '{}'")                                 \
+    S(InvalidValueType, "Invalid type for attribute '{}'")                               \
+    S(InvalidNumberOfValues, "Number of values does not match number of columns")        \
+    S(BooleanOperatorTypeMismatch, "Cannot apply '{}' operator to non-boolean operands") \
+    S(NumericOperatorTypeMismatch, "Cannot apply '{}' operator to non-numeric operands") \
+    S(IntegerOperatorTypeMismatch, "Cannot apply '{}' operator to non-numeric operands") \
+    S(InvalidOperator, "Invalid operator '{}'")
 
 enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
@@ -113,6 +117,13 @@ public:
     int updated() const { return m_update_count; }
     int inserted() const { return m_insert_count; }
     int deleted() const { return m_delete_count; }
+    void set_error(SQLErrorCode code, String argument = {})
+    {
+        m_error.code = code;
+        m_error.error_argument = argument;
+    }
+
+    bool has_error() const { return m_error.code != SQLErrorCode::NoError; }
     SQLError const& error() const { return m_error; }
     bool has_results() const { return m_has_results; }
     Vector<Tuple> const& results() const { return m_result_set; }
