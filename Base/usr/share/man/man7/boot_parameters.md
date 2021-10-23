@@ -51,6 +51,8 @@ List of options:
 * **`init_args`** - This parameter expects a set of arguments to pass to the **`init`** program.
   The value should be a set of strings separated by `,` characters.
 
+* **`panic`** - This parameter expects **`halt`** or **`shutdown`**. This is particularly useful in CI contexts.
+
 * **`pci_ecam`** - This parameter expects **`on`** or **`off`**.
 
 * **`root`** - This parameter configures the device to use as the root file system. It defaults to **`/dev/hda`** if unspecified.
