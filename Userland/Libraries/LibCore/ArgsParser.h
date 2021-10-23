@@ -61,6 +61,7 @@ public:
     void print_version(FILE*);
 
     void add_option(Option&&);
+    void add_ignored(const char* long_name, char short_name);
     void add_option(bool& value, const char* help_string, const char* long_name, char short_name);
     void add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name);

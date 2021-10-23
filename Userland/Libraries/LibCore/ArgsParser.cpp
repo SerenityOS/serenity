@@ -253,6 +253,21 @@ void ArgsParser::add_option(Option&& option)
     m_options.append(move(option));
 }
 
+void ArgsParser::add_ignored(const char* long_name, char short_name)
+{
+    Option option {
+        false,
+        "Ignored",
+        long_name,
+        short_name,
+        nullptr,
+        [](const char*) {
+            return true;
+        }
+    };
+    add_option(move(option));
+}
+
 void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
 {
     Option option {
