@@ -67,13 +67,13 @@ int main(int argc, char** argv)
         monitor_settings_widget.apply_settings();
         desktop_settings_widget.apply_settings();
         font_settings_widget.apply_settings();
-        app->quit();
+        Core::deferred_invoke([&] { app->quit(); });
     };
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.set_fixed_width(75);
     cancel_button.on_click = [&](auto) {
-        app->quit();
+        Core::deferred_invoke([&] { app->quit(); });
     };
 
     auto& apply_button = button_container.add<GUI::Button>("Apply");
