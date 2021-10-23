@@ -9,6 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <Services/LoginServer/LoginWindow.h>
 #include <errno.h>
 #include <string.h>
@@ -69,6 +70,11 @@ static void login(Core::Account const& account, LoginWindow& window)
 
     auto result = Core::File::remove("/tmp/portal/user"sv, Core::File::RecursionMode::Allowed, false);
     VERIFY(!result.is_error());
+
+    // Clear the clipboard to not leak it's content between sessions.
+    // FIXME: This is temporary until Clipboard is a user service.
+    GUI::Clipboard::the().clear();
+
     window.show();
 }
 
