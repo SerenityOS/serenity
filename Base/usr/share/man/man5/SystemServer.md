@@ -28,7 +28,7 @@ describing how to launch and manage this service.
 * `SocketPermissions` - comma-separated list of (octal) file system permissions for the socket file. The default permissions are 0600. If the number of socket permissions defined is less than the number of sockets defined, then the last defined permission will be used for the remainder of the items in `Socket`.
 * `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
 * `WorkingDirectory` - the working directory in which the service is spawned. By default, services are spawned in the root (`"/"`) directory.
-* `BootModes` - a comma-separated list of boot modes the service should be enabled in. By default, services are only enabled in the "graphical" mode. The current system mode is read from the [kernel command line](../man7/boot_parameters.md#options), and is assumed to be "graphical" if not specified there.
+* `SystemModes` - a comma-separated list of system modes in which the service should be enabled. By default, services are only enabled in the "graphical" mode. The current system mode is read from the [kernel command line](../man7/boot_parameters.md#options), and is assumed to be "graphical" if not specified there.
 * `Environment` - a space-separated list of "variable=value" pairs to set in the environment for the service.
 * `MultiInstance` - whether multiple instances of the service can be running simultaneously.
 * `AcceptSocketConnections` - whether SystemServer should accept connections on the socket, and spawn an instance of the service for each client connection.
@@ -76,7 +76,7 @@ Executable=/bin/Shell
 StdIO=/dev/tty0
 Environment=TERM=xterm
 KeepAlive=1
-BootModes=text
+SystemModes=text
 
 # Launch WindowManager with two sockets: one for main windowing operations, and
 # one for window management operations. Both sockets get file permissions as 660.
