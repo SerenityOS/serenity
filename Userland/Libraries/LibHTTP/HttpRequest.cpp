@@ -197,7 +197,10 @@ Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_ba
     auto token = value.substring_view(6);
     if (token.is_empty())
         return {};
-    auto decoded_token = String::copy(decode_base64(token));
+    auto decoded_token_bb = decode_base64(token);
+    if (!decoded_token_bb.has_value())
+        return {};
+    auto decoded_token = String::copy(decoded_token_bb.value());
     auto colon_index = decoded_token.find(':');
     if (!colon_index.has_value())
         return {};

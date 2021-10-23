@@ -100,8 +100,10 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
 
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
+        if (!bitmap_data.has_value())
+            return String { "Base64 decode failed"sv };
 
-        auto bitmap = try_decode_bitmap(bitmap_data);
+        auto bitmap = try_decode_bitmap(bitmap_data.value());
         if (!bitmap)
             return String { "Layer bitmap decode failed"sv };
 

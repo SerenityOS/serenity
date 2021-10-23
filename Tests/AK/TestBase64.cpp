@@ -13,7 +13,9 @@
 TEST_CASE(test_decode)
 {
     auto decode_equal = [&](const char* input, const char* expected) {
-        auto decoded = decode_base64(StringView(input));
+        auto decoded_option = decode_base64(StringView(input));
+        EXPECT(decoded_option.has_value());
+        auto decoded = decoded_option.value();
         EXPECT(String::copy(decoded) == String(expected));
         EXPECT(StringView(expected).length() <= calculate_base64_decoded_length(StringView(input).bytes()));
     };
@@ -27,12 +29,12 @@ TEST_CASE(test_decode)
     decode_equal("Zm9vYmFy", "foobar");
 }
 
-TEST_CASE(test_decode_nocrash)
+TEST_CASE(test_decode_invalid)
 {
-    // Any output is fine, we only check that we don't crash here.
-    decode_base64(StringView("asdf\xffqwer"));
-    decode_base64(StringView("asdf\x80qwer"));
-    // TODO: Handle decoding failure.
+    EXPECT(!decode_base64(StringView("asdf\xffqwe")).has_value());
+    EXPECT(!decode_base64(StringView("asdf\x80qwe")).has_value());
+    EXPECT(!decode_base64(StringView("asdf:qwe")).has_value());
+    EXPECT(!decode_base64(StringView("asdf=qwe")).has_value());
 }
 
 TEST_CASE(test_encode)
