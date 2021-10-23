@@ -146,13 +146,13 @@ static ThrowCompletionOr<Value> make_indices_array(GlobalObject& global_object, 
 }
 
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
-static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
+static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
 {
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
-    auto last_index_value = TRY_OR_DISCARD(regexp_object.get(vm.names.lastIndex));
-    auto last_index = TRY_OR_DISCARD(last_index_value.to_length(global_object));
+    auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
+    auto last_index = TRY(last_index_value.to_length(global_object));
 
     auto& regex = regexp_object.regex();
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
@@ -169,7 +169,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     while (true) {
         if (last_index > string.length_in_code_units()) {
             if (global || sticky)
-                TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
+                TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
             return js_null();
         }
@@ -181,7 +181,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             break;
 
         if (sticky) {
-            TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
+            TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
             return js_null();
         }
@@ -202,9 +202,9 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     }
 
     if (global || sticky)
-        TRY_OR_DISCARD(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
+        TRY(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
 
-    auto* array = TRY_OR_DISCARD(Array::create(global_object, result.n_named_capture_groups + 1));
+    auto* array = TRY(Array::create(global_object, result.n_named_capture_groups + 1));
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<FlyString, Match> group_names;
@@ -234,8 +234,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
     if (has_indices) {
-        auto indices_array = TRY_OR_DISCARD(make_indices_array(global_object, string_view, indices, group_names, has_groups));
-        TRY_OR_DISCARD(array->create_data_property(vm.names.indices, indices_array));
+        auto indices_array = TRY(make_indices_array(global_object, string_view, indices, group_names, has_groups));
+        TRY(array->create_data_property(vm.names.indices, indices_array));
     }
 
     MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
@@ -265,7 +265,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
         return {};
     }
 
-    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
+    return TRY_OR_DISCARD(regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string)));
 }
 
 // 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
@@ -329,7 +329,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::exec)
 
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
-    return regexp_builtin_exec(global_object, *regexp_object, move(string));
+    return TRY_OR_DISCARD(regexp_builtin_exec(global_object, *regexp_object, move(string)));
 }
 
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
