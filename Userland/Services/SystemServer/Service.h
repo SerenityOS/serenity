@@ -61,8 +61,8 @@ private:
     String m_user;
     // The working directory in which to spawn the service.
     String m_working_directory;
-    // Boot modes to run this service in. By default, this is the graphical mode.
-    Vector<String> m_boot_modes;
+    // System modes in which to run this service. By default, this is the graphical mode.
+    Vector<String> m_system_modes;
     // Whether several instances of this service can run at once.
     bool m_multi_instance { false };
     // Environment variables to pass to the service.

@@ -101,7 +101,7 @@ StdIO=/dev/ttyS0
 Environment=DO_SHUTDOWN_AFTER_TESTS=1 TERM=xterm PATH=/usr/local/bin:/usr/bin:/bin
 User=anon
 WorkingDirectory=/home/anon
-BootModes=self-test
+SystemModes=self-test
 ```
 
 `/dev/ttyS0` is used as stdio because that serial port is connected when qemu is run with `-display none` and
