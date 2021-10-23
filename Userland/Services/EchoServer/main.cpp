@@ -62,8 +62,10 @@ int main(int argc, char** argv)
 
         auto client = Client::create(id, move(client_socket));
         client->on_exit = [&clients, id] {
-            clients.remove(id);
-            outln("Client {} disconnected", id);
+            Core::deferred_invoke([&clients, id] {
+                clients.remove(id);
+                outln("Client {} disconnected", id);
+            });
         };
         clients.set(id, client);
     };
