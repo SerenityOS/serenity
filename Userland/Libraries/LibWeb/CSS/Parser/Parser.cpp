@@ -2082,21 +2082,21 @@ RefPtr<StyleValue> Parser::parse_identifier_value(ParsingContext const&, StyleCo
     return {};
 }
 
-Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRule const& component_value)
+Optional<Color> Parser::parse_color(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
     // https://www.w3.org/TR/css-color-3/
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
 
-        auto color = Color::from_string(ident.to_string().to_lowercase());
+        auto color = Color::from_string(ident.to_lowercase_string());
         if (color.has_value())
             return color;
 
     } else if (component_value.is(Token::Type::Hash)) {
-        // FIXME: Read it directly
-        auto color = Color::from_string(String::formatted("#{}", component_value.token().m_value.to_string().to_lowercase()));
+        auto color = Color::from_string(String::formatted("#{}", component_value.token().m_value.to_string()));
         if (color.has_value())
             return color;
+        return {};
 
     } else if (component_value.is_function()) {
         auto& function = component_value.function();
@@ -2245,6 +2245,66 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
             }
         }
         return {};
+    }
+
+    // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
+    if (context.in_quirks_mode() && property_has_quirk(context.current_property_id(), Quirk::HashlessHexColor)) {
+        // The value of a quirky color is obtained from the possible component values using the following algorithm,
+        // aborting on the first step that returns a value:
+
+        // 1. Let cv be the component value.
+        auto& cv = component_value;
+        String serialization;
+        // 2. If cv is a <number-token> or a <dimension-token>, follow these substeps:
+        if (cv.is(Token::Type::Number) || cv.is(Token::Type::Dimension)) {
+            // 1. If cv’s type flag is not "integer", return an error.
+            //    This means that values that happen to use scientific notation, e.g., 5e5e5e, will fail to parse.
+            if (cv.token().number_type() != Token::NumberType::Integer)
+                return {};
+
+            // 2. If cv’s value is less than zero, return an error.
+            auto value = cv.is(Token::Type::Number) ? cv.token().to_integer() : cv.token().dimension_value_int();
+            if (value < 0)
+                return {};
+
+            // 3. Let serialization be the serialization of cv’s value, as a base-ten integer using digits 0-9 (U+0030 to U+0039) in the shortest form possible.
+            StringBuilder serialization_builder;
+            serialization_builder.appendff("{}", value);
+
+            // 4. If cv is a <dimension-token>, append the unit to serialization.
+            if (cv.is(Token::Type::Dimension))
+                serialization_builder.append(cv.token().dimension_unit());
+
+            // 5. If serialization consists of fewer than six characters, prepend zeros (U+0030) so that it becomes six characters.
+            serialization = serialization_builder.to_string();
+            if (serialization_builder.length() < 6) {
+                StringBuilder builder;
+                for (size_t i = 0; i < (6 - serialization_builder.length()); i++)
+                    builder.append('0');
+                builder.append(serialization_builder.string_view());
+                serialization = builder.to_string();
+            }
+        }
+        // 3. Otherwise, cv is an <ident-token>; let serialization be cv’s value.
+        else {
+            if (!cv.is(Token::Type::Ident))
+                return {};
+            serialization = cv.token().ident();
+        }
+
+        // 4. If serialization does not consist of three or six characters, return an error.
+        if (serialization.length() != 3 && serialization.length() != 6)
+            return {};
+
+        // 5. If serialization contains any characters not in the range [0-9A-Fa-f] (U+0030 to U+0039, U+0041 to U+0046, U+0061 to U+0066), return an error.
+        for (auto c : serialization) {
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')))
+                return {};
+        }
+
+        // 6. Return the concatenation of "#" (U+0023) and serialization.
+        String concatenation = String::formatted("#{}", serialization);
+        return Color::from_string(concatenation);
     }
 
     return {};
@@ -3227,6 +3287,10 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, StyleC
     if (auto dynamic = parse_dynamic_value(context, component_value))
         return dynamic;
 
+    // We parse colors before numbers, to catch hashless hex colors.
+    if (auto color = parse_color_value(context, component_value))
+        return color;
+
     if (auto length = parse_length_value(context, component_value))
         return length;
 
@@ -3235,9 +3299,6 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, StyleC
 
     if (auto identifier = parse_identifier_value(context, component_value))
         return identifier;
-
-    if (auto color = parse_color_value(context, component_value))
-        return color;
 
     if (auto string = parse_string_value(context, component_value))
         return string;
