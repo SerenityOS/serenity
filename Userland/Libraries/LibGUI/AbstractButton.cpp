@@ -116,7 +116,7 @@ void AbstractButton::mousedown_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Left) {
         m_being_pressed = true;
-        update();
+        repaint();
 
         if (m_auto_repeat_interval) {
             click();
@@ -134,7 +134,7 @@ void AbstractButton::mouseup_event(MouseEvent& event)
         m_auto_repeat_timer->stop();
         bool was_being_pressed = m_being_pressed;
         m_being_pressed = false;
-        update();
+        repaint();
         if (was_being_pressed && !was_auto_repeating)
             click(event.modifiers());
     }
