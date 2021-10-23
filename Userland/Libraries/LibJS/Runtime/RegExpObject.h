@@ -14,7 +14,7 @@
 
 namespace JS {
 
-RegExpObject* regexp_create(GlobalObject&, Value pattern, Value flags);
+ThrowCompletionOr<RegExpObject*> regexp_create(GlobalObject&, Value pattern, Value flags);
 
 Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(StringView flags);
 String parse_regex_pattern(StringView pattern, bool unicode);

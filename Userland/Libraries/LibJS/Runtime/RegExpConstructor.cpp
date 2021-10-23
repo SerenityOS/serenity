@@ -88,10 +88,7 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
         flags_value = flags;
     }
 
-    auto* regexp = regexp_create(global_object, pattern_value, flags_value);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return regexp;
+    return TRY(regexp_create(global_object, pattern_value, flags_value));
 }
 
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species
