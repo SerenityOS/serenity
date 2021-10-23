@@ -48,6 +48,9 @@ NonnullRefPtr<ConfigFile> ConfigFile::open(String const& filename, int fd)
 ConfigFile::ConfigFile(const String& filename, AllowWriting allow_altering)
     : m_file(File::construct(filename))
 {
+    if (allow_altering == AllowWriting::Yes && !File::ensure_parent_directories(filename))
+        return;
+
     if (!m_file->open(allow_altering == AllowWriting::Yes ? OpenMode::ReadWrite : OpenMode::ReadOnly))
         return;
 
@@ -57,6 +60,9 @@ ConfigFile::ConfigFile(const String& filename, AllowWriting allow_altering)
 ConfigFile::ConfigFile(String const& filename, int fd)
     : m_file(File::construct(filename))
 {
+    if (!File::ensure_parent_directories(filename))
+        return;
+
     if (!m_file->open(fd, OpenMode::ReadWrite, File::ShouldCloseFileDescriptor::Yes))
         return;
 
