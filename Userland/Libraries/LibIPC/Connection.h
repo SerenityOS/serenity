@@ -60,6 +60,7 @@ protected:
 
     NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
+    RefPtr<Core::Timer> m_processing_timer;
 
     RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
