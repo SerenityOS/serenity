@@ -9,6 +9,7 @@
 #include <AK/RecursionDecision.h>
 #include <LibMarkdown/BlockQuote.h>
 #include <LibMarkdown/CodeBlock.h>
+#include <LibMarkdown/CommentBlock.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Heading.h>
 #include <LibMarkdown/HorizontalRule.h>
@@ -27,6 +28,7 @@ public:
 
     virtual RecursionDecision visit(BlockQuote const&) { return RecursionDecision::Recurse; }
     virtual RecursionDecision visit(CodeBlock const&) { return RecursionDecision::Recurse; }
+    virtual RecursionDecision visit(CommentBlock const&) { return RecursionDecision::Recurse; }
     virtual RecursionDecision visit(ContainerBlock const&) { return RecursionDecision::Recurse; }
     virtual RecursionDecision visit(Heading const&) { return RecursionDecision::Recurse; }
     virtual RecursionDecision visit(HorizontalRule const&) { return RecursionDecision::Recurse; }
