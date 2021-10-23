@@ -181,4 +181,27 @@ bool ConnectionBase::drain_messages_from_peer(u32 local_endpoint_magic)
     return true;
 }
 
+OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id, u32 local_endpoint_magic)
+{
+    for (;;) {
+        // Double check we don't already have the event waiting for us.
+        // Otherwise we might end up blocked for a while for no reason.
+        for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+            auto& message = m_unprocessed_messages[i];
+            if (message.endpoint_magic() != endpoint_magic)
+                continue;
+            if (message.message_id() == message_id)
+                return m_unprocessed_messages.take(i);
+        }
+
+        if (!m_socket->is_open())
+            break;
+
+        wait_for_socket_to_become_readable();
+        if (!drain_messages_from_peer(local_endpoint_magic))
+            break;
+    }
+    return {};
+}
+
 }
