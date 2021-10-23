@@ -17,15 +17,13 @@
 
 namespace JS {
 
-TypedArrayBase* typed_array_from(GlobalObject& global_object, Value typed_array_value)
+ThrowCompletionOr<TypedArrayBase*> typed_array_from(GlobalObject& global_object, Value typed_array_value)
 {
     auto& vm = global_object.vm();
 
-    auto* this_object = TRY_OR_DISCARD(typed_array_value.to_object(global_object));
-    if (!this_object->is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
-        return nullptr;
-    }
+    auto* this_object = TRY(typed_array_value.to_object(global_object));
+    if (!this_object->is_typed_array())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "TypedArray");
 
     return static_cast<TypedArrayBase*>(this_object);
 }
