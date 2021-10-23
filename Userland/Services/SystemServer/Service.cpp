@@ -314,7 +314,7 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
 
     m_working_directory = config.read_entry(name, "WorkingDirectory");
     m_environment = config.read_entry(name, "Environment").split(' ');
-    m_boot_modes = config.read_entry(name, "BootModes", "graphical").split(',');
+    m_system_modes = config.read_entry(name, "SystemModes", "graphical").split(',');
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
@@ -366,14 +366,14 @@ void Service::save_to(JsonObject& json)
         extra_args.append(arg);
     json.set("extra_arguments", move(extra_args));
 
-    JsonArray boot_modes;
-    for (String& mode : m_boot_modes)
-        boot_modes.append(mode);
-    json.set("boot_modes", boot_modes);
+    JsonArray system_modes;
+    for (String& mode : m_system_modes)
+        system_modes.append(mode);
+    json.set("system_modes", system_modes);
 
     JsonArray environment;
     for (String& env : m_environment)
-        boot_modes.append(env);
+        system_modes.append(env);
     json.set("environment", environment);
 
     JsonArray sockets;
@@ -406,5 +406,5 @@ void Service::save_to(JsonObject& json)
 bool Service::is_enabled() const
 {
     extern String g_system_mode;
-    return m_boot_modes.contains_slow(g_system_mode);
+    return m_system_modes.contains_slow(g_system_mode);
 }
