@@ -66,7 +66,7 @@ public:
     [[nodiscard]] bool is_vmmouse_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
-    [[nodiscard]] bool is_no_framebuffer_devices_mode() const;
+    [[nodiscard]] bool are_framebuffer_devices_enabled() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] BootMode boot_mode(Validate should_validate = Validate::No) const;

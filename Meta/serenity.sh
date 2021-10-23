@@ -358,7 +358,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             else
                 build_target install
                 build_target image
-                export SERENITY_KERNEL_CMDLINE="boot_mode=self-test"
+                export SERENITY_KERNEL_CMDLINE="fbdev=off boot_mode=self-test"
                 export SERENITY_RUN="ci"
                 build_target run
             fi
