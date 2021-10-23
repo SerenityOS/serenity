@@ -245,6 +245,9 @@ Optional<Color> Color::from_string(const StringView& string)
         { 0x000000, nullptr }
     };
 
+    if (string == "transparent")
+        return Color::from_rgba(0x00000000);
+
     for (size_t i = 0; !web_colors[i].name.is_null(); ++i) {
         if (string == web_colors[i].name)
             return Color::from_rgb(web_colors[i].color);

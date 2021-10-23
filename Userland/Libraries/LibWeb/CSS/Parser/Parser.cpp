@@ -2087,8 +2087,6 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
     // https://www.w3.org/TR/css-color-3/
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
-        if (ident.equals_ignoring_case("transparent"))
-            return Color::from_rgba(0x00000000);
 
         auto color = Color::from_string(ident.to_string().to_lowercase());
         if (color.has_value())
