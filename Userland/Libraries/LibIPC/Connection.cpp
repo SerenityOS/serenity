@@ -17,6 +17,7 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalS
     , m_local_endpoint_magic(local_endpoint_magic)
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
+    m_processing_timer = Core::Timer::create_single_shot(0, [this] { handle_messages(); });
 }
 
 ConnectionBase::~ConnectionBase()
@@ -175,9 +176,8 @@ bool ConnectionBase::drain_messages_from_peer()
     }
 
     if (!m_unprocessed_messages.is_empty()) {
-        deferred_invoke([this] {
-            handle_messages();
-        });
+        if (!m_processing_timer->is_active())
+            m_processing_timer->start();
     }
     return true;
 }
