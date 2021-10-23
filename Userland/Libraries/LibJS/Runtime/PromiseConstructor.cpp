@@ -263,9 +263,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -286,9 +284,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -309,9 +305,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -332,9 +326,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -354,9 +346,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
 JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::reject)
 {
     auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    auto promise_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
     auto reason = vm.argument(0);
     [[maybe_unused]] auto result = TRY_OR_DISCARD(vm.call(*promise_capability.reject, js_undefined(), reason));
     return promise_capability.promise;

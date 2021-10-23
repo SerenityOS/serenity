@@ -42,9 +42,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromisePrototype::then)
     auto on_fulfilled = vm.argument(0);
     auto on_rejected = vm.argument(1);
     auto* constructor = TRY_OR_DISCARD(species_constructor(global_object, *promise, *global_object.promise_constructor()));
-    auto result_capability = new_promise_capability(global_object, constructor);
-    if (vm.exception())
-        return {};
+    auto result_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
     return promise->perform_then(on_fulfilled, on_rejected, result_capability);
 }
 

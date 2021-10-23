@@ -161,8 +161,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     // 5. Assert: evalContext is an execution context associated to a ShadowRealm instance's [[ExecutionContext]].
 
     // 6. Let innerCapability be ! NewPromiseCapability(%Promise%).
-    auto inner_capability = new_promise_capability(global_object, global_object.promise_constructor());
-    VERIFY(!vm.exception());
+    auto inner_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
     // 7. Let runningContext be the running execution context.
     // 8. If runningContext is not already suspended, suspend runningContext.
@@ -245,8 +244,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
     // 16. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = new_promise_capability(global_object, global_object.promise_constructor());
-    VERIFY(!vm.exception());
+    auto promise_capability = MUST(new_promise_capability(global_object, global_object.promise_constructor()));
 
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
