@@ -33,8 +33,12 @@ bool GraphicsManagement::is_initialized()
 }
 
 UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
-    : m_framebuffer_devices_allowed(!kernel_command_line().is_no_framebuffer_devices_mode())
 {
+}
+
+bool GraphicsManagement::framebuffer_devices_allowed() const
+{
+    return kernel_command_line().are_framebuffer_devices_enabled();
 }
 
 void GraphicsManagement::deactivate_graphical_mode()
@@ -69,7 +73,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     auto add_and_configure_adapter = [&](GraphicsDevice& graphics_device) {
         m_graphics_devices.append(graphics_device);
-        if (!m_framebuffer_devices_allowed) {
+        if (!framebuffer_devices_allowed()) {
             graphics_device.enable_consoles();
             return;
         }
@@ -175,9 +179,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * be created, so SystemServer will not try to initialize WindowServer.
      */
 
-    if (kernel_command_line().is_no_framebuffer_devices_mode()) {
-        dbgln("Forcing no initialization of framebuffer devices");
-    }
+    if (!framebuffer_devices_allowed())
+        dbgln("Forcing non-initialization of framebuffer devices");
 
     PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
         // Note: Each graphics controller will try to set its native screen resolution

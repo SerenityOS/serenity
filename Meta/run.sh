@@ -69,6 +69,7 @@ fi
 
 [ "$KVM_SUPPORT" -eq "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
+# For default values, see Kernel/CommandLine.cpp
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=1G

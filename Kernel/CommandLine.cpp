@@ -214,10 +214,9 @@ BootMode CommandLine::boot_mode(Validate should_validate) const
     return BootMode::Unknown;
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_no_framebuffer_devices_mode() const
+UNMAP_AFTER_INIT bool CommandLine::are_framebuffer_devices_enabled() const
 {
-    const auto mode = boot_mode();
-    return mode == BootMode::NoFramebufferDevices || mode == BootMode::SelfTest;
+    return lookup("fbdev"sv).value_or("on"sv) == "on"sv;
 }
 
 StringView CommandLine::userspace_init() const
