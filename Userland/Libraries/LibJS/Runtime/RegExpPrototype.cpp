@@ -246,13 +246,13 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string)
+ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string)
 {
     auto& vm = global_object.vm();
 
-    auto exec = TRY_OR_DISCARD(regexp_object.get(vm.names.exec));
+    auto exec = TRY(regexp_object.get(vm.names.exec));
     if (exec.is_function()) {
-        auto result = TRY_OR_DISCARD(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
+        auto result = TRY(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
         if (!result.is_object() && !result.is_null())
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
@@ -260,12 +260,10 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16Strin
         return result;
     }
 
-    if (!is<RegExpObject>(regexp_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
-        return {};
-    }
+    if (!is<RegExpObject>(regexp_object))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
 
-    return TRY_OR_DISCARD(regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string)));
+    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
 }
 
 // 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
@@ -338,9 +336,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::test)
     auto* regexp_object = TRY_OR_DISCARD(this_object(global_object));
     auto string = TRY_OR_DISCARD(vm.argument(0).to_utf16_string(global_object));
 
-    auto match = regexp_exec(global_object, *regexp_object, move(string));
-    if (vm.exception())
-        return {};
+    auto match = TRY_OR_DISCARD(regexp_exec(global_object, *regexp_object, move(string)));
 
     return Value(!match.is_null());
 }
@@ -366,12 +362,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     bool global = TRY_OR_DISCARD(regexp_object->get(vm.names.global)).to_boolean();
 
-    if (!global) {
-        auto result = regexp_exec(global_object, *regexp_object, move(string));
-        if (vm.exception())
-            return {};
-        return result;
-    }
+    if (!global)
+        return TRY_OR_DISCARD(regexp_exec(global_object, *regexp_object, move(string)));
 
     TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
@@ -382,9 +374,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     size_t n = 0;
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, string);
-        if (vm.exception())
-            return {};
+        auto result = TRY_OR_DISCARD(regexp_exec(global_object, *regexp_object, string));
 
         if (result.is_null()) {
             if (n == 0)
@@ -458,9 +448,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     MarkedValueList results(vm.heap());
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, string);
-        if (vm.exception())
-            return {};
+        auto result = TRY_OR_DISCARD(regexp_exec(global_object, *regexp_object, string));
         if (result.is_null())
             break;
 
@@ -553,9 +541,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     if (!same_value(previous_last_index, Value(0)))
         TRY_OR_DISCARD(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-    auto result = regexp_exec(global_object, *regexp_object, move(string));
-    if (vm.exception())
-        return {};
+    auto result = TRY_OR_DISCARD(regexp_exec(global_object, *regexp_object, move(string)));
 
     auto current_last_index = TRY_OR_DISCARD(regexp_object->get(vm.names.lastIndex));
     if (!same_value(current_last_index, previous_last_index))
@@ -598,7 +584,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         return array;
 
     if (string.is_empty()) {
-        auto result = regexp_exec(global_object, *splitter, string);
+        auto result = TRY_OR_DISCARD(regexp_exec(global_object, *splitter, string));
         if (!result.is_null())
             return array;
 
@@ -612,9 +598,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     while (next_search_from < string_view.length_in_code_units()) {
         TRY_OR_DISCARD(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
-        auto result = regexp_exec(global_object, *splitter, string);
-        if (vm.exception())
-            return {};
+        auto result = TRY_OR_DISCARD(regexp_exec(global_object, *splitter, string));
         if (result.is_null()) {
             next_search_from = advance_string_index(string_view, next_search_from, unicode);
             continue;
