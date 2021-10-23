@@ -46,13 +46,13 @@ MouseSettingsWindow::MouseSettingsWindow()
     m_ok_button->on_click = [&](auto) {
         mouse_widget.update_window_server();
         theme_widget.update_window_server();
-        GUI::Application::the()->quit();
+        Core::deferred_invoke([&] { GUI::Application::the()->quit(); });
     };
 
     m_cancel_button = button_container.add<GUI::Button>("Cancel");
     m_cancel_button->set_fixed_width(75);
     m_cancel_button->on_click = [&](auto) {
-        GUI::Application::the()->quit();
+        Core::deferred_invoke([&] { GUI::Application::the()->quit(); });
     };
 
     m_apply_button = button_container.add<GUI::Button>("Apply");
