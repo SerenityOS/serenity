@@ -14,6 +14,7 @@
 #include <RequestServer/GeminiProtocol.h>
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
+#include <signal.h>
 
 int main(int, char**)
 {
