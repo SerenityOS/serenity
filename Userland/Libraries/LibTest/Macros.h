@@ -55,6 +55,19 @@ void current_test_case_did_fail();
         }                                                                                                                                                                                    \
     } while (false)
 
+#define EXPECT_EQ_TRUTH(a, b)                                                                                             \
+    do {                                                                                                                  \
+        auto lhs = (a);                                                                                                   \
+        auto rhs = (b);                                                                                                   \
+        bool ltruth = static_cast<bool>(lhs);                                                                             \
+        bool rtruth = static_cast<bool>(rhs);                                                                             \
+        if (ltruth != rtruth) {                                                                                           \
+            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ_TRUTH({}, {}) failed with lhs={} ({}) and rhs={} ({})", \
+                __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, ltruth, FormatIfSupported { rhs }, rtruth);        \
+            ::Test::current_test_case_did_fail();                                                                         \
+        }                                                                                                                 \
+    } while (false)
+
 // If you're stuck and `EXPECT_EQ` seems to refuse to print anything useful,
 // try this: It'll spit out a nice compiler error telling you why it doesn't print.
 #define EXPECT_EQ_FORCE(a, b)                                                                                                                    \
