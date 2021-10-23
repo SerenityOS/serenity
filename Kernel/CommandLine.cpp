@@ -38,8 +38,9 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     VERIFY(!s_the);
     s_the = new CommandLine(s_cmd_line);
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
-    // Validate the boot mode the user passed in.
+    // Validate the modes the user passed in.
     (void)s_the->boot_mode(Validate::Yes);
+    (void)s_the->panic_mode(Validate::Yes);
 }
 
 UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_bootloader)
@@ -212,6 +213,21 @@ BootMode CommandLine::boot_mode(Validate should_validate) const
     if (should_validate == Validate::Yes)
         PANIC("Unknown BootMode: {}", boot_mode);
     return BootMode::Unknown;
+}
+
+PanicMode CommandLine::panic_mode(Validate should_validate) const
+{
+    const auto panic_mode = lookup("panic"sv).value_or("halt"sv);
+    if (panic_mode == "halt"sv) {
+        return PanicMode::Halt;
+    } else if (panic_mode == "shutdown"sv) {
+        return PanicMode::Shutdown;
+    }
+
+    if (should_validate == Validate::Yes)
+        PANIC("Unknown PanicMode: {}", panic_mode);
+
+    return PanicMode::Halt;
 }
 
 UNMAP_AFTER_INIT bool CommandLine::are_framebuffer_devices_enabled() const

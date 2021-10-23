@@ -22,6 +22,11 @@ enum class BootMode {
     Unknown,
 };
 
+enum class PanicMode {
+    Halt,
+    Shutdown,
+};
+
 enum class HPETMode {
     Periodic,
     NonPeriodic
@@ -70,6 +75,7 @@ public:
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] BootMode boot_mode(Validate should_validate = Validate::No) const;
+    [[nodiscard]] PanicMode panic_mode(Validate should_validate = Validate::No) const;
     [[nodiscard]] HPETMode hpet_mode() const;
     [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_controller() const;
