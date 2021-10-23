@@ -216,14 +216,14 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.promise_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.all, all, 1, attr);
-    define_old_native_function(vm.names.allSettled, all_settled, 1, attr);
-    define_old_native_function(vm.names.any, any, 1, attr);
-    define_old_native_function(vm.names.race, race, 1, attr);
-    define_old_native_function(vm.names.reject, reject, 1, attr);
-    define_old_native_function(vm.names.resolve, resolve, 1, attr);
+    define_native_function(vm.names.all, all, 1, attr);
+    define_native_function(vm.names.allSettled, all_settled, 1, attr);
+    define_native_function(vm.names.any, any, 1, attr);
+    define_native_function(vm.names.race, race, 1, attr);
+    define_native_function(vm.names.reject, reject, 1, attr);
+    define_native_function(vm.names.resolve, resolve, 1, attr);
 
-    define_old_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -259,11 +259,11 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
 }
 
 // 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -280,11 +280,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all)
 }
 
 // 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -301,11 +301,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 }
 
 // 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -322,11 +322,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::any)
 }
 
 // 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
     auto promise_resolve = TRY_OR_REJECT(vm, promise_capability, get_promise_resolve(global_object, constructor));
     auto* iterator_record = TRY_OR_REJECT(vm, promise_capability, get_iterator(global_object, vm.argument(0)));
@@ -343,25 +343,25 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::race)
 }
 
 // 27.2.4.6 Promise.reject ( r ), https://tc39.es/ecma262/#sec-promise.reject
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::reject)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    auto promise_capability = TRY_OR_DISCARD(new_promise_capability(global_object, constructor));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    auto promise_capability = TRY(new_promise_capability(global_object, constructor));
     auto reason = vm.argument(0);
-    [[maybe_unused]] auto result = TRY_OR_DISCARD(vm.call(*promise_capability.reject, js_undefined(), reason));
+    [[maybe_unused]] auto result = TRY(vm.call(*promise_capability.reject, js_undefined(), reason));
     return promise_capability.promise;
 }
 
 // 27.2.4.7 Promise.resolve ( x ), https://tc39.es/ecma262/#sec-promise.resolve
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::resolve)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 {
-    auto* constructor = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
     auto value = vm.argument(0);
-    return TRY_OR_DISCARD(promise_resolve(global_object, *constructor, value));
+    return TRY(promise_resolve(global_object, *constructor, value));
 }
 
 // 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
-JS_DEFINE_OLD_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }
