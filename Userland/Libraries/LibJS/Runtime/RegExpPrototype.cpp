@@ -102,7 +102,7 @@ static Value get_match_indices_array(GlobalObject& global_object, Utf16View cons
 }
 
 // 1.1.4.1.5 MakeIndicesArray ( S , indices, groupNames, hasGroups ), https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-static ThrowCompletionOr<Value> make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
+static Value make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -120,7 +120,8 @@ static ThrowCompletionOr<Value> make_indices_array(GlobalObject& global_object, 
 
     auto& vm = global_object.vm();
 
-    auto* array = TRY(Array::create(global_object, indices.size()));
+    VERIFY(indices.size() < NumericLimits<u32>::max());
+    auto* array = MUST(Array::create(global_object, indices.size()));
 
     auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
 
@@ -131,16 +132,16 @@ static ThrowCompletionOr<Value> make_indices_array(GlobalObject& global_object, 
         if (match_indices.has_value())
             match_indices_array = get_match_indices_array(global_object, string, *match_indices);
 
-        TRY(array->create_data_property(i, match_indices_array));
+        MUST(array->create_data_property(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
         auto match_indices_array = get_match_indices_array(global_object, string, entry.value);
 
-        TRY(groups.as_object().create_data_property(entry.key, match_indices_array));
+        MUST(groups.as_object().create_data_property(entry.key, match_indices_array));
     }
 
-    TRY(array->create_data_property(vm.names.groups, groups));
+    MUST(array->create_data_property(vm.names.groups, groups));
 
     return array;
 }
@@ -204,7 +205,8 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     if (global || sticky)
         TRY(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
 
-    auto* array = TRY(Array::create(global_object, result.n_named_capture_groups + 1));
+    VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
+    auto* array = MUST(Array::create(global_object, result.n_named_capture_groups + 1));
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<FlyString, Match> group_names;
@@ -234,7 +236,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
     if (has_indices) {
-        auto indices_array = TRY(make_indices_array(global_object, string_view, indices, group_names, has_groups));
+        auto indices_array = make_indices_array(global_object, string_view, indices, group_names, has_groups);
         TRY(array->create_data_property(vm.names.indices, indices_array));
     }
 
