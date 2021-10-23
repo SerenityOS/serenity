@@ -20,7 +20,7 @@ struct PromiseCapability {
 };
 
 // 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability
-PromiseCapability new_promise_capability(GlobalObject& global_object, Value constructor);
+ThrowCompletionOr<PromiseCapability> new_promise_capability(GlobalObject& global_object, Value constructor);
 
 // 27.2.1.2 PromiseReaction Records, https://tc39.es/ecma262/#sec-promisereaction-records
 class PromiseReaction final : public Cell {
