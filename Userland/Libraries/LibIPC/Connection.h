@@ -40,7 +40,7 @@ public:
     virtual void die() { }
 
 protected:
-    explicit ConnectionBase(IPC::Stub&, NonnullRefPtr<Core::LocalSocket>);
+    explicit ConnectionBase(IPC::Stub&, NonnullRefPtr<Core::LocalSocket>, u32 local_endpoint_magic);
 
     Core::LocalSocket& socket() { return *m_socket; }
 
@@ -48,13 +48,13 @@ protected:
     virtual void did_become_responsive() { }
     virtual void try_parse_messages(Vector<u8> const& bytes, size_t& index) = 0;
 
-    OwnPtr<IPC::Message> wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id, u32 local_endpoint_magic);
+    OwnPtr<IPC::Message> wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id);
     void wait_for_socket_to_become_readable();
     Result<Vector<u8>, bool> read_as_much_as_possible_from_socket_without_blocking();
-    bool drain_messages_from_peer(u32 local_endpoint_magic);
+    bool drain_messages_from_peer();
 
     void post_message(MessageBuffer);
-    void handle_messages(u32 local_endpoint_magic);
+    void handle_messages();
 
     IPC::Stub& m_local_stub;
 
@@ -64,18 +64,20 @@ protected:
     RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;
+
+    u32 m_local_endpoint_magic { 0 };
 };
 
 template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public ConnectionBase {
 public:
     Connection(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
-        : ConnectionBase(local_stub, move(socket))
+        : ConnectionBase(local_stub, move(socket), LocalEndpoint::static_magic())
     {
         m_notifier->on_ready_to_read = [this] {
             NonnullRefPtr protect = *this;
-            drain_messages_from_peer(LocalEndpoint::static_magic());
-            handle_messages(LocalEndpoint::static_magic());
+            drain_messages_from_peer();
+            handle_messages();
         };
     }
 
@@ -105,7 +107,7 @@ protected:
     template<typename MessageType, typename Endpoint>
     OwnPtr<MessageType> wait_for_specific_endpoint_message()
     {
-        if (auto message = wait_for_specific_endpoint_message_impl(Endpoint::static_magic(), MessageType::static_message_id(), LocalEndpoint::static_magic()))
+        if (auto message = wait_for_specific_endpoint_message_impl(Endpoint::static_magic(), MessageType::static_message_id()))
             return message.template release_nonnull<MessageType>();
         return {};
     }
