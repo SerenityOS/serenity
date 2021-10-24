@@ -94,12 +94,11 @@ void EventLoop::drain_mouse()
         if (packet.is_relative) {
             state.x += packet.x;
             state.y -= packet.y;
-            state.z += packet.z;
         } else {
             state.x = packet.x;
             state.y = packet.y;
-            state.z += packet.z;
         }
+        state.z += packet.z;
 
         if (packet.buttons != state.buttons) {
             state.buttons = packet.buttons;
