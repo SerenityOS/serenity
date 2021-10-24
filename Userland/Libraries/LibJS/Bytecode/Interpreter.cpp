@@ -88,12 +88,15 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
                     accumulator() = vm().exception()->value();
                     vm().clear_exception();
                     will_jump = true;
-                } else if (unwind_context.finalizer) {
+                    break;
+                }
+                if (unwind_context.finalizer) {
                     block = unwind_context.finalizer;
                     m_unwind_contexts.take_last();
                     will_jump = true;
                     m_saved_exception = Handle<Exception>::create(vm().exception());
                     vm().clear_exception();
+                    break;
                 }
             }
             if (m_pending_jump.has_value()) {
