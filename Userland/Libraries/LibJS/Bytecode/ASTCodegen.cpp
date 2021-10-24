@@ -1200,7 +1200,7 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
         m_handler->parameter().visit(
             [&](FlyString const& parameter) {
-                if (parameter.is_empty()) {
+                if (!parameter.is_empty()) {
                     // FIXME: We need a separate DeclarativeEnvironment here
                     generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(parameter));
                 }
