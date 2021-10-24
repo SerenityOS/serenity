@@ -77,7 +77,7 @@ ThrowCompletionOr<bool> Object::is_extensible() const
 // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
 // 7.3.2 Get ( O, P ), https://tc39.es/ecma262/#sec-get-o-p
-ThrowCompletionOr<Value> Object::get(PropertyName const& property_name) const
+ThrowCompletionOr<Value> Object::get(PropertyKey const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -91,7 +91,7 @@ ThrowCompletionOr<Value> Object::get(PropertyName const& property_name) const
 // 7.3.3 GetV ( V, P ) is defined as Value::get().
 
 // 7.3.4 Set ( O, P, V, Throw ), https://tc39.es/ecma262/#sec-set-o-p-v-throw
-ThrowCompletionOr<bool> Object::set(PropertyName const& property_name, Value value, ShouldThrowExceptions throw_exceptions)
+ThrowCompletionOr<bool> Object::set(PropertyKey const& property_name, Value value, ShouldThrowExceptions throw_exceptions)
 {
     VERIFY(!value.is_empty());
     auto& vm = this->vm();
@@ -117,7 +117,7 @@ ThrowCompletionOr<bool> Object::set(PropertyName const& property_name, Value val
 }
 
 // 7.3.5 CreateDataProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createdataproperty
-ThrowCompletionOr<bool> Object::create_data_property(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_data_property(PropertyKey const& property_name, Value value)
 {
     // 1. Assert: Type(O) is Object.
 
@@ -137,7 +137,7 @@ ThrowCompletionOr<bool> Object::create_data_property(PropertyName const& propert
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
-ThrowCompletionOr<bool> Object::create_method_property(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_method_property(PropertyKey const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
 
@@ -159,7 +159,7 @@ ThrowCompletionOr<bool> Object::create_method_property(PropertyName const& prope
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
-ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyKey const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
     auto& vm = this->vm();
@@ -183,7 +183,7 @@ ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyName const
 }
 
 // 7.3.6 CreateNonEnumerableDataPropertyOrThrow ( O, P, V ), https://tc39.es/proposal-error-cause/#sec-createnonenumerabledatapropertyorthrow
-ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(PropertyName const& property_name, Value value)
+ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(PropertyKey const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
     VERIFY(property_name.is_valid());
@@ -196,7 +196,7 @@ ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(Pro
 }
 
 // 7.3.8 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
-ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
@@ -219,7 +219,7 @@ ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyName const& pro
 }
 
 // 7.3.9 DeletePropertyOrThrow ( O, P ), https://tc39.es/ecma262/#sec-deletepropertyorthrow
-ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyName const& property_name)
+ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyKey const& property_name)
 {
     auto& vm = this->vm();
 
@@ -242,7 +242,7 @@ ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyName const& pro
 }
 
 // 7.3.11 HasProperty ( O, P ), https://tc39.es/ecma262/#sec-hasproperty
-ThrowCompletionOr<bool> Object::has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::has_property(PropertyKey const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -254,7 +254,7 @@ ThrowCompletionOr<bool> Object::has_property(PropertyName const& property_name) 
 }
 
 // 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
-ThrowCompletionOr<bool> Object::has_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::has_own_property(PropertyKey const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
 
@@ -296,7 +296,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
     if (level == IntegrityLevel::Sealed) {
         // a. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_name = PropertyName::from_value(global_object, key);
+            auto property_name = PropertyKey::from_value(global_object, key);
 
             // i. Perform ? DefinePropertyOrThrow(O, k, PropertyDescriptor { [[Configurable]]: false }).
             TRY(define_property_or_throw(property_name, { .configurable = false }));
@@ -308,7 +308,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 
         // b. For each element k of keys, do
         for (auto& key : keys) {
-            auto property_name = PropertyName::from_value(global_object, key);
+            auto property_name = PropertyKey::from_value(global_object, key);
 
             // i. Let currentDesc be ? O.[[GetOwnProperty]](k).
             auto current_descriptor = TRY(internal_get_own_property(property_name));
@@ -360,7 +360,7 @@ ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 
     // 7. For each element k of keys, do
     for (auto& key : keys) {
-        auto property_name = PropertyName::from_value(global_object(), key);
+        auto property_name = PropertyKey::from_value(global_object(), key);
 
         // a. Let currentDesc be ? O.[[GetOwnProperty]](k).
         auto current_descriptor = TRY(internal_get_own_property(property_name));
@@ -405,7 +405,7 @@ ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(Propert
         // a. If Type(key) is String, then
         if (!key.is_string())
             continue;
-        auto property_name = PropertyName::from_value(global_object, key);
+        auto property_name = PropertyKey::from_value(global_object, key);
 
         // i. Let desc be ? O.[[GetOwnProperty]](key).
         auto descriptor = TRY(internal_get_own_property(property_name));
@@ -445,7 +445,7 @@ ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(Propert
 }
 
 // 7.3.25 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object)
+ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyKey, PropertyNameTraits> const& seen_names, GlobalObject& global_object)
 {
     if (source.is_nullish())
         return this;
@@ -453,7 +453,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
     auto* from_object = MUST(source.to_object(global_object));
 
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
-        auto next_key = PropertyName::from_value(global_object, next_key_value);
+        auto next_key = PropertyKey::from_value(global_object, next_key_value);
         if (seen_names.contains(next_key))
             continue;
 
@@ -547,13 +547,13 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
 }
 
 // 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
-ThrowCompletionOr<void> Object::define_field(Variant<PropertyName, PrivateName> name, ECMAScriptFunctionObject* initializer)
+ThrowCompletionOr<void> Object::define_field(Variant<PropertyKey, PrivateName> name, ECMAScriptFunctionObject* initializer)
 {
     Value init_value = js_undefined();
     if (initializer)
         init_value = TRY(vm().call(*initializer, this));
 
-    if (auto* property_name_ptr = name.get_pointer<PropertyName>())
+    if (auto* property_name_ptr = name.get_pointer<PropertyKey>())
         TRY(create_data_property_or_throw(*property_name_ptr, init_value));
     else
         TRY(private_field_add(name.get<PrivateName>(), init_value));
@@ -634,7 +634,7 @@ ThrowCompletionOr<bool> Object::internal_prevent_extensions()
 }
 
 // 10.1.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_property(PropertyKey const& property_name) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -680,7 +680,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
 }
 
 // 10.1.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc
-ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     VERIFY(property_name.is_valid());
     // 1. Let current be ? O.[[GetOwnProperty]](P).
@@ -694,7 +694,7 @@ ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyName const&
 }
 
 // 10.1.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p
-ThrowCompletionOr<bool> Object::internal_has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& property_name) const
 {
     auto& vm = this->vm();
 
@@ -725,7 +725,7 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyName const& proper
 }
 
 // 10.1.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> Object::internal_get(PropertyName const& property_name, Value receiver) const
+ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_name, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
     auto& vm = this->vm();
@@ -768,7 +768,7 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyName const& property_name,
 }
 
 // 10.1.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver
-ThrowCompletionOr<bool> Object::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> Object::internal_set(PropertyKey const& property_name, Value value, Value receiver)
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
@@ -784,7 +784,7 @@ ThrowCompletionOr<bool> Object::internal_set(PropertyName const& property_name, 
 }
 
 // 10.1.9.2 OrdinarySetWithOwnDescriptor ( O, P, V, Receiver, ownDesc ), https://tc39.es/ecma262/#sec-ordinarysetwithowndescriptor
-ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyName const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
+ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey const& property_name, Value value, Value receiver, Optional<PropertyDescriptor> own_descriptor)
 {
     auto& vm = this->vm();
 
@@ -870,7 +870,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyName co
 }
 
 // 10.1.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-delete-p
-ThrowCompletionOr<bool> Object::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> Object::internal_delete(PropertyKey const& property_name)
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -945,7 +945,7 @@ ThrowCompletionOr<bool> Object::set_immutable_prototype(Object* prototype)
     return false;
 }
 
-Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_name) const
+Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_name) const
 {
     VERIFY(property_name.is_valid());
 
@@ -968,7 +968,7 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_na
     return ValueAndAttributes { .value = value, .attributes = attributes };
 }
 
-bool Object::storage_has(PropertyName const& property_name) const
+bool Object::storage_has(PropertyKey const& property_name) const
 {
     VERIFY(property_name.is_valid());
     if (property_name.is_number())
@@ -976,7 +976,7 @@ bool Object::storage_has(PropertyName const& property_name) const
     return shape().lookup(property_name.to_string_or_symbol()).has_value();
 }
 
-void Object::storage_set(PropertyName const& property_name, ValueAndAttributes const& value_and_attributes)
+void Object::storage_set(PropertyKey const& property_name, ValueAndAttributes const& value_and_attributes)
 {
     VERIFY(property_name.is_valid());
 
@@ -1017,7 +1017,7 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
     m_storage[metadata->offset] = value;
 }
 
-void Object::storage_delete(PropertyName const& property_name)
+void Object::storage_delete(PropertyKey const& property_name)
 {
     VERIFY(property_name.is_valid());
     VERIFY(storage_has(property_name));
@@ -1045,7 +1045,7 @@ void Object::set_prototype(Object* new_prototype)
         m_shape = shape.create_prototype_transition(new_prototype);
 }
 
-void Object::define_old_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+void Object::define_old_native_accessor(PropertyKey const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> completion_getter = {};
     if (getter) {
@@ -1068,7 +1068,7 @@ void Object::define_old_native_accessor(PropertyName const& property_name, Funct
     define_native_accessor(property_name, move(completion_getter), move(completion_setter), attribute);
 }
 
-void Object::define_native_accessor(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+void Object::define_native_accessor(PropertyKey const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String formatted_property_name;
@@ -1096,7 +1096,7 @@ void Object::define_native_accessor(PropertyName const& property_name, Function<
     return define_direct_accessor(property_name, getter_function, setter_function, attribute);
 }
 
-void Object::define_direct_accessor(PropertyName const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes)
+void Object::define_direct_accessor(PropertyKey const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes)
 {
     VERIFY(property_name.is_valid());
 
@@ -1122,7 +1122,7 @@ void Object::ensure_shape_is_unique()
 }
 
 // Simple side-effect free property lookup, following the prototype chain. Non-standard.
-Value Object::get_without_side_effects(const PropertyName& property_name) const
+Value Object::get_without_side_effects(const PropertyKey& property_name) const
 {
     auto* object = this;
     while (object) {
@@ -1134,7 +1134,7 @@ Value Object::get_without_side_effects(const PropertyName& property_name) const
     return {};
 }
 
-void Object::define_old_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_old_native_function(PropertyKey const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto completion_native_function = [native_function = move(native_function), property_name](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
         auto result = native_function(vm, global_object);
@@ -1145,7 +1145,7 @@ void Object::define_old_native_function(PropertyName const& property_name, Funct
     define_native_function(property_name, move(completion_native_function), length, attribute);
 }
 
-void Object::define_native_function(PropertyName const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_native_function(PropertyKey const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String function_name;
@@ -1174,7 +1174,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
     auto keys = TRY(props->internal_own_property_keys());
 
     struct NameAndDescriptor {
-        PropertyName name;
+        PropertyKey name;
         PropertyDescriptor descriptor;
     };
 
@@ -1183,7 +1183,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
 
     // 5. For each element nextKey of keys, do
     for (auto& next_key : keys) {
-        auto property_name = PropertyName::from_value(global_object, next_key);
+        auto property_name = PropertyKey::from_value(global_object, next_key);
 
         // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
         auto property_descriptor = TRY(props->internal_get_own_property(property_name));
@@ -1237,7 +1237,7 @@ ThrowCompletionOr<Value> Object::ordinary_to_primitive(Value::PreferredType pref
 
     auto& vm = this->vm();
 
-    AK::Array<PropertyName, 2> method_names;
+    AK::Array<PropertyKey, 2> method_names;
 
     // 1. If hint is string, then
     if (preferred_type == Value::PreferredType::String) {

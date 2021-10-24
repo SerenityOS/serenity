@@ -276,7 +276,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_home_object);
 
     for (auto& field : m_fields) {
-        if (auto* property_name_ptr = field.name.get_pointer<PropertyName>(); property_name_ptr && property_name_ptr->is_symbol())
+        if (auto* property_name_ptr = field.name.get_pointer<PropertyKey>(); property_name_ptr && property_name_ptr->is_symbol())
             visitor.visit(property_name_ptr->as_symbol());
 
         visitor.visit(field.initializer);

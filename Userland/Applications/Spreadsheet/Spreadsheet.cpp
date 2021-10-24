@@ -648,7 +648,7 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
 JsonObject Sheet::gather_documentation() const
 {
     JsonObject object;
-    const JS::PropertyName doc_name { "__documentation" };
+    const JS::PropertyKey doc_name { "__documentation" };
 
     auto add_docs_from = [&](auto& it, auto& global_object) {
         auto value = global_object.get(it.key).release_value();

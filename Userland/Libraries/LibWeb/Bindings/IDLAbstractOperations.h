@@ -10,6 +10,6 @@
 
 namespace Web::Bindings::IDL {
 
-bool is_an_array_index(JS::GlobalObject&, JS::PropertyName const&);
+bool is_an_array_index(JS::GlobalObject&, JS::PropertyKey const&);
 
 }

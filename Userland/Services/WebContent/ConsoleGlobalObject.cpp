@@ -57,7 +57,7 @@ JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_prevent_extensions()
     return m_window_object->internal_prevent_extensions();
 }
 
-JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> ConsoleGlobalObject::internal_get_own_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> ConsoleGlobalObject::internal_get_own_property(JS::PropertyKey const& property_name) const
 {
     if (auto result = TRY(m_window_object->internal_get_own_property(property_name)); result.has_value())
         return result;
@@ -65,17 +65,17 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> ConsoleGlobalObject::int
     return Base::internal_get_own_property(property_name);
 }
 
-JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& descriptor)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_define_own_property(JS::PropertyKey const& property_name, JS::PropertyDescriptor const& descriptor)
 {
     return m_window_object->internal_define_own_property(property_name, descriptor);
 }
 
-JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_has_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_has_property(JS::PropertyKey const& property_name) const
 {
     return TRY(Object::internal_has_property(property_name)) || TRY(m_window_object->internal_has_property(property_name));
 }
 
-JS::ThrowCompletionOr<JS::Value> ConsoleGlobalObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> ConsoleGlobalObject::internal_get(JS::PropertyKey const& property_name, JS::Value receiver) const
 {
     if (TRY(m_window_object->has_own_property(property_name)))
         return m_window_object->internal_get(property_name, (receiver == this) ? m_window_object : receiver);
@@ -83,12 +83,12 @@ JS::ThrowCompletionOr<JS::Value> ConsoleGlobalObject::internal_get(JS::PropertyN
     return Base::internal_get(property_name, receiver);
 }
 
-JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
     return m_window_object->internal_set(property_name, value, (receiver == this) ? m_window_object : receiver);
 }
 
-JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_delete(JS::PropertyName const& property_name)
+JS::ThrowCompletionOr<bool> ConsoleGlobalObject::internal_delete(JS::PropertyKey const& property_name)
 {
     return m_window_object->internal_delete(property_name);
 }

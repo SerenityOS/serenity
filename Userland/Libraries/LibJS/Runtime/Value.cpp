@@ -733,7 +733,7 @@ ThrowCompletionOr<double> Value::to_integer_or_infinity(GlobalObject& global_obj
 }
 
 // 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
-ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyName const& property_name) const
+ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey const& property_name) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -746,7 +746,7 @@ ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyName co
 }
 
 // 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
+ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyKey const& property_name) const
 {
     auto& vm = global_object.vm();
 
@@ -1455,7 +1455,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
 }
 
 // 7.3.20 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyName const& property_name, Optional<MarkedValueList> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_name, Optional<MarkedValueList> arguments)
 {
     auto& vm = global_object.vm();
     auto property = TRY(get(global_object, property_name));

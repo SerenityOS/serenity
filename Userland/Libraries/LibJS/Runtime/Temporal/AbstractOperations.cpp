@@ -11,7 +11,7 @@
 #include <AK/Variant.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/IteratorOperations.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
@@ -96,7 +96,7 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
 }
 
 // 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
 {
     VERIFY(property.is_string());
 
@@ -158,7 +158,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
 // 13.4 GetStringOrNumberOption ( options, property, stringValues, minimum, maximum, fallback ), https://tc39.es/proposal-temporal/#sec-getstringornumberoption
 template<typename NumberType>
-ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
+ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback)
 {
     auto& vm = global_object.vm();
 

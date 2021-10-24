@@ -21,14 +21,14 @@ static CSS::PropertyID property_id_from_name(StringView name)
     return CSS::PropertyID::Invalid;
 }
 
-JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& name) const
+JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyKey const& name) const
 {
     if (!name.is_string())
         return Base::internal_has_property(name);
     return property_id_from_name(name.to_string()) != CSS::PropertyID::Invalid;
 }
 
-JS::ThrowCompletionOr<JS::Value> CSSStyleDeclarationWrapper::internal_get(JS::PropertyName const& name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> CSSStyleDeclarationWrapper::internal_get(JS::PropertyKey const& name, JS::Value receiver) const
 {
     if (!name.is_string())
         return Base::internal_get(name, receiver);
@@ -40,7 +40,7 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclarationWrapper::internal_get(JS::Pr
     return { js_string(vm(), String::empty()) };
 }
 
-JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> CSSStyleDeclarationWrapper::internal_set(JS::PropertyKey const& name, JS::Value value, JS::Value receiver)
 {
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);

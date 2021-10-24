@@ -939,7 +939,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
     for (auto& next_key : original_keys) {
         // a. If nextKey is not "month" or "monthCode", then
         if (next_key.as_string().string() != vm.names.month.as_string() && next_key.as_string().string() != vm.names.monthCode.as_string()) {
-            auto property_name = PropertyName::from_value(global_object, next_key);
+            auto property_name = PropertyKey::from_value(global_object, next_key);
 
             // i. Let propValue be ? Get(fields, nextKey).
             auto prop_value = TRY(fields.get(property_name));
@@ -960,7 +960,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
 
     // 5. For each element nextKey of newKeys, do
     for (auto& next_key : new_keys) {
-        auto property_name = PropertyName::from_value(global_object, next_key);
+        auto property_name = PropertyKey::from_value(global_object, next_key);
 
         // a. Let propValue be ? Get(additionalFields, nextKey).
         auto prop_value = TRY(additional_fields.get(property_name));

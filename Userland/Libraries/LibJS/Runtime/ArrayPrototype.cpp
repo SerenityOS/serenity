@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
     // 7. Repeat, while k < len,
     for (; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -219,7 +219,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::for_each)
     // 5. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -263,7 +263,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     // 6. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -611,7 +611,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
 
     // 10. Repeat, while k < len,
     for (; k < length; ++k) {
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // a. Let kPresent be ? HasProperty(O, ! ToString(𝔽(k))).
         auto k_present = TRY(object->has_property(property_name));
@@ -675,7 +675,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
         // b. Repeat, while kPresent is false and k < len,
         for (; !k_present && k < length; ++k) {
             // i. Let Pk be ! ToString(𝔽(k)).
-            auto property_name = PropertyName { k };
+            auto property_name = PropertyKey { k };
 
             // ii. Set kPresent to ? HasProperty(O, Pk).
             k_present = TRY(object->has_property(property_name));
@@ -697,7 +697,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
     // 9. Repeat, while k < len,
     for (; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -757,7 +757,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
         // b. Repeat, while kPresent is false and k ≥ 0,
         for (; !k_present && k >= 0; --k) {
             // i. Let Pk be ! ToString(𝔽(k)).
-            auto property_name = PropertyName { k };
+            auto property_name = PropertyKey { k };
 
             // ii. Set kPresent to ? HasProperty(O, Pk).
             k_present = TRY(object->has_property(property_name));
@@ -779,7 +779,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
     // 9. Repeat, while k ≥ 0,
     for (; k >= 0; --k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -1015,7 +1015,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 
     // 8. Repeat, while k ≥ 0,
     for (; k >= 0; --k) {
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // a. Let kPresent be ? HasProperty(O, ! ToString(𝔽(k))).
         auto k_present = TRY(object->has_property(property_name));
@@ -1091,7 +1091,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find)
     // 5. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_name));
@@ -1130,7 +1130,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
     // 5. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_name));
@@ -1169,7 +1169,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
     // 5. Repeat, while k ≥ 0,
     for (i64 k = static_cast<i64>(length) - 1; k >= 0; --k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_name));
@@ -1208,7 +1208,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
     // 5. Repeat, while k ≥ 0,
     for (i64 k = static_cast<i64>(length) - 1; k >= 0; --k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kValue be ? Get(O, Pk).
         auto k_value = TRY(object->get(property_name));
@@ -1247,7 +1247,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::some)
     // 5. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));
@@ -1292,7 +1292,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
     // 5. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
-        auto property_name = PropertyName { k };
+        auto property_name = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto k_present = TRY(object->has_property(property_name));

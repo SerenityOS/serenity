@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/VM.h>
 
@@ -80,7 +80,7 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, Value prop
         return false;
 
     // TODO: This can be optimized by skipping the following 3 out of 4 checks if property_index
-    //  came from a number-type PropertyName instead of a canonicalized string-type PropertyName
+    //  came from a number-type PropertyKey instead of a canonicalized string-type PropertyKey
 
     // If ! IsIntegralNumber(index) is false, return false.
     if (!property_index.is_integral_number())
@@ -190,7 +190,7 @@ class TypedArray : public TypedArrayBase {
 
 public:
     // 10.4.5.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p
-    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const& property_name) const override
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const& property_name) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
@@ -230,7 +230,7 @@ public:
     }
 
     // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
-    virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const& property_name) const override
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const& property_name) const override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
@@ -256,7 +256,7 @@ public:
     }
 
     // 10.4.5.3 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc
-    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor) override
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
@@ -311,7 +311,7 @@ public:
     }
 
     // 10.4.5.4 [[Get]] ( P, Receiver ), 10.4.5.4 [[Get]] ( P, Receiver )
-    virtual ThrowCompletionOr<Value> internal_get(PropertyName const& property_name, Value receiver) const override
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const& property_name, Value receiver) const override
     {
         VERIFY(!receiver.is_empty());
 
@@ -338,7 +338,7 @@ public:
     }
 
     // 10.4.5.5 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver
-    virtual ThrowCompletionOr<bool> internal_set(PropertyName const& property_name, Value value, Value receiver) override
+    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const& property_name, Value value, Value receiver) override
     {
         VERIFY(!value.is_empty());
         VERIFY(!receiver.is_empty());
@@ -371,7 +371,7 @@ public:
     }
 
     // 10.4.5.6 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p
-    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const& property_name) override
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const& property_name) override
     {
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());

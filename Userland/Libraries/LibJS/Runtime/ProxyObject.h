@@ -36,12 +36,12 @@ public:
     virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual ThrowCompletionOr<bool> internal_is_extensible() const override;
     virtual ThrowCompletionOr<bool> internal_prevent_extensions() override;
-    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
-    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
-    virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const&) const override;
-    virtual ThrowCompletionOr<Value> internal_get(PropertyName const&, Value receiver) const override;
-    virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver) override;
-    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&) override;
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&) override;
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const&) const override;
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const override;
+    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
     virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;

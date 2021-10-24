@@ -69,9 +69,9 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void initialize_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
+    void initialize_constructor(PropertyKey const&, ConstructorType*&, Object* prototype);
     template<typename ConstructorType>
-    void add_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
+    void add_constructor(PropertyKey const&, ConstructorType*&, Object* prototype);
 
 private:
     virtual bool is_global_object() const final { return true; }
@@ -133,7 +133,7 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(PropertyKey const& property_name, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
@@ -148,7 +148,7 @@ inline void GlobalObject::initialize_constructor(PropertyName const& property_na
 }
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::add_constructor(PropertyKey const& property_name, ConstructorType*& constructor, Object* prototype)
 {
     // Some constructors are pre-initialized separately.
     if (!constructor)
@@ -165,7 +165,7 @@ template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
 template<typename... Args>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyName const& property_name, Args... args)
+[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_name, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedValueList arglist { global_object.vm().heap() };

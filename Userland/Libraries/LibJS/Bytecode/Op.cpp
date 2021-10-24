@@ -216,7 +216,7 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
             auto property_name_or_error = key.to_property_key(interpreter.global_object());
             if (property_name_or_error.is_error())
                 return;
-            PropertyName property_name = property_name_or_error.release_value();
+            PropertyKey property_name = property_name_or_error.release_value();
             auto property_value_or_error = from_object->get(property_name);
             if (property_value_or_error.is_error())
                 return;

@@ -151,7 +151,7 @@ ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_des
 }
 
 // NON-STANDARD: Used to return the value of the ephemeral length property
-ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property(PropertyKey const& property_name) const
 {
     auto& vm = this->vm();
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
@@ -161,7 +161,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Array::internal_get_own_property
 }
 
 // 10.4.2.1 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc
-ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
 
@@ -208,7 +208,7 @@ ThrowCompletionOr<bool> Array::internal_define_own_property(PropertyName const& 
 }
 
 // NON-STANDARD: Used to reject deletes to ephemeral (non-configurable) length property
-ThrowCompletionOr<bool> Array::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> Array::internal_delete(PropertyKey const& property_name)
 {
     auto& vm = this->vm();
     if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())

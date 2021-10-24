@@ -18,7 +18,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -88,27 +88,27 @@ public:
 
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
-    ThrowCompletionOr<Value> get(PropertyName const&) const;
-    ThrowCompletionOr<bool> set(PropertyName const&, Value, ShouldThrowExceptions);
-    ThrowCompletionOr<bool> create_data_property(PropertyName const&, Value);
-    ThrowCompletionOr<bool> create_method_property(PropertyName const&, Value);
-    ThrowCompletionOr<bool> create_data_property_or_throw(PropertyName const&, Value);
-    ThrowCompletionOr<bool> create_non_enumerable_data_property_or_throw(PropertyName const&, Value);
-    ThrowCompletionOr<bool> define_property_or_throw(PropertyName const&, PropertyDescriptor const&);
-    ThrowCompletionOr<bool> delete_property_or_throw(PropertyName const&);
-    ThrowCompletionOr<bool> has_property(PropertyName const&) const;
-    ThrowCompletionOr<bool> has_own_property(PropertyName const&) const;
+    ThrowCompletionOr<Value> get(PropertyKey const&) const;
+    ThrowCompletionOr<bool> set(PropertyKey const&, Value, ShouldThrowExceptions);
+    ThrowCompletionOr<bool> create_data_property(PropertyKey const&, Value);
+    ThrowCompletionOr<bool> create_method_property(PropertyKey const&, Value);
+    ThrowCompletionOr<bool> create_data_property_or_throw(PropertyKey const&, Value);
+    ThrowCompletionOr<bool> create_non_enumerable_data_property_or_throw(PropertyKey const&, Value);
+    ThrowCompletionOr<bool> define_property_or_throw(PropertyKey const&, PropertyDescriptor const&);
+    ThrowCompletionOr<bool> delete_property_or_throw(PropertyKey const&);
+    ThrowCompletionOr<bool> has_property(PropertyKey const&) const;
+    ThrowCompletionOr<bool> has_own_property(PropertyKey const&) const;
     ThrowCompletionOr<bool> set_integrity_level(IntegrityLevel);
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
     ThrowCompletionOr<MarkedValueList> enumerable_own_property_names(PropertyKind kind) const;
-    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
+    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyKey, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
 
     PrivateElement* private_element_find(PrivateName const& name);
     ThrowCompletionOr<void> private_field_add(PrivateName const& name, Value value);
     ThrowCompletionOr<void> private_method_or_accessor_add(PrivateElement element);
     ThrowCompletionOr<Value> private_get(PrivateName const& name);
     ThrowCompletionOr<void> private_set(PrivateName const& name, Value value);
-    ThrowCompletionOr<void> define_field(Variant<PropertyName, PrivateName> name, ECMAScriptFunctionObject* initializer);
+    ThrowCompletionOr<void> define_field(Variant<PropertyKey, PrivateName> name, ECMAScriptFunctionObject* initializer);
 
     // 10.1 Ordinary Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
 
@@ -116,15 +116,15 @@ public:
     virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype);
     virtual ThrowCompletionOr<bool> internal_is_extensible() const;
     virtual ThrowCompletionOr<bool> internal_prevent_extensions();
-    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const;
-    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&);
-    virtual ThrowCompletionOr<bool> internal_has_property(PropertyName const&) const;
-    virtual ThrowCompletionOr<Value> internal_get(PropertyName const&, Value receiver) const;
-    virtual ThrowCompletionOr<bool> internal_set(PropertyName const&, Value value, Value receiver);
-    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&);
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const;
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&);
+    virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const&) const;
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const;
+    virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver);
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&);
     virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const;
 
-    ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyName const&, Value, Value, Optional<PropertyDescriptor>);
+    ThrowCompletionOr<bool> ordinary_set_with_own_descriptor(PropertyKey const&, Value, Value, Optional<PropertyDescriptor>);
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects
 
@@ -136,24 +136,24 @@ public:
 
     // Implementation-specific storage abstractions
 
-    Optional<ValueAndAttributes> storage_get(PropertyName const&) const;
-    bool storage_has(PropertyName const&) const;
-    void storage_set(PropertyName const&, ValueAndAttributes const&);
-    void storage_delete(PropertyName const&);
+    Optional<ValueAndAttributes> storage_get(PropertyKey const&) const;
+    bool storage_has(PropertyKey const&) const;
+    void storage_set(PropertyKey const&, ValueAndAttributes const&);
+    void storage_delete(PropertyKey const&);
 
     // Non-standard methods
 
-    Value get_without_side_effects(const PropertyName&) const;
+    Value get_without_side_effects(const PropertyKey&) const;
 
-    void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
-    void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
+    void define_direct_property(PropertyKey const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
+    void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
     // Legacy methods - Remove once JS_DECLARE_OLD_NATIVE_FUNCTION is removed
-    void define_old_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
-    void define_old_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
+    void define_old_native_function(PropertyKey const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
+    void define_old_native_accessor(PropertyKey const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 
-    void define_native_function(PropertyName const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
-    void define_native_accessor(PropertyName const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
+    void define_native_function(PropertyKey const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
+    void define_native_accessor(PropertyKey const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 
     virtual bool is_function() const { return false; }
     virtual bool is_typed_array() const { return false; }
