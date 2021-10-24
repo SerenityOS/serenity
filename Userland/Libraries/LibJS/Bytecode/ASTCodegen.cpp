@@ -1298,4 +1298,9 @@ void ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(m_class_expression.ptr()->name()));
 }
 
+void ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::ResolveThisBinding>();
+}
+
 }
