@@ -16,6 +16,7 @@
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -310,6 +311,8 @@ public:
 
 private:
     IdentifierTableIndex m_identifier;
+
+    Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
 };
 
 class GetById final : public Instruction {

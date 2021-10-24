@@ -238,9 +238,27 @@ void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
-    if (vm.exception())
+    auto reference = [&] {
+        auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+        if (m_cached_environment_coordinate.has_value()) {
+            auto* environment = interpreter.vm().running_execution_context().lexical_environment;
+            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+                environment = environment->outer_environment();
+            VERIFY(environment);
+            VERIFY(environment->is_declarative_environment());
+            if (!environment->is_permanently_screwed_by_eval()) {
+                return Reference { *environment, string, interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
+            }
+            m_cached_environment_coordinate = {};
+        }
+
+        auto reference = interpreter.vm().resolve_binding(string);
+        if (reference.environment_coordinate().has_value())
+            m_cached_environment_coordinate = reference.environment_coordinate();
+        return reference;
+    }();
+
+    if (interpreter.vm().exception())
         return;
 
     interpreter.accumulator() = reference.get_value(interpreter.global_object());
