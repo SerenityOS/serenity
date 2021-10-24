@@ -98,7 +98,6 @@ private:
 };
 
 static bool s_dump_ast = false;
-static bool s_dump_bytecode = false;
 static bool s_run_bytecode = false;
 static bool s_opt_bytecode = false;
 static bool s_as_module = false;
@@ -824,26 +823,20 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
             outln("{}", hint);
         vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
-        if (s_dump_bytecode || s_run_bytecode) {
-            auto unit = JS::Bytecode::Generator::generate(*program);
+        if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
+            auto executable = JS::Bytecode::Generator::generate(*program);
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
-                passes.perform(unit);
+                passes.perform(executable);
                 dbgln("Optimisation passes took {}us", passes.elapsed());
             }
 
-            if (s_dump_bytecode) {
-                for (auto& block : unit.basic_blocks)
-                    block.dump(unit);
-                if (!unit.string_table->is_empty()) {
-                    outln();
-                    unit.string_table->dump();
-                }
-            }
+            if (JS::Bytecode::g_dump_bytecode)
+                executable.dump();
 
             if (s_run_bytecode) {
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
-                bytecode_interpreter.run(unit);
+                bytecode_interpreter.run(executable);
             } else {
                 return true;
             }
@@ -1121,7 +1114,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
-    args_parser.add_option(s_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
+    args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
     args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
