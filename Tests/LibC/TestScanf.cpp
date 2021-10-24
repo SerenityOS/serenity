@@ -187,10 +187,11 @@ static bool check_value_conformance(const TestSuite& test)
         if (arg_value != value) {
             auto arg_ptr = (const u32*)arg_value.data();
             auto value_ptr = (const u32*)value.data();
-            printf("        value %zu FAIL, expected %04x%04x%04x%04x%04x%04x%04x%04x but got %04x%04x%04x%04x%04x%04x%04x%04x\n",
-                i,
+            printf("        value %zu FAIL,\n", i);
+            printf("          expected %08x%08x%08x%08x%08x%08x%08x%08x\n",
                 value_ptr[0], value_ptr[1], value_ptr[2], value_ptr[3],
-                value_ptr[4], value_ptr[5], value_ptr[6], value_ptr[7],
+                value_ptr[4], value_ptr[5], value_ptr[6], value_ptr[7]);
+            printf("          but got %08x%08x%08x%08x%08x%08x%08x%08x\n",
                 arg_ptr[0], arg_ptr[1], arg_ptr[2], arg_ptr[3],
                 arg_ptr[4], arg_ptr[5], arg_ptr[6], arg_ptr[7]);
             fail = true;
