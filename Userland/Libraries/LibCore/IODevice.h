@@ -19,6 +19,8 @@ class LineIterator {
 
 public:
     explicit LineIterator(IODevice&, bool is_end = false);
+    LineIterator(LineIterator&&) = default;
+    LineIterator& operator=(LineIterator&&) = default;
 
     bool operator==(const LineIterator& other) const { return &other == this || (at_end() && other.is_end()) || (other.at_end() && is_end()); }
     bool is_end() const { return m_is_end; }
