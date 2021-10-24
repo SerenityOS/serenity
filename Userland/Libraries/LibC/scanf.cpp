@@ -611,8 +611,9 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
                 ++elements_matched;
             break;
         case ConversionSpecifier::OutputNumberOfBytes: {
+            input_lexer.ignore_while(isspace);
             if (!suppress_assignment) {
-                auto* ptr = va_arg(ap, int*);
+                auto* ptr = va_arg(copy, int*);
                 *ptr = input_lexer.tell();
             }
             break;
