@@ -167,8 +167,16 @@ void TimelineTrack::recompute_histograms_if_needed(HistogramInputs const& inputs
         histogram.insert(clamp_timestamp(event.timestamp), 1 + event.lost_samples);
     }
 
-    for (size_t bucket = 0; bucket < m_kernel_histogram->size(); bucket++) {
+    auto shorter_histogram_size = min(m_kernel_histogram->size(), m_user_histogram->size());
+    for (size_t bucket = 0; bucket < shorter_histogram_size; ++bucket) {
         auto value = m_kernel_histogram->at(bucket) + m_user_histogram->at(bucket);
+        if (value > m_max_value)
+            m_max_value = value;
+    }
+
+    auto& longer_histogram = m_kernel_histogram->size() > m_user_histogram->size() ? *m_kernel_histogram : *m_user_histogram;
+    for (size_t bucket = shorter_histogram_size; bucket < longer_histogram.size(); ++bucket) {
+        auto value = longer_histogram.at(bucket);
         if (value > m_max_value)
             m_max_value = value;
     }
