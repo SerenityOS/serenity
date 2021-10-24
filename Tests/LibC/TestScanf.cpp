@@ -142,7 +142,7 @@ Argument charstararg2 { sizeof(charstar), &_charstararg2[0] };
 struct TestSuite {
     const char* format;
     const char* input;
-    int expected_output;
+    int expected_return_value;
     size_t argument_count;
     Argument arguments[8];
     Array<unsigned char, 32> expected_values[8]; // 32 bytes for each argument's value.
@@ -214,12 +214,12 @@ static void do_one_test(const TestSuite& test)
 #pragma GCC diagnostic pop
 
     bool overall = true;
-    printf("    output value...\n");
-    if (rc != test.expected_output) {
-        printf("    output value FAIL, expected %d but got %d\n", test.expected_output, rc);
+    printf("    return value...\n");
+    if (rc != test.expected_return_value) {
+        printf("    return value FAIL, expected %d but got %d\n", test.expected_return_value, rc);
         overall = false;
     } else {
-        printf("    output value PASS\n");
+        printf("    return value PASS\n");
     }
 
     printf("    read values...\n");
