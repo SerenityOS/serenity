@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Window.h>
 
 #include "DoubleClickArrowWidget.h"
@@ -26,5 +27,6 @@ private:
     RefPtr<GUI::SpinBox> m_scroll_length_spinbox;
     RefPtr<GUI::HorizontalSlider> m_double_click_speed_slider;
     RefPtr<GUI::Label> m_double_click_speed_label;
+    RefPtr<GUI::CheckBox> m_switch_buttons_checkbox;
     RefPtr<MouseSettings::DoubleClickArrowWidget> m_double_click_arrow_widget;
 };
