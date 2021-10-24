@@ -3,7 +3,7 @@ list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false
     file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv nproc
-    pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir route seq shutdown sleep sort stat stty su tail test
+    pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir sed route seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
