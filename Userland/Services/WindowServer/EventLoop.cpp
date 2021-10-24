@@ -104,8 +104,19 @@ void EventLoop::drain_mouse()
         }
 
         if (buttons != state.buttons) {
-            state.buttons = buttons;
+            state.buttons = buttons;          
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
+
+            // Swap primary (1) and secondary (2) buttons if checked in Settings.
+            // Should optimize to a single compare + two assignments.
+            // Doing the swap here avoids all emulator and hardware issues.
+            if (WindowManager::the().get_buttons_switched()) {
+                if (buttons == 2)
+                    state.buttons = 1;
+                if (buttons == 1)
+                    state.buttons = 2;
+            }
+
             screen_input.on_receive_mouse_data(state);
             if (state.is_relative) {
                 state.x = 0;
