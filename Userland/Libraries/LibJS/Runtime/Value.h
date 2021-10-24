@@ -314,7 +314,7 @@ public:
     ThrowCompletionOr<i64> to_bigint_int64(GlobalObject&) const;
     ThrowCompletionOr<u64> to_bigint_uint64(GlobalObject&) const;
     ThrowCompletionOr<double> to_double(GlobalObject&) const;
-    ThrowCompletionOr<StringOrSymbol> to_property_key(GlobalObject&) const;
+    ThrowCompletionOr<PropertyKey> to_property_key(GlobalObject&) const;
     ThrowCompletionOr<i32> to_i32(GlobalObject& global_object) const;
     ThrowCompletionOr<u32> to_u32(GlobalObject&) const;
     ThrowCompletionOr<i16> to_i16(GlobalObject&) const;

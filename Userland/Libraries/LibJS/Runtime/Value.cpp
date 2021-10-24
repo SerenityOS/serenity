@@ -559,7 +559,7 @@ ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 }
 
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
-ThrowCompletionOr<StringOrSymbol> Value::to_property_key(GlobalObject& global_object) const
+ThrowCompletionOr<PropertyKey> Value::to_property_key(GlobalObject& global_object) const
 {
     auto key = TRY(to_primitive(global_object, PreferredType::String));
     if (key.is_symbol())

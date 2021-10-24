@@ -668,7 +668,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     auto trap_result_array = TRY(vm.call(*trap, &m_handler, &m_target));
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
-    HashTable<StringOrSymbol> unique_keys;
+    HashTable<PropertyKey> unique_keys;
     auto trap_result = TRY(create_list_from_array_like(global_object, trap_result_array, [&](auto value) -> ThrowCompletionOr<void> {
         auto& vm = global_object.vm();
         if (!value.is_string() && !value.is_symbol())
