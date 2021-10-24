@@ -219,7 +219,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 {
     auto* object = TRY(value.to_object(global_object));
 
-    HashTable<PropertyKey, PropertyNameTraits> seen_names;
+    HashTable<PropertyKey> seen_names;
     for (auto& property : binding.entries) {
 
         VERIFY(!property.is_elision());
