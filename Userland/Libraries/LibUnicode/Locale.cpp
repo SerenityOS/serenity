@@ -803,6 +803,15 @@ Vector<StringView> get_locale_key_mapping([[maybe_unused]] StringView locale, [[
     return {};
 }
 
+Optional<StringView> get_number_system_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] StringView symbol)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_number_system_symbol(locale, system, symbol);
+#else
+    return {};
+#endif
+}
+
 Optional<ListPatterns> get_locale_list_patterns([[maybe_unused]] StringView locale, [[maybe_unused]] StringView type, [[maybe_unused]] StringView style)
 {
 #if ENABLE_UNICODE_DATA

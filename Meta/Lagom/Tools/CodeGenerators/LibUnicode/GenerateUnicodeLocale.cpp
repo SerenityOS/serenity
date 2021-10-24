@@ -25,6 +25,11 @@
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
 
+struct NumberSystem {
+    StringIndexType system { 0 };
+    HashMap<String, StringIndexType> symbols {};
+};
+
 struct ListPatterns {
     String type;
     String style;
@@ -43,6 +48,7 @@ struct Locale {
     HashMap<String, StringIndexType> scripts;
     HashMap<String, StringIndexType> currencies;
     HashMap<String, StringIndexType> keywords;
+    HashMap<String, NumberSystem> number_systems;
     Vector<ListPatterns> list_patterns;
 };
 
@@ -68,6 +74,7 @@ struct UnicodeLocaleData {
     Vector<String> variants;
     Vector<String> currencies;
     Vector<String> keywords;
+    Vector<String> numeric_symbols;
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
     HashMap<String, StringIndexType> language_aliases;
@@ -473,6 +480,47 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
         locale_data.keywords.append(key);
 }
 
+static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath numbers_path(move(locale_numbers_path));
+    numbers_path = numbers_path.append("numbers.json"sv);
+    VERIFY(Core::File::exists(numbers_path.string()));
+
+    auto numbers_file_or_error = Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!numbers_file_or_error.is_error());
+
+    auto numbers = JsonParser(numbers_file_or_error.value()->read_all()).parse();
+    VERIFY(numbers.has_value());
+
+    auto const& main_object = numbers->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
+    auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
+
+    auto ensure_number_system = [&](auto const& system) -> NumberSystem& {
+        return locale.number_systems.ensure(system, [&]() {
+            auto system_index = ensure_unique_string(locale_data, system);
+            return NumberSystem { .system = system_index };
+        });
+    };
+
+    locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        constexpr auto symbols_prefix = "symbols-numberSystem-"sv;
+
+        if (key.starts_with(symbols_prefix)) {
+            auto system = key.substring(symbols_prefix.length());
+            auto& number_system = ensure_number_system(system);
+
+            value.as_object().for_each_member([&](auto const& symbol, JsonValue const& localization) {
+                auto symbol_index = ensure_unique_string(locale_data, localization.as_string());
+                number_system.symbols.set(symbol, symbol_index);
+
+                if (!locale_data.numeric_symbols.contains_slow(symbol))
+                    locale_data.numeric_symbols.append(symbol);
+            });
+        }
+    });
+}
+
 static void parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
 {
     LexicalPath default_content_path(move(core_path));
@@ -599,6 +647,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
         auto& locale = locale_data.locales.ensure(*language);
         parse_locale_currencies(numbers_path, locale_data, locale);
         parse_numeric_keywords(numbers_path, locale_data, locale);
+        parse_number_systems(numbers_path, locale_data, locale);
     }
 
     parse_default_content_locales(move(core_path), locale_data);
@@ -664,6 +713,7 @@ namespace Unicode {
     generate_enum("ScriptTag"sv, {}, locale_data.scripts);
     generate_enum("Currency"sv, {}, locale_data.currencies);
     generate_enum("Key"sv, {}, locale_data.keywords);
+    generate_enum("NumericSymbol"sv, {}, locale_data.numeric_symbols);
     generate_enum("Variant"sv, {}, locale_data.variants);
     generate_enum("ListPatternType"sv, {}, locale_data.list_pattern_types);
     generate_enum("ListPatternStyle"sv, {}, locale_data.list_pattern_styles);
@@ -690,6 +740,9 @@ Optional<Currency> currency_from_string(StringView currency);
 
 Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
 Optional<Key> key_from_string(StringView key);
+
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView numeric_symbol);
+Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style);
 Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
@@ -720,6 +773,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("locales_size"sv, String::number(locale_data.locales.size()));
     generator.set("territories_size", String::number(locale_data.territories.size()));
     generator.set("variants_size", String::number(locale_data.max_variant_size));
+    generator.set("numeric_symbols_size", String::number(locale_data.numeric_symbols.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -761,6 +815,11 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
 
     generator.append(R"~~~(
 } };
+
+struct NumberSystem {
+    @string_index_type@ system { 0 };
+    Array<@string_index_type@, @numeric_symbols_size@> symbols {};
+};
 )~~~");
 
     auto format_mapping_name = [](StringView format, StringView name) {
@@ -813,6 +872,32 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {
                 values_in_current_row = 0;
                 generator.append("\n    ");
             }
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
+    auto append_number_systems = [&](String name, auto const& number_systems) {
+        generator.set("name", move(name));
+        generator.set("size", String::number(number_systems.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
+
+        for (auto const& number_system : number_systems) {
+            generator.set("system"sv, String::number(number_system.value.system));
+            generator.append(R"~~~(
+    { @system@, {)~~~");
+
+            for (auto const& symbol : locale_data.numeric_symbols) {
+                auto index = number_system.value.symbols.get(symbol).value_or(0);
+                generator.set("index", String::number(index));
+                generator.append(" @index@,");
+            }
+
+            generator.append(" } },");
         }
 
         generator.append(R"~~~(
@@ -888,6 +973,7 @@ static constexpr Array<Span<@type@ const>, @size@> @name@ { {
     append_mapping(s_string_index_type, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.scripts, value.scripts); });
     append_mapping(s_string_index_type, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.currencies); });
     append_mapping(s_string_index_type, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
+    append_mapping("NumberSystem"sv, "s_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_number_systems(name, value.number_systems); });
     append_mapping("Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
     generator.append(R"~~~(
@@ -1146,7 +1232,40 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_from_string("ListPatternType"sv, "list_pattern_type"sv, locale_data.list_pattern_types);
     append_from_string("ListPatternStyle"sv, "list_pattern_style"sv, locale_data.list_pattern_styles);
 
+    append_from_string("NumericSymbol"sv, "numeric_symbol"sv, locale_data.numeric_symbols);
+
     generator.append(R"~~~(
+static NumberSystem const* find_number_system(StringView locale, StringView system)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return nullptr;
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto const& number_systems = s_number_systems.at(locale_index);
+
+    for (auto const& number_system : number_systems) {
+        if (system == s_string_list[number_system.system])
+            return &number_system;
+    };
+
+    return nullptr;
+}
+
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol)
+{
+    auto symbol_value = numeric_symbol_from_string(symbol);
+    if (!symbol_value.has_value())
+        return {};
+
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+        auto symbol_index = to_underlying(*symbol_value);
+        return s_string_list[number_system->symbols[symbol_index]];
+    }
+
+    return {};
+}
+
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
 {
     auto locale_value = locale_from_string(locale);
