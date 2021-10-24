@@ -76,7 +76,6 @@ void EventLoop::drain_mouse()
     auto& screen_input = ScreenInput::the();
     MousePacket state;
     state.buttons = screen_input.mouse_button_state();
-    unsigned buttons = state.buttons;
     MousePacket packets[32];
 
     ssize_t nread = read(m_mouse_fd, &packets, sizeof(packets));
@@ -90,7 +89,6 @@ void EventLoop::drain_mouse()
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
         dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse X {}, Y {}, Z {}, relative={}", packet.x, packet.y, packet.z, packet.is_relative);
-        buttons = packet.buttons;
 
         state.is_relative = packet.is_relative;
         if (packet.is_relative) {
@@ -103,8 +101,8 @@ void EventLoop::drain_mouse()
             state.z += packet.z;
         }
 
-        if (buttons != state.buttons) {
-            state.buttons = buttons;
+        if (packet.buttons != state.buttons) {
+            state.buttons = packet.buttons;
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
             screen_input.on_receive_mouse_data(state);
             if (state.is_relative) {
