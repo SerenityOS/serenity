@@ -173,6 +173,8 @@ const TestSuite test_suites[] {
     // Note: '9223372036854775806' is the max value for 'long long'.
     { "%lld", "9223372036854775805", 1, 1, { longlongarg0 }, { to_value_t(9223372036854775805LL) } },
     { "%llu", "9223372036854775810", 1, 1, { unsignedlonglongarg0 }, { to_value_t(9223372036854775810ULL) } },
+    { "%n", "", 0, 1, { intarg0 }, { to_value_t(0) } },
+    { "%d %n", "1 a", 1, 2, { intarg0, intarg1 }, { to_value_t(1), to_value_t(2) } },
 };
 
 bool g_any_failed = false;
