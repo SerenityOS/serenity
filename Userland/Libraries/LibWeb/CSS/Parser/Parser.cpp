@@ -2088,7 +2088,7 @@ Optional<Color> Parser::parse_color(ParsingContext const& context, StyleComponen
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
 
-        auto color = Color::from_string(ident.to_lowercase_string());
+        auto color = Color::from_string(ident);
         if (color.has_value())
             return color;
 
