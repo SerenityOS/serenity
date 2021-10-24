@@ -71,12 +71,8 @@ void WindowManager::reload_config()
     apply_virtual_desktop_settings(virtual_desktop_rows, virtual_desktop_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    String bool_value = m_config->read_entry("Mouse", "ButtonsSwitched", "False");
-    if (bool_value.equals_ignoring_case("true")) {
-        m_buttons_switched = true;
-    } else {
-        m_buttons_switched = false;
-    }
+
+    m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
@@ -284,7 +280,7 @@ void WindowManager::set_buttons_switched(bool switched)
 {
     m_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
-    m_config->write_entry("Mouse", "ButtonsSwitched", String::boolean(switched));
+    m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
     m_config->sync();
 }
 

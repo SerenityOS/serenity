@@ -280,12 +280,6 @@ public:
         return formatted("{}", value);
     }
 
-    template<typename T>
-    [[nodiscard]] static String boolean(T value)
-    {
-        return value ? "true" : "false";
-    }
-
     [[nodiscard]] StringView view() const
     {
         return { characters(), length() };

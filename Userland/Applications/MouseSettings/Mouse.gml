@@ -180,7 +180,7 @@
             }
 
             @GUI::Label {
-                text: "Switch primary and secondary buttons:"
+                text: "Switch primary and secondary buttons"
                 fixed_width: 201
                 text_alignment: "CenterLeft"
                 name: "switch_buttons_label"
