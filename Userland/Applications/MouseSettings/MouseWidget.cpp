@@ -71,7 +71,7 @@ void MouseWidget::reset_default_values()
     m_speed_slider->set_value(speed_slider_scale);
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
-    m_switch_buttons_checkbox->set_checked(false);    
+    m_switch_buttons_checkbox->set_checked(false);
     update_window_server();
 }
 

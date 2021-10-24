@@ -76,7 +76,7 @@ void WindowManager::reload_config()
         m_buttons_switched = true;
     } else {
         m_buttons_switched = false;
-    }    
+    }
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
