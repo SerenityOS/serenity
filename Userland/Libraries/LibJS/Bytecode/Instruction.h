@@ -10,70 +10,70 @@
 #include <LibJS/Forward.h>
 
 #define ENUMERATE_BYTECODE_OPS(O)    \
-    O(Load)                          \
-    O(LoadImmediate)                 \
-    O(Store)                         \
     O(Add)                           \
-    O(Sub)                           \
-    O(Mul)                           \
+    O(BitwiseAnd)                    \
+    O(BitwiseNot)                    \
+    O(BitwiseOr)                     \
+    O(BitwiseXor)                    \
+    O(Call)                          \
+    O(ConcatString)                  \
+    O(ContinuePendingUnwind)         \
+    O(CopyObjectExcludingProperties) \
+    O(Decrement)                     \
     O(Div)                           \
-    O(Mod)                           \
+    O(EnterUnwindContext)            \
     O(Exp)                           \
+    O(GetById)                       \
+    O(GetByValue)                    \
+    O(GetIterator)                   \
+    O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
-    O(LessThan)                      \
-    O(LessThanEquals)                \
-    O(LooselyInequals)               \
-    O(LooselyEquals)                 \
-    O(StrictlyInequals)              \
-    O(StrictlyEquals)                \
-    O(NewBigInt)                     \
-    O(NewArray)                      \
+    O(In)                            \
+    O(Increment)                     \
+    O(InstanceOf)                    \
+    O(IteratorNext)                  \
+    O(IteratorResultDone)            \
+    O(IteratorResultValue)           \
     O(IteratorToArray)               \
-    O(NewString)                     \
-    O(NewObject)                     \
-    O(NewRegExp)                     \
-    O(CopyObjectExcludingProperties) \
-    O(GetVariable)                   \
-    O(SetVariable)                   \
-    O(PutById)                       \
-    O(GetById)                       \
-    O(PutByValue)                    \
-    O(GetByValue)                    \
     O(Jump)                          \
     O(JumpConditional)               \
     O(JumpNullish)                   \
     O(JumpUndefined)                 \
-    O(Call)                          \
-    O(NewFunction)                   \
-    O(Return)                        \
-    O(BitwiseAnd)                    \
-    O(BitwiseOr)                     \
-    O(BitwiseXor)                    \
-    O(BitwiseNot)                    \
-    O(Not)                           \
-    O(UnaryPlus)                     \
-    O(UnaryMinus)                    \
-    O(Typeof)                        \
-    O(LeftShift)                     \
-    O(RightShift)                    \
-    O(UnsignedRightShift)            \
-    O(In)                            \
-    O(InstanceOf)                    \
-    O(ConcatString)                  \
-    O(Increment)                     \
-    O(Decrement)                     \
-    O(Throw)                         \
-    O(PushDeclarativeEnvironment)    \
-    O(EnterUnwindContext)            \
     O(LeaveUnwindContext)            \
-    O(ContinuePendingUnwind)         \
-    O(Yield)                         \
-    O(GetIterator)                   \
-    O(IteratorNext)                  \
-    O(IteratorResultDone)            \
-    O(IteratorResultValue)           \
-    O(NewClass)
+    O(LeftShift)                     \
+    O(LessThan)                      \
+    O(LessThanEquals)                \
+    O(Load)                          \
+    O(LoadImmediate)                 \
+    O(LooselyEquals)                 \
+    O(LooselyInequals)               \
+    O(Mod)                           \
+    O(Mul)                           \
+    O(NewArray)                      \
+    O(NewBigInt)                     \
+    O(NewClass)                      \
+    O(NewFunction)                   \
+    O(NewObject)                     \
+    O(NewRegExp)                     \
+    O(NewString)                     \
+    O(Not)                           \
+    O(PushDeclarativeEnvironment)    \
+    O(PutById)                       \
+    O(PutByValue)                    \
+    O(Return)                        \
+    O(RightShift)                    \
+    O(SetVariable)                   \
+    O(Store)                         \
+    O(StrictlyEquals)                \
+    O(StrictlyInequals)              \
+    O(Sub)                           \
+    O(Throw)                         \
+    O(Typeof)                        \
+    O(UnaryMinus)                    \
+    O(UnaryPlus)                     \
+    O(UnsignedRightShift)            \
+    O(Yield)
 
 namespace JS::Bytecode {
 
