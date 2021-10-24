@@ -189,8 +189,13 @@ private:
     Symbol* m_symbol { nullptr };
 };
 
-struct PropertyNameTraits : public Traits<PropertyKey> {
-    static unsigned hash(PropertyKey const& name)
+}
+
+namespace AK {
+
+template<>
+struct Traits<JS::PropertyKey> : public GenericTraits<JS::PropertyKey> {
+    static unsigned hash(JS::PropertyKey const& name)
     {
         VERIFY(name.is_valid());
         if (name.is_string())
@@ -200,27 +205,23 @@ struct PropertyNameTraits : public Traits<PropertyKey> {
         return ptr_hash(name.as_symbol());
     }
 
-    static bool equals(PropertyKey const& a, PropertyKey const& b)
+    static bool equals(JS::PropertyKey const& a, JS::PropertyKey const& b)
     {
         if (a.type() != b.type())
             return false;
 
         switch (a.type()) {
-        case PropertyKey::Type::Number:
+        case JS::PropertyKey::Type::Number:
             return a.as_number() == b.as_number();
-        case PropertyKey::Type::String:
+        case JS::PropertyKey::Type::String:
             return a.as_string() == b.as_string();
-        case PropertyKey::Type::Symbol:
+        case JS::PropertyKey::Type::Symbol:
             return a.as_symbol() == b.as_symbol();
         default:
             VERIFY_NOT_REACHED();
         }
     }
 };
-
-}
-
-namespace AK {
 
 template<>
 struct Formatter<JS::PropertyKey> : Formatter<StringView> {

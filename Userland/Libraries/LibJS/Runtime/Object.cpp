@@ -445,7 +445,7 @@ ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(Propert
 }
 
 // 7.3.25 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
-ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyKey, PropertyNameTraits> const& seen_names, GlobalObject& global_object)
+ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object)
 {
     if (source.is_nullish())
         return this;

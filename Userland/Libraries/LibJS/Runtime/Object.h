@@ -101,7 +101,7 @@ public:
     ThrowCompletionOr<bool> set_integrity_level(IntegrityLevel);
     ThrowCompletionOr<bool> test_integrity_level(IntegrityLevel) const;
     ThrowCompletionOr<MarkedValueList> enumerable_own_property_names(PropertyKind kind) const;
-    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyKey, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
+    ThrowCompletionOr<Object*> copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object);
 
     PrivateElement* private_element_find(PrivateName const& name);
     ThrowCompletionOr<void> private_field_add(PrivateName const& name, Value value);
