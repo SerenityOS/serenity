@@ -61,6 +61,7 @@
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
     O(PutByValue)                    \
+    O(ResolveThisBinding)            \
     O(Return)                        \
     O(RightShift)                    \
     O(SetVariable)                   \

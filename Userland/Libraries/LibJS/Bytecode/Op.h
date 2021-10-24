@@ -715,6 +715,18 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class ResolveThisBinding final : public Instruction {
+public:
+    explicit ResolveThisBinding()
+        : Instruction(Type::ResolveThisBinding)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
 }
 
 namespace JS::Bytecode {
