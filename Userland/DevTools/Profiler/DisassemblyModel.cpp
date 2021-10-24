@@ -97,6 +97,10 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         dbgln("DisassemblyModel: symbol not found");
         return;
     }
+    if (!symbol.value().raw_data().length()) {
+        dbgln("DisassemblyModel: Found symbol without code");
+        return;
+    }
     VERIFY(symbol.has_value());
 
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
