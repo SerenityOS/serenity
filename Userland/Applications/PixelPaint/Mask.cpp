@@ -19,32 +19,6 @@ Mask::Mask(Gfx::IntRect bounding_rect, u8 default_value)
     }
 }
 
-size_t Mask::to_index(int x, int y) const
-{
-    VERIFY(m_bounding_rect.contains(x, y));
-
-    int dx = x - m_bounding_rect.x();
-    int dy = y - m_bounding_rect.y();
-    return dy * m_bounding_rect.width() + dx;
-}
-
-u8 Mask::get(int x, int y) const
-{
-    if (is_null() || !m_bounding_rect.contains(x, y)) {
-        return 0;
-    }
-
-    return m_data[to_index(x, y)];
-}
-
-void Mask::set(int x, int y, u8 value)
-{
-    VERIFY(!is_null());
-    VERIFY(m_bounding_rect.contains(x, y));
-
-    m_data[to_index(x, y)] = value;
-}
-
 Mask Mask::with_bounding_rect(Gfx::IntRect inner_rect) const
 {
     auto result = Mask::empty(inner_rect);
