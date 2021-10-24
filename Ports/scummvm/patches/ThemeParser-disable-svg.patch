@@ -1,0 +1,11 @@
+--- scummvm-2.5.0/gui/ThemeParser.cpp	2021-10-24 15:45:46.993615827 +0200
++++ scummvm-2.5.0-patched/gui/ThemeParser.cpp	2021-10-24 15:53:54.569381046 +0200
+@@ -299,8 +299,6 @@
+ 	}
+ 
+ 	Common::String scalableFile;
+-	if (node->values.contains("scalable_file"))
+-		scalableFile = node->values["scalable_file"];
+ 
+ 	int width = 0, height = 0;
+ 	Common::String val;
