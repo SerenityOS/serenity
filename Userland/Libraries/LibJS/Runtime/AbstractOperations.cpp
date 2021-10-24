@@ -452,7 +452,7 @@ Object* get_super_constructor(VM& vm)
 }
 
 // 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict ), https://tc39.es/ecma262/#sec-makesuperpropertyreference
-ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
+ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject& global_object, Value actual_this, PropertyKey const& property_key, bool strict)
 {
     auto& vm = global_object.vm();
     // 1. Let env be GetThisEnvironment().

@@ -21,7 +21,7 @@ FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject&, Object*
 PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer);
 Environment& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
-ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
+ThrowCompletionOr<Reference> make_super_property_reference(GlobalObject&, Value actual_this, PropertyKey const&, bool strict);
 ThrowCompletionOr<Value> require_object_coercible(GlobalObject&, Value);
 ThrowCompletionOr<Value> call_impl(GlobalObject&, Value function, Value this_value, Optional<MarkedValueList> = {});
 ThrowCompletionOr<Object*> construct(GlobalObject&, FunctionObject&, Optional<MarkedValueList> = {}, FunctionObject* new_target = nullptr);
