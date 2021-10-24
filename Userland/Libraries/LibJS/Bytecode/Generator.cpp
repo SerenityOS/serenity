@@ -44,7 +44,7 @@ Executable Generator::generate(ASTNode const& node, bool is_in_generator_functio
             generator.emit<Bytecode::Op::Yield>(nullptr);
         }
     }
-    return { move(generator.m_root_basic_blocks), move(generator.m_string_table), generator.m_next_register };
+    return { {}, move(generator.m_root_basic_blocks), move(generator.m_string_table), generator.m_next_register };
 }
 
 void Generator::grow(size_t additional_size)

@@ -678,14 +678,15 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable.has_value()) {
             m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind == FunctionKind::Generator);
+            m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);
             if constexpr (JS_BYTECODE_DEBUG) {
                 dbgln("Optimisation passes took {}us", passes.elapsed());
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-                for (auto& block : m_bytecode_executable->basic_blocks)
-                    block.dump(*m_bytecode_executable);
             }
+            if (JS::Bytecode::g_dump_bytecode)
+                m_bytecode_executable->dump();
         }
         auto result = bytecode_interpreter->run(*m_bytecode_executable);
         if (auto* exception = vm.exception())
