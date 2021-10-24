@@ -27,7 +27,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
 
@@ -106,7 +106,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     // 6. Repeat, while index < len,
     for (size_t i = 0; i < length; ++i) {
         // a. Let indexName be ! ToString(𝔽(index)).
-        auto index_name = PropertyName { i };
+        auto index_name = PropertyKey { i };
 
         // b. Let next be ? Get(obj, indexName).
         auto next = TRY(array_like.get(index_name));
@@ -206,7 +206,7 @@ bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const
 }
 
 // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
-bool validate_and_apply_property_descriptor(Object* object, PropertyName const& property_name, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
+bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& property_name, bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {
     // 1. Assert: If O is not undefined, then IsPropertyKey(P) is true.
     if (object)
@@ -835,7 +835,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
             // 2. Let p be MakeArgSetter(name, env).
             // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_old_native_accessor(
-                PropertyName { index },
+                PropertyKey { index },
                 [&environment, name](VM&, GlobalObject& global_object_getter) -> Value {
                     return MUST(environment.get_binding_value(global_object_getter, name, false));
                 },
@@ -859,7 +859,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName const& property_name)
+Value canonical_numeric_index_string(GlobalObject& global_object, PropertyKey const& property_name)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been

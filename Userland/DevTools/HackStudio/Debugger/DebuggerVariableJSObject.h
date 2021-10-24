@@ -25,7 +25,7 @@ public:
 
     virtual const char* class_name() const override { return m_variable_info.type_name.characters(); }
 
-    JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
+    JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
 
 private:
     DebuggerGlobalJSObject& debugger_object() const;

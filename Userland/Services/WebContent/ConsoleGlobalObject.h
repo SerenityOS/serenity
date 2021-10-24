@@ -27,12 +27,12 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
     virtual JS::ThrowCompletionOr<bool> internal_is_extensible() const override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
-    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const& name) const override;
-    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const& name, JS::PropertyDescriptor const& descriptor) override;
-    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const& name) const override;
-    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value) const override;
-    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
-    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyName const& name) override;
+    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const& name) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyKey const& name, JS::PropertyDescriptor const& descriptor) override;
+    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
+    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
+    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const& name) override;
     virtual JS::ThrowCompletionOr<JS::MarkedValueList> internal_own_property_keys() const override;
 
     virtual void initialize_global_object() override;

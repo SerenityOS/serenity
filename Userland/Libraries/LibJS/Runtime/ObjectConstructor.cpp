@@ -285,7 +285,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
 
     // 4. For each element key of ownKeys, do
     for (auto& key : own_keys) {
-        auto property_name = PropertyName::from_value(global_object, key);
+        auto property_name = PropertyKey::from_value(global_object, key);
 
         // a. Let desc be ? obj.[[GetOwnProperty]](key).
         auto desc = TRY_OR_DISCARD(object->internal_get_own_property(property_name));
@@ -425,7 +425,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::assign)
 
         // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {
-            auto property_name = PropertyName::from_value(global_object, next_key);
+            auto property_name = PropertyKey::from_value(global_object, next_key);
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
             auto desc = TRY_OR_DISCARD(from->internal_get_own_property(property_name));

@@ -59,12 +59,12 @@ public:
     void set_home_object(Object* home_object) { m_home_object = home_object; }
 
     struct InstanceField {
-        Variant<PropertyName, PrivateName> name;
+        Variant<PropertyKey, PrivateName> name;
         ECMAScriptFunctionObject* initializer { nullptr };
     };
 
     Vector<InstanceField> const& fields() const { return m_fields; }
-    void add_field(Variant<PropertyName, PrivateName> property_key, ECMAScriptFunctionObject* initializer);
+    void add_field(Variant<PropertyKey, PrivateName> property_key, ECMAScriptFunctionObject* initializer);
 
     Vector<PrivateElement> const& private_methods() const { return m_private_methods; }
     void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); };

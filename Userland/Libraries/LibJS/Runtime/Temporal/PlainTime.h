@@ -76,7 +76,7 @@ struct PartialUnregulatedTemporalTime {
 template<typename StructT, typename ValueT>
 struct TemporalTimeLikeProperty {
     ValueT StructT::*internal_slot { nullptr };
-    PropertyName property;
+    PropertyKey property;
 };
 
 template<typename StructT, typename ValueT>

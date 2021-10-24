@@ -38,9 +38,9 @@ public:
     explicit Array(Object& prototype);
     virtual ~Array() override;
 
-    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyName const&) const override;
-    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
-    virtual ThrowCompletionOr<bool> internal_delete(PropertyName const&) override;
+    virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
+    virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&) override;
+    virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedValueList> internal_own_property_keys() const override;
 
     [[nodiscard]] bool length_is_writable() const { return m_length_writable; };

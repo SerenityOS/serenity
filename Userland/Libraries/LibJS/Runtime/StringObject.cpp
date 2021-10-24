@@ -44,7 +44,7 @@ void StringObject::visit_edges(Cell::Visitor& visitor)
 }
 
 // 10.4.3.5 StringGetOwnProperty ( S, P ),https://tc39.es/ecma262/#sec-stringgetownproperty
-static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global_object, StringObject const& string, PropertyName const& property_name)
+static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global_object, StringObject const& string, PropertyKey const& property_name)
 {
     // 1. Assert: S is an Object that has a [[StringData]] internal slot.
     // 2. Assert: IsPropertyKey(P) is true.
@@ -52,7 +52,7 @@ static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global
 
     // 3. If Type(P) is not String, return undefined.
     // NOTE: The spec only uses string and symbol keys, and later coerces to numbers -
-    // this is not the case for PropertyName, so '!property_name.is_string()' would be wrong.
+    // this is not the case for PropertyKey, so '!property_name.is_string()' would be wrong.
     if (property_name.is_symbol())
         return {};
 
@@ -92,7 +92,7 @@ static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global
 }
 
 // 10.4.3.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-string-exotic-objects-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_property(PropertyKey const& property_name) const
 {
     // Assert: IsPropertyKey(P) is true.
 
@@ -108,7 +108,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> StringObject::internal_get_own_p
 }
 
 // 10.4.3.2 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-string-exotic-objects-defineownproperty-p-desc
-ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> StringObject::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());

@@ -279,7 +279,7 @@ private:
 
     [[nodiscard]] ThrowCompletionOr<Value> call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
 
-    ThrowCompletionOr<Object*> copy_data_properties(Object& rest_object, Object const& source, HashTable<PropertyName, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
+    ThrowCompletionOr<Object*> copy_data_properties(Object& rest_object, Object const& source, HashTable<PropertyKey, PropertyNameTraits> const& seen_names, GlobalObject& global_object);
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment, GlobalObject& global_object);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Object* iterator, bool& iterator_done, Environment* environment, GlobalObject& global_object);

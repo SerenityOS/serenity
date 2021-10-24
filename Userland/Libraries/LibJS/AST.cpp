@@ -1084,7 +1084,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
 
     // From here on equivalent to
     // 13.3.4 EvaluatePropertyAccessWithIdentifierKey ( baseValue, identifierName, strict ), https://tc39.es/ecma262/#sec-evaluate-property-access-with-identifier-key
-    PropertyName property_name;
+    PropertyKey property_name;
     if (is_computed()) {
         // Weird order which I can't quite find from the specs.
         auto value = m_property->execute(interpreter, global_object);
@@ -1094,7 +1094,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
 
         VERIFY(!value.is_empty());
-        property_name = PropertyName::from_value(global_object, value);
+        property_name = PropertyKey::from_value(global_object, value);
         if (interpreter.exception())
             return Reference {};
     } else if (is<PrivateIdentifier>(*m_property)) {
@@ -1191,7 +1191,7 @@ static ThrowCompletionOr<ClassElement::ClassElementName> class_key_to_property_n
     if (prop_key.is_object())
         prop_key = TRY(prop_key.to_primitive(global_object, Value::PreferredType::String));
 
-    auto property_key = PropertyName::from_value(global_object, prop_key);
+    auto property_key = PropertyKey::from_value(global_object, prop_key);
     if (auto* exception = interpreter.exception())
         return throw_completion(exception->value());
     return ClassElement::ClassElementName { property_key };
@@ -1211,7 +1211,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 
     auto set_function_name = [&](String prefix = "") {
         auto property_name = property_key.visit(
-            [&](PropertyName const& property_name) -> String {
+            [&](PropertyKey const& property_name) -> String {
                 if (property_name.is_symbol()) {
                     auto description = property_name.as_symbol()->description();
                     if (description.is_empty())
@@ -1228,8 +1228,8 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
         update_function_name(method_value, String::formatted("{}{}{}", prefix, prefix.is_empty() ? "" : " ", property_name));
     };
 
-    if (property_key.has<PropertyName>()) {
-        auto& property_name = property_key.get<PropertyName>();
+    if (property_key.has<PropertyKey>()) {
+        auto& property_name = property_key.get<PropertyKey>();
         switch (kind()) {
         case ClassMethod::Kind::Method:
             set_function_name();
@@ -1303,7 +1303,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     if (m_initializer) {
         auto copy_initializer = m_initializer;
         auto name = property_key.visit(
-            [&](PropertyName const& property_name) -> String {
+            [&](PropertyKey const& property_name) -> String {
                 return property_name.is_number() ? property_name.to_string() : property_name.to_string_or_symbol().to_display_string();
             },
             [&](PrivateName const& private_name) -> String {
@@ -2600,14 +2600,14 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         switch (property.type()) {
         case ObjectProperty::Type::Getter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(PropertyName::from_value(global_object, key), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(PropertyKey::from_value(global_object, key), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::Setter:
             VERIFY(value.is_function());
-            object->define_direct_accessor(PropertyName::from_value(global_object, key), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
+            object->define_direct_accessor(PropertyKey::from_value(global_object, key), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::KeyValue:
-            object->define_direct_property(PropertyName::from_value(global_object, key), value, JS::default_attributes);
+            object->define_direct_property(PropertyKey::from_value(global_object, key), value, JS::default_attributes);
             break;
         case ObjectProperty::Type::Spread:
         default:
@@ -2627,7 +2627,7 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
+PropertyKey MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
 {
     if (!is_computed())
         return verify_cast<Identifier>(*m_property).string();
@@ -2636,7 +2636,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
     if (interpreter.exception())
         return {};
     VERIFY(!value.is_empty());
-    return PropertyName::from_value(global_object, value);
+    return PropertyKey::from_value(global_object, value);
 }
 
 String MemberExpression::to_string_approximation() const

@@ -34,7 +34,7 @@ private:
     };
 
     // Stringify helpers
-    static String serialize_json_property(GlobalObject&, StringifyState&, const PropertyName& key, Object* holder);
+    static String serialize_json_property(GlobalObject&, StringifyState&, const PropertyKey& key, Object* holder);
     static String serialize_json_object(GlobalObject&, StringifyState&, Object&);
     static String serialize_json_array(GlobalObject&, StringifyState&, Object&);
     static String quote_json_string(String);
@@ -42,7 +42,7 @@ private:
     // Parse helpers
     static Object* parse_json_object(GlobalObject&, const JsonObject&);
     static Array* parse_json_array(GlobalObject&, const JsonArray&);
-    static Value internalize_json_property(GlobalObject&, Object* holder, PropertyName const& name, FunctionObject& reviver);
+    static Value internalize_json_property(GlobalObject&, Object* holder, PropertyKey const& name, FunctionObject& reviver);
 
     JS_DECLARE_OLD_NATIVE_FUNCTION(stringify);
     JS_DECLARE_OLD_NATIVE_FUNCTION(parse);

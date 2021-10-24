@@ -163,7 +163,7 @@ class PromiseReactionJob;
 class PromiseResolveThenableJob;
 class PropertyAttributes;
 class PropertyDescriptor;
-class PropertyName;
+class PropertyKey;
 class Realm;
 class Reference;
 class ScopeNode;

@@ -27,9 +27,9 @@ public:
 
     virtual ~SheetGlobalObject() override;
 
-    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const& name) const override;
-    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value receiver) const override;
-    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value value, JS::Value receiver) override;
+    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
+    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
     virtual void initialize_global_object() override;
 
     JS_DECLARE_OLD_NATIVE_FUNCTION(get_real_cell_contents);

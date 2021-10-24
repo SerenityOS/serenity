@@ -18,7 +18,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>
@@ -1036,7 +1036,7 @@ public:
     virtual ElementKind class_element_kind() const = 0;
     bool is_static() const { return m_is_static; }
 
-    using ClassElementName = Variant<PropertyName, PrivateName>;
+    using ClassElementName = Variant<PropertyKey, PrivateName>;
 
     struct ClassFieldDefinition {
         ClassElementName name;
@@ -1558,7 +1558,7 @@ public:
     Expression const& object() const { return *m_object; }
     Expression const& property() const { return *m_property; }
 
-    PropertyName computed_property_name(Interpreter&, GlobalObject&) const;
+    PropertyKey computed_property_name(Interpreter&, GlobalObject&) const;
 
     String to_string_approximation() const;
 

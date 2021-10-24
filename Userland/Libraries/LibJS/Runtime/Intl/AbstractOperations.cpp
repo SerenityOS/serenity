@@ -219,7 +219,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     // 7. Repeat, while k < len,
     for (size_t k = 0; k < length; ++k) {
         // a. Let Pk be ToString(k).
-        auto property_key = PropertyName { k };
+        auto property_key = PropertyKey { k };
 
         // b. Let kPresent be ? HasProperty(O, Pk).
         auto key_present = TRY(object->has_property(property_key));
@@ -597,7 +597,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
 {
     auto& vm = global_object.vm();
 
@@ -661,7 +661,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
 }
 
 // 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
-ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyName const& property, int minimum, int maximum, Optional<int> fallback)
+ThrowCompletionOr<Optional<int>> get_number_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback)
 {
     // 1. Assert: Type(options) is Object.
 

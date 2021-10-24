@@ -31,7 +31,7 @@ ProxyObject::~ProxyObject()
 {
 }
 
-static Value property_name_to_value(VM& vm, PropertyName const& name)
+static Value property_name_to_value(VM& vm, PropertyKey const& name)
 {
     VERIFY(name.is_valid());
     if (name.is_symbol())
@@ -223,7 +223,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_prevent_extensions()
 }
 
 // 10.5.5 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(const PropertyName& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_property(const PropertyKey& property_name) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -316,7 +316,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ProxyObject::internal_get_own_pr
 }
 
 // 10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
-ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -400,7 +400,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_define_own_property(PropertyName c
 }
 
 // 10.5.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p
-ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyName const& property_name) const
+ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& property_name) const
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -454,7 +454,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyName const& p
 }
 
 // 10.5.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyName const& property_name, Value receiver) const
+ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_name, Value receiver) const
 {
     VERIFY(!receiver.is_empty());
 
@@ -525,7 +525,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyName const& property_
 }
 
 // 10.5.9 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver
-ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_name, Value value, Value receiver)
 {
     VERIFY(!value.is_empty());
     VERIFY(!receiver.is_empty());
@@ -585,7 +585,7 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyName const& property_n
 }
 
 // 10.5.10 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p
-ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> ProxyObject::internal_delete(PropertyKey const& property_name)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -700,7 +700,7 @@ ThrowCompletionOr<MarkedValueList> ProxyObject::internal_own_property_keys() con
     // 16. For each element key of targetKeys, do
     for (auto& key : target_keys) {
         // a. Let desc be ? target.[[GetOwnProperty]](key).
-        auto descriptor = TRY(m_target.internal_get_own_property(PropertyName::from_value(global_object, key)));
+        auto descriptor = TRY(m_target.internal_get_own_property(PropertyKey::from_value(global_object, key)));
 
         // b. If desc is not undefined and desc.[[Configurable]] is false, then
         if (descriptor.has_value() && !*descriptor->configurable) {

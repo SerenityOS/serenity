@@ -219,7 +219,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 {
     auto* object = TRY(value.to_object(global_object));
 
-    HashTable<PropertyName, PropertyNameTraits> seen_names;
+    HashTable<PropertyKey, PropertyNameTraits> seen_names;
     for (auto& property : binding.entries) {
 
         VERIFY(!property.is_elision());
@@ -249,7 +249,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             break;
         }
 
-        PropertyName name;
+        PropertyKey name;
 
         property.name.visit(
             [&](Empty) { VERIFY_NOT_REACHED(); },

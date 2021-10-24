@@ -1384,7 +1384,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         generate_wrap_statement(scoped_generator, String::formatted("element{}", recursion_depth), sequence_generic_type.parameters.first(), String::formatted("auto wrapped_element{} =", recursion_depth), WrappingReference::Yes, recursion_depth + 1);
 
         scoped_generator.append(R"~~~(
-        auto property_index@recursion_depth@ = JS::PropertyName { i@recursion_depth@ };
+        auto property_index@recursion_depth@ = JS::PropertyKey { i@recursion_depth@ };
         MUST(new_array@recursion_depth@->create_data_property(property_index@recursion_depth@, wrapped_element@recursion_depth@));
     }
 
@@ -1577,18 +1577,18 @@ public:
 
     if (interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
-    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyName const&, JS::Value receiver) const override;
+    virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomSet")) {
         generator.append(R"~~~(
-    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value, JS::Value receiver) override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value, JS::Value receiver) override;
 )~~~");
     }
 
     if (interface.extended_attributes.contains("CustomHasProperty")) {
         generator.append(R"~~~(
-    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyName const&) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const&) const override;
 )~~~");
     }
 
@@ -1600,10 +1600,10 @@ public:
 
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
-    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyName const&) const override;
-    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyName const&, JS::Value, JS::Value) override;
-    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyName const&, JS::PropertyDescriptor const&) override;
-    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyName const&) override;
+    virtual JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> internal_get_own_property(JS::PropertyKey const&) const override;
+    virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value, JS::Value) override;
+    virtual JS::ThrowCompletionOr<bool> internal_define_own_property(JS::PropertyKey const&, JS::PropertyDescriptor const&) override;
+    virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<bool> internal_prevent_extensions() override;
     virtual JS::ThrowCompletionOr<JS::MarkedValueList> internal_own_property_keys() const override;
 )~~~");
@@ -1627,9 +1627,9 @@ private:
 
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
-    bool is_named_property_exposed_on_object(JS::PropertyName const&) const;
-    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_get_own_property_slot(JS::PropertyName const&) const;
-    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_set_slot(JS::PropertyName const&) const;
+    bool is_named_property_exposed_on_object(JS::PropertyKey const&) const;
+    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_get_own_property_slot(JS::PropertyKey const&) const;
+    Optional<JS::PropertyDescriptor> legacy_platform_object_get_own_property_for_set_slot(JS::PropertyKey const&) const;
 )~~~");
     }
 
@@ -1807,7 +1807,7 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
             // https://webidl.spec.whatwg.org/#dfn-named-property-visibility
 
             scoped_generator.append(R"~~~(
-bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& property_name) const
+bool @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& property_name) const
 {
     [[maybe_unused]] auto& vm = this->vm();
 
@@ -1877,7 +1877,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyName const& p
             get_own_property_generator.set("internal_method"sv, for_which_internal_method);
 
             get_own_property_generator.append(R"~~~(
-Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_property_for_@internal_method@_slot(JS::PropertyName const& property_name) const
+Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_property_for_@internal_method@_slot(JS::PropertyKey const& property_name) const
 {
 )~~~");
 
@@ -2049,7 +2049,7 @@ Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_pr
 
         if (interface.named_property_setter.has_value()) {
             // https://webidl.spec.whatwg.org/#invoke-named-setter
-            // NOTE: All users of invoke_named_property_setter check that JS::PropertyName is a String before calling it.
+            // NOTE: All users of invoke_named_property_setter check that JS::PropertyKey is a String before calling it.
             // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
@@ -2109,7 +2109,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
             // FIXME: It's not necessary to determine "creating" if the indexed property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_indices doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
-static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyName const& property_name, JS::Value value)
+static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyKey const& property_name, JS::Value value)
 {
     auto& vm = global_object.vm();
 
@@ -2165,7 +2165,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
         // 3.9.1. [[GetOwnProperty]], https://webidl.spec.whatwg.org/#legacy-platform-object-getownproperty
         scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_get_own_property(JS::PropertyName const& property_name) const
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_get_own_property(JS::PropertyKey const& property_name) const
 {
     // 1. Return LegacyPlatformObjectGetOwnProperty(O, P, false).
     return legacy_platform_object_get_own_property_for_get_own_property_slot(property_name);
@@ -2174,7 +2174,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::internal_g
 
         // 3.9.2. [[Set]], https://webidl.spec.whatwg.org/#legacy-platform-object-set
         scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
     auto& vm = this->vm();
     [[maybe_unused]] auto& global_object = this->global_object();
@@ -2239,7 +2239,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyName const& p
 
         // 3.9.3. [[DefineOwnProperty]], https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
         scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyName const& property_name, JS::PropertyDescriptor const& property_descriptor)
+JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::PropertyKey const& property_name, JS::PropertyDescriptor const& property_descriptor)
 {
     [[maybe_unused]] auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -2363,7 +2363,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
 
         // 3.9.4. [[Delete]], https://webidl.spec.whatwg.org/#legacy-platform-object-delete
         scoped_generator.append(R"~~~(
-JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyName const& property_name)
+JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const& property_name)
 {
     [[maybe_unused]] auto& vm = this->vm();
     auto& global_object = this->global_object();

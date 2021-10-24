@@ -129,7 +129,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(JSONObject::stringify)
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
-String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyName& key, Object* holder)
+String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyKey& key, Object* holder)
 {
     auto& vm = global_object.vm();
     auto value = TRY_OR_DISCARD(holder->get(key));
@@ -200,7 +200,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
     state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
-    auto process_property = [&](const PropertyName& key) {
+    auto process_property = [&](const PropertyKey& key) {
         if (key.is_symbol())
             return;
         auto serialized_property_string = serialize_json_property(global_object, state, key, &object);
@@ -437,7 +437,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
 }
 
 // 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
-Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyName const& name, FunctionObject& reviver)
+Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyKey const& name, FunctionObject& reviver)
 {
     auto& vm = global_object.vm();
     auto value = TRY_OR_DISCARD(holder->get(name));
@@ -445,7 +445,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
         auto is_array = TRY_OR_DISCARD(value.is_array(global_object));
 
         auto& value_object = value.as_object();
-        auto process_property = [&](const PropertyName& key) -> ThrowCompletionOr<void> {
+        auto process_property = [&](const PropertyKey& key) -> ThrowCompletionOr<void> {
             auto element = internalize_json_property(global_object, &value_object, key, reviver);
             if (auto* exception = vm.exception())
                 return throw_completion(exception->value());
