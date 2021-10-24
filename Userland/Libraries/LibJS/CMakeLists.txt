@@ -4,6 +4,7 @@ set(SOURCES
     Bytecode/BasicBlock.cpp
     Bytecode/Executable.cpp
     Bytecode/Generator.cpp
+    Bytecode/IdentifierTable.cpp
     Bytecode/Instruction.cpp
     Bytecode/Interpreter.cpp
     Bytecode/Op.cpp

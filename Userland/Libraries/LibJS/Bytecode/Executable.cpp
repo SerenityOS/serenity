@@ -17,6 +17,10 @@ void Executable::dump() const
         outln();
         string_table->dump();
     }
+    if (!identifier_table->is_empty()) {
+        outln();
+        identifier_table->dump();
+    }
 }
 
 }

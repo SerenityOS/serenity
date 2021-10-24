@@ -11,6 +11,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
@@ -102,6 +103,11 @@ public:
         return m_string_table->insert(move(string));
     }
 
+    IdentifierTableIndex intern_identifier(FlyString string)
+    {
+        return m_identifier_table->insert(move(string));
+    }
+
     bool is_in_generator_function() const { return m_is_in_generator_function; }
     void enter_generator_context() { m_is_in_generator_function = true; }
     void leave_generator_context() { m_is_in_generator_function = false; }
@@ -116,6 +122,7 @@ private:
     BasicBlock* m_current_basic_block { nullptr };
     NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
+    NonnullOwnPtr<IdentifierTable> m_identifier_table;
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };

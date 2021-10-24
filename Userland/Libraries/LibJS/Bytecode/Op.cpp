@@ -239,7 +239,7 @@ void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
+    auto reference = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
     if (vm.exception())
         return;
 
@@ -249,7 +249,7 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
+    auto reference = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
     if (vm.exception())
         return;
 
@@ -262,7 +262,7 @@ void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    auto value_or_error = object->get(interpreter.current_executable().get_string(m_property));
+    auto value_or_error = object->get(interpreter.current_executable().get_identifier(m_property));
     if (value_or_error.is_error())
         return;
     interpreter.accumulator() = value_or_error.release_value();
@@ -274,7 +274,7 @@ void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    MUST(object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    MUST(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -629,22 +629,22 @@ String ConcatString::to_string_impl(Bytecode::Executable const&) const
 
 String GetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
+    return String::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String SetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("SetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
+    return String::formatted("SetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String PutById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.string_table->get(m_property));
+    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.identifier_table->get(m_property));
 }
 
 String GetById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetById {} ({})", m_property, executable.string_table->get(m_property));
+    return String::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
 String Jump::to_string_impl(Bytecode::Executable const&) const
