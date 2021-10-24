@@ -1040,7 +1040,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         // 2. Let actualThis be ? env.GetThisBinding().
         auto actual_this = TRY_OR_DISCARD(environment.get_this_binding(global_object));
 
-        StringOrSymbol property_key;
+        PropertyKey property_key;
 
         if (is_computed()) {
             // SuperProperty : super [ Expression ]
