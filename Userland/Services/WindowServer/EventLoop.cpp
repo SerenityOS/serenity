@@ -86,6 +86,8 @@ void EventLoop::drain_mouse()
     size_t npackets = nread / sizeof(MousePacket);
     if (!npackets)
         return;
+
+    bool state_is_sent = false;
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
         dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse X {}, Y {}, Z {}, relative={}", packet.x, packet.y, packet.z, packet.is_relative);
@@ -99,11 +101,13 @@ void EventLoop::drain_mouse()
             state.y = packet.y;
         }
         state.z += packet.z;
+        state_is_sent = false;
 
         if (packet.buttons != state.buttons) {
             state.buttons = packet.buttons;
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
             screen_input.on_receive_mouse_data(state);
+            state_is_sent = true;
             if (state.is_relative) {
                 state.x = 0;
                 state.y = 0;
@@ -111,6 +115,8 @@ void EventLoop::drain_mouse()
             }
         }
     }
+    if (state_is_sent)
+        return;
     if (state.is_relative && (state.x || state.y || state.z))
         screen_input.on_receive_mouse_data(state);
     if (!state.is_relative)
