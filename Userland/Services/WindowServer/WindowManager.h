@@ -412,7 +412,7 @@ private:
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
     bool m_buttons_switched { false };
-    
+
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_window_with_active_menu;

@@ -104,7 +104,7 @@ void EventLoop::drain_mouse()
         }
 
         if (buttons != state.buttons) {
-            state.buttons = buttons;          
+            state.buttons = buttons;
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
 
             // Swap primary (1) and secondary (2) buttons if checked in Settings.
