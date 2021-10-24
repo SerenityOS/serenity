@@ -521,9 +521,10 @@ static void walk_tree(FileData& root_data, Command& command)
         return;
     }
 
-    int dirfd = openat(root_data.dirfd, root_data.basename, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    constexpr int flags = O_RDONLY | O_DIRECTORY | O_CLOEXEC;
+    int dirfd = openat(root_data.dirfd, root_data.basename, g_follow_symlinks ? flags : (flags | O_NOFOLLOW));
     if (dirfd < 0) {
-        if (errno == ENOTDIR) {
+        if (errno == ENOTDIR || (errno == ELOOP && !g_follow_symlinks)) {
             // Above we decided to try to open this file because it could
             // be a directory, but turns out it's not. This is fine though.
             return;
