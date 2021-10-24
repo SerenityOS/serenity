@@ -117,7 +117,6 @@ extern bool g_collect_on_every_allocation;
 extern bool g_zombify_dead_cells;
 #endif
 extern bool g_run_bytecode;
-extern bool g_dump_bytecode;
 extern String g_currently_running_test;
 struct FunctionWithLength {
     JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&, JS::GlobalObject&);
@@ -338,7 +337,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
 
     if (g_run_bytecode) {
         auto executable = JS::Bytecode::Generator::generate(m_test_script->parse_node());
-        if (g_dump_bytecode)
+        if (JS::Bytecode::g_dump_bytecode)
             executable.dump();
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(executable);
@@ -353,7 +352,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         return { test_path, file_script.error() };
     if (g_run_bytecode) {
         auto executable = JS::Bytecode::Generator::generate(file_script.value()->parse_node());
-        if (g_dump_bytecode)
+        if (JS::Bytecode::g_dump_bytecode)
             executable.dump();
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object(), interpreter->realm());
         bytecode_interpreter.run(executable);
