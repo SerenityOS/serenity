@@ -21,7 +21,7 @@ class StringTable {
 public:
     StringTable() = default;
 
-    StringTableIndex insert(StringView string);
+    StringTableIndex insert(String);
     String const& get(StringTableIndex) const;
     void dump() const;
     bool is_empty() const { return m_strings.is_empty(); }
