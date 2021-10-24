@@ -562,6 +562,8 @@ ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 ThrowCompletionOr<PropertyKey> Value::to_property_key(GlobalObject& global_object) const
 {
     auto key = TRY(to_primitive(global_object, PreferredType::String));
+    if (key.type() == Type::Int32 && key.as_i32() >= 0)
+        return PropertyKey { key.as_i32() };
     if (key.is_symbol())
         return &key.as_symbol();
     return TRY(key.to_string(global_object));
