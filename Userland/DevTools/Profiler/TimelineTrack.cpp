@@ -62,11 +62,9 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
+    recompute_histograms_if_needed({ start_of_trace, end_of_trace, (size_t)m_profile.length_in_ms() });
+
     float column_width = this->column_width();
-    size_t columns = frame_inner_rect().width() / column_width;
-
-    recompute_histograms_if_needed({ start_of_trace, end_of_trace, columns });
-
     float frame_height = (float)frame_inner_rect().height() / (float)m_max_value;
 
     for (size_t bucket = 0; bucket < m_kernel_histogram->size(); bucket++) {
