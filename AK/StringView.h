@@ -110,6 +110,8 @@ public:
 
     [[nodiscard]] constexpr StringView substring_view(size_t start) const
     {
+        if (!is_constant_evaluated())
+            VERIFY(start <= length());
         return substring_view(start, length() - start);
     }
 
