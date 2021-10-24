@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
@@ -17,14 +18,6 @@
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
-
-struct Executable {
-    NonnullOwnPtrVector<BasicBlock> basic_blocks;
-    NonnullOwnPtr<StringTable> string_table;
-    size_t number_of_registers { 0 };
-
-    String const& get_string(StringTableIndex index) const { return string_table->get(index); }
-};
 
 class Generator {
 public:
