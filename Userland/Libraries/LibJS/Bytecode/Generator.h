@@ -97,9 +97,9 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
-    StringTableIndex intern_string(StringView const& string)
+    StringTableIndex intern_string(String string)
     {
-        return m_string_table->insert(string);
+        return m_string_table->insert(move(string));
     }
 
     bool is_in_generator_function() const { return m_is_in_generator_function; }
