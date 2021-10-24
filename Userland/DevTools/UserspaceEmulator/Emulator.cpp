@@ -602,7 +602,7 @@ void Emulator::dispatch_one_pending_signal()
 
     auto old_esp = m_cpu.esp();
 
-    u32 stack_alignment = (m_cpu.esp().value() - 56) % 16;
+    u32 stack_alignment = (m_cpu.esp().value() - 52) % 16;
     m_cpu.set_esp(shadow_wrap_as_initialized(m_cpu.esp().value() - stack_alignment));
 
     m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eflags()));
@@ -621,9 +621,10 @@ void Emulator::dispatch_one_pending_signal()
 
     m_cpu.push32(shadow_wrap_as_initialized((u32)signum));
     m_cpu.push32(shadow_wrap_as_initialized(handler.handler));
-    m_cpu.push32(shadow_wrap_as_initialized(0u));
 
     VERIFY((m_cpu.esp().value() % 16) == 0);
+
+    m_cpu.push32(shadow_wrap_as_initialized(0u));
 
     m_cpu.set_eip(m_signal_trampoline);
 }

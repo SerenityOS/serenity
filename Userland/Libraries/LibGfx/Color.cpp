@@ -28,9 +28,9 @@ String Color::to_string_without_alpha() const
     return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
-static Optional<Color> parse_rgb_color(const StringView& string)
+static Optional<Color> parse_rgb_color(StringView const& string)
 {
-    VERIFY(string.starts_with("rgb("));
+    VERIFY(string.starts_with("rgb(", CaseSensitivity::CaseInsensitive));
     VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(4, string.length() - 5);
@@ -49,9 +49,9 @@ static Optional<Color> parse_rgb_color(const StringView& string)
     return Color(r, g, b);
 }
 
-static Optional<Color> parse_rgba_color(const StringView& string)
+static Optional<Color> parse_rgba_color(StringView const& string)
 {
-    VERIFY(string.starts_with("rgba("));
+    VERIFY(string.starts_with("rgba(", CaseSensitivity::CaseInsensitive));
     VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(5, string.length() - 6);
@@ -73,13 +73,13 @@ static Optional<Color> parse_rgba_color(const StringView& string)
     return Color(r, g, b, a);
 }
 
-Optional<Color> Color::from_string(const StringView& string)
+Optional<Color> Color::from_string(StringView const& string)
 {
     if (string.is_empty())
         return {};
 
     struct ColorAndWebName {
-        constexpr ColorAndWebName(RGBA32 c, const char* n)
+        constexpr ColorAndWebName(RGBA32 c, char const* n)
             : color(c)
             , name(n)
         {
@@ -245,18 +245,18 @@ Optional<Color> Color::from_string(const StringView& string)
         { 0x000000, nullptr }
     };
 
-    if (string == "transparent")
+    if (string.equals_ignoring_case("transparent"))
         return Color::from_rgba(0x00000000);
 
     for (size_t i = 0; !web_colors[i].name.is_null(); ++i) {
-        if (string == web_colors[i].name)
+        if (string.equals_ignoring_case(web_colors[i].name))
             return Color::from_rgb(web_colors[i].color);
     }
 
-    if (string.starts_with("rgb(") && string.ends_with(")"))
+    if (string.starts_with("rgb(", CaseSensitivity::CaseInsensitive) && string.ends_with(")"))
         return parse_rgb_color(string);
 
-    if (string.starts_with("rgba(") && string.ends_with(")"))
+    if (string.starts_with("rgba(", CaseSensitivity::CaseInsensitive) && string.ends_with(")"))
         return parse_rgba_color(string);
 
     if (string[0] != '#')
@@ -313,7 +313,7 @@ Optional<Color> Color::from_string(const StringView& string)
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, const Color& color)
+bool IPC::encode(IPC::Encoder& encoder, Color const& color)
 {
     encoder << color.value();
     return true;
@@ -328,7 +328,7 @@ bool IPC::decode(IPC::Decoder& decoder, Color& color)
     return true;
 }
 
-void AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, const Gfx::Color& value)
+void AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color const& value)
 {
     Formatter<StringView>::format(builder, value.to_string());
 }

@@ -8,7 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 namespace JS {
 
@@ -487,28 +487,28 @@ namespace JS {
     P(zonedDateTimeISO)
 
 struct CommonPropertyNames {
-    PropertyName and_ { "and", PropertyName::StringMayBeNumber::No };
-    PropertyName catch_ { "catch", PropertyName::StringMayBeNumber::No };
-    PropertyName delete_ { "delete", PropertyName::StringMayBeNumber::No };
-    PropertyName for_ { "for", PropertyName::StringMayBeNumber::No };
-    PropertyName or_ { "or", PropertyName::StringMayBeNumber::No };
-    PropertyName register_ { "register", PropertyName::StringMayBeNumber::No };
-    PropertyName return_ { "return", PropertyName::StringMayBeNumber::No };
-    PropertyName throw_ { "throw", PropertyName::StringMayBeNumber::No };
-    PropertyName xor_ { "xor", PropertyName::StringMayBeNumber::No };
-#define __ENUMERATE(x) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+    PropertyKey and_ { "and", PropertyKey::StringMayBeNumber::No };
+    PropertyKey catch_ { "catch", PropertyKey::StringMayBeNumber::No };
+    PropertyKey delete_ { "delete", PropertyKey::StringMayBeNumber::No };
+    PropertyKey for_ { "for", PropertyKey::StringMayBeNumber::No };
+    PropertyKey or_ { "or", PropertyKey::StringMayBeNumber::No };
+    PropertyKey register_ { "register", PropertyKey::StringMayBeNumber::No };
+    PropertyKey return_ { "return", PropertyKey::StringMayBeNumber::No };
+    PropertyKey throw_ { "throw", PropertyKey::StringMayBeNumber::No };
+    PropertyKey xor_ { "xor", PropertyKey::StringMayBeNumber::No };
+#define __ENUMERATE(x) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE
-#define __JS_ENUMERATE(x, a, b, c, t) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+#define __JS_ENUMERATE(x, a, b, c, t) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
-#define __JS_ENUMERATE(x, a, b, c) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+#define __JS_ENUMERATE(x, a, b, c) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
-#define __JS_ENUMERATE(x, a, b, c) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+#define __JS_ENUMERATE(x, a, b, c) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
-#define __JS_ENUMERATE(x, a) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+#define __JS_ENUMERATE(x, a) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 };

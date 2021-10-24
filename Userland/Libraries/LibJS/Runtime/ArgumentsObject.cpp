@@ -35,7 +35,7 @@ void ArgumentsObject::visit_edges(Cell::Visitor& visitor)
 }
 
 // 10.4.4.3 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-get-p-receiver
-ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyName const& property_name, Value receiver) const
+ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyKey const& property_name, Value receiver) const
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = *m_parameter_map;
@@ -56,7 +56,7 @@ ThrowCompletionOr<Value> ArgumentsObject::internal_get(PropertyName const& prope
 }
 
 // 10.4.4.4 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-set-p-v-receiver
-ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& property_name, Value value, Value receiver)
+ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyKey const& property_name, Value value, Value receiver)
 {
     bool is_mapped = false;
 
@@ -84,7 +84,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_set(PropertyName const& proper
 }
 
 // 10.4.4.5 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-delete-p
-ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& property_name)
+ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyKey const& property_name)
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();
@@ -106,7 +106,7 @@ ThrowCompletionOr<bool> ArgumentsObject::internal_delete(PropertyName const& pro
 }
 
 // 10.4.4.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-getownproperty-p
-ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyName const& property_name) const
+ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_own_property(PropertyKey const& property_name) const
 {
     // 1. Let desc be OrdinaryGetOwnProperty(args, P).
     auto desc = MUST(Object::internal_get_own_property(property_name));
@@ -130,7 +130,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> ArgumentsObject::internal_get_ow
 }
 
 // 10.4.4.2 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-defineownproperty-p-desc
-ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& descriptor)
+ThrowCompletionOr<bool> ArgumentsObject::internal_define_own_property(PropertyKey const& property_name, PropertyDescriptor const& descriptor)
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = parameter_map();

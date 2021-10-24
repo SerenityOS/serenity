@@ -10,6 +10,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
+#include <LibJS/Bytecode/Executable.h>
+#include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
@@ -17,14 +19,6 @@
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
-
-struct Executable {
-    NonnullOwnPtrVector<BasicBlock> basic_blocks;
-    NonnullOwnPtr<StringTable> string_table;
-    size_t number_of_registers { 0 };
-
-    String const& get_string(StringTableIndex index) const { return string_table->get(index); }
-};
 
 class Generator {
 public:
@@ -104,9 +98,14 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
-    StringTableIndex intern_string(StringView const& string)
+    StringTableIndex intern_string(String string)
     {
-        return m_string_table->insert(string);
+        return m_string_table->insert(move(string));
+    }
+
+    IdentifierTableIndex intern_identifier(FlyString string)
+    {
+        return m_identifier_table->insert(move(string));
     }
 
     bool is_in_generator_function() const { return m_is_in_generator_function; }
@@ -123,6 +122,7 @@ private:
     BasicBlock* m_current_basic_block { nullptr };
     NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
+    NonnullOwnPtr<IdentifierTable> m_identifier_table;
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };

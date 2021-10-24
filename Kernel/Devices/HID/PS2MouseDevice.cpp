@@ -16,17 +16,6 @@ namespace Kernel {
 
 #define IRQ_MOUSE 12
 
-#define PS2MOUSE_SET_RESOLUTION 0xE8
-#define PS2MOUSE_STATUS_REQUEST 0xE9
-#define PS2MOUSE_REQUEST_SINGLE_PACKET 0xEB
-#define PS2MOUSE_GET_DEVICE_ID 0xF2
-#define PS2MOUSE_SET_SAMPLE_RATE 0xF3
-#define PS2MOUSE_ENABLE_PACKET_STREAMING 0xF4
-#define PS2MOUSE_DISABLE_PACKET_STREAMING 0xF5
-#define PS2MOUSE_SET_DEFAULTS 0xF6
-#define PS2MOUSE_RESEND 0xFE
-#define PS2MOUSE_RESET 0xFF
-
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
@@ -142,7 +131,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
 
 u8 PS2MouseDevice::get_device_id()
 {
-    if (send_command(PS2MOUSE_GET_DEVICE_ID) != I8042_ACK)
+    if (send_command(I8042Command::GetDeviceID) != I8042Response::Acknowledge)
         return 0;
     return read_from_device();
 }
@@ -155,22 +144,22 @@ u8 PS2MouseDevice::read_from_device()
 u8 PS2MouseDevice::send_command(u8 command)
 {
     u8 response = m_i8042_controller->send_command(instrument_type(), command);
-    if (response != I8042_ACK)
-        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
+    if (response != I8042Response::Acknowledge)
+        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
     return response;
 }
 
 u8 PS2MouseDevice::send_command(u8 command, u8 data)
 {
     u8 response = m_i8042_controller->send_command(instrument_type(), command, data);
-    if (response != I8042_ACK)
-        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
+    if (response != I8042Response::Acknowledge)
+        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
     return response;
 }
 
 void PS2MouseDevice::set_sample_rate(u8 rate)
 {
-    send_command(PS2MOUSE_SET_SAMPLE_RATE, rate);
+    send_command(I8042Command::SetSampleRate, rate);
 }
 
 UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
@@ -192,11 +181,10 @@ UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
 
     u8 device_id = read_from_device();
 
-    // Set default settings.
-    if (send_command(PS2MOUSE_SET_DEFAULTS) != I8042_ACK)
+    if (send_command(I8042Command::SetDefaults) != I8042Response::Acknowledge)
         return false;
 
-    if (send_command(PS2MOUSE_ENABLE_PACKET_STREAMING) != I8042_ACK)
+    if (send_command(I8042Command::EnablePacketStreaming) != I8042Response::Acknowledge)
         return false;
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {

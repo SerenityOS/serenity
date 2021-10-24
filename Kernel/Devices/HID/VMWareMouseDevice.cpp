@@ -25,10 +25,11 @@ UNMAP_AFTER_INIT RefPtr<VMWareMouseDevice> VMWareMouseDevice::try_to_initialize(
     return {};
 }
 
-void VMWareMouseDevice::irq_handle_byte_read(u8)
+void VMWareMouseDevice::irq_handle_byte_read(u8 byte)
 {
     VERIFY(VMWareBackdoor::the());
     VERIFY(VMWareBackdoor::the()->vmmouse_is_absolute());
+
     // We won't receive complete packets with the backdoor enabled,
     // we will only get one byte for each event, which we'll just
     // discard. If we were to wait until we *think* that we got a
@@ -36,6 +37,12 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
     // because we wouldn't read the appropriate number of mouse
     // packets from VMWareBackdoor.
     auto mouse_packet = VMWareBackdoor::the()->receive_mouse_packet();
+
+    // Only process packets with bit 3 set.
+    // Note that this needs to happen _after_ invoking receive_mouse_packet() above
+    if (!(byte & 0x8))
+        return;
+
     if (mouse_packet.has_value()) {
         m_entropy_source.add_random_event(mouse_packet.value());
         {

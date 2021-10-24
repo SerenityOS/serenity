@@ -10,7 +10,7 @@
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/ExecutionContext.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -26,14 +26,14 @@ public:
     };
 
     Reference() { }
-    Reference(BaseType type, PropertyName name, bool strict)
+    Reference(BaseType type, PropertyKey name, bool strict)
         : m_base_type(type)
         , m_name(move(name))
         , m_strict(strict)
     {
     }
 
-    Reference(Value base, PropertyName name, Value this_value, bool strict = false)
+    Reference(Value base, PropertyKey name, Value this_value, bool strict = false)
         : m_base_type(BaseType::Value)
         , m_base_value(base)
         , m_name(move(name))
@@ -79,7 +79,7 @@ public:
         return *m_base_environment;
     }
 
-    PropertyName const& name() const { return m_name; }
+    PropertyKey const& name() const { return m_name; }
     bool is_strict() const { return m_strict; }
 
     // 6.2.4.2 IsUnresolvableReference ( V ), https://tc39.es/ecma262/#sec-isunresolvablereference
@@ -147,7 +147,7 @@ private:
         Value m_base_value {};
         mutable Environment* m_base_environment;
     };
-    PropertyName m_name;
+    PropertyKey m_name;
     Value m_this_value;
     bool m_strict { false };
 

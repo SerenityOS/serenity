@@ -8,13 +8,13 @@
 
 namespace JS::Bytecode {
 
-StringTableIndex StringTable::insert(StringView string)
+StringTableIndex StringTable::insert(String string)
 {
     for (size_t i = 0; i < m_strings.size(); i++) {
         if (m_strings[i] == string)
             return i;
     }
-    m_strings.append(string);
+    m_strings.append(move(string));
     return m_strings.size() - 1;
 }
 

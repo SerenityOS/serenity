@@ -314,7 +314,7 @@ public:
     ThrowCompletionOr<i64> to_bigint_int64(GlobalObject&) const;
     ThrowCompletionOr<u64> to_bigint_uint64(GlobalObject&) const;
     ThrowCompletionOr<double> to_double(GlobalObject&) const;
-    ThrowCompletionOr<StringOrSymbol> to_property_key(GlobalObject&) const;
+    ThrowCompletionOr<PropertyKey> to_property_key(GlobalObject&) const;
     ThrowCompletionOr<i32> to_i32(GlobalObject& global_object) const;
     ThrowCompletionOr<u32> to_u32(GlobalObject&) const;
     ThrowCompletionOr<i16> to_i16(GlobalObject&) const;
@@ -327,8 +327,8 @@ public:
     ThrowCompletionOr<double> to_integer_or_infinity(GlobalObject&) const;
     bool to_boolean() const;
 
-    ThrowCompletionOr<Value> get(GlobalObject&, PropertyName const&) const;
-    ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyName const&) const;
+    ThrowCompletionOr<Value> get(GlobalObject&, PropertyKey const&) const;
+    ThrowCompletionOr<FunctionObject*> get_method(GlobalObject&, PropertyKey const&) const;
 
     String to_string_without_side_effects() const;
 
@@ -344,12 +344,12 @@ public:
     bool operator==(Value const&) const;
 
     template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyName const& property_name, Args... args);
+    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyKey const& property_name, Args... args);
 
 private:
     Type m_type { Type::Empty };
 
-    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyName const&, Optional<MarkedValueList> arguments);
+    [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyKey const&, Optional<MarkedValueList> arguments);
 
     ThrowCompletionOr<i32> to_i32_slow_case(GlobalObject&) const;
 

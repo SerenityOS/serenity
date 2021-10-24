@@ -232,7 +232,7 @@ void Shape::add_property_without_transition(StringOrSymbol const& property_name,
         ++m_property_count;
 }
 
-FLATTEN void Shape::add_property_without_transition(PropertyName const& property_name, PropertyAttributes attributes)
+FLATTEN void Shape::add_property_without_transition(PropertyKey const& property_name, PropertyAttributes attributes)
 {
     VERIFY(property_name.is_valid());
     add_property_without_transition(property_name.to_string_or_symbol(), attributes);

@@ -76,7 +76,6 @@ void EventLoop::drain_mouse()
     auto& screen_input = ScreenInput::the();
     MousePacket state;
     state.buttons = screen_input.mouse_button_state();
-    unsigned buttons = state.buttons;
     MousePacket packets[32];
 
     ssize_t nread = read(m_mouse_fd, &packets, sizeof(packets));
@@ -87,24 +86,25 @@ void EventLoop::drain_mouse()
     size_t npackets = nread / sizeof(MousePacket);
     if (!npackets)
         return;
+
+    bool state_is_sent = false;
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
         dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse X {}, Y {}, Z {}, relative={}", packet.x, packet.y, packet.z, packet.is_relative);
-        buttons = packet.buttons;
 
         state.is_relative = packet.is_relative;
         if (packet.is_relative) {
             state.x += packet.x;
             state.y -= packet.y;
-            state.z += packet.z;
         } else {
             state.x = packet.x;
             state.y = packet.y;
-            state.z += packet.z;
         }
+        state.z += packet.z;
+        state_is_sent = false;
 
-        if (buttons != state.buttons) {
-            state.buttons = buttons;
+        if (packet.buttons != state.buttons) {
+            state.buttons = packet.buttons;
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
 
             // Swap primary (1) and secondary (2) buttons if checked in Settings.
@@ -121,6 +121,7 @@ void EventLoop::drain_mouse()
             }
 
             screen_input.on_receive_mouse_data(state);
+            state_is_sent = true;
             if (state.is_relative) {
                 state.x = 0;
                 state.y = 0;
@@ -128,6 +129,8 @@ void EventLoop::drain_mouse()
             }
         }
     }
+    if (state_is_sent)
+        return;
     if (state.is_relative && (state.x || state.y || state.z))
         screen_input.on_receive_mouse_data(state);
     if (!state.is_relative)

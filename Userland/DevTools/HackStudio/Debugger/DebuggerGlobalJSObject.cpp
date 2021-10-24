@@ -22,7 +22,7 @@ DebuggerGlobalJSObject::DebuggerGlobalJSObject()
     m_variables = lib->debug_info->get_variables_in_current_scope(regs);
 }
 
-JS::ThrowCompletionOr<JS::Value> DebuggerGlobalJSObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> DebuggerGlobalJSObject::internal_get(JS::PropertyKey const& property_name, JS::Value receiver) const
 {
     if (m_variables.is_empty() || !property_name.is_string())
         return Base::internal_get(property_name, receiver);
@@ -40,7 +40,7 @@ JS::ThrowCompletionOr<JS::Value> DebuggerGlobalJSObject::internal_get(JS::Proper
     return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
 
-JS::ThrowCompletionOr<bool> DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> DebuggerGlobalJSObject::internal_set(JS::PropertyKey const& property_name, JS::Value value, JS::Value receiver)
 {
     if (m_variables.is_empty() || !property_name.is_string())
         return Base::internal_set(property_name, value, receiver);

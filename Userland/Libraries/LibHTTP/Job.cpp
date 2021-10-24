@@ -221,6 +221,10 @@ void Job::on_socket_connected()
                 // Assume that any content-encoding means that we can't decode it as a stream :(
                 dbgln_if(JOB_DEBUG, "Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
+            } else if (name.equals_ignoring_case("Content-Length")) {
+                auto length = value.to_uint();
+                if (length.has_value())
+                    m_content_length = length.value();
             }
             dbgln_if(JOB_DEBUG, "Job: [{}] = '{}'", name, value);
             return;
@@ -284,6 +288,11 @@ void Job::on_socket_connected()
             } else {
                 auto transfer_encoding = m_headers.get("Transfer-Encoding");
                 if (transfer_encoding.has_value()) {
+                    // HTTP/1.1 3.3.3.3:
+                    // If a message is received with both a Transfer-Encoding and a Content-Length header field, the Transfer-Encoding overrides the Content-Length. [...]
+                    // https://httpwg.org/specs/rfc7230.html#message.body.length
+                    m_content_length = {};
+
                     // Note: Some servers add extra spaces around 'chunked', see #6302.
                     auto encoding = transfer_encoding.value().trim_whitespace();
 
@@ -312,10 +321,26 @@ void Job::on_socket_connected()
                 }
             }
 
+            bool read_everything = false;
+            if (m_content_length.has_value()) {
+                auto length = m_content_length.value();
+                if (m_received_size + payload.size() >= length) {
+                    payload.resize(length - m_buffered_size);
+                    read_everything = true;
+                }
+            }
+
             m_received_buffers.append(payload);
             m_buffered_size += payload.size();
             m_received_size += payload.size();
             flush_received_buffers();
+
+            deferred_invoke([this] { did_progress(m_content_length, m_received_size); });
+
+            if (read_everything) {
+                finish_up();
+                return IterationDecision::Break;
+            }
 
             if (m_current_chunk_remaining_size.has_value()) {
                 auto size = m_current_chunk_remaining_size.value() - payload.size();
@@ -341,25 +366,6 @@ void Job::on_socket_connected()
                 m_current_chunk_remaining_size = size;
             }
 
-            auto content_length_header = m_headers.get("Content-Length");
-            Optional<u32> content_length {};
-
-            if (content_length_header.has_value()) {
-                auto length = content_length_header.value().to_uint();
-                if (length.has_value())
-                    content_length = length.value();
-            }
-
-            deferred_invoke([this, content_length] { did_progress(content_length, m_received_size); });
-
-            if (content_length.has_value()) {
-                auto length = content_length.value();
-                if (m_received_size >= length) {
-                    m_received_size = length;
-                    finish_up();
-                    return IterationDecision::Break;
-                }
-            }
             return IterationDecision::Continue;
         });
 
@@ -383,7 +389,7 @@ void Job::finish_up()
     VERIFY(!m_has_scheduled_finish);
     m_state = State::Finished;
     if (!m_can_stream_response) {
-        auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size).release_value(); // FIXME: Handle possible OOM situation.
+        auto flattened_buffer = ByteBuffer::create_uninitialized(m_buffered_size).release_value(); // FIXME: Handle possible OOM situation.
         u8* flat_ptr = flattened_buffer.data();
         for (auto& received_buffer : m_received_buffers) {
             memcpy(flat_ptr, received_buffer.data(), received_buffer.size());

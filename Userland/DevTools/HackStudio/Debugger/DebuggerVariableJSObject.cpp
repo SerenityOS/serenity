@@ -10,7 +10,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 namespace HackStudio {
 
@@ -29,7 +29,7 @@ DebuggerVariableJSObject::~DebuggerVariableJSObject()
 {
 }
 
-JS::ThrowCompletionOr<bool> DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value)
+JS::ThrowCompletionOr<bool> DebuggerVariableJSObject::internal_set(const JS::PropertyKey& property_name, JS::Value value, JS::Value)
 {
     auto& vm = this->vm();
 

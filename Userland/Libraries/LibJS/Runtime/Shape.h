@@ -58,7 +58,7 @@ public:
     Shape* create_prototype_transition(Object* new_prototype);
 
     void add_property_without_transition(const StringOrSymbol&, PropertyAttributes);
-    void add_property_without_transition(PropertyName const&, PropertyAttributes);
+    void add_property_without_transition(PropertyKey const&, PropertyAttributes);
 
     bool is_unique() const { return m_unique; }
     Shape* create_unique_clone() const;

@@ -101,7 +101,7 @@ SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
-JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_has_property(JS::PropertyName const& name) const
+JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_has_property(JS::PropertyKey const& name) const
 {
     if (name.is_string()) {
         if (name.as_string() == "value")
@@ -112,7 +112,7 @@ JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_has_property(JS::Propert
     return Object::internal_has_property(name);
 }
 
-JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyName& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyKey& property_name, JS::Value receiver) const
 {
     if (property_name.is_string()) {
         if (property_name.as_string() == "value") {
@@ -131,7 +131,7 @@ JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::Prope
     return Base::internal_get(property_name, receiver);
 }
 
-JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKey& property_name, JS::Value value, JS::Value receiver)
 {
     if (property_name.is_string()) {
         if (auto pos = m_sheet.parse_cell_name(property_name.as_string()); pos.has_value()) {

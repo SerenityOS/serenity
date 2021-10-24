@@ -932,11 +932,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
 #if ARCH(I386)
         // Align the stack to 16 bytes.
-        // Note that we push 56 bytes (4 * 14) on to the stack,
-        // so we need to account for this here.
-        // 56 % 16 = 8, so we only need to take 8 bytes into consideration for
+        // Note that we push 52 bytes (4 * 13) on to the stack
+        // before the return address, so we need to account for this here.
+        // 56 % 16 = 4, so we only need to take 4 bytes into consideration for
         // the stack alignment.
-        FlatPtr stack_alignment = (stack - 8) % 16;
+        FlatPtr stack_alignment = (stack - 4) % 16;
         stack -= stack_alignment;
 
         push_value_on_user_stack(stack, ret_flags);
@@ -952,12 +952,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, state.edi);
 #else
         // Align the stack to 16 bytes.
-        // Note that we push 176 bytes (8 * 22) on to the stack,
-        // so we need to account for this here.
-        // 22 % 2 = 0, so we dont need to take anything into consideration
-        // for the alignment.
+        // Note that we push 168 bytes (8 * 21) on to the stack
+        // before the return address, so we need to account for this here.
+        // 168 % 16 = 8, so we only need to take 8 bytes into consideration for
+        // the stack alignment.
         // We also are not allowed to touch the thread's red-zone of 128 bytes
-        FlatPtr stack_alignment = stack % 16;
+        FlatPtr stack_alignment = (stack - 8) % 16;
         stack -= 128 + stack_alignment;
 
         push_value_on_user_stack(stack, ret_flags);
@@ -986,13 +986,14 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         push_value_on_user_stack(stack, signal);
         push_value_on_user_stack(stack, handler_vaddr.get());
+
+        VERIFY((stack % 16) == 0);
+
         push_value_on_user_stack(stack, 0); // push fake return address
 
         // We write back the adjusted stack value into the register state.
         // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
         state.set_userspace_sp(stack);
-
-        VERIFY((stack % 16) == 0);
     };
 
     // We now place the thread state on the userspace stack.

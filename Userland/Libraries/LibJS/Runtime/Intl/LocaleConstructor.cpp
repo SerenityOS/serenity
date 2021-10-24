@@ -26,7 +26,7 @@ struct LocaleAndKeys {
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& global_object, Object const& options, PropertyName const& property, Function<bool(StringView)> validator, Vector<StringView> const& values = {})
+static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Vector<StringView> const& values = {})
 {
     auto& vm = global_object.vm();
 

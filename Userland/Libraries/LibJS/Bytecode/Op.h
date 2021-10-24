@@ -9,12 +9,14 @@
 #pragma once
 
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -281,7 +283,7 @@ private:
 
 class SetVariable final : public Instruction {
 public:
-    explicit SetVariable(StringTableIndex identifier)
+    explicit SetVariable(IdentifierTableIndex identifier)
         : Instruction(Type::SetVariable)
         , m_identifier(identifier)
     {
@@ -292,12 +294,12 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
-    StringTableIndex m_identifier;
+    IdentifierTableIndex m_identifier;
 };
 
 class GetVariable final : public Instruction {
 public:
-    explicit GetVariable(StringTableIndex identifier)
+    explicit GetVariable(IdentifierTableIndex identifier)
         : Instruction(Type::GetVariable)
         , m_identifier(identifier)
     {
@@ -308,12 +310,14 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
-    StringTableIndex m_identifier;
+    IdentifierTableIndex m_identifier;
+
+    Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
 };
 
 class GetById final : public Instruction {
 public:
-    explicit GetById(StringTableIndex property)
+    explicit GetById(IdentifierTableIndex property)
         : Instruction(Type::GetById)
         , m_property(property)
     {
@@ -324,12 +328,12 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
 private:
-    StringTableIndex m_property;
+    IdentifierTableIndex m_property;
 };
 
 class PutById final : public Instruction {
 public:
-    explicit PutById(Register base, StringTableIndex property)
+    explicit PutById(Register base, IdentifierTableIndex property)
         : Instruction(Type::PutById)
         , m_base(base)
         , m_property(property)
@@ -342,7 +346,7 @@ public:
 
 private:
     Register m_base;
-    StringTableIndex m_property;
+    IdentifierTableIndex m_property;
 };
 
 class GetByValue final : public Instruction {
@@ -707,6 +711,18 @@ class IteratorResultValue final : public Instruction {
 public:
     IteratorResultValue()
         : Instruction(Type::IteratorResultValue)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
+class ResolveThisBinding final : public Instruction {
+public:
+    explicit ResolveThisBinding()
+        : Instruction(Type::ResolveThisBinding)
     {
     }
 

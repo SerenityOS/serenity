@@ -17,6 +17,7 @@
 namespace JS::Bytecode {
 
 static Interpreter* s_current;
+bool g_dump_bytecode = false;
 
 Interpreter* Interpreter::current()
 {

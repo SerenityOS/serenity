@@ -6,13 +6,13 @@
 
 #include <AK/NumericLimits.h>
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
 
 namespace Web::Bindings::IDL {
 
 // https://webidl.spec.whatwg.org/#is-an-array-index
-bool is_an_array_index(JS::GlobalObject& global_object, JS::PropertyName const& property_name)
+bool is_an_array_index(JS::GlobalObject& global_object, JS::PropertyKey const& property_name)
 {
     // 1. If Type(P) is not String, then return false.
     if (!property_name.is_number())

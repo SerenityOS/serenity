@@ -216,7 +216,7 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
             auto property_name_or_error = key.to_property_key(interpreter.global_object());
             if (property_name_or_error.is_error())
                 return;
-            PropertyName property_name = property_name_or_error.release_value();
+            PropertyKey property_name = property_name_or_error.release_value();
             auto property_value_or_error = from_object->get(property_name);
             if (property_value_or_error.is_error())
                 return;
@@ -238,9 +238,27 @@ void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
-    if (vm.exception())
+    auto reference = [&] {
+        auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+        if (m_cached_environment_coordinate.has_value()) {
+            auto* environment = interpreter.vm().running_execution_context().lexical_environment;
+            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+                environment = environment->outer_environment();
+            VERIFY(environment);
+            VERIFY(environment->is_declarative_environment());
+            if (!environment->is_permanently_screwed_by_eval()) {
+                return Reference { *environment, string, interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
+            }
+            m_cached_environment_coordinate = {};
+        }
+
+        auto reference = interpreter.vm().resolve_binding(string);
+        if (reference.environment_coordinate().has_value())
+            m_cached_environment_coordinate = reference.environment_coordinate();
+        return reference;
+    }();
+
+    if (interpreter.vm().exception())
         return;
 
     interpreter.accumulator() = reference.get_value(interpreter.global_object());
@@ -249,7 +267,7 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_string(m_identifier));
+    auto reference = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
     if (vm.exception())
         return;
 
@@ -262,7 +280,7 @@ void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    auto value_or_error = object->get(interpreter.current_executable().get_string(m_property));
+    auto value_or_error = object->get(interpreter.current_executable().get_identifier(m_property));
     if (value_or_error.is_error())
         return;
     interpreter.accumulator() = value_or_error.release_value();
@@ -274,12 +292,17 @@ void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
     if (object_or_error.is_error())
         return;
     auto* object = object_or_error.release_value();
-    MUST(object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+    MUST(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
 }
 
 void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.jump(*m_true_target);
+}
+
+void ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().resolve_this_binding(interpreter.global_object());
 }
 
 void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -624,22 +647,22 @@ String ConcatString::to_string_impl(Bytecode::Executable const&) const
 
 String GetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
+    return String::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String SetVariable::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("SetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
+    return String::formatted("SetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
 String PutById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.string_table->get(m_property));
+    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.identifier_table->get(m_property));
 }
 
 String GetById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetById {} ({})", m_property, executable.string_table->get(m_property));
+    return String::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
 String Jump::to_string_impl(Bytecode::Executable const&) const
@@ -783,6 +806,11 @@ String IteratorResultDone::to_string_impl(Executable const&) const
 String IteratorResultValue::to_string_impl(Executable const&) const
 {
     return "IteratorResultValue";
+}
+
+String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
+{
+    return "ResolveThisBinding"sv;
 }
 
 }

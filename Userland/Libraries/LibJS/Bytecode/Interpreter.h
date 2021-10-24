@@ -85,4 +85,6 @@ private:
     Handle<Exception> m_saved_exception;
 };
 
+extern bool g_dump_bytecode;
+
 }

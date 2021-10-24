@@ -276,7 +276,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_home_object);
 
     for (auto& field : m_fields) {
-        if (auto* property_name_ptr = field.name.get_pointer<PropertyName>(); property_name_ptr && property_name_ptr->is_symbol())
+        if (auto* property_name_ptr = field.name.get_pointer<PropertyKey>(); property_name_ptr && property_name_ptr->is_symbol())
             visitor.visit(property_name_ptr->as_symbol());
 
         visitor.visit(field.initializer);
@@ -678,14 +678,15 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable.has_value()) {
             m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind == FunctionKind::Generator);
+            m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);
             if constexpr (JS_BYTECODE_DEBUG) {
                 dbgln("Optimisation passes took {}us", passes.elapsed());
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-                for (auto& block : m_bytecode_executable->basic_blocks)
-                    block.dump(*m_bytecode_executable);
             }
+            if (JS::Bytecode::g_dump_bytecode)
+                m_bytecode_executable->dump();
         }
         auto result = bytecode_interpreter->run(*m_bytecode_executable);
         if (auto* exception = vm.exception())
@@ -697,7 +698,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         return normal_completion(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame()));
     } else {
-        VERIFY(m_kind != FunctionKind::Generator);
+        if (m_kind != FunctionKind::Regular)
+            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Non regular function execution in AST interpreter");
         OwnPtr<Interpreter> local_interpreter;
         Interpreter* ast_interpreter = vm.interpreter_if_exists();
 
