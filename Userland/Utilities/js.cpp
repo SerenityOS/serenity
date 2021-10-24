@@ -807,7 +807,7 @@ static bool write_to_file(String const& path)
     return true;
 }
 
-static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source)
+static bool parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
 {
     auto program_type = s_as_module ? JS::Program::Type::Module : JS::Program::Type::Script;
     auto parser = JS::Parser(JS::Lexer(source), program_type);
@@ -825,6 +825,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source
     } else {
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable = JS::Bytecode::Generator::generate(*program);
+            executable.name = source_name;
             if (s_opt_bytecode) {
                 auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
                 passes.perform(executable);
@@ -1006,7 +1007,7 @@ static void repl(JS::Interpreter& interpreter)
         if (piece.is_empty())
             continue;
         repl_statements.append(piece);
-        parse_and_run(interpreter, piece);
+        parse_and_run(interpreter, piece, "REPL");
     }
 }
 
@@ -1400,7 +1401,10 @@ int main(int argc, char** argv)
             builder.append(source);
         }
 
-        if (!parse_and_run(*interpreter, builder.to_string()))
+        StringBuilder source_name_builder;
+        source_name_builder.join(", ", script_paths);
+
+        if (!parse_and_run(*interpreter, builder.string_view(), source_name_builder.string_view()))
             return 1;
     }
 

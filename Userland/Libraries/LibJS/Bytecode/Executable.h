@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/StringTable.h>
@@ -13,6 +14,7 @@
 namespace JS::Bytecode {
 
 struct Executable {
+    FlyString name;
     NonnullOwnPtrVector<BasicBlock> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     size_t number_of_registers { 0 };
