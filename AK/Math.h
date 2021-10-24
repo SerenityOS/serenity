@@ -123,4 +123,6 @@ constexpr T pow(T x, T y);
 
 #if ARCH(I386) || ARCH(X86_64)
 #    include <AK/MathDetail/x86.h>
+#elif not defined(__serenity__)
+#    include <AK/MathDetail/stl_fallback.h>
 #endif
