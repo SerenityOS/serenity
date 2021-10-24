@@ -8,7 +8,7 @@ Make sure you also have all the following dependencies installed:
 
 ```console
 # core
-brew install coreutils e2fsprogs qemu bash gcc@10 imagemagick ninja cmake ccache rsync
+brew install coreutils e2fsprogs qemu bash gcc@11 imagemagick ninja cmake ccache rsync
 
 # (option 1) fuse + ext2
 brew install m4 autoconf automake libtool
@@ -30,7 +30,7 @@ If you are on macOS Big Sur, you will need to manually enable QEMU's hardware ac
 creating a new file called `entitlements.xml` in the `Build/` folder, with the content below, and then running this
 command:
 
-`codesign -s - --entitlements entitlements.xml --force /usr/local/bin/qemu-system-x86_64`
+`codesign -s - --entitlements entitlements.xml --force $(which qemu-system-x86_64)`
 
 <details>
 <summary>Content for 'entitlements.xml'.</summary>
