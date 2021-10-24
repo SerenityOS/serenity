@@ -63,7 +63,7 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         break;
     }
     switch (ch) {
-    case I8042_ACK:
+    case I8042Response::Acknowledge:
         break;
     default:
         if ((m_modifiers & Mod_Alt) != 0 && ch >= 2 && ch <= ConsoleManagement::s_max_virtual_consoles + 1) {
