@@ -601,7 +601,9 @@ static String format_identifier(StringView owner, String identifier)
 
     if (all_of(identifier, is_ascii_digit))
         return String::formatted("{}_{}", owner[0], identifier);
-    return identifier.to_titlecase();
+    if (is_ascii_lower_alpha(identifier[0]))
+        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+    return identifier;
 }
 
 static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
