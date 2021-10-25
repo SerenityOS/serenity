@@ -873,11 +873,13 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
         } else {
             member_expression.object().generate_bytecode(generator);
             generator.emit<Bytecode::Op::Store>(this_reg);
-            // FIXME: Don't copy this logic here, make MemberExpression generate it.
-            if (!is<Identifier>(member_expression.property()))
-                TODO();
-            auto identifier_table_ref = generator.intern_identifier(static_cast<Identifier const&>(member_expression.property()).string());
-            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            if (member_expression.is_computed()) {
+                member_expression.property().generate_bytecode(generator);
+                generator.emit<Bytecode::Op::GetByValue>(this_reg);
+            } else {
+                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            }
             generator.emit<Bytecode::Op::Store>(callee_reg);
         }
     } else {
