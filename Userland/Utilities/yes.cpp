@@ -17,10 +17,15 @@ int main(int argc, char** argv)
 
     const char* string = "yes";
 
+    static int delay = 0;
+
     Core::ArgsParser args_parser;
+    args_parser.add_option(delay, "The amount of time to wait between each message", "delay", 'n', "milliseconds");
     args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    for (;;)
+    for (;;) {
         puts(string);
+        usleep(delay * 1000);
+    }
 }
