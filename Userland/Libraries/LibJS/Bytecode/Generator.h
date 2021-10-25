@@ -70,6 +70,9 @@ public:
         return *static_cast<OpType*>(slot);
     }
 
+    void emit_load_from_reference(JS::ASTNode const&);
+    void emit_store_to_reference(JS::ASTNode const&);
+
     void begin_continuable_scope(Label continue_target);
     void end_continuable_scope();
     void begin_breakable_scope(Label breakable_target);
