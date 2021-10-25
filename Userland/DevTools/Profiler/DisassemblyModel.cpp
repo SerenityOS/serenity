@@ -87,7 +87,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
-    X86::ELFSymbolProvider symbol_provider(*elf);
+    X86::ELFSymbolProvider symbol_provider(*elf, base_address);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
