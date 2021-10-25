@@ -13,31 +13,6 @@
 
 namespace JS::Bytecode {
 
-class InstructionStreamIterator {
-public:
-    explicit InstructionStreamIterator(ReadonlyBytes bytes)
-        : m_bytes(bytes)
-    {
-    }
-
-    size_t offset() const { return m_offset; }
-    bool at_end() const { return m_offset >= m_bytes.size(); }
-    void jump(size_t offset)
-    {
-        VERIFY(offset <= m_bytes.size());
-        m_offset = offset;
-    }
-
-    Instruction const& operator*() const { return dereference(); }
-    void operator++();
-
-private:
-    Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_bytes.data() + offset()); }
-
-    ReadonlyBytes m_bytes;
-    size_t m_offset { 0 };
-};
-
 struct UnwindInfo {
     Executable const* executable;
     BasicBlock const* handler;

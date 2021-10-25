@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Span.h>
 #include <LibJS/Forward.h>
 
 #define ENUMERATE_BYTECODE_OPS(O)    \
@@ -106,4 +107,35 @@ protected:
 private:
     Type m_type {};
 };
+
+class InstructionStreamIterator {
+public:
+    explicit InstructionStreamIterator(ReadonlyBytes bytes)
+        : m_bytes(bytes)
+    {
+    }
+
+    size_t offset() const { return m_offset; }
+    bool at_end() const { return m_offset >= m_bytes.size(); }
+    void jump(size_t offset)
+    {
+        VERIFY(offset <= m_bytes.size());
+        m_offset = offset;
+    }
+
+    Instruction const& operator*() const { return dereference(); }
+
+    ALWAYS_INLINE void operator++()
+    {
+        VERIFY(!at_end());
+        m_offset += dereference().length();
+    }
+
+private:
+    Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_bytes.data() + offset()); }
+
+    ReadonlyBytes m_bytes;
+    size_t m_offset { 0 };
+};
+
 }
