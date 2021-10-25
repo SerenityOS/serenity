@@ -75,7 +75,6 @@ public:
         update_bounding_rect();
         if (!s_main_screen)
             s_main_screen = screen_ptr;
-        screen_ptr->init();
         return screen_ptr;
     }
     ~Screen();
