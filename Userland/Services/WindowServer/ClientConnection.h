@@ -160,6 +160,8 @@ private:
     virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize const&) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
+    virtual void set_buttons_switched(bool) override;
+    virtual Messages::WindowServer::GetButtonsSwitchedResponse get_buttons_switched() override;
     virtual void set_window_modified(i32, bool) override;
     virtual Messages::WindowServer::IsWindowModifiedResponse is_window_modified(i32) override;
     virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale(u32) override;

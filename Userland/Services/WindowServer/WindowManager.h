@@ -164,6 +164,8 @@ public:
     void set_scroll_step_size(unsigned);
     void set_double_click_speed(int);
     int double_click_speed() const;
+    void set_buttons_switched(bool);
+    bool get_buttons_switched() const;
 
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);
@@ -409,6 +411,7 @@ private:
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
+    bool m_buttons_switched { false };
 
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;

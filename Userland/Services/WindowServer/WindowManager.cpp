@@ -71,6 +71,7 @@ void WindowManager::reload_config()
     apply_virtual_desktop_settings(virtual_desktop_rows, virtual_desktop_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
+    m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
@@ -272,6 +273,19 @@ void WindowManager::set_double_click_speed(int speed)
 int WindowManager::double_click_speed() const
 {
     return m_double_click_speed;
+}
+
+void WindowManager::set_buttons_switched(bool switched)
+{
+    m_buttons_switched = switched;
+    dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
+    m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
+    m_config->sync();
+}
+
+bool WindowManager::get_buttons_switched() const
+{
+    return m_buttons_switched;
 }
 
 WindowStack& WindowManager::window_stack_for_window(Window& window)

@@ -144,6 +144,9 @@ endpoint WindowServer
     set_double_click_speed(int speed) =|
     get_double_click_speed() => (int speed)
 
+    set_buttons_switched(bool switched) =|
+    get_buttons_switched() => (bool switched) 
+
     get_desktop_display_scale(u32 screen_index) => (int desktop_display_scale)
 
     set_flash_flush(bool enabled) =|

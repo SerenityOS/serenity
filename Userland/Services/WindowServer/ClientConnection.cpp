@@ -921,6 +921,16 @@ Messages::WindowServer::GetDoubleClickSpeedResponse ClientConnection::get_double
     return WindowManager::the().double_click_speed();
 }
 
+void ClientConnection::set_buttons_switched(bool switched)
+{
+    WindowManager::the().set_buttons_switched(switched);
+}
+
+Messages::WindowServer::GetButtonsSwitchedResponse ClientConnection::get_buttons_switched()
+{
+    return WindowManager::the().get_buttons_switched();
+}
+
 void ClientConnection::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)
