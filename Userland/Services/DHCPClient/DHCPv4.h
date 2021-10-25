@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
@@ -239,9 +238,8 @@ private:
 class DHCPv4PacketBuilder {
 public:
     DHCPv4PacketBuilder()
-        : m_buffer(ByteBuffer::create_zeroed(sizeof(DHCPv4Packet)).release_value()) // FIXME: Handle possible OOM failure.
     {
-        auto* options = peek().options();
+        auto* options = m_packet.options();
         // set the magic DHCP cookie value
         options[0] = 99;
         options[1] = 130;
@@ -255,7 +253,7 @@ public:
         // we need enough space to fit the option value, its length, and its data
         VERIFY(next_option_offset + length + 2 < DHCPV4_OPTION_FIELD_MAX_LENGTH);
 
-        auto* options = peek().options();
+        auto* options = m_packet.options();
         options[next_option_offset++] = (u8)option;
         memcpy(options + next_option_offset, &length, 1);
         next_option_offset++;
@@ -266,17 +264,16 @@ public:
 
     void set_message_type(DHCPMessageType type) { add_option(DHCPOption::DHCPMessageType, 1, &type); }
 
-    DHCPv4Packet& peek() { return *(DHCPv4Packet*)m_buffer.data(); }
+    DHCPv4Packet& peek() { return m_packet; }
     DHCPv4Packet& build()
     {
         add_option(DHCPOption::End, 0, nullptr);
         m_can_add = false;
-        return *(DHCPv4Packet*)m_buffer.data();
+        return m_packet;
     }
-    size_t size() const { return m_buffer.size(); }
 
 private:
-    ByteBuffer m_buffer;
+    DHCPv4Packet m_packet;
     size_t next_option_offset { 4 };
     bool m_can_add { true };
 };
