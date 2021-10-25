@@ -51,6 +51,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         }
         kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();
+        base_address = maybe_kernel_base.value();
     } else {
         auto& process = node.process();
         auto library_data = process.library_metadata.library_containing(node.address());
