@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Utf16View.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -532,10 +533,21 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
 
     TRY(eval_declaration_instantiation(vm, eval_realm->global_object(), program, variable_environment, lexical_environment, private_environment, strict_eval));
 
-    auto& interpreter = vm.interpreter();
     TemporaryChange scope_change_strict(vm.running_execution_context().is_strict_mode, strict_eval);
-    // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
-    auto eval_result = program->evaluate_statements(interpreter, caller_realm);
+
+    Value eval_result;
+
+    if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
+        auto executable = JS::Bytecode::Generator::generate(program);
+        executable.name = "eval"sv;
+        if (JS::Bytecode::g_dump_bytecode)
+            executable.dump();
+        eval_result = bytecode_interpreter->run(executable);
+    } else {
+        auto& ast_interpreter = vm.interpreter();
+        // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't
+        eval_result = program->evaluate_statements(ast_interpreter, caller_realm);
+    }
 
     if (auto* exception = vm.exception())
         return throw_completion(exception->value());
