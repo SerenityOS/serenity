@@ -10,6 +10,7 @@
 
 namespace Unicode {
 
+enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
 enum class GeneralCategory : u8;
 enum class Language : u8;
@@ -27,6 +28,7 @@ struct LanguageID;
 struct ListPatterns;
 struct LocaleExtension;
 struct LocaleID;
+struct NumberFormat;
 struct OtherExtension;
 struct SpecialCasing;
 struct TransformedExtension;
