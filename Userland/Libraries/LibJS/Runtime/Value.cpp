@@ -773,6 +773,9 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+        return lhs.as_i32() > rhs.as_i32();
+
     TriState relation = TRY(is_less_than(global_object, false, lhs, rhs));
     if (relation == TriState::Unknown)
         return Value(false);
@@ -782,6 +785,9 @@ ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Va
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+        return lhs.as_i32() >= rhs.as_i32();
+
     TriState relation = TRY(is_less_than(global_object, true, lhs, rhs));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
@@ -791,6 +797,9 @@ ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+        return lhs.as_i32() < rhs.as_i32();
+
     TriState relation = TRY(is_less_than(global_object, true, lhs, rhs));
     if (relation == TriState::Unknown)
         return Value(false);
@@ -800,6 +809,9 @@ ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+        return lhs.as_i32() <= rhs.as_i32();
+
     TriState relation = TRY(is_less_than(global_object, false, lhs, rhs));
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
