@@ -350,7 +350,8 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
     if (!callee.is_function()) {
-        TODO();
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+        return;
     }
     auto& function = callee.as_function();
 
