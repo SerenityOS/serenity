@@ -153,7 +153,7 @@ private:
 
     bool m_is_private { false };
     // FIXME: This can (probably) be an union with m_name.
-    PrivateName m_private_name { 0, "" };
+    PrivateName m_private_name;
 
     Optional<EnvironmentCoordinate> m_environment_coordinate;
 };
