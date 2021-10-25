@@ -34,6 +34,7 @@ class TimeManagement {
 public:
     TimeManagement();
     static void initialize(u32 cpu);
+    static bool is_initialized();
     static TimeManagement& the();
 
     static bool is_valid_clock_id(clockid_t);
