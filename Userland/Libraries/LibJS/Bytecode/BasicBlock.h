@@ -39,6 +39,7 @@ private:
 };
 
 struct UnwindInfo {
+    Executable const* executable;
     BasicBlock const* handler;
     BasicBlock const* finalizer;
 };

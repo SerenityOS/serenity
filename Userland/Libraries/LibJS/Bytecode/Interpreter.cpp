@@ -82,6 +82,8 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
                 if (m_unwind_contexts.is_empty())
                     break;
                 auto& unwind_context = m_unwind_contexts.last();
+                if (unwind_context.executable != m_current_executable)
+                    break;
                 if (unwind_context.handler) {
                     block = unwind_context.handler;
                     unwind_context.handler = nullptr;
@@ -156,7 +158,7 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
 
 void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)
 {
-    m_unwind_contexts.empend(handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
+    m_unwind_contexts.empend(m_current_executable, handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
 }
 
 void Interpreter::leave_unwind_context()
