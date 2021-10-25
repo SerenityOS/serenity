@@ -158,4 +158,39 @@
             }
         }
     }
+
+    @GUI::GroupBox {
+        title: "Button configuration"
+        fixed_height: 60
+
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                fixed_width: 32
+                fixed_height: 32
+                name: "switch_buttons_image_label"
+            }
+
+            @GUI::Label {
+                text: "Switch primary and secondary buttons"
+                fixed_width: 201
+                text_alignment: "CenterLeft"
+                name: "switch_buttons_label"
+            }
+
+            @GUI::CheckBox {
+                name: "switch_buttons_input"
+                fixed_width: 14
+
+            }
+        }
+    }    
 }

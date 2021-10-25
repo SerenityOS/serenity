@@ -51,6 +51,10 @@ MouseWidget::MouseWidget()
         m_double_click_speed_label->set_text(String::formatted("{} ms", speed));
     };
     m_double_click_speed_slider->set_value(GUI::WindowServerConnection::the().get_double_click_speed());
+    m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_input");
+    m_switch_buttons_checkbox->set_checked(GUI::WindowServerConnection::the().get_buttons_switched());
+    auto& switch_buttons_image_label = *find_descendant_of_type_named<GUI::Label>("switch_buttons_image_label");
+    switch_buttons_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/switch-mouse-buttons.png"));
 }
 
 void MouseWidget::update_window_server()
@@ -59,6 +63,7 @@ void MouseWidget::update_window_server()
     GUI::WindowServerConnection::the().async_set_mouse_acceleration(factor);
     GUI::WindowServerConnection::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
     GUI::WindowServerConnection::the().async_set_double_click_speed(m_double_click_speed_slider->value());
+    GUI::WindowServerConnection::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
 }
 
 void MouseWidget::reset_default_values()
@@ -66,6 +71,7 @@ void MouseWidget::reset_default_values()
     m_speed_slider->set_value(speed_slider_scale);
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
+    m_switch_buttons_checkbox->set_checked(false);
     update_window_server();
 }
 
