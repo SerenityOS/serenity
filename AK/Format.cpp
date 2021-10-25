@@ -803,11 +803,14 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 #ifdef __serenity__
 #    ifdef KERNEL
     if (Kernel::Processor::is_initialized()) {
+        struct timespec ts = {};
+        if (TimeManagement::is_initialized())
+            ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
         if (Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
-            builder.appendff("\033[34;1m[#{} {}({}:{})]\033[0m: ", Kernel::Processor::current_id(), thread.process().name(), thread.pid().value(), thread.tid().value());
+            builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, Kernel::Processor::current_id(), thread.process().name(), thread.pid().value(), thread.tid().value());
         } else {
-            builder.appendff("\033[34;1m[#{} Kernel]\033[0m: ", Kernel::Processor::current_id());
+            builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, Kernel::Processor::current_id());
         }
     } else {
         builder.appendff("\033[34;1m[Kernel]\033[0m: ");
@@ -822,8 +825,10 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
         else
             got_process_name = TriState::False;
     }
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
     if (got_process_name == TriState::True)
-        builder.appendff("\033[33;1m{}({}:{})\033[0m: ", process_name_buffer, getpid(), gettid());
+        builder.appendff("{}.{:03} \033[33;1m{}({}:{})\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name_buffer, getpid(), gettid());
 #    endif
 #endif
 
@@ -849,11 +854,15 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     StringBuilder builder;
 
 #    ifdef __serenity__
+    struct timespec ts = {};
+    if (TimeManagement::is_initialized())
+        ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
+
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
-        builder.appendff("\033[34;1m[{}({}:{})]\033[0m: ", thread.process().name(), thread.pid().value(), thread.tid().value());
+        builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, thread.process().name(), thread.pid().value(), thread.tid().value());
     } else {
-        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
+        builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000);
     }
 #    endif
 
