@@ -264,11 +264,6 @@ void Screen::scale_factor_changed()
     constrain_pending_flush_rects();
 }
 
-void Screen::init()
-{
-    set_resolution(true);
-}
-
 Screen& Screen::closest_to_rect(const Gfx::IntRect& rect)
 {
     Screen* best_screen = nullptr;
