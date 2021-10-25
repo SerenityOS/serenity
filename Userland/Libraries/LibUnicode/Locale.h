@@ -81,6 +81,7 @@ struct LocaleID {
 enum class CompactNumberFormatType : u8 {
     DecimalLong,
     DecimalShort,
+    CurrencyShort,
 };
 
 struct NumberFormat {
