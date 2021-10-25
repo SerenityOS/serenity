@@ -78,6 +78,27 @@ struct LocaleID {
     Vector<String> private_use_extensions {};
 };
 
+enum class CompactNumberFormatType : u8 {
+    DecimalLong,
+    DecimalShort,
+};
+
+struct NumberFormat {
+    enum class Plurality : u8 {
+        Other,
+        Zero,
+        Single,
+        One,
+        Two,
+        Few,
+        Many,
+    };
+
+    u8 magnitude { 0 };
+    Plurality plurality { Plurality::Other };
+    StringView format {};
+};
+
 struct ListPatterns {
     StringView start;
     StringView middle;
@@ -141,6 +162,7 @@ Optional<StringView> get_locale_script_mapping(StringView locale, StringView scr
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol);
+Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
 Optional<StringView> resolve_language_alias(StringView language);

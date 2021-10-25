@@ -812,6 +812,15 @@ Optional<StringView> get_number_system_symbol([[maybe_unused]] StringView locale
 #endif
 }
 
+Vector<NumberFormat> get_compact_number_system_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] CompactNumberFormatType type)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_compact_number_system_formats(locale, system, type);
+#else
+    return {};
+#endif
+}
+
 Optional<ListPatterns> get_locale_list_patterns([[maybe_unused]] StringView locale, [[maybe_unused]] StringView type, [[maybe_unused]] StringView style)
 {
 #if ENABLE_UNICODE_DATA

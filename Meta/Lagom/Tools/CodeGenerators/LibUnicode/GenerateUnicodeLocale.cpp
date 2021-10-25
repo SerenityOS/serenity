@@ -21,13 +21,41 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
+#include <math.h>
 
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
 
+struct NumberFormat : public Unicode::NumberFormat {
+    using Base = Unicode::NumberFormat;
+
+    static Base::Plurality plurality_from_string(StringView plurality)
+    {
+        if (plurality == "other"sv)
+            return Base::Plurality::Other;
+        if (plurality == "1"sv)
+            return Base::Plurality::Single;
+        if (plurality == "zero"sv)
+            return Base::Plurality::Zero;
+        if (plurality == "one"sv)
+            return Base::Plurality::One;
+        if (plurality == "two"sv)
+            return Base::Plurality::Two;
+        if (plurality == "few"sv)
+            return Base::Plurality::Few;
+        if (plurality == "many"sv)
+            return Base::Plurality::Many;
+        VERIFY_NOT_REACHED();
+    }
+
+    StringIndexType format_index { 0 };
+};
+
 struct NumberSystem {
     StringIndexType system { 0 };
     HashMap<String, StringIndexType> symbols {};
+    Vector<NumberFormat> decimal_long_formats {};
+    Vector<NumberFormat> decimal_short_formats {};
 };
 
 struct ListPatterns {
@@ -503,8 +531,31 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
         });
     };
 
+    auto parse_number_format = [&](auto const& format_object) {
+        Vector<NumberFormat> result;
+        result.ensure_capacity(format_object.size());
+
+        format_object.for_each_member([&](auto const& key, JsonValue const& value) {
+            auto split_key = key.split_view('-');
+            VERIFY(split_key.size() == 3);
+
+            auto type = split_key[0].template to_uint<u64>().value();
+            VERIFY(type % 10 == 0);
+
+            NumberFormat format {};
+            format.magnitude = static_cast<u8>(log10(type));
+            format.plurality = NumberFormat::plurality_from_string(split_key[2]);
+            format.format_index = ensure_unique_string(locale_data, value.as_string());
+
+            result.append(move(format));
+        });
+
+        return result;
+    };
+
     locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         constexpr auto symbols_prefix = "symbols-numberSystem-"sv;
+        constexpr auto decimal_formats_prefix = "decimalFormats-numberSystem-"sv;
 
         if (key.starts_with(symbols_prefix)) {
             auto system = key.substring(symbols_prefix.length());
@@ -517,6 +568,15 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
                 if (!locale_data.numeric_symbols.contains_slow(symbol))
                     locale_data.numeric_symbols.append(symbol);
             });
+        } else if (key.starts_with(decimal_formats_prefix)) {
+            auto system = key.substring(decimal_formats_prefix.length());
+            auto& number_system = ensure_number_system(system);
+
+            auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
+            number_system.decimal_long_formats = parse_number_format(long_format.as_object());
+
+            auto const& short_format = value.as_object().get("short"sv).as_object().get("decimalFormat"sv);
+            number_system.decimal_short_formats = parse_number_format(short_format.as_object());
         }
     });
 }
@@ -701,6 +761,7 @@ enum class @name@ : @underlying@ {)~~~");
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
@@ -742,6 +803,7 @@ Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
 Optional<Key> key_from_string(StringView key);
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView numeric_symbol);
+Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style);
@@ -782,7 +844,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeLocale.h>
 
-namespace Unicode {
+namespace Unicode::Detail {
 
 struct Patterns {
     ListPatternType type;
@@ -816,9 +878,27 @@ static constexpr Array<StringView, @strings_size@ + 1> s_string_list { {
     generator.append(R"~~~(
 } };
 
+struct NumberFormat {
+    Unicode::NumberFormat to_unicode_number_format() const {
+        Unicode::NumberFormat number_format {};
+
+        number_format.magnitude = magnitude;
+        number_format.plurality = static_cast<Unicode::NumberFormat::Plurality>(plurality);
+        number_format.format = s_string_list[format];
+
+        return number_format;
+    }
+
+    u8 magnitude { 0 };
+    u8 plurality { 0 };
+    @string_index_type@ format { 0 };
+};
+
 struct NumberSystem {
     @string_index_type@ system { 0 };
     Array<@string_index_type@, @numeric_symbols_size@> symbols {};
+    Span<NumberFormat const> decimal_long_formats {};
+    Span<NumberFormat const> decimal_short_formats {};
 };
 )~~~");
 
@@ -879,8 +959,48 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {
 )~~~");
     };
 
+    auto append_number_formats = [&](String name, auto const& number_formats) {
+        generator.set("name"sv, move(name));
+        generator.set("size"sv, String::number(number_formats.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<NumberFormat, @size@> @name@ { {
+    )~~~");
+
+        constexpr size_t max_values_per_row = 10;
+        size_t values_in_current_row = 0;
+
+        for (auto const& number_format : number_formats) {
+            if (values_in_current_row++ > 0)
+                generator.append(" ");
+
+            generator.set("magnitude"sv, String::number(number_format.magnitude));
+            generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
+            generator.set("format"sv, String::number(number_format.format_index));
+            generator.append("{ @magnitude@, @plurality@, @format@ },");
+
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
+                generator.append("\n    ");
+            }
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
     auto append_number_systems = [&](String name, auto const& number_systems) {
-        generator.set("name", move(name));
+        auto format_name = [&](StringView system, StringView format) {
+            return String::formatted("{}_{}_{}", name, system, format);
+        };
+
+        for (auto const& number_system : number_systems) {
+            append_number_formats(format_name(number_system.key, "dl"sv), number_system.value.decimal_long_formats);
+            append_number_formats(format_name(number_system.key, "ds"sv), number_system.value.decimal_short_formats);
+        }
+
+        generator.set("name", name);
         generator.set("size", String::number(number_systems.size()));
 
         generator.append(R"~~~(
@@ -888,6 +1008,8 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
 
         for (auto const& number_system : number_systems) {
             generator.set("system"sv, String::number(number_system.value.system));
+            generator.set("decimal_long_formats"sv, format_name(number_system.key, "dl"sv));
+            generator.set("decimal_short_formats"sv, format_name(number_system.key, "ds"sv));
             generator.append(R"~~~(
     { @system@, {)~~~");
 
@@ -897,7 +1019,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
                 generator.append(" @index@,");
             }
 
-            generator.append(" } },");
+            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span() },");
         }
 
         generator.append(R"~~~(
@@ -1154,7 +1276,6 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
     return nullptr;
 }
 
-namespace Detail {
 )~~~");
 
     auto append_mapping_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
@@ -1266,6 +1387,31 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
     return {};
 }
 
+Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
+{
+    Vector<Unicode::NumberFormat> formats;
+
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+        Span<NumberFormat const> number_formats;
+
+        switch (type) {
+        case CompactNumberFormatType::DecimalLong:
+            number_formats = number_system->decimal_long_formats;
+            break;
+        case CompactNumberFormatType::DecimalShort:
+            number_formats = number_system->decimal_short_formats;
+            break;
+        }
+
+        formats.ensure_capacity(number_formats.size());
+
+        for (auto const& number_format : number_formats)
+            formats.append(number_format.to_unicode_number_format());
+    }
+
+    return formats;
+}
+
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style)
 {
     auto locale_value = locale_from_string(locale);
@@ -1360,8 +1506,6 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
         return s_string_list[likely_subtag->alias.region];
     return {};
-}
-
 }
 
 }
