@@ -27,6 +27,11 @@ namespace Kernel {
 
 static Singleton<TimeManagement> s_the;
 
+bool TimeManagement::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 TimeManagement& TimeManagement::the()
 {
     return *s_the;
