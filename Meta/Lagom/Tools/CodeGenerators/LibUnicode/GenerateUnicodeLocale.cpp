@@ -56,6 +56,7 @@ struct NumberSystem {
     HashMap<String, StringIndexType> symbols {};
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
+    Vector<NumberFormat> currency_short_formats {};
 };
 
 struct ListPatterns {
@@ -556,6 +557,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
     locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         constexpr auto symbols_prefix = "symbols-numberSystem-"sv;
         constexpr auto decimal_formats_prefix = "decimalFormats-numberSystem-"sv;
+        constexpr auto currency_formats_prefix = "currencyFormats-numberSystem-"sv;
 
         if (key.starts_with(symbols_prefix)) {
             auto system = key.substring(symbols_prefix.length());
@@ -577,6 +579,14 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
 
             auto const& short_format = value.as_object().get("short"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_short_formats = parse_number_format(short_format.as_object());
+        } else if (key.starts_with(currency_formats_prefix)) {
+            if (value.as_object().has("short"sv)) {
+                auto system = key.substring(currency_formats_prefix.length());
+                auto& number_system = ensure_number_system(system);
+
+                auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
+                number_system.currency_short_formats = parse_number_format(short_format.as_object());
+            }
         }
     });
 }
@@ -899,6 +909,7 @@ struct NumberSystem {
     Array<@string_index_type@, @numeric_symbols_size@> symbols {};
     Span<NumberFormat const> decimal_long_formats {};
     Span<NumberFormat const> decimal_short_formats {};
+    Span<NumberFormat const> currency_short_formats {};
 };
 )~~~");
 
@@ -998,6 +1009,7 @@ static constexpr Array<NumberFormat, @size@> @name@ { {
         for (auto const& number_system : number_systems) {
             append_number_formats(format_name(number_system.key, "dl"sv), number_system.value.decimal_long_formats);
             append_number_formats(format_name(number_system.key, "ds"sv), number_system.value.decimal_short_formats);
+            append_number_formats(format_name(number_system.key, "cs"sv), number_system.value.currency_short_formats);
         }
 
         generator.set("name", name);
@@ -1010,6 +1022,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             generator.set("system"sv, String::number(number_system.value.system));
             generator.set("decimal_long_formats"sv, format_name(number_system.key, "dl"sv));
             generator.set("decimal_short_formats"sv, format_name(number_system.key, "ds"sv));
+            generator.set("currency_short_formats"sv, format_name(number_system.key, "cs"sv));
             generator.append(R"~~~(
     { @system@, {)~~~");
 
@@ -1019,7 +1032,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
                 generator.append(" @index@,");
             }
 
-            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span() },");
+            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span() },");
         }
 
         generator.append(R"~~~(
@@ -1400,6 +1413,9 @@ Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView local
             break;
         case CompactNumberFormatType::DecimalShort:
             number_formats = number_system->decimal_short_formats;
+            break;
+        case CompactNumberFormatType::CurrencyShort:
+            number_formats = number_system->currency_short_formats;
             break;
         }
 
