@@ -78,6 +78,9 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldCho
     if (!cstring)
         return nullptr;
 
+    if (!*cstring)
+        return the_empty_stringimpl();
+
     return create(cstring, strlen(cstring), shouldChomp);
 }
 
