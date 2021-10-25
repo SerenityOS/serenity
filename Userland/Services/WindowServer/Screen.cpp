@@ -145,7 +145,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
                 return false;
             }
 
-            need_to_open_device = true;
+            need_to_open_device = false;
         }
 
         if (need_to_open_device && !screen->open_device()) {
