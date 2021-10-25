@@ -438,12 +438,12 @@ KResult TTY::set_termios(const termios& t)
         }
     }
 
+    if ((m_termios.c_cflag & CSIZE) != CS8) {
+        dbgln("FIXME: Character sizes other than 8 bits are not supported");
+        rc = ENOTIMPL;
+    }
+
     static constexpr FlagDescription unimplemented_cflags[] = {
-        { CSIZE, "CSIZE" },
-        { CS5, "CS5" },
-        { CS6, "CS6" },
-        { CS7, "CS7" },
-        { CS8, "CS8" },
         { CSTOPB, "CSTOPB" },
         { CREAD, "CREAD" },
         { PARENB, "PARENB" },
