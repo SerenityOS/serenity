@@ -64,10 +64,4 @@ void BasicBlock::grow(size_t additional_size)
     VERIFY(m_buffer_size <= m_buffer_capacity);
 }
 
-void InstructionStreamIterator::operator++()
-{
-    VERIFY(!at_end());
-    m_offset += dereference().length();
-}
-
 }
