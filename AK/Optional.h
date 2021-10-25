@@ -152,7 +152,7 @@ public:
         return release_value();
     }
 
-    [[nodiscard]] T release_value()
+    [[nodiscard]] ALWAYS_INLINE T release_value()
     {
         VERIFY(m_has_value);
         T released_value = move(value());
