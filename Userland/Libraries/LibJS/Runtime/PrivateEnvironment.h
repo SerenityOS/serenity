@@ -12,6 +12,7 @@
 namespace JS {
 
 struct PrivateName {
+    PrivateName() = default;
     PrivateName(u64 unique_id, FlyString description)
         : unique_id(unique_id)
         , description(move(description))
