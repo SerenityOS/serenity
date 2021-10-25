@@ -572,18 +572,7 @@ void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
 
 void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    object().generate_bytecode(generator);
-
-    if (is_computed()) {
-        auto object_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::Store>(object_reg);
-
-        property().generate_bytecode(generator);
-        generator.emit<Bytecode::Op::GetByValue>(object_reg);
-    } else {
-        auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(property()).string());
-        generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-    }
+    generator.emit_load_from_reference(*this);
 }
 
 void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
