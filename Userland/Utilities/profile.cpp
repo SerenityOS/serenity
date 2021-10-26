@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {
         print_types();
-        exit(1);
+        exit(0);
     }
 
     if (!pid_argument && !cmd_argument && !all_processes) {
