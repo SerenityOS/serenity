@@ -189,6 +189,9 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                 }
             }
         }
+        if (can_have_declared_layout(class_names.last()))
+            identifier_entries.empend("layout: ", 0u, Language::Unspecified, "layout");
+
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
             if (!registration.is_derived_from(widget_class))
                 return;
