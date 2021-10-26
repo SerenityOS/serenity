@@ -10,8 +10,8 @@
 #include <LibGfx/Orientation.h>
 #include <stdio.h>
 
-REGISTER_CORE_OBJECT(GUI, HorizontalBoxLayout)
-REGISTER_CORE_OBJECT(GUI, VerticalBoxLayout)
+REGISTER_LAYOUT(GUI, HorizontalBoxLayout)
+REGISTER_LAYOUT(GUI, VerticalBoxLayout)
 
 namespace GUI {
 
