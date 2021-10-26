@@ -113,42 +113,44 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_obje
 // 11.6.3 GetISOPartsFromEpoch ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-getisopartsfromepoch
 ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
 {
-    // 1. Let remainderNs be remainder(epochNanoseconds, 10^6).
+    // 1. Assert: epochNanoseconds is an integer.
+
+    // 2. Let remainderNs be remainder(epochNanoseconds, 10^6).
     auto remainder_ns_bigint = epoch_nanoseconds.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).remainder;
     auto remainder_ns = remainder_ns_bigint.to_base(10).to_int<i64>().value();
 
-    // 2. Let epochMilliseconds be (epochNanoseconds − remainderNs) / 10^6.
+    // 3. Let epochMilliseconds be (epochNanoseconds − remainderNs) / 10^6.
     auto epoch_milliseconds_bigint = epoch_nanoseconds.big_integer().minus(remainder_ns_bigint).divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).quotient;
     auto epoch_milliseconds = (double)epoch_milliseconds_bigint.to_base(10).to_int<i64>().value();
 
-    // 3. Let year be ! YearFromTime(epochMilliseconds).
+    // 4. Let year be ! YearFromTime(epochMilliseconds).
     auto year = year_from_time(epoch_milliseconds);
 
-    // 4. Let month be ! MonthFromTime(epochMilliseconds) + 1.
+    // 5. Let month be ! MonthFromTime(epochMilliseconds) + 1.
     auto month = static_cast<u8>(month_from_time(epoch_milliseconds) + 1);
 
-    // 5. Let day be ! DateFromTime(epochMilliseconds).
+    // 6. Let day be ! DateFromTime(epochMilliseconds).
     auto day = date_from_time(epoch_milliseconds);
 
-    // 6. Let hour be ! HourFromTime(epochMilliseconds).
+    // 7. Let hour be ! HourFromTime(epochMilliseconds).
     auto hour = hour_from_time(epoch_milliseconds);
 
-    // 7. Let minute be ! MinFromTime(epochMilliseconds).
+    // 8. Let minute be ! MinFromTime(epochMilliseconds).
     auto minute = min_from_time(epoch_milliseconds);
 
-    // 8. Let second be ! SecFromTime(epochMilliseconds).
+    // 9. Let second be ! SecFromTime(epochMilliseconds).
     auto second = sec_from_time(epoch_milliseconds);
 
-    // 9. Let millisecond be ! msFromTime(epochMilliseconds).
+    // 10. Let millisecond be ! msFromTime(epochMilliseconds).
     auto millisecond = ms_from_time(epoch_milliseconds);
 
-    // 10. Let microsecond be floor(remainderNs / 1000) modulo 1000.
+    // 11. Let microsecond be floor(remainderNs / 1000) modulo 1000.
     auto microsecond = static_cast<u16>((remainder_ns / 1000) % 1000);
 
-    // 11. Let nanosecond be remainderNs modulo 1000.
+    // 12. Let nanosecond be remainderNs modulo 1000.
     auto nanosecond = static_cast<u16>(remainder_ns % 1000);
 
-    // 12. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
+    // 13. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
 }
 
@@ -394,16 +396,18 @@ ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(GlobalObject& 
 // 11.6.13 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(GlobalObject& global_object, Value time_zone, Instant& instant, Object& calendar)
 {
-    // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
+    // 1. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
+
+    // 2. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, instant));
 
-    // 2. Let result be ! GetISOPartsFromEpoch(instant.[[Nanoseconds]]).
+    // 3. Let result be ! GetISOPartsFromEpoch(instant.[[Nanoseconds]]).
     auto result = get_iso_parts_from_epoch(instant.nanoseconds());
 
-    // 3. Set result to ! BalanceISODateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]] + offsetNanoseconds).
+    // 4. Set result to ! BalanceISODateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]] + offsetNanoseconds).
     result = balance_iso_date_time(result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond + offset_nanoseconds);
 
-    // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
+    // 5. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
     return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar);
 }
 
