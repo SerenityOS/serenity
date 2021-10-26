@@ -6,7 +6,7 @@ interface URLSearchParams {
   undefined append(USVString name, USVString value);
   undefined delete(USVString name);
   USVString? get(USVString name);
-  // TODO: sequence<USVString> getAll(USVString name);
+  sequence<USVString> getAll(USVString name);
   boolean has(USVString name);
   undefined set(USVString name, USVString value);
 

@@ -35,6 +35,7 @@ public:
     void append(String const& name, String const& value);
     void delete_(String const& name);
     String get(String const& name);
+    Vector<String> get_all(String const& name);
     bool has(String const& name);
     void set(String const& name, String const& value);
 
