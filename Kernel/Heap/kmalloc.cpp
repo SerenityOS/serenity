@@ -23,7 +23,12 @@
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 
-#define CHUNK_SIZE 32
+#if ARCH(I386)
+static constexpr size_t CHUNK_SIZE = 32;
+#else
+static constexpr size_t CHUNK_SIZE = 64;
+#endif
+
 #define POOL_SIZE (2 * MiB)
 #define ETERNAL_RANGE_SIZE (4 * MiB)
 
