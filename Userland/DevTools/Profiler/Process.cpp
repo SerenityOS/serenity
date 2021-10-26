@@ -102,8 +102,15 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
             if (!mapped_object)
                 return;
         }
-        m_libraries.set(path_string, adopt_own(*new Library { base, size, path_string, mapped_object }));
+        m_libraries.set(path_string, adopt_own(*new Library { base, size, path_string, mapped_object, {} }));
     }
+}
+
+const Debug::DebugInfo& LibraryMetadata::Library::load_debug_info(FlatPtr base_address) const
+{
+    if (debug_info == nullptr)
+        debug_info = make<Debug::DebugInfo>(object->elf, String::empty(), base_address);
+    return *debug_info.ptr();
 }
 
 String LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const

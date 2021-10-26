@@ -212,6 +212,7 @@ void Profile::rebuild_tree()
 }
 
 Optional<MappedObject> g_kernel_debuginfo_object;
+OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
 {

@@ -54,7 +54,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     , m_node(node)
 {
     FlatPtr base_address = 0;
-    OwnPtr<Debug::DebugInfo> debug_info;
+    const Debug::DebugInfo* debug_info;
     const ELF::Image* elf;
     if (auto maybe_kernel_base = Symbolication::kernel_base(); maybe_kernel_base.has_value() && m_node.address() >= *maybe_kernel_base) {
         if (!g_kernel_debuginfo_object.has_value())
@@ -63,7 +63,9 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         elf = try_load_kernel_binary();
         if (elf == nullptr)
             return;
-        debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, String::empty(), base_address);
+        if (g_kernel_debug_info == nullptr)
+            g_kernel_debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, String::empty(), base_address);
+        debug_info = g_kernel_debug_info.ptr();
     } else {
         auto& process = node.process();
         auto library_data = process.library_metadata.library_containing(node.address());
@@ -73,7 +75,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         }
         base_address = library_data->base;
         elf = &library_data->object->elf;
-        debug_info = make<Debug::DebugInfo>(library_data->object->elf, String::empty(), base_address);
+        debug_info = &library_data->load_debug_info(base_address);
     }
 
     VERIFY(elf != nullptr);
