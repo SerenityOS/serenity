@@ -9,6 +9,8 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Widget.h>
 
+REGISTER_ABSTRACT_CORE_OBJECT(GUI, Layout)
+
 namespace GUI {
 
 Layout::Layout()
