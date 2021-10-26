@@ -13,4 +13,5 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           CUSTOM_GITHUB_EVENT_NAME: ${{ github.event_name == 'pull_request_target' && 'pull_request' || github.event_name }} # fake the event type as discord doesn't know how to parse the special pull_request_target context
         uses: IdanHo/action-discord@754598254f288e6d8e9fca637832e3c163515ba8
-        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !github.event.pull_request.draft) || github.event['commits'] }}
+        # FIXME: Find a way to notify on 'ready_for_review', but rate-limited to once/twice per day.
+        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened') || github.event['commits'] }}
