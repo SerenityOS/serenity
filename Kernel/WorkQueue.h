@@ -9,6 +9,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
@@ -45,6 +46,9 @@ private:
     explicit WorkQueue(StringView);
 
     struct WorkItem {
+        MAKE_SLAB_ALLOCATED(WorkItem);
+
+    public:
         IntrusiveListNode<WorkItem> m_node;
         Function<void()> function;
     };
