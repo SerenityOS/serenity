@@ -5,7 +5,12 @@ set -eo pipefail
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.."
 
-BAD_FILES=$(find Base/etc/ Base/res/ Base/www/ -type f -executable)
+if [ "$(uname -s)" = "Darwin" ]; then
+    # MacOS's find does not support '-executable' OR '-perm /mode'.
+    BAD_FILES=$(find Base/etc/ Base/res/ Base/www/ -type f -perm +111)
+else
+    BAD_FILES=$(find Base/etc/ Base/res/ Base/www/ -type f -executable)
+fi
 
 if [ -n "${BAD_FILES}" ]
 then
