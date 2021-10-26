@@ -10,6 +10,20 @@ if ! command -v tar >/dev/null 2>&1 ; then
     exit 1
 fi
 
+if [ "$#" = "0" ]; then
+    VERIFY_GIT_STATE=n
+elif [ "$#" = "1" ] && [ "$1" = "--verify-git-state" ]; then
+    VERIFY_GIT_STATE=y
+else
+    echo "USAGE: $0 [--verify-git-state]"
+    echo "This script runs Serenity and exports a set of manpages through ArgsParser,"
+    echo "and places them in Base/usr/share/man/."
+    echo "If --verify-git-state is given, this script verifies that this does not modify"
+    echo "the git state, i.e. that all exported manpages already were in the repository"
+    echo "with the exact same content."
+    exit 1
+fi
+
 echo "This script assumes passwordless sudo."
 sudo true
 
@@ -49,3 +63,18 @@ sudo umount fsmount
 rmdir fsmount
 
 echo "Successfully (re-)generated manpages in Base/usr/share/man/"
+
+if [ "$VERIFY_GIT_STATE" = "y" ]; then
+    echo "Verifying git state ..."
+    if [ "" != "$(git clean -n Base/usr/share/man)" ] || ! git diff --quiet Base/usr/share/man; then
+        echo "Failed: There are missing and/or outdated manpages."
+        echo "$ git status Base/usr/share/man"
+        git status Base/usr/share/man
+        echo "$ git diff Base/usr/share/man"
+        git diff Base/usr/share/man
+        echo "You may need to run ./Meta/export-argsparser-manpages.sh on your system and commit/squash the resulting changes."
+        exit 1
+    else
+        echo "Verified: No missing or outdated manpages. Great!"
+    fi
+fi
