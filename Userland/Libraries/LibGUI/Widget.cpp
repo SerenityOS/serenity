@@ -1090,10 +1090,14 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unreg
             return false;
         }
 
-        if (class_name.to_string() == "GUI::VerticalBoxLayout") {
-            set_layout<GUI::VerticalBoxLayout>();
-        } else if (class_name.to_string() == "GUI::HorizontalBoxLayout") {
-            set_layout<GUI::HorizontalBoxLayout>();
+        auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
+        if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+            auto layout = registration->construct();
+            if (!layout || !registration->is_derived_from(layout_class)) {
+                dbgln("Invalid layout class: '{}'", class_name.to_string());
+                return false;
+            }
+            set_layout(static_ptr_cast<Layout>(layout).release_nonnull());
         } else {
             dbgln("Unknown layout class: '{}'", class_name.to_string());
             return false;
