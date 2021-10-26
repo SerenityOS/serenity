@@ -28,6 +28,8 @@
 
 namespace Profiler {
 
+extern Optional<MappedObject> g_kernel_debuginfo_object;
+
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
     static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)

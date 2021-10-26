@@ -211,6 +211,8 @@ void Profile::rebuild_tree()
     m_model->invalidate();
 }
 
+Optional<MappedObject> g_kernel_debuginfo_object;
+
 Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
 {
     auto file = Core::File::construct(path);
@@ -223,10 +225,14 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
     auto& object = json.value().as_object();
 
-    auto file_or_error = MappedFile::map("/boot/Kernel.debug");
-    OwnPtr<ELF::Image> kernel_elf;
-    if (!file_or_error.is_error())
-        kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
+    if (!g_kernel_debuginfo_object.has_value()) {
+        auto debuginfo_file_or_error = MappedFile::map("/boot/Kernel.debug");
+        if (!debuginfo_file_or_error.is_error()) {
+            auto debuginfo_file = debuginfo_file_or_error.release_value();
+            auto debuginfo_image = ELF::Image(debuginfo_file->bytes());
+            g_kernel_debuginfo_object = { { debuginfo_file, move(debuginfo_image) } };
+        }
+    }
 
     auto strings_value = object.get_ptr("strings"sv);
     if (!strings_value || !strings_value->is_array())
@@ -380,8 +386,8 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             String symbol;
 
             if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
-                if (kernel_elf) {
-                    symbol = kernel_elf->symbolicate(ptr - maybe_kernel_base.value(), &offset);
+                if (g_kernel_debuginfo_object.has_value()) {
+                    symbol = g_kernel_debuginfo_object->elf.symbolicate(ptr - maybe_kernel_base.value(), &offset);
                 } else {
                     symbol = String::formatted("?? <{:p}>", ptr);
                 }
