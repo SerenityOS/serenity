@@ -204,7 +204,6 @@ bool Region::map_individual_page_impl(size_t page_index)
 
 bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 {
-    SpinlockLocker lock(vmobject().m_lock);
     if (!m_page_directory)
         return true; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page(page_index))
@@ -221,6 +220,7 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
 {
     auto& vmobject = this->vmobject();
     bool success = true;
+    SpinlockLocker lock(vmobject.m_lock);
     vmobject.for_each_region([&](auto& region) {
         if (!region.do_remap_vmobject_page(page_index, with_flush))
             success = false;
