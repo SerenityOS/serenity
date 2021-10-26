@@ -11,6 +11,7 @@
 #include <AK/MappedFile.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 
 namespace Profiler {
@@ -29,8 +30,11 @@ public:
         size_t size;
         String name;
         MappedObject* object { nullptr };
+        // This is loaded lazily because we only need it in disassembly view
+        mutable OwnPtr<Debug::DebugInfo> debug_info;
 
         String symbolicate(FlatPtr, u32* offset) const;
+        const Debug::DebugInfo& load_debug_info(FlatPtr base_address) const;
     };
 
     void handle_mmap(FlatPtr base, size_t size, const String& name);
