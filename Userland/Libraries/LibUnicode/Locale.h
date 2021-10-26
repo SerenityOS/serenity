@@ -78,6 +78,10 @@ struct LocaleID {
     Vector<String> private_use_extensions {};
 };
 
+enum class StandardNumberFormatType : u8 {
+    Percent,
+};
+
 enum class CompactNumberFormatType : u8 {
     DecimalLong,
     DecimalShort,
@@ -163,6 +167,7 @@ Optional<StringView> get_locale_script_mapping(StringView locale, StringView scr
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
 Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol);
+Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
