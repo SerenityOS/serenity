@@ -32,12 +32,12 @@ class ObjectClassRegistration {
     AK_MAKE_NONMOVABLE(ObjectClassRegistration);
 
 public:
-    ObjectClassRegistration(StringView class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
+    ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
     ~ObjectClassRegistration();
 
     String class_name() const { return m_class_name; }
     const ObjectClassRegistration* parent_class() const { return m_parent_class; }
-    NonnullRefPtr<Object> construct() const { return m_factory(); }
+    RefPtr<Object> construct() const { return m_factory(); }
     bool is_derived_from(const ObjectClassRegistration& base_class) const;
 
     static void for_each(Function<void(const ObjectClassRegistration&)>);
@@ -45,7 +45,7 @@ public:
 
 private:
     StringView m_class_name;
-    Function<NonnullRefPtr<Object>()> m_factory;
+    Function<RefPtr<Object>()> m_factory;
     ObjectClassRegistration* m_parent_class { nullptr };
 };
 
