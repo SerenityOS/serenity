@@ -158,7 +158,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         }
         auto registration = Core::ObjectClassRegistration::find(class_names.last());
-        if (registration && registration->is_derived_from(widget_class)) {
+        if (registration && (registration->is_derived_from(widget_class) || registration->is_derived_from(layout_class))) {
             if (auto instance = registration->construct()) {
                 for (auto& it : instance->properties()) {
                     if (it.key.starts_with(identifier_string))
@@ -183,7 +183,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         }
         if (!class_names.is_empty()) {
             auto registration = Core::ObjectClassRegistration::find(class_names.last());
-            if (registration && registration->is_derived_from(widget_class)) {
+            if (registration && (registration->is_derived_from(widget_class) || registration->is_derived_from(layout_class))) {
                 if (auto instance = registration->construct()) {
                     for (auto& it : instance->properties()) {
                         if (!it.value->is_readonly())
