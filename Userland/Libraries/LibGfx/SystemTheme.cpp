@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,6 +41,11 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
         return color.value();
     };
 
+    auto get_flag = [&](auto& name) {
+        auto flag_string = file.read_entry("Flags", name);
+        return flag_string.equals_ignoring_case("true");
+    };
+
     auto get_metric = [&](auto& name, auto role) {
         int metric = file.read_num_entry("Metrics", name, -1);
         if (metric == -1) {
@@ -76,6 +82,12 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
     data->color[(int)ColorRole::role] = get_color(#role).value();
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
+
+#undef __ENUMERATE_FLAG_ROLE
+#define __ENUMERATE_FLAG_ROLE(role) \
+    data->flag[(int)FlagRole::role] = get_flag(#role);
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
 
 #undef __ENUMERATE_METRIC_ROLE
 #define __ENUMERATE_METRIC_ROLE(role) \

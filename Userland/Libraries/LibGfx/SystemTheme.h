@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -89,6 +90,9 @@ namespace Gfx {
     C(Window)                      \
     C(WindowText)
 
+#define ENUMERATE_FLAG_ROLES(C) \
+    C(IsDark)
+
 #define ENUMERATE_METRIC_ROLES(C) \
     C(TitleHeight)                \
     C(TitleButtonWidth)           \
@@ -131,6 +135,17 @@ inline const char* to_string(ColorRole role)
         VERIFY_NOT_REACHED();
     }
 }
+
+enum class FlagRole {
+    NoRole,
+
+#undef __ENUMERATE_FLAG_ROLE
+#define __ENUMERATE_FLAG_ROLE(role) role,
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
+
+        __Count,
+};
 
 enum class MetricRole {
     NoRole,
@@ -188,6 +203,7 @@ inline const char* to_string(PathRole role)
 
 struct SystemTheme {
     RGBA32 color[(int)ColorRole::__Count];
+    bool flag[(int)FlagRole::__Count];
     int metric[(int)MetricRole::__Count];
     char path[(int)PathRole::__Count][256]; // TODO: PATH_MAX?
 };
