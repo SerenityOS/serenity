@@ -20,6 +20,13 @@
 
 namespace Core {
 
+#define REGISTER_ABSTRACT_CORE_OBJECT(namespace_, class_name)                                                                 \
+    namespace Core {                                                                                                          \
+    namespace Registration {                                                                                                  \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return RefPtr<Object>(); }); \
+    }                                                                                                                         \
+    }
+
 #define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                             \
     namespace Core {                                                                                                                             \
     namespace Registration {                                                                                                                     \
