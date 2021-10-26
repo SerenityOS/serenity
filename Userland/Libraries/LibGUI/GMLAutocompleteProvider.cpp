@@ -186,9 +186,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         break;
     }
     case AfterIdentifier:
-        if (last_seen_token && last_seen_token->m_end.line != cursor.line()) {
+        if (last_seen_token && last_seen_token->m_end.line != cursor.line())
             break;
-        }
         if (identifier_string == "layout") {
             Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
                 if (!registration.is_derived_from(widget_class))
