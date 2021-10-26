@@ -16,7 +16,7 @@ while IFS= read -r FLAG; do
     # We simply search whether the CMakeLists.txt *ever* sets the flag.
     # There are (basically) no false positives, but there might be false negatives,
     # for example we intentionally don't check for commented-out lines here.
-    if ! grep -qP "set\(${FLAG}" Meta/CMake/all_the_debug_macros.cmake ; then
+    if ! grep -qF "set(${FLAG}" Meta/CMake/all_the_debug_macros.cmake ; then
         echo "'all_the_debug_macros.cmake' is missing ${FLAG}"
         MISSING_FLAGS=y
     fi
@@ -26,7 +26,7 @@ done < <(
         '*.h' \
         '*.in' \
         ':!:Kernel/FileSystem/ext2_fs.h' \
-    | xargs grep -P '(_DEBUG|DEBUG_)' \
+    | xargs grep -E '(_DEBUG|DEBUG_)' \
     | sed -re 's,^.*[^a-zA-Z0-9_]([a-zA-Z0-9_]*DEBUG[a-zA-Z0-9_]*).*$,\1,' \
     | sort \
     | uniq
