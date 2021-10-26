@@ -14,6 +14,20 @@
 #include <LibGUI/Margins.h>
 #include <LibGfx/Forward.h>
 
+namespace Core {
+namespace Registration {
+extern Core::ObjectClassRegistration registration_Layout;
+}
+}
+
+#define REGISTER_LAYOUT(namespace_, class_name)                                                                                                   \
+    namespace Core {                                                                                                                              \
+    namespace Registration {                                                                                                                      \
+    Core::ObjectClassRegistration registration_##class_name(                                                                                      \
+        #namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Layout); \
+    }                                                                                                                                             \
+    }
+
 namespace GUI {
 
 class Layout : public Core::Object {
