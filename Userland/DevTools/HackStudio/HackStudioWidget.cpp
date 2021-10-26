@@ -27,7 +27,6 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibConfig/Client.h>
-#include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>

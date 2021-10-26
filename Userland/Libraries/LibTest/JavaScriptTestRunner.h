@@ -16,7 +16,6 @@
 #include <AK/QuickSort.h>
 #include <AK/Result.h>
 #include <AK/Tuple.h>
-#include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibJS/Bytecode/Interpreter.h>
