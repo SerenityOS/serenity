@@ -5,7 +5,7 @@ crash - intentionally perform an illegal operation
 ## Synopsis
 
 ```**sh
-$ crash [options]
+$ /usr/Tests/Kernel/crash [options]
 ```
 
 ## Description
