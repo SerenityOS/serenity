@@ -60,7 +60,7 @@ jobs:
 
       # === PREPARE FOR BUILDING ===
 
-      - name: Lint (Phase 1/2)
+      - name: Lint (Phase 1/3)
         run: ${{ github.workspace }}/Meta/lint-ci.sh
       - name: Prepare useful stamps
         id: stamps
@@ -169,7 +169,14 @@ jobs:
         run: cmake --build .
       - name: Show ccache stats after build
         run: ccache -s
-      - name: Lint (Phase 2/2)
+      - name: Lint (Phase 2/3)
+        working-directory: ${{ github.workspace }}/Meta
+        # We can't run markdown checks before building Lagom, so this has to
+        # happen after the build. Lagom is only built on 'ALL_DEBUG', so we can
+        # only run it there.
+        run: ./check-markdown.sh
+        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
+      - name: Lint (Phase 3/3)
         working-directory: ${{ github.workspace }}/Meta
         run: ./check-symbols.sh
 
