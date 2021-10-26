@@ -217,7 +217,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 
         float chunk_width;
         if (do_wrap_lines) {
-            if (do_collapse && is_ascii_space(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
+            if (do_collapse && is_ascii_space(*chunk.view.begin()) && (line_boxes.last().is_empty_or_ends_in_whitespace() || line_boxes.last().ends_with_forced_line_break())) {
                 // This is a non-empty chunk that starts with collapsible whitespace.
                 // We are at either at the start of a new line, or after something that ended in whitespace,
                 // so we don't need to contribute our own whitespace to the line. Skip over it instead!
