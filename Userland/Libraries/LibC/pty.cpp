@@ -73,9 +73,6 @@ int openpty(int* amaster, int* aslave, char* name, const struct termios* termp, 
             return -1;
         }
     }
-
-    dbgln("openpty, master={}, slave={}, tty_name={}", *amaster, *aslave, tty_name);
-
     return 0;
 }
 
