@@ -57,6 +57,7 @@ struct NumberSystem {
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
     Vector<NumberFormat> currency_short_formats {};
+    NumberFormat percent_format {};
 };
 
 struct ListPatterns {
@@ -558,6 +559,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
         constexpr auto symbols_prefix = "symbols-numberSystem-"sv;
         constexpr auto decimal_formats_prefix = "decimalFormats-numberSystem-"sv;
         constexpr auto currency_formats_prefix = "currencyFormats-numberSystem-"sv;
+        constexpr auto percent_formats_prefix = "percentFormats-numberSystem-"sv;
 
         if (key.starts_with(symbols_prefix)) {
             auto system = key.substring(symbols_prefix.length());
@@ -587,6 +589,12 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
                 auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
                 number_system.currency_short_formats = parse_number_format(short_format.as_object());
             }
+        } else if (key.starts_with(percent_formats_prefix)) {
+            auto system = key.substring(decimal_formats_prefix.length());
+            auto& number_system = ensure_number_system(system);
+
+            auto format_object = value.as_object().get("standard"sv);
+            number_system.percent_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
         }
     });
 }
@@ -813,6 +821,7 @@ Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
 Optional<Key> key_from_string(StringView key);
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView numeric_symbol);
+Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 
@@ -910,6 +919,7 @@ struct NumberSystem {
     Span<NumberFormat const> decimal_long_formats {};
     Span<NumberFormat const> decimal_short_formats {};
     Span<NumberFormat const> currency_short_formats {};
+    NumberFormat percent_format {};
 };
 )~~~");
 
@@ -970,6 +980,13 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {
 )~~~");
     };
 
+    auto append_number_format = [&](auto const& number_format) {
+        generator.set("magnitude"sv, String::number(number_format.magnitude));
+        generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
+        generator.set("format"sv, String::number(number_format.format_index));
+        generator.append("{ @magnitude@, @plurality@, @format@ },");
+    };
+
     auto append_number_formats = [&](String name, auto const& number_formats) {
         generator.set("name"sv, move(name));
         generator.set("size"sv, String::number(number_formats.size()));
@@ -985,10 +1002,7 @@ static constexpr Array<NumberFormat, @size@> @name@ { {
             if (values_in_current_row++ > 0)
                 generator.append(" ");
 
-            generator.set("magnitude"sv, String::number(number_format.magnitude));
-            generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
-            generator.set("format"sv, String::number(number_format.format_index));
-            generator.append("{ @magnitude@, @plurality@, @format@ },");
+            append_number_format(number_format);
 
             if (values_in_current_row == max_values_per_row) {
                 values_in_current_row = 0;
@@ -1032,7 +1046,9 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
                 generator.append(" @index@,");
             }
 
-            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span() },");
+            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span(), ");
+            append_number_format(number_system.value.percent_format);
+            generator.append(" },");
         }
 
         generator.append(R"~~~(
@@ -1395,6 +1411,18 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         auto symbol_index = to_underlying(*symbol_value);
         return s_string_list[number_system->symbols[symbol_index]];
+    }
+
+    return {};
+}
+
+Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
+{
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+        switch (type) {
+        case StandardNumberFormatType::Percent:
+            return number_system->percent_format.to_unicode_number_format();
+        }
     }
 
     return {};
