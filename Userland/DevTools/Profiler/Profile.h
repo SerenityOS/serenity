@@ -29,6 +29,7 @@
 namespace Profiler {
 
 extern Optional<MappedObject> g_kernel_debuginfo_object;
+extern OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
