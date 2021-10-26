@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, thislooksfun <tlf@thislooks.fun>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
