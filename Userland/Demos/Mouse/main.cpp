@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    window->set_title("Mouse button demo");
+    window->set_title("Mouse demo");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(160, 155);
 
