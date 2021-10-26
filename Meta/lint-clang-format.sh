@@ -41,7 +41,7 @@ if (( ${#files[@]} )); then
         exit 1
     fi
 
-    if [ "$#" -gt "0" ] && [ "x--overwrite-inplace" = "x$1" ] ; then
+    if [ "$#" -gt "0" ] && [ "--overwrite-inplace" = "$1" ] ; then
         true # The only way to run this script.
     else
         # Note that this branch also covers --help, -h, -help, -?, etc.
