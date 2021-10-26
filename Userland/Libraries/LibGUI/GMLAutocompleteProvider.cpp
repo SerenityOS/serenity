@@ -145,10 +145,11 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         }
         auto registration = Core::ObjectClassRegistration::find(class_names.last());
         if (registration && registration->is_derived_from(widget_class)) {
-            auto instance = registration->construct();
-            for (auto& it : instance->properties()) {
-                if (it.key.starts_with(identifier_string))
-                    identifier_entries.empend(it.key, identifier_string.length());
+            if (auto instance = registration->construct()) {
+                for (auto& it : instance->properties()) {
+                    if (it.key.starts_with(identifier_string))
+                        identifier_entries.empend(it.key, identifier_string.length());
+                }
             }
         }
         if (can_have_declared_layout(class_names.last()) && "layout"sv.starts_with(identifier_string))
@@ -169,10 +170,11 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         if (!class_names.is_empty()) {
             auto registration = Core::ObjectClassRegistration::find(class_names.last());
             if (registration && registration->is_derived_from(widget_class)) {
-                auto instance = registration->construct();
-                for (auto& it : instance->properties()) {
-                    if (!it.value->is_readonly())
-                        identifier_entries.empend(it.key, 0u);
+                if (auto instance = registration->construct()) {
+                    for (auto& it : instance->properties()) {
+                        if (!it.value->is_readonly())
+                            identifier_entries.empend(it.key, 0u);
+                    }
                 }
             }
         }
