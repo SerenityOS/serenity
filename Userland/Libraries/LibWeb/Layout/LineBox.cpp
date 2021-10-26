@@ -5,8 +5,10 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/TypeCasts.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -61,9 +63,13 @@ bool LineBox::is_empty_or_ends_in_whitespace() const
 {
     if (m_fragments.is_empty())
         return true;
-    if (m_fragments.last().length() == 0)
-        return true;
+
     return m_fragments.last().ends_in_whitespace();
+}
+
+bool LineBox::ends_with_forced_line_break() const
+{
+    return is<BreakNode>(m_fragments.last().layout_node());
 }
 
 }
