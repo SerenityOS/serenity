@@ -29,12 +29,14 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     Vector<State> previous_states;
     bool should_push_state { true };
     GUI::GMLToken* last_seen_token { nullptr };
+    GUI::GMLToken* last_identifier_token { nullptr };
 
     for (auto& token : all_tokens) {
         auto handle_class_child = [&] {
             if (token.m_type == GUI::GMLToken::Type::Identifier) {
                 state = InIdentifier;
                 identifier_string = token.m_view;
+                last_identifier_token = &token;
             } else if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
                 previous_states.append(AfterClassName);
                 state = Free;
@@ -129,6 +131,17 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // TODO: Suggest braces?
             break;
         }
+
+        if (last_identifier_token && last_identifier_token->m_end.line == last_seen_token->m_end.line && identifier_string == "layout") {
+            Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+                if (&registration == &layout_class || !registration.is_derived_from(layout_class))
+                    return;
+                if (registration.class_name().starts_with(class_names.last()))
+                    identifier_entries.empend(registration.class_name(), class_names.last().length());
+            });
+            break;
+        }
+
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
             if (!registration.is_derived_from(widget_class))
                 return;
