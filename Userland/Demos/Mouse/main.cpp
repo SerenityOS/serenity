@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Path.h>
 #include <unistd.h>
@@ -70,12 +72,16 @@ public:
 
         painter.stroke_path(path, Color::Black, 1);
 
-        if (m_buttons & GUI::MouseButton::Left) {
+        auto primary_secondary_switched = GUI::WindowServerConnection::the().get_buttons_switched();
+        auto primary_pressed = m_buttons & GUI::MouseButton::Left;
+        auto secondary_pressed = m_buttons & GUI::MouseButton::Right;
+
+        if (primary_secondary_switched ? secondary_pressed : primary_pressed) {
             painter.fill_rect({ 31, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, Color::Blue);
         }
 
-        if (m_buttons & GUI::MouseButton::Right) {
+        if (primary_secondary_switched ? primary_pressed : secondary_pressed) {
             painter.fill_rect({ 96, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, Color::Blue);
         }
