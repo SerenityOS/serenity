@@ -131,6 +131,18 @@ String URLSearchParams::get(String const& name)
     return result->value;
 }
 
+// https://url.spec.whatwg.org/#dom-urlsearchparams-getall
+Vector<String> URLSearchParams::get_all(String const& name)
+{
+    // return the values of all name-value pairs whose name is name, in this’s list, in list order, and the empty sequence otherwise.
+    Vector<String> values;
+    for (auto& entry : m_list) {
+        if (entry.name == name)
+            values.append(entry.value);
+    }
+    return values;
+}
+
 bool URLSearchParams::has(String const& name)
 {
     // return true if there is a name-value pair whose name is name in this’s list, and false otherwise.
