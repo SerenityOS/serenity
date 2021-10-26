@@ -105,6 +105,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     }
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+    auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
 
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
     switch (state) {
@@ -190,10 +191,9 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         if (identifier_string == "layout") {
             Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-                if (!registration.is_derived_from(widget_class))
+                if (&registration == &layout_class || !registration.is_derived_from(layout_class))
                     return;
-                if (registration.class_name().contains("Layout"))
-                    class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+                class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
             });
         }
         break;
