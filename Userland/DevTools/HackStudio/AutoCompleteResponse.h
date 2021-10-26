@@ -22,6 +22,7 @@ inline bool encode(IPC::Encoder& encoder, const GUI::AutocompleteProvider::Entry
     encoder << (u64)response.partial_input_length;
     encoder << (u32)response.kind;
     encoder << (u32)response.language;
+    encoder << response.display_text;
     return true;
 }
 
@@ -34,7 +35,8 @@ inline bool decode(IPC::Decoder& decoder, GUI::AutocompleteProvider::Entry& resp
     bool ok = decoder.decode(response.completion)
         && decoder.decode(partial_input_length)
         && decoder.decode(kind)
-        && decoder.decode(language);
+        && decoder.decode(language)
+        && decoder.decode(response.display_text);
 
     if (ok) {
         response.kind = static_cast<GUI::AutocompleteProvider::CompletionKind>(kind);

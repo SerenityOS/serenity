@@ -37,6 +37,7 @@ public:
         size_t partial_input_length { 0 };
         CompletionKind kind { CompletionKind::Identifier };
         Language language { Language::Unspecified };
+        String display_text {};
     };
 
     struct ProjectLocation {

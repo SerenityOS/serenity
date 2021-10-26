@@ -33,6 +33,7 @@ public:
         __ModelRoleCustom = (int)GUI::ModelRole::Custom,
         PartialInputLength,
         Kind,
+        Completion,
     };
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
@@ -42,7 +43,10 @@ public:
         auto& suggestion = m_suggestions.at(index.row());
         if (role == GUI::ModelRole::Display) {
             if (index.column() == Column::Name) {
-                return suggestion.completion;
+                if (!suggestion.display_text.is_empty())
+                    return suggestion.display_text;
+                else
+                    return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
                 if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
@@ -66,6 +70,9 @@ public:
 
         if ((int)role == InternalRole::PartialInputLength)
             return (i64)suggestion.partial_input_length;
+
+        if ((int)role == InternalRole::Completion)
+            return suggestion.completion;
 
         return {};
     }
@@ -173,8 +180,8 @@ void AutocompleteBox::apply_suggestion()
     if (!selected_index.is_valid() || !m_suggestion_view->model()->is_within_range(selected_index))
         return;
 
-    auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutocompleteSuggestionModel::Column::Name);
-    auto suggestion = suggestion_index.data().to_string();
+    auto suggestion_index = m_suggestion_view->model()->index(selected_index.row());
+    auto suggestion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
     VERIFY(suggestion.length() >= partial_length);
