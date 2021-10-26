@@ -16,6 +16,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -56,6 +57,7 @@ public:
 
     Gfx::Palette palette() const;
     Gfx::IntRect screen_rect() const;
+    CSS::PreferredColorScheme preferred_color_scheme() const;
 
     bool is_same_origin_policy_enabled() const { return m_same_origin_policy_enabled; }
     void set_same_origin_policy_enabled(bool b) { m_same_origin_policy_enabled = b; }
@@ -74,6 +76,7 @@ class PageClient {
 public:
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
+    virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }
     virtual void page_did_change_title(const String&) { }
     virtual void page_did_start_loading(const AK::URL&) { }

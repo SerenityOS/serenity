@@ -40,6 +40,7 @@ public:
 
     AK::URL url() const;
 
+    void set_preferred_color_scheme(CSS::PreferredColorScheme);
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
     String selected_text() const;
@@ -65,6 +66,7 @@ private:
     // ^Web::PageClient
     virtual Gfx::Palette palette() const override { return GUI::AbstractScrollableWidget::palette(); }
     virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
+    virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) override;
     virtual void page_did_start_loading(const AK::URL&) override;
@@ -95,6 +97,7 @@ private:
     bool m_should_show_line_box_borders { false };
 
     NonnullOwnPtr<Page> m_page;
+    CSS::PreferredColorScheme m_preferred_color_scheme { CSS::PreferredColorScheme::Auto };
 };
 
 }

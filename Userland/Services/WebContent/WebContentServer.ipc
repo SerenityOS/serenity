@@ -1,6 +1,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 
 endpoint WebContentServer
 {
@@ -41,5 +42,6 @@ endpoint WebContentServer
     select_all() =|
 
     set_content_filters(Vector<String> filters) =|
+    set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
 
 }

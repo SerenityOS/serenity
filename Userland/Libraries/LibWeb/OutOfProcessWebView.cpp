@@ -489,4 +489,9 @@ void OutOfProcessWebView::set_content_filters(Vector<String> filters)
     client().async_set_content_filters(filters);
 }
 
+void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
+{
+    client().async_set_preferred_color_scheme(color_scheme);
+}
+
 }

@@ -29,6 +29,7 @@ public:
     void set_palette_impl(const Gfx::PaletteImpl&);
     void set_viewport_rect(const Gfx::IntRect&);
     void set_screen_rects(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; };
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
 
@@ -36,6 +37,7 @@ private:
     // ^PageClient
     virtual Gfx::Palette palette() const override;
     virtual Gfx::IntRect screen_rect() const override { return m_screen_rect; }
+    virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
@@ -75,6 +77,7 @@ private:
 
     RefPtr<Core::Timer> m_invalidation_coalescing_timer;
     Gfx::IntRect m_invalidation_rect;
+    Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 };
 
 }

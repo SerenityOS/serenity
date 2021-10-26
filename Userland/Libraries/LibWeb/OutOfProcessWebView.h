@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/WebViewHooks.h>
 
 namespace Web {
@@ -52,6 +53,7 @@ public:
     String dump_layout_tree();
 
     void set_content_filters(Vector<String>);
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id);

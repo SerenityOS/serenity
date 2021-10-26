@@ -10,6 +10,7 @@
 #include <LibIPC/ClientConnection.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
@@ -57,6 +58,7 @@ private:
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual void set_content_filters(Vector<String> const&) override;
+    virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
 
     virtual void js_console_input(String const&) override;
     virtual void run_javascript(String const&) override;

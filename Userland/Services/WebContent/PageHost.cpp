@@ -51,6 +51,13 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
     m_palette_impl = impl;
 }
 
+void PageHost::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
+{
+    m_preferred_color_scheme = color_scheme;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style();
+}
+
 Web::Layout::InitialContainingBlock* PageHost::layout_root()
 {
     auto* document = page().top_level_browsing_context().active_document();
