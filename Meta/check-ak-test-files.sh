@@ -9,7 +9,7 @@ MISSING_FILES=n
 
 while IFS= read -r FILENAME; do
     # Simply search whether the CMakeLists.txt *ever* mention the test files.
-    if ! grep -qP "${FILENAME}" Tests/AK/CMakeLists.txt ; then
+    if ! grep -qF "${FILENAME}" Tests/AK/CMakeLists.txt ; then
         echo "Tests/AK/CMakeLists.txt is either missing the test file ${FILENAME} or is not in the commit's staged changes"
         MISSING_FILES=y
     fi
