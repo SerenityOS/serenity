@@ -1,0 +1,67 @@
+--- fontconfig-2.13.94/src/fccompat.c	2021-10-24 21:16:27.503925061 -0700
++++ fontconfig-2.13.94/src/fccompat.c	2021-10-24 21:16:21.115917517 -0700
+@@ -184,54 +184,6 @@
+ {
+     int32_t result;
+ 
+-#if HAVE_RANDOM_R
+-    static struct random_data fcrandbuf;
+-    static char statebuf[256];
+-    static FcBool initialized = FcFalse;
+-#ifdef _AIX
+-    static char *retval;
+-    long res;
+-#endif
+-
+-    if (initialized != FcTrue)
+-    {
+-#ifdef _AIX
+-	initstate_r (time (NULL), statebuf, 256, &retval, &fcrandbuf);
+-#else
+-	initstate_r (time (NULL), statebuf, 256, &fcrandbuf);
+-#endif
+-	initialized = FcTrue;
+-    }
+-
+-#ifdef _AIX
+-    random_r (&res, &fcrandbuf);
+-    result = (int32_t)res;
+-#else
+-    random_r (&fcrandbuf, &result);
+-#endif
+-#elif HAVE_RANDOM
+-    static char statebuf[256];
+-    char *state;
+-    static FcBool initialized = FcFalse;
+-
+-    if (initialized != FcTrue)
+-    {
+-	state = initstate (time (NULL), statebuf, 256);
+-	initialized = FcTrue;
+-    }
+-    else
+-	state = setstate (statebuf);
+-
+-    result = random ();
+-
+-    setstate (state);
+-#elif HAVE_LRAND48
+-    result = lrand48 ();
+-#elif HAVE_RAND_R
+-    static unsigned int seed = time (NULL);
+-
+-    result = rand_r (&seed);
+-#elif HAVE_RAND
+     static FcBool initialized = FcFalse;
+ 
+     if (initialized != FcTrue)
+@@ -240,9 +192,6 @@
+ 	initialized = FcTrue;
+     }
+     result = rand ();
+-#else
+-# error no random number generator function available.
+-#endif
+ 
+     return result;
+ }
