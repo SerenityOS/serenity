@@ -611,7 +611,7 @@ u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
     // 3. Assert: day is an integer.
 
     // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's day of the week according to ISO-8601.
+    // 5. Return date's day of the week according to ISO-8601 as an integer.
     // NOTE: Implemented based on https://cs.uwaterloo.ca/~alopez-o/math-faq/node73.html
     auto normalized_month = month + (month < 3 ? 10 : -2);
     auto normalized_year = year - (month < 3 ? 1 : 0);
@@ -631,7 +631,7 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     // 3. Assert: day is an integer.
 
     // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's ordinal date in the year according to ISO-8601.
+    // 5. Return date's ordinal date in the year according to ISO-8601 as an integer.
     u16 days = day;
     for (u8 i = month - 1; i > 0; --i)
         days += iso_days_in_month(year, i);
@@ -646,7 +646,7 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
     // 3. Assert: day is an integer.
 
     // 4. Let date be the date given by year, month, and day.
-    // 5. Return date's week number according to ISO-8601.
+    // 5. Return date's week number according to ISO-8601 as an integer.
     auto day_of_year = to_iso_day_of_year(year, month, day);
     auto day_of_week = to_iso_day_of_week(year, month, day);
     auto week = (day_of_year - day_of_week + 10) / 7;

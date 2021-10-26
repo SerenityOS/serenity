@@ -618,6 +618,9 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
 // 13.29 ConstrainToRange ( x, minimum, maximum ), https://tc39.es/proposal-temporal/#sec-temporal-constraintorange
 double constrain_to_range(double x, double minimum, double maximum)
 {
+    // 1. Assert: x, minimum and maximum are mathematical values.
+
+    // 2. Return min(max(x, minimum), maximum).
     return min(max(x, minimum), maximum);
 }
 
