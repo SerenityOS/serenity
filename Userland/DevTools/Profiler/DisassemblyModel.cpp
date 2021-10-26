@@ -38,19 +38,12 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
     , m_node(node)
 {
-    OwnPtr<ELF::Image> kernel_elf;
     const ELF::Image* elf;
     FlatPtr base_address = 0;
-    auto maybe_kernel_base = Symbolication::kernel_base();
-    if (maybe_kernel_base.has_value() && m_node.address() >= maybe_kernel_base.value()) {
-        if (!m_kernel_file) {
-            auto file_or_error = MappedFile::map("/boot/Kernel.debug");
-            if (file_or_error.is_error())
-                return;
-            m_kernel_file = file_or_error.release_value();
-        }
-        kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
-        elf = kernel_elf.ptr();
+    if (auto maybe_kernel_base = Symbolication::kernel_base(); maybe_kernel_base.has_value() && m_node.address() >= *maybe_kernel_base) {
+        if (!g_kernel_debuginfo_object.has_value())
+            return;
+        elf = &g_kernel_debuginfo_object->elf;
         base_address = maybe_kernel_base.value();
     } else {
         auto& process = node.process();
