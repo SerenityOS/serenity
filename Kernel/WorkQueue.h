@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
@@ -51,8 +53,7 @@ private:
 
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;
-    IntrusiveList<&WorkItem::m_node> m_items;
-    Spinlock m_lock;
+    SpinlockProtected<IntrusiveList<&WorkItem::m_node>> m_items;
 };
 
 }

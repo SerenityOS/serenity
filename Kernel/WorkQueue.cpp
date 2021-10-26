@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/WaitQueue.h>
@@ -29,11 +29,10 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
         for (;;) {
             WorkItem* item;
             bool have_more;
-            {
-                SpinlockLocker lock(m_lock);
-                item = m_items.take_first();
-                have_more = !m_items.is_empty();
-            }
+            m_items.with([&](auto& items) {
+                item = items.take_first();
+                have_more = !items.is_empty();
+            });
             if (item) {
                 item->function();
                 delete item;
@@ -50,10 +49,9 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
 
 void WorkQueue::do_queue(WorkItem* item)
 {
-    {
-        SpinlockLocker lock(m_lock);
-        m_items.append(*item);
-    }
+    m_items.with([&](auto& items) {
+        items.append(*item);
+    });
     m_wait_queue.wake_one();
 }
 
