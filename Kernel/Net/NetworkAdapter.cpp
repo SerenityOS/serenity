@@ -47,7 +47,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_packet({ (const u8*)eth, size_in_bytes });
 }
 
-void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 ttl)
+void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 type_of_service, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     VERIFY(ipv4_packet_size <= mtu());
@@ -62,6 +62,7 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     auto& ipv4 = *(IPv4Packet*)eth.payload();
     ipv4.set_version(4);
     ipv4.set_internet_header_length(5);
+    ipv4.set_dscp_and_ecn(type_of_service);
     ipv4.set_source(source_ipv4);
     ipv4.set_destination(destination_ipv4);
     ipv4.set_protocol((u8)protocol);

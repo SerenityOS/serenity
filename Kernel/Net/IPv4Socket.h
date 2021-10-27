@@ -63,6 +63,7 @@ public:
 
     String absolute_path(const OpenFileDescription& description) const override;
 
+    u8 type_of_service() const { return m_type_of_service; }
     u8 ttl() const { return m_ttl; }
 
     enum class BufferMode {
@@ -123,6 +124,7 @@ private:
 
     u32 m_bytes_received { 0 };
 
+    u8 m_type_of_service { IPTOS_LOWDELAY };
     u8 m_ttl { 64 };
 
     bool m_can_read { false };

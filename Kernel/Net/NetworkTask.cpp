@@ -258,7 +258,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             dbgln("Could not allocate packet buffer while sending ICMP packet");
             return;
         }
-        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 64);
+        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
         memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
         auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
         response.header.set_type(ICMPType::EchoReply);
@@ -351,7 +351,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
         return;
     routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
         routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
-        buffer_size - ipv4_payload_offset, 64);
+        buffer_size - ipv4_payload_offset, 0, 64);
 
     auto& rst_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
     rst_packet = {};
