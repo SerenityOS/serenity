@@ -670,7 +670,8 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         if (!(path.ends_with(".h") || Core::File::is_directory(LexicalPath::join(full_dir, path).string())))
             continue;
         if (path.starts_with(partial_basename)) {
-            options.append({ path, partial_basename.length(), include_type, GUI::AutocompleteProvider::Language::Cpp });
+            auto completion = include_type == GUI::AutocompleteProvider::CompletionKind::ProjectInclude ? String::formatted("<{}>", path) : String::formatted("\"{}\"", path);
+            options.append({ completion, partial_basename.length() + 1, include_type, GUI::AutocompleteProvider::Language::Cpp, path });
         }
     }
 

@@ -181,10 +181,10 @@ void AutocompleteBox::apply_suggestion()
         return;
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row());
-    auto suggestion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_string();
+    auto completion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
-    VERIFY(suggestion.length() >= partial_length);
+    VERIFY(completion.length() >= partial_length);
     if (!m_editor->has_selection()) {
         auto cursor = m_editor->cursor();
         VERIFY(m_editor->cursor().column() >= partial_length);
@@ -193,16 +193,6 @@ void AutocompleteBox::apply_suggestion()
         auto end = cursor;
         m_editor->delete_text_range(TextRange(start, end));
     }
-
-    auto completion_kind = (GUI::AutocompleteProvider::CompletionKind)suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Kind).as_u32();
-
-    String completion;
-    if (suggestion.ends_with(".h") && completion_kind == GUI::AutocompleteProvider::CompletionKind::SystemInclude)
-        completion = String::formatted("{}{}", suggestion, ">");
-    else if (suggestion.ends_with(".h") && completion_kind == GUI::AutocompleteProvider::CompletionKind::ProjectInclude)
-        completion = String::formatted("{}{}", suggestion, "\"");
-    else
-        completion = suggestion;
 
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }
