@@ -202,8 +202,15 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                 break;
             }
         }
-        if (!class_names.is_empty())
+        if (!class_names.is_empty()) {
             register_class_properties_matching_pattern("*", 0u);
+
+            auto parent_registration = Core::ObjectClassRegistration::find(class_names.last());
+            if (parent_registration && parent_registration->is_derived_from(layout_class)) {
+                // Layouts can't have child classes, so why suggest them?
+                break;
+            }
+        }
 
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
             if (!registration.is_derived_from(widget_class))
