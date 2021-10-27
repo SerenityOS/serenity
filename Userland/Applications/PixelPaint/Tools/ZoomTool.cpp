@@ -23,10 +23,10 @@ ZoomTool::~ZoomTool()
 void ZoomTool::on_mousedown(Layer*, MouseEvent& event)
 {
     auto& raw_event = event.raw_event();
-    if (raw_event.button() != GUI::MouseButton::Left && raw_event.button() != GUI::MouseButton::Right)
+    if (raw_event.button() != GUI::MouseButton::Primary && raw_event.button() != GUI::MouseButton::Secondary)
         return;
 
-    auto scale_factor = (raw_event.button() == GUI::MouseButton::Left) ? m_sensitivity : -m_sensitivity;
+    auto scale_factor = (raw_event.button() == GUI::MouseButton::Primary) ? m_sensitivity : -m_sensitivity;
     m_editor->scale_centered_on_position(raw_event.position(), scale_factor);
 }
 

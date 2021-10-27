@@ -195,7 +195,7 @@ void HexEditor::set_content_length(int length)
 
 void HexEditor::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left) {
+    if (event.button() != GUI::MouseButton::Primary) {
         return;
     }
 
@@ -308,7 +308,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
 
 void HexEditor::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         if (m_in_drag_select) {
             if (m_selection_end < m_selection_start) {
                 // lets flip these around

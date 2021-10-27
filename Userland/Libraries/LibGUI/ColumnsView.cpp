@@ -246,7 +246,7 @@ void ColumnsView::mousedown_event(MouseEvent& event)
     if (!model())
         return;
 
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     auto index = index_at_event_position(event.position());

@@ -29,7 +29,7 @@ RectangleSelectTool::~RectangleSelectTool()
 void RectangleSelectTool::on_mousedown(Layer*, MouseEvent& event)
 {
     auto& image_event = event.image_event();
-    if (image_event.button() != GUI::MouseButton::Left)
+    if (image_event.button() != GUI::MouseButton::Primary)
         return;
 
     m_selecting = true;
@@ -61,7 +61,7 @@ void RectangleSelectTool::on_mousemove(Layer*, MouseEvent& event)
 void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
 {
     auto& image_event = event.image_event();
-    if (!m_selecting || image_event.button() != GUI::MouseButton::Left)
+    if (!m_selecting || image_event.button() != GUI::MouseButton::Primary)
         return;
 
     m_selecting = false;

@@ -283,7 +283,7 @@ void Mandelbrot::paint_event(GUI::PaintEvent& event)
 
 void Mandelbrot::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         if (!m_dragging) {
             m_selection_start = event.position();
             m_selection_end = event.position();
@@ -328,7 +328,7 @@ void Mandelbrot::mousemove_event(GUI::MouseEvent& event)
 
 void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         auto selection = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
         if (selection.width() > 0 && selection.height() > 0)
             m_set.zoom(selection);
@@ -337,7 +337,7 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
     } else if (event.button() == GUI::MouseButton::Middle) {
         m_panning = false;
         update();
-    } else if (event.button() == GUI::MouseButton::Right) {
+    } else if (event.button() == GUI::MouseButton::Secondary) {
         reset();
     }
 

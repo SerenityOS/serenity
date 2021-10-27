@@ -132,7 +132,7 @@ void GLContextWidget::resize_event(GUI::ResizeEvent& event)
 
 void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() == GUI::MouseButton::Left) {
+    if (event.buttons() == GUI::MouseButton::Primary) {
         int delta_x = m_last_mouse.x() - event.x();
         int delta_y = m_last_mouse.y() - event.y();
 

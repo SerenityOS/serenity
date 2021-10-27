@@ -95,7 +95,7 @@ String PlaylistModel::column_name(int column) const
 void PlaylistTableView::doubleclick_event(GUI::MouseEvent& event)
 {
     AbstractView::doubleclick_event(event);
-    if (event.button() == GUI::Left) {
+    if (event.button() == GUI::Primary) {
         if (on_doubleclick)
             on_doubleclick(event.position());
     }

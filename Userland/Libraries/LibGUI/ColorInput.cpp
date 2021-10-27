@@ -59,7 +59,7 @@ void ColorInput::set_color(Color color)
 
 void ColorInput::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left && color_rect().contains(event.position())) {
+    if (event.button() == MouseButton::Primary && color_rect().contains(event.position())) {
         m_may_be_color_rect_click = true;
         return;
     }
@@ -69,7 +69,7 @@ void ColorInput::mousedown_event(MouseEvent& event)
 
 void ColorInput::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         bool is_color_rect_click = m_may_be_color_rect_click && color_rect().contains(event.position());
         m_may_be_color_rect_click = false;
         if (is_color_rect_click) {

@@ -416,7 +416,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
         if (!button_rect.contains(event.position()))
             continue;
 
-        if (event.button() == MouseButton::Left) {
+        if (event.button() == MouseButton::Primary) {
             if (m_close_button_enabled && close_button_rect.contains(event.position())) {
                 m_pressed_close_button_index = i;
                 update_bar();
@@ -437,7 +437,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
 
 void TabWidget::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     if (m_dragging_active_tab) {

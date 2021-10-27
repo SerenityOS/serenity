@@ -54,7 +54,7 @@ void LinkLabel::mousemove_event(MouseEvent& event)
 
 void LinkLabel::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     Label::mousedown_event(event);

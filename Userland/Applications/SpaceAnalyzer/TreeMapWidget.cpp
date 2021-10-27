@@ -299,7 +299,7 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
 
 void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     const TreeMapNode* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {

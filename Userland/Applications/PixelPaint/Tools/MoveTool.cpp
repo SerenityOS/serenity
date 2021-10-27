@@ -24,7 +24,7 @@ MoveTool::~MoveTool()
 
 void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
-    if (event.image_event().button() == GUI::MouseButton::Right && !m_is_panning) {
+    if (event.image_event().button() == GUI::MouseButton::Secondary && !m_is_panning) {
         m_is_panning = true;
         m_event_origin = event.raw_event().position();
         m_saved_pan_origin = m_editor->pan_origin();
@@ -37,7 +37,7 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 
     auto& layer_event = event.layer_event();
     auto& image_event = event.image_event();
-    if (layer_event.button() != GUI::MouseButton::Left)
+    if (layer_event.button() != GUI::MouseButton::Primary)
         return;
     if (!layer->rect().contains(layer_event.position()))
         return;
@@ -70,7 +70,7 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
 
 void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
 {
-    if (event.image_event().button() == GUI::MouseButton::Right && m_is_panning) {
+    if (event.image_event().button() == GUI::MouseButton::Secondary && m_is_panning) {
         m_is_panning = false;
         m_editor->set_override_cursor(cursor());
         return;
@@ -80,7 +80,7 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
-    if (layer_event.button() != GUI::MouseButton::Left)
+    if (layer_event.button() != GUI::MouseButton::Primary)
         return;
     m_layer_being_moved = nullptr;
     m_editor->did_complete_action();

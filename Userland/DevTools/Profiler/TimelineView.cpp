@@ -31,7 +31,7 @@ u64 TimelineView::timestamp_at_x(int x) const
 
 void TimelineView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     set_selecting(true);
@@ -55,7 +55,7 @@ void TimelineView::mousemove_event(GUI::MouseEvent& event)
 
 void TimelineView::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     set_selecting(false);

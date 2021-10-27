@@ -38,9 +38,9 @@ void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!color.alpha())
         return;
 
-    if (event.layer_event().button() == GUI::MouseButton::Left)
+    if (event.layer_event().button() == GUI::MouseButton::Primary)
         m_editor->set_primary_color(color);
-    else if (event.layer_event().button() == GUI::MouseButton::Right)
+    else if (event.layer_event().button() == GUI::MouseButton::Secondary)
         m_editor->set_secondary_color(color);
 }
 

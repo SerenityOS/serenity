@@ -56,7 +56,7 @@ void GuideTool::on_mousedown(Layer*, MouseEvent& event)
 
     auto& image_event = event.image_event();
 
-    if (image_event.button() != GUI::MouseButton::Left)
+    if (image_event.button() != GUI::MouseButton::Primary)
         return;
 
     m_editor->set_guide_visibility(true);

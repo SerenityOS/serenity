@@ -79,7 +79,7 @@ void TreeView::doubleclick_event(MouseEvent& event)
     if (!index.is_valid())
         return;
 
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         set_cursor(index, SelectionUpdate::Set);
 
         if (model.row_count(index))

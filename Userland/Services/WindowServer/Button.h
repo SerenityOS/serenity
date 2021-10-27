@@ -35,7 +35,7 @@ public:
     void on_mouse_event(const MouseEvent&);
 
     Function<void(Button&)> on_click;
-    Function<void(Button&)> on_right_click;
+    Function<void(Button&)> on_secondary_click;
     Function<void(Button&)> on_middle_click;
 
     bool is_visible() const { return m_visible; }

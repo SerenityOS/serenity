@@ -728,7 +728,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
 
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     if (!m_human_can_play)

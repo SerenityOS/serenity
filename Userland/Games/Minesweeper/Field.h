@@ -61,7 +61,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void on_square_clicked(Square&);
-    void on_square_right_clicked(Square&);
+    void on_square_secondary_clicked(Square&);
     void on_square_middle_clicked(Square&);
     void on_square_chorded(Square&);
     void game_over();

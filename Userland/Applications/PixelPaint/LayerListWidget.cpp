@@ -146,7 +146,7 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (!m_image)
         return;
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
@@ -201,7 +201,7 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
 {
     if (!m_image)
         return;
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     if (!m_moving_gadget_index.has_value())
         return;

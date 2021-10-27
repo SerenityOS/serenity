@@ -449,8 +449,8 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
         auto message = make<MouseEvent>(buttons & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, buttons, button, m_modifiers);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     };
-    post_mousedown_or_mouseup_if_needed(MouseButton::Left);
-    post_mousedown_or_mouseup_if_needed(MouseButton::Right);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Primary);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Secondary);
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     post_mousedown_or_mouseup_if_needed(MouseButton::Back);
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);

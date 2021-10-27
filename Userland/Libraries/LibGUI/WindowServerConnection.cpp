@@ -212,9 +212,9 @@ static MouseButton to_mouse_button(u32 button)
     case 0:
         return MouseButton::None;
     case 1:
-        return MouseButton::Left;
+        return MouseButton::Primary;
     case 2:
-        return MouseButton::Right;
+        return MouseButton::Secondary;
     case 4:
         return MouseButton::Middle;
     case 8:

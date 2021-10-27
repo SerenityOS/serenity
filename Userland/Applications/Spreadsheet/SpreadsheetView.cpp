@@ -81,7 +81,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         sheet.disable_updates();
         ScopeGuard sheet_update_enabler { [&] { sheet.enable_updates(); } };
 
-        auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Left);
+        auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
         if (m_is_dragging_for_copy) {
             set_override_cursor(Gfx::StandardCursor::Crosshair);
             m_should_intercept_drag = false;

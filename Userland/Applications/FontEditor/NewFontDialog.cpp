@@ -93,13 +93,13 @@ private:
     }
     virtual void mousemove_event(MouseEvent& event) override
     {
-        if (event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right))
+        if (event.buttons() & (GUI::MouseButton::Primary | GUI::MouseButton::Secondary))
             draw_at_mouse(event);
     }
     void draw_at_mouse(const MouseEvent& event)
     {
-        bool set = event.buttons() & MouseButton::Left;
-        bool unset = event.buttons() & MouseButton::Right;
+        bool set = event.buttons() & MouseButton::Primary;
+        bool unset = event.buttons() & MouseButton::Secondary;
         if (!(set ^ unset))
             return;
         int x = (event.x() - 1) / m_scale;

@@ -700,7 +700,7 @@ bool WindowFrame::handle_titlebar_icon_mouse_event(MouseEvent const& event)
 {
     auto& wm = WindowManager::the();
 
-    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
+    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Primary || event.button() == MouseButton::Secondary)) {
         // Manually start a potential double click. Since we're opening
         // a menu, we will only receive the MouseDown event, so we
         // need to record that fact. If the user subsequently clicks
@@ -714,7 +714,7 @@ bool WindowFrame::handle_titlebar_icon_mouse_event(MouseEvent const& event)
 
         m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
         return true;
-    } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+    } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
         // Since the MouseDown event opened a menu, another MouseUp
         // from the second click outside the menu wouldn't be considered
         // a double click, so let's manually check if it would otherwise
@@ -743,12 +743,12 @@ void WindowFrame::handle_titlebar_mouse_event(MouseEvent const& event)
     }
 
     if (event.type() == Event::MouseDown) {
-        if ((m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) && event.button() == MouseButton::Right) {
+        if ((m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) && event.button() == MouseButton::Secondary) {
             auto default_action = m_window.is_maximized() ? WindowMenuDefaultAction::Restore : WindowMenuDefaultAction::Maximize;
             m_window.popup_window_menu(event.position().translated(rect().location()), default_action);
             return;
         }
-        if (m_window.is_movable() && event.button() == MouseButton::Left)
+        if (m_window.is_movable() && event.button() == MouseButton::Primary)
             wm.start_window_move(m_window, event.translated(rect().location()));
     }
 }
@@ -812,7 +812,7 @@ void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
         return;
     }
 
-    if (event.type() == Event::MouseDown && event.button() == MouseButton::Left)
+    if (event.type() == Event::MouseDown && event.button() == MouseButton::Primary)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
 
@@ -851,7 +851,7 @@ void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
 {
     auto menubar_rect = this->menubar_rect();
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove && &m_window == WindowManager::the().window_with_active_menu();
-    bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
+    bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Primary;
     bool should_open_menu = &menu != MenuManager::the().current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
     bool should_close_menu = &menu == MenuManager::the().current_menu() && is_mousedown_with_left_button;
 

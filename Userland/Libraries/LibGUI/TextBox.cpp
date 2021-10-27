@@ -103,7 +103,7 @@ void UrlBox::mousedown_event(GUI::MouseEvent& event)
     if (is_displayonly())
         return;
 
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     if (is_focus_transition()) {

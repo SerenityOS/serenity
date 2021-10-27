@@ -122,7 +122,7 @@ void Tray::mousemove_event(GUI::MouseEvent& event)
 
 void Tray::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     auto* pressed_item = item_at(event.position());
@@ -137,7 +137,7 @@ void Tray::mousedown_event(GUI::MouseEvent& event)
 
 void Tray::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     if (auto* pressed_item = item_at(event.position()); pressed_item && m_pressed_item_index == pressed_item->index) {

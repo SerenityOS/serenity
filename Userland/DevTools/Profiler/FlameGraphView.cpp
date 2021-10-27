@@ -88,7 +88,7 @@ void FlameGraphView::mousemove_event(GUI::MouseEvent& event)
 
 void FlameGraphView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     if (!m_hovered_bar)
