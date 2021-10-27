@@ -75,7 +75,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
     auto containing_token = document.parser().token_at(position);
 
     if (containing_token.has_value() && containing_token->type() == Token::Type::IncludePath) {
-        auto results = try_autocomplete_include(document, containing_token.value());
+        auto results = try_autocomplete_include(document, containing_token.value(), position);
         if (results.has_value())
             return results.value();
     }
@@ -637,7 +637,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_node(const ASTNode& node) co
     return parent_scope;
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_include(const DocumentData&, Token include_path_token)
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_include(const DocumentData&, Token include_path_token, Cpp::Position const& cursor_position) const
 {
     VERIFY(include_path_token.type() == Token::Type::IncludePath);
     auto partial_include = include_path_token.text().trim_whitespace();
@@ -648,12 +648,25 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     } include_type { Project };
 
     String include_root;
+    bool already_has_suffix = false;
     if (partial_include.starts_with("<")) {
         include_root = "/usr/include/";
         include_type = System;
+        if (partial_include.ends_with(">")) {
+            already_has_suffix = true;
+            partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();
+        }
     } else if (partial_include.starts_with("\"")) {
         include_root = filedb().project_root();
+        if (partial_include.length() > 1 && partial_include.ends_with("\"")) {
+            already_has_suffix = true;
+            partial_include = partial_include.substring_view(0, partial_include.length() - 1).trim_whitespace();
+        }
     } else
+        return {};
+
+    // The cursor is past the end of the <> or "", and so should not trigger autocomplete.
+    if (already_has_suffix && include_path_token.end() <= cursor_position)
         return {};
 
     auto last_slash = partial_include.find_last('/');
@@ -674,7 +687,11 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         if (!(path.ends_with(".h") || Core::File::is_directory(LexicalPath::join(full_dir, path).string())))
             continue;
         if (path.starts_with(partial_basename)) {
-            auto completion = include_type == System ? String::formatted("<{}>", path) : String::formatted("\"{}\"", path);
+            // FIXME: Place the cursor after the trailing > or ", even if it was
+            //        already typed.
+            auto prefix = include_type == System ? "<" : "\"";
+            auto suffix = include_type == System ? ">" : "\"";
+            auto completion = String::formatted("{}{}{}", prefix, path, already_has_suffix ? "" : suffix);
             options.append({ completion, partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path });
         }
     }

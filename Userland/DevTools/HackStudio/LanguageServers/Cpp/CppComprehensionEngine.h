@@ -129,7 +129,7 @@ private:
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(const DocumentData&, Token include_path_token);
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(const DocumentData&, Token include_path_token, Cpp::Position const& cursor_position) const;
     static bool is_symbol_available(const Symbol&, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope);
     Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall&, size_t argument_index);
 
