@@ -13,8 +13,10 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
@@ -53,6 +55,24 @@ public:
     {
         if (role == GUI::ModelRole::Display)
             return Gfx::to_string(static_cast<Gfx::MetricRole>(m_data[(size_t)index.row()]));
+        if (role == GUI::ModelRole::Custom)
+            return m_data[(size_t)index.row()];
+
+        return ItemListModel::data(index, role);
+    }
+};
+
+class PathRoleModel final : public GUI::ItemListModel<Gfx::PathRole> {
+public:
+    explicit PathRoleModel(Vector<Gfx::PathRole> const& data)
+        : ItemListModel<Gfx::PathRole>(data)
+    {
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::Display)
+            return Gfx::to_string(static_cast<Gfx::PathRole>(m_data[(size_t)index.row()]));
         if (role == GUI::ModelRole::Custom)
             return m_data[(size_t)index.row()];
 
@@ -124,6 +144,11 @@ int main(int argc, char** argv)
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
 
+    Vector<Gfx::PathRole> path_roles;
+#define __ENUMERATE_PATH_ROLE(role) path_roles.append(Gfx::PathRole::role);
+    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
+
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.load_from_gml(theme_editor_gml);
 
@@ -133,6 +158,9 @@ int main(int argc, char** argv)
     auto& color_input = *main_widget.find_descendant_of_type_named<GUI::ColorInput>("color_input");
     auto& metric_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
     auto& metric_input = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("metric_input");
+    auto& path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path_combo_box");
+    auto& path_input = *main_widget.find_descendant_of_type_named<GUI::TextBox>("path_input");
+    auto& path_picker_button = *main_widget.find_descendant_of_type_named<GUI::Button>("path_picker_button");
 
     color_combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
@@ -164,6 +192,32 @@ int main(int argc, char** argv)
     };
     metric_input.set_value(startup_preview_palette.metric(Gfx::MetricRole::TitleButtonHeight), GUI::AllowCallback::No);
 
+    path_combo_box.set_model(adopt_ref(*new PathRoleModel(path_roles)));
+    path_combo_box.on_change = [&](auto&, auto& index) {
+        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_path_role();
+        path_input.set_text(preview_widget.preview_palette().path(role));
+    };
+    path_combo_box.set_selected_index((size_t)Gfx::PathRole::TitleButtonIcons - 1);
+
+    path_input.on_change = [&] {
+        auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
+        auto preview_palette = preview_widget.preview_palette();
+        preview_palette.set_path(role, path_input.text());
+        preview_widget.set_preview_palette(preview_palette);
+    };
+    path_input.set_text(startup_preview_palette.path(Gfx::PathRole::TitleButtonIcons));
+
+    path_picker_button.on_click = [&](auto) {
+        // FIXME: Open at the path_input location. Right now that's panicking the kernel though! :^(
+        auto role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
+        bool open_folder = (role == Gfx::PathRole::TitleButtonIcons);
+        auto window_title = String::formatted(open_folder ? "Select {} folder" : "Select {} file", path_combo_box.text());
+        auto result = GUI::FilePicker::get_open_filepath(window, window_title, "/res/icons", open_folder);
+        if (!result.has_value())
+            return;
+        path_input.set_text(*result);
+    };
+
     auto& file_menu = window->add_menu("&File");
 
     auto update_window_title = [&] {
@@ -179,6 +233,9 @@ int main(int argc, char** argv)
 
         auto selected_metric_role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
         metric_input.set_value(preview_widget.preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
+
+        auto selected_path_role = path_combo_box.model()->index(path_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_path_role();
+        path_input.set_text(preview_widget.preview_palette().path(selected_path_role));
     };
 
     auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
@@ -197,10 +254,9 @@ int main(int argc, char** argv)
             theme->write_num_entry("Metrics", to_string(role), preview_widget.preview_palette().metric(role));
         }
 
-#define __ENUMERATE_PATH_ROLE(role) \
-    theme->write_entry("Paths", #role, preview_widget.preview_palette().path(Gfx::PathRole::role));
-        ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
-#undef __ENUMERATE_PATH_ROLE
+        for (auto role : path_roles) {
+            theme->write_entry("Paths", to_string(role), preview_widget.preview_palette().path(role));
+        }
 
         theme->sync();
     };
@@ -233,7 +289,7 @@ int main(int argc, char** argv)
 
     update_window_title();
 
-    window->resize(480, 460);
+    window->resize(480, 500);
     window->set_resizable(false);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
