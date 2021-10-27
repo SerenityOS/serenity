@@ -104,6 +104,7 @@ public:
     virtual bool is_initial_containing_block_box() const { return false; }
     virtual bool is_svg_box() const { return false; }
     virtual bool is_svg_path_box() const { return false; }
+    virtual bool is_label() const { return false; }
 
     template<typename T>
     bool fast_is() const = delete;
