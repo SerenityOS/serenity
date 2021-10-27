@@ -143,6 +143,22 @@ enum class MetricRole {
         __Count,
 };
 
+inline const char* to_string(MetricRole role)
+{
+    switch (role) {
+    case MetricRole::NoRole:
+        return "NoRole";
+#undef __ENUMERATE_METRIC_ROLE
+#define __ENUMERATE_METRIC_ROLE(role) \
+    case MetricRole::role:            \
+        return #role;
+        ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 enum class PathRole {
     NoRole,
 
@@ -153,6 +169,22 @@ enum class PathRole {
 
         __Count,
 };
+
+inline const char* to_string(PathRole role)
+{
+    switch (role) {
+    case PathRole::NoRole:
+        return "NoRole";
+#undef __ENUMERATE_PATH_ROLE
+#define __ENUMERATE_PATH_ROLE(role) \
+    case PathRole::role:            \
+        return #role;
+        ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#undef __ENUMERATE_PATH_ROLE
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 struct SystemTheme {
     RGBA32 color[(int)ColorRole::__Count];
