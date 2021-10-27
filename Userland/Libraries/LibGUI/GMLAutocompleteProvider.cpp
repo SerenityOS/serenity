@@ -110,6 +110,17 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
     auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout");
 
+    // FIXME: Can this be done without a StringBuilder?
+    auto make_fuzzy = [](StringView str) {
+        auto fuzzy_str_builder = StringBuilder(str.length() * 2 + 1);
+        fuzzy_str_builder.append('*');
+        for (auto character : str) {
+            fuzzy_str_builder.append(character);
+            fuzzy_str_builder.append('*');
+        }
+        return fuzzy_str_builder.build();
+    };
+
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
     switch (state) {
     case Free:
@@ -124,7 +135,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
         });
         break;
-    case InClassName:
+    case InClassName: {
         if (class_names.is_empty())
             break;
         if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
@@ -133,11 +144,12 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         }
 
+        auto fuzzy_class = make_fuzzy(class_names.last());
         if (last_identifier_token && last_identifier_token->m_end.line == last_seen_token->m_end.line && identifier_string == "layout") {
             Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
                 if (&registration == &layout_class || !registration.is_derived_from(layout_class))
                     return;
-                if (registration.class_name().starts_with(class_names.last()))
+                if (registration.class_name().matches(fuzzy_class))
                     identifier_entries.empend(registration.class_name(), class_names.last().length());
             });
             break;
@@ -146,10 +158,11 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
             if (!registration.is_derived_from(widget_class))
                 return;
-            if (registration.class_name().starts_with(class_names.last()))
+            if (registration.class_name().matches(fuzzy_class))
                 identifier_entries.empend(registration.class_name(), class_names.last().length());
         });
         break;
+    }
     case InIdentifier: {
         if (class_names.is_empty())
             break;
@@ -158,16 +171,17 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // TODO: Maybe suggest a colon?
             break;
         }
+        auto fuzzy_identifier_string = make_fuzzy(identifier_string);
         auto registration = Core::ObjectClassRegistration::find(class_names.last());
         if (registration && (registration->is_derived_from(widget_class) || registration->is_derived_from(layout_class))) {
             if (auto instance = registration->construct()) {
                 for (auto& it : instance->properties()) {
-                    if (it.key.starts_with(identifier_string))
+                    if (it.key.matches(fuzzy_identifier_string))
                         identifier_entries.empend(String::formatted("{}: ", it.key), identifier_string.length(), Language::Unspecified, it.key);
                 }
             }
         }
-        if (can_have_declared_layout(class_names.last()) && "layout"sv.starts_with(identifier_string))
+        if (can_have_declared_layout(class_names.last()) && "layout"sv.matches(fuzzy_identifier_string))
             identifier_entries.empend("layout: ", identifier_string.length(), Language::Unspecified, "layout");
         break;
     }
