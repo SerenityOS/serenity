@@ -173,6 +173,12 @@ int main(int argc, char** argv)
     preview_widget.on_theme_load_from_file = [&](String const& new_path) {
         path = new_path;
         update_window_title();
+
+        auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
+        color_input.set_color(preview_widget.preview_palette().color(selected_color_role));
+
+        auto selected_metric_role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
+        metric_input.set_value(preview_widget.preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
     };
 
     auto save_to_result = [&](FileSystemAccessClient::Result const& result) {
