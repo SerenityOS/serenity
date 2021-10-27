@@ -7,6 +7,7 @@
 #include "Overlays.h"
 #include "Compositor.h"
 #include "WindowManager.h"
+#include <LibGfx/StylePainter.h>
 
 namespace WindowServer {
 
@@ -113,7 +114,7 @@ void RectangularOverlay::render(Gfx::Painter& painter, Screen const& screen)
 
         Gfx::Painter bitmap_painter(*new_bitmap);
         if (auto* shadow_bitmap = WindowManager::the().overlay_rect_shadow()) {
-            WindowFrame::paint_simple_rect_shadow(bitmap_painter, new_bitmap->rect(), shadow_bitmap->bitmap(scale_factor), true, true);
+            Gfx::StylePainter::paint_simple_rect_shadow(bitmap_painter, new_bitmap->rect(), shadow_bitmap->bitmap(scale_factor), true, true);
         } else {
             bitmap_painter.fill_rect(new_bitmap->rect(), Color(Color::Black).with_alpha(0xcc));
         }

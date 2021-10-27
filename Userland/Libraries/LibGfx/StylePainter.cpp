@@ -58,4 +58,9 @@ void StylePainter::paint_transparency_grid(Painter& painter, const IntRect& rect
     current().paint_transparency_grid(painter, rect, palette);
 }
 
+void StylePainter::paint_simple_rect_shadow(Painter& painter, IntRect const& rect, Bitmap const& shadow_bitmap, bool shadow_includes_frame, bool fill_content)
+{
+    current().paint_simple_rect_shadow(painter, rect, shadow_bitmap, shadow_includes_frame, fill_content);
+}
+
 }

@@ -119,8 +119,6 @@ public:
 
     void open_menubar_menu(Menu&);
 
-    static void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&, bool shadow_includes_frame = false, bool fill_content = false);
-
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);

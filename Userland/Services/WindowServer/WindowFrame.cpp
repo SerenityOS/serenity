@@ -455,7 +455,7 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
         painter.clear_rect({ rect.location() - frame_rect_to_update.location(), rect.size() }, { 255, 255, 255, 0 });
 
     if (m_shadow_dirty && shadow_bitmap)
-        frame.paint_simple_rect_shadow(painter, { { 0, 0 }, frame_rect_including_shadow.size() }, shadow_bitmap->bitmap(screen.scale_factor()));
+        Gfx::StylePainter::paint_simple_rect_shadow(painter, { { 0, 0 }, frame_rect_including_shadow.size() }, shadow_bitmap->bitmap(screen.scale_factor()));
 
     {
         Gfx::PainterStateSaver save(painter);
@@ -878,99 +878,6 @@ void WindowFrame::start_flash_animation()
     }
     m_flash_counter = 8;
     m_flash_timer->start();
-}
-
-void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::IntRect& containing_rect, const Gfx::Bitmap& shadow_bitmap, bool shadow_includes_frame, bool fill_content)
-{
-    // The layout of the shadow_bitmap is defined like this:
-    // +---------+----+---------+----+----+----+
-    // |   TL    | T  |   TR    | LT | L  | LB |
-    // +---------+----+---------+----+----+----+
-    // |   BL    | B  |   BR    | RT | R  | RB |
-    // +---------+----+---------+----+----+----+
-    // Located strictly on the top or bottom of the rectangle, above or below of the content:
-    //   TL = top-left     T = top     TR = top-right
-    //   BL = bottom-left  B = bottom  BR = bottom-right
-    // Located on the left or right of the rectangle, but not above or below of the content:
-    //   LT = left-top     L = left    LB = left-bottom
-    //   RT = right-top    R = right   RB = right-bottom
-    // So, the bitmap has two rows and 6 column, two of which are twice as wide.
-    // The height divided by two defines a cell size, and width of each
-    // column must be the same as the height of the cell, except for the
-    // first an third column, which are twice as wide.
-    // If fill_content is true, it will use the RGBA color of right-bottom pixel of TL to fill the rectangle enclosed
-    if (shadow_bitmap.height() % 2 != 0) {
-        dbgln("Can't paint simple rect shadow, shadow bitmap height {} is not even", shadow_bitmap.height());
-        return;
-    }
-    auto base_size = shadow_bitmap.height() / 2;
-    if (shadow_bitmap.width() != base_size * (6 + 2)) {
-        if (shadow_bitmap.width() % base_size != 0)
-            dbgln("Can't paint simple rect shadow, shadow bitmap width {} is not a multiple of {}", shadow_bitmap.width(), base_size);
-        else
-            dbgln("Can't paint simple rect shadow, shadow bitmap width {} but expected {}", shadow_bitmap.width(), base_size * (6 + 2));
-        return;
-    }
-
-    // The containing_rect should have been inflated appropriately
-    VERIFY(containing_rect.size().contains(Gfx::IntSize { base_size, base_size }));
-
-    auto sides_height = containing_rect.height() - 2 * base_size;
-    auto half_height = sides_height / 2;
-    auto containing_horizontal_rect = containing_rect;
-
-    int horizontal_shift = 0;
-    if (half_height < base_size && !shadow_includes_frame) {
-        // If the height is too small we need to shift the left/right accordingly, unless the shadow includes portions of the frame
-        horizontal_shift = base_size - half_height;
-        containing_horizontal_rect.set_left(containing_horizontal_rect.left() + horizontal_shift);
-        containing_horizontal_rect.set_right(containing_horizontal_rect.right() - 2 * horizontal_shift);
-    }
-    auto half_width = containing_horizontal_rect.width() / 2;
-    int corner_piece_width = min(containing_horizontal_rect.width() / 2, base_size * 2);
-    int left_corners_right = containing_horizontal_rect.left() + corner_piece_width;
-    int right_corners_left = max(containing_horizontal_rect.right() - corner_piece_width + 1, left_corners_right + 1);
-    auto paint_horizontal = [&](int y, int src_row) {
-        if (half_width <= 0)
-            return;
-        Gfx::PainterStateSaver save(painter);
-        painter.add_clip_rect({ containing_horizontal_rect.left(), y, containing_horizontal_rect.width(), base_size });
-        painter.blit({ containing_horizontal_rect.left(), y }, shadow_bitmap, { 0, src_row * base_size, corner_piece_width, base_size });
-        painter.blit({ right_corners_left, y }, shadow_bitmap, { 5 * base_size - corner_piece_width, src_row * base_size, corner_piece_width, base_size });
-        for (int x = left_corners_right; x < right_corners_left; x += base_size) {
-            auto width = min(right_corners_left - x, base_size);
-            painter.blit({ x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
-        }
-    };
-
-    paint_horizontal(containing_rect.top(), 0);
-    paint_horizontal(containing_rect.bottom() - base_size + 1, 1);
-
-    int corner_piece_height = min(half_height, base_size);
-    int top_corners_bottom = base_size + corner_piece_height;
-    int bottom_corners_top = base_size + max(half_height, sides_height - corner_piece_height);
-    auto paint_vertical = [&](int x, int src_row, int hshift, int hsrcshift) {
-        Gfx::PainterStateSaver save(painter);
-        painter.add_clip_rect({ x, containing_rect.y() + base_size, base_size, containing_rect.height() - 2 * base_size });
-        painter.blit({ x + hshift, containing_rect.top() + top_corners_bottom - corner_piece_height }, shadow_bitmap, { base_size * 5 + hsrcshift, src_row * base_size, base_size - hsrcshift, corner_piece_height });
-        painter.blit({ x + hshift, containing_rect.top() + bottom_corners_top }, shadow_bitmap, { base_size * 7 + hsrcshift, src_row * base_size + base_size - corner_piece_height, base_size - hsrcshift, corner_piece_height });
-        for (int y = top_corners_bottom; y < bottom_corners_top; y += base_size) {
-            auto height = min(bottom_corners_top - y, base_size);
-            painter.blit({ x, containing_rect.top() + y }, shadow_bitmap, { base_size * 6, src_row * base_size, base_size, height });
-        }
-    };
-
-    paint_vertical(containing_rect.left(), 0, horizontal_shift, 0);
-    if (shadow_includes_frame)
-        horizontal_shift = 0; // TODO: fix off-by-one on rectangles barely wide enough
-    paint_vertical(containing_rect.right() - base_size + 1, 1, 0, horizontal_shift);
-
-    if (fill_content) {
-        // Fill the enclosed rectangle with the RGBA color of the right-bottom pixel of the TL tile
-        auto inner_rect = containing_rect.shrunken(2 * base_size, 2 * base_size);
-        if (!inner_rect.is_empty())
-            painter.fill_rect(inner_rect, shadow_bitmap.get_pixel(2 * base_size - 1, base_size - 1));
-    }
 }
 
 int WindowFrame::menu_row_count() const
