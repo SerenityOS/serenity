@@ -39,11 +39,6 @@ void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue>
     m_property_values.set(id, move(value));
 }
 
-void StyleProperties::set_property(CSS::PropertyID id, const StringView& value)
-{
-    m_property_values.set(id, StringStyleValue::create(value));
-}
-
 Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID property_id) const
 {
     auto it = m_property_values.find(property_id);
