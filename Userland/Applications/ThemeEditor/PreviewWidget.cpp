@@ -6,6 +6,7 @@
  */
 
 #include "PreviewWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringView.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -81,9 +82,15 @@ PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
     m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
 
-    m_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png");
-    m_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png");
-    m_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png");
+    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png");
+    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png");
+    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png");
+
+    VERIFY(m_active_window_icon);
+    VERIFY(m_inactive_window_icon);
+    VERIFY(m_default_close_bitmap);
+    VERIFY(m_default_maximize_bitmap);
+    VERIFY(m_default_minimize_bitmap);
 
     load_theme_bitmaps();
 
@@ -109,6 +116,12 @@ void PreviewWidget::load_theme_bitmaps()
                 last_path = String::empty();
         }
     };
+
+    auto buttons_path = m_preview_palette.title_button_icons_path();
+
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-close.png"), m_last_close_path, m_close_bitmap);
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-maximize.png"), m_last_maximize_path, m_maximize_bitmap);
+    load_bitmap(LexicalPath::absolute_path(buttons_path, "window-minimize.png"), m_last_minimize_path, m_minimize_bitmap);
 
     load_bitmap(m_preview_palette.active_window_shadow_path(), m_last_active_window_shadow_path, m_active_window_shadow);
     load_bitmap(m_preview_palette.inactive_window_shadow_path(), m_last_inactive_window_shadow_path, m_inactive_window_shadow);
@@ -159,9 +172,9 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         int pos = titlebar_text_rect.right() + 1;
 
         Vector<Button> buttons;
-        buttons.append(Button { {}, m_close_bitmap });
-        buttons.append(Button { {}, m_maximize_bitmap });
-        buttons.append(Button { {}, m_minimize_bitmap });
+        buttons.append(Button { {}, m_close_bitmap.is_null() ? m_default_close_bitmap : m_close_bitmap });
+        buttons.append(Button { {}, m_maximize_bitmap.is_null() ? m_default_maximize_bitmap : m_maximize_bitmap });
+        buttons.append(Button { {}, m_minimize_bitmap.is_null() ? m_default_minimize_bitmap : m_minimize_bitmap });
 
         for (auto& button : buttons) {
             pos -= window_button_width;
