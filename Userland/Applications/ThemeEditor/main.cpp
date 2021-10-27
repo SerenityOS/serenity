@@ -6,6 +6,7 @@
  */
 
 #include "PreviewWidget.h"
+#include <Applications/ThemeEditor/ThemeEditorGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -98,20 +99,13 @@ int main(int argc, char** argv)
 #undef __ENUMERATE_COLOR_ROLE
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.load_from_gml(theme_editor_gml);
 
-    auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(startup_preview_palette);
-    preview_widget.set_fixed_size(480, 360);
+    auto& preview_widget = main_widget.find_descendant_of_type_named<GUI::Frame>("preview_frame")
+                               ->add<ThemeEditor::PreviewWidget>(startup_preview_palette);
+    auto& combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
+    auto& color_input = *main_widget.find_descendant_of_type_named<GUI::ColorInput>("color_input");
 
-    auto& horizontal_container = main_widget.add<GUI::Widget>();
-    horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container.set_fixed_size(480, 20);
-
-    auto& combo_box = horizontal_container.add<GUI::ComboBox>();
-    auto& color_input = horizontal_container.add<GUI::ColorInput>();
-
-    combo_box.set_only_allow_values_from_model(true);
     combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
