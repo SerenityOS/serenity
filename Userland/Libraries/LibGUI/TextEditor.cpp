@@ -205,7 +205,7 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint const& widget_position) 
 
 void TextEditor::doubleclick_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     if (is_displayonly())
@@ -244,7 +244,7 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
 void TextEditor::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left) {
+    if (event.button() != MouseButton::Primary) {
         return;
     }
 
@@ -287,7 +287,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
 
 void TextEditor::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         if (m_in_drag_select) {
             m_in_drag_select = false;
         }

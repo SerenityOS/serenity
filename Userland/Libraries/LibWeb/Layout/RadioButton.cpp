@@ -39,7 +39,7 @@ void RadioButton::paint(PaintContext& context, PaintPhase phase)
 
 void RadioButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
 {
-    if (button != GUI::MouseButton::Left || !dom_node().enabled())
+    if (button != GUI::MouseButton::Primary || !dom_node().enabled())
         return;
 
     m_being_pressed = true;
@@ -51,7 +51,7 @@ void RadioButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, un
 
 void RadioButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !dom_node().enabled())
+    if (!m_tracking_mouse || button != GUI::MouseButton::Primary || !dom_node().enabled())
         return;
 
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.

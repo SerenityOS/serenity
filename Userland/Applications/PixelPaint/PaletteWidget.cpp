@@ -50,9 +50,9 @@ public:
             }
         }
 
-        if (event.button() == GUI::MouseButton::Left)
+        if (event.button() == GUI::MouseButton::Primary)
             m_palette_widget.set_primary_color(m_color);
-        else if (event.button() == GUI::MouseButton::Right)
+        else if (event.button() == GUI::MouseButton::Secondary)
             m_palette_widget.set_secondary_color(m_color);
     }
 
@@ -69,7 +69,7 @@ public:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() != GUI::MouseButton::Left || !on_color_change)
+        if (event.button() != GUI::MouseButton::Primary || !on_color_change)
             return;
 
         auto dialog = GUI::ColorPicker::construct(m_color, window());

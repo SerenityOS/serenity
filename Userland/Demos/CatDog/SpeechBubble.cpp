@@ -43,7 +43,7 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
 
 void SpeechBubble::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     if (on_dismiss)
         on_dismiss();

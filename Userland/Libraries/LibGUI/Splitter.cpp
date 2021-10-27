@@ -121,7 +121,7 @@ Splitter::Grabbable* Splitter::grabbable_at(Gfx::IntPoint const& position)
 
 void Splitter::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     auto* grabbable = grabbable_at(event.position());
@@ -235,7 +235,7 @@ void Splitter::did_layout()
 
 void Splitter::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
     m_resizing = false;
     m_first_resizee = nullptr;

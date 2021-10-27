@@ -501,18 +501,18 @@ void ImageEditor::layers_did_change()
 
 Color ImageEditor::color_for(GUI::MouseButton button) const
 {
-    if (button == GUI::MouseButton::Left)
+    if (button == GUI::MouseButton::Primary)
         return m_primary_color;
-    if (button == GUI::MouseButton::Right)
+    if (button == GUI::MouseButton::Secondary)
         return m_secondary_color;
     VERIFY_NOT_REACHED();
 }
 
 Color ImageEditor::color_for(GUI::MouseEvent const& event) const
 {
-    if (event.buttons() & GUI::MouseButton::Left)
+    if (event.buttons() & GUI::MouseButton::Primary)
         return m_primary_color;
-    if (event.buttons() & GUI::MouseButton::Right)
+    if (event.buttons() & GUI::MouseButton::Secondary)
         return m_secondary_color;
     VERIFY_NOT_REACHED();
 }

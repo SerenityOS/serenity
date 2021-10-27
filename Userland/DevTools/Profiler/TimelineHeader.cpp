@@ -66,7 +66,7 @@ void TimelineHeader::update_selection()
 
 void TimelineHeader::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     m_selected = !m_selected;
     on_selection_change(m_selected);

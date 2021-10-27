@@ -168,7 +168,7 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 
 void BoardWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         set_toggling_cells(true);
         auto row_and_column = get_row_and_column_for_point(event.x(), event.y());
         if (!row_and_column.has_value())

@@ -122,7 +122,7 @@ void CatDog::track_mouse_move(Gfx::IntPoint const& point)
 
 void CatDog::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     if (on_click)
         on_click();

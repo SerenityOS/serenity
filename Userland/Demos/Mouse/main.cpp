@@ -73,8 +73,8 @@ public:
         painter.stroke_path(path, Color::Black, 1);
 
         auto primary_secondary_switched = GUI::WindowServerConnection::the().get_buttons_switched();
-        auto primary_pressed = m_buttons & GUI::MouseButton::Left;
-        auto secondary_pressed = m_buttons & GUI::MouseButton::Right;
+        auto primary_pressed = m_buttons & GUI::MouseButton::Primary;
+        auto secondary_pressed = m_buttons & GUI::MouseButton::Secondary;
 
         if (primary_secondary_switched ? secondary_pressed : primary_pressed) {
             painter.fill_rect({ 31, 21, 34, 44 }, Color::Blue);

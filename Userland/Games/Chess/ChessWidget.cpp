@@ -176,7 +176,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
-    if (event.button() == GUI::MouseButton::Right) {
+    if (event.button() == GUI::MouseButton::Secondary) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
             set_override_cursor(Gfx::StandardCursor::None);
@@ -212,7 +212,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
-    if (event.button() == GUI::MouseButton::Right) {
+    if (event.button() == GUI::MouseButton::Secondary) {
         m_current_marking.secondary_color = event.shift();
         m_current_marking.alternate_color = event.ctrl();
         m_current_marking.to = mouse_to_square(event);

@@ -53,7 +53,7 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
 
 void ButtonBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
 {
-    if (button != GUI::MouseButton::Left || !dom_node().enabled())
+    if (button != GUI::MouseButton::Primary || !dom_node().enabled())
         return;
 
     m_being_pressed = true;
@@ -65,7 +65,7 @@ void ButtonBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsi
 
 void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !dom_node().enabled())
+    if (!m_tracking_mouse || button != GUI::MouseButton::Primary || !dom_node().enabled())
         return;
 
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.

@@ -186,7 +186,7 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
 
 void ClockWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left) {
+    if (event.button() != GUI::MouseButton::Primary) {
         return;
     } else {
         if (!m_calendar_window->is_visible())
