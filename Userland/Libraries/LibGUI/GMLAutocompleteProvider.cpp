@@ -162,12 +162,12 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             if (auto instance = registration->construct()) {
                 for (auto& it : instance->properties()) {
                     if (it.key.starts_with(identifier_string))
-                        identifier_entries.empend(it.key, identifier_string.length());
+                        identifier_entries.empend(String::formatted("{}: ", it.key), identifier_string.length(), Language::Unspecified, it.key);
                 }
             }
         }
         if (can_have_declared_layout(class_names.last()) && "layout"sv.starts_with(identifier_string))
-            identifier_entries.empend("layout", identifier_string.length());
+            identifier_entries.empend("layout: ", identifier_string.length(), Language::Unspecified, "layout");
         // No need to suggest anything if it's already completely typed out!
         if (identifier_entries.size() == 1 && identifier_entries.first().completion == identifier_string)
             identifier_entries.clear();
@@ -187,7 +187,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                 if (auto instance = registration->construct()) {
                     for (auto& it : instance->properties()) {
                         if (!it.value->is_readonly())
-                            identifier_entries.empend(it.key, 0u);
+                            identifier_entries.empend(String::formatted("{}: ", it.key), 0u, Language::Unspecified, it.key);
                     }
                 }
             }
