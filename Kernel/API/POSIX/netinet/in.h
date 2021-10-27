@@ -22,12 +22,17 @@ typedef uint32_t in_addr_t;
 
 #define IN_LOOPBACKNET 127
 
+#define IP_TOS 1
 #define IP_TTL 2
 #define IP_MULTICAST_LOOP 3
 #define IP_ADD_MEMBERSHIP 4
 #define IP_DROP_MEMBERSHIP 5
 #define IP_MULTICAST_IF 6
 #define IP_MULTICAST_TTL 7
+
+#define IPTOS_LOWDELAY 16
+#define IPTOS_THROUGHPUT 8
+#define IPTOS_RELIABILITY 4
 
 /* Make sure these don't overlap with any other IPv4 and IPv6 options */
 #define MCAST_JOIN_SOURCE_GROUP 100

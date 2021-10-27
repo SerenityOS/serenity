@@ -207,7 +207,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         return set_so_error(ENOMEM);
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(),
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        buffer_size - ipv4_payload_offset, ttl());
+        buffer_size - ipv4_payload_offset, type_of_service(), ttl());
     memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(TCPPacket));
     auto& tcp_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
     VERIFY(local_port());
@@ -587,7 +587,7 @@ void TCPSocket::retransmit_packets()
 
             routing_decision.adapter->fill_in_ipv4_header(*packet.buffer,
                 local_address(), routing_decision.next_hop, peer_address(),
-                IPv4Protocol::TCP, packet_buffer.size() - ipv4_payload_offset, ttl());
+                IPv4Protocol::TCP, packet_buffer.size() - ipv4_payload_offset, type_of_service(), ttl());
             routing_decision.adapter->send_packet(packet_buffer);
             m_packets_out++;
             m_bytes_out += packet_buffer.size();
