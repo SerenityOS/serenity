@@ -676,7 +676,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         include_dir = partial_include.substring_view(1, last_slash.value());
     }
 
-    auto full_dir = String::formatted("{}{}", include_root, include_dir);
+    auto full_dir = LexicalPath::join(include_root, include_dir).string();
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "searching path: {}, partial_basename: {}", full_dir, partial_basename);
 
     Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
@@ -691,8 +691,8 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
             //        already typed.
             auto prefix = include_type == System ? "<" : "\"";
             auto suffix = include_type == System ? ">" : "\"";
-            auto completion = String::formatted("{}{}{}", prefix, path, already_has_suffix ? "" : suffix);
-            options.append({ completion, partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path });
+            auto completion = String::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
+            options.append({ completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path });
         }
     }
 
