@@ -55,20 +55,19 @@ void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)
 
 void DoubleClickArrowWidget::mousedown_event(GUI::MouseEvent&)
 {
-    if (!m_double_click_timer.is_valid()) {
+    auto double_click_in_progress = m_double_click_timer.is_valid();
+    auto elapsed_ms = double_click_in_progress ? m_double_click_timer.elapsed() : 0;
+
+    if (!double_click_in_progress || elapsed_ms > m_double_click_speed) {
         m_double_click_timer.start();
         return;
     }
 
-    auto elapsed_time = m_double_click_timer.elapsed();
-    if (elapsed_time <= m_double_click_speed) {
-        dbgln("Double-click in {}ms", elapsed_time);
-        m_inverted = !m_inverted;
-        update();
-    }
+    dbgln("Double-click in {}ms", elapsed_ms);
+    m_inverted = !m_inverted;
+    update();
 
-    // Reset the timer after each click
-    m_double_click_timer.start();
+    m_double_click_timer.reset();
 }
 
 }
