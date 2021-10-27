@@ -168,9 +168,6 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         }
         if (can_have_declared_layout(class_names.last()) && "layout"sv.starts_with(identifier_string))
             identifier_entries.empend("layout: ", identifier_string.length(), Language::Unspecified, "layout");
-        // No need to suggest anything if it's already completely typed out!
-        if (identifier_entries.size() == 1 && identifier_entries.first().completion == identifier_string)
-            identifier_entries.clear();
         break;
     }
     case AfterClassName: {
