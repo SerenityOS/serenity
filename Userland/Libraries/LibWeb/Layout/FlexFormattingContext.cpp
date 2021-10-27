@@ -106,7 +106,7 @@ void FlexFormattingContext::run(Box& run_box, LayoutMode)
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
 {
-    auto width_of_containing_block = item.box.width_of_logical_containing_block();
+    auto width_of_containing_block = item.box.containing_block()->width();
     // FIXME: This should also take reverse-ness into account
     if (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse) {
         item.margins.main_before = item.box.computed_values().margin().left.resolved_or_zero(item.box, width_of_containing_block).to_px(item.box);

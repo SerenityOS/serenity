@@ -122,8 +122,6 @@ public:
     virtual void paint_box_shadow(PaintContext& context);
     virtual void paint_background(PaintContext& context);
 
-    virtual float width_of_logical_containing_block() const;
-
     Painting::BorderRadiusData normalized_border_radius_data();
 
     virtual Optional<float> intrinsic_width() const { return {}; }

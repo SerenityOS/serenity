@@ -234,11 +234,4 @@ StackingContext* Box::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
-float Box::width_of_logical_containing_block() const
-{
-    auto* containing_block = this->containing_block();
-    VERIFY(containing_block);
-    return containing_block->width();
-}
-
 }
