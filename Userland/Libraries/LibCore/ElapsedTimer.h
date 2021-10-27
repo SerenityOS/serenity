@@ -22,6 +22,7 @@ public:
 
     bool is_valid() const { return m_valid; }
     void start();
+    void reset();
     int elapsed() const;
     Time elapsed_time() const;
 

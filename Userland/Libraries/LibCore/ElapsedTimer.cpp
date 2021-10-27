@@ -28,6 +28,12 @@ void ElapsedTimer::start()
     m_origin_time.tv_usec = now_spec.tv_nsec / 1000;
 }
 
+void ElapsedTimer::reset()
+{
+    m_valid = false;
+    m_origin_time = { 0, 0 };
+}
+
 int ElapsedTimer::elapsed() const
 {
     VERIFY(is_valid());
