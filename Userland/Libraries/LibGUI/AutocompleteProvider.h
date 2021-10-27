@@ -20,13 +20,6 @@ class AutocompleteProvider {
 public:
     virtual ~AutocompleteProvider() { }
 
-    enum class CompletionKind {
-        Identifier,
-        PreprocessorDefinition,
-        SystemInclude,
-        ProjectInclude,
-    };
-
     enum class Language {
         Unspecified,
         Cpp,
@@ -35,7 +28,6 @@ public:
     struct Entry {
         String completion;
         size_t partial_input_length { 0 };
-        CompletionKind kind { CompletionKind::Identifier };
         Language language { Language::Unspecified };
         String display_text {};
     };
