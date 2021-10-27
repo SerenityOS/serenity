@@ -92,7 +92,7 @@ public:
         if (m_buttons & GUI::MouseButton::Forward)
             painter.fill_rect({ 26, 44, 4, 16 }, Color::Blue);
 
-        if (m_buttons & GUI::MouseButton::Back)
+        if (m_buttons & GUI::MouseButton::Backward)
             painter.fill_rect({ 26, 71, 4, 16 }, Color::Blue);
 
         if (m_show_scroll_wheel) {

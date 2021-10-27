@@ -118,7 +118,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
 
     if (m_has_five_buttons) {
         if (raw_packet.bytes[3] & 0x10)
-            packet.buttons |= MousePacket::BackButton;
+            packet.buttons |= MousePacket::BackwardButton;
         if (raw_packet.bytes[3] & 0x20)
             packet.buttons |= MousePacket::ForwardButton;
     }

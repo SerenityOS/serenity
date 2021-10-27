@@ -218,7 +218,7 @@ static MouseButton to_mouse_button(u32 button)
     case 4:
         return MouseButton::Middle;
     case 8:
-        return MouseButton::Back;
+        return MouseButton::Backward;
     case 16:
         return MouseButton::Forward;
     default:

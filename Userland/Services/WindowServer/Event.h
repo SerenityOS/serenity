@@ -53,7 +53,7 @@ enum class MouseButton : u8 {
     Primary = 1,
     Secondary = 2,
     Middle = 4,
-    Back = 8,
+    Backward = 8,
     Forward = 16,
 };
 

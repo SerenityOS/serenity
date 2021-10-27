@@ -391,7 +391,7 @@ private:
             m_primary = {};
             m_secondary = {};
             m_middle = {};
-            m_back = {};
+            m_backward = {};
             m_forward = {};
         }
 
@@ -401,7 +401,7 @@ private:
         ClickMetadata m_primary;
         ClickMetadata m_secondary;
         ClickMetadata m_middle;
-        ClickMetadata m_back;
+        ClickMetadata m_backward;
         ClickMetadata m_forward;
     };
 

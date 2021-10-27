@@ -452,7 +452,7 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
     post_mousedown_or_mouseup_if_needed(MouseButton::Primary);
     post_mousedown_or_mouseup_if_needed(MouseButton::Secondary);
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
-    post_mousedown_or_mouseup_if_needed(MouseButton::Back);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Backward);
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);
     if (m_cursor_location != prev_location) {
         auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
