@@ -32,7 +32,6 @@ public:
     enum InternalRole {
         __ModelRoleCustom = (int)GUI::ModelRole::Custom,
         PartialInputLength,
-        Kind,
         Completion,
     };
 
@@ -64,9 +63,6 @@ public:
                 return {};
             }
         }
-
-        if ((int)role == InternalRole::Kind)
-            return (u32)suggestion.kind;
 
         if ((int)role == InternalRole::PartialInputLength)
             return (i64)suggestion.partial_input_length;

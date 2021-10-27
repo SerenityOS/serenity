@@ -165,13 +165,13 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_na
 
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
     for (auto& symbol : matches) {
-        suggestions.append({ symbol.name.name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
+        suggestions.append({ symbol.name.name, partial_text.length() });
     }
 
     if (reference_scope.is_empty()) {
         for (auto& preprocessor_name : document.preprocessor().definitions().keys()) {
             if (preprocessor_name.starts_with(partial_text)) {
-                suggestions.append({ preprocessor_name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
+                suggestions.append({ preprocessor_name, partial_text.length() });
             }
         }
     }
@@ -215,7 +215,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_pr
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
     for (auto& prop : properties_of_type(document, type)) {
         if (prop.name.name.starts_with(partial_text)) {
-            suggestions.append({ prop.name.name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
+            suggestions.append({ prop.name.name, partial_text.length() });
         }
     }
     return suggestions;
@@ -642,11 +642,15 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     VERIFY(include_path_token.type() == Token::Type::IncludePath);
     auto partial_include = include_path_token.text().trim_whitespace();
 
+    enum IncludeType {
+        Project,
+        System,
+    } include_type { Project };
+
     String include_root;
-    auto include_type = GUI::AutocompleteProvider::CompletionKind::ProjectInclude;
     if (partial_include.starts_with("<")) {
         include_root = "/usr/include/";
-        include_type = GUI::AutocompleteProvider::CompletionKind::SystemInclude;
+        include_type = System;
     } else if (partial_include.starts_with("\"")) {
         include_root = filedb().project_root();
     } else
@@ -670,8 +674,8 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         if (!(path.ends_with(".h") || Core::File::is_directory(LexicalPath::join(full_dir, path).string())))
             continue;
         if (path.starts_with(partial_basename)) {
-            auto completion = include_type == GUI::AutocompleteProvider::CompletionKind::ProjectInclude ? String::formatted("<{}>", path) : String::formatted("\"{}\"", path);
-            options.append({ completion, partial_basename.length() + 1, include_type, GUI::AutocompleteProvider::Language::Cpp, path });
+            auto completion = include_type == System ? String::formatted("<{}>", path) : String::formatted("\"{}\"", path);
+            options.append({ completion, partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path });
         }
     }
 
