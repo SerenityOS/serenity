@@ -15,14 +15,14 @@ namespace Gfx {
 
 class ClassicStylePainter : public BaseStylePainter {
 public:
-    void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false) override;
-    void paint_tab_button(Painter&, const IntRect&, const Palette&, bool active, bool hovered, bool enabled, bool top, bool in_active_window) override;
-    void paint_frame(Painter&, const IntRect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) override;
-    void paint_window_frame(Painter&, const IntRect&, const Palette&) override;
-    void paint_progressbar(Painter&, const IntRect&, const Palette&, int min, int max, int value, const StringView& text, Orientation = Orientation::Horizontal) override;
-    void paint_radio_button(Painter&, const IntRect&, const Palette&, bool is_checked, bool is_being_pressed) override;
-    void paint_check_box(Painter&, const IntRect&, const Palette&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
-    void paint_transparency_grid(Painter&, const IntRect&, const Palette&) override;
+    virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false) override;
+    virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, bool top, bool in_active_window) override;
+    virtual void paint_frame(Painter&, IntRect const&, Palette const&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) override;
+    virtual void paint_window_frame(Painter&, IntRect const&, Palette const&) override;
+    virtual void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView const& text, Orientation = Orientation::Horizontal) override;
+    virtual void paint_radio_button(Painter&, IntRect const&, Palette const&, bool is_checked, bool is_being_pressed) override;
+    virtual void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
+    virtual void paint_transparency_grid(Painter&, IntRect const&, Palette const&) override;
 };
 
 }
