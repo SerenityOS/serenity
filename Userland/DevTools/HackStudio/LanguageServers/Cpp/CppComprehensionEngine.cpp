@@ -682,17 +682,23 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
     Vector<GUI::AutocompleteProvider::Entry> options;
 
+    auto prefix = include_type == System ? "<" : "\"";
+    auto suffix = include_type == System ? ">" : "\"";
     while (it.has_next()) {
         auto path = it.next_path();
-        if (!(path.ends_with(".h") || Core::File::is_directory(LexicalPath::join(full_dir, path).string())))
+
+        if (!path.starts_with(partial_basename))
             continue;
-        if (path.starts_with(partial_basename)) {
+
+        if (Core::File::is_directory(LexicalPath::join(full_dir, path).string())) {
+            // FIXME: Don't dismiss the autocomplete when filling these suggestions.
+            auto completion = String::formatted("{}{}{}/", prefix, include_dir, path);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path);
+        } else if (path.ends_with(".h")) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
-            auto prefix = include_type == System ? "<" : "\"";
-            auto suffix = include_type == System ? ">" : "\"";
             auto completion = String::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
-            options.append({ completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path });
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path);
         }
     }
 
