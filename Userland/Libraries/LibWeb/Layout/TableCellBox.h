@@ -22,9 +22,6 @@ public:
     size_t colspan() const;
 
     static CSS::Display static_display() { return CSS::Display { CSS::Display::Internal::TableCell }; }
-
-private:
-    virtual float width_of_logical_containing_block() const override;
 };
 
 }

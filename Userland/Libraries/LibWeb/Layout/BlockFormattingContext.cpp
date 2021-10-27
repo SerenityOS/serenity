@@ -120,7 +120,7 @@ void BlockFormattingContext::compute_width(Box& box)
     }
 
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.width_of_logical_containing_block();
+    float width_of_containing_block = box.containing_block()->width();
 
     auto zero_value = CSS::Length::make_px(0);
 
@@ -242,7 +242,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
 {
     // 10.3.5 Floating, non-replaced elements
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.width_of_logical_containing_block();
+    float width_of_containing_block = box.containing_block()->width();
     auto zero_value = CSS::Length::make_px(0);
 
     auto margin_left = computed_values.margin().left.resolved_or_zero(box, width_of_containing_block);
@@ -389,7 +389,7 @@ void BlockFormattingContext::compute_position(Box& box)
 
     auto& box_model = box.box_model();
     auto& computed_values = box.computed_values();
-    float width_of_containing_block = box.width_of_logical_containing_block();
+    float width_of_containing_block = box.containing_block()->width();
 
     auto specified_left = computed_values.offset().left.resolved_or_zero(box, width_of_containing_block);
     auto specified_right = computed_values.offset().right.resolved_or_zero(box, width_of_containing_block);
