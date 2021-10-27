@@ -23,6 +23,7 @@ public:
     virtual void paint_radio_button(Painter&, IntRect const&, Palette const&, bool is_checked, bool is_being_pressed) override;
     virtual void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
     virtual void paint_transparency_grid(Painter&, IntRect const&, Palette const&) override;
+    virtual void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame, bool fill_content) override;
 };
 
 }
