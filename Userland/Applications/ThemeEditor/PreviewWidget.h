@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,9 +43,15 @@ private:
 
     RefPtr<MiniWidgetGallery> m_gallery;
 
+    RefPtr<Gfx::Bitmap> m_default_close_bitmap;
+    RefPtr<Gfx::Bitmap> m_default_maximize_bitmap;
+    RefPtr<Gfx::Bitmap> m_default_minimize_bitmap;
     RefPtr<Gfx::Bitmap> m_close_bitmap;
     RefPtr<Gfx::Bitmap> m_maximize_bitmap;
     RefPtr<Gfx::Bitmap> m_minimize_bitmap;
+    String m_last_close_path;
+    String m_last_maximize_path;
+    String m_last_minimize_path;
 
     RefPtr<Gfx::Bitmap> m_active_window_shadow;
     RefPtr<Gfx::Bitmap> m_inactive_window_shadow;
