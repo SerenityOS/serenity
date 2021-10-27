@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,8 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/SpinBox.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
 
@@ -32,6 +35,24 @@ public:
     {
         if (role == GUI::ModelRole::Display)
             return Gfx::to_string(m_data[(size_t)index.row()]);
+        if (role == GUI::ModelRole::Custom)
+            return m_data[(size_t)index.row()];
+
+        return ItemListModel::data(index, role);
+    }
+};
+
+class MetricRoleModel final : public GUI::ItemListModel<Gfx::MetricRole> {
+public:
+    explicit MetricRoleModel(Vector<Gfx::MetricRole> const& data)
+        : ItemListModel<Gfx::MetricRole>(data)
+    {
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::Display)
+            return Gfx::to_string(static_cast<Gfx::MetricRole>(m_data[(size_t)index.row()]));
         if (role == GUI::ModelRole::Custom)
             return m_data[(size_t)index.row()];
 
@@ -98,29 +119,50 @@ int main(int argc, char** argv)
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
+    Vector<Gfx::MetricRole> metric_roles;
+#define __ENUMERATE_METRIC_ROLE(role) metric_roles.append(Gfx::MetricRole::role);
+    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#undef __ENUMERATE_METRIC_ROLE
+
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.load_from_gml(theme_editor_gml);
 
     auto& preview_widget = main_widget.find_descendant_of_type_named<GUI::Frame>("preview_frame")
                                ->add<ThemeEditor::PreviewWidget>(startup_preview_palette);
-    auto& combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
+    auto& color_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
     auto& color_input = *main_widget.find_descendant_of_type_named<GUI::ColorInput>("color_input");
+    auto& metric_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
+    auto& metric_input = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("metric_input");
 
-    combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
-    combo_box.on_change = [&](auto&, auto& index) {
+    color_combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
+    color_combo_box.on_change = [&](auto&, auto& index) {
         auto role = index.model()->data(index, GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_widget.preview_palette().color(role));
     };
-
-    combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
+    color_combo_box.set_selected_index((size_t)Gfx::ColorRole::Window - 1);
 
     color_input.on_change = [&] {
-        auto role = combo_box.model()->index(combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
+        auto role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
         auto preview_palette = preview_widget.preview_palette();
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
     color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
+
+    metric_combo_box.set_model(adopt_ref(*new MetricRoleModel(metric_roles)));
+    metric_combo_box.on_change = [&](auto&, auto& index) {
+        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_metric_role();
+        metric_input.set_value(preview_widget.preview_palette().metric(role), GUI::AllowCallback::No);
+    };
+    metric_combo_box.set_selected_index((size_t)Gfx::MetricRole::TitleButtonHeight - 1);
+
+    metric_input.on_change = [&](int value) {
+        auto role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
+        auto preview_palette = preview_widget.preview_palette();
+        preview_palette.set_metric(role, value);
+        preview_widget.set_preview_palette(preview_palette);
+    };
+    metric_input.set_value(startup_preview_palette.metric(Gfx::MetricRole::TitleButtonHeight), GUI::AllowCallback::No);
 
     auto& file_menu = window->add_menu("&File");
 
@@ -145,10 +187,9 @@ int main(int argc, char** argv)
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
         }
 
-#define __ENUMERATE_METRIC_ROLE(role) \
-    theme->write_num_entry("Metrics", #role, preview_widget.preview_palette().metric(Gfx::MetricRole::role));
-        ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
-#undef __ENUMERATE_METRIC_ROLE
+        for (auto role : metric_roles) {
+            theme->write_num_entry("Metrics", to_string(role), preview_widget.preview_palette().metric(role));
+        }
 
 #define __ENUMERATE_PATH_ROLE(role) \
     theme->write_entry("Paths", #role, preview_widget.preview_palette().path(Gfx::PathRole::role));
@@ -186,7 +227,7 @@ int main(int argc, char** argv)
 
     update_window_title();
 
-    window->resize(480, 385);
+    window->resize(480, 460);
     window->set_resizable(false);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
