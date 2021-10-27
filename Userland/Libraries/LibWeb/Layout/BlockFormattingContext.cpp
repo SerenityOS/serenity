@@ -289,50 +289,6 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     box.set_width(compute_width_for_replaced_element(box));
 }
 
-static float compute_auto_height_for_block_level_element(Box const& box)
-{
-    Optional<float> top;
-    Optional<float> bottom;
-
-    if (box.children_are_inline()) {
-        // If it only has inline-level children, the height is the distance between
-        // the top of the topmost line box and the bottom of the bottommost line box.
-        auto& block_container = verify_cast<Layout::BlockContainer>(box);
-        if (!block_container.line_boxes().is_empty()) {
-            for (auto& fragment : block_container.line_boxes().first().fragments()) {
-                if (!top.has_value() || fragment.offset().y() < top.value())
-                    top = fragment.offset().y();
-            }
-            for (auto& fragment : block_container.line_boxes().last().fragments()) {
-                if (!bottom.has_value() || (fragment.offset().y() + fragment.height()) > bottom.value())
-                    bottom = fragment.offset().y() + fragment.height();
-            }
-        }
-    } else {
-        // If it has block-level children, the height is the distance between
-        // the top margin-edge of the topmost block-level child box
-        // and the bottom margin-edge of the bottommost block-level child box.
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (child_box.is_absolutely_positioned())
-                return IterationDecision::Continue;
-            if ((box.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
-                return IterationDecision::Continue;
-
-            float child_box_top = child_box.effective_offset().y() - child_box.box_model().margin_box().top;
-            float child_box_bottom = child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box().bottom;
-
-            if (!top.has_value() || child_box_top < top.value())
-                top = child_box_top;
-
-            if (!bottom.has_value() || child_box_bottom > bottom.value())
-                bottom = child_box_bottom;
-
-            return IterationDecision::Continue;
-        });
-    }
-    return bottom.value_or(0) - top.value_or(0);
-}
-
 float BlockFormattingContext::compute_theoretical_height(const Box& box)
 {
     auto& computed_values = box.computed_values();
@@ -345,7 +301,7 @@ float BlockFormattingContext::compute_theoretical_height(const Box& box)
     } else {
         if (box.computed_values().height().is_undefined_or_auto()
             || (computed_values.height().is_percentage() && !containing_block.computed_values().height().is_absolute())) {
-            height = compute_auto_height_for_block_level_element(box);
+            height = compute_auto_height_for_block_level_element(box, ConsiderFloats::No);
         } else {
             height = computed_values.height().resolved_or_auto(box, containing_block.height()).to_px(box);
         }

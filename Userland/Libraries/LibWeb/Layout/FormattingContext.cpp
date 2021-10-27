@@ -187,7 +187,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
     return { w, h };
 }
 
-static float compute_auto_height_for_block_level_element(Box const& box)
+float FormattingContext::compute_auto_height_for_block_level_element(Box const& box, ConsiderFloats consider_floats)
 {
     Optional<float> top;
     Optional<float> bottom;
@@ -227,20 +227,22 @@ static float compute_auto_height_for_block_level_element(Box const& box)
 
             return IterationDecision::Continue;
         });
-        // In addition, if the element has any floating descendants
-        // whose bottom margin edge is below the element's bottom content edge,
-        // then the height is increased to include those edges.
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (!child_box.is_floating())
+        if (consider_floats == ConsiderFloats::Yes) {
+            // In addition, if the element has any floating descendants
+            // whose bottom margin edge is below the element's bottom content edge,
+            // then the height is increased to include those edges.
+            box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+                if (!child_box.is_floating())
+                    return IterationDecision::Continue;
+
+                float child_box_bottom = child_box.effective_offset().y() + child_box.height();
+
+                if (!bottom.has_value() || child_box_bottom > bottom.value())
+                    bottom = child_box_bottom;
+
                 return IterationDecision::Continue;
-
-            float child_box_bottom = child_box.effective_offset().y() + child_box.height();
-
-            if (!bottom.has_value() || child_box_bottom > bottom.value())
-                bottom = child_box_bottom;
-
-            return IterationDecision::Continue;
-        });
+            });
+        }
     }
     return bottom.value_or(0) - top.value_or(0);
 }
