@@ -249,10 +249,40 @@ static bool is_not_table_cell(const Node& node)
     return !display.is_table_cell();
 }
 
+static bool is_ignorable_whitespace(Layout::Node const& node)
+{
+    if (node.is_text_node() && static_cast<TextNode const&>(node).text_for_rendering().is_whitespace())
+        return true;
+
+    if (node.is_anonymous() && node.is_block_container() && static_cast<BlockContainer const&>(node).children_are_inline()) {
+        bool contains_only_white_space = true;
+        node.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
+            if (!text_node.text_for_rendering().is_whitespace()) {
+                contains_only_white_space = false;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        if (contains_only_white_space)
+            return true;
+    }
+
+    return false;
+}
+
 template<typename Matcher, typename Callback>
 static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& parent, Matcher matcher, Callback callback)
 {
     NonnullRefPtrVector<Node> sequence;
+
+    auto sequence_is_all_ignorable_whitespace = [&]() -> bool {
+        for (auto& node : sequence) {
+            if (!is_ignorable_whitespace(node))
+                return false;
+        }
+        return true;
+    };
+
     Node* next_sibling = nullptr;
     for (auto* child = parent.first_child(); child; child = next_sibling) {
         next_sibling = child->next_sibling();
@@ -260,12 +290,13 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
             sequence.append(*child);
         } else {
             if (!sequence.is_empty()) {
-                callback(sequence, next_sibling);
+                if (!sequence_is_all_ignorable_whitespace())
+                    callback(sequence, next_sibling);
                 sequence.clear();
             }
         }
     }
-    if (!sequence.is_empty())
+    if (sequence.is_empty() && !sequence_is_all_ignorable_whitespace())
         callback(sequence, nullptr);
 }
 
