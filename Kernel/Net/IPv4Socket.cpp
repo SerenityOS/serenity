@@ -229,7 +229,7 @@ KResultOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuf
         if (!packet)
             return set_so_error(ENOMEM);
         routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
-            m_peer_address, (IPv4Protocol)protocol(), data_length, m_ttl);
+            m_peer_address, (IPv4Protocol)protocol(), data_length, m_type_of_service, m_ttl);
         if (auto result = data.read(packet->buffer->data() + ipv4_payload_offset, data_length); result.is_error()) {
             routing_decision.adapter->release_packet_buffer(*packet);
             return set_so_error(result);
@@ -504,6 +504,16 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         m_ttl = value;
         return KSuccess;
     }
+    case IP_TOS: {
+        if (user_value_size < sizeof(int))
+            return EINVAL;
+        int value;
+        TRY(copy_from_user(&value, static_ptr_cast<const int*>(user_value)));
+        if (value < 0 || value > 255)
+            return EINVAL;
+        m_type_of_service = value;
+        return KSuccess;
+    }
     case IP_MULTICAST_LOOP: {
         if (user_value_size != 1)
             return EINVAL;
@@ -556,6 +566,14 @@ KResult IPv4Socket::getsockopt(OpenFileDescription& description, int level, int 
             return EINVAL;
         int ttl = m_ttl;
         TRY(copy_to_user(static_ptr_cast<int*>(value), (int*)&ttl));
+        size = sizeof(int);
+        return copy_to_user(value_size, &size);
+    }
+    case IP_TOS: {
+        if (size < sizeof(int))
+            return EINVAL;
+        int type_of_service = m_type_of_service;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), (int*)&type_of_service));
         size = sizeof(int);
         return copy_to_user(value_size, &size);
     }
