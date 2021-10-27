@@ -37,7 +37,7 @@ GitFilesView::GitFilesView(GitFileActionCallback callback, NonnullRefPtr<Gfx::Bi
 
 void GitFilesView::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left) {
+    if (event.button() != GUI::MouseButton::Primary) {
         ListView::mousedown_event(event);
         return;
     }

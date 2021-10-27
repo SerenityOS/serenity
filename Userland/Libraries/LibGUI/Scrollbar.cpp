@@ -220,7 +220,7 @@ void Scrollbar::on_automatic_scrolling_timer_fired()
 
 void Scrollbar::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
     if (!has_scrubber())
         return;
@@ -259,7 +259,7 @@ void Scrollbar::mousedown_event(MouseEvent& event)
 
 void Scrollbar::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
     set_automatic_scrolling_active(false, Component::None);
     update();

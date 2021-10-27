@@ -111,7 +111,7 @@ int OpacitySlider::value_at(const Gfx::IntPoint& position) const
 
 void OpacitySlider::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         m_dragging = true;
         set_value(value_at(event.position()));
         return;
@@ -130,7 +130,7 @@ void OpacitySlider::mousemove_event(MouseEvent& event)
 
 void OpacitySlider::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         m_dragging = false;
         return;
     }

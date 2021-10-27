@@ -28,7 +28,7 @@ Label::~Label()
 
 void Label::handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button)
 {
-    if (button != GUI::MouseButton::Left)
+    if (button != GUI::MouseButton::Primary)
         return;
 
     if (auto* control = control_node(); control)
@@ -39,7 +39,7 @@ void Label::handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, uns
 
 void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& position, unsigned button)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left)
+    if (!m_tracking_mouse || button != GUI::MouseButton::Primary)
         return;
 
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.

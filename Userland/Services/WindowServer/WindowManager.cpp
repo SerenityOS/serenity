@@ -724,7 +724,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
 {
     if (!m_move_window)
         return false;
-    if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
 
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
@@ -964,7 +964,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         });
     }
 
-    if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
+    if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Primary))
         return true;
 
     if (auto* window = current_window_stack().window_at(event.position())) {
@@ -989,10 +989,10 @@ void WindowManager::set_cursor_tracking_button(Button* button)
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> ClickMetadata const&
 {
     switch (button) {
-    case MouseButton::Left:
-        return m_left;
-    case MouseButton::Right:
-        return m_right;
+    case MouseButton::Primary:
+        return m_primary;
+    case MouseButton::Secondary:
+        return m_secondary;
     case MouseButton::Middle:
         return m_middle;
     case MouseButton::Back:
@@ -1007,10 +1007,10 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) con
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> ClickMetadata&
 {
     switch (button) {
-    case MouseButton::Left:
-        return m_left;
-    case MouseButton::Right:
-        return m_right;
+    case MouseButton::Primary:
+        return m_primary;
+    case MouseButton::Secondary:
+        return m_secondary;
     case MouseButton::Middle:
         return m_middle;
     case MouseButton::Back:
@@ -1163,11 +1163,11 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
     if (!blocking_modal_window && window.is_movable()) {
-        if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+        if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Primary) {
             start_window_move(window, event);
             return;
         }
-        if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
+        if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Secondary && !window.blocking_modal_window()) {
             start_window_resize(window, event);
             return;
         }

@@ -142,7 +142,7 @@ void HeaderView::doubleclick_event(MouseEvent& event)
 
 void HeaderView::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     if (!model())
@@ -227,7 +227,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
 
 void HeaderView::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         if (m_in_section_resize) {
             if (!section_resize_grabbable_rect(m_resizing_section).contains(event.position()))
                 set_override_cursor(Gfx::StandardCursor::None);

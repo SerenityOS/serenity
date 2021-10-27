@@ -180,7 +180,7 @@ void ValueSlider::mousemove_event(MouseEvent& event)
 
 void ValueSlider::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     m_textbox->set_focus(true);
@@ -193,7 +193,7 @@ void ValueSlider::mousedown_event(MouseEvent& event)
 
 void ValueSlider::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     m_dragging = false;

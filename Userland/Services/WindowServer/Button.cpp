@@ -45,14 +45,14 @@ void Button::on_mouse_event(const MouseEvent& event)
     auto interesting_button = false;
 
     switch (event.button()) {
-    case MouseButton::Left:
+    case MouseButton::Primary:
         interesting_button = !!on_click;
         break;
     case MouseButton::Middle:
         interesting_button = !!on_middle_click;
         break;
-    case MouseButton::Right:
-        interesting_button = !!on_right_click;
+    case MouseButton::Secondary:
+        interesting_button = !!on_secondary_click;
         break;
     default:
         break;
@@ -63,14 +63,14 @@ void Button::on_mouse_event(const MouseEvent& event)
 
     auto& wm = WindowManager::the();
 
-    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right || event.button() == MouseButton::Middle)) {
+    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Primary || event.button() == MouseButton::Secondary || event.button() == MouseButton::Middle)) {
         m_pressed = true;
         wm.set_cursor_tracking_button(this);
         m_frame.invalidate(m_relative_rect);
         return;
     }
 
-    if (event.type() == Event::MouseUp && (event.button() == MouseButton::Left || event.button() == MouseButton::Right || event.button() == MouseButton::Middle)) {
+    if (event.type() == Event::MouseUp && (event.button() == MouseButton::Primary || event.button() == MouseButton::Secondary || event.button() == MouseButton::Middle)) {
         if (wm.cursor_tracking_button() != this)
             return;
         wm.set_cursor_tracking_button(nullptr);
@@ -78,14 +78,14 @@ void Button::on_mouse_event(const MouseEvent& event)
         m_pressed = false;
         if (rect().contains(event.position())) {
             switch (event.button()) {
-            case MouseButton::Left:
+            case MouseButton::Primary:
                 if (on_click)
                     on_click(*this);
                 break;
 
-            case MouseButton::Right:
-                if (on_right_click)
-                    on_right_click(*this);
+            case MouseButton::Secondary:
+                if (on_secondary_click)
+                    on_secondary_click(*this);
                 break;
 
             default:
@@ -113,7 +113,7 @@ void Button::on_mouse_event(const MouseEvent& event)
             m_frame.invalidate(m_relative_rect);
     }
 
-    if (event.type() == Event::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
+    if (event.type() == Event::MouseMove && event.buttons() & (unsigned)MouseButton::Primary) {
         if (wm.cursor_tracking_button() != this)
             return;
         bool old_pressed = m_pressed;

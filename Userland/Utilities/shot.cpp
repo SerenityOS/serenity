@@ -41,7 +41,7 @@ public:
 private:
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Left)
+        if (event.button() == GUI::MouseButton::Primary)
             m_anchor_point = event.position();
     };
 
@@ -55,7 +55,7 @@ private:
 
     virtual void mouseup_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Left)
+        if (event.button() == GUI::MouseButton::Primary)
             m_window->close();
     };
 

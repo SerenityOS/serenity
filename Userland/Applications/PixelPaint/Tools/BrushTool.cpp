@@ -32,7 +32,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
-    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
+    if (layer_event.button() != GUI::MouseButton::Primary && layer_event.button() != GUI::MouseButton::Secondary)
         return;
 
     // Shift+Click draws a line from the last position to current one.
@@ -60,7 +60,7 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
-    if (!(layer_event.buttons() & GUI::MouseButton::Left || layer_event.buttons() & GUI::MouseButton::Right))
+    if (!(layer_event.buttons() & GUI::MouseButton::Primary || layer_event.buttons() & GUI::MouseButton::Secondary))
         return;
 
     draw_line(layer->bitmap(), color_for(layer_event), m_last_position, layer_event.position());

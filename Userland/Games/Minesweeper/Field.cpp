@@ -19,14 +19,14 @@ class SquareButton final : public GUI::Button {
     C_OBJECT(SquareButton);
 
 public:
-    Function<void()> on_right_click;
+    Function<void()> on_secondary_click;
     Function<void()> on_middle_click;
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Right) {
-            if (on_right_click)
-                on_right_click();
+        if (event.button() == GUI::MouseButton::Secondary) {
+            if (on_secondary_click)
+                on_secondary_click();
         }
         if (event.button() == GUI::MouseButton::Middle) {
             if (on_middle_click)
@@ -50,8 +50,8 @@ public:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Right || event.button() == GUI::MouseButton::Left) {
-            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) || m_square.field->is_single_chording()) {
+        if (event.button() == GUI::MouseButton::Secondary || event.button() == GUI::MouseButton::Primary) {
+            if (event.buttons() == (GUI::MouseButton::Secondary | GUI::MouseButton::Primary) || m_square.field->is_single_chording()) {
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
@@ -82,7 +82,7 @@ public:
     virtual void mouseup_event(GUI::MouseEvent& event) override
     {
         if (m_chord) {
-            if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
+            if (event.button() == GUI::MouseButton::Primary || event.button() == GUI::MouseButton::Secondary) {
                 if (rect().contains(event.position())) {
                     if (on_chord_click)
                         on_chord_click();
@@ -248,8 +248,8 @@ void Field::reset()
                 square.button->on_click = [this, &square](auto) {
                     on_square_clicked(square);
                 };
-                square.button->on_right_click = [this, &square] {
-                    on_square_right_clicked(square);
+                square.button->on_secondary_click = [this, &square] {
+                    on_square_secondary_clicked(square);
                 };
                 square.button->on_middle_click = [this, &square] {
                     on_square_middle_clicked(square);
@@ -385,7 +385,7 @@ void Field::on_square_chorded(Square& square)
     });
 }
 
-void Field::on_square_right_clicked(Square& square)
+void Field::on_square_secondary_clicked(Square& square)
 {
     if (square.is_swept)
         return;

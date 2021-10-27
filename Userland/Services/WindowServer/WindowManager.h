@@ -388,8 +388,8 @@ private:
 
         void reset()
         {
-            m_left = {};
-            m_right = {};
+            m_primary = {};
+            m_secondary = {};
             m_middle = {};
             m_back = {};
             m_forward = {};
@@ -398,8 +398,8 @@ private:
         WeakPtr<Window> m_clicked_window;
 
     private:
-        ClickMetadata m_left;
-        ClickMetadata m_right;
+        ClickMetadata m_primary;
+        ClickMetadata m_secondary;
         ClickMetadata m_middle;
         ClickMetadata m_back;
         ClickMetadata m_forward;
