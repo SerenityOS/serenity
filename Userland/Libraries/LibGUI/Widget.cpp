@@ -1108,6 +1108,7 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unreg
         });
     }
 
+    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
     auto children = json.get("children");
     if (children.is_array()) {
         for (auto& child_json_value : children.as_array().values()) {
@@ -1123,6 +1124,10 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unreg
             RefPtr<Core::Object> child;
             if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
                 child = registration->construct();
+                if (!child || !registration->is_derived_from(widget_class)) {
+                    dbgln("Invalid widget class: '{}'", class_name.to_string());
+                    return false;
+                }
             } else {
                 child = unregistered_child_handler(class_name.as_string());
             }
