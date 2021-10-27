@@ -41,7 +41,6 @@ public:
 private:
     MiniWidgetGallery()
     {
-        set_fill_with_background_color(true);
         m_button = add<GUI::Button>();
         m_button->set_text("Button");
         m_checkbox = add<GUI::CheckBox>();
@@ -144,6 +143,8 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
             rect.center_vertically_within(titlebar_text_rect);
             button.rect = rect;
         }
+
+        painter.fill_rect(rect, m_preview_palette.window());
 
         auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
         Gfx::PainterStateSaver saver(painter);
