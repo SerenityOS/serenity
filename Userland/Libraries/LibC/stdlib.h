@@ -98,6 +98,4 @@ int posix_openpt(int flags);
 int grantpt(int fd);
 int unlockpt(int fd);
 
-long getauxval(long type);
-
 __END_DECLS
