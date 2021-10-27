@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 
 namespace ThemeEditor {
@@ -28,6 +29,8 @@ public:
 private:
     explicit PreviewWidget(const Gfx::Palette&);
 
+    void load_theme_bitmaps();
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
@@ -42,6 +45,17 @@ private:
     RefPtr<Gfx::Bitmap> m_close_bitmap;
     RefPtr<Gfx::Bitmap> m_maximize_bitmap;
     RefPtr<Gfx::Bitmap> m_minimize_bitmap;
+
+    RefPtr<Gfx::Bitmap> m_active_window_shadow;
+    RefPtr<Gfx::Bitmap> m_inactive_window_shadow;
+    RefPtr<Gfx::Bitmap> m_menu_shadow;
+    RefPtr<Gfx::Bitmap> m_taskbar_shadow;
+    RefPtr<Gfx::Bitmap> m_tooltip_shadow;
+    String m_last_active_window_shadow_path;
+    String m_last_inactive_window_shadow_path;
+    String m_last_menu_shadow_path;
+    String m_last_taskbar_shadow_path;
+    String m_last_tooltip_shadow_path;
 };
 
 }
