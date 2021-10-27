@@ -40,6 +40,7 @@ set(LIBTEST_BASED_SOURCES
     TestMemoryDeviceMmap.cpp
     TestMunMap.cpp
     TestProcFS.cpp
+    TestProcFSWrite.cpp
 )
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
