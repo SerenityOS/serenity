@@ -13,6 +13,29 @@ extern "C" {
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
+enum {
+    IFF_UP = 1 << 0,
+    IFF_BROADCAST = 1 << 1,
+    IFF_DEBUG = 1 << 2,
+    IFF_LOOPBACK = 1 << 3,
+    IFF_POINTOPOINT = 1 << 4,
+    IFF_RUNNING = 1 << 5,
+    IFF_NOARP = 1 << 6,
+    IFF_PROMISC = 1 << 7,
+    IFF_ALLMULTI = 1 << 8,
+    IFF_MULTICAST = 1 << 9,
+};
+#define IFF_UP IFF_UP
+#define IFF_BROADCAST IFF_BROADCAST
+#define IFF_DEBUG IFF_DEBUG
+#define IFF_LOOPBACK IFF_LOOPBACK
+#define IFF_POINTOPOINT IFF_POINTOPOINT
+#define IFF_RUNNING IFF_RUNNING
+#define IFF_NOARP IFF_NOARP
+#define IFF_PROMISC IFF_PROMISC
+#define IFF_ALLMULTI IFF_ALLMULTI
+#define IFF_MULTICAST IFF_MULTICAST
+
 struct ifconf {
     int ifc_len;
     union {
