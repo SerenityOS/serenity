@@ -551,12 +551,14 @@ KResult IPv4Socket::getsockopt(OpenFileDescription& description, int level, int 
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     switch (option) {
-    case IP_TTL:
+    case IP_TTL: {
         if (size < sizeof(int))
             return EINVAL;
-        TRY(copy_to_user(static_ptr_cast<int*>(value), (int*)&m_ttl));
+        int ttl = m_ttl;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), (int*)&ttl));
         size = sizeof(int);
         return copy_to_user(value_size, &size);
+    }
     case IP_MULTICAST_LOOP: {
         if (size < 1)
             return EINVAL;
