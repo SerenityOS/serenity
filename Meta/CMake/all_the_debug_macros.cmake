@@ -227,3 +227,5 @@ set(WSSCREEN_DEBUG ON)
 # set(CONSOLE_OUT_TO_BOCHS_DEBUG_PORT)
 # False positive: BOCHS_DEBUG_PORT represents an IO port constant
 # set(BOCHS_DEBUG_PORT)
+# False positive: IFF_DEBUG is an ioctl flag
+# set(IFF_DEBUG)
