@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/types.h>
+#include <Kernel/API/POSIX/sys/uio.h>
 #include <Kernel/API/POSIX/sys/un.h>
 
 #ifdef __cplusplus
