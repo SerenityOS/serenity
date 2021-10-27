@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,6 +85,8 @@ PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     m_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png");
     m_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png");
 
+    load_theme_bitmaps();
+
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);
 }
@@ -92,10 +95,33 @@ PreviewWidget::~PreviewWidget()
 {
 }
 
+void PreviewWidget::load_theme_bitmaps()
+{
+    auto load_bitmap = [](String const& path, String& last_path, RefPtr<Gfx::Bitmap>& bitmap) {
+        if (path.is_empty()) {
+            last_path = String::empty();
+            bitmap = nullptr;
+        } else if (last_path != path) {
+            bitmap = Gfx::Bitmap::try_load_from_file(path);
+            if (bitmap)
+                last_path = path;
+            else
+                last_path = String::empty();
+        }
+    };
+
+    load_bitmap(m_preview_palette.active_window_shadow_path(), m_last_active_window_shadow_path, m_active_window_shadow);
+    load_bitmap(m_preview_palette.inactive_window_shadow_path(), m_last_inactive_window_shadow_path, m_inactive_window_shadow);
+    load_bitmap(m_preview_palette.menu_shadow_path(), m_last_menu_shadow_path, m_menu_shadow);
+    load_bitmap(m_preview_palette.taskbar_shadow_path(), m_last_taskbar_shadow_path, m_taskbar_shadow);
+    load_bitmap(m_preview_palette.tooltip_shadow_path(), m_last_tooltip_shadow_path, m_tooltip_shadow);
+}
+
 void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
 {
     m_preview_palette = palette;
     m_gallery->set_preview_palette(palette);
+    load_theme_bitmaps();
     update();
 }
 
@@ -139,14 +165,27 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
         for (auto& button : buttons) {
             pos -= window_button_width;
-            Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
-            rect.center_vertically_within(titlebar_text_rect);
-            button.rect = rect;
+            Gfx::IntRect button_rect { pos, 0, window_button_width, window_button_height };
+            button_rect.center_vertically_within(titlebar_text_rect);
+            button.rect = button_rect;
         }
 
         painter.fill_rect(rect, m_preview_palette.window());
 
         auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
+
+        auto paint_shadow = [](Gfx::Painter& painter, Gfx::IntRect& frame_rect, Gfx::Bitmap const& shadow_bitmap) {
+            auto total_shadow_size = shadow_bitmap.height();
+            auto shadow_rect = frame_rect.inflated(total_shadow_size, total_shadow_size);
+            Gfx::StylePainter::paint_simple_rect_shadow(painter, shadow_rect, shadow_bitmap);
+        };
+
+        if (state == Gfx::WindowTheme::WindowState::Active && m_active_window_shadow) {
+            paint_shadow(painter, frame_rect, *m_active_window_shadow);
+        } else if (state == Gfx::WindowTheme::WindowState::Inactive && m_inactive_window_shadow) {
+            paint_shadow(painter, frame_rect, *m_inactive_window_shadow);
+        }
+
         Gfx::PainterStateSaver saver(painter);
         painter.translate(frame_rect.location());
         Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, buttons.last().rect, 0, false);
