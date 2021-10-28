@@ -112,16 +112,18 @@ Attribute const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* 
 
     // 1. If element is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
-    Optional<String> qualified_name_lowercase;
-    if (associated_element->namespace_uri() == Namespace::HTML) {
-        qualified_name_lowercase = qualified_name.to_lowercase_string();
-        qualified_name = qualified_name_lowercase->view();
-    }
+    bool compare_as_lowercase = associated_element->namespace_uri() == Namespace::HTML;
 
     // 2. Return the first attribute in element’s attribute list whose qualified name is qualifiedName; otherwise null.
     for (auto const& attribute : m_attributes) {
-        if (attribute.name() == qualified_name)
-            return &attribute;
+        if (compare_as_lowercase) {
+            if (attribute.name().equals_ignoring_case(qualified_name))
+                return &attribute;
+        } else {
+            if (attribute.name() == qualified_name)
+                return &attribute;
+        }
+
         if (item_index)
             ++(*item_index);
     }
