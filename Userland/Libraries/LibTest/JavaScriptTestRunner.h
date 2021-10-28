@@ -239,7 +239,7 @@ inline AK::Result<NonnullRefPtr<JS::SourceTextModule>, ParserError> parse_module
 inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
     auto results = MUST(interpreter.global_object().get("__TestResults__"));
-    auto json_string = JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined());
+    auto json_string = TRY_OR_DISCARD(JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined()));
 
     auto json = JsonValue::from_string(json_string);
     if (!json.has_value())
