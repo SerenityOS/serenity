@@ -7,10 +7,13 @@ endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(KERNEL_ARCH aarch64)
+    set(BFDNAME elf64-littleaarch64)
 elseif ("${SERENITY_ARCH}" STREQUAL "i686")
     set(KERNEL_ARCH i386)
+    set(BFDNAME elf32-i386)
 elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_ARCH x86_64)
+    set(BFDNAME elf64-x86-64)
 endif()
 
 set(KERNEL_HEAP_SOURCES
@@ -367,7 +370,7 @@ else()
     set(SOURCES
         ${SOURCES}
         ${AK_SOURCES}
-        
+
         Arch/aarch64/dummy.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
@@ -408,7 +411,7 @@ else() # Assume Clang
 
     # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script
     set(TARGET_STRING "--target=${CMAKE_CXX_COMPILER_TARGET}")
-    
+
     add_link_options(LINKER:--build-id=none)
 endif()
 
@@ -512,7 +515,8 @@ endif()
 add_custom_command(
     TARGET Kernel POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E env CXXFILT=${SERENITY_CXXFILT} NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-    COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${SERENITY_GNU_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+    COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${SERENITY_GNU_OBJCOPY} BFDNAME=${BFDNAME} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+    COMMAND ${CMAKE_OBJCOPY} --target=${BFDNAME} Kernel # HACK: GNU objcopy strips the machine type on x86_64 Clang, we add it back.
     COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
     COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
