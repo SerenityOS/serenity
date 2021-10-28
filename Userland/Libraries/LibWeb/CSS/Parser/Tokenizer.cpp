@@ -685,7 +685,7 @@ Token Tokenizer::consume_a_numeric_token()
 
         auto unit = consume_a_name();
         VERIFY(!unit.is_empty() && !unit.is_whitespace());
-        token.m_unit.append(unit);
+        token.m_unit = move(unit);
 
         return token;
     }
