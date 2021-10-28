@@ -12,9 +12,10 @@ jobs:
     steps:
       - name: Get PR Commits
         id: 'get-pr-commits'
-        uses: IdanHo/get-pr-commits@d94b66d146a31ef91e54a2597dee4fb523157232
+        uses: thislooksfun/get-pr-commits@4dddd32f36d0baafbaecc6c1317e4f8942c11570
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          keep_keypaths: '[["sha"], ["commit", "message"]]'
 
       - name: Check linebreaks
         if: ${{ success() || failure() }}
