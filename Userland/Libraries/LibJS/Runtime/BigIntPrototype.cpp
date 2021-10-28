@@ -24,9 +24,9 @@ void BigIntPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 
     // 21.2.3.5 BigInt.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-bigint.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.BigInt.as_string()), Attribute::Configurable);
@@ -48,30 +48,28 @@ static ThrowCompletionOr<BigInt*> this_bigint_value(GlobalObject& global_object,
 }
 
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto* bigint = TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
+    auto* bigint = TRY(this_bigint_value(global_object, vm.this_value(global_object)));
     double radix = 10;
     if (!vm.argument(0).is_undefined()) {
-        radix = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
-        if (radix < 2 || radix > 36) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
-            return {};
-        }
+        radix = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+        if (radix < 2 || radix > 36)
+            return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidRadix);
     }
     return js_string(vm, bigint->big_integer().to_base(radix));
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
-JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
     return to_string(vm, global_object);
 }
 
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
-JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntPrototype::value_of)
+JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    return TRY_OR_DISCARD(this_bigint_value(global_object, vm.this_value(global_object)));
+    return TRY(this_bigint_value(global_object, vm.this_value(global_object)));
 }
 
 }
