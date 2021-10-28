@@ -8,6 +8,7 @@
 
 #include <LibGUI/Forward.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibIPC/Decoder.h>
