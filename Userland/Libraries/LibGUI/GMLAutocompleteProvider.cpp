@@ -184,15 +184,24 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         break;
     }
     case InIdentifier: {
-        if (class_names.is_empty())
-            break;
         if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
             // After an identifier, but with extra space
             // TODO: Maybe suggest a colon?
             break;
         }
 
-        register_class_properties_matching_pattern(make_fuzzy(identifier_string), identifier_string.length());
+        auto fuzzy_pattern = make_fuzzy(identifier_string);
+        if (!class_names.is_empty()) {
+            register_class_properties_matching_pattern(fuzzy_pattern, identifier_string.length());
+
+            auto parent_registration = Core::ObjectClassRegistration::find(class_names.last());
+            if (parent_registration && parent_registration->is_derived_from(layout_class)) {
+                // Layouts can't have child classes, so why suggest them?
+                break;
+            }
+        }
+
+        register_widgets_matching_pattern(fuzzy_pattern, identifier_string.length());
         break;
     }
     case AfterClassName: {
