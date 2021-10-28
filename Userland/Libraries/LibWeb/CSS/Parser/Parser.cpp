@@ -387,15 +387,17 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
         };
 
     } else if (first_value.is_block() && first_value.block().is_square()) {
-        auto& attribute_parts = first_value.block().values();
+        auto attribute_tokens = TokenStream { first_value.block().values() };
 
-        if (attribute_parts.is_empty()) {
+        attribute_tokens.skip_whitespace();
+
+        if (!attribute_tokens.has_next_token()) {
             dbgln_if(CSS_PARSER_DEBUG, "CSS attribute selector is empty!");
             return ParsingResult::SyntaxError;
         }
 
         // FIXME: Handle namespace prefix for attribute name.
-        auto& attribute_part = attribute_parts.first();
+        auto& attribute_part = attribute_tokens.next_token();
         if (!attribute_part.is(Token::Type::Ident)) {
             dbgln_if(CSS_PARSER_DEBUG, "Expected ident for attribute name, got: '{}'", attribute_part.to_debug_string());
             return ParsingResult::SyntaxError;
@@ -414,11 +416,11 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             }
         };
 
-        if (attribute_parts.size() == 1)
+        attribute_tokens.skip_whitespace();
+        if (!attribute_tokens.has_next_token())
             return simple_selector;
 
-        size_t attribute_index = 1;
-        auto& delim_part = attribute_parts.at(attribute_index);
+        auto& delim_part = attribute_tokens.next_token();
         if (!delim_part.is(Token::Type::Delim)) {
             dbgln_if(CSS_PARSER_DEBUG, "Expected a delim for attribute comparison, got: '{}'", delim_part.to_debug_string());
             return ParsingResult::SyntaxError;
@@ -426,15 +428,13 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
 
         if (delim_part.token().delim() == "="sv) {
             simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
-            attribute_index++;
         } else {
-            attribute_index++;
-            if (attribute_index >= attribute_parts.size()) {
+            if (!attribute_tokens.has_next_token()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended part way through a match type.");
                 return ParsingResult::SyntaxError;
             }
 
-            auto& delim_second_part = attribute_parts.at(attribute_index);
+            auto& delim_second_part = attribute_tokens.next_token();
             if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == "=")) {
                 dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
                 return ParsingResult::SyntaxError;
@@ -442,33 +442,33 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
 
             if (delim_part.token().delim() == "~"sv) {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
-                attribute_index++;
             } else if (delim_part.token().delim() == "*"sv) {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
-                attribute_index++;
             } else if (delim_part.token().delim() == "|"sv) {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
-                attribute_index++;
             } else if (delim_part.token().delim() == "^"sv) {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
-                attribute_index++;
             } else if (delim_part.token().delim() == "$"sv) {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
-                attribute_index++;
+            } else {
+                attribute_tokens.reconsume_current_input_token();
             }
         }
 
-        if (attribute_index >= attribute_parts.size()) {
+        attribute_tokens.skip_whitespace();
+        if (!attribute_tokens.has_next_token()) {
             dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended without a value to match.");
             return ParsingResult::SyntaxError;
         }
 
-        auto& value_part = attribute_parts.at(attribute_index);
+        auto& value_part = attribute_tokens.next_token();
         if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
             dbgln_if(CSS_PARSER_DEBUG, "Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
             return ParsingResult::SyntaxError;
         }
         simple_selector.attribute.value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+
+        attribute_tokens.skip_whitespace();
 
         // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
         return simple_selector;
