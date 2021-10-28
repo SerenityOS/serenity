@@ -335,6 +335,7 @@ public:
     ErrorOr<FlatPtr> sys$execve(Userspace<const Syscall::SC_execve_params*>);
     ErrorOr<FlatPtr> sys$dup2(int old_fd, int new_fd);
     ErrorOr<FlatPtr> sys$sigaction(int signum, Userspace<const sigaction*> act, Userspace<sigaction*> old_act);
+    ErrorOr<FlatPtr> sys$sigaltstack(Userspace<const stack_t*> ss, Userspace<stack_t*> old_ss);
     ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
@@ -555,6 +556,8 @@ private:
     void clear_futex_queues_on_exec();
 
     void setup_socket_fd(int fd, NonnullRefPtr<OpenFileDescription> description, int type);
+
+    ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
 public:
     NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }

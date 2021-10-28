@@ -21,6 +21,7 @@ int sigaction(int sig, const struct sigaction* act, struct sigaction* old_act);
 int sigemptyset(sigset_t*);
 int sigfillset(sigset_t*);
 int sigaddset(sigset_t*, int sig);
+int sigaltstack(const stack_t* ss, stack_t* old_ss);
 int sigdelset(sigset_t*, int sig);
 int sigismember(const sigset_t*, int sig);
 int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);

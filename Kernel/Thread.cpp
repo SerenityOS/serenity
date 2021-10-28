@@ -802,6 +802,17 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
+bool Thread::has_alternative_signal_stack() const
+{
+    return m_alternative_signal_stack_size != 0;
+}
+
+bool Thread::is_in_alternative_signal_stack() const
+{
+    auto sp = get_register_dump_from_stack().userspace_sp();
+    return sp >= m_alternative_signal_stack && sp < m_alternative_signal_stack + m_alternative_signal_stack_size;
+}
+
 static void push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
     stack -= sizeof(FlatPtr);
@@ -923,9 +934,16 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_signal_mask |= new_signal_mask;
     m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
 
+    bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && has_alternative_signal_stack() && !is_in_alternative_signal_stack();
+
     auto setup_stack = [&](RegisterState& state) {
-        FlatPtr stack = state.userspace_sp();
-        FlatPtr old_sp = stack;
+        FlatPtr old_sp = state.userspace_sp();
+        FlatPtr stack;
+        if (use_alternative_stack)
+            stack = m_alternative_signal_stack + m_alternative_signal_stack_size;
+        else
+            stack = old_sp;
+
         FlatPtr ret_ip = state.ip();
         FlatPtr ret_flags = state.flags();
 
