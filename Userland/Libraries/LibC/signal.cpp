@@ -75,6 +75,12 @@ int sigaddset(sigset_t* set, int sig)
     return 0;
 }
 
+int sigaltstack(const stack_t* ss, stack_t* old_ss)
+{
+    int rc = syscall(SC_sigaltstack, ss, old_ss);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int sigdelset(sigset_t* set, int sig)
 {
     if (sig < 1 || sig > 32) {

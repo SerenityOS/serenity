@@ -172,6 +172,8 @@ public:
     void set_writable(bool b) { set_access_bit(Access::Write, b); }
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
+    void unsafe_clear_access() { m_access = Region::None; }
+
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualRange {
