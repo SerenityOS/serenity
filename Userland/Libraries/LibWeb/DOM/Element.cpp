@@ -114,7 +114,7 @@ bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensit
     return any_of(m_classes, [&](auto& it) {
         return case_sensitivity == CaseSensitivity::CaseSensitive
             ? it == class_name
-            : it.to_lowercase() == class_name.to_lowercase();
+            : it.equals_ignoring_case(class_name);
     });
 }
 
