@@ -98,7 +98,10 @@ float StyleProperties::line_height(const Layout::Node& layout_node) const
 {
     auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, Length::make_auto());
     if (line_height_length.is_absolute())
-        return (float)line_height_length.to_px(layout_node);
+        return line_height_length.to_px(layout_node);
+    auto font_size = length_or_fallback(CSS::PropertyID::FontSize, Length::make_auto());
+    if (font_size.is_absolute())
+        return font_size.to_px(layout_node);
     return (float)computed_font().glyph_height() * 1.4f;
 }
 
