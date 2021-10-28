@@ -22,8 +22,8 @@ void BooleanPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     BooleanObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 BooleanPrototype::~BooleanPrototype()
@@ -31,30 +31,26 @@ BooleanPrototype::~BooleanPrototype()
 }
 
 // 20.3.3.2 Boolean.prototype.toString ( ), https://tc39.es/ecma262/#sec-boolean.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(BooleanPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
     if (this_value.is_boolean())
         return js_string(vm, this_value.as_bool() ? "true" : "false");
-    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
-        return {};
-    }
+    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object()))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
 
     bool bool_value = static_cast<const BooleanObject&>(this_value.as_object()).value_of().as_bool();
     return js_string(vm, bool_value ? "true" : "false");
 }
 
 // 20.3.3.3 Boolean.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-boolean.prototype.valueof
-JS_DEFINE_OLD_NATIVE_FUNCTION(BooleanPrototype::value_of)
+JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
 {
     auto this_value = vm.this_value(global_object);
     if (this_value.is_boolean())
         return this_value;
-    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
-        return {};
-    }
+    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object()))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Boolean");
 
     return static_cast<const BooleanObject&>(this_value.as_object()).value_of();
 }
