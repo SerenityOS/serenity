@@ -155,6 +155,20 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout");
     };
 
+    auto register_properties_and_widgets_matching_pattern = [&](String pattern, size_t partial_input_length) {
+        if (!class_names.is_empty()) {
+            register_class_properties_matching_pattern(pattern, partial_input_length);
+
+            auto parent_registration = Core::ObjectClassRegistration::find(class_names.last());
+            if (parent_registration && parent_registration->is_derived_from(layout_class)) {
+                // Layouts can't have child classes, so why suggest them?
+                return;
+            }
+        }
+
+        register_widgets_matching_pattern(pattern, partial_input_length);
+    };
+
     bool after_token_on_same_line = last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line();
     switch (state) {
     case Free:
@@ -191,18 +205,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         }
 
-        auto fuzzy_pattern = make_fuzzy(identifier_string);
-        if (!class_names.is_empty()) {
-            register_class_properties_matching_pattern(fuzzy_pattern, identifier_string.length());
-
-            auto parent_registration = Core::ObjectClassRegistration::find(class_names.last());
-            if (parent_registration && parent_registration->is_derived_from(layout_class)) {
-                // Layouts can't have child classes, so why suggest them?
-                break;
-            }
-        }
-
-        register_widgets_matching_pattern(fuzzy_pattern, identifier_string.length());
+        register_properties_and_widgets_matching_pattern(make_fuzzy(identifier_string), identifier_string.length());
         break;
     }
     case AfterClassName: {
@@ -213,17 +216,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                 break;
             }
         }
-        if (!class_names.is_empty()) {
-            register_class_properties_matching_pattern("*", 0u);
 
-            auto parent_registration = Core::ObjectClassRegistration::find(class_names.last());
-            if (parent_registration && parent_registration->is_derived_from(layout_class)) {
-                // Layouts can't have child classes, so why suggest them?
-                break;
-            }
-        }
-
-        register_widgets_matching_pattern("*", 0u);
+        register_properties_and_widgets_matching_pattern("*", 0u);
         break;
     }
     case AfterIdentifier:
