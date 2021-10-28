@@ -5,6 +5,7 @@
  */
 
 #include <LibGUI/AutocompleteProvider.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextEditor.h>
@@ -86,10 +87,17 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 {
     m_popup_window = GUI::Window::construct(m_editor->window());
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
-    m_popup_window->set_rect(0, 0, 300, 100);
+    m_popup_window->set_rect(0, 0, 175, 25);
 
-    m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
+    auto& main_widget = m_popup_window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    m_suggestion_view = main_widget.add<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
+    m_suggestion_view->set_visible(false);
+
+    m_no_suggestions_view = main_widget.add<GUI::Label>("No suggestions");
 }
 
 void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
@@ -104,15 +112,17 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
         model.set_suggestions(move(suggestions));
     } else {
         m_suggestion_view->set_model(adopt_ref(*new AutocompleteSuggestionModel(move(suggestions))));
-        m_suggestion_view->update();
         if (has_suggestions)
             m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
     }
 
     m_suggestion_view->model()->invalidate();
+
+    m_suggestion_view->set_visible(has_suggestions);
+    m_no_suggestions_view->set_visible(!has_suggestions);
+    m_popup_window->resize(has_suggestions ? Gfx::IntSize(300, 100) : Gfx::IntSize(175, 25));
+
     m_suggestion_view->update();
-    if (!has_suggestions)
-        close();
 }
 
 bool AutocompleteBox::is_visible() const
@@ -122,7 +132,7 @@ bool AutocompleteBox::is_visible() const
 
 void AutocompleteBox::show(Gfx::IntPoint suggestion_box_location)
 {
-    if (!m_suggestion_view->model() || m_suggestion_view->model()->row_count() == 0)
+    if (!m_suggestion_view->model())
         return;
 
     m_popup_window->move_to(suggestion_box_location);

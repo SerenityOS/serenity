@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Forward.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibIPC/Decoder.h>
@@ -92,6 +93,7 @@ private:
     WeakPtr<TextEditor> m_editor;
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
+    RefPtr<GUI::Label> m_no_suggestions_view;
 };
 
 }

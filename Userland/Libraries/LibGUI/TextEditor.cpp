@@ -814,7 +814,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 
     if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
         if (m_autocomplete_provider) {
-            try_show_autocomplete();
+            try_show_autocomplete(UserRequestedAutocomplete::Yes);
             update_autocomplete.disarm();
             return;
         }
@@ -1456,14 +1456,14 @@ void TextEditor::undefer_reflow()
     }
 }
 
-void TextEditor::try_show_autocomplete()
+void TextEditor::try_show_autocomplete(UserRequestedAutocomplete user_requested_autocomplete)
 {
     if (m_autocomplete_provider) {
         m_autocomplete_provider->provide_completions([&](auto completions) {
             auto has_completions = !completions.is_empty();
             m_autocomplete_box->update_suggestions(move(completions));
             auto position = content_rect_for_position(cursor()).translated(0, -visible_content_rect().y()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
-            if (has_completions)
+            if (has_completions || user_requested_autocomplete == Yes)
                 m_autocomplete_box->show(position);
         });
     }
@@ -1958,7 +1958,7 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
 
     if (value) {
         VERIFY(m_autocomplete_provider);
-        m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] { try_show_autocomplete(); });
+        m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] { try_show_autocomplete(UserRequestedAutocomplete::No); });
         return;
     }
 
