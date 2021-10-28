@@ -34,7 +34,7 @@ void ProxyConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.revocable, revocable, 2, attr);
+    define_native_function(vm.names.revocable, revocable, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
@@ -58,9 +58,9 @@ ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
-JS_DEFINE_OLD_NATIVE_FUNCTION(ProxyConstructor::revocable)
+JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
-    auto* proxy = TRY_OR_DISCARD(proxy_create(global_object, vm.argument(0), vm.argument(1)));
+    auto* proxy = TRY(proxy_create(global_object, vm.argument(0), vm.argument(1)));
 
     // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/#sec-proxy-revocation-functions
     auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
