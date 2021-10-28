@@ -56,18 +56,16 @@ DataViewPrototype::~DataViewPrototype()
 
 // 25.3.1.1 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
 template<typename T>
-static Value get_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian)
+static ThrowCompletionOr<Value> get_view_value(GlobalObject& global_object, Value request_index, Value is_little_endian)
 {
     auto& vm = global_object.vm();
-    auto* view = TRY_OR_DISCARD(DataViewPrototype::typed_this_value(global_object));
-    auto get_index = TRY_OR_DISCARD(request_index.to_index(global_object));
+    auto* view = TRY(DataViewPrototype::typed_this_value(global_object));
+    auto get_index = TRY(request_index.to_index(global_object));
     auto little_endian = is_little_endian.to_boolean();
 
     auto buffer = view->viewed_array_buffer();
-    if (buffer->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-        return {};
-    }
+    if (buffer->is_detached())
+        return vm.template throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
 
     auto view_offset = view->byte_offset();
     auto view_size = view->byte_length();
@@ -80,10 +78,8 @@ static Value get_view_value(GlobalObject& global_object, Value request_index, Va
     Checked<size_t> end_index = get_index;
     end_index += element_size;
 
-    if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
-        return {};
-    }
+    if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
     return buffer->get_value<T>(buffer_index.value(), false, ArrayBuffer::Order::Unordered, little_endian);
 }
@@ -132,61 +128,61 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
 // 25.3.4.5 DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_big_int_64)
 {
-    return get_view_value<i64>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<i64>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.6 DataView.prototype.getBigUint64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_big_uint_64)
 {
-    return get_view_value<u64>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<u64>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.7 DataView.prototype.getFloat32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_float_32)
 {
-    return get_view_value<float>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<float>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.8 DataView.prototype.getFloat64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_float_64)
 {
-    return get_view_value<double>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<double>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.9 DataView.prototype.getInt8 ( byteOffset ), https://tc39.es/ecma262/#sec-dataview.prototype.getint8
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_8)
 {
-    return get_view_value<i8>(global_object, vm.argument(0), Value(true));
+    return TRY_OR_DISCARD(get_view_value<i8>(global_object, vm.argument(0), Value(true)));
 }
 
 // 25.3.4.10 DataView.prototype.getInt16 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getint16
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_16)
 {
-    return get_view_value<i16>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<i16>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.11 DataView.prototype.getInt32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getint32
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_int_32)
 {
-    return get_view_value<i32>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<i32>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.12 DataView.prototype.getUint8 ( byteOffset ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint8
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_8)
 {
-    return get_view_value<u8>(global_object, vm.argument(0), Value(true));
+    return TRY_OR_DISCARD(get_view_value<u8>(global_object, vm.argument(0), Value(true)));
 }
 
 // 25.3.4.13 DataView.prototype.getUint16 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint16
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_16)
 {
-    return get_view_value<u16>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<u16>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.14 DataView.prototype.getUint32 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getuint32
 JS_DEFINE_OLD_NATIVE_FUNCTION(DataViewPrototype::get_uint_32)
 {
-    return get_view_value<u32>(global_object, vm.argument(0), vm.argument(1));
+    return TRY_OR_DISCARD(get_view_value<u32>(global_object, vm.argument(0), vm.argument(1)));
 }
 
 // 25.3.4.15 DataView.prototype.setBigInt64 ( byteOffset, value [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64
