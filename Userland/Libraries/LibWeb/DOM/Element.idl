@@ -24,6 +24,9 @@ interface Element : Node {
 
     boolean matches(DOMString selectors);
 
+    // legacy alias of .matches
+    [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors);
+
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 
