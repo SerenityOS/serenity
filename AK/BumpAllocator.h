@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -55,14 +56,22 @@ public:
     {
         if (!m_head_chunk)
             return;
-        for_each_chunk([this](auto chunk) {
-            if (!s_unused_allocation_cache) {
-                auto next_chunk = ((ChunkHeader const*)chunk)->next_chunk;
-                if (!next_chunk) {
-                    s_unused_allocation_cache = chunk;
+        // Note that 'cache_filled' is just an educated guess, and we don't rely on it.
+        // If we determine 'cache_filled=true' and the cache becomes empty in the meantime,
+        // then we haven't lost much; it was a close call anyway.
+        // If we determine 'cache_filled=false' and the cache becomes full in the meantime,
+        // then we'll end up with a different chunk to munmap(), no big difference.
+        bool cache_filled = s_unused_allocation_cache.load(MemoryOrder::memory_order_relaxed);
+        for_each_chunk([&](auto chunk) {
+            if (!cache_filled) {
+                cache_filled = true;
+                ((ChunkHeader*)chunk)->next_chunk = 0;
+                chunk = s_unused_allocation_cache.exchange(chunk);
+                if (!chunk)
                     return;
-                }
+                // The cache got filled in the meantime. Oh well, we have to call munmap() anyway.
             }
+
             if constexpr (use_mmap) {
                 munmap((void*)chunk, m_chunk_size);
             } else {
@@ -91,10 +100,8 @@ protected:
     {
         // dbgln("Allocated {} entries in previous chunk and have {} unusable bytes", m_allocations_in_previous_chunk, m_chunk_size - m_byte_offset_into_current_chunk);
         // m_allocations_in_previous_chunk = 0;
-        void* new_chunk;
-        if (s_unused_allocation_cache) {
-            new_chunk = (void*)exchange(s_unused_allocation_cache, 0);
-        } else {
+        void* new_chunk = (void*)s_unused_allocation_cache.exchange(0);
+        if (!new_chunk) {
             if constexpr (use_mmap) {
 #ifdef __serenity__
                 new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
@@ -140,7 +147,7 @@ protected:
     FlatPtr m_current_chunk { 0 };
     size_t m_byte_offset_into_current_chunk { 0 };
     size_t m_chunk_size { 0 };
-    static FlatPtr s_unused_allocation_cache;
+    static Atomic<FlatPtr> s_unused_allocation_cache;
 };
 
 template<typename T, bool use_mmap = false, size_t chunk_size = use_mmap ? 4 * MiB : 4 * KiB>
@@ -186,7 +193,7 @@ public:
 };
 
 template<bool use_mmap, size_t size>
-inline FlatPtr BumpAllocator<use_mmap, size>::s_unused_allocation_cache { 0 };
+inline Atomic<FlatPtr> BumpAllocator<use_mmap, size>::s_unused_allocation_cache { 0 };
 
 }
 
