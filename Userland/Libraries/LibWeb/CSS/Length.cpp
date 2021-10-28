@@ -101,13 +101,6 @@ float Length::to_px(Layout::Node const& layout_node) const
     return to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
 }
 
-float Length::relative_length_to_px(Layout::Node const& layout_node) const
-{
-    auto viewport_rect = layout_node.document().browsing_context()->viewport_rect();
-    auto root_element = layout_node.document().document_element();
-    return relative_length_to_px(viewport_rect, layout_node.font().metrics('M'), root_element->layout_node()->font().presentation_size());
-}
-
 static float resolve_calc_value(CalculatedStyleValue::CalcValue const&, const Layout::Node& layout_node, float reference_for_percent);
 static float resolve_calc_number_value(CalculatedStyleValue::CalcNumberValue const&);
 static float resolve_calc_product(NonnullOwnPtr<CalculatedStyleValue::CalcProduct> const&, const Layout::Node& layout_node, float reference_for_percent);
