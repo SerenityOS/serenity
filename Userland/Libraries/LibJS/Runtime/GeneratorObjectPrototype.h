@@ -21,9 +21,9 @@ public:
     virtual ~GeneratorObjectPrototype() override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(next);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(return_);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(throw_);
+    JS_DECLARE_NATIVE_FUNCTION(next);
+    JS_DECLARE_NATIVE_FUNCTION(return_);
+    JS_DECLARE_NATIVE_FUNCTION(throw_);
 };
 
 }
