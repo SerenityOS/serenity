@@ -59,12 +59,12 @@ String Token::to_debug_string() const
     case Type::Percentage:
         builder.append("Percentage: ");
         builder.append(m_value.to_string());
-        builder.append(m_unit.to_string());
+        builder.append('%');
         return builder.to_string();
     case Type::Dimension:
         builder.append("Dimension: ");
         builder.append(m_value.to_string());
-        builder.append(m_unit.to_string());
+        builder.append(m_unit);
         return builder.to_string();
     case Type::Whitespace:
         builder.append("Whitespace");
@@ -140,7 +140,7 @@ String Token::to_debug_string() const
         }
 
         builder.append("', unit: '");
-        builder.append(m_unit.to_string());
+        builder.append(m_unit);
     }
 
     builder.append("' }");
