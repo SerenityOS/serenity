@@ -406,6 +406,9 @@ typedef struct {
     Elf32_Sword r_addend;
 } Elf32_Rela;
 
+/* Packed relative relocation */
+typedef Elf32_Word Elf32_Relr;
+
 /* Extract relocation info - r_info */
 #define ELF32_R_SYM(i) ((i) >> 8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
@@ -421,6 +424,9 @@ typedef struct {
     Elf64_Xword r_info;    /* index & type of relocation */
     Elf64_Sxword r_addend; /* adjustment value */
 } Elf64_Rela;
+
+/* Packed relative relocation */
+typedef Elf64_Xword Elf64_Relr;
 
 #define ELF64_R_SYM(info) ((info) >> 32)
 #define ELF64_R_TYPE(info) ((info)&0xFFFFFFFF)
@@ -545,10 +551,19 @@ typedef struct {
 #define DT_ENCODING 31        /* further DT_* follow encoding rules */
 #define DT_PREINIT_ARRAY 32   /* address of array of preinit func */
 #define DT_PREINIT_ARRAYSZ 33 /* size of array of preinit func */
-#define DT_LOOS 0x6000000d    /* reserved range for OS */
-#define DT_HIOS 0x6ffff000    /*  specific dynamic array tags */
-#define DT_LOPROC 0x70000000  /* reserved range for processor */
-#define DT_HIPROC 0x7fffffff  /*  specific dynamic array tags */
+/*
+ * NOTE: These values are not yet standardized, but are already used by major implementations
+ * There's an ongoing effort to add them to the gABI.
+ * See: https://sourceware.org/pipermail/libc-alpha/2021-October/131781.html
+ */
+#define DT_RELRSZ 35  /* size of DT_RELR relocation table */
+#define DT_RELR 36    /* address of packed relocation table */
+#define DT_RELRENT 37 /* size of DT_RELR relocation entry */
+
+#define DT_LOOS 0x6000000d   /* reserved range for OS */
+#define DT_HIOS 0x6ffff000   /*  specific dynamic array tags */
+#define DT_LOPROC 0x70000000 /* reserved range for processor */
+#define DT_HIPROC 0x7fffffff /*  specific dynamic array tags */
 
 /* some other useful tags */
 #define DT_GNU_HASH 0x6ffffef5  /* address of GNU hash table */
