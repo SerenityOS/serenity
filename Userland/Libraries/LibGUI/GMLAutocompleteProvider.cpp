@@ -123,6 +123,20 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
 
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
 
+    auto register_layouts_matching_pattern = [&](String pattern, size_t partial_input_length) {
+        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+            if (registration.is_derived_from(layout_class) && &registration != &layout_class && registration.class_name().matches(pattern))
+                class_entries.empend(String::formatted("@{}", registration.class_name()), partial_input_length);
+        });
+    };
+
+    auto register_widgets_matching_pattern = [&](String pattern, size_t partial_input_length) {
+        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+            if (registration.is_derived_from(widget_class) && registration.class_name().matches(pattern))
+                class_entries.empend(String::formatted("@{}", registration.class_name()), partial_input_length);
+        });
+    };
+
     auto register_class_properties_matching_pattern = [&](String pattern, size_t partial_input_length) {
         auto class_name = class_names.last();
 
@@ -148,11 +162,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // Nothing to put here.
             break;
         }
-        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-            if (!registration.is_derived_from(widget_class))
-                return;
-            class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
-        });
+
+        register_widgets_matching_pattern("*", 0u);
         break;
     case InClassName: {
         if (class_names.is_empty())
@@ -163,23 +174,13 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         }
 
-        auto fuzzy_class = make_fuzzy(class_names.last());
-        if (last_identifier_token && last_identifier_token->m_end.line == last_seen_token->m_end.line && identifier_string == "layout") {
-            Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-                if (&registration == &layout_class || !registration.is_derived_from(layout_class))
-                    return;
-                if (registration.class_name().matches(fuzzy_class))
-                    identifier_entries.empend(registration.class_name(), class_names.last().length());
-            });
-            break;
-        }
+        auto class_name = class_names.last();
+        auto fuzzy_class = make_fuzzy(class_name);
+        if (last_identifier_token && last_identifier_token->m_end.line == last_seen_token->m_end.line && identifier_string == "layout")
+            register_layouts_matching_pattern(fuzzy_class, class_name.length() + 1);
+        else
+            register_widgets_matching_pattern(fuzzy_class, class_name.length() + 1);
 
-        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-            if (!registration.is_derived_from(widget_class))
-                return;
-            if (registration.class_name().matches(fuzzy_class))
-                identifier_entries.empend(registration.class_name(), class_names.last().length());
-        });
         break;
     }
     case InIdentifier: {
@@ -212,23 +213,14 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             }
         }
 
-        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-            if (!registration.is_derived_from(widget_class))
-                return;
-            class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
-        });
+        register_widgets_matching_pattern("*", 0u);
         break;
     }
     case AfterIdentifier:
         if (last_seen_token && last_seen_token->m_end.line != cursor.line())
             break;
-        if (identifier_string == "layout") {
-            Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
-                if (&registration == &layout_class || !registration.is_derived_from(layout_class))
-                    return;
-                class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
-            });
-        }
+        if (identifier_string == "layout")
+            register_layouts_matching_pattern("*", 0u);
         break;
     default:
         break;
