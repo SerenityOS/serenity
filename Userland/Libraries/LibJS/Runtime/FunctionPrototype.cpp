@@ -29,11 +29,11 @@ void FunctionPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.apply, apply, 2, attr);
-    define_old_native_function(vm.names.bind, bind, 1, attr);
-    define_old_native_function(vm.names.call, call, 1, attr);
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(*vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
+    define_native_function(vm.names.apply, apply, 2, attr);
+    define_native_function(vm.names.bind, bind, 1, attr);
+    define_native_function(vm.names.call, call, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(*vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
     define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
 }
@@ -43,30 +43,26 @@ FunctionPrototype::~FunctionPrototype()
 }
 
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
-JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::apply)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-        return {};
-    }
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!this_object->is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     auto& function = static_cast<FunctionObject&>(*this_object);
     auto this_arg = vm.argument(0);
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
-        return TRY_OR_DISCARD(vm.call(function, this_arg));
-    auto arguments = TRY_OR_DISCARD(create_list_from_array_like(global_object, arg_array));
-    return TRY_OR_DISCARD(vm.call(function, this_arg, move(arguments)));
+        return TRY(vm.call(function, this_arg));
+    auto arguments = TRY(create_list_from_array_like(global_object, arg_array));
+    return TRY(vm.call(function, this_arg, move(arguments)));
 }
 
 // 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
-JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::bind)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-        return {};
-    }
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!this_object->is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     auto& this_function = static_cast<FunctionObject&>(*this_object);
     auto bound_this_arg = vm.argument(0);
 
@@ -80,13 +76,11 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::bind)
 }
 
 // 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
-JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::call)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-        return {};
-    }
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!this_object->is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     auto& function = static_cast<FunctionObject&>(*this_object);
     auto this_arg = vm.argument(0);
     MarkedValueList arguments(vm.heap());
@@ -94,17 +88,15 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::call)
         for (size_t i = 1; i < vm.argument_count(); ++i)
             arguments.append(vm.argument(i));
     }
-    return TRY_OR_DISCARD(vm.call(function, this_arg, move(arguments)));
+    return TRY(vm.call(function, this_arg, move(arguments)));
 }
 
 // 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
-        return {};
-    }
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!this_object->is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Function");
     String function_name;
     String function_parameters;
     String function_body;
@@ -149,9 +141,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::to_string)
 }
 
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
-JS_DEFINE_OLD_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
+JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
-    return TRY_OR_DISCARD(ordinary_has_instance(global_object, vm.argument(0), vm.this_value(global_object)));
+    return TRY(ordinary_has_instance(global_object, vm.argument(0), vm.this_value(global_object)));
 }
 
 }
