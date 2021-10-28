@@ -137,7 +137,6 @@ public:
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
 
 private:
-    float relative_length_to_px(const Layout::Node&) const;
     float resolve_calculated_value(const Layout::Node& layout_node, float reference_for_percent) const;
 
     const char* unit_name() const;
