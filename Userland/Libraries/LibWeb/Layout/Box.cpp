@@ -234,4 +234,22 @@ StackingContext* Box::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
+void Box::before_children_paint(PaintContext& context, PaintPhase phase)
+{
+    NodeWithStyleAndBoxModelMetrics::before_children_paint(context, phase);
+    // FIXME: Support more overflow variations.
+    if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        context.painter().save();
+        context.painter().add_clip_rect(enclosing_int_rect(bordered_rect()));
+    }
+}
+
+void Box::after_children_paint(PaintContext& context, PaintPhase phase)
+{
+    NodeWithStyleAndBoxModelMetrics::after_children_paint(context, phase);
+    // FIXME: Support more overflow variations.
+    if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden)
+        context.painter().restore();
+}
+
 }
