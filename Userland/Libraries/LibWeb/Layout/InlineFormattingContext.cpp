@@ -141,8 +141,6 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 
             if (fragment.type() == LineBoxFragment::Type::Leading || fragment.type() == LineBoxFragment::Type::Trailing) {
                 fragment.set_height(max_height);
-            } else {
-                fragment.set_height(max(min_line_height, fragment.height()));
             }
 
             // Vertically align everyone's bottom to the line.
