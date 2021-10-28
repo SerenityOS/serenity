@@ -86,6 +86,7 @@ public:
     void show(Gfx::IntPoint suggestion_box_location);
     void close();
 
+    bool has_suggestions() { return m_suggestion_view->model()->row_count() > 0; }
     void next_suggestion();
     void previous_suggestion();
     void apply_suggestion();
