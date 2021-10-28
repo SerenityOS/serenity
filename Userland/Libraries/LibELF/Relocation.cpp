@@ -26,6 +26,8 @@ bool perform_relative_relocations(FlatPtr base_address)
     FlatPtr relocation_section_addr = 0;
     size_t relocation_table_size = 0;
     size_t relocation_count = 0;
+    FlatPtr packed_relocation_section_addr = 0;
+    size_t packed_relocation_table_size = 0;
     bool use_addend = false;
     auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(dynamic_section_addr);
     for (unsigned i = 0;; ++i) {
@@ -40,28 +42,59 @@ bool perform_relative_relocations(FlatPtr base_address)
             relocation_count = dyn.d_un.d_val;
         else if (dyn.d_tag == DT_RELSZ || dyn.d_tag == DT_RELASZ)
             relocation_table_size = dyn.d_un.d_val;
+        else if (dyn.d_tag == DT_RELR)
+            packed_relocation_section_addr = base_address + dyn.d_un.d_ptr;
+        else if (dyn.d_tag == DT_RELRSZ)
+            packed_relocation_table_size = dyn.d_un.d_val;
     }
-    if (!relocation_section_addr || !relocation_table_size || !relocation_count)
+    if ((!relocation_section_addr || !relocation_table_size || !relocation_count) && (!packed_relocation_section_addr || !packed_relocation_table_size))
         return false;
 
-    auto relocation_entry_size = relocation_table_size / relocation_count;
-    for (unsigned i = 0; i < relocation_count; ++i) {
-        size_t offset_in_section = i * relocation_entry_size;
-        auto* relocation = (ElfW(Rela)*)(relocation_section_addr + offset_in_section);
+    if (relocation_count != 0) {
+        auto relocation_entry_size = relocation_table_size / relocation_count;
+        for (unsigned i = 0; i < relocation_count; ++i) {
+            size_t offset_in_section = i * relocation_entry_size;
+            auto* relocation = (ElfW(Rela)*)(relocation_section_addr + offset_in_section);
 #if ARCH(I386)
-        VERIFY(ELF32_R_TYPE(relocation->r_info) == R_386_RELATIVE);
+            VERIFY(ELF32_R_TYPE(relocation->r_info) == R_386_RELATIVE);
 #else
-        VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
+            VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
 #endif
-        auto* patch_address = (FlatPtr*)(base_address + relocation->r_offset);
-        FlatPtr relocated_address;
-        if (use_addend) {
-            relocated_address = base_address + relocation->r_addend;
-        } else {
-            __builtin_memcpy(&relocated_address, patch_address, sizeof(relocated_address));
-            relocated_address += base_address;
+            auto* patch_address = (FlatPtr*)(base_address + relocation->r_offset);
+            FlatPtr relocated_address;
+            if (use_addend) {
+                relocated_address = base_address + relocation->r_addend;
+            } else {
+                __builtin_memcpy(&relocated_address, patch_address, sizeof(relocated_address));
+                relocated_address += base_address;
+            }
+            __builtin_memcpy(patch_address, &relocated_address, sizeof(relocated_address));
         }
-        __builtin_memcpy(patch_address, &relocated_address, sizeof(relocated_address));
+    }
+
+    auto patch_relr = [base_address](FlatPtr* patch_ptr) {
+        FlatPtr relocated_address;
+        __builtin_memcpy(&relocated_address, patch_ptr, sizeof(FlatPtr));
+        relocated_address += base_address;
+        __builtin_memcpy(patch_ptr, &relocated_address, sizeof(FlatPtr));
+    };
+
+    auto* entries = reinterpret_cast<ElfW(Relr)*>(packed_relocation_section_addr);
+    auto* patch_ptr = reinterpret_cast<FlatPtr*>(base_address);
+    for (unsigned i = 0; i < packed_relocation_table_size / sizeof(FlatPtr); ++i) {
+        if (entries[i] % 2 == 0) {
+            patch_ptr = reinterpret_cast<FlatPtr*>(base_address + entries[i]);
+            patch_relr(patch_ptr);
+            ++patch_ptr;
+        } else {
+            unsigned j = 0;
+            for (FlatPtr bitmap = entries[i]; bitmap >>= 1u; ++j) {
+                if (bitmap & 1) {
+                    patch_relr(patch_ptr + j);
+                }
+            }
+            patch_ptr += 8 * sizeof(FlatPtr) - 1;
+        }
     }
 
     return true;

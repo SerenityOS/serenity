@@ -272,6 +272,7 @@ public:
 
     RelocationSection relocation_section() const;
     RelocationSection plt_relocation_section() const;
+    Section packed_relocation_section() const;
 
     bool should_process_origin() const { return m_dt_flags & DF_ORIGIN; }
     bool requires_symbolic_symbol_resolution() const { return m_dt_flags & DF_SYMBOLIC; }
@@ -374,6 +375,10 @@ private:
     size_t m_size_of_relocation_table { 0 };
     bool m_addend_used { false };
     FlatPtr m_relocation_table_offset { 0 };
+    // ld.lld may also generate fancy RELR entries
+    size_t m_size_of_packed_relocations_entry { 0 };
+    size_t m_size_of_packed_relocation_table { 0 };
+    FlatPtr m_packed_relocation_table_offset { 0 };
     bool m_is_elf_dynamic { false };
 
     // DT_FLAGS

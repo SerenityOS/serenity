@@ -195,8 +195,10 @@ void DynamicLoader::do_main_relocations()
             break;
         }
     };
+
     m_dynamic_object->relocation_section().for_each_relocation(do_single_relocation);
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
+    do_packed_relocations(m_dynamic_object->packed_relocation_section());
 }
 
 Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
@@ -528,6 +530,34 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         VERIFY_NOT_REACHED();
     }
     return RelocationResult::Success;
+}
+
+void DynamicLoader::do_packed_relocations(const ELF::DynamicObject::Section& section)
+{
+    if (section.entry_count() == 0)
+        return;
+    VERIFY(section.entry_size() == sizeof(FlatPtr));
+
+    auto entries = reinterpret_cast<ElfW(Relr)*>(section.address().get());
+    auto base = m_dynamic_object->base_address();
+
+    auto* patch_ptr = reinterpret_cast<FlatPtr*>(base.get());
+
+    for (unsigned i = 0; i < section.entry_count(); ++i) {
+        if (entries[i] % 2 == 0) {
+            patch_ptr = reinterpret_cast<FlatPtr*>(base.offset(entries[i]).get());
+            *patch_ptr += base.get();
+            ++patch_ptr;
+        } else {
+            unsigned j = 0;
+            for (FlatPtr bitmap = entries[i]; (bitmap >>= 1u) != 0u; j++) {
+                if (bitmap & 1u) {
+                    *(patch_ptr + j) += base.get();
+                }
+            }
+            patch_ptr += 8 * sizeof(FlatPtr) - 1;
+        }
+    }
 }
 
 ssize_t DynamicLoader::negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const

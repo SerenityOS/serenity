@@ -135,6 +135,15 @@ void DynamicObject::parse()
         case DT_RELCOUNT:
             m_number_of_relocations = entry.val();
             break;
+        case DT_RELR:
+            m_packed_relocation_table_offset = entry.ptr() - m_elf_base_address.get();
+            break;
+        case DT_RELRSZ:
+            m_size_of_packed_relocation_table = entry.val();
+            break;
+        case DT_RELRENT:
+            m_size_of_packed_relocations_entry = entry.val();
+            break;
         case DT_FLAGS:
             m_dt_flags = entry.val();
             break;
@@ -235,6 +244,11 @@ DynamicObject::RelocationSection DynamicObject::relocation_section() const
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), false);
+}
+
+DynamicObject::Section DynamicObject::packed_relocation_section() const
+{
+    return Section(*this, m_packed_relocation_table_offset, m_size_of_packed_relocation_table, m_size_of_packed_relocations_entry, "DT_RELR"sv);
 }
 
 ElfW(Half) DynamicObject::program_header_count() const
@@ -432,6 +446,12 @@ const char* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
         return "VERNEEDED";
     case DT_VERNEEDEDNUM:
         return "VERNEEDEDNUM";
+    case DT_RELR:
+        return "DT_RELR";
+    case DT_RELRSZ:
+        return "DT_RELRSZ";
+    case DT_RELRENT:
+        return "DT_RELRENT";
     default:
         return "??";
     }
