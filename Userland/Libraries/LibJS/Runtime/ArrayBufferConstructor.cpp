@@ -27,10 +27,10 @@ void ArrayBufferConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.array_buffer_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.isView, is_view, 1, attr);
+    define_native_function(vm.names.isView, is_view, 1, attr);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
-    define_old_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -64,7 +64,7 @@ ThrowCompletionOr<Object*> ArrayBufferConstructor::construct(FunctionObject& new
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 {
     auto arg = vm.argument(0);
     if (!arg.is_object())
@@ -77,7 +77,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 }
 
 // 25.1.4.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
-JS_DEFINE_OLD_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
 }
