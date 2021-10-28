@@ -20,9 +20,9 @@ public:
     virtual ~FinalizationRegistryPrototype() override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(cleanup_some);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(register_);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(unregister);
+    JS_DECLARE_NATIVE_FUNCTION(cleanup_some);
+    JS_DECLARE_NATIVE_FUNCTION(register_);
+    JS_DECLARE_NATIVE_FUNCTION(unregister);
 };
 
 }
