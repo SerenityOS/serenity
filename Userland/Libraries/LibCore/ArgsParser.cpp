@@ -27,7 +27,7 @@ namespace Core {
 
 ArgsParser::ArgsParser()
 {
-    add_option(m_show_help, "Display this message", "help", 0);
+    add_option(m_show_help, "Display help message and exit", "help", 0);
     add_option(m_show_version, "Print version", "version", 0);
 }
 
