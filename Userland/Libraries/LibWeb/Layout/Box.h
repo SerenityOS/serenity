@@ -88,6 +88,17 @@ public:
         return { m_offset, m_size };
     }
 
+    Gfx::FloatRect border_box_as_relative_rect() const
+    {
+        auto rect = content_box_as_relative_rect();
+        auto border_box = box_model().border_box();
+        rect.set_x(rect.x() - border_box.left);
+        rect.set_width(rect.width() + border_box.left + border_box.right);
+        rect.set_y(rect.y() - border_box.top);
+        rect.set_height(rect.height() + border_box.top + border_box.bottom);
+        return rect;
+    }
+
     Gfx::FloatRect margin_box_as_relative_rect() const
     {
         auto rect = content_box_as_relative_rect();
