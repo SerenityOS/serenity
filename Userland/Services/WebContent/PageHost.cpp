@@ -64,6 +64,10 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
     Gfx::Painter painter(target);
     Gfx::IntRect bitmap_rect { {}, content_rect.size() };
 
+    auto* document = page().top_level_browsing_context().active_document();
+    VERIFY(document);
+    document->update_layout();
+
     auto* layout_root = this->layout_root();
     if (!layout_root) {
         painter.fill_rect(bitmap_rect, Color::White);
