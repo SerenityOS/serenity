@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <math.h>
@@ -132,7 +133,7 @@ public:
     StringView dimension_unit() const
     {
         VERIFY(m_type == Type::Dimension);
-        return m_unit.string_view();
+        return m_unit.view();
     }
     double dimension_value() const
     {
@@ -175,7 +176,7 @@ private:
     Type m_type { Type::Invalid };
 
     StringBuilder m_value;
-    StringBuilder m_unit;
+    FlyString m_unit;
     HashType m_hash_type { HashType::Unrestricted };
     NumberType m_number_type { NumberType::Integer };
     double m_number_value { 0 };
