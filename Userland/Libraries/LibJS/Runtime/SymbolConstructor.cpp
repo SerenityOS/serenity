@@ -24,8 +24,8 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.symbol_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.for_, for_, 1, attr);
-    define_old_native_function(vm.names.keyFor, key_for, 1, attr);
+    define_native_function(vm.names.for_, for_, 1, attr);
+    define_native_function(vm.names.keyFor, key_for, 1, attr);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     define_direct_property(vm.names.SymbolName, vm.well_known_symbol_##snake_name(), 0);
@@ -54,20 +54,18 @@ ThrowCompletionOr<Object*> SymbolConstructor::construct(FunctionObject&)
 }
 
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
-JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolConstructor::for_)
+JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
-    auto description = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto description = TRY(vm.argument(0).to_string(global_object));
     return global_object.vm().get_global_symbol(description);
 }
 
 // 20.4.2.6 Symbol.keyFor ( sym ), https://tc39.es/ecma262/#sec-symbol.keyfor
-JS_DEFINE_OLD_NATIVE_FUNCTION(SymbolConstructor::key_for)
+JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
-    if (!argument.is_symbol()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects());
-        return {};
-    }
+    if (!argument.is_symbol())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects());
 
     auto& symbol = argument.as_symbol();
     if (symbol.is_global())
