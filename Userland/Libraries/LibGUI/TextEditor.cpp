@@ -804,11 +804,7 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     ArmedScopeGuard update_autocomplete { [&] {
-        if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
-            m_autocomplete_provider->provide_completions([&](auto completions) {
-                m_autocomplete_box->update_suggestions(move(completions));
-            });
-        }
+        try_update_autocomplete();
     } };
 
     if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
@@ -1458,13 +1454,27 @@ void TextEditor::undefer_reflow()
 
 void TextEditor::try_show_autocomplete(UserRequestedAutocomplete user_requested_autocomplete)
 {
-    if (m_autocomplete_provider) {
-        m_autocomplete_provider->provide_completions([&](auto completions) {
-            auto has_completions = !completions.is_empty();
-            m_autocomplete_box->update_suggestions(move(completions));
+    force_update_autocomplete([&, user_requested_autocomplete = move(user_requested_autocomplete)] {
+        if (user_requested_autocomplete == Yes || m_autocomplete_box->has_suggestions()) {
             auto position = content_rect_for_position(cursor()).translated(0, -visible_content_rect().y()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
-            if (has_completions || user_requested_autocomplete == Yes)
-                m_autocomplete_box->show(position);
+            m_autocomplete_box->show(position);
+        }
+    });
+}
+
+void TextEditor::try_update_autocomplete(Function<void()> callback)
+{
+    if (m_autocomplete_box && m_autocomplete_box->is_visible())
+        force_update_autocomplete(move(callback));
+}
+
+void TextEditor::force_update_autocomplete(Function<void()> callback)
+{
+    if (m_autocomplete_provider) {
+        m_autocomplete_provider->provide_completions([&, callback = move(callback)](auto completions) {
+            m_autocomplete_box->update_suggestions(move(completions));
+            if (callback)
+                callback();
         });
     }
 }
