@@ -198,8 +198,10 @@ void DynamicLoader::do_main_relocations()
             break;
         }
     };
+
     m_dynamic_object->relocation_section().for_each_relocation(do_single_relocation);
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
+    do_relr_relocations();
 }
 
 Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
@@ -535,6 +537,14 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         VERIFY_NOT_REACHED();
     }
     return RelocationResult::Success;
+}
+
+void DynamicLoader::do_relr_relocations()
+{
+    auto base_address = m_dynamic_object->base_address().get();
+    m_dynamic_object->for_each_relr_relocation([base_address](FlatPtr address) {
+        *(FlatPtr*)address += base_address;
+    });
 }
 
 ssize_t DynamicLoader::negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const
