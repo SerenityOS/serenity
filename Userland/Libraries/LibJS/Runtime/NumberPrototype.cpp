@@ -36,9 +36,9 @@ void NumberPrototype::initialize(GlobalObject& object)
     auto& vm = this->vm();
     Object::initialize(object);
     u8 attr = Attribute::Configurable | Attribute::Writable;
-    define_old_native_function(vm.names.toFixed, to_fixed, 1, attr);
-    define_old_native_function(vm.names.toString, to_string, 1, attr);
-    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toFixed, to_fixed, 1, attr);
+    define_native_function(vm.names.toString, to_string, 1, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 NumberPrototype::~NumberPrototype()
@@ -57,22 +57,18 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
-JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_fixed)
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
-    auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
-    auto fraction_digits = TRY_OR_DISCARD(vm.argument(0).to_integer_or_infinity(global_object));
-    if (!vm.argument(0).is_finite_number()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
-        return {};
-    }
+    auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
+    auto fraction_digits = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+    if (!vm.argument(0).is_finite_number())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
-    if (fraction_digits < 0 || fraction_digits > 100) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
-        return {};
-    }
+    if (fraction_digits < 0 || fraction_digits > 100)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
     if (!number_value.is_finite_number())
-        return js_string(vm, TRY_OR_DISCARD(number_value.to_string(global_object)));
+        return js_string(vm, TRY(number_value.to_string(global_object)));
 
     auto number = number_value.as_double();
     if (fabs(number) >= 1e+21)
@@ -82,19 +78,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
-    auto number_value = TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
+    auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
     double radix_argument = 10;
     auto argument = vm.argument(0);
     if (!vm.argument(0).is_undefined())
-        radix_argument = TRY_OR_DISCARD(argument.to_integer_or_infinity(global_object));
+        radix_argument = TRY(argument.to_integer_or_infinity(global_object));
     int radix = (int)radix_argument;
 
-    if (vm.exception() || radix < 2 || radix > 36) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
-        return {};
-    }
+    if (radix < 2 || radix > 36)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidRadix);
 
     if (number_value.is_positive_infinity())
         return js_string(vm, "Infinity");
@@ -154,9 +148,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::to_string)
 }
 
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof
-JS_DEFINE_OLD_NATIVE_FUNCTION(NumberPrototype::value_of)
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
-    return TRY_OR_DISCARD(this_number_value(global_object, vm.this_value(global_object)));
+    return this_number_value(global_object, vm.this_value(global_object));
 }
 
 }
