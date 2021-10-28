@@ -42,6 +42,19 @@ struct sigaction {
     int sa_flags;
 };
 
+typedef struct {
+    void* ss_sp;
+    int ss_flags;
+    size_t ss_size;
+} stack_t;
+
+#define SS_ONSTACK 1
+#define SS_DISABLE 2
+
+// FIXME: These values are arbitrary, and might be platform dependent
+#define MINSIGSTKSZ 4096 // Minimum allowed
+#define SIGSTKSZ 32768   // Recommended size
+
 #define SIG_DFL ((__sighandler_t)0)
 #define SIG_ERR ((__sighandler_t)-1)
 #define SIG_IGN ((__sighandler_t)1)
