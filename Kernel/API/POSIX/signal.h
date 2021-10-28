@@ -68,6 +68,15 @@ struct sigaction {
 #define CLD_STOPPED 4
 #define CLD_CONTINUED 5
 
+#define FPE_INTDIV 0
+#define FPE_INTOVF 1
+#define FPE_FLTDIV 2
+#define FPE_FLTOVF 3
+#define FPE_FLTUND 4
+#define FPE_FLTRES 5
+#define FPE_FLTINV 6
+#define FPE_FLTSUB 7
+
 #ifdef __cplusplus
 }
 #endif
