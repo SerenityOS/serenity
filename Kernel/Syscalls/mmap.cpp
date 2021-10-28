@@ -424,18 +424,14 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
         return EINVAL;
     if (!region->is_mmap())
         return EPERM;
-    bool set_volatile = advice & MADV_SET_VOLATILE;
-    bool set_nonvolatile = advice & MADV_SET_NONVOLATILE;
-    if (set_volatile && set_nonvolatile)
-        return EINVAL;
-    if (set_volatile || set_nonvolatile) {
+    if (advice == MADV_SET_VOLATILE || advice == MADV_SET_NONVOLATILE) {
         if (!region->vmobject().is_anonymous())
             return EINVAL;
         auto& vmobject = static_cast<Memory::AnonymousVMObject&>(region->vmobject());
         if (!vmobject.is_purgeable())
             return EINVAL;
         bool was_purged = false;
-        TRY(vmobject.set_volatile(set_volatile, was_purged));
+        TRY(vmobject.set_volatile(advice == MADV_SET_VOLATILE, was_purged));
         return was_purged ? 1 : 0;
     }
     return EINVAL;
