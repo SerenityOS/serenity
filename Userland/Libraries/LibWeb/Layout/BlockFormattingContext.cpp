@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ListItemBox.h>
+#include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Page/BrowsingContext.h>
 
@@ -385,6 +386,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
 
     block_container.for_each_child_of_type<Box>([&](Box& child_box) {
         if (child_box.is_absolutely_positioned())
+            return IterationDecision::Continue;
+
+        // NOTE: ListItemMarkerBoxes are placed by their corresponding ListItemBox.
+        if (is<ListItemMarkerBox>(child_box))
             return IterationDecision::Continue;
 
         if (child_box.is_floating()) {
