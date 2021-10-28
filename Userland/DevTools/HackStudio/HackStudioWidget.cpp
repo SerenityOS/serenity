@@ -1162,10 +1162,14 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     auto open_locator_action = GUI::Action::create("Open &Locator", { Mod_Ctrl, Key_K }, [this](auto&) {
         m_locator->open();
     });
+    auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
+        project().model().set_should_show_dotfiles(checked.is_checked());
+    });
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
+    view_menu.add_action(show_dotfiles_action);
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
