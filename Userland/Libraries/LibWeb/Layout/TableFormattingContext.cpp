@@ -29,6 +29,7 @@ void TableFormattingContext::run(Box& box, LayoutMode)
 {
     compute_width(box);
 
+    float total_content_width = 0;
     float total_content_height = 0;
 
     box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
@@ -41,19 +42,27 @@ void TableFormattingContext::run(Box& box, LayoutMode)
             calculate_column_widths(row, column_widths);
         });
 
+        float content_width = 0;
         float content_height = 0;
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             row.set_offset(0, content_height);
             layout_row(row, column_widths);
+            content_width = max(content_width, row.width());
             content_height += row.height();
         });
 
+        if (row_group_box.computed_values().width().is_auto())
+            row_group_box.set_width(content_width);
         row_group_box.set_height(content_height);
 
         row_group_box.set_offset(0, total_content_height);
         total_content_height += content_height;
+        total_content_width = max(total_content_width, row_group_box.width());
     });
+
+    if (box.computed_values().width().is_auto())
+        box.set_width(total_content_width);
 
     // FIXME: This is a total hack, we should respect the 'height' property.
     box.set_height(total_content_height);
