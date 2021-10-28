@@ -1026,6 +1026,9 @@ public:
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
+    [[nodiscard]] bool has_alternative_signal_stack() const;
+    [[nodiscard]] bool is_in_alternative_signal_stack() const;
+
     FPUState& fpu_state() { return m_fpu_state; }
 
     ErrorOr<void> make_thread_specific_region(Badge<Process>);
@@ -1295,6 +1298,8 @@ private:
     u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
+    FlatPtr m_alternative_signal_stack { 0 };
+    FlatPtr m_alternative_signal_stack_size { 0 };
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
     OwnPtr<Memory::Region> m_kernel_stack_region;
