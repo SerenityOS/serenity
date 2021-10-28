@@ -15,7 +15,7 @@ class FunctionConstructor final : public NativeFunction {
     JS_OBJECT(FunctionConstructor, NativeFunction);
 
 public:
-    static RefPtr<FunctionExpression> create_dynamic_function_node(GlobalObject& global_object, FunctionObject& new_target, FunctionKind kind);
+    static ThrowCompletionOr<RefPtr<FunctionExpression>> create_dynamic_function_node(GlobalObject& global_object, FunctionObject& new_target, FunctionKind kind);
 
     explicit FunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;

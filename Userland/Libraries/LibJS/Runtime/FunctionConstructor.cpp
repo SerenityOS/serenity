@@ -37,21 +37,21 @@ FunctionConstructor::~FunctionConstructor()
 }
 
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction
-RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(GlobalObject& global_object, FunctionObject&, FunctionKind kind)
+ThrowCompletionOr<RefPtr<FunctionExpression>> FunctionConstructor::create_dynamic_function_node(GlobalObject& global_object, FunctionObject&, FunctionKind kind)
 {
     auto& vm = global_object.vm();
     String parameters_source = "";
     String body_source = "";
     if (vm.argument_count() == 1)
-        body_source = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+        body_source = TRY(vm.argument(0).to_string(global_object));
     if (vm.argument_count() > 1) {
         Vector<String> parameters;
         for (size_t i = 0; i < vm.argument_count() - 1; ++i)
-            parameters.append(TRY_OR_DISCARD(vm.argument(i).to_string(global_object)));
+            parameters.append(TRY(vm.argument(i).to_string(global_object)));
         StringBuilder parameters_builder;
         parameters_builder.join(',', parameters);
         parameters_source = parameters_builder.build();
-        body_source = TRY_OR_DISCARD(vm.argument(vm.argument_count() - 1).to_string(global_object));
+        body_source = TRY(vm.argument(vm.argument_count() - 1).to_string(global_object));
     }
     auto is_generator = kind == FunctionKind::Generator;
     auto source = String::formatted("function{} anonymous({}\n) {{\n{}\n}}", is_generator ? "*" : "", parameters_source, body_source);
@@ -59,8 +59,7 @@ RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(Glo
     auto function = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        vm.throw_exception<SyntaxError>(global_object, error.to_string());
-        return {};
+        return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
     return function;
@@ -76,9 +75,7 @@ ThrowCompletionOr<Value> FunctionConstructor::call()
 ThrowCompletionOr<Object*> FunctionConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-    auto function = create_dynamic_function_node(global_object(), new_target, FunctionKind::Regular);
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    auto function = TRY(create_dynamic_function_node(global_object(), new_target, FunctionKind::Regular));
 
     OwnPtr<Interpreter> local_interpreter;
     Interpreter* interpreter = vm.interpreter_if_exists();
