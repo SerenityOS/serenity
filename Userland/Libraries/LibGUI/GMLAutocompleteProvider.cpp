@@ -198,7 +198,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
 
         break;
     }
-    case InIdentifier: {
+    case InIdentifier:
         if (after_token_on_same_line) {
             // After an identifier, but with extra space
             // TODO: Maybe suggest a colon?
@@ -207,8 +207,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
 
         register_properties_and_widgets_matching_pattern(make_fuzzy(identifier_string), identifier_string.length());
         break;
-    }
-    case AfterClassName: {
+    case AfterClassName:
         if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
             if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column != cursor.column()) {
                 // Inside braces, but on the same line as some other stuff (and not the continuation of one!)
@@ -219,7 +218,6 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
 
         register_properties_and_widgets_matching_pattern("*", 0u);
         break;
-    }
     case AfterIdentifier:
         if (last_seen_token && last_seen_token->m_end.line != cursor.line())
             break;
