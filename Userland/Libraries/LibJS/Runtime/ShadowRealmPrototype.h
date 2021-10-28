@@ -20,8 +20,8 @@ public:
     virtual ~ShadowRealmPrototype() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(evaluate);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(import_value);
+    JS_DECLARE_NATIVE_FUNCTION(evaluate);
+    JS_DECLARE_NATIVE_FUNCTION(import_value);
 };
 
 }
