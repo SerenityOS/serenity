@@ -194,13 +194,10 @@ float FormattingContext::compute_auto_height_for_block_level_element(Box const& 
 
     if (box.children_are_inline()) {
         // If it only has inline-level children, the height is the distance between
-        // the top of the topmost line box and the bottom of the bottommost line box.
+        // the top content edge and the bottom of the bottommost line box.
         auto& block_container = verify_cast<BlockContainer>(box);
+        top = 0;
         if (!block_container.line_boxes().is_empty()) {
-            for (auto& fragment : block_container.line_boxes().first().fragments()) {
-                if (!top.has_value() || fragment.offset().y() < top.value())
-                    top = fragment.offset().y();
-            }
             for (auto& fragment : block_container.line_boxes().last().fragments()) {
                 if (!bottom.has_value() || (fragment.offset().y() + fragment.height()) > bottom.value())
                     bottom = fragment.offset().y() + fragment.height();
