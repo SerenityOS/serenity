@@ -229,7 +229,7 @@ protected:
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
-    virtual void cursor_did_change() { }
+    virtual void cursor_did_change();
     Gfx::IntRect ruler_content_rect(size_t line) const;
     Gfx::IntRect gutter_content_rect(size_t line) const;
 
@@ -279,6 +279,7 @@ private:
         Yes
     };
     void try_show_autocomplete(UserRequestedAutocomplete);
+    void hide_autocomplete_if_needed();
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }

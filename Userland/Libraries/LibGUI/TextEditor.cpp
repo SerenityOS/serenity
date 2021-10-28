@@ -738,7 +738,6 @@ void TextEditor::select_all()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
-    TemporaryChange change { m_should_keep_autocomplete_box, true };
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         m_autocomplete_box->apply_suggestion();
         m_autocomplete_box->close();
@@ -882,6 +881,7 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+        TemporaryChange change { m_should_keep_autocomplete_box, true };
         add_code_point(event.code_point());
         return;
     }
@@ -1469,6 +1469,15 @@ void TextEditor::try_show_autocomplete(UserRequestedAutocomplete user_requested_
     }
 }
 
+void TextEditor::hide_autocomplete_if_needed()
+{
+    if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
+        m_autocomplete_box->close();
+        if (m_autocomplete_timer)
+            m_autocomplete_timer->stop();
+    }
+}
+
 void TextEditor::enter_event(Core::Event&)
 {
     m_automatic_selection_scroll_timer->stop();
@@ -1484,11 +1493,7 @@ void TextEditor::did_change(AllowCallback allow_callback)
 {
     update_content_size();
     recompute_all_visual_lines();
-    if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
-        m_autocomplete_box->close();
-        if (m_autocomplete_timer)
-            m_autocomplete_timer->stop();
-    }
+    hide_autocomplete_if_needed();
     m_needs_rehighlight = true;
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
@@ -1825,6 +1830,11 @@ void TextEditor::document_did_set_text(AllowCallback allow_callback)
 void TextEditor::document_did_set_cursor(TextPosition const& position)
 {
     set_cursor(position);
+}
+
+void TextEditor::cursor_did_change()
+{
+    hide_autocomplete_if_needed();
 }
 
 void TextEditor::clipboard_content_did_change(String const& mime_type)
