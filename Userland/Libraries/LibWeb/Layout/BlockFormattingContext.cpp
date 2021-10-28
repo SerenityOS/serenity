@@ -535,8 +535,8 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     // Compute scrollable overflow.
     float bottom_edge = 0;
     float right_edge = 0;
-    icb.for_each_in_subtree_of_type<Box>([&](auto& child) {
-        auto child_rect = child.absolute_rect();
+    icb.for_each_in_subtree_of_type<Box>([&](Box& child) {
+        auto child_rect = child.bordered_rect();
         bottom_edge = max(bottom_edge, child_rect.bottom());
         right_edge = max(right_edge, child_rect.right());
         return IterationDecision::Continue;
