@@ -274,7 +274,11 @@ private:
     void defer_reflow();
     void undefer_reflow();
 
-    void try_show_autocomplete();
+    enum UserRequestedAutocomplete {
+        No,
+        Yes
+    };
+    void try_show_autocomplete(UserRequestedAutocomplete);
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
