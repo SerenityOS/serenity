@@ -14,17 +14,13 @@
 namespace JS {
 
 // 10.5.14 ProxyCreate ( target, handler ), https://tc39.es/ecma262/#sec-proxycreate
-static ProxyObject* proxy_create(GlobalObject& global_object, Value target, Value handler)
+static ThrowCompletionOr<ProxyObject*> proxy_create(GlobalObject& global_object, Value target, Value handler)
 {
     auto& vm = global_object.vm();
-    if (!target.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
-        return {};
-    }
-    if (!handler.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
-        return {};
-    }
+    if (!target.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
+    if (!handler.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
     return ProxyObject::create(global_object, target.as_object(), handler.as_object());
 }
 
@@ -58,18 +54,13 @@ ThrowCompletionOr<Value> ProxyConstructor::call()
 ThrowCompletionOr<Object*> ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    auto* proxy = proxy_create(global_object(), vm.argument(0), vm.argument(1));
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
-    return proxy;
+    return TRY(proxy_create(global_object(), vm.argument(0), vm.argument(1)));
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_OLD_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
-    auto* proxy = proxy_create(global_object, vm.argument(0), vm.argument(1));
-    if (vm.exception())
-        return {};
+    auto* proxy = TRY_OR_DISCARD(proxy_create(global_object, vm.argument(0), vm.argument(1)));
 
     // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/#sec-proxy-revocation-functions
     auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> ThrowCompletionOr<Value> {
