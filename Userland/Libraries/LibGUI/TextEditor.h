@@ -279,6 +279,8 @@ private:
         Yes
     };
     void try_show_autocomplete(UserRequestedAutocomplete);
+    void try_update_autocomplete(Function<void()> callback = {});
+    void force_update_autocomplete(Function<void()> callback = {});
     void hide_autocomplete_if_needed();
 
     int icon_size() const { return 16; }
