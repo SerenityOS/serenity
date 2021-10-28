@@ -112,11 +112,12 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
         model.set_suggestions(move(suggestions));
     } else {
         m_suggestion_view->set_model(adopt_ref(*new AutocompleteSuggestionModel(move(suggestions))));
-        if (has_suggestions)
-            m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
     }
 
     m_suggestion_view->model()->invalidate();
+
+    if (has_suggestions)
+        m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
 
     m_suggestion_view->set_visible(has_suggestions);
     m_no_suggestions_view->set_visible(!has_suggestions);
@@ -136,8 +137,6 @@ void AutocompleteBox::show(Gfx::IntPoint suggestion_box_location)
         return;
 
     m_popup_window->move_to(suggestion_box_location);
-    if (!is_visible())
-        m_suggestion_view->move_cursor(GUI::AbstractView::CursorMovement::Home, GUI::AbstractTableView::SelectionUpdate::Set);
     m_popup_window->show();
 }
 
