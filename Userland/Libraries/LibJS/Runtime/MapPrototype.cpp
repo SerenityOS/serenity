@@ -22,17 +22,17 @@ void MapPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_old_native_function(vm.names.clear, clear, 0, attr);
-    define_old_native_function(vm.names.delete_, delete_, 1, attr);
-    define_old_native_function(vm.names.entries, entries, 0, attr);
-    define_old_native_function(vm.names.forEach, for_each, 1, attr);
-    define_old_native_function(vm.names.get, get, 1, attr);
-    define_old_native_function(vm.names.has, has, 1, attr);
-    define_old_native_function(vm.names.keys, keys, 0, attr);
-    define_old_native_function(vm.names.set, set, 2, attr);
-    define_old_native_function(vm.names.values, values, 0, attr);
+    define_native_function(vm.names.clear, clear, 0, attr);
+    define_native_function(vm.names.delete_, delete_, 1, attr);
+    define_native_function(vm.names.entries, entries, 0, attr);
+    define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.get, get, 1, attr);
+    define_native_function(vm.names.has, has, 1, attr);
+    define_native_function(vm.names.keys, keys, 0, attr);
+    define_native_function(vm.names.set, set, 2, attr);
+    define_native_function(vm.names.values, values, 0, attr);
 
-    define_old_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), attr);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Map.as_string()), Attribute::Configurable);
@@ -43,49 +43,44 @@ MapPrototype::~MapPrototype()
 }
 
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::clear)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     map->entries().clear();
     return js_undefined();
 }
 
 // 24.1.3.3 Map.prototype.delete ( key ), https://tc39.es/ecma262/#sec-map.prototype.delete
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::delete_)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     return Value(map->entries().remove(vm.argument(0)));
 }
 
 // 24.1.3.4 Map.prototype.entries ( ), https://tc39.es/ecma262/#sec-map.prototype.entries
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::entries)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
 
     return MapIterator::create(global_object, *map, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-map.prototype.foreach
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::for_each)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
-    if (!vm.argument(0).is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
-        return {};
-    }
+    auto* map = TRY(typed_this_object(global_object));
+    if (!vm.argument(0).is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
     auto this_value = vm.this_value(global_object);
-    for (auto& entry : map->entries()) {
-        (void)vm.call(vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value);
-        if (vm.exception())
-            return {};
-    }
+    for (auto& entry : map->entries())
+        TRY(vm.call(vm.argument(0).as_function(), vm.argument(1), entry.value, entry.key, this_value));
     return js_undefined();
 }
 
 // 24.1.3.6 Map.prototype.get ( key ), https://tc39.es/ecma262/#sec-map.prototype.get
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::get)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     auto result = map->entries().get(vm.argument(0));
     if (!result.has_value())
         return js_undefined();
@@ -93,25 +88,25 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::get)
 }
 
 // 24.1.3.7 Map.prototype.has ( key ), https://tc39.es/ecma262/#sec-map.prototype.has
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::has)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     auto& entries = map->entries();
     return Value(entries.find(vm.argument(0)) != entries.end());
 }
 
 // 24.1.3.8 Map.prototype.keys ( ), https://tc39.es/ecma262/#sec-map.prototype.keys
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::keys)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
 
     return MapIterator::create(global_object, *map, Object::PropertyKind::Key);
 }
 
 // 24.1.3.9 Map.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-map.prototype.set
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::set)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     auto key = vm.argument(0);
     if (key.is_negative_zero())
         key = Value(0);
@@ -120,17 +115,17 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::set)
 }
 
 // 24.1.3.11 Map.prototype.values ( ), https://tc39.es/ecma262/#sec-map.prototype.values
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::values)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
 
     return MapIterator::create(global_object, *map, Object::PropertyKind::Value);
 }
 
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size
-JS_DEFINE_OLD_NATIVE_FUNCTION(MapPrototype::size_getter)
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::size_getter)
 {
-    auto* map = TRY_OR_DISCARD(typed_this_object(global_object));
+    auto* map = TRY(typed_this_object(global_object));
     return Value(map->entries().size());
 }
 
