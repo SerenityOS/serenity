@@ -29,8 +29,8 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
 
     // TODO: Implement these functions below and uncomment this.
     // u8 attr = Attribute::Writable | Attribute::Configurable;
-    // define_old_native_function(vm.names.asIntN, as_int_n, 2, attr);
-    // define_old_native_function(vm.names.asUintN, as_uint_n, 2, attr);
+    // define_native_function(vm.names.asIntN, as_int_n, 2, attr);
+    // define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -65,13 +65,13 @@ ThrowCompletionOr<Object*> BigIntConstructor::construct(FunctionObject&)
 }
 
 // 21.2.2.1 BigInt.asIntN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asintn
-JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
+JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 {
     TODO();
 }
 
 // 21.2.2.2 BigInt.asUintN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asuintn
-JS_DEFINE_OLD_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
+JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
     TODO();
 }
