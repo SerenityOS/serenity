@@ -73,13 +73,18 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
     CSS::StyleInvalidator style_invalidator(document());
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
+    // FIXME: Handle the second condition, assume it is an HTML document for now.
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
+
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
 
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attribute::create(document(), name, value);
+        auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
         m_attributes->append_attribute(new_attribute);
+
+        attribute = new_attribute.ptr();
     }
 
     // 5. Change attribute to value.
@@ -87,7 +92,7 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
         attribute->set_value(value);
     }
 
-    parse_attribute(name, value);
+    parse_attribute(attribute->local_name(), value);
     return {};
 }
 
