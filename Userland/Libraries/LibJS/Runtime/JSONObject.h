@@ -20,7 +20,7 @@ public:
 
     // The base implementation of stringify is exposed because it is used by
     // test-js to communicate between the JS tests and the C++ test runner.
-    static String stringify_impl(GlobalObject&, Value value, Value replacer, Value space);
+    static ThrowCompletionOr<String> stringify_impl(GlobalObject&, Value value, Value replacer, Value space);
 
     static Value parse_json_value(GlobalObject&, const JsonValue&);
 
@@ -34,18 +34,18 @@ private:
     };
 
     // Stringify helpers
-    static String serialize_json_property(GlobalObject&, StringifyState&, const PropertyKey& key, Object* holder);
-    static String serialize_json_object(GlobalObject&, StringifyState&, Object&);
-    static String serialize_json_array(GlobalObject&, StringifyState&, Object&);
+    static ThrowCompletionOr<String> serialize_json_property(GlobalObject&, StringifyState&, const PropertyKey& key, Object* holder);
+    static ThrowCompletionOr<String> serialize_json_object(GlobalObject&, StringifyState&, Object&);
+    static ThrowCompletionOr<String> serialize_json_array(GlobalObject&, StringifyState&, Object&);
     static String quote_json_string(String);
 
     // Parse helpers
     static Object* parse_json_object(GlobalObject&, const JsonObject&);
     static Array* parse_json_array(GlobalObject&, const JsonArray&);
-    static Value internalize_json_property(GlobalObject&, Object* holder, PropertyKey const& name, FunctionObject& reviver);
+    static ThrowCompletionOr<Value> internalize_json_property(GlobalObject&, Object* holder, PropertyKey const& name, FunctionObject& reviver);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(stringify);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(parse);
+    JS_DECLARE_NATIVE_FUNCTION(stringify);
+    JS_DECLARE_NATIVE_FUNCTION(parse);
 };
 
 }
