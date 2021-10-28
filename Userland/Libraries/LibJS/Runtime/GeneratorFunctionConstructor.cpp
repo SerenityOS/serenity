@@ -45,9 +45,7 @@ ThrowCompletionOr<Value> GeneratorFunctionConstructor::call()
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
 ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
-    auto function = FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator);
-    if (auto* exception = vm().exception())
-        return throw_completion(exception->value());
+    auto function = TRY(FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator));
 
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
