@@ -155,9 +155,10 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout");
     };
 
+    bool after_token_on_same_line = last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line();
     switch (state) {
     case Free:
-        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (after_token_on_same_line) {
             // After some token, but with extra space, not on a new line.
             // Nothing to put here.
             break;
@@ -168,7 +169,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     case InClassName: {
         if (class_names.is_empty())
             break;
-        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (after_token_on_same_line) {
             // After a class name, but haven't seen braces.
             // TODO: Suggest braces?
             break;
@@ -184,7 +185,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         break;
     }
     case InIdentifier: {
-        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (after_token_on_same_line) {
             // After an identifier, but with extra space
             // TODO: Maybe suggest a colon?
             break;
