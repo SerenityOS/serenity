@@ -1349,9 +1349,16 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
     return consume_a_declaration(m_token_stream);
 }
 
+// https://www.w3.org/TR/css-syntax-3/#consume-declaration
 template<typename T>
 Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
 {
+    // Note: This algorithm assumes that the next input token has already been checked to
+    // be an <ident-token>.
+
+    // To consume a declaration:
+
+    // Consume the next input token.
     tokens.skip_whitespace();
     auto start_position = tokens.position();
     auto& token = tokens.next_token();
@@ -1361,20 +1368,30 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
         return {};
     }
 
+    // Create a new declaration with its name set to the value of the current input token
+    // and its value initially set to the empty list.
     StyleDeclarationRule declaration;
     declaration.m_name = ((Token)token).ident();
 
+    // 1. While the next input token is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
 
-    auto& maybe_colon = tokens.next_token();
+    // 2. If the next input token is anything other than a <colon-token>, this is a parse error.
+    // Return nothing.
+    auto& maybe_colon = tokens.peek_token();
     if (!maybe_colon.is(Token::Type::Colon)) {
         log_parse_error();
         tokens.rewind_to_position(start_position);
         return {};
     }
+    // Otherwise, consume the next input token.
+    tokens.next_token();
 
+    // 3. While the next input token is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
 
+    // 4. As long as the next input token is anything other than an <EOF-token>, consume a
+    //    component value and append it to the declaration’s value.
     for (;;) {
         if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
@@ -1382,24 +1399,47 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
         declaration.m_values.append(consume_a_component_value(tokens));
     }
 
+    // 5. If the last two non-<whitespace-token>s in the declaration’s value are a <delim-token>
+    //    with the value "!" followed by an <ident-token> with a value that is an ASCII case-insensitive
+    //    match for "important", remove them from the declaration’s value and set the declaration’s
+    //    important flag to true.
     if (declaration.m_values.size() >= 2) {
-        auto second_last = declaration.m_values.at(declaration.m_values.size() - 2);
-        auto last = declaration.m_values.at(declaration.m_values.size() - 1);
+        // Walk backwards from the end until we find "important"
+        Optional<size_t> important_index;
+        for (size_t i = declaration.m_values.size() - 1; i > 0; i--) {
+            auto value = declaration.m_values[i];
+            if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important")) {
+                important_index = i;
+                break;
+            }
+            if (value.is(Token::Type::Whitespace))
+                continue;
+            break;
+        }
 
-        if (second_last.m_type == StyleComponentValueRule::ComponentType::Token && last.m_type == StyleComponentValueRule::ComponentType::Token) {
-            auto last_token = last.m_token;
-            auto second_last_token = second_last.m_token;
-
-            if (second_last_token.is(Token::Type::Delim) && second_last_token.m_value.to_string().equals_ignoring_case("!")) {
-                if (last_token.is(Token::Type::Ident) && last_token.m_value.to_string().equals_ignoring_case("important")) {
-                    declaration.m_values.remove(declaration.m_values.size() - 2);
-                    declaration.m_values.remove(declaration.m_values.size() - 1);
-                    declaration.m_important = true;
+        // Walk backwards from important until we find "!"
+        if (important_index.has_value()) {
+            Optional<size_t> bang_index;
+            for (size_t i = important_index.value() - 1; i > 0; i--) {
+                auto value = declaration.m_values[i];
+                if (value.is(Token::Type::Delim) && value.token().delim() == "!"sv) {
+                    bang_index = i;
+                    break;
                 }
+                if (value.is(Token::Type::Whitespace))
+                    continue;
+                break;
+            }
+
+            if (bang_index.has_value()) {
+                declaration.m_values.remove(important_index.value());
+                declaration.m_values.remove(bang_index.value());
+                declaration.m_important = true;
             }
         }
     }
 
+    // 6. While the last token in the declaration’s value is a <whitespace-token>, remove that token.
     while (!declaration.m_values.is_empty()) {
         auto maybe_whitespace = declaration.m_values.last();
         if (!(maybe_whitespace.is(Token::Type::Whitespace))) {
@@ -1408,6 +1448,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
         declaration.m_values.take_last();
     }
 
+    // 7. Return the declaration.
     return declaration;
 }
 
