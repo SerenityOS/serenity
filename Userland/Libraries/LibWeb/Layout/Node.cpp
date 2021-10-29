@@ -320,6 +320,12 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (auto list_style_type = specified_style.list_style_type(); list_style_type.has_value())
         computed_values.set_list_style_type(list_style_type.value());
 
+    auto list_style_image = specified_style.property(CSS::PropertyID::ListStyleImage);
+    if (list_style_image.has_value() && list_style_image.value()->is_image()) {
+        m_list_style_image = list_style_image.value()->as_image();
+        m_list_style_image->load_bitmap(document());
+    }
+
     computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
     computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
