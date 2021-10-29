@@ -693,7 +693,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
         if (Core::File::is_directory(LexicalPath::join(full_dir, path).string())) {
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = String::formatted("{}{}{}/", prefix, include_dir, path);
-            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, GUI::AutocompleteProvider::Language::Cpp, path, GUI::AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
         } else if (path.ends_with(".h")) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
