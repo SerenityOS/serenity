@@ -32,7 +32,7 @@ public:
     static void for_each(Function<void(const LocalSocket&)>);
 
     StringView socket_path() const;
-    String absolute_path(const OpenFileDescription& description) const override;
+    KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
 
     // ^Socket
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;

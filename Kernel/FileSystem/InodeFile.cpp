@@ -89,15 +89,14 @@ KResultOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription
         vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode()));
     else
         vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode()));
-    auto path = TRY(description.try_serialize_absolute_path());
+    auto path = TRY(description.pseudo_path());
     return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
 }
 
-String InodeFile::absolute_path(const OpenFileDescription& description) const
+KResultOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(const OpenFileDescription&) const
 {
+    // If it has an inode, then it has a path, and therefore the caller should have been able to get a custody at some point.
     VERIFY_NOT_REACHED();
-    VERIFY(description.custody());
-    return description.absolute_path();
 }
 
 KResult InodeFile::truncate(u64 size)
