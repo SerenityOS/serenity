@@ -349,19 +349,18 @@ KResult OpenFileDescription::close()
     return m_file->close();
 }
 
-KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::try_serialize_absolute_path()
+KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::original_absolute_path() const
+{
+    if (!m_custody)
+        return ENOENT;
+    return m_custody->try_serialize_absolute_path();
+}
+
+KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::pseudo_path() const
 {
     if (m_custody)
         return m_custody->try_serialize_absolute_path();
-    // FIXME: Don't go through a String here!
-    return KString::try_create(m_file->absolute_path(*this));
-}
-
-String OpenFileDescription::absolute_path() const
-{
-    if (m_custody)
-        return m_custody->absolute_path();
-    return m_file->absolute_path(*this);
+    return m_file->pseudo_path(*this);
 }
 
 InodeMetadata OpenFileDescription::metadata() const

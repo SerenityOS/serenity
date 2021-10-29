@@ -132,9 +132,9 @@ KResultOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBu
     return m_buffer->write(buffer, size);
 }
 
-String FIFO::absolute_path(const OpenFileDescription&) const
+KResultOr<NonnullOwnPtr<KString>> FIFO::pseudo_path(const OpenFileDescription&) const
 {
-    return String::formatted("fifo:{}", m_fifo_id);
+    return KString::try_create(String::formatted("fifo:{}", m_fifo_id));
 }
 
 KResult FIFO::stat(::stat& st) const

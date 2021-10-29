@@ -81,9 +81,9 @@ KResult InodeWatcher::close()
     return KSuccess;
 }
 
-String InodeWatcher::absolute_path(const OpenFileDescription&) const
+KResultOr<NonnullOwnPtr<KString>> InodeWatcher::pseudo_path(const OpenFileDescription&) const
 {
-    return String::formatted("InodeWatcher:({})", m_wd_to_watches.size());
+    return KString::try_create(String::formatted("InodeWatcher:({})", m_wd_to_watches.size()));
 }
 
 void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, InodeWatcherEvent::Type event_type, String const& name)

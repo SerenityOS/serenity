@@ -124,7 +124,8 @@ KResult VirtualFileSystem::mount_root(FileSystem& fs)
     }
 
     m_root_inode = root_inode;
-    dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFileSystem&>(fs).file_description().absolute_path());
+    auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
+    dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), pseudo_path);
 
     m_mounts.with_exclusive([&](auto& mounts) {
         mounts.append(move(mount));

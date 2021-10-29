@@ -456,10 +456,10 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     return true;
 }
 
-String IPv4Socket::absolute_path(const OpenFileDescription&) const
+KResultOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(const OpenFileDescription&) const
 {
     if (m_role == Role::None)
-        return "socket";
+        return KString::try_create("socket"sv);
 
     StringBuilder builder;
     builder.append("socket:");
@@ -485,7 +485,7 @@ String IPv4Socket::absolute_path(const OpenFileDescription&) const
         VERIFY_NOT_REACHED();
     }
 
-    return builder.to_string();
+    return KString::try_create(builder.to_string());
 }
 
 KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)

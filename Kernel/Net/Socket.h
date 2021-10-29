@@ -105,7 +105,7 @@ public:
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
     virtual KResult stat(::stat&) const override;
-    virtual String absolute_path(const OpenFileDescription&) const override = 0;
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }
     const Time& receive_timeout() const { return m_receive_timeout; }

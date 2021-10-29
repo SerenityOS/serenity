@@ -61,7 +61,7 @@ public:
 
     IPv4SocketTuple tuple() const { return IPv4SocketTuple(m_local_address, m_local_port, m_peer_address, m_peer_port); }
 
-    String absolute_path(const OpenFileDescription& description) const override;
+    KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
 
     u8 type_of_service() const { return m_type_of_service; }
     u8 ttl() const { return m_ttl; }

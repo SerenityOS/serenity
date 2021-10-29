@@ -275,7 +275,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
 
-    auto elf_name = TRY(object_description.try_serialize_absolute_path());
+    auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
 
     Memory::MemoryManager::enter_address_space(*new_space);
@@ -438,7 +438,9 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
-    auto path = TRY(main_program_description->try_serialize_absolute_path());
+    // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
+    // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
+    auto path = TRY(main_program_description->original_absolute_path());
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
 

@@ -40,8 +40,7 @@ public:
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
-    virtual String absolute_path(const OpenFileDescription&) const override;
-    virtual String absolute_path() const;
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }

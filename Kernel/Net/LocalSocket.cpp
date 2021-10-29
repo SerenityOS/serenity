@@ -355,7 +355,7 @@ StringView LocalSocket::socket_path() const
     return m_path->view();
 }
 
-String LocalSocket::absolute_path(const OpenFileDescription& description) const
+KResultOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescription& description) const
 {
     StringBuilder builder;
     builder.append("socket:");
@@ -378,7 +378,7 @@ String LocalSocket::absolute_path(const OpenFileDescription& description) const
         break;
     }
 
-    return builder.to_string();
+    return KString::try_create(builder.to_string());
 }
 
 KResult LocalSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)

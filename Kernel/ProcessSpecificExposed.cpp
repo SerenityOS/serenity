@@ -80,9 +80,10 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& p
 KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
 {
     auto file_description = TRY(m_fds.open_file_description(fd));
-    auto data = file_description->absolute_path();
-    TRY(builder.append(data));
-    return data.length();
+    // Note: These links are not guaranteed to point to actual VFS paths, just like in other kernels.
+    auto data = TRY(file_description->pseudo_path());
+    TRY(builder.append(data->view()));
+    return data->length();
 }
 
 KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
@@ -187,7 +188,9 @@ KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
         RefPtr<OpenFileDescription> description = file_description_metadata.description();
         auto description_object = array.add_object();
         description_object.add("fd", count);
-        description_object.add("absolute_path", description->absolute_path());
+        // TODO: Better OOM handling.
+        auto pseudo_path_or_error = description->pseudo_path();
+        description_object.add("absolute_path", pseudo_path_or_error.is_error() ? "???"sv : pseudo_path_or_error.value()->view());
         description_object.add("seekable", description->file().is_seekable());
         description_object.add("class", description->file().class_name());
         description_object.add("offset", description->offset());
