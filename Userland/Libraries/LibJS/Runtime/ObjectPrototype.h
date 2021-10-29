@@ -24,20 +24,20 @@ public:
     virtual ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
 
     // public to serve as intrinsic function %Object.prototype.toString%
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(has_own_property);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_locale_string);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(value_of);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(property_is_enumerable);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(is_prototype_of);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(define_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(define_setter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(lookup_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(lookup_setter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(proto_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(proto_setter);
+    JS_DECLARE_NATIVE_FUNCTION(has_own_property);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
+    JS_DECLARE_NATIVE_FUNCTION(property_is_enumerable);
+    JS_DECLARE_NATIVE_FUNCTION(is_prototype_of);
+    JS_DECLARE_NATIVE_FUNCTION(define_getter);
+    JS_DECLARE_NATIVE_FUNCTION(define_setter);
+    JS_DECLARE_NATIVE_FUNCTION(lookup_getter);
+    JS_DECLARE_NATIVE_FUNCTION(lookup_setter);
+    JS_DECLARE_NATIVE_FUNCTION(proto_getter);
+    JS_DECLARE_NATIVE_FUNCTION(proto_setter);
 };
 
 }
