@@ -38,19 +38,19 @@ KResultOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
 
     while (current_custody) {
         VirtualFileSystem::the().for_each_mount([&kernelbuf, &current_custody](auto& mount) {
-            if (current_custody) {
-                if (&current_custody->inode() == &mount.guest()) {
-                    int mountflags = mount.flags();
-                    int flags = 0;
-                    if (mountflags & MS_RDONLY)
-                        flags = flags | ST_RDONLY;
-                    if (mountflags & MS_NOSUID)
-                        flags = flags | ST_NOSUID;
+            if (&current_custody->inode() == &mount.guest()) {
+                int mountflags = mount.flags();
+                int flags = 0;
+                if (mountflags & MS_RDONLY)
+                    flags = flags | ST_RDONLY;
+                if (mountflags & MS_NOSUID)
+                    flags = flags | ST_NOSUID;
 
-                    kernelbuf.f_flag = flags;
-                    current_custody = nullptr;
-                }
+                kernelbuf.f_flag = flags;
+                current_custody = nullptr;
+                return IterationDecision::Break;
             }
+            return IterationDecision::Continue;
         });
 
         if (current_custody) {

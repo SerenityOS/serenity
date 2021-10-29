@@ -351,7 +351,8 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        VirtualFileSystem::the().for_each_mount([&array](auto& mount) {
+        KResult result = KSuccess;
+        VirtualFileSystem::the().for_each_mount([&array, &result](auto& mount) {
             auto& fs = mount.guest_fs();
             auto fs_object = array.add_object();
             fs_object.add("class_name", fs.class_name());
@@ -368,6 +369,8 @@ private:
                 fs_object.add("source", static_cast<const FileBackedFileSystem&>(fs).file_description().absolute_path());
             else
                 fs_object.add("source", "none");
+
+            return IterationDecision::Continue;
         });
         array.finish();
         return KSuccess;
