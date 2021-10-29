@@ -10,6 +10,7 @@ set(SOURCES
     Paragraph.cpp
     Table.cpp
     Text.cpp
+    TextAlignment.cpp
 )
 
 serenity_lib(LibMarkdown markdown)
