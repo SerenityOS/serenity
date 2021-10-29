@@ -77,11 +77,11 @@ public:
     virtual ~ReplObject() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(exit_interpreter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(repl_help);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(load_file);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(save_to_file);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
+    JS_DECLARE_NATIVE_FUNCTION(repl_help);
+    JS_DECLARE_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_NATIVE_FUNCTION(save_to_file);
+    JS_DECLARE_NATIVE_FUNCTION(load_json);
 };
 
 class ScriptObject final : public JS::GlobalObject {
@@ -93,8 +93,8 @@ public:
     virtual ~ScriptObject() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(load_file);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(load_json);
+    JS_DECLARE_NATIVE_FUNCTION(load_file);
+    JS_DECLARE_NATIVE_FUNCTION(load_json);
 };
 
 static bool s_dump_ast = false;
@@ -891,42 +891,35 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     return true;
 }
 
-static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<JS::Value> load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
-        return {};
-    }
+    if (!file->open(Core::OpenMode::ReadOnly))
+        return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
     auto file_contents = file->read_all();
     auto source = StringView { file_contents };
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        vm.throw_exception<JS::SyntaxError>(global_object, error.to_string());
-        return {};
+        return vm.throw_completion<JS::SyntaxError>(global_object, error.to_string());
     }
     // FIXME: Use eval()-like semantics and execute in current scope?
     vm.interpreter().run(global_object, *program);
     return JS::js_undefined();
 }
 
-static JS::Value load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto filename = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto filename = TRY(vm.argument(0).to_string(global_object));
     auto file = Core::File::construct(filename);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
-        return {};
-    }
+    if (!file->open(Core::OpenMode::ReadOnly))
+        return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    if (!json.has_value()) {
-        vm.throw_exception<JS::SyntaxError>(global_object, JS::ErrorType::JsonMalformed);
-        return {};
-    }
+    if (!json.has_value())
+        return vm.throw_completion<JS::SyntaxError>(global_object, JS::ErrorType::JsonMalformed);
     return JS::JSONObject::parse_json_value(global_object, json.value());
 }
 
@@ -935,14 +928,14 @@ void ReplObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_old_native_function("exit", exit_interpreter, 0, attr);
-    define_old_native_function("help", repl_help, 0, attr);
-    define_old_native_function("load", load_file, 1, attr);
-    define_old_native_function("save", save_to_file, 1, attr);
-    define_old_native_function("loadJSON", load_json, 1, attr);
+    define_native_function("exit", exit_interpreter, 0, attr);
+    define_native_function("help", repl_help, 0, attr);
+    define_native_function("load", load_file, 1, attr);
+    define_native_function("save", save_to_file, 1, attr);
+    define_native_function("loadJSON", load_json, 1, attr);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::save_to_file)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!vm.argument_count())
         return JS::Value(false);
@@ -954,14 +947,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::save_to_file)
     return JS::Value(false);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::exit_interpreter)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
     if (!vm.argument_count())
         exit(0);
-    exit(TRY_OR_DISCARD(vm.argument(0).to_number(global_object)).as_double());
+    exit(TRY(vm.argument(0).to_number(global_object)).as_double());
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::repl_help)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 {
     outln("REPL commands:");
     outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
@@ -971,12 +964,12 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::repl_help)
     return JS::js_undefined();
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::load_file)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
 {
     return load_file_impl(vm, global_object);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ReplObject::load_json)
+JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
 {
     return load_json_impl(vm, global_object);
 }
@@ -986,16 +979,16 @@ void ScriptObject::initialize_global_object()
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_old_native_function("load", load_file, 1, attr);
-    define_old_native_function("loadJSON", load_json, 1, attr);
+    define_native_function("load", load_file, 1, attr);
+    define_native_function("loadJSON", load_json, 1, attr);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ScriptObject::load_file)
+JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
 {
     return load_file_impl(vm, global_object);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ScriptObject::load_json)
+JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
 {
     return load_json_impl(vm, global_object);
 }
