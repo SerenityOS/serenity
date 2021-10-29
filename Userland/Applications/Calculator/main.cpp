@@ -67,6 +67,14 @@ int main(int argc, char** argv)
         }
     }));
 
+    auto& constants_menu = window->add_menu("&Constants");
+    constants_menu.add_action(GUI::Action::create("&Pi", [&](auto&) {
+        widget.set_entry(KeypadValue { 31415926535, 10 });
+    }));
+    constants_menu.add_action(GUI::Action::create("&Euler's Constant", [&](auto&) {
+        widget.set_entry(KeypadValue { 27182818284, 10 });
+    }));
+
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
 
