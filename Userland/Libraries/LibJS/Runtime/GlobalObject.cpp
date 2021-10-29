@@ -429,7 +429,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::eval)
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
-static String encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
+static ThrowCompletionOr<String> encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
 {
     StringBuilder encoded_builder;
     for (unsigned char code_unit : string) {
@@ -444,34 +444,31 @@ static String encode([[maybe_unused]] JS::GlobalObject& global_object, const Str
 }
 
 // 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
-static String decode(JS::GlobalObject& global_object, const String& string, StringView reserved_set)
+static ThrowCompletionOr<String> decode(JS::GlobalObject& global_object, const String& string, StringView reserved_set)
 {
     StringBuilder decoded_builder;
     auto expected_continuation_bytes = 0;
     for (size_t k = 0; k < string.length(); k++) {
         auto code_unit = string[k];
         if (code_unit != '%') {
-            if (expected_continuation_bytes > 0) {
-                global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
-                return {};
-            }
+            if (expected_continuation_bytes > 0)
+                return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
             decoded_builder.append(code_unit);
             continue;
         }
-        if (k + 2 >= string.length()) {
-            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
-            return {};
-        }
+
+        if (k + 2 >= string.length())
+            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
         auto first_digit = decode_hex_digit(string[k + 1]);
-        if (first_digit >= 16) {
-            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
-            return {};
-        }
+        if (first_digit >= 16)
+            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
         auto second_digit = decode_hex_digit(string[k + 2]);
-        if (second_digit >= 16) {
-            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
-            return {};
-        }
+        if (second_digit >= 16)
+            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
         char decoded_code_unit = (first_digit << 4) | second_digit;
         k += 2;
         if (expected_continuation_bytes > 0) {
@@ -479,6 +476,7 @@ static String decode(JS::GlobalObject& global_object, const String& string, Stri
             expected_continuation_bytes--;
             continue;
         }
+
         if ((decoded_code_unit & 0x80) == 0) {
             if (reserved_set.contains(decoded_code_unit))
                 decoded_builder.append(string.substring_view(k - 2, 3));
@@ -486,11 +484,11 @@ static String decode(JS::GlobalObject& global_object, const String& string, Stri
                 decoded_builder.append(decoded_code_unit);
             continue;
         }
+
         auto leading_ones = count_trailing_zeroes_32_safe(~decoded_code_unit) - 24;
-        if (leading_ones == 1 || leading_ones > 4) {
-            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
-            return {};
-        }
+        if (leading_ones == 1 || leading_ones > 4)
+            return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
+
         decoded_builder.append(decoded_code_unit);
         expected_continuation_bytes = leading_ones - 1;
     }
@@ -501,9 +499,7 @@ static String decode(JS::GlobalObject& global_object, const String& string, Stri
 JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
-    auto encoded = encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv);
-    if (vm.exception())
-        return {};
+    auto encoded = TRY_OR_DISCARD(encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
     return js_string(vm, move(encoded));
 }
 
@@ -511,9 +507,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri)
 JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
-    auto decoded = decode(global_object, uri_string, ";/?:@&=+$,#"sv);
-    if (vm.exception())
-        return {};
+    auto decoded = TRY_OR_DISCARD(decode(global_object, uri_string, ";/?:@&=+$,#"sv));
     return js_string(vm, move(decoded));
 }
 
@@ -521,9 +515,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::decode_uri)
 JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
-    auto encoded = encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv);
-    if (vm.exception())
-        return {};
+    auto encoded = TRY_OR_DISCARD(encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
     return js_string(vm, move(encoded));
 }
 
@@ -531,9 +523,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 JS_DEFINE_OLD_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
     auto uri_string = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
-    auto decoded = decode(global_object, uri_string, ""sv);
-    if (vm.exception())
-        return {};
+    auto decoded = TRY_OR_DISCARD(decode(global_object, uri_string, ""sv));
     return js_string(vm, move(decoded));
 }
 
