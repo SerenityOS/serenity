@@ -126,11 +126,6 @@ InodeMetadata DevTmpFSInode::metadata() const
         break;
     case Type::Link:
         metadata.inode = { fsid(), index() };
-        // FIXME: For now, it might not be possible to change the m_mode due to
-        // it pointing to another device node which its absolute_path() is not
-        // recognizable by the VirtualFileSystem.
-        // When we resolve the issues with the clunky absolute_path() interface,
-        // this should work out of the box...
         metadata.mode = S_IFLNK | m_mode;
         break;
     default:
