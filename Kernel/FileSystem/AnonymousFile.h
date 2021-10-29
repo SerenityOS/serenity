@@ -24,7 +24,7 @@ public:
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"sv; }
-    virtual String absolute_path(const OpenFileDescription&) const override { return ":anonymous-file:"; }
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const;
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return false; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return false; }
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }

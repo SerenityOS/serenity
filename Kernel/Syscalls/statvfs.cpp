@@ -77,7 +77,9 @@ KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
     REQUIRE_PROMISE(stdio);
 
     auto description = TRY(fds().open_file_description(fd));
-    return do_statvfs(description->absolute_path(), buf);
+    auto absolute_path = TRY(description->original_absolute_path());
+    // FIXME: TOCTOU bug! The file connected to the fd may or may not have been moved, and the name possibly taken by a different file.
+    return do_statvfs(absolute_path->view(), buf);
 }
 
 }

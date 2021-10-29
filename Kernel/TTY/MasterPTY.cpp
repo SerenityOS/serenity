@@ -127,9 +127,10 @@ KResult MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Use
     return EINVAL;
 }
 
-String MasterPTY::absolute_path(const OpenFileDescription&) const
+KResultOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
 {
-    return String::formatted("ptm:{}", m_pts_name);
+    // FIXME: Replace this and others of this pattern by KString::formatted()
+    return KString::try_create(String::formatted("ptm:{}", m_pts_name));
 }
 
 }
