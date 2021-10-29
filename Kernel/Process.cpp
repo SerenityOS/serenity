@@ -565,9 +565,11 @@ bool Process::dump_perfcore()
 
     // Try to generate a filename which isn't already used.
     auto base_filename = String::formatted("{}_{}", name(), pid().value());
-    auto description_or_error = VirtualFileSystem::the().open(String::formatted("{}.profile", base_filename), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+    auto perfcore_filename = String::formatted("{}.profile", base_filename);
+    auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
     for (size_t attempt = 1; attempt < 10 && description_or_error.is_error(); ++attempt)
-        description_or_error = VirtualFileSystem::the().open(String::formatted("{}.{}.profile", base_filename, attempt), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+        perfcore_filename = String::formatted("{}.{}.profile", base_filename, attempt);
+    description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
     if (description_or_error.is_error()) {
         dbgln("Failed to generate perfcore for pid {}: Could not generate filename for the perfcore file.", pid().value());
         return false;
@@ -596,7 +598,7 @@ bool Process::dump_perfcore()
         return false;
     }
 
-    dbgln("Wrote perfcore for pid {} to {}", pid().value(), description.absolute_path());
+    dbgln("Wrote perfcore for pid {} to {}", pid().value(), perfcore_filename);
     return true;
 }
 
