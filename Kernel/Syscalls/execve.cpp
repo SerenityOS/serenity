@@ -739,19 +739,19 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
 
         auto elf_header = (ElfW(Ehdr)*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
+            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
             return ENOEXEC;
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_description->absolute_path());
+            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
             return ENOEXEC;
         }
 
         if (!interpreter_interpreter_path.is_empty()) {
-            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
+            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_path, interpreter_interpreter_path);
             return ELOOP;
         }
 
