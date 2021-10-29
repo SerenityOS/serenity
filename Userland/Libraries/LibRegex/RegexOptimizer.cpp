@@ -436,13 +436,23 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
 
 void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&& right)
 {
-    if (left.is_empty()) {
-        target.extend(right);
-        return;
-    }
+    auto left_is_empty = left.is_empty();
+    auto right_is_empty = right.is_empty();
+    if (left_is_empty || right_is_empty) {
+        if (left_is_empty && right_is_empty)
+            return;
 
-    if (right.is_empty()) {
-        target.extend(left);
+        // ForkJump right (+ left.size() + 2 + right.size())
+        // (left)
+        // Jump end (+ right.size())
+        // (right)
+        // LABEL end
+        target.append(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
+        target.append(left.size() + 2 + right.size());
+        target.extend(move(left));
+        target.append(static_cast<ByteCodeValueType>(OpCodeId::Jump));
+        target.append(right.size());
+        target.extend(move(right));
         return;
     }
 
