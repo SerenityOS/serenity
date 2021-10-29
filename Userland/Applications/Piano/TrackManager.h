@@ -38,7 +38,7 @@ public:
     void set_octave(Direction);
     void set_octave(int octave);
     void add_track();
-    void next_track();
+    void switch_to_next_track();
 
 private:
     Vector<NonnullOwnPtr<Track>> m_tracks;

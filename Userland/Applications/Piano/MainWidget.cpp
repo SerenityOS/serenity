@@ -64,7 +64,7 @@ void MainWidget::add_actions(GUI::Menu& menu)
 
     menu.add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, [&](auto&) {
         turn_off_pressed_keys();
-        m_track_manager.next_track();
+        m_track_manager.switch_to_next_track();
         turn_on_pressed_keys();
 
         m_knobs_widget->update_knobs();
