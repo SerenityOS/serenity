@@ -38,6 +38,7 @@ public:
     void set_octave(Direction);
     void set_octave(int octave);
     void add_track();
+    void switch_to_last_track();
     void switch_to_next_track();
     void switch_to_previous_track();
 
