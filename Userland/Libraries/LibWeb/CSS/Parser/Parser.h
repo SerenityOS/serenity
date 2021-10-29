@@ -195,7 +195,12 @@ private:
     static Optional<float> try_parse_float(StringView string);
     static Optional<Color> parse_color(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
-    static Optional<AK::URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
+
+    enum class AllowedDataUrlType {
+        None,
+        Image,
+    };
+    static Optional<AK::URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
     Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, StyleComponentValueRule const&);
