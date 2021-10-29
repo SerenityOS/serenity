@@ -724,11 +724,12 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
-void VirtualFileSystem::for_each_mount(Function<void(Mount const&)> callback) const
+void VirtualFileSystem::for_each_mount(Function<IterationDecision(Mount const&)> callback) const
 {
     m_mounts.with_shared([&](auto& mounts) {
         for (auto& mount : mounts) {
-            callback(mount);
+            if (callback(mount) == IterationDecision::Break)
+                break;
         }
     });
 }

@@ -66,7 +66,7 @@ public:
     KResult mknod(StringView path, mode_t, dev_t, Custody& base);
     KResultOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 
-    void for_each_mount(Function<void(const Mount&)>) const;
+    void for_each_mount(Function<IterationDecision(const Mount&)>) const;
 
     InodeIdentifier root_inode_id() const;
 
