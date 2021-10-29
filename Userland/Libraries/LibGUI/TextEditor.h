@@ -282,6 +282,7 @@ private:
     void try_update_autocomplete(Function<void()> callback = {});
     void force_update_autocomplete(Function<void()> callback = {});
     void hide_autocomplete_if_needed();
+    void hide_autocomplete();
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
