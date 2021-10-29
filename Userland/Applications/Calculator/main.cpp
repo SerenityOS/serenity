@@ -62,7 +62,7 @@ int main(int argc, char** argv)
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
                 auto data = atof(StringView(clipboard.data).to_string().characters());
-                widget.set_entry(data);
+                widget.set_entry(KeypadValue { data });
             }
         }
     }));
