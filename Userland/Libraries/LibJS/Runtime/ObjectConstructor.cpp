@@ -87,15 +87,15 @@ enum class GetOwnPropertyKeysType {
 };
 
 // 20.1.2.11.1 GetOwnPropertyKeys ( O, type ), https://tc39.es/ecma262/#sec-getownpropertykeys
-static Array* get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
+static ThrowCompletionOr<Array*> get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
 {
     auto& vm = global_object.vm();
 
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY_OR_DISCARD(value.to_object(global_object));
+    auto* object = TRY(value.to_object(global_object));
 
     // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
-    auto keys = TRY_OR_DISCARD(object->internal_own_property_keys());
+    auto keys = TRY(object->internal_own_property_keys());
 
     // 3. Let nameList be a new empty List.
     auto name_list = MarkedValueList { vm.heap() };
@@ -117,14 +117,14 @@ static Array* get_own_property_keys(GlobalObject& global_object, Value value, Ge
 JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
     // 1. Return ? GetOwnPropertyKeys(O, string).
-    return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String);
+    return TRY_OR_DISCARD(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String));
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
 JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
     // 1. Return ? GetOwnPropertyKeys(O, symbol).
-    return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol);
+    return TRY_OR_DISCARD(get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol));
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
