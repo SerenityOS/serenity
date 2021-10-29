@@ -40,7 +40,9 @@ void ListItemBox::layout_marker()
     }
 
     m_marker->set_offset(-(m_marker->width() + 4), 0);
-    m_marker->set_height(line_height());
+
+    if (m_marker->height() > height())
+        set_height(m_marker->height());
 }
 
 }
