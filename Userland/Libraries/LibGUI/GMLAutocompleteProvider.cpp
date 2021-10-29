@@ -152,7 +152,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         }
 
         if (can_have_declared_layout(class_names.last()) && "layout"sv.matches(pattern))
-            identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout");
+            identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout", AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
     };
 
     auto register_properties_and_widgets_matching_pattern = [&](String pattern, size_t partial_input_length) {
