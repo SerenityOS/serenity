@@ -34,6 +34,7 @@ public:
         __ModelRoleCustom = (int)GUI::ModelRole::Custom,
         PartialInputLength,
         Completion,
+        HideAutocompleteAfterApplying,
     };
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
@@ -70,6 +71,9 @@ public:
 
         if ((int)role == InternalRole::Completion)
             return suggestion.completion;
+
+        if ((int)role == InternalRole::HideAutocompleteAfterApplying)
+            return suggestion.hide_autocomplete_after_applying == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes;
 
         return {};
     }
@@ -173,21 +177,27 @@ void AutocompleteBox::previous_suggestion()
     }
 }
 
-void AutocompleteBox::apply_suggestion()
+AutocompleteProvider::Entry::HideAutocompleteAfterApplying AutocompleteBox::apply_suggestion()
 {
+    auto hide_when_done = AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes;
+
     if (m_editor.is_null())
-        return;
+        return hide_when_done;
 
     if (!m_editor->is_editable())
-        return;
+        return hide_when_done;
 
     auto selected_index = m_suggestion_view->selection().first();
     if (!selected_index.is_valid() || !m_suggestion_view->model()->is_within_range(selected_index))
-        return;
+        return hide_when_done;
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row());
     auto completion = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Completion).to_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
+    auto hide_after_applying = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::HideAutocompleteAfterApplying).to_bool();
+
+    if (!hide_after_applying)
+        hide_when_done = AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No;
 
     VERIFY(completion.length() >= partial_length);
     if (!m_editor->has_selection()) {
@@ -200,6 +210,8 @@ void AutocompleteBox::apply_suggestion()
     }
 
     m_editor->insert_at_cursor_or_replace_selection(completion);
+
+    return hide_when_done;
 }
 
 bool AutocompleteProvider::Declaration::operator==(const AutocompleteProvider::Declaration& other) const
