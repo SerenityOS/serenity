@@ -33,19 +33,19 @@ void ObjectPrototype::initialize(GlobalObject& global_object)
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_old_native_function(vm.names.hasOwnProperty, has_own_property, 1, attr);
-    define_old_native_function(vm.names.toString, to_string, 0, attr);
-    define_old_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
-    define_old_native_function(vm.names.valueOf, value_of, 0, attr);
-    define_old_native_function(vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
-    define_old_native_function(vm.names.isPrototypeOf, is_prototype_of, 1, attr);
+    define_native_function(vm.names.hasOwnProperty, has_own_property, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
+    define_native_function(vm.names.isPrototypeOf, is_prototype_of, 1, attr);
 
     // Annex B
-    define_old_native_function(vm.names.__defineGetter__, define_getter, 2, attr);
-    define_old_native_function(vm.names.__defineSetter__, define_setter, 2, attr);
-    define_old_native_function(vm.names.__lookupGetter__, lookup_getter, 1, attr);
-    define_old_native_function(vm.names.__lookupSetter__, lookup_setter, 1, attr);
-    define_old_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
+    define_native_function(vm.names.__defineGetter__, define_getter, 2, attr);
+    define_native_function(vm.names.__defineSetter__, define_setter, 2, attr);
+    define_native_function(vm.names.__lookupGetter__, lookup_getter, 1, attr);
+    define_native_function(vm.names.__lookupSetter__, lookup_setter, 1, attr);
+    define_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
 }
 
 ObjectPrototype::~ObjectPrototype()
@@ -60,15 +60,15 @@ ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* proto
 }
 
 // 20.1.3.2 Object.prototype.hasOwnProperty ( V ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
-    auto property_key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    return Value(TRY_OR_DISCARD(this_object->has_own_property(property_key)));
+    auto property_key = TRY(vm.argument(0).to_property_key(global_object));
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    return Value(TRY(this_object->has_own_property(property_key)));
 }
 
 // 20.1.3.6 Object.prototype.toString ( ), https://tc39.es/ecma262/#sec-object.prototype.tostring
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::to_string)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
 
@@ -84,7 +84,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::to_string)
     auto* object = MUST(this_value.to_object(global_object));
 
     // 4. Let isArray be ? IsArray(O).
-    auto is_array = TRY_OR_DISCARD(Value(object).is_array(global_object));
+    auto is_array = TRY(Value(object).is_array(global_object));
 
     String builtin_tag;
 
@@ -120,7 +120,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::to_string)
         builtin_tag = "Object";
 
     // 15. Let tag be ? Get(O, @@toStringTag).
-    auto to_string_tag = TRY_OR_DISCARD(object->get(*vm.well_known_symbol_to_string_tag()));
+    auto to_string_tag = TRY(object->get(*vm.well_known_symbol_to_string_tag()));
 
     // Optimization: Instead of creating another PrimitiveString from builtin_tag, we separate tag and to_string_tag and add an additional branch to step 16.
     String tag;
@@ -136,27 +136,27 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::to_string)
 }
 
 // 20.1.3.5 Object.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-object.prototype.tolocalestring
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
     auto this_value = vm.this_value(global_object);
-    return TRY_OR_DISCARD(this_value.invoke(global_object, vm.names.toString));
+    return this_value.invoke(global_object, vm.names.toString);
 }
 
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::value_of)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
-    return TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    return TRY(vm.this_value(global_object).to_object(global_object));
 }
 
 // 20.1.3.4 Object.prototype.propertyIsEnumerable ( V ), https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
     // 1. Let P be ? ToPropertyKey(V).
-    auto property_key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
+    auto property_key = TRY(vm.argument(0).to_property_key(global_object));
     // 2. Let O be ? ToObject(this value).
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
-    auto property_descriptor = TRY_OR_DISCARD(this_object->internal_get_own_property(property_key));
+    auto property_descriptor = TRY(this_object->internal_get_own_property(property_key));
     // 4. If desc is undefined, return false.
     if (!property_descriptor.has_value())
         return Value(false);
@@ -165,16 +165,16 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 }
 
 // 20.1.3.3 Object.prototype.isPrototypeOf ( V ), https://tc39.es/ecma262/#sec-object.prototype.isprototypeof
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 {
     auto object_argument = vm.argument(0);
     if (!object_argument.is_object())
         return Value(false);
     auto* object = &object_argument.as_object();
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
     for (;;) {
-        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
+        object = TRY(object->internal_get_prototype_of());
         if (!object)
             return Value(false);
         if (same_value(this_object, object))
@@ -183,96 +183,92 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 }
 
 // B.2.2.2 Object.prototype.__defineGetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::define_getter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 {
-    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
     auto getter = vm.argument(1);
-    if (!getter.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, getter.to_string_without_side_effects());
-        return {};
-    }
+    if (!getter.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, getter.to_string_without_side_effects());
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(global_object));
 
-    TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
+    TRY(object->define_property_or_throw(key, descriptor));
 
     return js_undefined();
 }
 
 // B.2.2.3 Object.prototype.__defineSetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::define_setter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 {
-    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
     auto setter = vm.argument(1);
-    if (!setter.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, setter.to_string_without_side_effects());
-        return {};
-    }
+    if (!setter.is_function())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, setter.to_string_without_side_effects());
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 
-    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(global_object));
 
-    TRY_OR_DISCARD(object->define_property_or_throw(key, descriptor));
+    TRY(object->define_property_or_throw(key, descriptor));
 
     return js_undefined();
 }
 
 // B.2.2.4 Object.prototype.__lookupGetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 {
-    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(global_object));
 
     while (object) {
-        auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));
+        auto desc = TRY(object->internal_get_own_property(key));
         if (desc.has_value()) {
             if (desc->is_accessor_descriptor())
                 return *desc->get ?: js_undefined();
             return js_undefined();
         }
-        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
+        object = TRY(object->internal_get_prototype_of());
     }
 
     return js_undefined();
 }
 
 // B.2.2.5 Object.prototype.__lookupSetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 {
-    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    auto key = TRY_OR_DISCARD(vm.argument(0).to_property_key(global_object));
+    auto key = TRY(vm.argument(0).to_property_key(global_object));
 
     while (object) {
-        auto desc = TRY_OR_DISCARD(object->internal_get_own_property(key));
+        auto desc = TRY(object->internal_get_own_property(key));
         if (desc.has_value()) {
             if (desc->is_accessor_descriptor())
                 return *desc->set ?: js_undefined();
             return js_undefined();
         }
-        object = TRY_OR_DISCARD(object->internal_get_prototype_of());
+        object = TRY(object->internal_get_prototype_of());
     }
 
     return js_undefined();
 }
 
 // B.2.2.1.1 get Object.prototype.__proto__, https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
 {
-    auto* object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    return TRY_OR_DISCARD(object->internal_get_prototype_of());
+    auto* object = TRY(vm.this_value(global_object).to_object(global_object));
+    return TRY(object->internal_get_prototype_of());
 }
 
 // B.2.2.1.2 set Object.prototype.__proto__, https://tc39.es/ecma262/#sec-set-object.prototype.__proto__
-JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
 {
-    auto object = TRY_OR_DISCARD(require_object_coercible(global_object, vm.this_value(global_object)));
+    auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
 
     auto proto = vm.argument(0);
     if (!proto.is_object() && !proto.is_null())
@@ -281,11 +277,10 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
     if (!object.is_object())
         return js_undefined();
 
-    auto status = TRY_OR_DISCARD(object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr));
+    auto status = TRY(object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr));
     if (!status) {
         // FIXME: Improve/contextualize error message
-        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
-        return {};
+        return vm.throw_completion<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
     }
     return js_undefined();
 }
