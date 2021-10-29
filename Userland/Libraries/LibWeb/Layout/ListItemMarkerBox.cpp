@@ -49,13 +49,21 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
         VERIFY_NOT_REACHED();
     }
 
-    if (m_text.is_null()) {
-        set_width(4);
-        return;
+    int image_width = 0;
+    int image_height = 0;
+    if (auto const* list_style_image = list_style_image_bitmap()) {
+        image_width = list_style_image->rect().width();
+        image_height = list_style_image->rect().height();
     }
 
-    auto text_width = font().width(m_text);
-    set_width(text_width);
+    if (m_text.is_null()) {
+        set_width(image_width + 4);
+    } else {
+        auto text_width = font().width(m_text);
+        set_width(image_width + text_width);
+    }
+
+    set_height(max(image_height, line_height()));
 }
 
 ListItemMarkerBox::~ListItemMarkerBox()
@@ -67,10 +75,16 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     if (phase != PaintPhase::Foreground)
         return;
 
+    auto enclosing = enclosing_int_rect(absolute_rect());
+
+    if (auto const* list_style_image = list_style_image_bitmap()) {
+        context.painter().blit(enclosing.location(), *list_style_image, list_style_image->rect());
+        return;
+    }
+
     // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.
     auto color = parent()->computed_values().color();
 
-    auto enclosing = enclosing_int_rect(absolute_rect());
     int marker_width = (int)enclosing.height() / 2;
     Gfx::IntRect marker_rect { 0, 0, marker_width, marker_width };
     marker_rect.center_within(enclosing);
@@ -108,6 +122,11 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+Gfx::Bitmap const* ListItemMarkerBox::list_style_image_bitmap() const
+{
+    return list_style_image() ? list_style_image()->bitmap() : nullptr;
 }
 
 }

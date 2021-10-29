@@ -206,6 +206,7 @@ public:
     float line_height() const { return m_line_height; }
     float font_size() const { return m_font_size; }
     const CSS::ImageStyleValue* background_image() const { return m_background_image; }
+    const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
@@ -222,6 +223,7 @@ private:
     float m_line_height { 0 };
     float m_font_size { 0 };
     RefPtr<CSS::ImageStyleValue> m_background_image;
+    RefPtr<CSS::ImageStyleValue> m_list_style_image;
 
     bool m_has_definite_height { false };
     bool m_has_definite_width { false };

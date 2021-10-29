@@ -20,6 +20,7 @@ public:
 
 private:
     virtual bool can_have_children() const override { return false; }
+    Gfx::Bitmap const* list_style_image_bitmap() const;
 
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
     size_t m_index;
