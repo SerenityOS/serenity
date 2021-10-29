@@ -32,6 +32,12 @@ public:
         size_t partial_input_length { 0 };
         Language language { Language::Unspecified };
         String display_text {};
+
+        enum class HideAutocompleteAfterApplying {
+            No,
+            Yes,
+        };
+        HideAutocompleteAfterApplying hide_autocomplete_after_applying { HideAutocompleteAfterApplying::Yes };
     };
 
     struct ProjectLocation {
@@ -89,7 +95,7 @@ public:
     bool has_suggestions() { return m_suggestion_view->model()->row_count() > 0; }
     void next_suggestion();
     void previous_suggestion();
-    void apply_suggestion();
+    AutocompleteProvider::Entry::HideAutocompleteAfterApplying apply_suggestion();
 
 private:
     WeakPtr<TextEditor> m_editor;
