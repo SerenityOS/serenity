@@ -739,8 +739,11 @@ void TextEditor::select_all()
 void TextEditor::keydown_event(KeyEvent& event)
 {
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
-        m_autocomplete_box->apply_suggestion();
-        hide_autocomplete();
+        TemporaryChange change { m_should_keep_autocomplete_box, true };
+        if (m_autocomplete_box->apply_suggestion() == AutocompleteProvider::Entry::HideAutocompleteAfterApplying::Yes)
+            hide_autocomplete();
+        else
+            try_update_autocomplete();
         return;
     }
 
