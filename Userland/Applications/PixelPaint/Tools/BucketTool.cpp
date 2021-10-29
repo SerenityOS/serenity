@@ -34,7 +34,7 @@ static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs
     int a = rhs.red() - lhs.red();
     int b = rhs.green() - lhs.green();
     int c = rhs.blue() - lhs.blue();
-    return (a * a + b * b + c * c) / (255.0f * 255.0f);
+    return (a * a + b * b + c * c) / (3.0f * 255.0f * 255.0f);
 }
 
 static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position, Color target_color, Color fill_color, int threshold)
