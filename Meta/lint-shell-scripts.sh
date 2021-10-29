@@ -30,6 +30,15 @@ if (( ${#files[@]} )); then
     fi
 
     shellcheck "${files[@]}"
+
+    for file in "${files[@]}"; do
+        if (< "$file" grep -qE "grep [^|);]*-[^- ]*P"); then
+            # '\x2D' is the unicode escape sequence for '-'. This is used so
+            # that this script does not flag itself for containing grep dash P.
+            echo -e "The script '$file' contains 'grep \x2DP', which is not supported on macOS. Please use grep -E instead."
+            exit 1
+        fi
+    done
 else
     echo "No .sh files to check."
 fi
