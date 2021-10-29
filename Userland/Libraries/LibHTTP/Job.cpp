@@ -325,7 +325,7 @@ void Job::on_socket_connected()
             if (m_content_length.has_value()) {
                 auto length = m_content_length.value();
                 if (m_received_size + payload.size() >= length) {
-                    payload.resize(length - m_buffered_size);
+                    payload.resize(length - m_received_size);
                     read_everything = true;
                 }
             }
@@ -338,6 +338,7 @@ void Job::on_socket_connected()
             deferred_invoke([this] { did_progress(m_content_length, m_received_size); });
 
             if (read_everything) {
+                VERIFY(m_received_size <= m_content_length.value());
                 finish_up();
                 return IterationDecision::Break;
             }
