@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     time_image.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/timer.png"));
 
     auto& time_label = container.add<GUI::Label>();
-    time_label.set_autosize(true);
+    time_label.set_fixed_width(50);
     time_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     container.layout()->add_spacer();
