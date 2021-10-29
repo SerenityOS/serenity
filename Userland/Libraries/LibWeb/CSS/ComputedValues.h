@@ -179,7 +179,6 @@ protected:
         CSS::FlexBasisData flex_basis {};
         float flex_grow { InitialValues::flex_grow() };
         float flex_shrink { InitialValues::flex_shrink() };
-        ;
         CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
