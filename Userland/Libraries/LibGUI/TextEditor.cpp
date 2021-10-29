@@ -740,12 +740,12 @@ void TextEditor::keydown_event(KeyEvent& event)
 {
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         m_autocomplete_box->apply_suggestion();
-        m_autocomplete_box->close();
+        hide_autocomplete();
         return;
     }
 
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Escape) {
-        m_autocomplete_box->close();
+        hide_autocomplete();
         return;
     }
 
@@ -826,13 +826,13 @@ void TextEditor::keydown_event(KeyEvent& event)
 
     if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
         if (m_autocomplete_box)
-            m_autocomplete_box->close();
+            hide_autocomplete();
         return;
     }
 
     if (event.key() == KeyCode::Key_Delete) {
         if (m_autocomplete_box)
-            m_autocomplete_box->close();
+            hide_autocomplete();
         return;
     }
 
@@ -840,7 +840,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         if (!is_editable())
             return;
         if (m_autocomplete_box)
-            m_autocomplete_box->close();
+            hide_autocomplete();
         if (has_selection()) {
             delete_selection();
             did_update_selection();
@@ -1481,7 +1481,13 @@ void TextEditor::force_update_autocomplete(Function<void()> callback)
 
 void TextEditor::hide_autocomplete_if_needed()
 {
-    if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
+    if (!m_should_keep_autocomplete_box)
+        hide_autocomplete();
+}
+
+void TextEditor::hide_autocomplete()
+{
+    if (m_autocomplete_box) {
         m_autocomplete_box->close();
         if (m_autocomplete_timer)
             m_autocomplete_timer->stop();
@@ -1913,7 +1919,7 @@ void TextEditor::set_autocomplete_provider(OwnPtr<AutocompleteProvider>&& provid
             m_autocomplete_box = make<AutocompleteBox>(*this);
     }
     if (m_autocomplete_box)
-        m_autocomplete_box->close();
+        hide_autocomplete();
 }
 
 EditingEngine const* TextEditor::editing_engine() const
