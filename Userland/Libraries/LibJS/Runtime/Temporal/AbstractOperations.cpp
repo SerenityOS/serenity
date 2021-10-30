@@ -1005,9 +1005,9 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         if (fraction_part.has_value()) {
             // i. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
             auto fraction = String::formatted("{}000000000", *fraction_part);
-            // ii. Let nanoseconds be the String value equal to the substring of fraction from 0 to 9.
+            // ii. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = MUST(Value(js_string(vm, fraction.substring(0, 9))).to_integer_or_infinity(global_object));
+            nanoseconds = MUST(Value(js_string(vm, fraction.substring(1, 10))).to_integer_or_infinity(global_object));
         }
         // h. Else,
         else {
