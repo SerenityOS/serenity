@@ -25,7 +25,7 @@ class AHCIController final : public ATAController
     friend class AHCIPort;
     AK_MAKE_ETERNAL
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIController>> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
@@ -41,16 +41,16 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&);
-    UNMAP_AFTER_INIT void initialize_hba(PCI::DeviceIdentifier const&);
+    UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&, NonnullOwnPtr<Memory::Region>);
+    UNMAP_AFTER_INIT KResult initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
+    PhysicalAddress m_hba_physical_address;
     NonnullOwnPtr<Memory::Region> m_hba_region;
     AHCI::HBADefinedCapabilities m_capabilities;
     NonnullRefPtrVector<AHCIPortHandler> m_handlers;

@@ -58,7 +58,9 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
             if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
                 && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
                 && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
-                m_controllers.append(AHCIController::initialize(device_identifier));
+                auto ahci_controller_or_error = AHCIController::initialize(device_identifier);
+                if (!ahci_controller_or_error.is_error())
+                    m_controllers.append(ahci_controller_or_error.release_value());
             }
         });
     }
