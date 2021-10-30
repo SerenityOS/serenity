@@ -205,6 +205,7 @@ namespace JS {
     P(getMilliseconds)                       \
     P(getMinutes)                            \
     P(getMonth)                              \
+    P(getNextTransition)                     \
     P(getOffsetNanosecondsFor)               \
     P(getOffsetStringFor)                    \
     P(getOwnPropertyDescriptor)              \
