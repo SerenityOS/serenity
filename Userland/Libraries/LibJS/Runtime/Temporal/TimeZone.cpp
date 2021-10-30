@@ -154,6 +154,20 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
 }
 
+// 11.6.4 GetIANATimeZoneEpochValue ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneepochvalue
+MarkedValueList get_iana_time_zone_epoch_value(GlobalObject& global_object, StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+{
+    // The abstract operation GetIANATimeZoneEpochValue is an implementation-defined algorithm that returns a List of integers. Each integer in the List represents a number of nanoseconds since the Unix epoch in UTC that may correspond to the given calendar date and wall-clock time in the IANA time zone identified by timeZoneIdentifier.
+    // When the input represents a local time repeating multiple times at a negative time zone transition (e.g. when the daylight saving time ends or the time zone offset is decreased due to a time zone rule change), the returned List will have more than one element. When the input represents a skipped local time at a positive time zone transition (e.g. when the daylight saving time starts or the time zone offset is increased due to a time zone rule change), the returned List will be empty. Otherwise, the returned List will have one element.
+
+    VERIFY(time_zone_identifier == "UTC"sv);
+    // FIXME: MarkedValueList<T> for T != Value would still be nice.
+    auto& vm = global_object.vm();
+    auto list = MarkedValueList { vm.heap() };
+    list.append(get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
+    return list;
+}
+
 // 11.6.5 GetIANATimeZoneOffsetNanoseconds ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneoffsetnanoseconds
 i64 get_iana_time_zone_offset_nanoseconds([[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] String const& time_zone_identifier)
 {
@@ -161,6 +175,24 @@ i64 get_iana_time_zone_offset_nanoseconds([[maybe_unused]] BigInt const& epoch_n
     // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
     // TODO: Implement this
     return 0;
+}
+
+// 11.6.6 GetIANATimeZoneNextTransition ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezonenexttransition
+BigInt* get_iana_time_zone_next_transition(GlobalObject&, [[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] StringView time_zone_identifier)
+{
+    // The abstract operation GetIANATimeZoneNextTransition is an implementation-defined algorithm that returns an integer representing the number of nanoseconds since the Unix epoch in UTC that corresponds to the first time zone transition after epochNanoseconds in the IANA time zone identified by timeZoneIdentifier or null if no such transition exists.
+
+    // TODO: Implement this
+    return nullptr;
+}
+
+// 11.6.7 GetIANATimeZonePreviousTransition ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneprevioustransition
+BigInt* get_iana_time_zone_previous_transition(GlobalObject&, [[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] StringView time_zone_identifier)
+{
+    // The abstract operation GetIANATimeZonePreviousTransition is an implementation-defined algorithm that returns an integer representing the number of nanoseconds since the Unix epoch in UTC that corresponds to the last time zone transition before epochNanoseconds in the IANA time zone identified by timeZoneIdentifier or null if no such transition exists.
+
+    // TODO: Implement this
+    return nullptr;
 }
 
 // https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffset

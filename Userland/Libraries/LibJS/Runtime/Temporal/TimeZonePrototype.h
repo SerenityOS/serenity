@@ -24,6 +24,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_offset_nanoseconds_for);
     JS_DECLARE_NATIVE_FUNCTION(get_offset_string_for);
     JS_DECLARE_NATIVE_FUNCTION(get_plain_date_time_for);
+    JS_DECLARE_NATIVE_FUNCTION(get_possible_instants_for);
+    JS_DECLARE_NATIVE_FUNCTION(get_next_transition);
+    JS_DECLARE_NATIVE_FUNCTION(get_previous_transition);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
 };

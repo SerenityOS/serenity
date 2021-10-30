@@ -205,6 +205,7 @@ namespace JS {
     P(getMilliseconds)                       \
     P(getMinutes)                            \
     P(getMonth)                              \
+    P(getNextTransition)                     \
     P(getOffsetNanosecondsFor)               \
     P(getOffsetStringFor)                    \
     P(getOwnPropertyDescriptor)              \
@@ -212,6 +213,8 @@ namespace JS {
     P(getOwnPropertyNames)                   \
     P(getOwnPropertySymbols)                 \
     P(getPlainDateTimeFor)                   \
+    P(getPossibleInstantsFor)                \
+    P(getPreviousTransition)                 \
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
