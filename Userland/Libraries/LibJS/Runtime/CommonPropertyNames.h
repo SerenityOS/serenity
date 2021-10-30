@@ -214,6 +214,7 @@ namespace JS {
     P(getOwnPropertySymbols)                 \
     P(getPlainDateTimeFor)                   \
     P(getPossibleInstantsFor)                \
+    P(getPreviousTransition)                 \
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
