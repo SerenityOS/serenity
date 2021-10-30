@@ -31,7 +31,7 @@ String Paragraph::render_to_html(bool tight) const
 String Paragraph::render_for_terminal(size_t width) const
 {
     StringBuilder builder;
-    builder.append(TextAlignment::justify(m_text.render_for_terminal(), width - 1));
+    builder.append(TextAlignment::justify(m_text.render_for_terminal(), width));
     builder.append("\n\n");
     return builder.build();
 }

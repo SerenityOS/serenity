@@ -13,7 +13,8 @@ String TextAlignment::justify(String text, int justification_width, bool ignore_
     StringBuilder justified_text;
 
     auto add_text_from_nodes = [&justified_text](RefPtr<WordNode> node) {
-        while (!node.is_null()) {
+        // We stop when next is null since we don't want to add the trailing space
+        while (!node->next.is_null()) {
             justified_text.append(node->value);
             node = node->next;
         }
@@ -31,7 +32,7 @@ String TextAlignment::justify(String text, int justification_width, bool ignore_
             if (ignore_terminal_sequences)
                 word_length = unadorned_text_length(word_text);
 
-            if (word_length + 1 > free_space_on_line) {
+            if (word_length > free_space_on_line && spaces.size()) {
                 spaces.remove(spaces.size() - 1);
 
                 while (free_space_on_line) {
