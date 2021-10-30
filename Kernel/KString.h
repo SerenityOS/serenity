@@ -64,6 +64,14 @@ struct Formatter<OwnPtr<Kernel::KString>> : Formatter<StringView> {
 };
 
 template<>
+struct Formatter<NonnullOwnPtr<Kernel::KString>> : Formatter<StringView> {
+    void format(FormatBuilder& builder, NonnullOwnPtr<Kernel::KString> const& value)
+    {
+        Formatter<StringView>::format(builder, value->view());
+    }
+};
+
+template<>
 struct Traits<NonnullOwnPtr<Kernel::KString>> : public GenericTraits<NonnullOwnPtr<Kernel::KString>> {
     using PeekType = Kernel::KString*;
     using ConstPeekType = Kernel::KString const*;
