@@ -212,6 +212,7 @@ namespace JS {
     P(getOwnPropertyNames)                   \
     P(getOwnPropertySymbols)                 \
     P(getPlainDateTimeFor)                   \
+    P(getPossibleInstantsFor)                \
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \

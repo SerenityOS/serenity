@@ -5,6 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
@@ -31,6 +32,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
     define_native_function(vm.names.getOffsetStringFor, get_offset_string_for, 1, attr);
     define_native_function(vm.names.getPlainDateTimeFor, get_plain_date_time_for, 1, attr);
+    define_native_function(vm.names.getPossibleInstantsFor, get_possible_instants_for, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
@@ -95,6 +97,47 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 
     // 4. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     return TRY(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
+}
+
+// 11.4.8 Temporal.TimeZone.prototype.getPossibleInstantsFor ( dateTime ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getpossibleinstantsfor
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
+{
+    // 1. Let timeZone be the this value.
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimezone]]).
+    auto* time_zone = TRY(typed_this_object(global_object));
+
+    // 3. Set dateTime to ? ToTemporalDateTime(dateTime).
+    auto* date_time = TRY(to_temporal_date_time(global_object, vm.argument(0)));
+
+    // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, then
+    if (time_zone->offset_nanoseconds().has_value()) {
+        // a. Let epochNanoseconds be ! GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+        auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
+
+        // b. Let instant be ! CreateTemporalInstant(ℤ(epochNanoseconds − timeZone.[[OffsetNanoseconds]])).
+        auto* instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds())))));
+
+        // c. Return ! CreateArrayFromList(« instant »).
+        return Array::create_from(global_object, { instant });
+    }
+
+    // 5. Let possibleEpochNanoseconds be ? GetIANATimeZoneEpochValue(timeZone.[[Identifier]], dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    auto possible_epoch_nanoseconds = get_iana_time_zone_epoch_value(global_object, time_zone->identifier(), date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
+
+    // 6. Let possibleInstants be a new empty List.
+    auto possible_instants = MarkedValueList { vm.heap() };
+
+    // 7. For each value epochNanoseconds in possibleEpochNanoseconds, do
+    for (auto& epoch_nanoseconds : possible_epoch_nanoseconds) {
+        // a. Let instant be ! CreateTemporalInstant(epochNanoseconds).
+        auto* instant = MUST(create_temporal_instant(global_object, epoch_nanoseconds.as_bigint()));
+
+        // b. Append instant to possibleInstants.
+        possible_instants.append(instant);
+    }
+
+    // 8. Return ! CreateArrayFromList(possibleInstants).
+    return Array::create_from(global_object, possible_instants);
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring
