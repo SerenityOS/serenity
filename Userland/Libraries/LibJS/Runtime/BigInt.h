@@ -13,7 +13,7 @@ namespace JS {
 
 class BigInt final : public Cell {
 public:
-    BigInt(Crypto::SignedBigInteger);
+    explicit BigInt(Crypto::SignedBigInteger);
     virtual ~BigInt();
 
     const Crypto::SignedBigInteger& big_integer() const { return m_big_integer; }
