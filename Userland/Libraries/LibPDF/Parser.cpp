@@ -91,6 +91,8 @@ bool Parser::parse_header()
 {
     // FIXME: Do something with the version?
     m_reader.set_reading_forwards();
+    if (m_reader.remaining() == 0)
+        return false;
     m_reader.move_to(0);
     if (m_reader.remaining() < 8 || !m_reader.matches("%PDF-"))
         return false;
