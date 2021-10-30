@@ -341,7 +341,7 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(y) || !AK::is_within_range<int>(m + 1))
         return js_nan();
-    auto t = Core::DateTime::create(static_cast<int>(y), static_cast<int>(m + 1), 0).timestamp() * 1000;
+    auto t = Core::DateTime::create(static_cast<int>(y), static_cast<int>(m + 1), 1).timestamp() * 1000;
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
 }
