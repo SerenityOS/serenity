@@ -16,8 +16,8 @@ struct NumericLimits {
 
 template<>
 struct NumericLimits<bool> {
-    static constexpr char min() { return false; }
-    static constexpr char max() { return true; }
+    static constexpr bool min() { return false; }
+    static constexpr bool max() { return true; }
     static constexpr bool is_signed() { return false; }
 };
 
