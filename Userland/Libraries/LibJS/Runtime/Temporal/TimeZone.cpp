@@ -310,37 +310,40 @@ String format_time_zone_offset_string(double offset_nanoseconds)
     else
         builder.append('-');
 
-    // 3. Let nanoseconds be abs(offsetNanoseconds) modulo 10^9.
-    auto nanoseconds = AK::abs(offset) % 1000000000;
+    // 3. Let _offsetNanoseconds_ be abs(_offsetNanoseconds_).
+    offset = AK::abs(offset);
 
-    // 4. Let seconds be floor(offsetNanoseconds / 10^9) modulo 60.
+    // 4. Let nanoseconds be offsetNanoseconds modulo 10^9.
+    auto nanoseconds = offset % 1000000000;
+
+    // 5. Let seconds be floor(offsetNanoseconds / 10^9) modulo 60.
     auto seconds = (offset / 1000000000) % 60;
-    // 5. Let minutes be floor(offsetNanoseconds / (6 × 10^10)) modulo 60.
+    // 6. Let minutes be floor(offsetNanoseconds / (6 × 10^10)) modulo 60.
     auto minutes = (offset / 60000000000) % 60;
-    // 6. Let hours be floor(offsetNanoseconds / (3.6 × 10^12)).
+    // 7. Let hours be floor(offsetNanoseconds / (3.6 × 10^12)).
     auto hours = offset / 3600000000000;
 
-    // 7. Let h be hours, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 8. Let h be hours, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
     builder.appendff("{:02}", hours);
-    // 8. Let m be minutes, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 9. Let m be minutes, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
     builder.appendff(":{:02}", minutes);
-    // 9. Let s be seconds, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 10. Let s be seconds, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
     // Handled by steps 10 & 11
 
-    // 10. If nanoseconds ≠ 0, then
+    // 11. If nanoseconds ≠ 0, then
     if (nanoseconds != 0) {
         // a. Let fraction be nanoseconds, formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
         builder.appendff(":{:02}.{:9}", seconds, nanoseconds);
     }
-    // 11. Else if seconds ≠ 0, then
+    // 12. Else if seconds ≠ 0, then
     else if (seconds != 0) {
         // a. Let post be the string-concatenation of the code unit 0x003A (COLON) and s.
         builder.appendff(":{:02}", seconds);
     }
 
-    // 12. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
+    // 13. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
     return builder.to_string();
 }
 
