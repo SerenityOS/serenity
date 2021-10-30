@@ -952,7 +952,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 
     // 2. If isoString does not satisfy the syntax of a TemporalTimeZoneString (see 13.33), then
     // a. Throw a RangeError exception.
-    // 3. Let z, sign, hours, minutes, seconds, fraction and name be the parts of isoString produced respectively by the UTCDesignator, TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, TimeZoneUTCOffsetFraction, and TimeZoneIANAName productions, or undefined if not present.
+    // 3. Let z, sign, hours, minutes, seconds, fraction and name be the parts of isoString produced respectively by the UTCDesignator, TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, TimeZoneUTCOffsetFractionalPart, and TimeZoneIANAName productions, or undefined if not present.
     Optional<StringView> z_part;
     Optional<StringView> sign_part;
     Optional<StringView> hours_part;
