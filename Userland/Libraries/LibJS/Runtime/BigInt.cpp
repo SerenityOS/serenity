@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCipher/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>

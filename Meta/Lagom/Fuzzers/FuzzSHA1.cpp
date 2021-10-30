@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCrypto/Hash/SHA1.h>
+#include <LibCipher/Hash/SHA1.h>
 #include <stddef.h>
 #include <stdint.h>
 

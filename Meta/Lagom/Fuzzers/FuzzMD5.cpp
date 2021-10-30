@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCrypto/Hash/MD5.h>
+#include <LibCipher/Hash/MD5.h>
 #include <stddef.h>
 #include <stdint.h>
 

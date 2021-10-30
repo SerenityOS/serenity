@@ -5,7 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCipher/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>

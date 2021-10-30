@@ -9,8 +9,8 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
+#include <LibCipher/BigInt/UnsignedBigInteger.h>
 #include <LibCore/DateTime.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>

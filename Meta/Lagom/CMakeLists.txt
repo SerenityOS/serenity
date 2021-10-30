@@ -271,11 +271,11 @@ if (BUILD_LAGOM)
     )
 
     # Crypto
-    file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
-    file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
-    file(GLOB LIBCRYPTO_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*/*.cpp")
+    file(GLOB LIBCIPHER_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCipher/*.cpp")
+    file(GLOB LIBCIPHER_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCipher/*/*.cpp")
+    file(GLOB LIBCIPHER_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCipher/*/*/*.cpp")
     lagom_lib(Crypto crypto
-        SOURCES ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES}
+        SOURCES ${LIBCIPHER_SOURCES} ${LIBCIPHER_SUBDIR_SOURCES} ${LIBCIPHER_SUBSUBDIR_SOURCES}
     )
 
     # ELF
@@ -485,8 +485,8 @@ if (BUILD_LAGOM)
         set_tests_properties(TestLibCoreIODevice PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
 
         # Crypto
-        file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
-        foreach(source ${LIBCRYPTO_TESTS})
+        file(GLOB LIBCIPHER_TESTS CONFIGURE_DEPENDS "../../Tests/LibCipher/*.cpp")
+        foreach(source ${LIBCIPHER_TESTS})
             lagom_test(${source} LIBS LagomCrypto)
         endforeach()
 

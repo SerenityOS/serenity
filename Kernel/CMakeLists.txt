@@ -347,8 +347,8 @@ set(KEYBOARD_SOURCES
 )
 
 set(CRYPTO_SOURCES
-    ../Userland/Libraries/LibCrypto/Cipher/AES.cpp
-    ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
+    ../Userland/Libraries/LibCipher/Cipher/AES.cpp
+    ../Userland/Libraries/LibCipher/Hash/SHA2.cpp
 )
 
 set(SOURCES

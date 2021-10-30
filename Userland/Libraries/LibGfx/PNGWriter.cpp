@@ -8,7 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/String.h>
-#include <LibCrypto/Checksum/CRC32.h>
+#include <LibCipher/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
 

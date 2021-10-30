@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCrypto/PK/RSA.h>
+#include <LibCipher/PK/RSA.h>
 #include <stddef.h>
 #include <stdint.h>
 

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCipher/Hash/HashManager.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCrypto/Hash/HashManager.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

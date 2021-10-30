@@ -13,9 +13,9 @@
 #include <Kernel/Locking/Lockable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/StdLib.h>
-#include <LibCrypto/Cipher/AES.h>
-#include <LibCrypto/Cipher/Cipher.h>
-#include <LibCrypto/Hash/SHA2.h>
+#include <LibCipher/Cipher/AES.h>
+#include <LibCipher/Cipher/Cipher.h>
+#include <LibCipher/Hash/SHA2.h>
 
 namespace Kernel {
 

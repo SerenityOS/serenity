@@ -6,12 +6,12 @@
 
 #include <AK/LexicalPath.h>
 #include <LibArchive/Zip.h>
+#include <LibCipher/Checksum/CRC32.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
-#include <LibCrypto/Checksum/CRC32.h>
 
 int main(int argc, char** argv)
 {

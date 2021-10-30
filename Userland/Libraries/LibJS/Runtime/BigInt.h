@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCipher/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Cell.h>
 
 namespace JS {

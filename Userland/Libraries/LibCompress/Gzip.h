@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <LibCipher/Checksum/CRC32.h>
 #include <LibCompress/Deflate.h>
-#include <LibCrypto/Checksum/CRC32.h>
 
 namespace Compress {
 

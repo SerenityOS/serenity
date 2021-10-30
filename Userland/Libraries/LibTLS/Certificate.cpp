@@ -6,9 +6,9 @@
 
 #include "Certificate.h"
 #include <AK/Debug.h>
-#include <LibCrypto/ASN1/ASN1.h>
-#include <LibCrypto/ASN1/DER.h>
-#include <LibCrypto/ASN1/PEM.h>
+#include <LibCipher/ASN1/ASN1.h>
+#include <LibCipher/ASN1/DER.h>
+#include <LibCipher/ASN1/PEM.h>
 
 namespace TLS {
 

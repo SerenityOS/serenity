@@ -6,7 +6,7 @@
  */
 
 #include <AK/Variant.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCipher/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>

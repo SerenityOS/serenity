@@ -11,9 +11,9 @@
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
+#include <LibCipher/BigInt/UnsignedBigInteger.h>
+#include <LibCipher/PK/RSA.h>
 #include <LibCore/DateTime.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
-#include <LibCrypto/PK/RSA.h>
 
 namespace TLS {
 

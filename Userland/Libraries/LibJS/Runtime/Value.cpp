@@ -9,8 +9,8 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
-#include <LibCrypto/NumberTheory/ModularFunctions.h>
+#include <LibCipher/BigInt/SignedBigInteger.h>
+#include <LibCipher/NumberTheory/ModularFunctions.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>

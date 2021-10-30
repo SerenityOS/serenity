@@ -5,7 +5,7 @@
  */
 
 #include <AK/DateTimeLexer.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCipher/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>

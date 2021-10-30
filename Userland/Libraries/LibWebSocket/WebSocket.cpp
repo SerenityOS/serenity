@@ -6,7 +6,7 @@
 
 #include <AK/Base64.h>
 #include <AK/Random.h>
-#include <LibCrypto/Hash/HashManager.h>
+#include <LibCipher/Hash/HashManager.h>
 #include <LibWebSocket/Impl/TCPWebSocketConnectionImpl.h>
 #include <LibWebSocket/Impl/TLSv12WebSocketConnectionImpl.h>
 #include <LibWebSocket/WebSocket.h>

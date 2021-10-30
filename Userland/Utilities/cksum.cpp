@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCipher/Checksum/Adler32.h>
+#include <LibCipher/Checksum/CRC32.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCrypto/Checksum/Adler32.h>
-#include <LibCrypto/Checksum/CRC32.h>
 
 int main(int argc, char** argv)
 {

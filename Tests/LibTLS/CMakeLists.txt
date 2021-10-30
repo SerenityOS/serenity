@@ -3,5 +3,5 @@ set(TEST_SOURCES
 )
 
 foreach(source IN LISTS TEST_SOURCES)
-    serenity_test("${source}" LibTLS LIBS LibTLS LibCrypto)
+    serenity_test("${source}" LibTLS LIBS LibTLS LibCipher)
 endforeach()
