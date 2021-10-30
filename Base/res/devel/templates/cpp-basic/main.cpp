@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include <AK/Format.h>
 
 int main(int argc, char** argv)
 {
-    printf("Hello friends!\n");
+    outln("Hello friends!");
     return 0;
 }
