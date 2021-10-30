@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     bool case_insensitive = false;
     bool invert_match = false;
     bool quiet_mode = false;
+    bool suppress_errors = false;
     bool colored_output = isatty(STDOUT_FILENO);
 
     Core::ArgsParser args_parser;
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_option(quiet_mode, "Do not write anything to standard output", "quiet", 'q');
+    args_parser.add_option(suppress_errors, "Suppress error messages for nonexistent or unreadable files", "no-messages", 's');
     args_parser.add_option(Core::ArgsParser::Option {
         .requires_argument = true,
         .help_string = "Action to take for binary files ([binary], text, skip)",
@@ -158,10 +160,11 @@ int main(int argc, char** argv)
             return false;
         };
 
-        auto handle_file = [&matches, binary_mode](StringView filename, bool print_filename) -> bool {
+        auto handle_file = [&matches, binary_mode, suppress_errors](StringView filename, bool print_filename) -> bool {
             auto file = Core::File::construct(filename);
             if (!file->open(Core::OpenMode::ReadOnly)) {
-                warnln("Failed to open {}: {}", filename, file->error_string());
+                if (!suppress_errors)
+                    warnln("Failed to open {}: {}", filename, file->error_string());
                 return false;
             }
 
