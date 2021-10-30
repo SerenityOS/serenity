@@ -365,14 +365,14 @@ void FormatBuilder::put_f64(
             string_builder.append('-');
         else if (sign_mode == SignMode::Always)
             string_builder.append('+');
-        else
+        else if (sign_mode == SignMode::Reserved)
             string_builder.append(' ');
 
         if (isnan(value))
             string_builder.append(upper_case ? "NAN"sv : "nan"sv);
         else
             string_builder.append(upper_case ? "INF"sv : "inf"sv);
-        format_builder.put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
+        put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
         return;
     }
 
@@ -431,14 +431,14 @@ void FormatBuilder::put_f80(
             string_builder.append('-');
         else if (sign_mode == SignMode::Always)
             string_builder.append('+');
-        else
+        else if (sign_mode == SignMode::Reserved)
             string_builder.append(' ');
 
         if (isnan(value))
             string_builder.append(upper_case ? "NAN"sv : "nan"sv);
         else
             string_builder.append(upper_case ? "INF"sv : "inf"sv);
-        format_builder.put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
+        put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
         return;
     }
 
