@@ -341,7 +341,14 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 8. Find a finite time value t such that YearFromTime(t) is ym and MonthFromTime(t) is mn and DateFromTime(t) is 1𝔽; but if this is not possible (because some argument is out of range), return NaN.
     if (!AK::is_within_range<int>(y) || !AK::is_within_range<int>(m + 1))
         return js_nan();
+    // FIXME: Core::DateTime assumes the argument values are in local time, which is not the case here.
+    //        Let mktime() think local time is UTC by temporarily overwriting the TZ environment variable,
+    //        so that the values are not adjusted. Core::DateTime should probably learn to deal with both
+    //        local time and UTC time itself.
+    auto* tz = getenv("TZ");
+    VERIFY(setenv("TZ", "UTC", 1) == 0);
     auto t = Core::DateTime::create(static_cast<int>(y), static_cast<int>(m + 1), 1).timestamp() * 1000;
+    tz ? setenv("TZ", tz, 1) : unsetenv("TZ");
     // 9. Return Day(t) + dt - 1𝔽.
     return Value(day(static_cast<double>(t)) + dt - 1);
 }
