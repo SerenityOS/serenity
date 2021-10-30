@@ -14,10 +14,12 @@
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -27,6 +29,7 @@
 #include <unistd.h>
 
 static const char* APP_NAME = "Space Analyzer";
+static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     TreeNode(String name)
@@ -123,6 +126,38 @@ static long long int update_totals(TreeNode& node)
     return result;
 }
 
+static NonnullRefPtr<GUI::Window> create_progress_window()
+{
+    auto window = GUI::Window::construct();
+
+    window->set_title(APP_NAME);
+    window->set_resizable(false);
+    window->set_closeable(false);
+    window->resize(240, 50);
+    window->center_on_screen();
+
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& label = main_widget.add<GUI::Label>("Analyzing storage space...");
+    label.set_fixed_height(22);
+
+    auto& progresslabel = main_widget.add<GUI::Label>();
+    progresslabel.set_name("progresslabel");
+    progresslabel.set_fixed_height(22);
+
+    return window;
+}
+
+static void update_progress_label(GUI::Label& progresslabel, size_t files_encountered_count)
+{
+    auto text = String::formatted("{} files...", files_encountered_count);
+    progresslabel.set_text(text);
+
+    Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
+}
+
 struct QueueEntry {
     QueueEntry(String path, TreeNode* node)
         : path(move(path))
@@ -131,12 +166,13 @@ struct QueueEntry {
     TreeNode* node { nullptr };
 };
 
-static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator)
+static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
 {
     VERIFY(!root.m_name.ends_with("/"));
 
     Queue<QueueEntry> queue;
     queue.enqueue(QueueEntry(root.m_name, &root));
+    size_t files_encountered_count = 0;
 
     StringBuilder builder = StringBuilder();
     builder.append(root.m_name);
@@ -167,6 +203,10 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
                 queue_entry.node->m_children->append(TreeNode(dir_iterator.next_path()));
             }
             for (auto& child : *queue_entry.node->m_children) {
+                files_encountered_count += 1;
+                if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
+                    update_progress_label(progresslabel, files_encountered_count);
+
                 String& name = child.m_name;
                 int name_len = name.length();
                 builder.append(name);
@@ -192,13 +232,22 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
 
 static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
+    statusbar.set_text("");
+    auto progress_window = create_progress_window();
+    progress_window->show();
+
+    auto& progresslabel = *progress_window->main_widget()->find_descendant_of_type_named<GUI::Label>("progresslabel");
+    update_progress_label(progresslabel, 0);
+
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
     TreeNode* root = &tree->m_root;
     Vector<MountInfo> mounts;
     fill_mounts(mounts);
     HashMap<int, int> error_accumulator;
-    populate_filesize_tree(*root, mounts, error_accumulator);
+    populate_filesize_tree(*root, mounts, error_accumulator, progresslabel);
+
+    progress_window->close();
 
     // Display an error summary in the statusbar.
     if (!error_accumulator.is_empty()) {
