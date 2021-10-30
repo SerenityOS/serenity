@@ -34,6 +34,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getPlainDateTimeFor, get_plain_date_time_for, 1, attr);
     define_native_function(vm.names.getPossibleInstantsFor, get_possible_instants_for, 1, attr);
     define_native_function(vm.names.getNextTransition, get_next_transition, 1, attr);
+    define_native_function(vm.names.getPreviousTransition, get_previous_transition, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
@@ -157,6 +158,31 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_next_transition)
 
     // 5. Let transition be ? GetIANATimeZoneNextTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
     auto* transition = get_iana_time_zone_next_transition(global_object, starting_point->nanoseconds(), time_zone->identifier());
+
+    // 6. If transition is null, return null.
+    if (!transition)
+        return js_null();
+
+    // 7. Return ! CreateTemporalInstant(transition).
+    return MUST(create_temporal_instant(global_object, *transition));
+}
+
+// 11.4.10 Temporal.TimeZone.prototype.getPreviousTransition ( startingPoint ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getprevioustransition
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_previous_transition)
+{
+    // 1. Let timeZone be the this value.
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = TRY(typed_this_object(global_object));
+
+    // 3. Set startingPoint to ? ToTemporalInstant(startingPoint).
+    auto* starting_point = TRY(to_temporal_instant(global_object, vm.argument(0)));
+
+    // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, return null.
+    if (!time_zone->offset_nanoseconds().has_value())
+        return js_null();
+
+    // 5. Let transition be ? GetIANATimeZonePreviousTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
+    auto* transition = get_iana_time_zone_previous_transition(global_object, starting_point->nanoseconds(), time_zone->identifier());
 
     // 6. If transition is null, return null.
     if (!transition)
