@@ -28,6 +28,7 @@ public:
 
     void fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
     void rescan_hardware();
+    void apply_quirks();
     void rescan_hardware_with_memory_addressing();
     void rescan_hardware_with_io_addressing();
 

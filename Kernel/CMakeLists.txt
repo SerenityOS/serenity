@@ -24,6 +24,7 @@ set(KERNEL_SOURCES
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
     Bus/PCI/Initializer.cpp
+    Bus/PCI/Quirks.cpp
     Bus/PCI/SysFSPCI.cpp
     Bus/USB/SysFSUSB.cpp
     Bus/USB/UHCI/UHCIController.cpp

@@ -229,6 +229,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptLine);
 TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 
 class Access;
+class Quirks;
 class DeviceIdentifier {
 public:
     DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> capabilities)
@@ -264,11 +265,11 @@ public:
     InterruptLine interrupt_line() const { return m_interrupt_line; }
     InterruptPin interrupt_pin() const { return m_interrupt_pin; }
 
-    void apply_subclass_code_change(Badge<Access>, SubclassCode new_subclass)
+    void apply_subclass_code_change(Badge<Quirks>, SubclassCode new_subclass)
     {
         m_subclass_code = new_subclass;
     }
-    void apply_prog_if_change(Badge<Access>, ProgrammingInterface new_progif)
+    void apply_prog_if_change(Badge<Quirks>, ProgrammingInterface new_progif)
     {
         m_prog_if = new_progif;
     }

@@ -43,6 +43,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_memory_access(PhysicalAddress mcfg_
     if (!access->search_pci_domains_from_acpi_mcfg_table(mcfg_table))
         return false;
     access->rescan_hardware_with_memory_addressing();
+    access->apply_quirks();
     dbgln_if(PCI_DEBUG, "PCI: MMIO access initialised.");
     return true;
 }
@@ -85,6 +86,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_io_access()
     }
     auto* access = new Access(Access::AccessType::IO);
     access->rescan_hardware_with_io_addressing();
+    access->apply_quirks();
     dbgln_if(PCI_DEBUG, "PCI: IO access initialised.");
     return true;
 }
