@@ -29,7 +29,7 @@ int main(int, char**)
     unveil(nullptr, nullptr);
 
     Core::EventLoop event_loop;
-    AudioServer::Mixer mixer { config };
+    auto mixer = AudioServer::Mixer::construct(config);
 
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
@@ -42,7 +42,7 @@ int main(int, char**)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, mixer);
+        IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, *mixer);
     };
 
     if (pledge("stdio recvfd thread accept cpath rpath wpath", nullptr) < 0) {

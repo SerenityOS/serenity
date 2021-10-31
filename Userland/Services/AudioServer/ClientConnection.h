@@ -23,7 +23,6 @@ class Mixer;
 class ClientConnection final : public IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint> {
     C_OBJECT(ClientConnection)
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id, Mixer& mixer);
     ~ClientConnection() override;
 
     void did_finish_playing_buffer(Badge<ClientAudioStream>, int buffer_id);
@@ -36,6 +35,8 @@ public:
     static void for_each(Function<void(ClientConnection&)>);
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id, Mixer& mixer);
+
     virtual Messages::AudioServer::GetMainMixVolumeResponse get_main_mix_volume() override;
     virtual void set_main_mix_volume(double) override;
     virtual Messages::AudioServer::GetSelfVolumeResponse get_self_volume() override;
