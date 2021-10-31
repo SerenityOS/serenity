@@ -194,7 +194,7 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                         [&](auto&, auto& arguments) -> Wasm::Result {
                             JS::MarkedValueList argument_values { vm.heap() };
                             for (auto& entry : arguments)
-                                argument_values.append(to_js_value(entry, global_object));
+                                argument_values.append(to_js_value(global_object, entry));
 
                             auto result_or_error = vm.call(function, JS::js_undefined(), move(argument_values));
                             if (result_or_error.is_error()) {
@@ -205,7 +205,7 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                                 return Wasm::Result { Vector<Wasm::Value> {} };
 
                             if (type.results().size() == 1) {
-                                auto value = to_webassembly_value(result_or_error.release_value(), type.results().first(), global_object);
+                                auto value = to_webassembly_value(global_object, result_or_error.release_value(), type.results().first());
                                 if (!value.has_value())
                                     return Wasm::Trap {};
 
@@ -238,7 +238,7 @@ Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module con
                             vm.throw_exception<JS::TypeError>(global_object, "LinkError: Import resolution attempted to cast a BigInteger to a Number");
                             return;
                         }
-                        auto cast_value = to_webassembly_value(import_, type.type(), global_object);
+                        auto cast_value = to_webassembly_value(global_object, import_, type.type());
                         if (!cast_value.has_value())
                             return;
                         address = s_abstract_machine.store().allocate({ type.type(), false }, cast_value.release_value());
@@ -358,7 +358,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     return promise;
 }
 
-JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
+JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
 {
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
@@ -371,7 +371,7 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
         return JS::Value(static_cast<double>(wasm_value.to<float>().value()));
     case Wasm::ValueType::FunctionReference:
         // FIXME: What's the name of a function reference that isn't exported?
-        return create_native_function(wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled", global_object);
+        return create_native_function(global_object, wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled");
     case Wasm::ValueType::NullFunctionReference:
         return JS::js_null();
     case Wasm::ValueType::ExternReference:
@@ -381,7 +381,7 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
     VERIFY_NOT_REACHED();
 }
 
-Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object)
+Optional<Wasm::Value> to_webassembly_value(JS::GlobalObject& global_object, JS::Value value, const Wasm::ValueType& type)
 {
     static ::Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
     auto& vm = global_object.vm();
@@ -432,7 +432,7 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
     VERIFY_NOT_REACHED();
 }
 
-JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object)
+JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm::FunctionAddress address, String const& name)
 {
     Optional<Wasm::FunctionType> type;
     WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
@@ -449,7 +449,7 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
             // Grab as many values as needed and convert them.
             size_t index = 0;
             for (auto& type : type.parameters()) {
-                auto result = to_webassembly_value(vm.argument(index++), type, global_object);
+                auto result = to_webassembly_value(global_object, vm.argument(index++), type);
                 if (result.has_value())
                     values.append(result.release_value());
                 else
@@ -465,11 +465,11 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
                 return JS::js_undefined();
 
             if (result.values().size() == 1)
-                return to_js_value(result.values().first(), global_object);
+                return to_js_value(global_object, result.values().first());
 
             Vector<JS::Value> result_values;
             for (auto& entry : result.values())
-                result_values.append(to_js_value(entry, global_object));
+                result_values.append(to_js_value(global_object, entry));
 
             return JS::Value(JS::Array::create_from(global_object, result_values));
         });

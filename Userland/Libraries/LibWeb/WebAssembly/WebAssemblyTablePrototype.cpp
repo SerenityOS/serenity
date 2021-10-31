@@ -40,7 +40,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
         if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
-        return to_webassembly_value(value_value, table->type().element_type(), global_object);
+        return to_webassembly_value(global_object, value_value, table->type().element_type());
     }();
 
     if (!reference_value.has_value())
@@ -81,7 +81,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
         return JS::js_undefined();
 
     Wasm::Value wasm_value { ref.value() };
-    return to_js_value(wasm_value, global_object);
+    return to_js_value(global_object, wasm_value);
 }
 
 JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
@@ -109,7 +109,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
         if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
-        return to_webassembly_value(value_value, table->type().element_type(), global_object);
+        return to_webassembly_value(global_object, value_value, table->type().element_type());
     }();
 
     if (!reference_value.has_value())
