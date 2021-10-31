@@ -167,6 +167,13 @@ enum class Position {
     Sticky,
 };
 
+enum class PositionEdge {
+    Left,
+    Right,
+    Top,
+    Bottom,
+};
+
 enum class Repeat : u8 {
     NoRepeat,
     Repeat,
@@ -242,6 +249,7 @@ public:
         ListStyle,
         Numeric,
         Overflow,
+        Position,
         String,
         TextDecoration,
         Transformation,
@@ -270,6 +278,7 @@ public:
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
+    bool is_position() const { return type() == Type::Position; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
     bool is_transformation() const { return type() == Type::Transformation; }
@@ -278,8 +287,8 @@ public:
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
 
-    BackgroundRepeatStyleValue const& as_background_repeat() const;
     BackgroundStyleValue const& as_background() const;
+    BackgroundRepeatStyleValue const& as_background_repeat() const;
     BorderRadiusStyleValue const& as_border_radius() const;
     BorderStyleValue const& as_border() const;
     BoxShadowStyleValue const& as_box_shadow() const;
@@ -297,14 +306,15 @@ public:
     ListStyleStyleValue const& as_list_style() const;
     NumericStyleValue const& as_numeric() const;
     OverflowStyleValue const& as_overflow() const;
+    PositionStyleValue const& as_position() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
     TransformationStyleValue const& as_transformation() const;
     UnsetStyleValue const& as_unset() const;
     StyleValueList const& as_value_list() const;
 
-    BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
     BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
+    BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
     BorderRadiusStyleValue& as_border_radius() { return const_cast<BorderRadiusStyleValue&>(const_cast<StyleValue const&>(*this).as_border_radius()); }
     BorderStyleValue& as_border() { return const_cast<BorderStyleValue&>(const_cast<StyleValue const&>(*this).as_border()); }
     BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
@@ -322,6 +332,7 @@ public:
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
     NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
+    PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
@@ -405,6 +416,37 @@ private:
     // FIXME: background-attachment
     // FIXME: background-clip
     // FIXME: background-origin
+};
+
+class PositionStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+    {
+        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
+    }
+    virtual ~PositionStyleValue() override { }
+
+    PositionEdge edge_x() const { return m_edge_x; }
+    Length const& offset_x() const { return m_offset_x; }
+    PositionEdge edge_y() const { return m_edge_y; }
+    Length const& offset_y() const { return m_offset_y; }
+
+    virtual String to_string() const override;
+
+private:
+    PositionStyleValue(PositionEdge edge_x, Length const& offset_x, PositionEdge edge_y, Length const& offset_y)
+        : StyleValue(Type::Position)
+        , m_edge_x(edge_x)
+        , m_offset_x(offset_x)
+        , m_edge_y(edge_y)
+        , m_offset_y(offset_y)
+    {
+    }
+
+    PositionEdge m_edge_x;
+    Length m_offset_x;
+    PositionEdge m_edge_y;
+    Length m_offset_y;
 };
 
 class BackgroundRepeatStyleValue final : public StyleValue {
