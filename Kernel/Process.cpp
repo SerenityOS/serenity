@@ -566,16 +566,20 @@ bool Process::dump_perfcore()
     // Try to generate a filename which isn't already used.
     auto base_filename = String::formatted("{}_{}", name(), pid().value());
     auto perfcore_filename = String::formatted("{}.profile", base_filename);
-    auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
-    for (size_t attempt = 1; attempt < 10 && description_or_error.is_error(); ++attempt)
+    RefPtr<OpenFileDescription> description;
+    for (size_t attempt = 1; attempt <= 10; ++attempt) {
+        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+        if (!description_or_error.is_error()) {
+            description = description_or_error.release_value();
+            break;
+        }
         perfcore_filename = String::formatted("{}.{}.profile", base_filename, attempt);
-    description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
-    if (description_or_error.is_error()) {
+    }
+    if (!description) {
         dbgln("Failed to generate perfcore for pid {}: Could not generate filename for the perfcore file.", pid().value());
         return false;
     }
 
-    auto& description = *description_or_error.value();
     auto builder_or_error = KBufferBuilder::try_create();
     if (builder_or_error.is_error()) {
         dbgln("Failed to generate perfcore for pid {}: Could not allocate KBufferBuilder.", pid());
@@ -593,7 +597,7 @@ bool Process::dump_perfcore()
         return false;
     }
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
-    if (description.write(json_buffer, json->size()).is_error()) {
+    if (description->write(json_buffer, json->size()).is_error()) {
         dbgln("Failed to generate perfcore for pid {}: Could not write to perfcore file.", pid().value());
         return false;
     }
