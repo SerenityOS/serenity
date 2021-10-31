@@ -63,6 +63,7 @@ public:
     bool is_execute_disabled() const { return (raw() & NoExecute) == NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
 
+private:
     void set_bit(u64 bit, bool value)
     {
         if (value)
@@ -71,7 +72,6 @@ public:
             m_raw &= ~bit;
     }
 
-private:
     u64 m_raw;
 };
 
@@ -84,7 +84,7 @@ public:
         m_raw |= PhysicalAddress::physical_page_base(value);
     }
 
-    u64 raw() const { return (u32)m_raw; }
+    u64 raw() const { return m_raw; }
 
     enum Flags {
         Present = 1 << 0,
@@ -120,6 +120,7 @@ public:
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 
+private:
     void set_bit(u64 bit, bool value)
     {
         if (value)
@@ -128,7 +129,6 @@ public:
             m_raw &= ~bit;
     }
 
-private:
     u64 m_raw;
 };
 
