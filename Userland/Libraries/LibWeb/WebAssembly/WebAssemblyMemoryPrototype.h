@@ -27,8 +27,8 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(grow);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(buffer_getter);
+    JS_DECLARE_NATIVE_FUNCTION(grow);
+    JS_DECLARE_NATIVE_FUNCTION(buffer_getter);
 };
 
 }
