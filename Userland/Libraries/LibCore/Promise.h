@@ -14,9 +14,6 @@ template<typename Result>
 class Promise : public Object {
     C_OBJECT(Promise);
 
-private:
-    Optional<Result> m_pending;
-
 public:
     Function<void(Result&)> on_resolved;
 
@@ -51,5 +48,10 @@ public:
         };
         return new_promise;
     }
+
+private:
+    Promise() = default;
+
+    Optional<Result> m_pending;
 };
 }

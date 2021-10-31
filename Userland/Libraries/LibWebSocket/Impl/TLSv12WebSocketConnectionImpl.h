@@ -21,7 +21,6 @@ class TLSv12WebSocketConnectionImpl final : public AbstractWebSocketImpl {
 
 public:
     virtual ~TLSv12WebSocketConnectionImpl() override;
-    explicit TLSv12WebSocketConnectionImpl(Core::Object* parent = nullptr);
 
     void connect(ConnectionInfo const& connection) override;
 
@@ -38,6 +37,8 @@ public:
     virtual void discard_connection() override;
 
 private:
+    explicit TLSv12WebSocketConnectionImpl(Core::Object* parent = nullptr);
+
     RefPtr<TLS::TLSv12> m_socket;
 };
 

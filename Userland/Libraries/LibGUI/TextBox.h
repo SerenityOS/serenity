@@ -14,7 +14,6 @@ namespace GUI {
 class TextBox : public TextEditor {
     C_OBJECT(TextBox)
 public:
-    TextBox();
     virtual ~TextBox() override;
 
     Function<void()> on_up_pressed;
@@ -22,6 +21,9 @@ public:
 
     void set_history_enabled(bool enabled) { m_history_enabled = enabled; }
     void add_current_text_to_history();
+
+protected:
+    TextBox();
 
 private:
     virtual void keydown_event(GUI::KeyEvent&) override;
@@ -39,20 +41,21 @@ private:
 
 class PasswordBox : public TextBox {
     C_OBJECT(PasswordBox)
-public:
+private:
     PasswordBox();
 };
 
 class UrlBox : public TextBox {
     C_OBJECT(UrlBox)
 public:
-    UrlBox();
     virtual ~UrlBox() override;
 
     void set_focus_transition(bool focus_transition) { m_focus_transition = focus_transition; }
     bool is_focus_transition() const { return m_focus_transition; }
 
 private:
+    UrlBox();
+
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void focusout_event(GUI::FocusEvent&) override;
 

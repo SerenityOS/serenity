@@ -81,7 +81,7 @@ private:
     class AbstractScrollableWidgetScrollbar final : public Scrollbar {
         C_OBJECT(AbstractScrollableWidgetScrollbar);
 
-    protected:
+    private:
         explicit AbstractScrollableWidgetScrollbar(AbstractScrollableWidget& owner, Gfx::Orientation orientation)
             : Scrollbar(orientation)
             , m_owner(owner)
@@ -93,7 +93,6 @@ private:
             m_owner.handle_wheel_event(event, *this);
         }
 
-    private:
         AbstractScrollableWidget& m_owner;
     };
     friend class ScrollableWidgetScrollbar;

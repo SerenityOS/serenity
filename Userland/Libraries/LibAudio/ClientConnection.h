@@ -19,8 +19,6 @@ class ClientConnection final
     , public AudioClientEndpoint {
     C_OBJECT(ClientConnection)
 public:
-    ClientConnection();
-
     void enqueue(Buffer const&);
     bool try_enqueue(Buffer const&);
     void async_enqueue(Buffer const&);
@@ -31,6 +29,8 @@ public:
     Function<void(double volume)> on_client_volume_change;
 
 private:
+    ClientConnection();
+
     virtual void finished_playing_buffer(i32) override;
     virtual void muted_state_changed(bool) override;
     virtual void main_mix_volume_changed(double) override;

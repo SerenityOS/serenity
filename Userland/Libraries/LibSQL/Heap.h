@@ -32,7 +32,6 @@ class Heap : public Core::Object {
     C_OBJECT(Heap);
 
 public:
-    explicit Heap(String);
     virtual ~Heap() override { flush(); }
 
     u32 size() const { return m_end_of_file; }
@@ -93,6 +92,8 @@ public:
     void flush();
 
 private:
+    explicit Heap(String);
+
     bool seek_block(u32);
     void read_zero_block();
     void initialize_zero_block();

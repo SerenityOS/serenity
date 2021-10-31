@@ -24,7 +24,6 @@ class Database : public Core::Object {
     C_OBJECT(Database);
 
 public:
-    explicit Database(String);
     ~Database() override = default;
 
     void commit() { m_heap->flush(); }
@@ -43,6 +42,8 @@ public:
     bool update(Row&);
 
 private:
+    explicit Database(String);
+
     NonnullRefPtr<Heap> m_heap;
     Serializer m_serializer;
     RefPtr<BTree> m_schemas;

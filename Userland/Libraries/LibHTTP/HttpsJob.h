@@ -18,12 +18,6 @@ namespace HTTP {
 class HttpsJob final : public Job {
     C_OBJECT(HttpsJob)
 public:
-    explicit HttpsJob(const HttpRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certs = nullptr)
-        : Job(request, output_stream)
-        , m_override_ca_certificates(override_certs)
-    {
-    }
-
     virtual ~HttpsJob() override
     {
     }
@@ -51,6 +45,12 @@ protected:
     virtual void read_while_data_available(Function<IterationDecision()>) override;
 
 private:
+    explicit HttpsJob(const HttpRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certs = nullptr)
+        : Job(request, output_stream)
+        , m_override_ca_certificates(override_certs)
+    {
+    }
+
     RefPtr<TLS::TLSv12> m_socket;
     const Vector<Certificate>* m_override_ca_certificates { nullptr };
 };
