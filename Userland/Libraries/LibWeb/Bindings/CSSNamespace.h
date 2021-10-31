@@ -21,8 +21,8 @@ public:
     virtual ~CSSNamespace() override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(escape);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(supports);
+    JS_DECLARE_NATIVE_FUNCTION(escape);
+    JS_DECLARE_NATIVE_FUNCTION(supports);
 };
 
 }
