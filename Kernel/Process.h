@@ -577,10 +577,9 @@ private:
     {
         if (g_profiling_all_threads)
             return g_global_perf_events;
-        else if (m_profiling)
+        if (m_profiling)
             return m_perf_event_buffer.ptr();
-        else
-            return nullptr;
+        return nullptr;
     }
 
     mutable IntrusiveListNode<Process> m_list_node;
