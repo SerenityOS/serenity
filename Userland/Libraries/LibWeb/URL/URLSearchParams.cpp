@@ -207,13 +207,14 @@ String URLSearchParams::to_string()
     return url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded);
 }
 
-void URLSearchParams::for_each(Function<IterationDecision(String const&, String const&)> callback)
+JS::ThrowCompletionOr<void> URLSearchParams::for_each(ForEachCallback callback)
 {
     for (auto i = 0u; i < m_list.size(); ++i) {
         auto& query_param = m_list[i]; // We are explicitly iterating over the indices here as the callback might delete items from the list
-        if (callback(query_param.name, query_param.value) == IterationDecision::Break)
-            break;
+        TRY(callback(query_param.name, query_param.value));
     }
+
+    return {};
 }
 
 }
