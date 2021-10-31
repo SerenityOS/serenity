@@ -546,8 +546,8 @@ private:
 
     ErrorOr<siginfo_t> do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options);
 
-    ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const;
-    ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&) const;
+    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length);
+    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&);
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
