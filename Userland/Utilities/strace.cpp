@@ -581,6 +581,14 @@ struct Formatter<MmapFlags> : StandardFormatter {
             active_flags.append("MAP_PRIVATE");
         if (flags & MAP_FIXED)
             active_flags.append("MAP_FIXED");
+        if (flags & MAP_RANDOMIZED)
+            active_flags.append("MAP_RANDOMIZED");
+        if (flags & MAP_STACK)
+            active_flags.append("MAP_STACK");
+        if (flags & MAP_NORESERVE)
+            active_flags.append("MAP_NORESERVE");
+        if (flags & MAP_PURGEABLE)
+            active_flags.append("MAP_PURGEABLE");
         builder.join(" | ", active_flags);
     }
 };
