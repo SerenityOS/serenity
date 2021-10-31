@@ -20,7 +20,7 @@
 class NetworkWidget final : public GUI::ImageWidget {
     C_OBJECT(NetworkWidget);
 
-public:
+private:
     NetworkWidget(bool notifications)
     {
         m_notifications = notifications;
@@ -28,7 +28,6 @@ public:
         start_timer(5000);
     }
 
-private:
     virtual void timer_event(Core::TimerEvent&) override
     {
         update_widget();

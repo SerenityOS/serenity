@@ -35,26 +35,6 @@ struct AppState {
 class ResultRow final : public GUI::Widget {
     C_OBJECT(ResultRow)
 public:
-    ResultRow()
-    {
-        auto& layout = set_layout<GUI::HorizontalBoxLayout>();
-        layout.set_spacing(12);
-        layout.set_margins(4);
-
-        m_image = add<GUI::ImageWidget>();
-
-        m_label_container = add<GUI::Widget>();
-        m_label_container->set_layout<GUI::VerticalBoxLayout>();
-        m_label_container->set_fixed_height(30);
-
-        m_title = m_label_container->add<GUI::Label>();
-        m_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-
-        set_shrink_to_fit(true);
-        set_fill_with_background_color(true);
-        set_greedy_for_hits(true);
-    }
-
     void set_image(RefPtr<Gfx::Bitmap> bitmap)
     {
         m_image->set_bitmap(bitmap);
@@ -89,6 +69,26 @@ public:
     Function<void()> on_selected;
 
 private:
+    ResultRow()
+    {
+        auto& layout = set_layout<GUI::HorizontalBoxLayout>();
+        layout.set_spacing(12);
+        layout.set_margins(4);
+
+        m_image = add<GUI::ImageWidget>();
+
+        m_label_container = add<GUI::Widget>();
+        m_label_container->set_layout<GUI::VerticalBoxLayout>();
+        m_label_container->set_fixed_height(30);
+
+        m_title = m_label_container->add<GUI::Label>();
+        m_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+
+        set_shrink_to_fit(true);
+        set_fill_with_background_color(true);
+        set_greedy_for_hits(true);
+    }
+
     void mousedown_event(GUI::MouseEvent&) override
     {
         set_background_role(ColorRole::MenuBase);

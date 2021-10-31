@@ -21,8 +21,6 @@ class SoundPlayerWidgetAdvancedView final : public GUI::Widget
     C_OBJECT(SoundPlayerWidgetAdvancedView)
 
 public:
-    explicit SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ClientConnection&);
-
     void set_nonlinear_volume_slider(bool nonlinear);
     void set_playlist_visible(bool visible);
 
@@ -51,6 +49,8 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
+    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ClientConnection&);
+
     void sync_previous_next_buttons();
 
     void drop_event(GUI::DropEvent& event) override;

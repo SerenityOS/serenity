@@ -30,6 +30,7 @@ class GraphWidget final : public GUI::Frame {
 public:
     static constexpr size_t history_size = 24;
 
+private:
     GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color, Optional<Gfx::Color> graph_error_color)
         : m_graph_type(graph_type)
     {
@@ -39,7 +40,6 @@ public:
         start_timer(1000);
     }
 
-private:
     virtual void timer_event(Core::TimerEvent&) override
     {
         switch (m_graph_type) {

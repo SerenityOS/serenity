@@ -40,19 +40,22 @@ public:
     void doubleclick_event(GUI::MouseEvent& event) override;
 
     Function<void(const Gfx::Point<int>&)> on_doubleclick;
+
+private:
+    PlaylistTableView();
 };
 
 class PlaylistWidget : public GUI::Widget {
     C_OBJECT(PlaylistWidget)
 public:
-    PlaylistWidget();
     void set_data_model(RefPtr<PlaylistModel> model)
     {
         m_table_view->set_model(model);
         m_table_view->update();
     }
 
-protected:
 private:
+    PlaylistWidget();
+
     RefPtr<PlaylistTableView> m_table_view;
 };
