@@ -148,7 +148,7 @@ public:
 
     inline static Process& current()
     {
-        auto current_thread = Processor::current_thread();
+        auto* current_thread = Processor::current_thread();
         VERIFY(current_thread);
         return current_thread->process();
     }
@@ -489,7 +489,7 @@ public:
     template<typename Callback>
     void for_each_coredump_property(Callback callback) const
     {
-        for (auto& property : m_coredump_properties) {
+        for (auto const& property : m_coredump_properties) {
             if (property.key && property.value)
                 callback(*property.key, *property.value);
         }

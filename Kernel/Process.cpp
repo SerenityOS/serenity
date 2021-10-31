@@ -102,7 +102,7 @@ void Process::kill_threads_except_self()
     if (thread_count() <= 1)
         return;
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     for_each_thread([&](Thread& thread) {
         if (&thread == current_thread)
             return;
@@ -378,7 +378,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
     } else {
         if (ip >= kernel_load_base && g_kernel_symbols_available) {
-            auto* symbol = symbolicate_kernel_address(ip);
+            auto const* symbol = symbolicate_kernel_address(ip);
             dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? symbol->name : "(k?)"), (symbol ? ip - symbol->address : 0));
         } else {
             dbgln("\033[31;1m{:p}  (?)\033[0m\n", ip);
@@ -402,7 +402,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
     return processes().with([&](const auto& list) -> RefPtr<Process> {
-        for (auto& process : list) {
+        for (auto const& process : list) {
             if (process.pid() == pid)
                 return &process;
         }
@@ -416,7 +416,7 @@ const Process::OpenFileDescriptionAndFlags* Process::OpenFileDescriptions::get_i
     if (m_fds_metadatas.size() <= i)
         return nullptr;
 
-    if (auto& metadata = m_fds_metadatas[i]; metadata.is_valid())
+    if (auto const& metadata = m_fds_metadatas[i]; metadata.is_valid())
         return &metadata;
 
     return nullptr;
@@ -462,7 +462,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::open_
 void Process::OpenFileDescriptions::enumerate(Function<void(const OpenFileDescriptionAndFlags&)> callback) const
 {
     SpinlockLocker lock(m_fds_lock);
-    for (auto& file_description_metadata : m_fds_metadatas) {
+    for (auto const& file_description_metadata : m_fds_metadatas) {
         callback(file_description_metadata);
     }
 }

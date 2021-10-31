@@ -135,7 +135,7 @@ public:
         auto expected_wakeup = last_wakeup + ideal_interval;
         auto delay = (now > expected_wakeup) ? now - expected_wakeup : Time::from_microseconds(0);
         last_wakeup = now;
-        auto current_thread = Thread::current();
+        auto* current_thread = Thread::current();
         // FIXME: We currently don't collect samples while idle.
         //        That will be an interesting mode to add in the future. :^)
         if (!current_thread || current_thread == Processor::idle_thread())
