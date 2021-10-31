@@ -215,7 +215,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     m_cursor_blink_timer->start();
 
     if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
-        m_scrollbar->set_value(m_scrollbar->value() - m_terminal.rows());
+        m_scrollbar->decrease_slider_by(m_terminal.rows());
         return;
     }
     if (event.key() == KeyCode::Key_PageDown && event.modifiers() == Mod_Shift) {

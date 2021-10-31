@@ -106,7 +106,7 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                     scrollbar.set_value(scrollbar.max());
                 }
             } else {
-                scrollbar.set_value(scrollbar.value() - 20);
+                scrollbar.decrease_slider_by(20);
             }
         }
     }
