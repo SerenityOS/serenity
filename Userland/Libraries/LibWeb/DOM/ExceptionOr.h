@@ -80,30 +80,6 @@ public:
         return m_exception.template downcast<SimpleException, NonnullRefPtr<DOMException>>();
     }
 
-    auto materialized_exception(JS::GlobalObject& global_object) const
-    {
-#define E(x) JS::x*,
-        using ResultType = Variant<ENUMERATE_SIMPLE_WEBIDL_EXCEPTION_TYPES(E) NonnullRefPtr<DOMException>>;
-#undef E
-
-        return m_exception.visit(
-            [&](SimpleException& exception) -> ResultType {
-                switch (exception.type) {
-#define E(x)                     \
-    case SimpleExceptionType::x: \
-        return JS::x::create(global_object, exception.message);
-
-                    ENUMERATE_SIMPLE_WEBIDL_EXCEPTION_TYPES(E)
-
-#undef E
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            },
-            [&](NonnullRefPtr<DOMException> const& exception) -> ResultType { return exception; },
-            [](Empty) -> ResultType { VERIFY_NOT_REACHED(); });
-    }
-
     bool is_exception() const
     {
         return !m_exception.template has<Empty>();
