@@ -20,9 +20,9 @@ public:
     {
     }
 
-    virtual void handle_uci();
-    virtual void handle_position(const Chess::UCI::PositionCommand&);
-    virtual void handle_go(const Chess::UCI::GoCommand&);
+    virtual void handle_uci() override;
+    virtual void handle_position(const Chess::UCI::PositionCommand&) override;
+    virtual void handle_go(const Chess::UCI::GoCommand&) override;
 
 private:
     Chess::Board m_board;

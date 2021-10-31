@@ -20,7 +20,7 @@ public:
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
-    virtual void handle_bestmove(const Chess::UCI::BestMoveCommand&);
+    virtual void handle_bestmove(const Chess::UCI::BestMoveCommand&) override;
 
     template<typename Callback>
     void get_best_move(const Chess::Board& board, int time_limit, Callback&& callback)
