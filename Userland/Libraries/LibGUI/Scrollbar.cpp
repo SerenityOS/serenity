@@ -228,7 +228,7 @@ void Scrollbar::paint_event(PaintEvent& event)
 void Scrollbar::on_automatic_scrolling_timer_fired()
 {
     if (m_pressed_component == Component::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
-        set_value(value() - step());
+        decrease_slider_by_steps(1);
         return;
     }
     if (m_pressed_component == Component::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
