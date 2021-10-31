@@ -178,7 +178,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
     auto& big_lock = process().big_lock();
     VERIFY((&lock == &big_lock && m_blocking_lock != &big_lock) || !m_blocking_lock);
 
-    auto previous_blocking_lock = m_blocking_lock;
+    auto* previous_blocking_lock = m_blocking_lock;
     m_blocking_lock = &lock;
     m_lock_requested_count = lock_count;
 
@@ -789,7 +789,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
 bool Thread::should_ignore_signal(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto& action = m_signal_action_data[signal];
+    auto const& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
     if ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN)
@@ -800,7 +800,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 bool Thread::has_signal_handler(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto& action = m_signal_action_data[signal];
+    auto const& action = m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
 
@@ -859,7 +859,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
 
     auto& process = this->process();
-    auto tracer = process.tracer();
+    auto* tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
         dbgln_if(SIGNAL_DEBUG, "Signal {} stopping this thread", signal);
         set_state(State::Stopped, signal);
