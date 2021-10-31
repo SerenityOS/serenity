@@ -60,8 +60,8 @@ public:
     ~WebAssemblyModule() override = default;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(get_export);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(wasm_invoke);
+    JS_DECLARE_NATIVE_FUNCTION(get_export);
+    JS_DECLARE_NATIVE_FUNCTION(wasm_invoke);
 
     static HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& spec_test_namespace()
     {
@@ -143,19 +143,17 @@ TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 void WebAssemblyModule::initialize(JS::GlobalObject& global_object)
 {
     Base::initialize(global_object);
-    define_old_native_function("getExport", get_export, 1, JS::default_attributes);
-    define_old_native_function("invoke", wasm_invoke, 1, JS::default_attributes);
+    define_native_function("getExport", get_export, 1, JS::default_attributes);
+    define_native_function("invoke", wasm_invoke, 1, JS::default_attributes);
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::get_export)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto name = TRY(vm.argument(0).to_string(global_object));
     auto this_value = vm.this_value(global_object);
-    auto* object = TRY_OR_DISCARD(this_value.to_object(global_object));
-    if (!is<WebAssemblyModule>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Not a WebAssemblyModule");
-        return {};
-    }
+    auto* object = TRY(this_value.to_object(global_object));
+    if (!is<WebAssemblyModule>(object))
+        return vm.throw_completion<JS::TypeError>(global_object, "Not a WebAssemblyModule");
     auto instance = static_cast<WebAssemblyModule*>(object);
     for (auto& entry : instance->module_instance().exports()) {
         if (entry.name() == name) {
@@ -173,49 +171,41 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                             [&](const auto& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
                     });
             }
-            vm.throw_exception<JS::TypeError>(global_object, String::formatted("'{}' does not refer to a function or a global", name));
-            return {};
+            return vm.throw_completion<JS::TypeError>(global_object, String::formatted("'{}' does not refer to a function or a global", name));
         }
     }
-    vm.throw_exception<JS::TypeError>(global_object, String::formatted("'{}' could not be found", name));
-    return {};
+    return vm.throw_completion<JS::TypeError>(global_object, String::formatted("'{}' could not be found", name));
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 {
-    auto address = static_cast<unsigned long>(TRY_OR_DISCARD(vm.argument(0).to_double(global_object)));
+    auto address = static_cast<unsigned long>(TRY(vm.argument(0).to_double(global_object)));
     Wasm::FunctionAddress function_address { address };
     auto function_instance = WebAssemblyModule::machine().store().get(function_address);
-    if (!function_instance) {
-        vm.throw_exception<JS::TypeError>(global_object, "Invalid function address");
-        return {};
-    }
+    if (!function_instance)
+        return vm.throw_completion<JS::TypeError>(global_object, "Invalid function address");
 
     const Wasm::FunctionType* type { nullptr };
     function_instance->visit([&](auto& value) { type = &value.type(); });
-    if (!type) {
-        vm.throw_exception<JS::TypeError>(global_object, "Invalid function found at given address");
-        return {};
-    }
+    if (!type)
+        return vm.throw_completion<JS::TypeError>(global_object, "Invalid function found at given address");
 
     Vector<Wasm::Value> arguments;
-    if (type->parameters().size() + 1 > vm.argument_count()) {
-        vm.throw_exception<JS::TypeError>(global_object, String::formatted("Expected {} arguments for call, but found {}", type->parameters().size() + 1, vm.argument_count()));
-        return {};
-    }
+    if (type->parameters().size() + 1 > vm.argument_count())
+        return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Expected {} arguments for call, but found {}", type->parameters().size() + 1, vm.argument_count()));
     size_t index = 1;
     for (auto& param : type->parameters()) {
         auto argument = vm.argument(index++);
         double double_value = 0;
         if (!argument.is_bigint())
-            double_value = TRY_OR_DISCARD(argument.to_double(global_object));
+            double_value = TRY(argument.to_double(global_object));
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
             arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
             break;
         case Wasm::ValueType::Kind::I64:
             if (argument.is_bigint()) {
-                auto value = TRY_OR_DISCARD(argument.to_bigint_int64(global_object));
+                auto value = TRY(argument.to_bigint_int64(global_object));
                 arguments.append(Wasm::Value(param, bit_cast<u64>(value)));
             } else {
                 arguments.append(Wasm::Value(param, static_cast<u64>(double_value)));
@@ -243,10 +233,8 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     }
 
     auto result = WebAssemblyModule::machine().invoke(function_address, arguments);
-    if (result.is_trap()) {
-        vm.throw_exception<JS::TypeError>(global_object, String::formatted("Execution trapped: {}", result.trap().reason));
-        return {};
-    }
+    if (result.is_trap())
+        return vm.throw_completion<JS::TypeError>(global_object, String::formatted("Execution trapped: {}", result.trap().reason));
 
     if (result.values().is_empty())
         return JS::js_null();
