@@ -294,7 +294,7 @@ template<typename T>
 struct Formatter<T, typename EnableIf<IsIntegral<T>>::Type> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
+        : StandardFormatter(move(formatter))
     {
     }
 
@@ -305,7 +305,7 @@ template<>
 struct Formatter<StringView> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
+        : StandardFormatter(move(formatter))
     {
     }
 
@@ -317,7 +317,7 @@ requires(HasFormatter<T>) struct Formatter<Vector<T>> : StandardFormatter {
 
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
+        : StandardFormatter(move(formatter))
     {
     }
     void format(FormatBuilder& builder, Vector<T> value)
