@@ -40,7 +40,6 @@ class DHCPv4Client final : public Core::Object {
     C_OBJECT(DHCPv4Client)
 
 public:
-    explicit DHCPv4Client();
     virtual ~DHCPv4Client() override;
 
     void dhcp_discover(const InterfaceDescriptor& ifname);
@@ -57,6 +56,8 @@ public:
     static Result<Interfaces, String> get_discoverable_interfaces();
 
 private:
+    explicit DHCPv4Client();
+
     void try_discover_ifs();
 
     HashMap<u32, OwnPtr<DHCPv4Transaction>> m_ongoing_transactions;

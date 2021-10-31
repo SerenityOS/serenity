@@ -18,12 +18,13 @@ class ClientConnection final
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     ~ClientConnection() override;
 
     virtual void die() override;
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+
     virtual Messages::InspectorServer::GetAllObjectsResponse get_all_objects(pid_t) override;
     virtual Messages::InspectorServer::SetInspectedObjectResponse set_inspected_object(pid_t, u64 object_id) override;
     virtual Messages::InspectorServer::SetObjectPropertyResponse set_object_property(pid_t, u64 object_id, String const& name, String const& value) override;

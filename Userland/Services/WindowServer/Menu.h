@@ -28,7 +28,6 @@ class Menu final : public Core::Object {
     C_OBJECT(Menu);
 
 public:
-    Menu(ClientConnection*, int menu_id, String name);
     virtual ~Menu() override;
 
     ClientConnection* client() { return m_client; }
@@ -129,6 +128,8 @@ public:
     const Vector<size_t>* items_with_alt_shortcut(u32 alt_shortcut) const;
 
 private:
+    Menu(ClientConnection*, int menu_id, String name);
+
     virtual void event(Core::Event&) override;
 
     void handle_mouse_move_event(const MouseEvent&);

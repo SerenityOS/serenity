@@ -14,7 +14,6 @@ namespace WindowServer {
 class AppletManager : public Core::Object {
     C_OBJECT(AppletManager)
 public:
-    AppletManager();
     ~AppletManager();
 
     static AppletManager& the();
@@ -35,6 +34,8 @@ public:
     void did_change_theme();
 
 private:
+    AppletManager();
+
     void repaint();
     void draw_applet(const Window& applet);
     void set_hovered_applet(Window*);

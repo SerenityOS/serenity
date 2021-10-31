@@ -14,6 +14,8 @@ namespace SQLServer {
 
 class DatabaseConnection final : public Core::Object {
     C_OBJECT(DatabaseConnection)
+
+public:
     ~DatabaseConnection() override = default;
 
     static RefPtr<DatabaseConnection> connection_for(int connection_id);

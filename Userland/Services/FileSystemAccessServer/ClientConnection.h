@@ -20,12 +20,13 @@ class ClientConnection final
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     ~ClientConnection() override;
 
     virtual void die() override;
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+
     virtual void request_file_read_only_approved(i32, i32, String const&) override;
     virtual void request_file(i32, i32, String const&, Core::OpenMode const&) override;
     virtual void prompt_open_file(i32, i32, String const&, String const&, Core::OpenMode const&) override;
