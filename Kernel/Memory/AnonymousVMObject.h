@@ -75,7 +75,7 @@ private:
         [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
         void uncommit_one();
 
-    public:
+    private:
         Spinlock m_lock;
         CommittedPhysicalPageSet m_committed_pages;
     };
