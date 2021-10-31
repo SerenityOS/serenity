@@ -138,7 +138,8 @@ public:
     template<typename U>
     constexpr Checked& operator=(U value)
     {
-        return *this = Checked(value);
+        *this = Checked(value);
+        return *this;
     }
 
     constexpr Checked& operator=(const Checked& other) = default;

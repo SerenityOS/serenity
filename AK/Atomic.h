@@ -187,6 +187,7 @@ public:
         return *ret;
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator) We want operator= to exchange the value, so returning an object of type Atomic& here does not make sense
     ALWAYS_INLINE T operator=(T desired) volatile noexcept
     {
         store(desired);
@@ -317,6 +318,7 @@ public:
         return __atomic_load_n(&m_value, order);
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator) We want operator= to exchange the value, so returning an object of type Atomic& here does not make sense
     ALWAYS_INLINE T operator=(T desired) volatile noexcept
     {
         store(desired);
@@ -417,6 +419,7 @@ public:
         return __atomic_load_n(&m_value, order);
     }
 
+    // NOLINTNEXTLINE(misc-unconventional-assign-operator) We want operator= to exchange the value, so returning an object of type Atomic& here does not make sense
     T* operator=(T* desired) volatile noexcept
     {
         store(desired);
