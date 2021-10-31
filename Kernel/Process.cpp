@@ -526,7 +526,7 @@ Custody& Process::current_directory()
     return *m_cwd;
 }
 
-ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length) const
+ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length)
 {
     if (path_length == 0)
         return EINVAL;
@@ -535,7 +535,7 @@ ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<cha
     return try_copy_kstring_from_user(user_path, path_length);
 }
 
-ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path) const
+ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path)
 {
     Userspace<char const*> path_characters((FlatPtr)path.characters);
     return get_syscall_path_argument(path_characters, path.length);
