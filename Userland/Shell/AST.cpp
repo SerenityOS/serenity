@@ -160,6 +160,9 @@ static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullR
 
     for (auto& slice : slices) {
         auto value = slice.run(shell);
+        if (shell && shell->has_any_error())
+            break;
+
         if (!value) {
             shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice.position());
             return move(input_value);
@@ -207,6 +210,9 @@ static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& value
 
     for (auto& slice : slices) {
         auto value = slice.run(shell);
+        if (shell && shell->has_any_error())
+            break;
+
         if (!value) {
             shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice.position());
             return move(values);
@@ -270,6 +276,9 @@ bool Node::is_syntax_error() const
 void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
 {
     auto value = run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return;
+
     if (value->is_job()) {
         callback(value);
         return;
@@ -389,6 +398,9 @@ void And::dump(int level) const
 RefPtr<Value> And::run(RefPtr<Shell> shell)
 {
     auto commands = m_left->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     commands.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::And });
     return make_ref_counted<CommandSequenceValue>(move(commands));
 }
@@ -443,11 +455,15 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
     RefPtr<Value> result = nullptr;
 
     for (auto& element : m_list) {
+        if (shell && shell->has_any_error())
+            break;
         if (!result) {
             result = make_ref_counted<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
             continue;
         }
         auto element_value = element->run(shell)->resolve_without_cast(shell);
+        if (shell && shell->has_any_error())
+            break;
 
         if (result->is_command() || element_value->is_command()) {
             auto joined_commands = join_commands(result->resolve_as_commands(shell), element_value->resolve_as_commands(shell));
@@ -484,6 +500,8 @@ void ListConcatenate::for_each_entry(RefPtr<Shell> shell, Function<IterationDeci
 {
     for (auto& entry : m_list) {
         auto value = entry->run(shell);
+        if (shell && shell->has_any_error())
+            break;
         if (!value)
             continue;
         if (callback(value.release_nonnull()) == IterationDecision::Break)
@@ -646,6 +664,8 @@ RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
 {
     NonnullRefPtrVector<Value> values;
     for (auto& entry : m_entries) {
+        if (shell && shell->has_any_error())
+            break;
         auto value = entry.run(shell);
         if (value)
             values.append(value.release_nonnull());
@@ -704,6 +724,9 @@ RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
         return m_inner->run(shell);
 
     auto value = m_inner->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     if (value->is_command())
         return value;
 
@@ -771,6 +794,8 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     auto inner_value = m_inner->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
 
     if (inner_value->is_command() || inner_value->is_list())
         return inner_value;
@@ -972,6 +997,9 @@ void DynamicEvaluate::dump(int level) const
 RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
 {
     auto result = m_inner->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
@@ -1190,6 +1218,9 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             if (consecutive_interruptions == 2)
                 return IterationDecision::Break;
 
+            if (shell && shell->has_any_error())
+                return IterationDecision::Break;
+
             RefPtr<Value> block_value;
 
             {
@@ -1208,6 +1239,9 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         });
     } else {
         for (;;) {
+            if (shell && shell->has_any_error())
+                break;
+
             if (consecutive_interruptions == 2)
                 break;
 
@@ -1328,6 +1362,9 @@ RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
 
     // To deindent, first split to lines...
     auto value = m_contents->run(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     if (!value)
         return value;
     auto list = value->resolve_as_list(shell);
@@ -1547,7 +1584,11 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
     if (m_command->would_execute())
         return m_command->for_each_entry(shell, move(callback));
 
-    auto commands = shell->expand_aliases(m_command->run(shell)->resolve_as_commands(shell));
+    auto unexpanded_commands = m_command->run(shell)->resolve_as_commands(shell);
+    if (shell && shell->has_any_error())
+        return;
+
+    auto commands = shell->expand_aliases(move(unexpanded_commands));
 
     if (m_capture_stdout) {
         // Make sure that we're going to be running _something_.
@@ -1717,6 +1758,9 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
 
 RefPtr<Value> Execute::run(RefPtr<Shell> shell)
 {
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     if (m_command->would_execute())
         return m_command->run(shell);
 
@@ -1798,6 +1842,9 @@ void IfCond::dump(int level) const
 RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
 {
     auto cond = m_condition->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     // The condition could be a builtin, in which case it has already run and exited.
     if (cond->is_job()) {
         auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
@@ -1985,7 +2032,12 @@ void Join::dump(int level) const
 RefPtr<Value> Join::run(RefPtr<Shell> shell)
 {
     auto left = m_left->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto right = m_right->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
 
     return make_ref_counted<CommandSequenceValue>(join_commands(move(left), move(right)));
 }
@@ -2067,6 +2119,9 @@ void MatchExpr::dump(int level) const
 RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
 {
     auto value = m_matched_expr->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto list = value->resolve_as_list(shell);
 
     auto list_matches = [&](auto&& pattern, auto& spans) {
@@ -2092,6 +2147,9 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
             pattern.append(static_cast<const BarewordLiteral*>(&option)->text());
         } else {
             auto list = option.run(shell);
+            if (shell && shell->has_any_error())
+                return pattern;
+
             option.for_each_entry(shell, [&](auto&& value) {
                 pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behavior,
                                                                  //       asking the node for a 'raw' value.
@@ -2209,6 +2267,9 @@ void Or::dump(int level) const
 RefPtr<Value> Or::run(RefPtr<Shell> shell)
 {
     auto commands = m_left->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     commands.last().next_chain.empend(*m_right, NodeWithAction::Or);
     return make_ref_counted<CommandSequenceValue>(move(commands));
 }
@@ -2260,7 +2321,12 @@ void Pipe::dump(int level) const
 RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 {
     auto left = m_left->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto right = m_right->to_lazy_evaluated_commands(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
 
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
@@ -2464,7 +2530,13 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
     };
 
     auto start_value = m_start->run(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto end_value = m_end->run(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     if (!start_value || !end_value)
         return make_ref_counted<ListValue>({});
 
@@ -2523,6 +2595,9 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
     auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -2550,6 +2625,9 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
     auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -2578,6 +2656,8 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
     Vector<Command> all_commands;
     Command* last_command_in_sequence = nullptr;
     for (auto& entry : m_entries) {
+        if (shell && shell->has_any_error())
+            break;
         if (!last_command_in_sequence) {
             auto commands = entry.to_lazy_evaluated_commands(shell);
             all_commands.extend(move(commands));
@@ -2839,7 +2919,12 @@ void Juxtaposition::dump(int level) const
 RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 {
     auto left_value = m_left->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto right_value = m_right->run(shell)->resolve_without_cast(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
 
     auto left = left_value->resolve_as_list(shell);
     auto right = right_value->resolve_as_list(shell);
@@ -2998,7 +3083,12 @@ void StringPartCompose::dump(int level) const
 RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
 {
     auto left = m_left->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     auto right = m_right->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
     builder.join(" ", left);
@@ -3161,6 +3251,9 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
     auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -3188,6 +3281,9 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
     auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    if (shell && shell->has_any_error())
+        return make_ref_counted<ListValue>({});
+
     StringBuilder builder;
     builder.join(" ", path_segments);
 
@@ -3218,9 +3314,15 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
 {
     for (auto& var : m_variables) {
         auto name_value = var.name->run(shell)->resolve_as_list(shell);
+        if (shell && shell->has_any_error())
+            break;
+
         VERIFY(name_value.size() == 1);
         auto name = name_value[0];
         auto value = var.value->run(shell);
+        if (shell && shell->has_any_error())
+            break;
+
         shell->set_local_variable(name, value.release_nonnull());
     }
 

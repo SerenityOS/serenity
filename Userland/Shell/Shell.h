@@ -244,6 +244,7 @@ public:
             m_source_position.value().position = position.release_value();
     }
     bool has_error(ShellError err) const { return m_error == err; }
+    bool has_any_error() const { return !has_error(ShellError::None); }
     const String& error_description() const { return m_error_description; }
     ShellError take_error()
     {
