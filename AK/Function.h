@@ -156,6 +156,7 @@ private:
             delete this;
         }
 
+        // NOLINTNEXTLINE(readability-non-const-parameter) False positive; destination is used in a placement new expression
         void init_and_swap(u8* destination, size_t size) final override
         {
             VERIFY(size >= sizeof(CallableWrapper));
