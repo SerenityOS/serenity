@@ -125,7 +125,7 @@ public:
     virtual void initialize_global_object() override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(fuzzilli);
+    JS_DECLARE_NATIVE_FUNCTION(fuzzilli);
 };
 
 TestRunnerGlobalObject::TestRunnerGlobalObject()
@@ -136,14 +136,14 @@ TestRunnerGlobalObject::~TestRunnerGlobalObject()
 {
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
 {
     if (!vm.argument_count())
         return JS::js_undefined();
 
-    auto operation = TRY_OR_DISCARD(vm.argument(0).to_string(global_object));
+    auto operation = TRY(vm.argument(0).to_string(global_object));
     if (operation == "FUZZILLI_CRASH") {
-        auto type = TRY_OR_DISCARD(vm.argument(1).to_i32(global_object));
+        auto type = TRY(vm.argument(1).to_i32(global_object));
         switch (type) {
         case 0:
             *((int*)0x41414141) = 0x1337;
@@ -159,7 +159,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
             fzliout = stdout;
         }
 
-        auto string = TRY_OR_DISCARD(vm.argument(1).to_string(global_object));
+        auto string = TRY(vm.argument(1).to_string(global_object));
         fprintf(fzliout, "%s\n", string.characters());
         fflush(fzliout);
     }
@@ -171,7 +171,7 @@ void TestRunnerGlobalObject::initialize_global_object()
 {
     Base::initialize_global_object();
     define_direct_property("global", this, JS::Attribute::Enumerable);
-    define_old_native_function("fuzzilli", fuzzilli, 2, JS::default_attributes);
+    define_native_function("fuzzilli", fuzzilli, 2, JS::default_attributes);
 }
 
 int main(int, char**)
