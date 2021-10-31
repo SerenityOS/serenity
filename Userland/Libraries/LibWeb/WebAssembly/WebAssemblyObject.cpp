@@ -35,9 +35,9 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     Object::initialize(global_object);
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_old_native_function("validate", validate, 1, attr);
-    define_old_native_function("compile", compile, 1, attr);
-    define_old_native_function("instantiate", instantiate, 1, attr);
+    define_native_function("validate", validate, 1, attr);
+    define_native_function("compile", compile, 1, attr);
+    define_native_function("instantiate", instantiate, 1, attr);
 
     auto& vm = global_object.vm();
 
@@ -87,7 +87,7 @@ void WebAssemblyObject::visit_edges(Visitor& visitor)
     }
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyObject::validate)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
 {
     // FIXME: Implement this once module validation is implemented in LibWasm.
     dbgln("Hit WebAssemblyObject::validate() stub!");
@@ -127,7 +127,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::
     return WebAssemblyObject::s_compiled_modules.size() - 1;
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyObject::compile)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
 {
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
@@ -291,7 +291,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
     return s_instantiated_modules.size() - 1;
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 {
     // FIXME: This shouldn't block!
     auto buffer_or_error = vm.argument(0).to_object(global_object);
