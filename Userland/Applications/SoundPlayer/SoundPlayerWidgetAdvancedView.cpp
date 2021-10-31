@@ -152,7 +152,7 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
         m_volume_slider->increase_slider_by_page_steps(1);
 
     if (event.key() == Key_Down)
-        m_volume_slider->set_value(m_volume_slider->value() - m_volume_slider->page_step());
+        m_volume_slider->decrease_slider_by_page_steps(1);
 
     GUI::Widget::keydown_event(event);
 }
