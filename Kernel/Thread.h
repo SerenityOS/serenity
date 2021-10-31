@@ -883,7 +883,7 @@ public:
                 // NOTE: this may execute on the same or any other processor!
                 SpinlockLocker scheduler_lock(g_scheduler_lock);
                 SpinlockLocker block_lock(m_block_lock);
-                if (m_blocker && timeout_unblocked.exchange(true) == false)
+                if (m_blocker && !timeout_unblocked.exchange(true))
                     unblock();
             });
             if (!timer_was_added) {
