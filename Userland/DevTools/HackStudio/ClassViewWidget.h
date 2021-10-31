@@ -18,11 +18,12 @@ class ClassViewWidget final : public GUI::Widget {
     C_OBJECT(ClassViewWidget)
 public:
     virtual ~ClassViewWidget() override { }
-    ClassViewWidget();
 
     void refresh();
 
 private:
+    ClassViewWidget();
+
     RefPtr<GUI::TreeView> m_class_tree;
 };
 
