@@ -100,6 +100,7 @@ struct MemoryManagerData {
     PhysicalAddress m_last_quickmap_pt;
 };
 
+// NOLINTNEXTLINE(readability-redundant-declaration) FIXME: Why do we declare this here *and* in Thread.h?
 extern RecursiveSpinlock s_mm_lock;
 
 // This class represents a set of committed physical pages.
