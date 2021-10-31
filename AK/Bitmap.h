@@ -82,7 +82,7 @@ public:
 
         auto previous_size_bytes = size_in_bytes();
         auto previous_size = m_size;
-        auto previous_data = m_data;
+        auto* previous_data = m_data;
 
         m_size = size;
         m_data = reinterpret_cast<u8*>(kmalloc(size_in_bytes()));

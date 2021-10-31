@@ -254,7 +254,7 @@ private:
     NEVER_INLINE void shrink_into_inline_buffer(size_t size, bool may_discard_existing_data)
     {
         // m_inline_buffer and m_outline_buffer are part of a union, so save the pointer
-        auto outline_buffer = m_outline_buffer;
+        auto* outline_buffer = m_outline_buffer;
         auto outline_capacity = m_outline_capacity;
         if (!may_discard_existing_data)
             __builtin_memcpy(m_inline_buffer, outline_buffer, size);
@@ -265,7 +265,7 @@ private:
     NEVER_INLINE ErrorOr<void> try_ensure_capacity_slowpath(size_t new_capacity)
     {
         new_capacity = kmalloc_good_size(new_capacity);
-        auto new_buffer = (u8*)kmalloc(new_capacity);
+        auto* new_buffer = (u8*)kmalloc(new_capacity);
         if (!new_buffer)
             return Error::from_errno(ENOMEM);
 
