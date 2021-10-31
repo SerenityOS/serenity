@@ -118,6 +118,15 @@ private:
     double const m_default_value;
 };
 
+template<typename EnumT>
+requires(IsEnum<EnumT>) class ProcessorEnumParameter final : public Detail::ProcessorParameterSingleValue<EnumT> {
+public:
+    ProcessorEnumParameter(String name, EnumT initial_value)
+        : Detail::ProcessorParameterSingleValue<EnumT>(move(name), initial_value, ParameterType::Enum)
+    {
+    }
+};
+
 }
 template<>
 struct AK::Formatter<LibDSP::ProcessorRangeParameter> : AK::StandardFormatter {
