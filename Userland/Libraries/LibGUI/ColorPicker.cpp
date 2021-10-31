@@ -156,8 +156,8 @@ public:
     Function<void(Color)> on_color_changed;
 
 private:
-    virtual void mousedown_event(GUI::MouseEvent&) { m_event_loop->quit(1); }
-    virtual void mousemove_event(GUI::MouseEvent&)
+    virtual void mousedown_event(GUI::MouseEvent&) override { m_event_loop->quit(1); }
+    virtual void mousemove_event(GUI::MouseEvent&) override
     {
         auto new_col = WindowServerConnection::the().get_color_under_cursor();
         if (new_col == m_col)
@@ -167,7 +167,7 @@ private:
             on_color_changed(m_col);
     }
 
-    virtual void keydown_event(GUI::KeyEvent& event)
+    virtual void keydown_event(GUI::KeyEvent& event) override
     {
         if (event.key() == KeyCode::Key_Escape) {
             event.accept();

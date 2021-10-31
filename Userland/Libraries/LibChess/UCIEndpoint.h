@@ -36,7 +36,7 @@ public:
 
     void send_command(const Command&);
 
-    virtual void event(Core::Event&);
+    virtual void event(Core::Event&) override;
 
     Core::IODevice& in() { return *m_in; }
     Core::IODevice& out() { return *m_out; }
