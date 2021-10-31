@@ -43,7 +43,6 @@ class Field final : public GUI::Frame {
     friend class SquareLabel;
 
 public:
-    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
     virtual ~Field() override;
 
     size_t rows() const { return m_rows; }
@@ -58,6 +57,8 @@ public:
     void reset();
 
 private:
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void on_square_clicked(Square&);

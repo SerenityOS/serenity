@@ -218,6 +218,8 @@ class Mandelbrot : public GUI::Frame {
     void reset();
 
 private:
+    Mandelbrot() = default;
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
     virtual void mousemove_event(GUI::MouseEvent& event) override;
