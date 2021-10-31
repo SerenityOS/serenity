@@ -22,7 +22,6 @@ class TCPWebSocketConnectionImpl final : public AbstractWebSocketImpl {
 
 public:
     virtual ~TCPWebSocketConnectionImpl() override;
-    explicit TCPWebSocketConnectionImpl(Core::Object* parent = nullptr);
 
     virtual void connect(ConnectionInfo const& connection) override;
 
@@ -39,6 +38,8 @@ public:
     virtual void discard_connection() override;
 
 private:
+    explicit TCPWebSocketConnectionImpl(Core::Object* parent = nullptr);
+
     RefPtr<Core::Notifier> m_notifier;
     RefPtr<Core::TCPSocket> m_socket;
 };

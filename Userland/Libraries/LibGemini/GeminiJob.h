@@ -17,12 +17,6 @@ namespace Gemini {
 class GeminiJob final : public Job {
     C_OBJECT(GeminiJob)
 public:
-    explicit GeminiJob(const GeminiRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certificates = nullptr)
-        : Job(request, output_stream)
-        , m_override_ca_certificates(override_certificates)
-    {
-    }
-
     virtual ~GeminiJob() override
     {
     }
@@ -50,6 +44,12 @@ protected:
     virtual void read_while_data_available(Function<IterationDecision()>) override;
 
 private:
+    explicit GeminiJob(const GeminiRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certificates = nullptr)
+        : Job(request, output_stream)
+        , m_override_ca_certificates(override_certificates)
+    {
+    }
+
     RefPtr<TLS::TLSv12> m_socket;
     const Vector<Certificate>* m_override_ca_certificates { nullptr };
 };

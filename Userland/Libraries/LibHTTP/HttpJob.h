@@ -18,11 +18,6 @@ namespace HTTP {
 class HttpJob final : public Job {
     C_OBJECT(HttpJob)
 public:
-    explicit HttpJob(const HttpRequest& request, OutputStream& output_stream)
-        : Job(request, output_stream)
-    {
-    }
-
     virtual ~HttpJob() override
     {
     }
@@ -46,6 +41,11 @@ protected:
     virtual bool is_established() const override { return true; }
 
 private:
+    explicit HttpJob(const HttpRequest& request, OutputStream& output_stream)
+        : Job(request, output_stream)
+    {
+    }
+
     RefPtr<Core::Socket> m_socket;
 };
 

@@ -27,7 +27,6 @@ class TerminalWidget final
     C_OBJECT(TerminalWidget);
 
 public:
-    TerminalWidget(int ptm_fd, bool automatic_size_policy);
     virtual ~TerminalWidget() override;
 
     void set_pty_master_fd(int fd);
@@ -95,6 +94,8 @@ public:
     void set_color_scheme(const StringView&);
 
 private:
+    TerminalWidget(int ptm_fd, bool automatic_size_policy);
+
     // ^GUI::Widget
     virtual void event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;

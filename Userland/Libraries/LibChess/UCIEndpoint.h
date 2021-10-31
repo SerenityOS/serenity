@@ -18,9 +18,6 @@ class Endpoint : public Core::Object {
 public:
     virtual ~Endpoint() override { }
 
-    Endpoint() { }
-    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
-
     virtual void handle_uci() { }
     virtual void handle_debug(const DebugCommand&) { }
     virtual void handle_isready() { }
@@ -47,6 +44,10 @@ public:
         set_in_notifier();
     }
     void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
+
+protected:
+    Endpoint() { }
+    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
 
 private:
     void set_in_notifier();

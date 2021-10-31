@@ -125,7 +125,7 @@ pid_t EventLoop::s_pid;
 
 class InspectorServerConnection : public Object {
     C_OBJECT(InspectorServerConnection)
-public:
+private:
     explicit InspectorServerConnection(RefPtr<LocalSocket> socket)
         : m_socket(move(socket))
         , m_client_id(s_id_allocator->allocate())
@@ -162,6 +162,7 @@ public:
             inspected_object->decrement_inspector_count({});
     }
 
+public:
     void send_response(const JsonObject& response)
     {
         auto serialized = response.to_string();

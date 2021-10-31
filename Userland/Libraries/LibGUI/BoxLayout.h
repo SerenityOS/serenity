@@ -36,7 +36,7 @@ private:
 class VerticalBoxLayout final : public BoxLayout {
     C_OBJECT(VerticalBoxLayout);
 
-public:
+private:
     explicit VerticalBoxLayout()
         : BoxLayout(Gfx::Orientation::Vertical)
     {
@@ -47,7 +47,7 @@ public:
 class HorizontalBoxLayout final : public BoxLayout {
     C_OBJECT(HorizontalBoxLayout);
 
-public:
+private:
     explicit HorizontalBoxLayout()
         : BoxLayout(Gfx::Orientation::Horizontal)
     {
