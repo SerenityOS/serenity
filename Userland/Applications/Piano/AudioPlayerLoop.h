@@ -17,17 +17,17 @@ class TrackManager;
 
 // Wrapper class accepting custom events to advance the track playing and forward audio data to the system.
 // This does not run on a separate thread, preventing IPC multithreading madness.
-class AudioPlayerLoop : public Core::Object {
+class AudioPlayerLoop final : public Core::Object {
     C_OBJECT(AudioPlayerLoop)
 public:
-    AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
-
     void enqueue_audio();
 
     void toggle_paused();
     bool is_playing() { return m_should_play_audio; }
 
 private:
+    AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
+
     TrackManager& m_track_manager;
     Array<Sample, sample_count> m_buffer;
     Optional<Audio::ResampleHelper<double>> m_resampler;

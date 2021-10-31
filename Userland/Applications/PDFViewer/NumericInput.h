@@ -12,7 +12,6 @@
 class NumericInput final : public GUI::TextBox {
     C_OBJECT(NumericInput)
 public:
-    NumericInput();
     virtual ~NumericInput() override = default;
 
     Function<void(i32)> on_number_changed;
@@ -22,6 +21,7 @@ public:
     void set_current_number(i32 number, bool call_change_handler = true);
 
 private:
+    NumericInput();
     void on_focus_lost();
 
     bool m_needs_text_reset { false };

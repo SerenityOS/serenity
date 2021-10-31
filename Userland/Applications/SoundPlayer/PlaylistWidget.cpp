@@ -92,6 +92,8 @@ String PlaylistModel::column_name(int column) const
     VERIFY_NOT_REACHED();
 }
 
+PlaylistTableView::PlaylistTableView() = default;
+
 void PlaylistTableView::doubleclick_event(GUI::MouseEvent& event)
 {
     AbstractView::doubleclick_event(event);

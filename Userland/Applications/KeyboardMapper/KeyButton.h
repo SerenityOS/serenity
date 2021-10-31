@@ -8,7 +8,7 @@
 
 #include <LibGUI/AbstractButton.h>
 
-class KeyButton : public GUI::AbstractButton {
+class KeyButton final : public GUI::AbstractButton {
     C_OBJECT(KeyButton)
 
 public:
@@ -25,5 +25,7 @@ protected:
     virtual void paint_event(GUI::PaintEvent&) override;
 
 private:
+    KeyButton() = default;
+
     bool m_pressed { false };
 };

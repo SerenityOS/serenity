@@ -21,7 +21,7 @@ public:
 
     bool mouse_is_down() const { return m_mouse_is_down; }
 
-protected:
+private:
     AutoSlider(Orientation orientation)
         : GUI::Slider(orientation)
     {
@@ -42,6 +42,5 @@ protected:
         GUI::Slider::mouseup_event(event);
     }
 
-private:
     bool m_mouse_is_down { false };
 };
