@@ -432,7 +432,7 @@ private:
 
     u8 m_keyboard_modifiers { 0 };
 
-    WindowSwitcher m_switcher;
+    NonnullRefPtr<WindowSwitcher> m_switcher;
 
     WeakPtr<Button> m_cursor_tracking_button;
     WeakPtr<Button> m_hovered_button;
