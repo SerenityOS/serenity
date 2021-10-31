@@ -66,57 +66,57 @@ public:
 private:
     virtual void visit_edges(Visitor&) override;
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(top_getter);
+    JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(document_getter);
+    JS_DECLARE_NATIVE_FUNCTION(document_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(performance_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(history_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(screen_getter);
+    JS_DECLARE_NATIVE_FUNCTION(performance_getter);
+    JS_DECLARE_NATIVE_FUNCTION(history_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(event_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(event_setter);
+    JS_DECLARE_NATIVE_FUNCTION(event_getter);
+    JS_DECLARE_NATIVE_FUNCTION(event_setter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(inner_width_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(inner_height_getter);
+    JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
+    JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(parent_getter);
+    JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(device_pixel_ratio_getter);
+    JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(scroll_x_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(scroll_y_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(scroll);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(scroll_by);
+    JS_DECLARE_NATIVE_FUNCTION(scroll_x_getter);
+    JS_DECLARE_NATIVE_FUNCTION(scroll_y_getter);
+    JS_DECLARE_NATIVE_FUNCTION(scroll);
+    JS_DECLARE_NATIVE_FUNCTION(scroll_by);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(screen_x_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(screen_y_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(screen_left_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(screen_top_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_x_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_y_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_left_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_top_getter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(alert);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(confirm);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(prompt);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(set_interval);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(set_timeout);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(clear_interval);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(clear_timeout);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(request_animation_frame);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(cancel_animation_frame);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(atob);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(btoa);
+    JS_DECLARE_NATIVE_FUNCTION(alert);
+    JS_DECLARE_NATIVE_FUNCTION(confirm);
+    JS_DECLARE_NATIVE_FUNCTION(prompt);
+    JS_DECLARE_NATIVE_FUNCTION(set_interval);
+    JS_DECLARE_NATIVE_FUNCTION(set_timeout);
+    JS_DECLARE_NATIVE_FUNCTION(clear_interval);
+    JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
+    JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
+    JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
+    JS_DECLARE_NATIVE_FUNCTION(atob);
+    JS_DECLARE_NATIVE_FUNCTION(btoa);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(get_computed_style);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(match_media);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(get_selection);
+    JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
+    JS_DECLARE_NATIVE_FUNCTION(match_media);
+    JS_DECLARE_NATIVE_FUNCTION(get_selection);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(queue_microtask);
+    JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(crypto_getter);
+    JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
 
-#define __ENUMERATE(attribute, event_name)              \
-    JS_DECLARE_OLD_NATIVE_FUNCTION(attribute##_getter); \
-    JS_DECLARE_OLD_NATIVE_FUNCTION(attribute##_setter);
+#define __ENUMERATE(attribute, event_name)          \
+    JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
+    JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
