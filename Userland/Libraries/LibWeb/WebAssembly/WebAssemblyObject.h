@@ -60,9 +60,9 @@ public:
     static Wasm::AbstractMachine s_abstract_machine;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(validate);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(compile);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(instantiate);
+    JS_DECLARE_NATIVE_FUNCTION(validate);
+    JS_DECLARE_NATIVE_FUNCTION(compile);
+    JS_DECLARE_NATIVE_FUNCTION(instantiate);
 };
 
 class WebAssemblyMemoryObject final : public JS::Object {
