@@ -43,7 +43,8 @@ public:
 
     String to_string();
 
-    void for_each(Function<IterationDecision(String const&, String const&)>);
+    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
+    JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
 private:
     friend class URL;

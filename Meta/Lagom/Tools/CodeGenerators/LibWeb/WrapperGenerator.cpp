@@ -940,14 +940,8 @@ static bool is_wrappable_type(IDL::Type const& type)
     return false;
 }
 
-enum class ReturnType {
-    Completion,
-    Value,
-    Void,
-};
-
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, ReturnType return_type, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, HashMap<String, IDL::Dictionary> const& dictionaries, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {}, bool variadic = false)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -963,22 +957,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (optional_default_value.has_value())
         scoped_generator.set("parameter.optional_default_value", *optional_default_value);
 
-    switch (return_type) {
-    case ReturnType::Completion:
-        scoped_generator.set("return_statement", "return JS::throw_completion(vm.exception()->value());");
-        scoped_generator.set("try_macro", "TRY");
-        break;
-    case ReturnType::Value:
-        scoped_generator.set("return_statement", "return {};");
-        scoped_generator.set("try_macro", "TRY_OR_DISCARD");
-        break;
-    case ReturnType::Void:
-        scoped_generator.set("return_statement", "return;");
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
         if (variadic) {
@@ -987,48 +965,34 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
     for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = vm.argument(i).to_string(global_object);
-        if (to_string_result.is_error())
-            @return_statement@
-        @cpp_name@.append(to_string_result.release_value());
+        auto to_string_result = TRY(vm.argument(i).to_string(global_object));
+        @cpp_name@.append(move(to_string_result));
     }
 )~~~");
         } else if (!optional) {
             if (!parameter.type->nullable) {
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
-    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
+    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
         @cpp_name@ = String::empty();
-    } else {
-        auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
-        if (to_string_result.is_error())
-            @return_statement@
-        @cpp_name@ = to_string_result.release_value();
-    }
+    else
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     String @cpp_name@;
-    if (!@js_name@@js_suffix@.is_nullish()) {
-        auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
-        if (to_string_result.is_error())
-            @return_statement@
-        @cpp_name@ = to_string_result.release_value();
-    }
+    if (!@js_name@@js_suffix@.is_nullish())
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
 )~~~");
             }
         } else {
             scoped_generator.append(R"~~~(
     String @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined()) {
-        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
+        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
             @cpp_name@ = String::empty();
-        } else {
-            auto to_string_result = @js_name@@js_suffix@.to_string(global_object);
-            if (to_string_result.is_error())
-                @return_statement@
-            @cpp_name@ = to_string_result.release_value();
-        }
+        else
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(global_object));
     })~~~");
             if (optional_default_value.has_value() && (!parameter.type->nullable || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
@@ -1045,34 +1009,27 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     RefPtr<EventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        if (!@js_name@@js_suffix@.is_function()) {
-            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
-            @return_statement@
-        }
+        if (!@js_name@@js_suffix@.is_function())
+            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
+
         @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
     }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_function()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
-        @return_statement@
-    }
+    if (!@js_name@@js_suffix@.is_function())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Function");
+
     auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
         }
     } else if (is_wrappable_type(*parameter.type)) {
         if (!parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    auto @cpp_name@_object_or_error = @js_name@@js_suffix@.to_object(global_object);
-    if (@cpp_name@_object_or_error.is_error())
-        @return_statement@
-    auto @cpp_name@_object = @cpp_name@_object_or_error.release_value();
+    auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
 
-    if (!is<@wrapper_name@>(@cpp_name@_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
-        @return_statement@
-    }
+    if (!is<@wrapper_name@>(@cpp_name@_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     auto& @cpp_name@ = static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
 )~~~");
@@ -1080,15 +1037,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
-        auto @cpp_name@_object_or_error = @js_name@@js_suffix@.to_object(global_object);
-        if (@cpp_name@_object_or_error.is_error())
-            @return_statement@
-        auto @cpp_name@_object = @cpp_name@_object_or_error.release_value();
+        auto @cpp_name@_object = TRY(@js_name@@js_suffix@.to_object(global_object));
 
-        if (!is<@wrapper_name@>(@cpp_name@_object)) {
-            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
-            @return_statement@
-        }
+        if (!is<@wrapper_name@>(@cpp_name@_object))
+            return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
         @cpp_name@ = &static_cast<@wrapper_name@*>(@cpp_name@_object)->impl();
     }
@@ -1097,7 +1049,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (parameter.type->name == "double") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    double @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_double(global_object));
+    double @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
@@ -1111,7 +1063,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
-        @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_double(global_object));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
@@ -1153,15 +1105,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
     } else if (parameter.type->name == "unsigned long") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_u32(global_object));
+    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
 )~~~");
     } else if (parameter.type->name == "unsigned short") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_u16(global_object));
+    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
 )~~~");
     } else if (parameter.type->name == "long") {
         scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @try_macro@(@js_name@@js_suffix@.to_i32(global_object));
+    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
 )~~~");
     } else if (parameter.type->name == "EventHandler") {
         // x.onfoo = function() { ... }
@@ -1219,10 +1171,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             TODO();
         auto dictionary_generator = scoped_generator.fork();
         dictionary_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_nullish() && !@js_name@@js_suffix@.is_object()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
-        @return_statement@
-    }
+    if (!@js_name@@js_suffix@.is_nullish() && !@js_name@@js_suffix@.is_object())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
+
     @parameter.type.name@ @cpp_name@ {};
 )~~~");
         auto* current_dictionary = &dictionaries.find(parameter.type->name)->value;
@@ -1236,24 +1187,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (@js_name@@js_suffix@.is_nullish()) {
         @member_name@ = JS::js_undefined();
     } else {
-        auto @member_name@_or_error = @js_name@@js_suffix@.as_object().get("@member_key@");
-        if (@member_name@_or_error.is_error())
-            @return_statement@
-        @member_name@ = @member_name@_or_error.release_value();
+        @member_name@ = TRY(@js_name@@js_suffix@.as_object().get("@member_key@"));
     }
 )~~~");
                 if (member.required) {
                     dictionary_generator.append(R"~~~(
-    if (@member_name@.is_undefined()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::MissingRequiredProperty, "@member_key@");
-        @return_statement@
-    }
+    if (@member_name@.is_undefined())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::MissingRequiredProperty, "@member_key@");
 )~~~");
                 }
 
                 auto member_value_name = String::formatted("{}_value", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
-                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, return_type, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, dictionaries, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
                 dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
@@ -1270,7 +1216,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 }
 
 template<typename FunctionType>
-static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function, ReturnType return_type)
+static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function)
 {
     auto argument_count_check_generator = generator.fork();
     argument_count_check_generator.set("function.name", function.name);
@@ -1286,27 +1232,13 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
         argument_count_check_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", function.length()));
     }
 
-    switch (return_type) {
-    case ReturnType::Completion:
-        argument_count_check_generator.set("return_statement", "return JS::throw_completion(vm.exception()->value());");
-        break;
-    case ReturnType::Value:
-        argument_count_check_generator.set("return_statement", "return {};");
-        break;
-    default:
-        // 'Void' not used here.
-        VERIFY_NOT_REACHED();
-    }
-
     argument_count_check_generator.append(R"~~~(
-    if (vm.argument_count() < @function.nargs@) {
-        vm.throw_exception<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
-        @return_statement@
-    }
+    if (vm.argument_count() < @function.nargs@)
+        return vm.throw_completion<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries, ReturnType return_type)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, HashMap<String, IDL::Dictionary> const& dictionaries)
 {
     auto arguments_generator = generator.fork();
 
@@ -1323,7 +1255,7 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
         }
 
         bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, return_type, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), dictionaries, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value, parameter.variadic);
         ++argument_index;
     }
 
@@ -1464,22 +1396,20 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     }
 
     function_generator.append(R"~~~(
-JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 {
 )~~~");
 
     if (is_static_function == StaticFunction::No) {
         function_generator.append(R"~~~(
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 )~~~");
     }
 
-    generate_argument_count_check(generator, function, ReturnType::Value);
+    generate_argument_count_check(generator, function);
 
     StringBuilder arguments_builder;
-    generate_arguments(generator, function.parameters, arguments_builder, dictionaries, ReturnType::Value);
+    generate_arguments(generator, function.parameters, arguments_builder, dictionaries);
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
@@ -1494,7 +1424,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 
     function_generator.append(R"~~~(
     if (should_return_empty(result))
-        return JS::Value();
+        return JS::throw_completion(vm.exception()->value());
 
     [[maybe_unused]] auto retval = result.release_value();
 )~~~");
@@ -2053,7 +1983,7 @@ Optional<JS::PropertyDescriptor> @class_name@::legacy_platform_object_get_own_pr
             // FIXME: It's not necessary to determine "creating" if the named property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_names doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
-static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
+static JS::ThrowCompletionOr<void> invoke_named_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, String const& property_name, JS::Value value)
 {
     auto& vm = global_object.vm();
 
@@ -2068,7 +1998,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
 
             // 4. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, ReturnType::Void);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
 
             // 5. If operation was defined without an identifier, then:
             if (interface.named_property_setter->name.is_empty()) {
@@ -2077,12 +2007,12 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
         // 5.1. If creating is true, then perform the steps listed in the interface description to set the value of a new named property with P as the name and value as the value.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_new_named_property(property_name, converted_value); });
         if (should_return_empty(result))
-            return;
+            return JS::throw_completion(vm.exception()->value());
     } else {
         // 5.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing named property with P as the name and value as the value.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_existing_named_property(property_name, converted_value); });
         if (should_return_empty(result))
-            return;
+            return JS::throw_completion(vm.exception()->value());
     }
 )~~~");
             } else {
@@ -2094,11 +2024,12 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
                 function_scoped_generator.append(R"~~~(
     auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.@function.cpp_name@(property_name, converted_value); });
     if (should_return_empty(result))
-        return;
+        return JS::throw_completion(vm.exception()->value());
 )~~~");
             }
 
             scoped_generator.append(R"~~~(
+    return {};
 }
 )~~~");
         }
@@ -2109,7 +2040,7 @@ static void invoke_named_property_setter(JS::GlobalObject& global_object, @fully
             // FIXME: It's not necessary to determine "creating" if the indexed property setter specifies an identifier.
             //        Try avoiding it somehow, e.g. by enforcing supported_property_indices doesn't have side effects so it can be skipped.
             scoped_generator.append(R"~~~(
-static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyKey const& property_name, JS::Value value)
+static JS::ThrowCompletionOr<void> invoke_indexed_property_setter(JS::GlobalObject& global_object, @fully_qualified_name@& impl, JS::PropertyKey const& property_name, JS::Value value)
 {
     auto& vm = global_object.vm();
 
@@ -2126,7 +2057,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
 
             // 5. Let value be the result of converting V to an IDL value of type T.
             // NOTE: This takes the last parameter as it's enforced that there's only two parameters.
-            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries, ReturnType::Void);
+            generate_to_cpp(scoped_generator, interface.named_property_setter->parameters.last(), "value", "", "converted_value", interface.dictionaries);
 
             // 6. If operation was defined without an identifier, then:
             if (interface.indexed_property_setter->name.is_empty()) {
@@ -2135,12 +2066,12 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
         // 6.1 If creating is true, then perform the steps listed in the interface description to set the value of a new indexed property with index as the index and value as the value.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_new_indexed_property(index, converted_value); });
         if (should_return_empty(result))
-            return;
+            return JS::throw_completion(vm.exception()->value());
     } else {
         // 6.2 Otherwise, creating is false. Perform the steps listed in the interface description to set the value of an existing indexed property with index as the index and value as the value.
         auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.set_value_of_existing_indexed_property(index, converted_value); });
         if (should_return_empty(result))
-            return;
+            return JS::throw_completion(vm.exception()->value());
     }
 )~~~");
             } else {
@@ -2152,7 +2083,7 @@ static void invoke_indexed_property_setter(JS::GlobalObject& global_object, @ful
                 function_scoped_generator.append(R"~~~(
     auto result = throw_dom_exception_if_needed(vm, global_object, [&] { impl.@function.cpp_name@(index, converted_value); });
     if (should_return_empty(result))
-        return;
+        return JS::throw_completion(vm.exception()->value());
 )~~~");
             }
 
@@ -2193,9 +2124,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
                 scoped_generator.append(R"~~~(
         if (IDL::is_an_array_index(global_object, property_name)) {
             // 1. Invoke the indexed property setter on O with P and V.
-            invoke_indexed_property_setter(global_object, impl(), property_name, value);
-            if (auto* exception = vm.exception())
-                return JS::throw_completion(exception->value());
+            TRY(invoke_indexed_property_setter(global_object, impl(), property_name, value));
 
             // 2. Return true.
             return true;
@@ -2209,9 +2138,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_set(JS::PropertyKey const& pr
                 scoped_generator.append(R"~~~(
         if (property_name.is_string()) {
             // 1. Invoke the named property setter on O with P and V.
-            invoke_named_property_setter(global_object, impl(), property_name.as_string(), value);
-            if (auto* exception = vm.exception())
-                return JS::throw_completion(exception->value());
+            TRY(invoke_named_property_setter(global_object, impl(), property_name.as_string(), value));
 
             // 2. Return true.
             return true;
@@ -2263,9 +2190,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
             } else {
                 scoped_generator.append(R"~~~(
         // 3. Invoke the indexed property setter on O with P and Desc.[[Value]].
-        invoke_indexed_property_setter(global_object, impl(), property_name, *property_descriptor.value);
-        if (auto* exception = vm.exception())
-            return JS::throw_completion(exception->value());
+        TRY(invoke_indexed_property_setter(global_object, impl(), property_name, *property_descriptor.value));
 
         // 4. Return true.
         return true;
@@ -2322,9 +2247,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_define_own_property(JS::Prope
                 return false;
 
             // 2. Invoke the named property setter on O with P and Desc.[[Value]].
-            invoke_named_property_setter(global_object, impl(), property_name_as_string, *property_descriptor.value);
-            if (auto* exception = vm.exception())
-                return JS::throw_completion(exception->value());
+            TRY(invoke_named_property_setter(global_object, impl(), property_name_as_string, *property_descriptor.value));
 
             // 3. Return true.
             return true;
@@ -2580,7 +2503,7 @@ private:
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(@function.name:snakecase@);
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
 )~~~");
     }
 
@@ -2702,10 +2625,10 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
-            generate_argument_count_check(generator, constructor, ReturnType::Completion);
+            generate_argument_count_check(generator, constructor);
 
             StringBuilder arguments_builder;
-            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries, ReturnType::Completion);
+            generate_arguments(generator, constructor.parameters, arguments_builder, interface.dictionaries);
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
@@ -2759,7 +2682,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
         function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
-    define_old_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -2809,24 +2732,24 @@ private:
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
         function_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(@function.name:snakecase@);
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
         )~~~");
     }
 
     if (interface.has_stringifier) {
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
         )~~~");
     }
 
     if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(entries);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(for_each);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(keys);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(values);
+    JS_DECLARE_NATIVE_FUNCTION(entries);
+    JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(keys);
+    JS_DECLARE_NATIVE_FUNCTION(values);
         )~~~");
     }
 
@@ -2834,12 +2757,12 @@ private:
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
         attribute_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
 )~~~");
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-    JS_DECLARE_OLD_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
 )~~~");
         }
     }
@@ -3078,7 +3001,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         }
 
         attribute_generator.append(R"~~~(
-    define_old_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+    define_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
     }
 
@@ -3109,7 +3032,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         }
 
         function_generator.append(R"~~~(
-    define_old_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
@@ -3118,7 +3041,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto stringifier_generator = generator.fork();
         stringifier_generator.append(R"~~~(
-    define_old_native_function("toString", to_string, 0, default_attributes);
+    define_native_function("toString", to_string, 0, default_attributes);
 )~~~");
     }
 
@@ -3145,10 +3068,10 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_old_native_function(vm.names.entries, entries, 0, default_attributes);
-    define_old_native_function(vm.names.forEach, for_each, 1, default_attributes);
-    define_old_native_function(vm.names.keys, keys, 0, default_attributes);
-    define_old_native_function(vm.names.values, values, 0, default_attributes);
+    define_native_function(vm.names.entries, entries, 0, default_attributes);
+    define_native_function(vm.names.forEach, for_each, 1, default_attributes);
+    define_native_function(vm.names.keys, keys, 0, default_attributes);
+    define_native_function(vm.names.values, values, 0, default_attributes);
 
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
@@ -3167,9 +3090,9 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
     if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
         generator.append(R"~~~(
-static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 )~~~");
 
         if (interface.name == "EventTarget") {
@@ -3181,10 +3104,8 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         }
 
         generator.append(R"~~~(
-    if (!is<@wrapper_class@>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
-        return nullptr;
-    }
+    if (!is<@wrapper_class@>(this_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
 
     return &static_cast<@wrapper_class@*>(this_object)->impl();
 }
@@ -3216,11 +3137,9 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         }
 
         attribute_generator.append(R"~~~(
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 )~~~");
 
         if (attribute.extended_attributes.contains("ReturnNullIfCrossOrigin")) {
@@ -3254,16 +3173,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
     auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, ReturnType::Value, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface.dictionaries, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name != "boolean") {
@@ -3283,7 +3200,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->set_@attribute.name:snakecase@(cpp_value); });
 
     if (should_return_empty(result))
-        return JS::Value();
+        return JS::throw_completion(vm.exception()->value());
 )~~~");
             }
 
@@ -3306,11 +3223,9 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
             stringifier_generator.set("attribute.cpp_getter_name", interface.stringifier_attribute->to_snakecase());
 
         stringifier_generator.append(R"~~~(
-JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::to_string)
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
 )~~~");
         if (interface.stringifier_attribute.has_value()) {
@@ -3322,7 +3237,7 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::to_string)
     auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->to_string(); });
 
     if (should_return_empty(result))
-        return JS::Value();
+        return JS::throw_completion(vm.exception()->value());
 
     auto retval = result.release_value();
 )~~~");
@@ -3337,56 +3252,44 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(@class_name@::to_string)
     if (interface.pair_iterator_types.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::entries)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
     return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue));
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::for_each)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
     auto callback = vm.argument(0);
-    if (!callback.is_function()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
-        return {};
-    }
+    if (!callback.is_function())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
 
     auto this_value = vm.this_value(global_object);
-    impl->for_each([&](auto key, auto value) {
+    TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
 )~~~");
         generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key");
         generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value");
         iterator_generator.append(R"~~~(
-        auto result = vm.call(callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value);
-        return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
-    });
-    if (vm.exception())
+        TRY(vm.call(callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
         return {};
+    }));
 
     return JS::js_undefined();
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::keys)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
     return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Key));
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::values)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
+    auto* impl = TRY(impl_from(vm, global_object));
 
     return wrap(global_object, @iterator_name@::create(*impl, Object::PropertyKind::Value));
 }
@@ -3572,7 +3475,7 @@ public:
     virtual ~@prototype_class@() override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(next);
+    JS_DECLARE_NATIVE_FUNCTION(next);
 };
 
 } // namespace Web::Bindings
@@ -3665,30 +3568,25 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
 
-    define_old_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_native_function(vm.names.next, next, 0, JS::Attribute::Configurable | JS::Attribute::Writable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Iterator"), JS::Attribute::Configurable);
 }
 
-static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
-    if (!is<@wrapper_class@>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
-        return nullptr;
-    }
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!is<@wrapper_class@>(this_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "@fully_qualified_name@");
     return &static_cast<@wrapper_class@*>(this_object)->impl();
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(@prototype_class@::next)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 {
-    auto* impl = impl_from(vm, global_object);
-    if (!impl)
-        return {};
-
+    auto* impl = TRY(impl_from(vm, global_object));
     auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->next(); });
 
     if (should_return_empty(result))
-        return JS::Value();
+        return JS::throw_completion(vm.exception()->value());
 
     return result.release_value();
 }
