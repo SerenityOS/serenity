@@ -151,7 +151,7 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>&
     auto name = TRY(KString::try_create(parts.last()));
     auto process = TRY(Process::try_create(first_thread, move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
-    TRY(process->m_fds.try_resize(process->m_fds.max_open()));
+    TRY(process->m_fds.try_resize(Process::OpenFileDescriptions::max_open()));
 
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
     auto description = TRY(device_to_use_as_tty.open(O_RDWR));
