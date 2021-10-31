@@ -2487,6 +2487,175 @@ RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& co
     return nullptr;
 }
 
+RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+{
+    // NOTE: This *looks* like it parses a <position>, but it doesn't. From the spec:
+    //      "Note: The background-position property also accepts a three-value syntax.
+    //       This has been disallowed generically because it creates parsing ambiguities
+    //       when combined with other length or percentage components in a property value."
+    //           - https://www.w3.org/TR/css-values-4/#typedef-position
+    //       So, we'll need a separate function to parse <position> later.
+
+    auto start_position = tokens.position();
+    auto error = [&]() {
+        tokens.rewind_to_position(start_position);
+        return nullptr;
+    };
+
+    auto to_edge = [](ValueID identifier) -> Optional<PositionEdge> {
+        switch (identifier) {
+        case ValueID::Top:
+            return PositionEdge::Top;
+        case ValueID::Bottom:
+            return PositionEdge::Bottom;
+        case ValueID::Left:
+            return PositionEdge::Left;
+        case ValueID::Right:
+            return PositionEdge::Right;
+        default:
+            return {};
+        }
+    };
+    auto is_horizontal = [](ValueID identifier) -> bool {
+        switch (identifier) {
+        case ValueID::Left:
+        case ValueID::Right:
+            return true;
+        default:
+            return false;
+        }
+    };
+    auto is_vertical = [](ValueID identifier) -> bool {
+        switch (identifier) {
+        case ValueID::Top:
+        case ValueID::Bottom:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto zero_offset = Length::make_px(0);
+    auto center_offset = Length { 50, Length::Type::Percentage };
+
+    struct EdgeOffset {
+        PositionEdge edge;
+        Length offset;
+        bool edge_provided;
+        bool offset_provided;
+    };
+
+    Optional<EdgeOffset> horizontal;
+    Optional<EdgeOffset> vertical;
+    bool found_center = false;
+
+    while (tokens.has_next_token()) {
+        // Check if we're done
+        auto seen_items = (horizontal.has_value() ? 1 : 0) + (vertical.has_value() ? 1 : 0) + (found_center ? 1 : 0);
+        if (seen_items == 2)
+            break;
+
+        auto& token = tokens.peek_token();
+        auto maybe_value = parse_css_value(context, token);
+        if (!maybe_value || !property_accepts_value(PropertyID::BackgroundPosition, *maybe_value))
+            break;
+        tokens.next_token();
+        auto value = maybe_value.release_nonnull();
+
+        if (value->has_length()) {
+            if (!horizontal.has_value()) {
+                horizontal = EdgeOffset { PositionEdge::Left, value->to_length(), false, true };
+            } else if (!vertical.has_value()) {
+                vertical = EdgeOffset { PositionEdge::Top, value->to_length(), false, true };
+            } else {
+                return error();
+            }
+            continue;
+        }
+
+        if (value->has_identifier()) {
+            auto identifier = value->to_identifier();
+            if (is_horizontal(identifier)) {
+                Length offset = zero_offset;
+                bool offset_provided = false;
+                if (tokens.has_next_token()) {
+                    auto maybe_offset = parse_length(context, tokens.peek_token());
+                    if (maybe_offset.has_value()) {
+                        offset = maybe_offset.value();
+                        offset_provided = true;
+                        tokens.next_token();
+                    }
+                }
+                horizontal = EdgeOffset { *to_edge(identifier), offset, true, offset_provided };
+            } else if (is_vertical(identifier)) {
+                Length offset = zero_offset;
+                bool offset_provided = false;
+                if (tokens.has_next_token()) {
+                    auto maybe_offset = parse_length(context, tokens.peek_token());
+                    if (maybe_offset.has_value()) {
+                        offset = maybe_offset.value();
+                        offset_provided = true;
+                        tokens.next_token();
+                    }
+                }
+                vertical = EdgeOffset { *to_edge(identifier), offset, true, offset_provided };
+            } else if (identifier == ValueID::Center) {
+                found_center = true;
+            } else {
+                return error();
+            }
+            continue;
+        }
+
+        tokens.reconsume_current_input_token();
+        break;
+    }
+
+    if (found_center) {
+        if (horizontal.has_value() && vertical.has_value())
+            return error();
+        if (!horizontal.has_value())
+            horizontal = EdgeOffset { PositionEdge::Left, center_offset, true, false };
+        if (!vertical.has_value())
+            vertical = EdgeOffset { PositionEdge::Top, center_offset, true, false };
+    }
+
+    if (!horizontal.has_value() && !vertical.has_value())
+        return error();
+
+    // Unpack `<edge> <length>`:
+    // The loop above reads this pattern as a single EdgeOffset, when actually, it should be treated
+    // as `x y` if the edge is horizontal, and `y` (with the second token reconsumed) otherwise.
+    if (!vertical.has_value() && horizontal->edge_provided && horizontal->offset_provided) {
+        // Split into `x y`
+        vertical = EdgeOffset { PositionEdge::Top, horizontal->offset, false, true };
+        horizontal->offset = zero_offset;
+        horizontal->offset_provided = false;
+    } else if (!horizontal.has_value() && vertical->edge_provided && vertical->offset_provided) {
+        // `y`, reconsume
+        vertical->offset = zero_offset;
+        vertical->offset_provided = false;
+        tokens.reconsume_current_input_token();
+    }
+
+    // If only one value is specified, the second value is assumed to be center.
+    if (!horizontal.has_value())
+        horizontal = EdgeOffset { PositionEdge::Left, center_offset, false, false };
+    if (!vertical.has_value())
+        vertical = EdgeOffset { PositionEdge::Top, center_offset, false, false };
+
+    return PositionStyleValue::create(
+        horizontal->edge, horizontal->offset,
+        vertical->edge, vertical->offset);
+}
+
+RefPtr<StyleValue> Parser::parse_background_position_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    // FIXME: Handle multiple sets of comma-separated values.
+    return parse_single_background_position_value(context, tokens);
+}
+
 RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     auto is_directional_repeat = [](StyleValue const& value) -> bool {
@@ -3243,6 +3412,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundImage:
         if (auto parsed_value = parse_background_image_value(m_context, component_values))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
+    case PropertyID::BackgroundPosition:
+        if (auto parsed_value = parse_background_position_value(m_context, component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundRepeat:
