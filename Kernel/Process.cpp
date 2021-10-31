@@ -502,7 +502,7 @@ Time kgettimeofday()
     return TimeManagement::now();
 }
 
-siginfo_t Process::wait_info()
+siginfo_t Process::wait_info() const
 {
     siginfo_t siginfo {};
     siginfo.si_signo = SIGCHLD;
@@ -889,7 +889,7 @@ static constexpr StringView to_string(Pledge promise)
     VERIFY_NOT_REACHED();
 }
 
-void Process::require_no_promises()
+void Process::require_no_promises() const
 {
     if (!has_promises())
         return;

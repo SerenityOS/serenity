@@ -38,8 +38,9 @@ public:
 
     [[nodiscard]] bool is_null() const { return m_address == 0; }
 
+    // NOLINTNEXTLINE(readability-make-member-function-const) const PhysicalAddress shouldn't be allowed to modify the underlying memory
     [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
-    [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
+    [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<u8 const*>(m_address); }
 
     [[nodiscard]] PhysicalAddress page_base() const { return PhysicalAddress(physical_page_base(m_address)); }
     [[nodiscard]] PhysicalPtr offset_in_page() const { return PhysicalAddress(m_address & 0xfff).get(); }
