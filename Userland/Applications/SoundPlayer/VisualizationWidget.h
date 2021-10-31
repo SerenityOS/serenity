@@ -17,5 +17,6 @@ public:
     virtual void set_samplerate(int) { }
 
 protected:
+    VisualizationWidget() = default;
     virtual ~VisualizationWidget() = default;
 };
