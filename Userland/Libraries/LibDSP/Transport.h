@@ -16,6 +16,14 @@ namespace LibDSP {
 class Transport final : public Core::Object {
     C_OBJECT(Transport)
 public:
+    u32 const& time() const { return m_time; }
+    u16 beats_per_minute() const { return m_beats_per_minute; }
+    double current_second() const { return m_time / m_sample_rate; }
+    double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }
+    double sample_rate() const { return m_sample_rate; }
+    double current_measure() const { return m_time / samples_per_measure(); }
+
+private:
     Transport(u16 beats_per_minute, u8 beats_per_measure, u32 sample_rate)
         : m_beats_per_minute(beats_per_minute)
         , m_beats_per_measure(beats_per_measure)
@@ -27,14 +35,6 @@ public:
     {
     }
 
-    u32 const& time() const { return m_time; }
-    u16 beats_per_minute() const { return m_beats_per_minute; }
-    double current_second() const { return m_time / m_sample_rate; }
-    double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }
-    double sample_rate() const { return m_sample_rate; }
-    double current_measure() const { return m_time / samples_per_measure(); }
-
-private:
     u32 m_time { 0 };
     u16 const m_beats_per_minute { 0 };
     u8 const m_beats_per_measure { 0 };
