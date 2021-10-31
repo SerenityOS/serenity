@@ -24,13 +24,6 @@ class ColorWidget : public GUI::Frame {
     C_OBJECT(ColorWidget);
 
 public:
-    explicit ColorWidget(Color color, PaletteWidget& palette_widget)
-        : m_palette_widget(palette_widget)
-        , m_color(color)
-    {
-        set_fixed_width(16);
-    }
-
     virtual ~ColorWidget() override
     {
     }
@@ -57,6 +50,13 @@ public:
     }
 
 private:
+    explicit ColorWidget(Color color, PaletteWidget& palette_widget)
+        : m_palette_widget(palette_widget)
+        , m_color(color)
+    {
+        set_fixed_width(16);
+    }
+
     PaletteWidget& m_palette_widget;
     Color m_color;
 };
@@ -87,6 +87,9 @@ public:
 
     Function<void(Color const&)> on_color_change;
     Color m_color = Color::White;
+
+private:
+    SelectedColorWidget() = default;
 };
 
 PaletteWidget::PaletteWidget()

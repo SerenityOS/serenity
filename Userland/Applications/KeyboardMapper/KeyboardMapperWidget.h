@@ -10,11 +10,10 @@
 #include <LibGUI/Button.h>
 #include <LibKeyboard/CharacterMapData.h>
 
-class KeyboardMapperWidget : public GUI::Widget {
+class KeyboardMapperWidget final : public GUI::Widget {
     C_OBJECT(KeyboardMapperWidget)
 
 public:
-    KeyboardMapperWidget();
     virtual ~KeyboardMapperWidget() override;
 
     void create_frame();
@@ -31,6 +30,8 @@ protected:
     void update_window_title();
 
 private:
+    KeyboardMapperWidget();
+
     Vector<KeyButton*> m_keys;
     RefPtr<GUI::Widget> m_map_group;
 
