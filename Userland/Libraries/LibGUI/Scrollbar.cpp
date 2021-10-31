@@ -232,7 +232,7 @@ void Scrollbar::on_automatic_scrolling_timer_fired()
         return;
     }
     if (m_pressed_component == Component::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
-        set_value(value() + step());
+        increase_slider_by_steps(1);
         return;
     }
     if (m_pressed_component == Component::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
@@ -299,7 +299,7 @@ void Scrollbar::mousewheel_event(MouseEvent& event)
 {
     if (!is_scrollable())
         return;
-    set_value(value() + event.wheel_delta() * step());
+    increase_slider_by_steps(event.wheel_delta());
     Widget::mousewheel_event(event);
 }
 
