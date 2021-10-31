@@ -34,7 +34,7 @@ class SysFSDeviceComponent final
 public:
     static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);
 
-    bool is_block_device() { return m_block_device; }
+    bool is_block_device() const { return m_block_device; }
 
 private:
     explicit SysFSDeviceComponent(Device const&);

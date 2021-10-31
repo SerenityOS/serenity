@@ -78,7 +78,7 @@ private:
     bool m_readonly { false };
 };
 
-inline FileSystem* InodeIdentifier::fs()
+inline FileSystem* InodeIdentifier::fs() // NOLINT(readability-make-member-function-const) const InodeIdentifiers should not be able to modify the FileSystem
 {
     return FileSystem::from_fsid(m_fsid);
 }
