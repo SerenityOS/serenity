@@ -442,6 +442,10 @@
 #cmakedefine01 WASM_TRACE_DEBUG
 #endif
 
+#ifndef WASM_VALIDATOR_DEBUG
+#cmakedefine01 WASM_VALIDATOR_DEBUG
+#endif
+
 #ifndef WEBSERVER_DEBUG
 #cmakedefine01 WEBSERVER_DEBUG
 #endif
