@@ -445,12 +445,14 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
     }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
 auto Thread::sleep(clockid_t clock_id, const Time& duration, Time* remaining_time) -> BlockResult
 {
     VERIFY(state() == Thread::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
 auto Thread::sleep_until(clockid_t clock_id, const Time& deadline) -> BlockResult
 {
     VERIFY(state() == Thread::Running);

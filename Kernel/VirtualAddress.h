@@ -37,6 +37,7 @@ public:
     bool operator==(const VirtualAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const VirtualAddress& other) const { return m_address != other.m_address; }
 
+    // NOLINTNEXTLINE(readability-make-member-function-const) const VirtualAddress shouldn't be allowed to modify the underlying memory
     [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
     [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
