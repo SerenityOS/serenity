@@ -77,7 +77,7 @@ private:
 
 class PageTableEntry {
 public:
-    PhysicalPtr physical_page_base() { return PhysicalAddress::physical_page_base(m_raw); }
+    PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
     void set_physical_page_base(PhysicalPtr value)
     {
         m_raw &= 0x8000000000000fffULL;

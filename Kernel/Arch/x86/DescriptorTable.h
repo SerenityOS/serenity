@@ -160,7 +160,7 @@ struct [[gnu::packed]] IDTEntry
     {
     }
 
-    FlatPtr off()
+    FlatPtr off() const
     {
 #if ARCH(I386)
         return (u32)offset_2 << 16 & (u32)offset_1;
@@ -168,7 +168,7 @@ struct [[gnu::packed]] IDTEntry
         return (u64)offset_3 << 32 & (u64)offset_2 << 16 & (u64)offset_1;
 #endif
     }
-    IDTEntryType type()
+    IDTEntryType type() const
     {
         return IDTEntryType(type_attr.gate_type);
     }

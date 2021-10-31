@@ -120,12 +120,12 @@ public:
     void detect_hypervisor();
     void detect_hypervisor_hyperv(CPUID const& hypervisor_leaf_range);
 
-    void idle_begin()
+    void idle_begin() const
     {
         s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
     }
 
-    void idle_end()
+    void idle_end() const
     {
         s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
     }

@@ -421,7 +421,7 @@ public:
     static void initialize();
 
     [[noreturn]] void crash(int signal, FlatPtr ip, bool out_of_memory = false);
-    [[nodiscard]] siginfo_t wait_info();
+    [[nodiscard]] siginfo_t wait_info() const;
 
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY*);
@@ -509,7 +509,7 @@ public:
     VirtualAddress signal_trampoline() const { return m_protected_values.signal_trampoline; }
 
     void require_promise(Pledge);
-    void require_no_promises();
+    void require_no_promises() const;
 
 private:
     friend class MemoryManager;
