@@ -68,7 +68,6 @@ public:
 
     static WindowManager& the();
 
-    explicit WindowManager(Gfx::PaletteImpl const&);
     virtual ~WindowManager() override;
 
     Palette palette() const { return Palette(*m_palette); }
@@ -322,6 +321,8 @@ public:
     void apply_cursor_theme(String const& name);
 
 private:
+    explicit WindowManager(Gfx::PaletteImpl const&);
+
     void notify_new_active_window(Window&);
     void notify_new_active_input_window(Window&);
     void notify_previous_active_window(Window&);

@@ -18,12 +18,13 @@ class ClientConnection final
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     virtual ~ClientConnection() override;
 
     virtual void die() override;
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+
     virtual Messages::LookupServer::LookupNameResponse lookup_name(String const&) override;
     virtual Messages::LookupServer::LookupAddressResponse lookup_address(String const&) override;
 };

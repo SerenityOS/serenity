@@ -17,6 +17,7 @@ class ClipboardServerConnection final
     , public ClipboardClientEndpoint {
     C_OBJECT(ClipboardServerConnection);
 
+public:
     Function<void()> on_data_changed;
     RefPtr<Gfx::Bitmap> get_bitmap();
     void set_bitmap(Gfx::Bitmap const& bitmap);

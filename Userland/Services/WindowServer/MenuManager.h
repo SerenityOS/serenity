@@ -20,7 +20,6 @@ class MenuManager final : public Core::Object {
 public:
     static MenuManager& the();
 
-    MenuManager();
     virtual ~MenuManager() override;
 
     bool is_open(const Menu&) const;
@@ -48,6 +47,8 @@ public:
     Menu* hovered_menu() { return m_hovered_menu; }
 
 private:
+    MenuManager();
+
     void close_menus(const Vector<Menu&>&);
 
     virtual void event(Core::Event&) override;

@@ -14,16 +14,16 @@ class ChessEngine : public Chess::UCI::Endpoint {
 public:
     virtual ~ChessEngine() override { }
 
+    virtual void handle_uci() override;
+    virtual void handle_position(const Chess::UCI::PositionCommand&) override;
+    virtual void handle_go(const Chess::UCI::GoCommand&) override;
+
+private:
     ChessEngine() { }
     ChessEngine(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
         : Endpoint(in, out)
     {
     }
 
-    virtual void handle_uci() override;
-    virtual void handle_position(const Chess::UCI::PositionCommand&) override;
-    virtual void handle_go(const Chess::UCI::GoCommand&) override;
-
-private:
     Chess::Board m_board;
 };

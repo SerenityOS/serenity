@@ -24,13 +24,6 @@
 class SelectableLayover final : public GUI::Widget {
     C_OBJECT(SelectableLayover)
 public:
-    SelectableLayover(GUI::Window* window)
-        : m_window(window)
-        , m_background_color(palette().threed_highlight().with_alpha(128))
-    {
-        set_override_cursor(Gfx::StandardCursor::Crosshair);
-    }
-
     virtual ~SelectableLayover() override {};
 
     Gfx::IntRect region() const
@@ -39,6 +32,13 @@ public:
     }
 
 private:
+    SelectableLayover(GUI::Window* window)
+        : m_window(window)
+        , m_background_color(palette().threed_highlight().with_alpha(128))
+    {
+        set_override_cursor(Gfx::StandardCursor::Crosshair);
+    }
+
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
         if (event.button() == GUI::MouseButton::Primary)

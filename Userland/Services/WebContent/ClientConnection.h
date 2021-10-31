@@ -25,7 +25,6 @@ class ClientConnection final
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     ~ClientConnection() override;
 
     virtual void die() override;
@@ -33,6 +32,8 @@ public:
     void initialize_js_console(Badge<PageHost>);
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+
     Web::Page& page();
     const Web::Page& page() const;
 
