@@ -36,17 +36,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
 
     auto initial_size = table->elements().size();
     auto value_value = vm.argument(1);
-    auto reference_value = [&]() -> Optional<Wasm::Value> {
+    auto reference_value = TRY_OR_DISCARD([&]() -> JS::ThrowCompletionOr<Wasm::Value> {
         if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
         return to_webassembly_value(global_object, value_value, table->type().element_type());
-    }();
+    }());
 
-    if (!reference_value.has_value())
-        return {};
-
-    auto& reference = reference_value->value().get<Wasm::Reference>();
+    auto& reference = reference_value.value().get<Wasm::Reference>();
 
     if (!table->grow(delta, reference)) {
         vm.throw_exception<JS::RangeError>(global_object, "Failed to grow table");
@@ -105,17 +102,14 @@ JS_DEFINE_OLD_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
     }
 
     auto value_value = vm.argument(1);
-    auto reference_value = [&]() -> Optional<Wasm::Value> {
+    auto reference_value = TRY_OR_DISCARD([&]() -> JS::ThrowCompletionOr<Wasm::Value> {
         if (value_value.is_undefined())
             return Wasm::Value(table->type().element_type(), 0ull);
 
         return to_webassembly_value(global_object, value_value, table->type().element_type());
-    }();
+    }());
 
-    if (!reference_value.has_value())
-        return {};
-
-    auto& reference = reference_value->value().get<Wasm::Reference>();
+    auto& reference = reference_value.value().get<Wasm::Reference>();
     table->elements()[index] = reference;
 
     return JS::js_undefined();
