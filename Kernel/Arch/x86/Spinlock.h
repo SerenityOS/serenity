@@ -31,7 +31,6 @@ public:
         }
         track_lock_acquire(m_rank);
         return prev_flags;
-        return 0;
     }
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
@@ -90,7 +89,6 @@ public:
             track_lock_acquire(m_rank);
         m_recursions++;
         return prev_flags;
-        return 0;
     }
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
