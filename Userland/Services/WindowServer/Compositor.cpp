@@ -1084,10 +1084,10 @@ void Compositor::recompute_overlay_rects()
 void Compositor::recompute_occlusions()
 {
     auto& wm = WindowManager::the();
-    bool is_switcher_visible = wm.m_switcher.is_visible();
+    bool is_switcher_visible = wm.m_switcher->is_visible();
     auto never_occlude = [&](WindowStack& window_stack) {
         if (is_switcher_visible) {
-            switch (wm.m_switcher.mode()) {
+            switch (wm.m_switcher->mode()) {
             case WindowSwitcher::Mode::ShowCurrentDesktop:
                 // Any window on the currently rendered desktop should not be occluded, even if it's behind
                 // another window entirely.
@@ -1540,7 +1540,7 @@ void Compositor::finish_window_stack_switch()
     m_window_stack_transition_animation = nullptr;
 
     auto& wm = WindowManager::the();
-    if (!wm.m_switcher.is_visible())
+    if (!wm.m_switcher->is_visible())
         previous_window_stack->set_all_occluded(true);
     wm.did_switch_window_stack({}, *previous_window_stack, *m_current_window_stack);
 
