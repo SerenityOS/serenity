@@ -85,6 +85,7 @@ Window::Window(Core::Object& parent, WindowType type)
         m_minimum_size = s_default_normal_minimum_size;
 
     WindowManager::the().add_window(*this);
+    frame().window_was_constructed({});
 }
 
 Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)

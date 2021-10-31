@@ -362,11 +362,6 @@ public:
     const Vector<Screen*, default_screen_count>& screens() const { return m_screens; }
     Vector<Screen*, default_screen_count>& screens() { return m_screens; }
 
-    void did_construct()
-    {
-        frame().window_was_constructed({});
-    }
-
     void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
     bool is_moving_to_another_stack() const { return m_moving_to_another_stack; }
 
