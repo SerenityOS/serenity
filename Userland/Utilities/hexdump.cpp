@@ -45,15 +45,16 @@ int main(int argc, char** argv)
                 out("  ");
         }
 
-        out("  ");
+        out("  |");
 
-        for (size_t i = 0; i < 16; ++i) {
-            if (i < line.size() && isprint(line[i]))
+        for (size_t i = 0; i < line.size(); ++i) {
+            if (isprint(line[i]))
                 putchar(line[i]);
             else
-                putchar(' ');
+                putchar('.');
         }
 
+        putchar('|');
         putchar('\n');
     };
 
