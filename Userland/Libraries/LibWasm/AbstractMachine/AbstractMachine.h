@@ -373,6 +373,7 @@ public:
 
     auto is_mutable() const { return m_mutable; }
     auto& value() const { return m_value; }
+    GlobalType type() const { return { m_value.type(), is_mutable() }; }
     void set_value(Value value)
     {
         VERIFY(is_mutable());
@@ -489,6 +490,8 @@ class AbstractMachine {
 public:
     explicit AbstractMachine() = default;
 
+    // Validate a module; permanently sets the module's validity status.
+    ErrorOr<void, ValidationError> validate(Module&);
     // Load and instantiate a module, and link it into this interpreter.
     InstantiationResult instantiate(Module const&, Vector<ExternValue>);
     Result invoke(FunctionAddress, Vector<Value>);
