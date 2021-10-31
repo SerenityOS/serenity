@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
+#include <AK/Array.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
+
+static constexpr size_t LINE_LENGTH_BYTES = 16;
 
 int main(int argc, char** argv)
 {
@@ -30,14 +32,11 @@ int main(int argc, char** argv)
         file = file_or_error.value();
     }
 
-    auto contents = file->read_all();
-
-    Vector<u8, 16> line;
-
-    auto print_line = [&] {
-        for (size_t i = 0; i < 16; ++i) {
-            if (i < line.size())
-                out("{:02x} ", line[i]);
+    auto print_line = [](u8* buf, size_t size) {
+        VERIFY(size <= LINE_LENGTH_BYTES);
+        for (size_t i = 0; i < LINE_LENGTH_BYTES; ++i) {
+            if (i < size)
+                out("{:02x} ", buf[i]);
             else
                 out("   ");
 
@@ -47,9 +46,9 @@ int main(int argc, char** argv)
 
         out("  |");
 
-        for (size_t i = 0; i < line.size(); ++i) {
-            if (isprint(line[i]))
-                putchar(line[i]);
+        for (size_t i = 0; i < size; ++i) {
+            if (isprint(buf[i]))
+                putchar(buf[i]);
             else
                 putchar('.');
         }
@@ -58,17 +57,26 @@ int main(int argc, char** argv)
         putchar('\n');
     };
 
-    for (size_t i = 0; i < contents.size(); ++i) {
-        line.append(contents[i]);
+    Array<u8, BUFSIZ> contents;
+    static_assert(LINE_LENGTH_BYTES * 2 <= contents.size(), "Buffer is too small?!");
+    size_t contents_size = 0;
 
-        if (line.size() == 16) {
-            print_line();
-            line.clear();
+    int nread;
+    do {
+        nread = file->read(&contents[contents_size], BUFSIZ - contents_size);
+        contents_size += nread;
+        // Print as many complete lines as we can (possibly none).
+        size_t offset;
+        for (offset = 0; offset + LINE_LENGTH_BYTES - 1 < contents_size; offset += LINE_LENGTH_BYTES) {
+            print_line(&contents[offset], LINE_LENGTH_BYTES);
         }
-    }
-
-    if (!line.is_empty())
-        print_line();
+        contents_size -= offset;
+        // Regions cannot overlap due to above static_assert.
+        memcpy(&contents[0], &contents[offset], contents_size);
+    } while (nread);
+    VERIFY(contents_size <= LINE_LENGTH_BYTES - 1);
+    if (contents_size > 0)
+        print_line(&contents[0], contents_size);
 
     return 0;
 }
