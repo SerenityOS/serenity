@@ -26,7 +26,6 @@ public:
     };
     static WindowSwitcher& the();
 
-    WindowSwitcher();
     virtual ~WindowSwitcher() override;
 
     bool is_visible() const { return m_visible; }
@@ -49,6 +48,8 @@ public:
     Mode mode() const { return m_mode; }
 
 private:
+    WindowSwitcher();
+
     int thumbnail_width() const { return 40; }
     int thumbnail_height() const { return 40; }
     int item_height() const { return 10 + thumbnail_height(); }
