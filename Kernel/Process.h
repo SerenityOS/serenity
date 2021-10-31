@@ -663,9 +663,9 @@ public:
 
         ErrorOr<void> try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
 
-        size_t max_open() const
+        static constexpr size_t max_open()
         {
-            return m_max_open_file_descriptors;
+            return s_max_open_file_descriptors;
         }
 
         void clear()
@@ -678,7 +678,7 @@ public:
 
     private:
         OpenFileDescriptions() = default;
-        static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
+        static constexpr size_t s_max_open_file_descriptors { FD_SETSIZE };
         mutable Spinlock m_fds_lock;
         Vector<OpenFileDescriptionAndFlags> m_fds_metadatas;
     };
