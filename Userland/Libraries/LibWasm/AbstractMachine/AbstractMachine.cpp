@@ -8,6 +8,7 @@
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
+#include <LibWasm/AbstractMachine/Validator.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -100,8 +101,29 @@ ElementInstance* Store::get(ElementAddress address)
     return &m_elements[value];
 }
 
+ErrorOr<void, ValidationError> AbstractMachine::validate(Module& module)
+{
+    if (module.validation_status() != Module::ValidationStatus::Unchecked) {
+        if (module.validation_status() == Module::ValidationStatus::Valid)
+            return {};
+
+        return ValidationError { module.validation_error() };
+    }
+
+    auto result = Validator {}.validate(module);
+    if (result.is_error()) {
+        module.set_validation_error(result.error().error_string);
+        return result.release_error();
+    }
+
+    return {};
+}
+
 InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<ExternValue> externs)
 {
+    if (auto result = validate(const_cast<Module&>(module)); result.is_error())
+        return InstantiationError { String::formatted("Validation failed: {}", result.error()) };
+
     auto main_module_instance_pointer = make<ModuleInstance>();
     auto& main_module_instance = *main_module_instance_pointer;
     Optional<InstantiationResult> instantiation_result;
@@ -109,8 +131,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     module.for_each_section_of_type<TypeSection>([&](TypeSection const& section) {
         main_module_instance.types() = section.types();
     });
-
-    // FIXME: Validate stuff
 
     Vector<Value> global_values;
     Vector<Vector<Reference>> elements;
