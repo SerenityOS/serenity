@@ -96,10 +96,11 @@ class KeyPartDef : public ColumnDef {
     C_OBJECT(KeyPartDef);
 
 public:
-    KeyPartDef(IndexDef*, String, SQLType, Order = Order::Ascending);
     Order sort_order() const { return m_sort_order; }
 
 private:
+    KeyPartDef(IndexDef*, String, SQLType, Order = Order::Ascending);
+
     Order m_sort_order { Order::Ascending };
 };
 

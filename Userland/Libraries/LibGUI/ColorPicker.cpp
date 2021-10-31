@@ -129,11 +129,6 @@ private:
 class ColorSelectOverlay final : public Widget {
     C_OBJECT(ColorSelectOverlay)
 public:
-    ColorSelectOverlay()
-    {
-        set_override_cursor(Gfx::StandardCursor::Eyedropper);
-    }
-
     Optional<Color> exec()
     {
         m_event_loop = make<Core::EventLoop>();
@@ -156,6 +151,11 @@ public:
     Function<void(Color)> on_color_changed;
 
 private:
+    ColorSelectOverlay()
+    {
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+    }
+
     virtual void mousedown_event(GUI::MouseEvent&) override { m_event_loop->quit(1); }
     virtual void mousemove_event(GUI::MouseEvent&) override
     {
