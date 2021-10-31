@@ -55,9 +55,7 @@ static Count get_count(const String& file_specifier)
     }
 
     bool start_a_new_word = true;
-    int last_ch = EOF;
     for (int ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer)) {
-        last_ch = ch;
         count.bytes++;
         if (isspace(ch)) {
             start_a_new_word = true;
@@ -68,8 +66,6 @@ static Count get_count(const String& file_specifier)
             count.words++;
         }
     }
-    if (last_ch != '\n')
-        count.lines++;
 
     if (file_pointer != stdin)
         fclose(file_pointer);
