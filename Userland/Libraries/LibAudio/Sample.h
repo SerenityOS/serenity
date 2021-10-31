@@ -90,18 +90,22 @@ struct Sample {
         return new_frame;
     }
 
-    ALWAYS_INLINE Sample& log_pan(double const pan)
+    // Constant power panning
+    ALWAYS_INLINE Sample& pan(double const position)
     {
-        left *= linear_to_log(min(pan * -1 + 1.0, 1.0));
-        right *= linear_to_log(min(pan + 1.0, 1.0));
+        double const pi_over_2 = AK::Pi<double> * 0.5;
+        double const root_over_2 = AK::sqrt(2.0) * 0.5;
+        double const angle = position * pi_over_2 * 0.5;
+        left *= root_over_2 * (AK::cos(angle) - AK::sin(angle));
+        right *= root_over_2 * (AK::cos(angle) + AK::sin(angle));
         return *this;
     }
 
-    ALWAYS_INLINE Sample log_pan(double const pan) const
+    ALWAYS_INLINE Sample panned(double const position) const
     {
-        Sample new_frame { left, right };
-        new_frame.log_pan(pan);
-        return new_frame;
+        Sample new_sample { left, right };
+        new_sample.pan(position);
+        return new_sample;
     }
 
     constexpr Sample& operator*=(double const mult)
