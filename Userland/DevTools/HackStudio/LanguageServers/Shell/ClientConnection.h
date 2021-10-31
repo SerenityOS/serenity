@@ -15,6 +15,7 @@ namespace LanguageServers::Shell {
 class ClientConnection final : public LanguageServers::ClientConnection {
     C_OBJECT(ClientConnection);
 
+private:
     ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
         : LanguageServers::ClientConnection(move(socket), client_id)
     {
