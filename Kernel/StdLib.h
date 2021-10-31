@@ -14,10 +14,6 @@
 #include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>
 
-namespace Syscall {
-struct StringArgument;
-}
-
 ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*>, size_t);
 ErrorOr<Time> copy_time_from_user(timespec const*);
 ErrorOr<Time> copy_time_from_user(timeval const*);
