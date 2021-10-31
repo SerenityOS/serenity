@@ -343,6 +343,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::BackgroundPosition) {
+        if (value.is_value_list()) {
+            auto& background_position_list = value.as_value_list().values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_position_list.is_empty()) {
+                auto& background_position = background_position_list.first();
+                style.set_property(CSS::PropertyID::BackgroundPosition, background_position);
+            }
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundPosition, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::BackgroundRepeat) {
         if (value.is_value_list()) {
             auto& background_repeat_list = value.as_value_list().values();
