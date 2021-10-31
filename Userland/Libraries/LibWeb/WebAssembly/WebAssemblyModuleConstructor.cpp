@@ -34,13 +34,9 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(Funct
     auto& global_object = this->global_object();
 
     auto* buffer_object = TRY(vm.argument(0).to_object(global_object));
-    auto result = parse_module(global_object, buffer_object);
-    if (result.is_error()) {
-        vm.throw_exception(global_object, result.error());
-        return JS::throw_completion(result.error());
-    }
+    auto result = TRY(parse_module(global_object, buffer_object));
 
-    return heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result.release_value());
+    return heap().allocate<WebAssemblyModuleObject>(global_object, global_object, result);
 }
 
 void WebAssemblyModuleConstructor::initialize(JS::GlobalObject& global_object)

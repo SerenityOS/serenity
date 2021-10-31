@@ -62,17 +62,14 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
         return vm.throw_completion<JS::RangeError>(global_object, "maximum should be larger than or equal to initial");
 
     auto value_value = TRY(descriptor->get("value"));
-    auto reference_value = [&]() -> Optional<Wasm::Value> {
+    auto reference_value = TRY([&]() -> JS::ThrowCompletionOr<Wasm::Value> {
         if (value_value.is_undefined())
             return Wasm::Value(*reference_type, 0ull);
 
         return to_webassembly_value(global_object, value_value, *reference_type);
-    }();
+    }());
 
-    if (auto* exception = vm.exception())
-        return JS::throw_completion(exception->value());
-
-    auto& reference = reference_value->value().get<Wasm::Reference>();
+    auto& reference = reference_value.value().get<Wasm::Reference>();
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::TableType { *reference_type, Wasm::Limits { initial, maximum } });
     if (!address.has_value())
