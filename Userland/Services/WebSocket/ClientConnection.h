@@ -19,12 +19,13 @@ class ClientConnection final
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
     ~ClientConnection() override;
 
     virtual void die() override;
 
 private:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+
     virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, String const&, Vector<String> const&, Vector<String> const&, IPC::Dictionary const&) override;
     virtual Messages::WebSocketServer::ReadyStateResponse ready_state(i32) override;
     virtual void send(i32, bool, ByteBuffer const&) override;
