@@ -73,6 +73,7 @@ private:
     RefPtr<GUI::Button> m_next_button;
     RefPtr<AutoSlider> m_playback_progress_slider;
     RefPtr<GUI::Label> m_volume_label;
+    RefPtr<GUI::HorizontalSlider> m_volume_slider;
     RefPtr<GUI::Label> m_timestamp_label;
 
     bool m_nonlinear_volume_slider;

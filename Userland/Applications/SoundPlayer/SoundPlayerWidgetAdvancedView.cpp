@@ -102,13 +102,13 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_volume_label = &menubar.add<GUI::Label>();
     m_volume_label->set_fixed_width(30);
 
-    auto& volume_slider = menubar.add<GUI::HorizontalSlider>();
-    volume_slider.set_fixed_width(95);
-    volume_slider.set_min(0);
-    volume_slider.set_max(150);
-    volume_slider.set_value(100);
+    m_volume_slider = &menubar.add<GUI::HorizontalSlider>();
+    m_volume_slider->set_fixed_width(95);
+    m_volume_slider->set_min(0);
+    m_volume_slider->set_max(150);
+    m_volume_slider->set_value(100);
 
-    volume_slider.on_change = [&](int value) {
+    m_volume_slider->on_change = [&](int value) {
         double volume = m_nonlinear_volume_slider ? (double)(value * value) / (100 * 100) : value / 100.;
         set_volume(volume);
     };
