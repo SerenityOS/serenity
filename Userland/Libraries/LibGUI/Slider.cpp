@@ -104,7 +104,7 @@ void Slider::mousedown_event(MouseEvent& event)
             auto knob_first_edge = knob_rect().first_edge_for_orientation(orientation());
             auto knob_last_edge = knob_rect().last_edge_for_orientation(orientation());
             if (mouse_offset > knob_last_edge)
-                set_value(value() + page_step());
+                increase_slider_by_page_steps(1);
             else if (mouse_offset < knob_first_edge)
                 set_value(value() - page_step());
         }
