@@ -108,7 +108,6 @@ private:
 class Mixer : public Core::Object {
     C_OBJECT(Mixer)
 public:
-    Mixer(NonnullRefPtr<Core::ConfigFile> config);
     virtual ~Mixer() override;
 
     NonnullRefPtr<ClientAudioStream> create_queue(ClientConnection&);
@@ -124,6 +123,8 @@ public:
     u16 audiodevice_get_sample_rate() const;
 
 private:
+    Mixer(NonnullRefPtr<Core::ConfigFile> config);
+
     void request_setting_sync();
 
     Vector<NonnullRefPtr<ClientAudioStream>> m_pending_mixing;
