@@ -142,6 +142,15 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
     if (event.key() == Key_Space)
         m_play_button->click();
 
+    if (event.key() == Key_S)
+        m_stop_button->click();
+
+    if (event.key() == Key_Up)
+        m_volume_slider->set_value(m_volume_slider->value() + m_volume_slider->page_step());
+
+    if (event.key() == Key_Down)
+        m_volume_slider->set_value(m_volume_slider->value() - m_volume_slider->page_step());
+
     GUI::Widget::keydown_event(event);
 }
 
