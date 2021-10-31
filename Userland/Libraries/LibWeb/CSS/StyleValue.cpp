@@ -139,6 +139,12 @@ OverflowStyleValue const& StyleValue::as_overflow() const
     return static_cast<OverflowStyleValue const&>(*this);
 }
 
+PositionStyleValue const& StyleValue::as_position() const
+{
+    VERIFY(is_position());
+    return static_cast<PositionStyleValue const&>(*this);
+}
+
 StringStyleValue const& StyleValue::as_string() const
 {
     VERIFY(is_string());
@@ -399,6 +405,25 @@ String ColorStyleValue::to_string() const
     if (m_color.alpha() == 1)
         return String::formatted("rgb({}, {}, {})", m_color.red(), m_color.green(), m_color.blue());
     return String::formatted("rgba({}, {}, {}, {})", m_color.red(), m_color.green(), m_color.blue(), (float)(m_color.alpha()) / 255.0f);
+}
+
+String PositionStyleValue::to_string() const
+{
+    auto to_string = [](PositionEdge edge) {
+        switch (edge) {
+        case PositionEdge::Left:
+            return "left";
+        case PositionEdge::Right:
+            return "right";
+        case PositionEdge::Top:
+            return "top";
+        case PositionEdge::Bottom:
+            return "bottom";
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    return String::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), m_offset_y.to_string());
 }
 
 }

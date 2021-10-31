@@ -53,6 +53,7 @@ class MediaQueryList;
 class MediaQueryListEvent;
 class NumericStyleValue;
 class OverflowStyleValue;
+class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class Screen;
 class Selector;

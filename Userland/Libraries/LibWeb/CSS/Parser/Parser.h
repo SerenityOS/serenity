@@ -214,6 +214,8 @@ private:
     static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_background_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_background_image_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+    static RefPtr<StyleValue> parse_single_background_position_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static RefPtr<StyleValue> parse_background_position_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_background_repeat_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_border_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_border_radius_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
