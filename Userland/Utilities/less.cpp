@@ -139,7 +139,7 @@ public:
     {
         clear_status();
 
-        while (n - (m_lines.size() - m_line) + m_height - 1 > 0) {
+        while (m_lines.size() < m_line + n + m_height - 1) {
             if (!read_line())
                 break;
         }
