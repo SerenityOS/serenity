@@ -792,9 +792,7 @@ bool Thread::should_ignore_signal(u8 signal) const
     auto const& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
-    if ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN)
-        return true;
-    return false;
+    return ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN);
 }
 
 bool Thread::has_signal_handler(u8 signal) const
@@ -1068,7 +1066,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
     } else if (previous_state == Stopped) {
         m_stop_state = State::Invalid;
         auto& process = this->process();
-        if (process.set_stopped(false) == true) {
+        if (process.set_stopped(false)) {
             process.for_each_thread([&](auto& thread) {
                 if (&thread == this)
                     return;
@@ -1092,7 +1090,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
         // We don't want to restore to Running state, only Runnable!
         m_stop_state = previous_state != Running ? previous_state : Runnable;
         auto& process = this->process();
-        if (process.set_stopped(true) == false) {
+        if (!process.set_stopped(true)) {
             process.for_each_thread([&](auto& thread) {
                 if (&thread == this)
                     return;
