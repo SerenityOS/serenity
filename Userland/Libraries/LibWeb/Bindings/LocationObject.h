@@ -29,19 +29,19 @@ public:
     //        but we don't have the infrastructure in place to implement them yet.
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(reload);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(replace);
+    JS_DECLARE_NATIVE_FUNCTION(reload);
+    JS_DECLARE_NATIVE_FUNCTION(replace);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(href_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(href_setter);
+    JS_DECLARE_NATIVE_FUNCTION(href_getter);
+    JS_DECLARE_NATIVE_FUNCTION(href_setter);
 
-    JS_DECLARE_OLD_NATIVE_FUNCTION(host_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(hostname_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(pathname_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(hash_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(search_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(protocol_getter);
-    JS_DECLARE_OLD_NATIVE_FUNCTION(port_getter);
+    JS_DECLARE_NATIVE_FUNCTION(host_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hostname_getter);
+    JS_DECLARE_NATIVE_FUNCTION(pathname_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hash_getter);
+    JS_DECLARE_NATIVE_FUNCTION(search_getter);
+    JS_DECLARE_NATIVE_FUNCTION(protocol_getter);
+    JS_DECLARE_NATIVE_FUNCTION(port_getter);
 };
 
 }
