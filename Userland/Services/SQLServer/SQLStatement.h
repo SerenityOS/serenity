@@ -18,6 +18,8 @@ namespace SQLServer {
 
 class SQLStatement final : public Core::Object {
     C_OBJECT(SQLStatement)
+
+public:
     ~SQLStatement() override = default;
 
     static RefPtr<SQLStatement> statement_for(int statement_id);
