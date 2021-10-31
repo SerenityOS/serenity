@@ -106,7 +106,7 @@ void Slider::mousedown_event(MouseEvent& event)
             if (mouse_offset > knob_last_edge)
                 increase_slider_by_page_steps(1);
             else if (mouse_offset < knob_first_edge)
-                set_value(value() - page_step());
+                decrease_slider_by_page_steps(1);
         }
     }
     return Widget::mousedown_event(event);
