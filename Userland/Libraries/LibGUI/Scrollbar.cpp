@@ -329,7 +329,7 @@ void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
 
     if (click_position.primary_offset_for_orientation(orientation()) < scrubber_rect().primary_offset_for_orientation(orientation())) {
         gutter_click_state = GutterClickState::BeforeScrubber;
-        set_value(value() - page_increment);
+        decrease_slider_by(page_increment);
     } else {
         gutter_click_state = GutterClickState::AfterScrubber;
         increase_slider_by(page_increment);

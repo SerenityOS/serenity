@@ -269,7 +269,7 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
             vertical_scrollbar().increase_slider_by(frame_inner_rect().height());
             break;
         case Key_PageUp:
-            vertical_scrollbar().set_value(vertical_scrollbar().value() - frame_inner_rect().height());
+            vertical_scrollbar().decrease_slider_by(frame_inner_rect().height());
             break;
         default:
             if (!page_accepted_event) {

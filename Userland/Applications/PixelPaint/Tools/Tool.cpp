@@ -34,7 +34,7 @@ void Tool::on_keydown(GUI::KeyEvent& event)
     switch (event.key()) {
     case KeyCode::Key_LeftBracket:
         if (m_primary_slider)
-            m_primary_slider->set_value(m_primary_slider->value() - 1);
+            m_primary_slider->decrease_slider_by(1);
         break;
     case KeyCode::Key_RightBracket:
         if (m_primary_slider)
@@ -42,7 +42,7 @@ void Tool::on_keydown(GUI::KeyEvent& event)
         break;
     case KeyCode::Key_LeftBrace:
         if (m_secondary_slider)
-            m_secondary_slider->set_value(m_secondary_slider->value() - 1);
+            m_secondary_slider->decrease_slider_by(1);
         break;
     case KeyCode::Key_RightBrace:
         if (m_secondary_slider)
