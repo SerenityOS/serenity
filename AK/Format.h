@@ -85,32 +85,40 @@ struct TypeErasedParameter {
             return Type::Custom;
     }
 
+    template<typename Visitor>
+    constexpr auto visit(Visitor&& visitor) const
+    {
+        switch (type) {
+        case TypeErasedParameter::Type::UInt8:
+            return visitor(*static_cast<const u8*>(value));
+        case TypeErasedParameter::Type::UInt16:
+            return visitor(*static_cast<const u16*>(value));
+        case TypeErasedParameter::Type::UInt32:
+            return visitor(*static_cast<const u32*>(value));
+        case TypeErasedParameter::Type::UInt64:
+            return visitor(*static_cast<const u64*>(value));
+        case TypeErasedParameter::Type::Int8:
+            return visitor(*static_cast<const i8*>(value));
+        case TypeErasedParameter::Type::Int16:
+            return visitor(*static_cast<const i16*>(value));
+        case TypeErasedParameter::Type::Int32:
+            return visitor(*static_cast<const i32*>(value));
+        case TypeErasedParameter::Type::Int64:
+            return visitor(*static_cast<const i64*>(value));
+        default:
+            TODO();
+        }
+    }
+
     constexpr size_t to_size() const
     {
-        i64 svalue;
-
-        if (type == TypeErasedParameter::Type::UInt8)
-            svalue = *static_cast<const u8*>(value);
-        else if (type == TypeErasedParameter::Type::UInt16)
-            svalue = *static_cast<const u16*>(value);
-        else if (type == TypeErasedParameter::Type::UInt32)
-            svalue = *static_cast<const u32*>(value);
-        else if (type == TypeErasedParameter::Type::UInt64)
-            svalue = *static_cast<const u64*>(value);
-        else if (type == TypeErasedParameter::Type::Int8)
-            svalue = *static_cast<const i8*>(value);
-        else if (type == TypeErasedParameter::Type::Int16)
-            svalue = *static_cast<const i16*>(value);
-        else if (type == TypeErasedParameter::Type::Int32)
-            svalue = *static_cast<const i32*>(value);
-        else if (type == TypeErasedParameter::Type::Int64)
-            svalue = *static_cast<const i64*>(value);
-        else
-            VERIFY_NOT_REACHED();
-
-        VERIFY(svalue >= 0);
-
-        return static_cast<size_t>(svalue);
+        return visit([]<typename T>(T value) {
+            if constexpr (sizeof(T) > sizeof(size_t))
+                VERIFY(value < NumericLimits<size_t>::max());
+            if constexpr (IsSigned<T>)
+                VERIFY(value > 0);
+            return static_cast<size_t>(value);
+        });
     }
 
     // FIXME: Getters and setters.
