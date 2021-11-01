@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libsodium
-version=1.0.18-stable
+version=1.0.18
 useconfigure=true
-workdir=libsodium-stable
-files="https://download.libsodium.org/libsodium/releases/libsodium-${version}.tar.gz libsodium-${version}.tar.gz 3c240fcd414189492d7c7dc12d2cf48f67bf04142ce2f60b620adb5bac6ca732"
+workdir=libsodium-${version}
+files="https://download.libsodium.org/libsodium/releases/libsodium-${version}.tar.gz libsodium-${version}.tar.gz 6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1"
 auth_type=sha256
 
 install() {
