@@ -90,6 +90,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, Proper
 template<typename NumberType>
 ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
+ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);

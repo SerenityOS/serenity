@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -444,6 +445,179 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(Glob
 
     // 5. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
     return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar);
+}
+
+// 11.6.14 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
+ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
+{
+    // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
+
+    // 2. Let possibleInstants be ? GetPossibleInstantsFor(timeZone, dateTime).
+    auto possible_instants = TRY(get_possible_instants_for(global_object, time_zone, date_time));
+
+    // 3. Return ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
+    return disambiguate_possible_instants(global_object, possible_instants, time_zone, date_time, disambiguation);
+}
+
+// 11.6.15 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
+ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_object, Vector<Value> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
+{
+    // TODO: MarkedValueList<T> would be nice, then we could pass a Vector<Instant*> here and wouldn't need the casts...
+
+    auto& vm = global_object.vm();
+
+    // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
+
+    // 2. Let n be possibleInstants's length.
+    auto n = possible_instants.size();
+
+    // 3. If n = 1, then
+    if (n == 1) {
+        // a. Return possibleInstants[0].
+        auto& instant = possible_instants[0];
+        return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+    }
+
+    // 4. If n ≠ 0, then
+    if (n != 0) {
+        // a. If disambiguation is "earlier" or "compatible", then
+        if (disambiguation.is_one_of("earlier"sv, "compatible"sv)) {
+            // i. Return possibleInstants[0].
+            auto& instant = possible_instants[0];
+            return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+        }
+
+        // b. If disambiguation is "later", then
+        if (disambiguation == "later"sv) {
+            // i. Return possibleInstants[n − 1].
+            auto& instant = possible_instants[n - 1];
+            return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+        }
+
+        // c. Assert: disambiguation is "reject".
+        VERIFY(disambiguation == "reject"sv);
+
+        // d. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsRejectMoreThanOne);
+    }
+
+    // 5. Assert: n = 0.
+    VERIFY(n == 0);
+
+    // 6. If disambiguation is "reject", then
+    if (disambiguation == "reject"sv) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsRejectZero);
+    }
+
+    // 7. Let epochNanoseconds be ! GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
+
+    // 8. Let dayBefore be ! CreateTemporalInstant(epochNanoseconds − 8.64 × 10^13).
+    auto* day_before = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus("86400000000000"_sbigint))));
+
+    // 9. Let dayAfter be ! CreateTemporalInstant(epochNanoseconds + 8.64 × 10^13).
+    auto* day_after = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().plus("86400000000000"_sbigint))));
+
+    // 10. Let offsetBefore be ? GetOffsetNanosecondsFor(timeZone, dayBefore).
+    auto offset_before = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_before));
+
+    // 11. Let offsetAfter be ? GetOffsetNanosecondsFor(timeZone, dayAfter).
+    auto offset_after = TRY(get_offset_nanoseconds_for(global_object, time_zone, *day_after));
+
+    // 12. Let nanoseconds be offsetAfter − offsetBefore.
+    auto nanoseconds = offset_after - offset_before;
+
+    // 13. If disambiguation is "earlier", then
+    if (disambiguation == "earlier"sv) {
+        TODO();
+        // a. Let earlier be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, −nanoseconds, undefined).
+        auto earlier = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), 0, 0, 0, 0, 0, 0, 0, 0, 0, -nanoseconds, nullptr));
+
+        // b. Let earlierDateTime be ! CreateTemporalDateTime(earlier.[[Year]], earlier.[[Month]], earlier.[[Day]], earlier.[[Hour]], earlier.[[Minute]], earlier.[[Second]], earlier.[[Millisecond]], earlier.[[Microsecond]], earlier.[[Nanosecond]], dateTime.[[Calendar]]).
+        auto* earlier_date_time = MUST(create_temporal_date_time(global_object, earlier.year, earlier.month, earlier.day, earlier.hour, earlier.minute, earlier.second, earlier.millisecond, earlier.microsecond, earlier.nanosecond, date_time.calendar()));
+
+        // c. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, earlierDateTime).
+        auto possible_instants_mvl = TRY(get_possible_instants_for(global_object, time_zone, *earlier_date_time));
+
+        // d. If possibleInstants is empty, throw a RangeError exception.
+        if (possible_instants_mvl.is_empty())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsEarlierZero);
+
+        // e. Return possibleInstants[0].
+        auto& instant = possible_instants_mvl[0];
+        return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+    }
+
+    // 14. Assert: disambiguation is "compatible" or "later".
+    VERIFY(disambiguation.is_one_of("compatible"sv, "later"sv));
+
+    // 15. Let later be ? AddDateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], dateTime.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds, undefined).
+    auto later = TRY(add_date_time(global_object, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond(), date_time.calendar(), 0, 0, 0, 0, 0, 0, 0, 0, 0, nanoseconds, nullptr));
+
+    // 16. Let laterDateTime be ! CreateTemporalDateTime(later.[[Year]], later.[[Month]], later.[[Day]], later.[[Hour]], later.[[Minute]], later.[[Second]], later.[[Millisecond]], later.[[Microsecond]], later.[[Nanosecond]], dateTime.[[Calendar]]).
+    auto* later_date_time = MUST(create_temporal_date_time(global_object, later.year, later.month, later.day, later.hour, later.minute, later.second, later.millisecond, later.microsecond, later.nanosecond, date_time.calendar()));
+
+    // 17. Set possibleInstants to ? GetPossibleInstantsFor(timeZone, laterDateTime).
+    auto possible_instants_mvl = TRY(get_possible_instants_for(global_object, time_zone, *later_date_time));
+
+    // 18. Set n to possibleInstants's length.
+    n = possible_instants_mvl.size();
+
+    // 19. If n = 0, throw a RangeError exception.
+    if (n == 0)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDisambiguatePossibleInstantsZero);
+
+    // 20. Return possibleInstants[n − 1].
+    auto& instant = possible_instants_mvl[n - 1];
+    return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
+}
+
+// 11.6.16 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
+ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
+
+    // 2. Let possibleInstants be ? Invoke(timeZone, "getPossibleInstantsFor", « dateTime »).
+    auto possible_instants = TRY(time_zone.invoke(global_object, vm.names.getPossibleInstantsFor, &date_time));
+
+    // 3. Let iteratorRecord be ? GetIterator(possibleInstants, sync).
+    auto* iterator = TRY(get_iterator(global_object, possible_instants, IteratorHint::Sync));
+
+    // 4. Let list be a new empty List.
+    auto list = MarkedValueList { vm.heap() };
+
+    // 5. Let next be true.
+    Object* next = nullptr;
+
+    // 6. Repeat, while next is not false,
+    do {
+        // a. Set next to ? IteratorStep(iteratorRecord).
+        next = TRY(iterator_step(global_object, *iterator));
+
+        // b. If next is not false, then
+        if (next) {
+            // i. Let nextValue be ? IteratorValue(next).
+            auto next_value = TRY(iterator_value(global_object, *next));
+
+            // ii. If Type(nextValue) is not Object or nextValue does not have an [[InitializedTemporalInstant]] internal slot, then
+            if (!next_value.is_object() || !is<Instant>(next_value.as_object())) {
+                // 1. Let completion be ThrowCompletion(a newly created TypeError object).
+                auto completion = vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Instant");
+
+                // 2. Return ? IteratorClose(iteratorRecord, completion).
+                return iterator_close(*iterator, move(completion));
+            }
+
+            // iii. Append nextValue to the end of the List list.
+            list.append(next_value);
+        }
+    } while (next != nullptr);
+
+    // 7. Return list.
+    return { move(list) };
 }
 
 }

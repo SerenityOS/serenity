@@ -200,6 +200,18 @@ ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Obje
     return option.as_string().string();
 }
 
+// 13.7 ToTemporalDisambiguation ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
+ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object, Object const& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Return ? GetOption(normalizedOptions, "disambiguation", « String », « "compatible", "earlier", "later", "reject" », "compatible").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.disambiguation, { OptionType::String }, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
 // 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
 {
