@@ -88,21 +88,26 @@ else
     TARGET="${SERENITY_ARCH:-"i686"}"
 fi
 
-case "$1" in
-    GNU|Clang)
-        TOOLCHAIN_TYPE="$1"; shift
-        ;;
-    *)
-        if [ -n "$1" ]; then
-            echo "WARNING: unknown toolchain '$1'. Defaulting to GNU."
-            echo "         Valid values are 'Clang', 'GNU' (default)"
-        fi
-        TOOLCHAIN_TYPE="GNU"
-        ;;
-esac
+CMAKE_ARGS=()
+
+# Toolchain selection only applies to non-lagom targets.
+if [ "$TARGET" != "lagom" ]; then
+    case "$1" in
+        GNU|Clang)
+            TOOLCHAIN_TYPE="$1"; shift
+            ;;
+        *)
+            if [ -n "$1" ]; then
+                echo "WARNING: unknown toolchain '$1'. Defaulting to GNU."
+                echo "         Valid values are 'Clang', 'GNU' (default)"
+            fi
+            TOOLCHAIN_TYPE="GNU"
+            ;;
+    esac
+    CMAKE_ARGS+=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
+fi
 
 CMD_ARGS=( "$@" )
-CMAKE_ARGS=( "-DSERENITY_TOOLCHAIN=$TOOLCHAIN_TYPE" )
 
 get_top_dir() {
     git rev-parse --show-toplevel
