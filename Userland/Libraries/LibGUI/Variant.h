@@ -35,6 +35,7 @@ public:
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
     Variant(const Gfx::ColorRole);
+    Variant(const Gfx::FlagRole);
     Variant(const Gfx::MetricRole);
     Variant(const Gfx::PathRole);
     Variant(const JsonValue&);
@@ -67,6 +68,7 @@ public:
         Font,
         TextAlignment,
         ColorRole,
+        FlagRole,
         MetricRole,
         PathRole,
     };
@@ -88,6 +90,7 @@ public:
     bool is_font() const { return m_type == Type::Font; }
     bool is_text_alignment() const { return m_type == Type::TextAlignment; }
     bool is_color_role() const { return m_type == Type::ColorRole; }
+    bool is_flag_role() const { return m_type == Type::FlagRole; }
     bool is_metric_role() const { return m_type == Type::MetricRole; }
     bool is_path_role() const { return m_type == Type::PathRole; }
     Type type() const { return m_type; }
@@ -251,6 +254,13 @@ public:
         return m_value.as_color_role;
     }
 
+    Gfx::FlagRole to_flag_role() const
+    {
+        if (type() != Type::FlagRole)
+            return Gfx::FlagRole::NoRole;
+        return m_value.as_flag_role;
+    }
+
     Gfx::MetricRole to_metric_role() const
     {
         if (type() != Type::MetricRole)
@@ -315,6 +325,7 @@ private:
         Gfx::RGBA32 as_color;
         Gfx::TextAlignment as_text_alignment;
         Gfx::ColorRole as_color_role;
+        Gfx::FlagRole as_flag_role;
         Gfx::MetricRole as_metric_role;
         Gfx::PathRole as_path_role;
         RawPoint as_point;
