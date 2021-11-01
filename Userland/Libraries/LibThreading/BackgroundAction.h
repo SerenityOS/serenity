@@ -38,13 +38,6 @@ class BackgroundAction final : public Core::Object
     C_OBJECT(BackgroundAction);
 
 public:
-    static NonnullRefPtr<BackgroundAction<Result>> create(
-        Function<Result(BackgroundAction&)> action,
-        Function<void(Result)> on_complete = nullptr)
-    {
-        return adopt_ref(*new BackgroundAction(move(action), move(on_complete)));
-    }
-
     void cancel()
     {
         m_cancelled = true;

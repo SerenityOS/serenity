@@ -30,7 +30,7 @@ bool MonitorWidget::set_wallpaper(String path)
     if (!is_different_to_current_wallpaper_path(path))
         return false;
 
-    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
+    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::construct(
         [path](auto&) {
             RefPtr<Gfx::Bitmap> bmp;
             if (!path.is_empty())
