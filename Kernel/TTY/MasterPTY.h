@@ -20,7 +20,7 @@ public:
     virtual ~MasterPTY() override;
 
     unsigned index() const { return m_index; }
-    String pts_name() const;
+    KString const& pts_name() const;
     KResultOr<size_t> on_slave_write(const UserOrKernelBuffer&, size_t);
     bool can_write_from_slave() const;
     void notify_slave_closed(Badge<SlavePTY>);
@@ -29,7 +29,7 @@ public:
     virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
 private:
-    explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
+    explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer, NonnullOwnPtr<KString> pts_name);
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
@@ -44,7 +44,7 @@ private:
     unsigned m_index;
     bool m_closed { false };
     NonnullOwnPtr<DoubleBuffer> m_buffer;
-    String m_pts_name;
+    NonnullOwnPtr<KString> m_pts_name;
 };
 
 }

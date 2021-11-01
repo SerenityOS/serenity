@@ -28,7 +28,7 @@ public:
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
     virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
-    virtual String const& tty_name() const = 0;
+    virtual KString const& tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }

@@ -497,7 +497,7 @@ private:
             process_object.add("nfds", process.fds().open_count());
             process_object.add("name", process.name());
             process_object.add("executable", process.executable() ? process.executable()->absolute_path() : "");
-            process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
+            process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv);
             process_object.add("amount_virtual", process.address_space().amount_virtual());
             process_object.add("amount_resident", process.address_space().amount_resident());
             process_object.add("amount_dirty_private", process.address_space().amount_dirty_private());

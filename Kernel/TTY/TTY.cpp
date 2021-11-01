@@ -578,7 +578,7 @@ KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 
 KResultOr<NonnullOwnPtr<KString>> TTY::pseudo_path(const OpenFileDescription&) const
 {
-    return KString::try_create(tty_name());
+    return tty_name().try_clone();
 }
 
 void TTY::set_size(unsigned short columns, unsigned short rows)

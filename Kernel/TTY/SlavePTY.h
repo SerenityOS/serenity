@@ -27,7 +27,7 @@ public:
 
 private:
     // ^TTY
-    virtual String const& tty_name() const override;
+    virtual KString const& tty_name() const override;
     virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
     virtual void echo(u8) override;
 
@@ -39,12 +39,12 @@ private:
     virtual KResult close() override;
 
     friend class MasterPTY;
-    SlavePTY(MasterPTY&, unsigned index);
+    SlavePTY(MasterPTY&, unsigned index, NonnullOwnPtr<KString> pts_name);
 
     RefPtr<MasterPTY> m_master;
     time_t m_time_of_last_write { 0 };
     unsigned m_index { 0 };
-    String m_tty_name;
+    NonnullOwnPtr<KString> m_tty_name;
 
     mutable IntrusiveListNode<SlavePTY> m_list_node;
 

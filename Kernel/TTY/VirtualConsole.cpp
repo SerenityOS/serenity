@@ -103,7 +103,12 @@ void VirtualConsole::set_graphical(bool graphical)
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
+    // FIXME: Don't make a temporary String here
+    auto pts_name_or_error = KString::try_create(String::formatted("/dev/tty/{}", index));
+    VERIFY(!pts_name_or_error.is_error());
+    auto pts_name = pts_name_or_error.release_value();
+
+    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, move(pts_name));
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return virtual_console_or_error.release_value();
@@ -123,7 +128,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_prese
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
-    m_tty_name = String::formatted("/dev/tty{}", m_index);
     VERIFY(GraphicsManagement::the().console());
     set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
     m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
@@ -174,9 +178,10 @@ void VirtualConsole::refresh_after_resolution_change()
     flush_dirty_lines();
 }
 
-UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, NonnullOwnPtr<KString> tty_name)
     : TTY(4, index)
     , m_index(index)
+    , m_tty_name(move(tty_name))
     , m_console_impl(*this)
 {
     initialize();
