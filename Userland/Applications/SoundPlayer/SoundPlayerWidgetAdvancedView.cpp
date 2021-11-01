@@ -111,6 +111,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     volume_slider.on_change = [&](int value) {
         double volume = m_nonlinear_volume_slider ? (double)(value * value) / (100 * 100) : value / 100.;
         set_volume(volume);
+        //FIXME: Update volume slider when its muted
     };
 
     set_nonlinear_volume_slider(false);
@@ -141,6 +142,9 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Space)
         m_play_button->click();
+
+    if (event.key() == Key_M)
+        toggle_mute();
 
     GUI::Widget::keydown_event(event);
 }
