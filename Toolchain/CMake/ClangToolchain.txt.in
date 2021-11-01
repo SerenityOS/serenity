@@ -33,7 +33,13 @@ set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecs
 # FIXME: We could eliminate this setting by building LibC and support asm files (crti.o, crtn.o)
 #        in a separate build stage before the main build to ensure that LibC is available
 #        for the try_compile check for the main build.
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+#        Note that `set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)` is not a suitable replacement,
+#        since applications might try and use `try_compile()` to detect which library a symbol is in,
+#        which doesn't work when using static linking.
+#        Instead, just tell CMake directly that the compiler works fine, so that it doesn't have to run
+#        a compile check before the build.
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
