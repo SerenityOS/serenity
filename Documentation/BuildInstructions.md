@@ -28,11 +28,11 @@ sudo apt install gcc-10 g++-10
 
 #### QEMU 5 or later
 
-QEMU version 5 is available in Ubuntu 20.10. For earlier versions, you can build version 6 using the `Toolchain/BuildQemu.sh` script.
-You may need the gtk+ 3.0 dev package:
+QEMU version 5 is available in Ubuntu 20.10, but it is recommended to build Qemu as provided by the toolchain by running `Toolchain/BuildQemu.sh`.
+Note that you might need additional dev packages:
 
 ```console
-sudo apt install libpixman-1-dev libgtk-3-dev
+sudo apt install libgtk-3-dev libpixman-1-dev libspice-server-dev
 ```
 
 ### Windows
