@@ -133,6 +133,7 @@ namespace JS {
     P(deleteProperty)                        \
     P(deref)                                 \
     P(description)                           \
+    P(disambiguation)                        \
     P(done)                                  \
     P(dotAll)                                \
     P(encodeURI)                             \
@@ -198,6 +199,7 @@ namespace JS {
     P(getFloat64)                            \
     P(getFullYear)                           \
     P(getHours)                              \
+    P(getInstantFor)                         \
     P(getInt8)                               \
     P(getInt16)                              \
     P(getInt32)                              \

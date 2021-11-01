@@ -452,6 +452,36 @@ i8 compare_temporal_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16
     return 0;
 }
 
+// 4.5.12 AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-addtime
+DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+{
+    // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integers.
+    VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
+
+    // FIXME: balance_time() should probably take double arguments. In fact, pretty much every balance_foo() needed to take doubles at some point.
+
+    // 2. Let hour be hour + hours.
+    i64 hour_ = hour + hours;
+
+    // 3. Let minute be minute + minutes.
+    i64 minute_ = minute + minutes;
+
+    // 4. Let second be second + seconds.
+    i64 second_ = second + seconds;
+
+    // 5. Let millisecond be millisecond + milliseconds.
+    i64 millisecond_ = millisecond + milliseconds;
+
+    // 6. Let microsecond be microsecond + microseconds.
+    i64 microsecond_ = microsecond + microseconds;
+
+    // 7. Let nanosecond be nanosecond + nanoseconds.
+    i64 nanosecond_ = nanosecond + nanoseconds;
+
+    // 8. Return ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
+    return balance_time(hour_, minute_, second_, millisecond_, microsecond_, nanosecond_);
+}
+
 // 4.5.13 RoundTime ( hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLengthNs ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundtime
 DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length_ns)
 {

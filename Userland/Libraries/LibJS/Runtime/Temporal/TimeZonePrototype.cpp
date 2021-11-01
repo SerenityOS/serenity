@@ -7,6 +7,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -32,6 +33,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
     define_native_function(vm.names.getOffsetStringFor, get_offset_string_for, 1, attr);
     define_native_function(vm.names.getPlainDateTimeFor, get_plain_date_time_for, 1, attr);
+    define_native_function(vm.names.getInstantFor, get_instant_for, 1, attr);
     define_native_function(vm.names.getPossibleInstantsFor, get_possible_instants_for, 1, attr);
     define_native_function(vm.names.getNextTransition, get_next_transition, 1, attr);
     define_native_function(vm.names.getPreviousTransition, get_previous_transition, 1, attr);
@@ -99,6 +101,26 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 
     // 4. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     return TRY(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
+}
+
+// 11.4.7 Temporal.TimeZone.prototype.getInstantFor ( dateTime [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getinstantfor
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_instant_for)
+{
+    // 1. Let timeZone be the this value.
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = TRY(typed_this_object(global_object));
+
+    // 3. Set dateTime to ? ToTemporalDateTime(dateTime).
+    auto* date_time = TRY(to_temporal_date_time(global_object, vm.argument(0)));
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 5. Let disambiguation be ? ToTemporalDisambiguation(options).
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+
+    // 6. Return ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
+    return TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));
 }
 
 // 11.4.8 Temporal.TimeZone.prototype.getPossibleInstantsFor ( dateTime ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getpossibleinstantsfor

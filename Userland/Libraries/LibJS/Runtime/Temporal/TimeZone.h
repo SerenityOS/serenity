@@ -49,6 +49,9 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject&, Value temporal_t
 ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject&, Value time_zone, Instant&);
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(GlobalObject&, Value time_zone, Instant&);
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(GlobalObject&, Value time_zone, Instant&, Object& calendar);
+ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject&, Value time_zone, PlainDateTime&, StringView disambiguation);
+ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject&, Vector<Value> const& possible_instants, Value time_zone, PlainDateTime&, StringView disambiguation);
+ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject&, Value time_zone, PlainDateTime&);
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const&);
 

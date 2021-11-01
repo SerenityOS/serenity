@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
@@ -133,6 +134,29 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 
     // 5. Return result.
     return &result.as_object();
+}
+
+// 12.1.7 CalendarDateAdd ( calendar, date, duration, options [ , dateAdd ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
+ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, PlainDate& date, Duration& duration, Object* options, FunctionObject* date_add)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(calendar) is Object.
+
+    // 2. If dateAdd is not present, set dateAdd to ? GetMethod(calendar, "dateAdd").
+    if (!date_add)
+        date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
+
+    // 3. Let addedDate be ? Call(dateAdd, calendar, « date, duration, options »).
+    auto added_date = TRY(call(global_object, date_add ?: js_undefined(), &calendar, &date, &duration, options ?: js_undefined()));
+
+    // 4. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
+    auto* added_date_object = TRY(added_date.to_object(global_object));
+    if (!is<PlainDate>(added_date_object))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
+
+    // 5. Return addedDate.
+    return static_cast<PlainDate*>(added_date_object);
 }
 
 // 12.1.9 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
