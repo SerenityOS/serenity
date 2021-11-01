@@ -7,6 +7,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
@@ -38,6 +39,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
@@ -123,6 +125,28 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 
     // 3. Return 𝔽(temporalTime.[[ISONanosecond]]).
     return Value(temporal_time->iso_nanosecond());
+}
+
+// 4.3.10 Temporal.PlainTime.prototype.add ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.add
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::add)
+{
+    auto temporal_duration_like = vm.argument(0);
+
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = TRY(typed_this_object(global_object));
+
+    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « »).
+    auto duration = TRY(to_limited_temporal_duration(global_object, temporal_duration_like, {}));
+
+    // 4. Let result be ! AddTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
+    auto result = add_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds);
+
+    // 5. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+
+    // 6. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
 // 4.3.12 Temporal.PlainTime.prototype.with ( temporalTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with
