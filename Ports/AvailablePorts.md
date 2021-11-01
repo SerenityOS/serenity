@@ -178,4 +178,4 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`yasm`](yasm/)                        | Yasm Modular Assembler                                          | 1.3.0                    | https://yasm.tortall.net/                                                      |
 | [`zlib`](zlib/)                        | zlib                                                            | 1.2.11                   | https://www.zlib.net/                                                          |
 | [`zsh`](zsh/)                          | Z Shell (Zsh)                                                   | 5.8                      | https://www.zsh.org                                                            |
-| [`zstd`](zstd/)                        | Zstandard                                                       | 1.4.4                    | https://facebook.github.io/zstd/                                               |
+| [`zstd`](zstd/)                        | Zstandard                                                       | 1.5.0                    | https://facebook.github.io/zstd/                                               |
