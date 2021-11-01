@@ -66,7 +66,7 @@ public:
 
 protected:
     virtual KResultOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const = 0;
-    explicit BIOSSysFSComponent(String name);
+    explicit BIOSSysFSComponent(StringView name);
 };
 
 class DMIEntryPointExposedBlob : public BIOSSysFSComponent {
