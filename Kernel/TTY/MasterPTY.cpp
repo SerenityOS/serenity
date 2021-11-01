@@ -18,21 +18,25 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
+    // FIXME: Don't make a temporary String here
+    auto pts_name = TRY(KString::try_create(String::formatted("/dev/pts/{}", index)));
+    auto tty_name = TRY(pts_name->try_clone());
+
     auto buffer = TRY(DoubleBuffer::try_create());
-    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
-    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
+    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer), move(pts_name))));
+    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index, move(tty_name))));
     master_pty->m_slave = slave_pty;
     master_pty->after_inserting();
     slave_pty->after_inserting();
     return master_pty;
 }
 
-MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
+MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer, NonnullOwnPtr<KString> pts_name)
     : CharacterDevice(200, index)
     , m_index(index)
     , m_buffer(move(buffer))
+    , m_pts_name(move(pts_name))
 {
-    m_pts_name = String::formatted("/dev/pts/{}", m_index);
     auto& process = Process::current();
     set_uid(process.uid());
     set_gid(process.gid());
@@ -49,9 +53,9 @@ MasterPTY::~MasterPTY()
     PTYMultiplexer::the().notify_master_destroyed({}, m_index);
 }
 
-String MasterPTY::pts_name() const
+KString const& MasterPTY::pts_name() const
 {
-    return m_pts_name;
+    return *m_pts_name;
 }
 
 KResultOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)

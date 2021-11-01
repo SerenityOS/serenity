@@ -86,13 +86,13 @@ public:
     void emit_char(char);
 
 private:
-    explicit VirtualConsole(const unsigned index);
+    explicit VirtualConsole(const unsigned index, NonnullOwnPtr<KString> tty_name);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
     virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
-    virtual String const& tty_name() const override { return m_tty_name; }
+    virtual KString const& tty_name() const override { return *m_tty_name; }
     virtual void echo(u8) override;
 
     // ^TerminalClient
@@ -114,7 +114,7 @@ private:
     bool m_active { false };
     bool m_graphical { false };
 
-    String m_tty_name;
+    NonnullOwnPtr<KString> m_tty_name;
 
 private:
     void initialize();
