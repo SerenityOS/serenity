@@ -59,7 +59,6 @@ void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelInd
 {
     dbgln_if(WASM_TRACE_DEBUG, "Branch to label with index {}...", index.value());
     auto label = configuration.nth_label(index.value());
-    TRAP_IF_NOT(label.has_value());
     dbgln_if(WASM_TRACE_DEBUG, "...which is actually IP {}, and has {} result(s)", label->continuation().value(), label->arity());
     auto results = pop_values(configuration, label->arity());
 
@@ -89,9 +88,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
         return;
     }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto& entry = configuration.stack().peek();
-    TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
         m_trap = Trap { "Memory access out of bounds" };
@@ -115,18 +112,16 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
     TRAP_IF_NOT(m_stack_info.size_free() >= Constants::minimum_stack_space_to_keep_free);
 
     auto instance = configuration.store().get(address);
-    TRAP_IF_NOT(instance);
     FunctionType const* type { nullptr };
     instance->visit([&](auto const& function) { type = &function.type(); });
-    TRAP_IF_NOT(type);
     TRAP_IF_NOT(configuration.stack().entries().size() > type->parameters().size());
     Vector<Value> args;
     args.ensure_capacity(type->parameters().size());
     auto span = configuration.stack().entries().span().slice_from_end(type->parameters().size());
     for (auto& entry : span) {
-        auto* ptr = entry.get_pointer<Value>();
-        TRAP_IF_NOT(ptr != nullptr);
-        args.unchecked_append(move(*ptr));
+        auto* call_argument = entry.get_pointer<Value>();
+        TRAP_IF_NOT(call_argument);
+        args.unchecked_append(move(*call_argument));
     }
 
     configuration.stack().entries().remove(configuration.stack().size() - span.size(), span.size());
@@ -150,17 +145,12 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 template<typename PopType, typename PushType, typename Operator>
 void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
 {
-    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto rhs_entry = configuration.stack().pop();
     auto& lhs_entry = configuration.stack().peek();
     auto rhs_ptr = rhs_entry.get_pointer<Value>();
     auto lhs_ptr = lhs_entry.get_pointer<Value>();
-    TRAP_IF_NOT(rhs_ptr);
-    TRAP_IF_NOT(lhs_ptr);
     auto rhs = rhs_ptr->to<PopType>();
     auto lhs = lhs_ptr->to<PopType>();
-    TRAP_IF_NOT(lhs.has_value());
-    TRAP_IF_NOT(rhs.has_value());
     PushType result;
     auto call_result = Operator {}(lhs.value(), rhs.value());
     if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
@@ -179,12 +169,9 @@ void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
 template<typename PopType, typename PushType, typename Operator>
 void BytecodeInterpreter::unary_operation(Configuration& configuration)
 {
-    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto& entry = configuration.stack().peek();
     auto entry_ptr = entry.get_pointer<Value>();
-    TRAP_IF_NOT(entry_ptr);
     auto value = entry_ptr->to<PopType>();
-    TRAP_IF_NOT(value.has_value());
     auto call_result = Operator {}(*value);
     PushType result;
     if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
@@ -237,9 +224,7 @@ struct ConvertToRaw<double> {
 template<typename PopT, typename StoreT>
 void BytecodeInterpreter::pop_and_store(Configuration& configuration, Instruction const& instruction)
 {
-    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto entry = configuration.stack().pop();
-    TRAP_IF_NOT(entry.has<Value>());
     auto value = ConvertToRaw<StoreT> {}(*entry.get<Value>().to<PopT>());
     dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(StoreT));
     store_to_memory(configuration, instruction, { &value, sizeof(StoreT) });
@@ -249,13 +234,9 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
-    TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto entry = configuration.stack().pop();
-    TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
-    TRAP_IF_NOT(base.has_value());
     u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
     Checked addition { instance_address };
     addition += data.size();
@@ -377,9 +358,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         configuration.stack().push(Value(configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()]));
         return;
     case Instructions::local_set.value(): {
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
         return;
     }
@@ -417,11 +396,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
 
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>().to<i32>();
-        TRAP_IF_NOT(value.has_value());
         auto end_label = Label(arity, args.end_ip.value());
         if (value.value() == 0) {
             if (args.else_ip.has_value()) {
@@ -438,7 +414,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::structured_end.value():
     case Instructions::structured_else.value(): {
         auto index = configuration.nth_label_index(0);
-        TRAP_IF_NOT(index.has_value());
         auto label = configuration.stack().entries()[*index].get<Label>();
         configuration.stack().entries().remove(*index, 1);
 
@@ -471,20 +446,15 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::br.value():
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     case Instructions::br_if.value(): {
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         if (entry.get<Value>().to<i32>().value_or(0) == 0)
             return;
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     }
     case Instructions::br_table.value(): {
         auto& arguments = instruction.arguments().get<Instruction::TableBranchArgs>();
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         auto maybe_i = entry.get<Value>().to<i32>();
-        TRAP_IF_NOT(maybe_i.has_value());
         if (0 <= *maybe_i) {
             size_t i = *maybe_i;
             if (i < arguments.labels.size())
@@ -494,7 +464,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
-        TRAP_IF_NOT(index.value() < configuration.frame().module().functions().size());
         auto address = configuration.frame().module().functions()[index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "call({})", address.value());
         call_address(configuration, address);
@@ -502,14 +471,10 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::call_indirect.value(): {
         auto& args = instruction.arguments().get<Instruction::IndirectCallArgs>();
-        TRAP_IF_NOT(args.table.value() < configuration.frame().module().tables().size());
         auto table_address = configuration.frame().module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         auto index = entry.get<Value>().to<i32>();
-        TRAP_IF_NOT(index.has_value());
         TRAP_IF_NOT(index.value() >= 0);
         TRAP_IF_NOT(static_cast<size_t>(index.value()) < table_instance->elements().size());
         auto element = table_instance->elements()[index.value()];
@@ -567,19 +532,15 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_store32.value():
         return pop_and_store<i64, i32>(configuration, instruction);
     case Instructions::local_tee.value(): {
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto& entry = configuration.stack().peek();
-        TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>();
         auto local_index = instruction.arguments().get<LocalIndex>();
-        TRAP_IF_NOT(configuration.frame().locals().size() > local_index.value());
         dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
         configuration.frame().locals()[local_index.value()] = move(value);
         return;
     }
     case Instructions::global_get.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
-        TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
         auto address = configuration.frame().module().globals()[global_index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "global({}) -> stack", address.value());
         auto global = configuration.store().get(address);
@@ -588,11 +549,8 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::global_set.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
-        TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
         auto address = configuration.frame().module().globals()[global_index.value()];
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>();
         dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
         auto global = configuration.store().get(address);
@@ -600,7 +558,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_size.value(): {
-        TRAP_IF_NOT(configuration.frame().module().memories().size() > 0);
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
@@ -609,15 +566,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_grow.value(): {
-        TRAP_IF_NOT(configuration.frame().module().memories().size() > 0);
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto& entry = configuration.stack().peek();
-        TRAP_IF_NOT(entry.has<Value>());
         auto new_pages = entry.get<Value>().to<i32>();
-        TRAP_IF_NOT(new_pages.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "memory.grow({}), previously {} pages...", *new_pages, old_pages);
         if (instance->grow(new_pages.value() * Constants::page_size))
             configuration.stack().peek() = Value((i32)old_pages);
@@ -630,44 +583,34 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         goto unimplemented;
     case Instructions::ref_null.value(): {
         auto type = instruction.arguments().get<ValueType>();
-        TRAP_IF_NOT(type.is_reference());
         configuration.stack().push(Value(Reference(Reference::Null { type })));
         return;
     };
     case Instructions::ref_func.value(): {
         auto index = instruction.arguments().get<FunctionIndex>().value();
         auto& functions = configuration.frame().module().functions();
-        TRAP_IF_NOT(functions.size() > index);
         auto address = functions[index];
         configuration.stack().push(Value(ValueType(ValueType::FunctionReference), address.value()));
         return;
     }
     case Instructions::ref_is_null.value(): {
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto top = configuration.stack().peek().get_pointer<Value>();
-        TRAP_IF_NOT(top);
         TRAP_IF_NOT(top->type().is_reference());
         auto is_null = top->to<Reference::Null>().has_value();
         configuration.stack().peek() = Value(ValueType(ValueType::I32), static_cast<u64>(is_null ? 1 : 0));
         return;
     }
     case Instructions::drop.value():
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         configuration.stack().pop();
         return;
     case Instructions::select.value():
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
-        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
-        TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>().to<i32>();
-        TRAP_IF_NOT(value.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "select({})", value.value());
         auto rhs_entry = configuration.stack().pop();
-        TRAP_IF_NOT(rhs_entry.has<Value>());
         auto& lhs_entry = configuration.stack().peek();
-        TRAP_IF_NOT(lhs_entry.has<Value>());
         auto rhs = move(rhs_entry.get<Value>());
         auto lhs = move(lhs_entry.get<Value>());
         configuration.stack().peek() = value.value() != 0 ? move(lhs) : move(rhs);
