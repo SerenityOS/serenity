@@ -27,12 +27,13 @@ static in_addr_t* __gethostbyname_address_list_buffer[2];
 
 static hostent __gethostbyaddr_buffer;
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
-// XXX: IPCCompiler depends on LibC. Because of this, it cannot be compiled
+// IPCCompiler depends on LibC. Because of this, it cannot be compiled
 // before LibC is. However, the lookup magic can only be obtained from the
 // endpoint itself if IPCCompiler has compiled the IPC file, so this creates
 // a chicken-and-egg situation. Because of this, the LookupServer endpoint magic
 // is hardcoded here.
-static constexpr i32 lookup_server_endpoint_magic = 9001;
+// Keep the name synchronized with LookupServer/LookupServer.ipc.
+static constexpr i32 lookup_server_endpoint_magic = "LookupServer"sv.hash();
 
 // Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
