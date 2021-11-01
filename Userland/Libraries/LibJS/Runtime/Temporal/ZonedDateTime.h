@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -33,6 +34,14 @@ private:
     Object& m_calendar;          // [[Calendar]]
 };
 
+struct NanosecondsToDaysResult {
+    double days;
+    Handle<BigInt> nanoseconds;
+    double day_length;
+};
+
 ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject&, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target = nullptr);
+ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject&, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options = nullptr);
+ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject&, BigInt const& nanoseconds, Value relative_to);
 
 }
