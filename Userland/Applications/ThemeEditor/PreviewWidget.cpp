@@ -210,7 +210,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         }
     };
 
-    auto active_rect = Gfx::IntRect(0, 0, 320, 240).centered_within(frame_inner_rect());
+    auto active_rect = Gfx::IntRect(0, 0, 320, 240).centered_within(frame_inner_rect()).translated(0, 20);
     auto inactive_rect = active_rect.translated(-20, -20);
 
     paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, *m_active_window_icon);
@@ -219,7 +219,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
 void PreviewWidget::resize_event(GUI::ResizeEvent&)
 {
-    m_gallery->set_relative_rect(Gfx::IntRect(0, 0, 320, 240).centered_within(rect()));
+    m_gallery->set_relative_rect(Gfx::IntRect(0, 0, 320, 240).centered_within(rect()).translated(0, 20));
 }
 
 void PreviewWidget::drop_event(GUI::DropEvent& event)
