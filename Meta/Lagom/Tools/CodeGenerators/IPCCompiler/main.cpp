@@ -223,30 +223,6 @@ int main(int argc, char** argv)
         endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
         endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
-        if (lexer.peek() == '[') {
-            // This only supports a single parameter for now, and adding multiple
-            // endpoint parameter support is left as an exercise for the reader. :^)
-
-            lexer.consume_specific('[');
-            consume_whitespace();
-
-            auto parameter = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '='; });
-            consume_whitespace();
-            assert_specific('=');
-            consume_whitespace();
-
-            if (parameter == "magic") {
-                // "magic" overwrites the default magic with a hardcoded one.
-                auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != ']'; });
-                endpoints.last().magic = magic_string.to_uint().value();
-            } else {
-                warnln("parse_endpoint: unknown parameter '{}' passed", parameter);
-                VERIFY_NOT_REACHED();
-            }
-
-            assert_specific(']');
-            consume_whitespace();
-        }
         assert_specific('{');
         parse_messages();
         assert_specific('}');
