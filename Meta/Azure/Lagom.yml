@@ -105,7 +105,8 @@ jobs:
     - ${{ if eq(parameters.lagom_lints, true) }}:
       - script: |
           ./Meta/check-markdown.sh
-        displayName: 'Check Markdown'
+          git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/Tools/IPCMagicLinter/IPCMagicLinter
+        displayName: 'Run lints that require Lagom'
         workingDirectory: $(Build.SourcesDirectory)/
         env:
           MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/markdown-check
