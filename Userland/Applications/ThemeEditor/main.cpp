@@ -14,6 +14,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
@@ -44,6 +45,24 @@ public:
     }
 };
 
+class FlagRoleModel final : public GUI::ItemListModel<Gfx::FlagRole> {
+public:
+    explicit FlagRoleModel(Vector<Gfx::FlagRole> const& data)
+        : ItemListModel<Gfx::FlagRole>(data)
+    {
+    }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::Display)
+            return Gfx::to_string(m_data[(size_t)index.row()]);
+        if (role == GUI::ModelRole::Custom)
+            return m_data[(size_t)index.row()];
+
+        return ItemListModel::data(index, role);
+    }
+};
+
 class MetricRoleModel final : public GUI::ItemListModel<Gfx::MetricRole> {
 public:
     explicit MetricRoleModel(Vector<Gfx::MetricRole> const& data)
@@ -54,7 +73,7 @@ public:
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
         if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(static_cast<Gfx::MetricRole>(m_data[(size_t)index.row()]));
+            return Gfx::to_string(m_data[(size_t)index.row()]);
         if (role == GUI::ModelRole::Custom)
             return m_data[(size_t)index.row()];
 
@@ -72,7 +91,7 @@ public:
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
         if (role == GUI::ModelRole::Display)
-            return Gfx::to_string(static_cast<Gfx::PathRole>(m_data[(size_t)index.row()]));
+            return Gfx::to_string(m_data[(size_t)index.row()]);
         if (role == GUI::ModelRole::Custom)
             return m_data[(size_t)index.row()];
 
@@ -139,6 +158,11 @@ int main(int argc, char** argv)
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
+    Vector<Gfx::FlagRole> flag_roles;
+#define __ENUMERATE_FLAG_ROLE(role) flag_roles.append(Gfx::FlagRole::role);
+    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
+
     Vector<Gfx::MetricRole> metric_roles;
 #define __ENUMERATE_METRIC_ROLE(role) metric_roles.append(Gfx::MetricRole::role);
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
@@ -156,6 +180,8 @@ int main(int argc, char** argv)
                                ->add<ThemeEditor::PreviewWidget>(startup_preview_palette);
     auto& color_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
     auto& color_input = *main_widget.find_descendant_of_type_named<GUI::ColorInput>("color_input");
+    auto& flag_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("flag_combo_box");
+    auto& flag_input = *main_widget.find_descendant_of_type_named<GUI::CheckBox>("flag_input");
     auto& metric_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
     auto& metric_input = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("metric_input");
     auto& path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path_combo_box");
@@ -176,6 +202,21 @@ int main(int argc, char** argv)
         preview_widget.set_preview_palette(preview_palette);
     };
     color_input.set_color(startup_preview_palette.color(Gfx::ColorRole::Window));
+
+    flag_combo_box.set_model(adopt_ref(*new FlagRoleModel(flag_roles)));
+    flag_combo_box.on_change = [&](auto&, auto& index) {
+        auto role = index.model()->data(index, GUI::ModelRole::Custom).to_flag_role();
+        flag_input.set_checked(preview_widget.preview_palette().flag(role), GUI::AllowCallback::No);
+    };
+    flag_combo_box.set_selected_index((size_t)Gfx::FlagRole::IsDark - 1);
+
+    flag_input.on_checked = [&](bool checked) {
+        auto role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
+        auto preview_palette = preview_widget.preview_palette();
+        preview_palette.set_flag(role, checked);
+        preview_widget.set_preview_palette(preview_palette);
+    };
+    flag_input.set_checked(startup_preview_palette.flag(Gfx::FlagRole::IsDark), GUI::AllowCallback::No);
 
     metric_combo_box.set_model(adopt_ref(*new MetricRoleModel(metric_roles)));
     metric_combo_box.on_change = [&](auto&, auto& index) {
@@ -231,6 +272,9 @@ int main(int argc, char** argv)
         auto selected_color_role = color_combo_box.model()->index(color_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_color_role();
         color_input.set_color(preview_widget.preview_palette().color(selected_color_role));
 
+        auto selected_flag_role = flag_combo_box.model()->index(flag_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_flag_role();
+        flag_input.set_checked(preview_widget.preview_palette().flag(selected_flag_role), GUI::AllowCallback::No);
+
         auto selected_metric_role = metric_combo_box.model()->index(metric_combo_box.selected_index()).data(GUI::ModelRole::Custom).to_metric_role();
         metric_input.set_value(preview_widget.preview_palette().metric(selected_metric_role), GUI::AllowCallback::No);
 
@@ -248,6 +292,10 @@ int main(int argc, char** argv)
         auto theme = Core::ConfigFile::open(*result.chosen_file, *result.fd);
         for (auto role : color_roles) {
             theme->write_entry("Colors", to_string(role), preview_widget.preview_palette().color(role).to_string());
+        }
+
+        for (auto role : flag_roles) {
+            theme->write_bool_entry("Flags", to_string(role), preview_widget.preview_palette().flag(role));
         }
 
         for (auto role : metric_roles) {
@@ -289,7 +337,7 @@ int main(int argc, char** argv)
 
     update_window_title();
 
-    window->resize(480, 500);
+    window->resize(480, 520);
     window->set_resizable(false);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
