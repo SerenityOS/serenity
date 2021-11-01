@@ -111,10 +111,14 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t ind
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, const CircularQueue<char, 16384>& log)
 {
-    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, log);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!virtual_console_or_error.is_error());
-    return virtual_console_or_error.release_value();
+    auto virtual_console = VirtualConsole::create(index);
+    // HACK: We have to go through the TTY layer for correct newline handling.
+    // It would be nice to not have to make all these calls, but we can't get the underlying data pointer
+    // and head index. If we did that, we could reduce this to at most 2 calls.
+    for (auto ch : log) {
+        virtual_console->emit_char(ch);
+    }
+    return virtual_console;
 }
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()
@@ -176,20 +180,6 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     , m_console_impl(*this)
 {
     initialize();
-}
-
-UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, const CircularQueue<char, 16384>& log)
-    : TTY(4, index)
-    , m_index(index)
-    , m_console_impl(*this)
-{
-    initialize();
-    // HACK: We have to go through the TTY layer for correct newline handling.
-    // It would be nice to not have to make all these calls, but we can't get the underlying data pointer
-    // and head index. If we did that, we could reduce this to at most 2 calls.
-    for (auto ch : log) {
-        emit_char(ch);
-    }
 }
 
 UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()

@@ -87,7 +87,6 @@ public:
 
 private:
     explicit VirtualConsole(const unsigned index);
-    VirtualConsole(const unsigned index, const CircularQueue<char, 16384>&);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 
