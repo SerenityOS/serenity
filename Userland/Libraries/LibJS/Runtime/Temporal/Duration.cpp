@@ -294,16 +294,19 @@ BigInt* total_duration_nanoseconds(GlobalObject& global_object, double days, dou
 ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to)
 {
     auto& vm = global_object.vm();
+
     // 1. If relativeTo is not present, set relativeTo to undefined.
 
     Crypto::SignedBigInteger total_nanoseconds;
     // 2. If Type(relativeTo) is Object and relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (relative_to && is<ZonedDateTime>(*relative_to)) {
+        auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(*relative_to);
+
         // a. Let endNs be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-        TODO();
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto* end_ns = TRY(add_zoned_date_time(global_object, relative_to_zoned_date_time.nanoseconds(), &relative_to_zoned_date_time.time_zone(), relative_to_zoned_date_time.calendar(), 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds.big_integer().to_double()));
+
         // b. Set nanoseconds to endNs − relativeTo.[[Nanoseconds]].
+        total_nanoseconds = end_ns->big_integer().minus(relative_to_zoned_date_time.nanoseconds().big_integer());
     }
     // 3. Else,
     else {
@@ -314,13 +317,13 @@ ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object
     // 4. If largestUnit is one of "year", "month", "week", or "day", then
     if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let result be ? NanosecondsToDays(nanoseconds, relativeTo).
-        TODO();
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+        auto result = TRY(nanoseconds_to_days(global_object, *js_bigint(vm, total_nanoseconds), relative_to ?: js_undefined()));
 
         // b. Set days to result.[[Days]].
+        days = result.days;
 
         // c. Set nanoseconds to result.[[Nanoseconds]].
+        total_nanoseconds = result.nanoseconds.cell()->big_integer();
     }
     // 5. Else,
     else {
