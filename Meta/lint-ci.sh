@@ -40,6 +40,17 @@ for cmd in \
     fi
 done
 
+if [ -x ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter ]; then
+    if git ls-files '*.ipc' | xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; then
+        echo -e "[${GREEN}OK${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
+    else
+        echo -e "[${RED}FAIL${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
+        ((FAILURES+=1))
+    fi
+else
+    echo -e "[${GREEN}SKIP${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
+fi
+
 echo "Running Meta/lint-clang-format.sh"
 if Meta/lint-clang-format.sh --overwrite-inplace "$@" && git diff --exit-code; then
     echo -e "[${GREEN}OK${NC}]: Meta/lint-clang-format.sh"
