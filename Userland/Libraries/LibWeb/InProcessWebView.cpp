@@ -51,6 +51,13 @@ String InProcessWebView::selected_text() const
     return page().focused_context().selected_text();
 }
 
+void InProcessWebView::set_preferred_color_scheme(CSS::PreferredColorScheme color_scheme)
+{
+    m_preferred_color_scheme = color_scheme;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style();
+}
+
 void InProcessWebView::page_did_layout()
 {
     VERIFY(layout_root());

@@ -28,7 +28,7 @@ void ConsoleGlobalObject::initialize_global_object()
     Base::initialize_global_object();
 
     // $0 magic variable
-    define_old_native_accessor("$0", inspected_node_getter, nullptr, 0);
+    define_native_accessor("$0", inspected_node_getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)
@@ -98,14 +98,12 @@ JS::ThrowCompletionOr<JS::MarkedValueList> ConsoleGlobalObject::internal_own_pro
     return m_window_object->internal_own_property_keys();
 }
 
-JS_DEFINE_OLD_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
+JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
 {
-    auto* this_object = TRY_OR_DISCARD(vm.this_value(global_object).to_object(global_object));
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
-    if (!is<ConsoleGlobalObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
-        return {};
-    }
+    if (!is<ConsoleGlobalObject>(this_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
 
     auto console_global_object = static_cast<ConsoleGlobalObject*>(this_object);
     auto& window = console_global_object->m_window_object->impl();

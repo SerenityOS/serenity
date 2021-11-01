@@ -26,7 +26,7 @@ public:
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual String absolute_path(const OpenFileDescription&) const override { return tty_name(); }
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
     virtual String const& tty_name() const = 0;
 

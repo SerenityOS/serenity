@@ -351,7 +351,8 @@ private:
     virtual KResult try_generate(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        VirtualFileSystem::the().for_each_mount([&array](auto& mount) {
+        KResult result = KSuccess;
+        VirtualFileSystem::the().for_each_mount([&array, &result](auto& mount) {
             auto& fs = mount.guest_fs();
             auto fs_object = array.add_object();
             fs_object.add("class_name", fs.class_name());
@@ -364,13 +365,23 @@ private:
             fs_object.add("readonly", fs.is_readonly());
             fs_object.add("mount_flags", mount.flags());
 
-            if (fs.is_file_backed())
-                fs_object.add("source", static_cast<const FileBackedFileSystem&>(fs).file_description().absolute_path());
-            else
+            if (fs.is_file_backed()) {
+                auto pseudo_path_or_error = static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path();
+                if (pseudo_path_or_error.is_error()) {
+                    // We're probably out of memory and should not attempt to continue.
+                    result = pseudo_path_or_error.error();
+                    return IterationDecision::Break;
+                }
+                fs_object.add("source", pseudo_path_or_error.value()->characters());
+            } else {
                 fs_object.add("source", "none");
+            }
+
+            return IterationDecision::Continue;
         });
-        array.finish();
-        return KSuccess;
+        if (result == KSuccess)
+            array.finish();
+        return result;
     }
 };
 

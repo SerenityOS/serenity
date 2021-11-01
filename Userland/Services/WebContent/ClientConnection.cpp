@@ -351,4 +351,9 @@ void ClientConnection::set_content_filters(Vector<String> const& filters)
         Web::ContentFilter::the().add_pattern(filter);
 }
 
+void ClientConnection::set_preferred_color_scheme(Web::CSS::PreferredColorScheme const& color_scheme)
+{
+    m_page_host->set_preferred_color_scheme(color_scheme);
+}
+
 }

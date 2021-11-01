@@ -25,7 +25,7 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
 
 private:
-    JS_DECLARE_OLD_NATIVE_FUNCTION(exports_getter);
+    JS_DECLARE_NATIVE_FUNCTION(exports_getter);
     static JS::Handle<WebAssemblyInstancePrototype> s_instance;
 };
 

@@ -11,6 +11,7 @@
 #include "Guide.h"
 #include "Image.h"
 #include "Selection.h"
+#include <AK/Variant.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Point.h>
@@ -163,7 +164,7 @@ private:
 
     float m_pixel_grid_threshold { 15.0f };
 
-    Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
+    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_active_cursor { Gfx::StandardCursor::None };
 
     Selection m_selection;
 };

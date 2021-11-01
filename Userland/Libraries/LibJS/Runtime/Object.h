@@ -148,10 +148,6 @@ public:
     void define_direct_property(PropertyKey const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
-    // Legacy methods - Remove once JS_DECLARE_OLD_NATIVE_FUNCTION is removed
-    void define_old_native_function(PropertyKey const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
-    void define_old_native_accessor(PropertyKey const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
-
     void define_native_function(PropertyKey const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(PropertyKey const&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 

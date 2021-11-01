@@ -275,7 +275,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
 
-    auto elf_name = TRY(object_description.try_serialize_absolute_path());
+    auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
 
     Memory::MemoryManager::enter_address_space(*new_space);
@@ -438,7 +438,9 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
-    auto path = TRY(main_program_description->try_serialize_absolute_path());
+    // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
+    // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
+    auto path = TRY(main_program_description->original_absolute_path());
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
 
@@ -739,19 +741,19 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
 
         auto elf_header = (ElfW(Ehdr)*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
+            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
             return ENOEXEC;
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
-            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_description->absolute_path());
+            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
             return ENOEXEC;
         }
 
         if (!interpreter_interpreter_path.is_empty()) {
-            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
+            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_path, interpreter_interpreter_path);
             return ELOOP;
         }
 

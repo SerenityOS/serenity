@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FocusPolicy.h>
@@ -272,8 +273,8 @@ public:
 
     virtual Gfx::IntRect children_clip_rect() const;
 
-    Gfx::StandardCursor override_cursor() const { return m_override_cursor; }
-    void set_override_cursor(Gfx::StandardCursor);
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> override_cursor() const { return m_override_cursor; }
+    void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     bool load_from_gml(const StringView&);
     bool load_from_gml(const StringView&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
@@ -373,7 +374,7 @@ private:
     WeakPtr<Widget> m_focus_proxy;
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
-    Gfx::StandardCursor m_override_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_override_cursor { Gfx::StandardCursor::None };
 };
 
 inline Widget* Widget::parent_widget()

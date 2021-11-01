@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <math.h>
 
 TEST_CASE(is_integral_works_properly)
 {
@@ -240,6 +241,10 @@ TEST_CASE(floating_point_numbers)
     EXPECT_EQ(String::formatted("{:.3}", 1.12), "1.12");
     EXPECT_EQ(String::formatted("{:.1}", 1.12), "1.1");
     EXPECT_EQ(String::formatted("{}", -1.12), "-1.12");
+
+    EXPECT_EQ(String::formatted("{}", NAN), "nan");
+    EXPECT_EQ(String::formatted("{}", INFINITY), "inf");
+    EXPECT_EQ(String::formatted("{}", -INFINITY), "-inf");
 
     // FIXME: There is always the question what we mean with the width field. Do we mean significant digits?
     //        Do we mean the whole width? This is what was the simplest to implement:

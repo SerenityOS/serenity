@@ -17,10 +17,12 @@ public:
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return m_cursor; }
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;
     int m_threshold { 0 };
+    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::Crosshair };
 };
 
 }

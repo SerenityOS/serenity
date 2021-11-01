@@ -5,13 +5,16 @@ set(SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${SOURCES}
+        Arch/aarch64/Aarch64_asm_utils.S
+        Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/GPIO.cpp
+        Arch/aarch64/Framebuffer.cpp
         Arch/aarch64/Mailbox.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMIO.cpp
         Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
-        Arch/aarch64/Aarch64_asm_utils.S
+        Arch/aarch64/Utils.cpp
         Arch/aarch64/boot.S
         Arch/aarch64/init.cpp
     )
@@ -63,6 +66,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    embed_resource(Prekernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
+
     add_custom_command(
         TARGET Prekernel POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary Prekernel kernel8.img

@@ -93,7 +93,8 @@ public:
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
     virtual KResult stat(::stat&) const { return EBADF; }
 
-    virtual String absolute_path(const OpenFileDescription&) const = 0;
+    // Although this might be better described "name" or "description", these terms already have other meanings.
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const = 0;
 
     virtual KResult truncate(u64) { return EINVAL; }
     virtual KResult sync() { return EINVAL; }

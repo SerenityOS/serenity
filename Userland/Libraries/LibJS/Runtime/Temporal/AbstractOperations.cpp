@@ -952,7 +952,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 
     // 2. If isoString does not satisfy the syntax of a TemporalTimeZoneString (see 13.33), then
     // a. Throw a RangeError exception.
-    // 3. Let z, sign, hours, minutes, seconds, fraction and name be the parts of isoString produced respectively by the UTCDesignator, TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, TimeZoneUTCOffsetFraction, and TimeZoneIANAName productions, or undefined if not present.
+    // 3. Let z, sign, hours, minutes, seconds, fraction and name be the parts of isoString produced respectively by the UTCDesignator, TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, TimeZoneUTCOffsetFractionalPart, and TimeZoneIANAName productions, or undefined if not present.
     Optional<StringView> z_part;
     Optional<StringView> sign_part;
     Optional<StringView> hours_part;
@@ -1005,9 +1005,9 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         if (fraction_part.has_value()) {
             // i. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
             auto fraction = String::formatted("{}000000000", *fraction_part);
-            // ii. Let nanoseconds be the String value equal to the substring of fraction from 0 to 9.
+            // ii. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = MUST(Value(js_string(vm, fraction.substring(0, 9))).to_integer_or_infinity(global_object));
+            nanoseconds = MUST(Value(js_string(vm, fraction.substring(1, 10))).to_integer_or_infinity(global_object));
         }
         // h. Else,
         else {

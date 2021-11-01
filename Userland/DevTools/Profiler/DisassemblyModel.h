@@ -54,7 +54,6 @@ private:
 
     Profile& m_profile;
     ProfileNode& m_node;
-    RefPtr<MappedFile> m_kernel_file;
 
     Vector<InstructionData> m_instructions;
 };

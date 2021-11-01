@@ -36,7 +36,7 @@ public:
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
     virtual KResult stat(::stat& buffer) const override { return inode().metadata().stat(buffer); }
 
-    virtual String absolute_path(const OpenFileDescription&) const override;
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
     virtual KResult truncate(u64) override;
     virtual KResult sync() override;
