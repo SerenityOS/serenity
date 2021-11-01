@@ -132,7 +132,7 @@ void FileProvider::query(const String& query, Function<void(NonnullRefPtrVector<
     if (m_fuzzy_match_work)
         m_fuzzy_match_work->cancel();
 
-    m_fuzzy_match_work = Threading::BackgroundAction<NonnullRefPtrVector<Result>>::create(
+    m_fuzzy_match_work = Threading::BackgroundAction<NonnullRefPtrVector<Result>>::construct(
         [this, query](auto& task) {
             NonnullRefPtrVector<Result> results;
 
@@ -163,7 +163,7 @@ void FileProvider::build_filesystem_cache()
     m_building_cache = true;
     m_work_queue.enqueue("/");
 
-    Threading::BackgroundAction<int>::create(
+    Threading::BackgroundAction<int>::construct(
         [this](auto&) {
             String slash = "/";
             auto timer = Core::ElapsedTimer::start_new();
