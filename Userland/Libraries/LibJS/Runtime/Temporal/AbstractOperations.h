@@ -99,6 +99,7 @@ ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject&, Object const& 
 ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
 ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);
 String larger_of_two_temporal_units(StringView, StringView);
+ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object& options, String largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
