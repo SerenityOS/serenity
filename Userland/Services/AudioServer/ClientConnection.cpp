@@ -139,12 +139,12 @@ Messages::AudioServer::GetPlayingBufferResponse ClientConnection::get_playing_bu
     return id;
 }
 
-Messages::AudioServer::GetMutedResponse ClientConnection::get_muted()
+Messages::AudioServer::IsMainMixMutedResponse ClientConnection::is_main_mix_muted()
 {
     return m_mixer.is_muted();
 }
 
-void ClientConnection::set_muted(bool muted)
+void ClientConnection::set_main_mix_muted(bool muted)
 {
     m_mixer.set_muted(muted);
 }

@@ -46,8 +46,8 @@ private:
     virtual void set_paused(bool) override;
     virtual void clear_buffer(bool) override;
     virtual Messages::AudioServer::GetPlayingBufferResponse get_playing_buffer() override;
-    virtual Messages::AudioServer::GetMutedResponse get_muted() override;
-    virtual void set_muted(bool) override;
+    virtual Messages::AudioServer::IsMainMixMutedResponse is_main_mix_muted() override;
+    virtual void set_main_mix_muted(bool) override;
     virtual void set_sample_rate(u16 sample_rate) override;
     virtual Messages::AudioServer::GetSampleRateResponse get_sample_rate() override;
 
