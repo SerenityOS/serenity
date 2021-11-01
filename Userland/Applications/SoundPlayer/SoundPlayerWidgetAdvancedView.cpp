@@ -167,6 +167,10 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
     m_playback_progress_slider->set_enabled(state != PlayState::NoFileLoaded);
 }
 
+void SoundPlayerWidgetAdvancedView::mute_changed(bool)
+{
+}
+
 void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
 {
 }

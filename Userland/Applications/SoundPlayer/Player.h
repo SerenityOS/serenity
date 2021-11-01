@@ -49,10 +49,15 @@ public:
     double volume() const { return m_volume; }
     void set_volume(double value);
 
+    bool is_muted() const { return m_muted; }
+    void set_mute(bool);
+
     void play();
     void pause();
     void toggle_pause();
     void stop();
+    void mute();
+    void toggle_mute();
     void seek(int sample);
 
     virtual void play_state_changed(PlayState) = 0;
@@ -63,6 +68,7 @@ public:
     virtual void audio_load_error(StringView, StringView) = 0;
     virtual void shuffle_mode_changed(ShuffleMode) = 0;
     virtual void volume_changed(double) = 0;
+    virtual void mute_changed(bool) = 0;
     virtual void total_samples_changed(int) = 0;
     virtual void sound_buffer_played(RefPtr<Audio::Buffer>, [[maybe_unused]] int sample_rate, [[maybe_unused]] int samples_played) = 0;
 
@@ -73,6 +79,7 @@ protected:
         set_loop_mode(LoopMode::None);
         time_elapsed(0);
         set_volume(1.);
+        set_mute(false);
     }
 
 private:
@@ -86,4 +93,5 @@ private:
 
     StringView m_loaded_filename;
     double m_volume { 0 };
+    bool m_muted { false };
 };
