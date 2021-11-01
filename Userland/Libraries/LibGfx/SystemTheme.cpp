@@ -42,8 +42,7 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
     };
 
     auto get_flag = [&](auto& name) {
-        auto flag_string = file.read_entry("Flags", name);
-        return flag_string.equals_ignoring_case("true");
+        return file.read_bool_entry("Flags", name, false);
     };
 
     auto get_metric = [&](auto& name, auto role) {
