@@ -114,7 +114,8 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (text.is_empty()) {
-        outln();
+        if (!no_trailing_newline)
+            outln();
         return 0;
     }
 
