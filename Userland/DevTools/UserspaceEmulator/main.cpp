@@ -34,7 +34,7 @@ int main(int argc, char** argv, char** env)
     parser.add_option(g_report_to_debug, "Write reports to the debug log", "report-to-debug", 0);
     parser.add_option(pause_on_startup, "Pause on startup", "pause", 'p');
     parser.add_option(dump_profile, "Generate a ProfileViewer-compatible profile", "profile", 0);
-    parser.add_option(profile_instruction_interval, "Set the profile instruction capture interval, 128 by default", "profile-interval", 'i', "#instructions");
+    parser.add_option(profile_instruction_interval, "Set the profile instruction capture interval, 128 by default", "profile-interval", 'i', "num_instructions");
     parser.add_option(profile_dump_path, "File path for profile dump", "profile-file", 0, "path");
     parser.add_option(enable_roi_mode, "Enable Region-of-Interest mode for profiling", "roi", 0);
 
