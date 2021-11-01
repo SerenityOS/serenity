@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlo
     return adopt_ref(*new (nothrow) DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
 }
 
-UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(String name)
+UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(StringView name)
     : SysFSComponent(name)
 {
 }
@@ -42,7 +42,7 @@ KResultOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, Use
 }
 
 UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size)
-    : BIOSSysFSComponent("smbios_entry_point")
+    : BIOSSysFSComponent("smbios_entry_point"sv)
     , m_dmi_entry_point(dmi_entry_point)
     , m_dmi_entry_point_length(blob_size)
 {
@@ -60,7 +60,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::create(Ph
 }
 
 UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
-    : BIOSSysFSComponent("DMI")
+    : BIOSSysFSComponent("DMI"sv)
     , m_smbios_structure_table(smbios_structure_table)
     , m_smbios_structure_table_length(smbios_structure_table_length)
 {
