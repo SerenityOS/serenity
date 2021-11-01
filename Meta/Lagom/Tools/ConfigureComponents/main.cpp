@@ -45,18 +45,6 @@ enum class WhiptailMode {
     Checklist
 };
 
-static Optional<String> get_current_working_directory()
-{
-    char* cwd = getcwd(nullptr, 0);
-    if (!cwd) {
-        perror("getcwd");
-        return {};
-    }
-    String data { cwd };
-    free(cwd);
-    return data;
-}
-
 static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_file)
 {
     VERIFY(!config_file.read_entry("Global", "build_everything", {}).is_empty());
@@ -236,10 +224,10 @@ int main()
         return 1;
     }
 
-    auto current_working_directory = get_current_working_directory();
-    if (!current_working_directory.has_value())
+    auto current_working_directory = Core::File::current_working_directory();
+    if (current_working_directory.is_null())
         return 1;
-    auto lexical_cwd = LexicalPath(*current_working_directory);
+    auto lexical_cwd = LexicalPath(current_working_directory);
     auto& parts = lexical_cwd.parts_view();
     if (parts.size() < 2 || parts[parts.size() - 2] != "Build") {
         warnln("\e[31mError:\e[0m This program needs to be executed from inside 'Build/*'.");
