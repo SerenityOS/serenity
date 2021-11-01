@@ -159,6 +159,29 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Obj
     return static_cast<PlainDate*>(added_date_object);
 }
 
+// 12.1.8 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
+ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject& global_object, Object& calendar, PlainDate& one, PlainDate& two, Object& options, FunctionObject* date_until)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(calendar) is Object.
+
+    // 2. If dateUntil is not present, set dateUntil to ? GetMethod(calendar, "dateUntil").
+    if (!date_until)
+        date_until = TRY(Value(&calendar).get_method(global_object, vm.names.dateUntil));
+
+    // 3. Let duration be ? Call(dateUntil, calendar, « one, two, options »).
+    auto duration = TRY(call(global_object, date_until ?: js_undefined(), &calendar, &one, &two, &options));
+
+    // 4. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration_object = TRY(duration.to_object(global_object));
+    if (!is<Duration>(duration_object))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.Duration");
+
+    // 5. Return duration.
+    return static_cast<Duration*>(duration_object);
+}
+
 // 12.1.9 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
 ThrowCompletionOr<double> calendar_year(GlobalObject& global_object, Object& calendar, Object& date_like)
 {

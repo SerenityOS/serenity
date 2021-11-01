@@ -533,6 +533,35 @@ String larger_of_two_temporal_units(StringView unit1, StringView unit2)
     return "nanosecond"sv;
 }
 
+// 13.24 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
+ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object, Object& options, String largest_unit)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let merged be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* merged = Object::create(global_object, global_object.object_prototype());
+
+    // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
+    auto keys = TRY(options.enumerable_own_property_names(Object::PropertyKind::Key));
+
+    // 3. For each element nextKey of keys, do
+    for (auto& key : keys) {
+        auto next_key = PropertyKey::from_value(global_object, key);
+
+        // a. Let propValue be ? Get(options, nextKey).
+        auto prop_value = TRY(options.get(next_key));
+
+        // b. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+        MUST(merged->create_data_property_or_throw(next_key, prop_value));
+    }
+
+    // 4. Perform ! CreateDataPropertyOrThrow(merged, "largestUnit", largestUnit).
+    MUST(merged->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, move(largest_unit))));
+
+    // 5. Return merged.
+    return merged;
+}
+
 // 13.25 MaximumTemporalDurationRoundingIncrement ( unit ), https://tc39.es/proposal-temporal/#sec-temporal-maximumtemporaldurationroundingincrement
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
 {
