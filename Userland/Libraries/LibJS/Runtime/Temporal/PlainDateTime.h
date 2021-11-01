@@ -49,6 +49,19 @@ private:
     Object& m_calendar;          // [[Calendar]]
 };
 
+// Used by AddDateTime to temporarily hold values
+struct TemporalPlainDateTime {
+    i32 year;
+    u8 month;
+    u8 day;
+    u8 hour;
+    u8 minute;
+    u8 second;
+    u16 millisecond;
+    u16 microsecond;
+    u16 nanosecond;
+};
+
 BigInt* get_epoch_from_iso_parts(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 bool iso_date_time_within_limits(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
@@ -57,5 +70,6 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
 ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<String> temporal_date_time_to_string(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Value calendar, Variant<StringView, u8> const& precision, StringView show_calendar);
 i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2);
+ThrowCompletionOr<TemporalPlainDateTime> add_date_time(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options);
 
 }

@@ -196,6 +196,10 @@
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(TemporalAmbiguousMonthOfPlainMonthDay, "Accessing month of PlainMonthDay is ambiguous, use monthCode instead")                    \
+    M(TemporalDisambiguatePossibleInstantsEarlierZero, "Cannot disambiguate zero possible instants with mode \"earlier\"")              \
+    M(TemporalDisambiguatePossibleInstantsRejectMoreThanOne, "Cannot disambiguate two or more possible instants with mode \"reject\"")  \
+    M(TemporalDisambiguatePossibleInstantsRejectZero, "Cannot disambiguate zero possible instants with mode \"reject\"")                \
+    M(TemporalDisambiguatePossibleInstantsZero, "Cannot disambiguate zero possible instants")                                           \
     M(TemporalDuplicateCalendarField, "Duplicate calendar field '{}'")                                                                  \
     M(TemporalInvalidCalendar, "Invalid calendar")                                                                                      \
     M(TemporalInvalidCalendarFieldName, "Invalid calendar field '{}'")                                                                  \
