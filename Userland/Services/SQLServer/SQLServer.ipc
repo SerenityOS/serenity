@@ -1,4 +1,4 @@
-endpoint SQLServer [magic=5432]
+endpoint SQLServer
 {
     connect(String name) => (int connection_id)
     sql_statement(int connection_id, String statement) => (int statement_id)
