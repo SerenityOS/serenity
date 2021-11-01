@@ -147,6 +147,22 @@ enum class FlagRole {
         __Count,
 };
 
+inline const char* to_string(FlagRole role)
+{
+    switch (role) {
+    case FlagRole::NoRole:
+        return "NoRole";
+#undef __ENUMERATE_FLAG_ROLE
+#define __ENUMERATE_FLAG_ROLE(role) \
+    case FlagRole::role:            \
+        return #role;
+        ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#undef __ENUMERATE_FLAG_ROLE
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 enum class MetricRole {
     NoRole,
 

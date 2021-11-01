@@ -48,6 +48,8 @@ const char* to_string(Variant::Type type)
         return "TextAlignment";
     case Variant::Type::ColorRole:
         return "ColorRole";
+    case Variant::Type::FlagRole:
+        return "FlagRole";
     case Variant::Type::MetricRole:
         return "MetricRole";
     case Variant::Type::PathRole:
@@ -95,6 +97,12 @@ Variant::Variant(Gfx::ColorRole value)
     : m_type(Type::ColorRole)
 {
     m_value.as_color_role = value;
+}
+
+Variant::Variant(Gfx::FlagRole value)
+    : m_type(Type::FlagRole)
+{
+    m_value.as_flag_role = value;
 }
 
 Variant::Variant(Gfx::MetricRole value)
@@ -347,6 +355,9 @@ void Variant::copy_from(const Variant& other)
     case Type::ColorRole:
         m_value.as_color_role = other.m_value.as_color_role;
         break;
+    case Type::FlagRole:
+        m_value.as_flag_role = other.m_value.as_flag_role;
+        break;
     case Type::MetricRole:
         m_value.as_metric_role = other.m_value.as_metric_role;
         break;
@@ -395,6 +406,8 @@ bool Variant::operator==(const Variant& other) const
         return m_value.as_text_alignment == other.m_value.as_text_alignment;
     case Type::ColorRole:
         return m_value.as_color_role == other.m_value.as_color_role;
+    case Type::FlagRole:
+        return m_value.as_flag_role == other.m_value.as_flag_role;
     case Type::MetricRole:
         return m_value.as_metric_role == other.m_value.as_metric_role;
     case Type::PathRole:
@@ -438,6 +451,7 @@ bool Variant::operator<(const Variant& other) const
     case Type::Font:
     case Type::TextAlignment:
     case Type::ColorRole:
+    case Type::FlagRole:
     case Type::MetricRole:
     case Type::PathRole:
         // FIXME: Figure out how to compare these.
@@ -498,6 +512,8 @@ String Variant::to_string() const
     }
     case Type::ColorRole:
         return String::formatted("Gfx::ColorRole::{}", Gfx::to_string(m_value.as_color_role));
+    case Type::FlagRole:
+        return String::formatted("Gfx::FlagRole::{}", Gfx::to_string(m_value.as_flag_role));
     case Type::MetricRole:
         return String::formatted("Gfx::MetricRole::{}", Gfx::to_string(m_value.as_metric_role));
     case Type::PathRole:
