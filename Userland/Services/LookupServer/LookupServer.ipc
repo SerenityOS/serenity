@@ -1,4 +1,5 @@
-endpoint LookupServer [magic=9001]
+// Keep the name synchronized with LibC/netdb.cpp, constant 'lookup_server_endpoint_magic'.
+endpoint LookupServer
 {
     lookup_name(String name) => (int code, Vector<String> addresses)
     lookup_address(String address) => (int code, String name)
