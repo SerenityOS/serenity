@@ -1,0 +1,24 @@
+--- zstd-1.5.0/lib/Makefile.orig	2021-05-14 16:59:34.000000000 +0200
++++ zstd-1.5.0/lib/Makefile	2021-11-01 16:24:07.000000000 +0100
+@@ -206,17 +206,10 @@
+ 
+ # macOS linker doesn't support -soname, and use different extension
+ # see : https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
+-ifeq ($(UNAME), Darwin)
+-  SHARED_EXT = dylib
+-  SHARED_EXT_MAJOR = $(LIBVER_MAJOR).$(SHARED_EXT)
+-  SHARED_EXT_VER = $(LIBVER).$(SHARED_EXT)
+-  SONAME_FLAGS = -install_name $(LIBDIR)/libzstd.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
+-else
+-  SONAME_FLAGS = -Wl,-soname=libzstd.$(SHARED_EXT).$(LIBVER_MAJOR)
+-  SHARED_EXT = so
+-  SHARED_EXT_MAJOR = $(SHARED_EXT).$(LIBVER_MAJOR)
+-  SHARED_EXT_VER = $(SHARED_EXT).$(LIBVER)
+-endif
++SONAME_FLAGS = -Wl,-soname=libzstd.$(SHARED_EXT).$(LIBVER_MAJOR)
++SHARED_EXT = so
++SHARED_EXT_MAJOR = $(SHARED_EXT).$(LIBVER_MAJOR)
++SHARED_EXT_VER = $(SHARED_EXT).$(LIBVER)
+ 
+ SET_CACHE_DIRECTORY = \
+    +$(MAKE) --no-print-directory $@ \
