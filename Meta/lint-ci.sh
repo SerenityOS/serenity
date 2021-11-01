@@ -26,7 +26,6 @@ for cmd in \
         Meta/check-newlines-at-eof.py \
         Meta/check-style.py \
         Meta/lint-executable-resources.sh \
-        Meta/lint-ipc-ids.sh \
         Meta/lint-keymaps.py \
         Meta/lint-shell-scripts.sh \
         Meta/lint-prettier.sh \
