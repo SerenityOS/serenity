@@ -286,8 +286,8 @@ TEST_CASE(serialize_boolean_value)
 TEST_CASE(tuple_value)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -303,8 +303,8 @@ TEST_CASE(tuple_value)
 TEST_CASE(copy_tuple_value)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -321,7 +321,7 @@ TEST_CASE(copy_tuple_value)
 TEST_CASE(tuple_value_wrong_type)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -333,7 +333,7 @@ TEST_CASE(tuple_value_wrong_type)
 TEST_CASE(tuple_value_too_many_values)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -346,8 +346,8 @@ TEST_CASE(tuple_value_too_many_values)
 TEST_CASE(tuple_value_not_enough_values)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Ascending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -365,8 +365,8 @@ TEST_CASE(tuple_value_not_enough_values)
 TEST_CASE(serialize_tuple_value)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
 
     auto v = SQL::Value::create_tuple(descriptor);
     Vector<SQL::Value> values;
@@ -477,8 +477,8 @@ TEST_CASE(order_int_values)
 TEST_CASE(tuple)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -490,8 +490,8 @@ TEST_CASE(tuple)
 TEST_CASE(serialize_tuple)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -512,8 +512,8 @@ TEST_CASE(serialize_tuple)
 TEST_CASE(copy_tuple)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -530,8 +530,8 @@ TEST_CASE(copy_tuple)
 TEST_CASE(compare_tuples)
 {
     NonnullRefPtr<SQL::TupleDescriptor> descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    descriptor->append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
-    descriptor->append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
+    descriptor->append({ "schema", "table", "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor->append({ "schema", "table", "col2", SQL::SQLType::Integer, SQL::Order::Descending });
 
     SQL::Tuple tuple1(descriptor);
     tuple1["col1"] = "Test";

@@ -1014,7 +1014,7 @@ void TupleImpl::infer_descriptor()
 void TupleImpl::extend_descriptor(Value const& value)
 {
     VERIFY(m_descriptor_inferred);
-    m_descriptor->empend("", value.type(), Order::Ascending);
+    m_descriptor->empend("", "", "", value.type(), Order::Ascending);
 }
 
 bool TupleImpl::validate_before_assignment(Vector<Value> const& values)

@@ -124,8 +124,8 @@ void insert_into_and_scan_hash_index(int);
 NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Serializer& serializer)
 {
     NonnullRefPtr<SQL::TupleDescriptor> tuple_descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    tuple_descriptor->append({ "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
-    tuple_descriptor->append({ "text_value", SQL::SQLType::Text, SQL::Order::Ascending });
+    tuple_descriptor->append({ "schema", "table", "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
+    tuple_descriptor->append({ "schema", "table", "text_value", SQL::SQLType::Text, SQL::Order::Ascending });
 
     auto directory_pointer = serializer.heap().user_value(0);
     if (!directory_pointer) {

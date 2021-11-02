@@ -13,6 +13,8 @@
 namespace SQL {
 
 struct TupleElementDescriptor {
+    String schema { "" };
+    String table { "" };
     String name { "" };
     SQLType type { SQLType::Text };
     Order order { Order::Ascending };
