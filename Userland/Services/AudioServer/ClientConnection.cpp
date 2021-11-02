@@ -43,9 +43,9 @@ void ClientConnection::did_finish_playing_buffer(Badge<ClientAudioStream>, int b
     async_finished_playing_buffer(buffer_id);
 }
 
-void ClientConnection::did_change_muted_state(Badge<Mixer>, bool muted)
+void ClientConnection::did_change_main_mix_muted_state(Badge<Mixer>, bool muted)
 {
-    async_muted_state_changed(muted);
+    async_main_mix_muted_state_changed(muted);
 }
 
 void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, double volume)
@@ -139,12 +139,12 @@ Messages::AudioServer::GetPlayingBufferResponse ClientConnection::get_playing_bu
     return id;
 }
 
-Messages::AudioServer::GetMutedResponse ClientConnection::get_muted()
+Messages::AudioServer::IsMainMixMutedResponse ClientConnection::is_main_mix_muted()
 {
     return m_mixer.is_muted();
 }
 
-void ClientConnection::set_muted(bool muted)
+void ClientConnection::set_main_mix_muted(bool muted)
 {
     m_mixer.set_muted(muted);
 }
