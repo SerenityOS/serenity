@@ -695,7 +695,7 @@ struct ForInOfHeadState {
             if (lhs_kind == LexicalBinding)
                 lhs_reference->initialize_referenced_binding(global_object, next_value);
             else
-                lhs_reference->put_value(global_object, next_value);
+                TRY(lhs_reference->put_value(global_object, next_value));
             if (auto* exception = interpreter.exception())
                 return throw_completion(exception->value());
             return {};
@@ -749,9 +749,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
                     return throw_completion(exception->value());
 
                 auto result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(global_object, *variable.init(), binding_id));
-                reference.put_value(global_object, result);
-                if (auto* exception = interpreter.exception())
-                    return throw_completion(exception->value());
+                TRY(reference.put_value(global_object, result));
             }
         } else {
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
@@ -1367,10 +1365,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
         MUST(interpreter.lexical_environment()->initialize_binding(global_object, name, class_constructor));
     } else {
         auto reference = interpreter.vm().resolve_binding(name);
-
-        reference.put_value(global_object, class_constructor);
-        if (interpreter.exception())
-            return {};
+        TRY_OR_DISCARD(reference.put_value(global_object, class_constructor));
     }
 
     return {};
@@ -2148,9 +2143,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
                 if (interpreter.exception())
                     return {};
 
-                reference.put_value(global_object, rhs_result);
-                if (interpreter.exception())
-                    return {};
+                TRY_OR_DISCARD(reference.put_value(global_object, rhs_result));
 
                 return rhs_result;
             },
@@ -2203,9 +2196,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
                 return {};
         }
 
-        reference.put_value(global_object, rhs_result);
-        if (interpreter.exception())
-            return {};
+        TRY_OR_DISCARD(reference.put_value(global_object, rhs_result));
 
         return rhs_result;
     }
@@ -2259,13 +2250,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         VERIFY_NOT_REACHED();
     }
 
-    if (interpreter.exception())
-        return {};
-
-    reference.put_value(global_object, rhs_result);
-
-    if (interpreter.exception())
-        return {};
+    TRY_OR_DISCARD(reference.put_value(global_object, rhs_result));
 
     return rhs_result;
 }
@@ -2299,9 +2284,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         VERIFY_NOT_REACHED();
     }
 
-    reference.put_value(global_object, new_value);
-    if (interpreter.exception())
-        return {};
+    TRY_OR_DISCARD(reference.put_value(global_object, new_value));
     return m_prefixed ? new_value : old_value;
 }
 
@@ -2396,35 +2379,31 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
 
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
-            declarator.target().visit(
-                [&](NonnullRefPtr<Identifier> const& id) {
+            TRY_OR_DISCARD(declarator.target().visit(
+                [&](NonnullRefPtr<Identifier> const& id) -> ThrowCompletionOr<void> {
                     auto reference = id->to_reference(interpreter, global_object);
-                    if (interpreter.exception())
-                        return;
-                    auto initializer_result_or_error = interpreter.vm().named_evaluation_if_anonymous_function(global_object, *init, id->string());
-                    if (initializer_result_or_error.is_error())
-                        return;
-                    auto initializer_result = initializer_result_or_error.release_value();
+                    if (auto* exception = interpreter.exception())
+                        return throw_completion(exception->value());
+                    auto initializer_result = TRY_OR_DISCARD(interpreter.vm().named_evaluation_if_anonymous_function(global_object, *init, id->string()));
                     VERIFY(!initializer_result.is_empty());
 
                     if (m_declaration_kind == DeclarationKind::Var)
-                        reference.put_value(global_object, initializer_result);
+                        TRY(reference.put_value(global_object, initializer_result));
                     else
                         reference.initialize_referenced_binding(global_object, initializer_result);
+                    if (auto* exception = interpreter.exception())
+                        return throw_completion(exception->value());
+                    return {};
                 },
-                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<void> {
                     auto initializer_result = init->execute(interpreter, global_object);
-                    if (interpreter.exception())
-                        return;
+                    if (auto* exception = interpreter.exception())
+                        return throw_completion(exception->value());
 
                     Environment* environment = m_declaration_kind == DeclarationKind::Var ? nullptr : interpreter.lexical_environment();
 
-                    // FIXME: I want to use TRY_OR_DISCARD here but can't return...
-                    auto result = interpreter.vm().binding_initialization(pattern, initializer_result, environment, global_object);
-                    (void)result;
-                });
-            if (interpreter.exception())
-                return {};
+                    return interpreter.vm().binding_initialization(pattern, initializer_result, environment, global_object);
+                }));
         } else if (m_declaration_kind != DeclarationKind::Var) {
             VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
             auto& identifier = declarator.target().get<NonnullRefPtr<Identifier>>();

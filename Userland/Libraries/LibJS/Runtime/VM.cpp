@@ -182,10 +182,7 @@ ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Valu
         return {};
     }
     auto reference = resolve_binding(target);
-    reference.put_value(global_object, value);
-    if (auto* thrown_exception = exception())
-        return JS::throw_completion(thrown_exception->value());
-    return {};
+    return reference.put_value(global_object, value);
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
@@ -242,7 +239,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
             TRY(rest_object->copy_data_properties(object, seen_names, global_object));
             if (!environment)
-                assignment_target.put_value(global_object, rest_object);
+                TRY(assignment_target.put_value(global_object, rest_object));
             else
                 assignment_target.initialize_referenced_binding(global_object, rest_object);
 
@@ -284,7 +281,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             }
 
             if (!environment)
-                reference.put_value(global_object, value_to_assign);
+                TRY(reference.put_value(global_object, value_to_assign));
             else
                 reference.initialize_referenced_binding(global_object, value_to_assign);
             continue;
@@ -321,7 +318,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         } else {
             VERIFY(reference_to_assign_to.has_value());
             if (!environment)
-                reference_to_assign_to->put_value(global_object, value_to_assign);
+                TRY(reference_to_assign_to->put_value(global_object, value_to_assign));
             else
                 reference_to_assign_to->initialize_referenced_binding(global_object, value_to_assign);
 
@@ -419,7 +416,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         } else if (!entry.alias.has<Empty>()) {
             VERIFY(assignment_target.has_value());
             if (!environment)
-                assignment_target->put_value(global_object, value);
+                TRY(assignment_target->put_value(global_object, value));
             else
                 assignment_target->initialize_referenced_binding(global_object, value);
 

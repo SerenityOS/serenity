@@ -129,7 +129,7 @@ public:
         (void)m_base_environment->initialize_binding(global_object, m_name.as_string(), value);
     }
 
-    void put_value(GlobalObject&, Value);
+    ThrowCompletionOr<void> put_value(GlobalObject&, Value);
     ThrowCompletionOr<Value> get_value(GlobalObject&) const;
     ThrowCompletionOr<bool> delete_(GlobalObject&);
 
