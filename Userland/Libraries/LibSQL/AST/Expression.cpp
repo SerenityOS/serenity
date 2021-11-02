@@ -170,11 +170,21 @@ Value ColumnNameExpression::evaluate(ExecutionContext& context) const
 {
     auto& descriptor = *context.current_row->descriptor();
     VERIFY(context.current_row->size() == descriptor.size());
+    Optional<size_t> index_in_row;
     for (auto ix = 0u; ix < context.current_row->size(); ix++) {
         auto& column_descriptor = descriptor[ix];
-        if (column_descriptor.name == column_name())
-            return { (*context.current_row)[ix] };
+        if (!table_name().is_empty() && column_descriptor.table != table_name())
+            continue;
+        if (column_descriptor.name == column_name()) {
+            if (index_in_row.has_value()) {
+                context.result->set_error(SQLErrorCode::AmbiguousColumnName, column_name());
+                return Value::null();
+            }
+            index_in_row = ix;
+        }
     }
+    if (index_in_row.has_value())
+        return (*context.current_row)[index_in_row.value()];
     context.result->set_error(SQLErrorCode::ColumnDoesNotExist, column_name());
     return Value::null();
 }
