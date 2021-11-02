@@ -32,6 +32,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(with);
     JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
