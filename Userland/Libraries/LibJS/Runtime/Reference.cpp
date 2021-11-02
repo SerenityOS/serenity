@@ -97,7 +97,7 @@ Value Reference::get_value(GlobalObject& global_object) const
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
-bool Reference::delete_(GlobalObject& global_object)
+ThrowCompletionOr<bool> Reference::delete_(GlobalObject& global_object)
 {
     // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
     // UnaryExpression : delete UnaryExpression
@@ -123,22 +123,18 @@ bool Reference::delete_(GlobalObject& global_object)
         VERIFY(!is_private_reference());
 
         // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
-        if (is_super_reference()) {
-            vm.throw_exception<ReferenceError>(global_object, ErrorType::UnsupportedDeleteSuperProperty);
-            return {};
-        }
+        if (is_super_reference())
+            return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnsupportedDeleteSuperProperty);
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
         auto* base_obj = MUST(m_base_value.to_object(global_object));
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-        bool delete_status = TRY_OR_DISCARD(base_obj->internal_delete(m_name));
+        bool delete_status = TRY(base_obj->internal_delete(m_name));
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
-        if (!delete_status && m_strict) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
-            return {};
-        }
+        if (!delete_status && m_strict)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
 
         // f. Return deleteStatus.
         return delete_status;
@@ -151,7 +147,7 @@ bool Reference::delete_(GlobalObject& global_object)
     VERIFY(m_base_type == BaseType::Environment);
 
     //    c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
-    return TRY_OR_DISCARD(m_base_environment->delete_binding(global_object, m_name.as_string()));
+    return m_base_environment->delete_binding(global_object, m_name.as_string());
 }
 
 String Reference::to_string() const

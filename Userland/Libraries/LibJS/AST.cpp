@@ -1120,7 +1120,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto reference = m_lhs->to_reference(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        return Value(reference.delete_(global_object));
+        return Value(TRY_OR_DISCARD(reference.delete_(global_object)));
     }
 
     Value lhs_result;

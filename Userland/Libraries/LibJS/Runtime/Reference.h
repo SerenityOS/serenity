@@ -131,7 +131,7 @@ public:
 
     void put_value(GlobalObject&, Value);
     Value get_value(GlobalObject&) const;
-    bool delete_(GlobalObject&);
+    ThrowCompletionOr<bool> delete_(GlobalObject&);
 
     String to_string() const;
 
