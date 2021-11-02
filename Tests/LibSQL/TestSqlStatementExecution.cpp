@@ -25,8 +25,7 @@ RefPtr<SQL::SQLResult> execute(NonnullRefPtr<SQL::Database> database, String con
     EXPECT(!parser.has_errors());
     if (parser.has_errors())
         outln("{}", parser.errors()[0].to_string());
-    SQL::AST::ExecutionContext context { database };
-    auto result = statement->execute(context);
+    auto result = statement->execute(move(database));
     if (result->error().code != SQL::SQLErrorCode::NoError)
         outln("{}", result->error().to_string());
     return result;

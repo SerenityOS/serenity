@@ -298,6 +298,7 @@ private:
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
     RefPtr<SQLResult> result { nullptr };
+    class Statement const* statement;
     Tuple* current_row { nullptr };
 };
 
@@ -722,6 +723,7 @@ private:
 
 class Statement : public ASTNode {
 public:
+    RefPtr<SQLResult> execute(AK::NonnullRefPtr<Database> database) const;
     virtual RefPtr<SQLResult> execute(ExecutionContext&) const { return nullptr; }
 };
 

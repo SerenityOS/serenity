@@ -67,8 +67,7 @@ void SQLStatement::execute()
             return;
         }
         VERIFY(!connection()->database().is_null());
-        SQL::AST::ExecutionContext context { connection()->database().release_nonnull() };
-        m_result = m_statement->execute(context);
+        m_result = m_statement->execute(connection()->database().release_nonnull());
         if (m_result->error().code != SQL::SQLErrorCode::NoError) {
             report_error(m_result->error());
             return;
