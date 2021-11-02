@@ -274,7 +274,8 @@ void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
     if (vm.exception())
         return;
 
-    reference.put_value(interpreter.global_object(), interpreter.accumulator());
+    // TODO: ThrowCompletionOr<void> return
+    (void)reference.put_value(interpreter.global_object(), interpreter.accumulator());
 }
 
 void GetById::execute_impl(Bytecode::Interpreter& interpreter) const

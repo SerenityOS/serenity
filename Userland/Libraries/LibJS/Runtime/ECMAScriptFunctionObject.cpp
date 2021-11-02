@@ -398,22 +398,22 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
         auto& parameter = m_formal_parameters[i];
-        parameter.binding.visit(
-            [&](auto const& param) {
+        TRY(parameter.binding.visit(
+            [&](auto const& param) -> ThrowCompletionOr<void> {
                 Value argument_value;
                 if (parameter.is_rest) {
                     auto* array = MUST(Array::create(global_object(), 0));
                     for (size_t rest_index = i; rest_index < execution_context_arguments.size(); ++rest_index)
                         array->indexed_properties().append(execution_context_arguments[rest_index]);
-                    argument_value = move(array);
+                    argument_value = array;
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
                     // FIXME: Support default arguments in the bytecode world!
                     if (interpreter)
                         argument_value = parameter.default_value->execute(*interpreter, global_object());
-                    if (vm.exception())
-                        return;
+                    if (auto* exception = vm.exception())
+                        return throw_completion(exception->value());
                 } else {
                     argument_value = js_undefined();
                 }
@@ -422,26 +422,21 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 if constexpr (IsSame<FlyString const&, decltype(param)>) {
                     Reference reference = vm.resolve_binding(param, used_environment);
-                    if (vm.exception())
-                        return;
+                    if (auto* exception = vm.exception())
+                        return throw_completion(exception->value());
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
-                        reference.put_value(global_object(), argument_value);
+                        TRY(reference.put_value(global_object(), argument_value));
                     else
                         reference.initialize_referenced_binding(global_object(), argument_value);
+                    if (auto* exception = vm.exception())
+                        return throw_completion(exception->value());
+                    return {};
                 } else if (IsSame<NonnullRefPtr<BindingPattern> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
-                    auto result = vm.binding_initialization(param, argument_value, used_environment, global_object());
-                    if (result.is_error())
-                        return;
+                    return vm.binding_initialization(param, argument_value, used_environment, global_object());
                 }
-
-                if (vm.exception())
-                    return;
-            });
-
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
+            }));
     }
 
     Environment* var_environment;
