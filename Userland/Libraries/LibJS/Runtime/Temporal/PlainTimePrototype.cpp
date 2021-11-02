@@ -46,6 +46,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.with, with, 1, attr);
+    define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
     define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
@@ -264,6 +265,63 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto result = TRY(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
     // 25. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+}
+
+// 4.3.15 Temporal.PlainTime.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::round)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = TRY(typed_this_object(global_object));
+
+    // 3. If options is undefined, then
+    if (vm.argument(0).is_undefined()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+    }
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », undefined).
+    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, {}));
+
+    // 6. If smallestUnit is undefined, throw a RangeError exception.
+    if (!smallest_unit_value.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
+
+    // NOTE: At this point smallest_unit_value can only be a string
+    auto& smallest_unit = *smallest_unit_value;
+
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
+
+    double maximum;
+
+    // 8. If smallestUnit is "hour", then
+    if (smallest_unit == "hour"sv) {
+        // a. Let maximum be 24.
+        maximum = 24;
+    }
+    // 9. Else if smallestUnit is "minute" or "second", then
+    else if (smallest_unit == "minute"sv || smallest_unit == "second"sv) {
+        // a. Let maximum be 60.
+        maximum = 60;
+    }
+    // 10. Else,
+    else {
+        // a. Let maximum be 1000.
+        maximum = 1000;
+    }
+
+    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum, false));
+
+    // 12. Let result be ! RoundTime(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    auto result = round_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), rounding_increment, smallest_unit, rounding_mode);
+
+    // 13. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
