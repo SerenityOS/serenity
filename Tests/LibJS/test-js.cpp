@@ -65,9 +65,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
 
     auto reference = vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment);
 
-    auto value = reference.get_value(global_object);
-    if (auto* exception = vm.exception())
-        return JS::throw_completion(exception->value());
+    auto value = TRY(reference.get_value(global_object));
 
     if (!value.is_object())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));

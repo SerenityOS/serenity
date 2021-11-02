@@ -261,7 +261,10 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
     if (interpreter.vm().exception())
         return;
 
-    interpreter.accumulator() = reference.get_value(interpreter.global_object());
+    auto value_or_error = reference.get_value(interpreter.global_object());
+    if (value_or_error.is_error())
+        return;
+    interpreter.accumulator() = value_or_error.release_value();
 }
 
 void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const

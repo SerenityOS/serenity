@@ -1331,9 +1331,7 @@ int main(int argc, char** argv)
                 auto maybe_variable = vm->resolve_binding(variable_name, &global_environment);
                 if (vm->exception())
                     break;
-                maybe_value = maybe_variable.get_value(interpreter->global_object());
-                if (vm->exception())
-                    break;
+                maybe_value = TRY_OR_DISCARD(maybe_variable.get_value(interpreter->global_object()));
                 VERIFY(!maybe_value->is_empty());
 
                 auto variable = *maybe_value;

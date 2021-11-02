@@ -130,7 +130,7 @@ public:
     }
 
     void put_value(GlobalObject&, Value);
-    Value get_value(GlobalObject&) const;
+    ThrowCompletionOr<Value> get_value(GlobalObject&) const;
     ThrowCompletionOr<bool> delete_(GlobalObject&);
 
     String to_string() const;
@@ -140,7 +140,7 @@ public:
     Optional<EnvironmentCoordinate> environment_coordinate() const { return m_environment_coordinate; }
 
 private:
-    void throw_reference_error(GlobalObject&) const;
+    Completion throw_reference_error(GlobalObject&) const;
 
     BaseType m_base_type { BaseType::Unresolvable };
     union {
