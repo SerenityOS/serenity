@@ -714,6 +714,9 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
 
         auto text_node = static_cast<DOM::Text const*>(this);
         object.add("text", text_node->data());
+    } else if (is_comment()) {
+        object.add("type"sv, "comment"sv);
+        object.add("data"sv, static_cast<DOM::Comment const&>(*this).data());
     }
 
     if (has_child_nodes()) {
