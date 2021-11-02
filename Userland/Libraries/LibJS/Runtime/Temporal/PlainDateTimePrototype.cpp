@@ -9,10 +9,13 @@
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -61,6 +64,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
     define_native_function(vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
     define_native_function(vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
@@ -470,6 +474,29 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
 {
     // 1. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainDateTime", "a primitive value");
+}
+
+// 5.3.36 Temporal.PlainDateTime.prototype.toZonedDateTime ( temporalTimeZoneLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_zoned_date_time)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = TRY(typed_this_object(global_object));
+
+    // 3. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
+    auto* time_zone = TRY(to_temporal_time_zone(global_object, vm.argument(0)));
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 5. Let disambiguation be ? ToTemporalDisambiguation(options).
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+
+    // 6. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
+    auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));
+
+    // 7. Return ! CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, dateTime.[[Calendar]]).
+    return MUST(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, date_time->calendar()));
 }
 
 // 5.3.37 Temporal.PlainDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate
