@@ -426,12 +426,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                         return throw_completion(exception->value());
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
-                        TRY(reference.put_value(global_object(), argument_value));
+                        return reference.put_value(global_object(), argument_value);
                     else
-                        reference.initialize_referenced_binding(global_object(), argument_value);
-                    if (auto* exception = vm.exception())
-                        return throw_completion(exception->value());
-                    return {};
+                        return reference.initialize_referenced_binding(global_object(), argument_value);
                 } else if (IsSame<NonnullRefPtr<BindingPattern> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
                     return vm.binding_initialization(param, argument_value, used_environment, global_object());

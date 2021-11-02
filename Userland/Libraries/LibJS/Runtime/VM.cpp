@@ -239,11 +239,9 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
             TRY(rest_object->copy_data_properties(object, seen_names, global_object));
             if (!environment)
-                TRY(assignment_target.put_value(global_object, rest_object));
+                return assignment_target.put_value(global_object, rest_object);
             else
-                assignment_target.initialize_referenced_binding(global_object, rest_object);
-
-            break;
+                return assignment_target.initialize_referenced_binding(global_object, rest_object);
         }
 
         PropertyKey name;
@@ -283,7 +281,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (!environment)
                 TRY(reference.put_value(global_object, value_to_assign));
             else
-                reference.initialize_referenced_binding(global_object, value_to_assign);
+                TRY(reference.initialize_referenced_binding(global_object, value_to_assign));
             continue;
         }
 
@@ -320,10 +318,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (!environment)
                 TRY(reference_to_assign_to->put_value(global_object, value_to_assign));
             else
-                reference_to_assign_to->initialize_referenced_binding(global_object, value_to_assign);
-
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+                TRY(reference_to_assign_to->initialize_referenced_binding(global_object, value_to_assign));
         }
     }
 
@@ -418,10 +413,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             if (!environment)
                 TRY(assignment_target->put_value(global_object, value));
             else
-                assignment_target->initialize_referenced_binding(global_object, value);
-
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+                TRY(assignment_target->initialize_referenced_binding(global_object, value));
         }
     }
 

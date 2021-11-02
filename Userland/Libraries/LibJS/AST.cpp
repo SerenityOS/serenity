@@ -693,12 +693,9 @@ struct ForInOfHeadState {
         if (!destructuring) {
             VERIFY(lhs_reference.has_value());
             if (lhs_kind == LexicalBinding)
-                lhs_reference->initialize_referenced_binding(global_object, next_value);
+                return lhs_reference->initialize_referenced_binding(global_object, next_value);
             else
-                TRY(lhs_reference->put_value(global_object, next_value));
-            if (auto* exception = interpreter.exception())
-                return throw_completion(exception->value());
-            return {};
+                return lhs_reference->put_value(global_object, next_value);
         }
 
         // j. Else,
@@ -2388,12 +2385,9 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
                     VERIFY(!initializer_result.is_empty());
 
                     if (m_declaration_kind == DeclarationKind::Var)
-                        TRY(reference.put_value(global_object, initializer_result));
+                        return reference.put_value(global_object, initializer_result);
                     else
-                        reference.initialize_referenced_binding(global_object, initializer_result);
-                    if (auto* exception = interpreter.exception())
-                        return throw_completion(exception->value());
-                    return {};
+                        return reference.initialize_referenced_binding(global_object, initializer_result);
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<void> {
                     auto initializer_result = init->execute(interpreter, global_object);
@@ -2408,9 +2402,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
             auto& identifier = declarator.target().get<NonnullRefPtr<Identifier>>();
             auto reference = identifier->to_reference(interpreter, global_object);
-            reference.initialize_referenced_binding(global_object, js_undefined());
-            if (interpreter.exception())
-                return {};
+            TRY_OR_DISCARD(reference.initialize_referenced_binding(global_object, js_undefined()));
         }
     }
     return {};
