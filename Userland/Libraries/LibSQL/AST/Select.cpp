@@ -13,13 +13,14 @@ namespace SQL::AST {
 
 RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
 {
-    if (table_or_subquery_list().size() == 1 && table_or_subquery_list()[0].is_table()) {
-        auto table = context.database->get_table(table_or_subquery_list()[0].schema_name(), table_or_subquery_list()[0].table_name());
+    NonnullRefPtrVector<ResultColumn> columns;
+    for (auto& table_descriptor : table_or_subquery_list()) {
+        if (!table_descriptor.is_table())
+            TODO();
+        auto table = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
         if (!table) {
-            return SQLResult::construct(SQL::SQLCommand::Select, SQL::SQLErrorCode::TableDoesNotExist, table_or_subquery_list()[0].table_name());
+            return SQLResult::construct(SQL::SQLCommand::Select, SQL::SQLErrorCode::TableDoesNotExist, table_descriptor.table_name());
         }
-
-        NonnullRefPtrVector<ResultColumn> columns;
         if (result_column_list().size() == 1 && result_column_list()[0].type() == ResultType::All) {
             for (auto& col : table->columns()) {
                 columns.append(
@@ -27,35 +28,64 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
                         create_ast_node<ColumnNameExpression>(table->parent()->name(), table->name(), col.name()),
                         ""));
             }
-        } else {
-            for (auto& col : result_column_list()) {
-                columns.append(col);
-            }
         }
-        context.result = SQLResult::construct();
-        AK::NonnullRefPtr<TupleDescriptor> descriptor = AK::adopt_ref(*new TupleDescriptor);
-        Tuple tuple(descriptor);
-        for (auto& row : context.database->select_all(*table)) {
-            context.current_row = &row;
-            if (where_clause()) {
-                auto where_result = where_clause()->evaluate(context);
-                if (context.result->has_error())
-                    return context.result;
-                if (!where_result)
-                    continue;
-            }
-            tuple.clear();
-            for (auto& col : columns) {
-                auto value = col.expression()->evaluate(context);
-                if (context.result->has_error())
-                    return context.result;
-                tuple.append(value);
-            }
-            context.result->append(tuple);
-        }
-        return context.result;
     }
-    return SQLResult::construct();
+
+    VERIFY(!result_column_list().is_empty());
+    if (result_column_list().size() != 1 || result_column_list()[0].type() != ResultType::All) {
+        for (auto& col : result_column_list()) {
+            if (col.type() == ResultType::All)
+                // FIXME can have '*' for example in conjunction with computed columns
+                return SQLResult::construct(SQL::SQLCommand::Select, SQL::SQLErrorCode::SyntaxError, "*");
+            columns.append(col);
+        }
+    }
+
+    context.result = SQLResult::construct();
+    AK::NonnullRefPtr<TupleDescriptor> descriptor = AK::adopt_ref(*new TupleDescriptor);
+    Tuple tuple(descriptor);
+    Vector<Tuple> rows;
+    descriptor->empend("__unity__");
+    tuple.append(Value(SQLType::Boolean, true));
+    rows.append(tuple);
+
+    for (auto& table_descriptor : table_or_subquery_list()) {
+        if (!table_descriptor.is_table())
+            TODO();
+        auto table = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
+        if (table->num_columns() == 0)
+            continue;
+        auto old_descriptor_size = descriptor->size();
+        descriptor->extend(table->to_tuple_descriptor());
+        for (auto cartesian_row = rows.first(); cartesian_row.size() == old_descriptor_size; cartesian_row = rows.first()) {
+            rows.remove(0);
+            for (auto& table_row : context.database->select_all(*table)) {
+                auto new_row = cartesian_row;
+                new_row.extend(table_row);
+                rows.append(new_row);
+            }
+        }
+    }
+
+    for (auto& row : rows) {
+        context.current_row = &row;
+        if (where_clause()) {
+            auto where_result = where_clause()->evaluate(context);
+            if (context.result->has_error())
+                return context.result;
+            if (!where_result)
+                continue;
+        }
+        tuple.clear();
+        for (auto& col : columns) {
+            auto value = col.expression()->evaluate(context);
+            if (context.result->has_error())
+                return context.result;
+            tuple.append(value);
+        }
+        context.result->append(tuple);
+    }
+    return context.result;
 }
 
 }

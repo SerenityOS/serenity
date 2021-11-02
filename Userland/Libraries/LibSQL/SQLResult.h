@@ -51,6 +51,7 @@ constexpr char const* command_tag(SQLCommand command)
     S(SchemaExists, "Schema '{}' already exist")                                         \
     S(TableDoesNotExist, "Table '{}' does not exist")                                    \
     S(ColumnDoesNotExist, "Column '{}' does not exist")                                  \
+    S(AmbiguousColumnName, "Column name '{}' is ambiguous")                              \
     S(TableExists, "Table '{}' already exist")                                           \
     S(InvalidType, "Invalid type '{}'")                                                  \
     S(InvalidDatabaseName, "Invalid database name '{}'")                                 \

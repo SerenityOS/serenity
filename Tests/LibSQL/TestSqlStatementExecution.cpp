@@ -46,6 +46,17 @@ void create_table(NonnullRefPtr<SQL::Database> database)
     EXPECT(result->inserted() == 1);
 }
 
+void create_two_tables(NonnullRefPtr<SQL::Database> database)
+{
+    create_schema(database);
+    auto result = execute(database, "CREATE TABLE TestSchema.TestTable1 ( TextColumn1 text, IntColumn integer );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 1);
+    result = execute(database, "CREATE TABLE TestSchema.TestTable2 ( TextColumn2 text, IntColumn integer );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 1);
+}
+
 TEST_CASE(create_schema)
 {
     ScopeGuard guard([]() { unlink(db_name); });
@@ -132,15 +143,15 @@ TEST_CASE(select_from_table)
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
     create_table(database);
-    auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_1', 42 ), ( 'Test_2', 43 );");
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 2);
-    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_3', 44 ), ( 'Test_4', 45 );");
-    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 2);
-    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_5', 46 );");
-    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 1);
+    EXPECT(result->inserted() == 5);
     result = execute(database, "SELECT * FROM TestSchema.TestTable;");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->has_results());
@@ -152,15 +163,15 @@ TEST_CASE(select_with_column_names)
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
     create_table(database);
-    auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_1', 42 ), ( 'Test_2', 43 );");
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 2);
-    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_3', 44 ), ( 'Test_4', 45 );");
-    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 2);
-    result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test_5', 46 );");
-    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
-    EXPECT(result->inserted() == 1);
+    EXPECT(result->inserted() == 5);
     result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable;");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->has_results());
@@ -207,6 +218,79 @@ TEST_CASE(select_with_where)
     for (auto& row : result->results()) {
         EXPECT(row[1].to_int().value() > 44);
     }
+}
+
+TEST_CASE(select_cross_join)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_two_tables(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable1 ( TextColumn1, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database,
+        "INSERT INTO TestSchema.TestTable2 ( TextColumn2, IntColumn ) VALUES "
+        "( 'Test_10', 40 ), "
+        "( 'Test_11', 41 ), "
+        "( 'Test_12', 42 ), "
+        "( 'Test_13', 47 ), "
+        "( 'Test_14', 48 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database, "SELECT * FROM TestSchema.TestTable1, TestSchema.TestTable2;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 25u);
+    for (auto& row : result->results()) {
+        EXPECT(row.size() == 4);
+        EXPECT(row[1].to_int().value() >= 42);
+        EXPECT(row[1].to_int().value() <= 46);
+        EXPECT(row[3].to_int().value() >= 40);
+        EXPECT(row[3].to_int().value() <= 48);
+    }
+}
+
+TEST_CASE(select_inner_join)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    create_two_tables(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable1 ( TextColumn1, IntColumn ) VALUES "
+        "( 'Test_1', 42 ), "
+        "( 'Test_2', 43 ), "
+        "( 'Test_3', 44 ), "
+        "( 'Test_4', 45 ), "
+        "( 'Test_5', 46 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database,
+        "INSERT INTO TestSchema.TestTable2 ( TextColumn2, IntColumn ) VALUES "
+        "( 'Test_10', 40 ), "
+        "( 'Test_11', 41 ), "
+        "( 'Test_12', 42 ), "
+        "( 'Test_13', 47 ), "
+        "( 'Test_14', 48 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 5);
+    result = execute(database,
+        "SELECT TestTable1.IntColumn, TextColumn1, TextColumn2 "
+        "FROM TestSchema.TestTable1, TestSchema.TestTable2 "
+        "WHERE TestTable1.IntColumn = TestTable2.IntColumn;");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 1u);
+    auto& row = result->results()[0];
+    EXPECT_EQ(row.size(), 3u);
+    EXPECT_EQ(row[0].to_int().value(), 42);
+    EXPECT_EQ(row[1].to_string(), "Test_1");
+    EXPECT_EQ(row[2].to_string(), "Test_12");
 }
 
 }
