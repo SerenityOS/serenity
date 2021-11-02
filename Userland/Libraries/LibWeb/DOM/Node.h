@@ -202,6 +202,8 @@ public:
 
     NonnullRefPtr<Node> get_root_node(GetRootNodeOptions const& options = {});
 
+    bool is_uninteresting_whitespace_node() const;
+
 protected:
     Node(Document&, NodeType);
 

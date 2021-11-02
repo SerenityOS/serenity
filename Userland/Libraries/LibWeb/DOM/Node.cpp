@@ -676,6 +676,23 @@ RefPtr<Document> Node::owner_document() const
     return m_document;
 }
 
+// This function tells us whether a node is interesting enough to show up
+// in the DOM inspector. This hides two things:
+// - Non-rendered whitespace
+// - Rendered whitespace between block-level elements
+bool Node::is_uninteresting_whitespace_node() const
+{
+    if (!is<Text>(*this))
+        return false;
+    if (!static_cast<Text const&>(*this).data().is_whitespace())
+        return false;
+    if (!layout_node())
+        return true;
+    if (layout_node()->parent()->is_anonymous())
+        return true;
+    return false;
+}
+
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
     object.add("name", node_name().view());
@@ -702,6 +719,8 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     if (has_child_nodes()) {
         auto children = object.add_array("children");
         for_each_child([&children](DOM::Node& child) {
+            if (child.is_uninteresting_whitespace_node())
+                return;
             JsonObjectSerializer<StringBuilder> child_object = children.add_object();
             child.serialize_tree_as_json(child_object);
         });
