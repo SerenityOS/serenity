@@ -6,6 +6,7 @@ set(SOURCES
     AST/Lexer.cpp
     AST/Parser.cpp
     AST/Select.cpp
+    AST/Statement.cpp
     AST/SyntaxHighlighter.cpp
     AST/Token.cpp
     BTree.cpp
