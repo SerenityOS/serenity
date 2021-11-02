@@ -97,6 +97,8 @@ void Mixer::mix()
                 Audio::Frame sample;
                 if (!queue->get_next_sample(sample))
                     break;
+                if (queue->is_muted())
+                    continue;
                 sample.log_multiply(SAMPLE_HEADROOM);
                 sample.log_multiply(queue->volume());
                 mixed_sample += sample;
