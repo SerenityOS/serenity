@@ -73,7 +73,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, String::formatted("Variable with name {}", variable_name.string()));
 
     vm.heap().uproot_cell(&value.as_object());
-    reference.delete_(global_object);
+    TRY(reference.delete_(global_object));
 
     return JS::js_undefined();
 }
