@@ -15,7 +15,7 @@ public:
     Function<void(int)> on_knob_released;
     void set_value(int value)
     {
-        if (!knob_dragging())
+        if (!knob_dragging() && !mouse_is_down())
             GUI::Slider::set_value(value);
     }
 
