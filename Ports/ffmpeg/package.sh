@@ -2,7 +2,7 @@
 port=ffmpeg
 version=4.4
 useconfigure=true
-depends=("libiconv" "libtiff" "xz" "bzip")
+depends=("libiconv" "libtiff" "xz" "bzip2")
 files="https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz ffmpeg-${version}.tar.gz a4abede145de22eaf233baa1726e38e137f5698d9edd61b5763cd02b883f3c7c"
 auth_type="sha256"
 installopts=("INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local")

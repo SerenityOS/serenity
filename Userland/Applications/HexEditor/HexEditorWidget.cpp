@@ -174,12 +174,12 @@ HexEditorWidget::HexEditorWidget()
 
                 auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
 
-                if (result == -1) {
+                if (!result.has_value()) {
                     GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
                     return;
                 }
 
-                m_last_found_index = result;
+                m_last_found_index = result.value();
             }
 
             m_editor->update();
@@ -268,12 +268,12 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         }
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
-        if (!result) {
+        if (!result.has_value()) {
             GUI::MessageBox::show(&window, String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
-        m_last_found_index = result;
+        m_last_found_index = result.value();
     }));
 
     edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {

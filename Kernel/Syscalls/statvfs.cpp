@@ -38,19 +38,19 @@ KResultOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
 
     while (current_custody) {
         VirtualFileSystem::the().for_each_mount([&kernelbuf, &current_custody](auto& mount) {
-            if (current_custody) {
-                if (&current_custody->inode() == &mount.guest()) {
-                    int mountflags = mount.flags();
-                    int flags = 0;
-                    if (mountflags & MS_RDONLY)
-                        flags = flags | ST_RDONLY;
-                    if (mountflags & MS_NOSUID)
-                        flags = flags | ST_NOSUID;
+            if (&current_custody->inode() == &mount.guest()) {
+                int mountflags = mount.flags();
+                int flags = 0;
+                if (mountflags & MS_RDONLY)
+                    flags = flags | ST_RDONLY;
+                if (mountflags & MS_NOSUID)
+                    flags = flags | ST_NOSUID;
 
-                    kernelbuf.f_flag = flags;
-                    current_custody = nullptr;
-                }
+                kernelbuf.f_flag = flags;
+                current_custody = nullptr;
+                return IterationDecision::Break;
             }
+            return IterationDecision::Continue;
         });
 
         if (current_custody) {
@@ -77,7 +77,9 @@ KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
     REQUIRE_PROMISE(stdio);
 
     auto description = TRY(fds().open_file_description(fd));
-    return do_statvfs(description->absolute_path(), buf);
+    auto absolute_path = TRY(description->original_absolute_path());
+    // FIXME: TOCTOU bug! The file connected to the fd may or may not have been moved, and the name possibly taken by a different file.
+    return do_statvfs(absolute_path->view(), buf);
 }
 
 }

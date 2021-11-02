@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Widget.h>
 #include <LibJS/Interpreter.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -296,6 +298,30 @@ void BrowserWindow::build_menus()
     if (!search_engine_set && !g_search_engine.is_empty()) {
         custom_search_engine_action->set_checked(true);
         custom_search_engine_action->set_status_tip(g_search_engine);
+    }
+
+    auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
+    color_scheme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"));
+    {
+        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser", "Preferences", "ColorScheme", "auto"));
+        m_color_scheme_actions.set_exclusive(true);
+
+        auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
+            auto action = GUI::Action::create_checkable(
+                name, [=, this](auto&) {
+                    Config::write_string("Browser", "Preferences", "ColorScheme", Web::CSS::preferred_color_scheme_to_string(preference_value));
+                    active_tab().m_web_content_view->set_preferred_color_scheme(preference_value);
+                },
+                this);
+            if (current_setting == preference_value)
+                action->set_checked(true);
+            color_scheme_menu.add_action(action);
+            m_color_scheme_actions.add_action(action);
+        };
+
+        add_color_scheme_action("Follow system theme", Web::CSS::PreferredColorScheme::Auto);
+        add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
+        add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
     }
 
     auto& debug_menu = add_menu("&Debug");

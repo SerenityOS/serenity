@@ -1045,29 +1045,6 @@ void Object::set_prototype(Object* new_prototype)
         m_shape = shape.create_prototype_transition(new_prototype);
 }
 
-void Object::define_old_native_accessor(PropertyKey const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
-{
-    Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> completion_getter = {};
-    if (getter) {
-        completion_getter = [getter = move(getter)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-            auto result = getter(vm, global_object);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
-            return result;
-        };
-    }
-    Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> completion_setter = {};
-    if (setter) {
-        completion_setter = [setter = move(setter)](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-            auto result = setter(vm, global_object);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
-            return result;
-        };
-    }
-    define_native_accessor(property_name, move(completion_getter), move(completion_setter), attribute);
-}
-
 void Object::define_native_accessor(PropertyKey const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> getter, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
@@ -1132,17 +1109,6 @@ Value Object::get_without_side_effects(const PropertyKey& property_name) const
         object = object->prototype();
     }
     return {};
-}
-
-void Object::define_old_native_function(PropertyKey const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
-{
-    auto completion_native_function = [native_function = move(native_function), property_name](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
-        auto result = native_function(vm, global_object);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        return result;
-    };
-    define_native_function(property_name, move(completion_native_function), length, attribute);
 }
 
 void Object::define_native_function(PropertyKey const& property_name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)

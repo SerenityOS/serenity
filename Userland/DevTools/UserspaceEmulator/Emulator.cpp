@@ -446,12 +446,12 @@ String Emulator::create_backtrace_line(FlatPtr address)
 {
     auto maybe_symbol = symbol_at(address);
     if (!maybe_symbol.has_value()) {
-        return String::formatted("=={{{}}}==    {:p}", getpid(), address);
+        return String::formatted("=={}==    {:p}", getpid(), address);
     } else if (!maybe_symbol->source_position.has_value()) {
-        return String::formatted("=={{{}}}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
+        return String::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
     } else {
         auto const& source_position = maybe_symbol->source_position.value();
-        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
+        return String::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
     }
 }
 

@@ -70,7 +70,8 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
             return ENODEV;
         }
 
-        dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
+        auto source_pseudo_path = TRY(description->pseudo_path());
+        dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
 
         fs = TRY(Ext2FS::try_create(*description));
     } else if (fs_type == "9p"sv || fs_type == "Plan9FS"sv) {
@@ -96,7 +97,8 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
             dbgln("mount: this is not a seekable file");
             return ENODEV;
         }
-        dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
+        auto source_pseudo_path = TRY(description->pseudo_path());
+        dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
         fs = TRY(ISO9660FS::try_create(*description));
     } else {
         return ENODEV;

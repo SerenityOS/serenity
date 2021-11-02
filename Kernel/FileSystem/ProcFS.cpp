@@ -244,7 +244,7 @@ ProcFSProcessAssociatedInode::ProcFSProcessAssociatedInode(const ProcFS& fs, Pro
 
 KResultOr<size_t> ProcFSProcessAssociatedInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
-    VERIFY_NOT_REACHED();
+    return ENOTSUP;
 }
 
 KResultOr<NonnullRefPtr<ProcFSProcessDirectoryInode>> ProcFSProcessDirectoryInode::try_create(const ProcFS& procfs, ProcessID pid)

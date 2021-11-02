@@ -1,0 +1,79 @@
+diff -ur a/configure b/configure
+--- a/configure	2021-08-01 01:29:22.000000000 +0200
++++ b/configure	2021-10-31 20:28:51.932716113 +0100
+@@ -6046,7 +6046,7 @@
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+     sdl2_minor_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl2_micro_version=`$SDL2_CONFIG $sdl2_config_args --version | \
++    sdl2_micro_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdl2test" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6200,9 +6200,9 @@
+ 	else
+ 		hold_CPPFLAGS="${CPPFLAGS}"
+ 		hold_LIBS="${LIBS}"
+-		SDL2_CFLAGS=`sdl2-config --cflags`
++		SDL2_CFLAGS=`${SDL2_CONFIG} ${sdl2_args} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL2_CFLAGS}"
+-		SDL2_LIBS=`sdl2-config --libs`
++		SDL2_LIBS=`${SDL2_CONFIG} ${sdl2_args} --libs`
+ 		LIBS="${LIBS} ${SDL2_LIBS}"
+ 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL2_image" >&5
+ $as_echo_n "checking for IMG_LoadPNG_RW in -lSDL2_image... " >&6; }
+@@ -6389,14 +6389,14 @@
+   if test "$SDL_CONFIG" = "no" ; then
+     no_sdl=yes
+   else
+-    SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
+-    SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
++    SDL_CFLAGS=`$SDL_CONFIG ${sdl_args} --cflags`
++    SDL_LIBS=`$SDL_CONFIG ${sdl_args} --libs`
+ 
+-    sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
++    sdl_major_version=`$SDL_CONFIG ${sdl_args} --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+-    sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
++    sdl_minor_version=`$SDL_CONFIG ${sdl_args} --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl_micro_version=`$SDL_CONFIG $sdl_config_args --version | \
++    sdl_micro_version=`$SDL_CONFIG ${sdl_args} --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdltest" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6550,9 +6550,9 @@
+ 	   else
+ 			hold_CPPFLAGS="${CPPFLAGS}"
+ 			hold_LIBS="${LIBS}"
+-			SDL_CFLAGS=`sdl-config --cflags`
++			SDL_CFLAGS=`${SDL_CONFIG} ${sdl_args} --cflags`
+ 			CPPFLAGS="${CPPFLAGS} ${SDL_CFLAGS}"
+-			SDL_LIBS=`sdl-config --libs`
++			SDL_LIBS=`${SDL_CONFIG} ${sdl_args} --libs`
+ 			LIBS="${LIBS} ${SDL_LIBS}"
+ 			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5
+ $as_echo_n "checking for IMG_LoadPNG_RW in -lSDL_image... " >&6; }
+@@ -6674,8 +6674,8 @@
+ 	hold_CPPFLAGS="${CPPFLAGS}"
+ 	hold_LIBS="${LIBS}"
+ 	if test "$with_sdl2" != "yes"; then
+-		SDL2_CFLAGS=`sdl2-config --cflags`
+-		SDL2_LIBS=`sdl2-config --libs`
++		SDL2_CFLAGS=`${SDL2_CONFIG} ${sdl2_args} --cflags`
++		SDL2_LIBS=`${SDL2_CONFIG} ${sdl2_args} --libs`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL2_CFLAGS}"
+ 		LIBS="${LIBS} ${SDL2_LIBS}"
+ 	fi
+@@ -6741,9 +6741,9 @@
+ 	hold_CPPFLAGS="${CPPFLAGS}"
+ 	hold_LIBS="${LIBS}"
+ 	if test "$with_sdl" != "yes"; then
+-		SDL_CFLAGS=`sdl-config --cflags`
++		SDL_CFLAGS=`${SDL_CONFIG} ${sdl_args} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL_CFLAGS}"
+-		SDL_LIBS=`sdl-config --libs`
++		SDL_LIBS=`${SDL_CONFIG} ${sdl_args} --libs`
+ 		LIBS="${LIBS} ${SDL_LIBS}"
+ 	fi
+ 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Mix_OpenAudio in -lSDL_mixer" >&5

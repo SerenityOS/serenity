@@ -140,18 +140,9 @@ Device::~Device()
     VERIFY(m_state == State::BeingRemoved);
 }
 
-String Device::absolute_path() const
+KResultOr<NonnullOwnPtr<KString>> Device::pseudo_path(const OpenFileDescription&) const
 {
-    // FIXME: I assume we can't really provide a well known path in the kernel
-    // because this is a violation of abstraction layers between userland and the
-    // kernel, but maybe the whole name of "absolute_path" is just wrong as this
-    // is really not an "absolute_path".
-    return String::formatted("device:{},{}", major(), minor());
-}
-
-String Device::absolute_path(const OpenFileDescription&) const
-{
-    return absolute_path();
+    return KString::try_create(String::formatted("device:{},{}", major(), minor()));
 }
 
 void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)

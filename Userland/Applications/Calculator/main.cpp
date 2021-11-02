@@ -62,9 +62,17 @@ int main(int argc, char** argv)
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
                 auto data = atof(StringView(clipboard.data).to_string().characters());
-                widget.set_entry(data);
+                widget.set_entry(KeypadValue { data });
             }
         }
+    }));
+
+    auto& constants_menu = window->add_menu("&Constants");
+    constants_menu.add_action(GUI::Action::create("&Pi", [&](auto&) {
+        widget.set_entry(KeypadValue { 31415926535, 10 });
+    }));
+    constants_menu.add_action(GUI::Action::create("&Euler's Constant", [&](auto&) {
+        widget.set_entry(KeypadValue { 27182818284, 10 });
     }));
 
     auto& help_menu = window->add_menu("&Help");

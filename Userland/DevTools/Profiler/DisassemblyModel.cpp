@@ -34,24 +34,38 @@ static Color color_for_percent(int percent)
     return heat_gradient().get_pixel(percent, 0);
 }
 
+static Optional<MappedObject> s_kernel_binary;
+
+static ELF::Image* try_load_kernel_binary()
+{
+    if (s_kernel_binary.has_value())
+        return &s_kernel_binary->elf;
+    auto kernel_binary_or_error = MappedFile::map("/boot/Kernel");
+    if (!kernel_binary_or_error.is_error()) {
+        auto kernel_binary = kernel_binary_or_error.release_value();
+        s_kernel_binary = { { kernel_binary, ELF::Image(kernel_binary->bytes()) } };
+        return &s_kernel_binary->elf;
+    }
+    return nullptr;
+}
+
 DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
     , m_node(node)
 {
-    OwnPtr<ELF::Image> kernel_elf;
-    const ELF::Image* elf;
     FlatPtr base_address = 0;
-    auto maybe_kernel_base = Symbolication::kernel_base();
-    if (maybe_kernel_base.has_value() && m_node.address() >= maybe_kernel_base.value()) {
-        if (!m_kernel_file) {
-            auto file_or_error = MappedFile::map("/boot/Kernel.debug");
-            if (file_or_error.is_error())
-                return;
-            m_kernel_file = file_or_error.release_value();
-        }
-        kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
-        elf = kernel_elf.ptr();
-        base_address = maybe_kernel_base.value();
+    const Debug::DebugInfo* debug_info;
+    const ELF::Image* elf;
+    if (auto maybe_kernel_base = Symbolication::kernel_base(); maybe_kernel_base.has_value() && m_node.address() >= *maybe_kernel_base) {
+        if (!g_kernel_debuginfo_object.has_value())
+            return;
+        base_address = maybe_kernel_base.release_value();
+        elf = try_load_kernel_binary();
+        if (elf == nullptr)
+            return;
+        if (g_kernel_debug_info == nullptr)
+            g_kernel_debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, String::empty(), base_address);
+        debug_info = g_kernel_debug_info.ptr();
     } else {
         auto& process = node.process();
         auto library_data = process.library_metadata.library_containing(node.address());
@@ -59,16 +73,17 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             dbgln("no library data for address {:p}", node.address());
             return;
         }
-        elf = &library_data->object->elf;
         base_address = library_data->base;
+        elf = &library_data->object->elf;
+        debug_info = &library_data->load_debug_info(base_address);
     }
 
     VERIFY(elf != nullptr);
+    VERIFY(debug_info != nullptr);
 
     FlatPtr function_address = node.address() - base_address;
     auto is_function_address = false;
-    Debug::DebugInfo debug_info { *elf, {}, base_address };
-    auto function = debug_info.get_containing_function(function_address);
+    auto function = debug_info->get_containing_function(function_address);
     if (function.has_value()) {
         if (function_address == function->address_low)
             is_function_address = true;
@@ -114,7 +129,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         u32 samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
         float percent = ((float)samples_at_this_instruction / (float)m_node.event_count()) * 100.0f;
 
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, debug_info.get_source_position_with_inlines(address_in_profiled_program - base_address) });
+        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, debug_info->get_source_position_with_inlines(address_in_profiled_program - base_address) });
 
         offset_into_symbol += insn.value().length();
     }

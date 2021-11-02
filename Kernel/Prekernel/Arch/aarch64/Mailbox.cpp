@@ -33,6 +33,30 @@ constexpr u32 MBOX_EMPTY = 0x4000'0000;
 
 constexpr int ARM_TO_VIDEOCORE_CHANNEL = 8;
 
+Mailbox::Message::Message(u32 tag, u32 arguments_size)
+{
+    m_tag = tag;
+    m_arguments_size = arguments_size;
+    m_command_tag = MBOX_REQUEST;
+}
+
+Mailbox::MessageHeader::MessageHeader()
+{
+    m_message_queue_size = 0;
+    m_command_tag = MBOX_REQUEST;
+}
+
+bool Mailbox::MessageHeader::success() const
+{
+    return m_command_tag == MBOX_RESPONSE_SUCCESS;
+}
+
+Mailbox& Mailbox::the()
+{
+    static Mailbox instance;
+    return instance;
+}
+
 static void wait_until_we_can_write(MMIO& mmio)
 {
     // Since nothing else writes to the mailbox, this wait is mostly cargo-culted.
@@ -47,8 +71,14 @@ static void wait_for_reply(MMIO& mmio)
         ;
 }
 
-bool Mailbox::call(u8 channel, u32 volatile* __attribute__((aligned(16))) message)
+bool Mailbox::send_queue(void* queue, u32 queue_size) const
 {
+    // According to Raspberry Pi specs this is the only channel implemented.
+    const u32 channel = ARM_TO_VIDEOCORE_CHANNEL;
+
+    auto message_header = reinterpret_cast<MessageHeader*>(queue);
+    message_header->set_queue_size(queue_size);
+
     auto& mmio = MMIO::the();
 
     // The mailbox interface has a FIFO for message deliverly in both directions.
@@ -59,7 +89,7 @@ bool Mailbox::call(u8 channel, u32 volatile* __attribute__((aligned(16))) messag
     wait_until_we_can_write(mmio);
 
     // The mailbox message is 32-bit based, so this assumes that message is in the first 4 GiB.
-    u32 request = static_cast<u32>(reinterpret_cast<FlatPtr>(message) & ~0xF) | (channel & 0xF);
+    u32 request = static_cast<u32>(reinterpret_cast<FlatPtr>(queue) & ~0xF) | (channel & 0xF);
     mmio.write(MBOX_WRITE_DATA, request);
 
     for (;;) {
@@ -68,52 +98,10 @@ bool Mailbox::call(u8 channel, u32 volatile* __attribute__((aligned(16))) messag
         u32 response = mmio.read(MBOX_READ_DATA);
         // We keep at most one message in flight and do synchronous communication, so response will always be == request for us.
         if (response == request)
-            return message[1] == MBOX_RESPONSE_SUCCESS;
+            return message_header->success();
     }
 
     return true;
-}
-
-constexpr u32 MBOX_TAG_GET_FIRMWARE_VERSION = 0x0000'0001;
-constexpr u32 MBOX_TAG_SET_CLOCK_RATE = 0x0003'8002;
-
-u32 Mailbox::query_firmware_version()
-{
-    // See https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface for data format.
-    u32 __attribute__((aligned(16))) message[7];
-    message[0] = sizeof(message);
-    message[1] = MBOX_REQUEST;
-
-    message[2] = MBOX_TAG_GET_FIRMWARE_VERSION;
-    message[3] = 0; // Tag data size. MBOX_TAG_GET_FIRMWARE_VERSION needs no arguments.
-    message[4] = MBOX_REQUEST;
-    message[5] = 0; // Trailing zero for request, room for data in response.
-
-    message[6] = 0; // Room for trailing zero in response.
-
-    if (call(ARM_TO_VIDEOCORE_CHANNEL, message) && message[2] == MBOX_TAG_GET_FIRMWARE_VERSION)
-        return message[5];
-
-    return 0xffff'ffff;
-}
-
-u32 Mailbox::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo)
-{
-    u32 __attribute__((aligned(16))) message[9];
-    message[0] = sizeof(message);
-    message[1] = MBOX_REQUEST;
-
-    message[2] = MBOX_TAG_SET_CLOCK_RATE;
-    message[3] = 12; // Tag data size.
-    message[4] = MBOX_REQUEST;
-    message[5] = static_cast<u32>(clock_id);
-    message[6] = rate_hz;
-    message[7] = skip_setting_turbo ? 1 : 0;
-
-    message[8] = 0;
-
-    call(ARM_TO_VIDEOCORE_CHANNEL, message);
-    return message[6];
 }
 
 }

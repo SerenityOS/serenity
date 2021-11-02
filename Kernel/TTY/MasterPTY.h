@@ -26,7 +26,7 @@ public:
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
-    virtual String absolute_path(const OpenFileDescription&) const override;
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
 private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);

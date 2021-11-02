@@ -50,7 +50,7 @@ public:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EIO; }
     virtual KResult close() override;
 
-    virtual String absolute_path(const OpenFileDescription&) const override;
+    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
     virtual StringView class_name() const override { return "InodeWatcher"sv; };
     virtual bool is_inode_watcher() const override { return true; }
 
