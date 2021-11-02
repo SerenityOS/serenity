@@ -73,7 +73,7 @@ int main(int argc, char** argv)
                 break;
             }
             case AudioVariable::Mute: {
-                bool muted = audio_client->get_muted();
+                bool muted = audio_client->is_main_mix_muted();
                 if (human_mode)
                     outln("Muted: {}", muted ? "Yes" : "No");
                 else
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
             }
             case AudioVariable::Mute: {
                 bool& mute = to_set.value.get<bool>();
-                audio_client->set_muted(mute);
+                audio_client->set_main_mix_muted(mute);
                 break;
             }
             case AudioVariable::SampleRate: {

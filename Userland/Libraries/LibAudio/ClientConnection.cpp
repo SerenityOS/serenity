@@ -42,10 +42,10 @@ void ClientConnection::finished_playing_buffer(i32 buffer_id)
         on_finish_playing_buffer(buffer_id);
 }
 
-void ClientConnection::muted_state_changed(bool muted)
+void ClientConnection::main_mix_muted_state_changed(bool muted)
 {
-    if (on_muted_state_change)
-        on_muted_state_change(muted);
+    if (on_main_mix_muted_state_change)
+        on_main_mix_muted_state_change(muted);
 }
 
 void ClientConnection::main_mix_volume_changed(double volume)
