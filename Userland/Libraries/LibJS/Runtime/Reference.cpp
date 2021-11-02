@@ -13,53 +13,38 @@
 namespace JS {
 
 // 6.2.4.6 PutValue ( V, W ), https://tc39.es/ecma262/#sec-putvalue
-void Reference::put_value(GlobalObject& global_object, Value value)
+ThrowCompletionOr<void> Reference::put_value(GlobalObject& global_object, Value value)
 {
     auto& vm = global_object.vm();
 
-    if (!is_valid_reference()) {
-        vm.throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
-        return;
-    }
+    if (!is_valid_reference())
+        return vm.throw_completion<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
 
     if (is_unresolvable()) {
-        if (m_strict) {
-            (void)throw_reference_error(global_object);
-            return;
-        }
-        MUST(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
-        return;
+        if (m_strict)
+            return throw_reference_error(global_object);
+        TRY(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
+        return {};
     }
 
     if (is_property_reference()) {
-        auto base_obj_or_error = m_base_value.to_object(global_object);
-        if (base_obj_or_error.is_error())
-            return;
-        auto* base_obj = base_obj_or_error.release_value();
+        auto* base_obj = TRY(m_base_value.to_object(global_object));
 
-        if (is_private_reference()) {
-            base_obj->private_set(m_private_name, value);
-            return;
-        }
+        if (is_private_reference())
+            return base_obj->private_set(m_private_name, value);
 
-        auto succeeded_or_error = base_obj->internal_set(m_name, value, get_this_value());
-        if (succeeded_or_error.is_error())
-            return;
-        auto succeeded = succeeded_or_error.release_value();
-        if (!succeeded && m_strict) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
-            return;
-        }
-        return;
+        auto succeeded = TRY(base_obj->internal_set(m_name, value, get_this_value()));
+        if (!succeeded && m_strict)
+            return vm.throw_completion<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
+        return {};
     }
 
     VERIFY(m_base_type == BaseType::Environment);
     VERIFY(m_base_environment);
-    // These can throw, TRY() when converting put_value() to ThrowCompletionOr
     if (m_environment_coordinate.has_value())
-        (void)static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(global_object, m_environment_coordinate->index, value, m_strict);
     else
-        (void)m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
+        return m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
 }
 
 Completion Reference::throw_reference_error(GlobalObject& global_object) const
