@@ -132,6 +132,15 @@ Tuple& Tuple::operator+=(Value const& value)
     return *this;
 }
 
+void Tuple::extend(Tuple const& other)
+{
+    VERIFY((descriptor()->size() == size()) || (descriptor()->size() >= size() + other.size()));
+    if (descriptor()->size() == size()) {
+        descriptor()->extend(other.descriptor());
+    }
+    m_data.extend(other.m_data);
+}
+
 bool Tuple::is_compatible(Tuple const& other) const
 {
     if ((m_descriptor->size() == 0) && (other.m_descriptor->size() == 0)) {

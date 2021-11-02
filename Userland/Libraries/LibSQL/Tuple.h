@@ -55,6 +55,7 @@ public:
     Value& operator[](String const& name);
     void append(Value const&);
     Tuple& operator+=(Value const&);
+    void extend(Tuple const&);
     [[nodiscard]] bool is_compatible(Tuple const&) const;
 
     [[nodiscard]] u32 pointer() const { return m_pointer; }
