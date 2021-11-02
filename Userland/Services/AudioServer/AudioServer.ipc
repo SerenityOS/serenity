@@ -5,6 +5,8 @@ endpoint AudioServer
     // Mixer functions
     set_main_mix_muted(bool muted) => ()
     is_main_mix_muted() => (bool muted)
+    set_self_muted(bool muted) => ()
+    is_self_muted() => (bool muted)
     get_main_mix_volume() => (double volume)
     set_main_mix_volume(double volume) => ()
     get_self_volume() => (double volume)
