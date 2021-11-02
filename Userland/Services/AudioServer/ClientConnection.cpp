@@ -148,4 +148,18 @@ void ClientConnection::set_main_mix_muted(bool muted)
 {
     m_mixer.set_muted(muted);
 }
+
+Messages::AudioServer::IsSelfMutedResponse ClientConnection::is_self_muted()
+{
+    if (m_queue)
+        return m_queue->is_muted();
+
+    return false;
+}
+
+void ClientConnection::set_self_muted(bool muted)
+{
+    if (m_queue)
+        m_queue->set_muted(muted);
+}
 }
