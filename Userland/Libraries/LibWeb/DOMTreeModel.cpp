@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2018-2020, Adam Hodgen <ant1441@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,12 +8,15 @@
 #include "DOMTreeModel.h"
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
+#include <LibGUI/TreeView.h>
+#include <LibGfx/Palette.h>
 #include <ctype.h>
 
 namespace Web {
 
-DOMTreeModel::DOMTreeModel(JsonObject dom_tree)
-    : m_dom_tree(move(dom_tree))
+DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
+    : m_tree_view(tree_view)
+    , m_dom_tree(move(dom_tree))
 {
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"));
     m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
@@ -117,6 +120,14 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
     auto node_name = node.get("name").as_string();
     auto type = node.get("type").as_string_or("unknown");
+
+    if (role == GUI::ModelRole::ForegroundColor) {
+        // FIXME: Allow models to return a foreground color *role*.
+        //        Then we won't need to have a GUI::TreeView& member anymore.
+        if (type == "comment"sv)
+            return m_tree_view.palette().syntax_comment();
+        return {};
+    }
 
     if (role == GUI::ModelRole::Icon) {
         if (type == "document")

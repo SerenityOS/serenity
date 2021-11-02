@@ -109,7 +109,7 @@ void InspectorWidget::set_dom_json(String json)
         return;
 
     m_dom_json = json;
-    m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view()));
+    m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view(), *m_dom_tree_view));
 
     if (m_pending_inspect_node_id.has_value()) {
         i32 node_id = m_pending_inspect_node_id.value();
