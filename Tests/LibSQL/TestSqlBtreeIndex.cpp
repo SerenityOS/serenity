@@ -127,7 +127,7 @@ void insert_into_and_scan_btree(int);
 NonnullRefPtr<SQL::BTree> setup_btree(SQL::Serializer& serializer)
 {
     NonnullRefPtr<SQL::TupleDescriptor> tuple_descriptor = adopt_ref(*new SQL::TupleDescriptor);
-    tuple_descriptor->append({ "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
+    tuple_descriptor->append({ "schema", "table", "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
 
     auto root_pointer = serializer.heap().user_value(0);
     if (!root_pointer) {

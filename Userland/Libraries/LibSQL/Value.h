@@ -130,7 +130,7 @@ public:
 
     [[nodiscard]] TupleElementDescriptor descriptor() const
     {
-        return { "", type(), Order::Ascending };
+        return { "", "", "", type(), Order::Ascending };
     }
 
     static Value const& null();
