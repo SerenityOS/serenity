@@ -42,6 +42,7 @@ public:
     virtual void playlist_loaded(StringView, bool) override;
     virtual void audio_load_error(StringView path, StringView error_reason) override;
     virtual void volume_changed(double) override;
+    virtual void mute_changed(bool) override;
     virtual void total_samples_changed(int) override;
     virtual void sound_buffer_played(RefPtr<Audio::Buffer>, int sample_rate, int samples_played) override;
 
