@@ -220,13 +220,9 @@ Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& globa
 
 CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter, GlobalObject& global_object, Reference const& callee_reference) const
 {
-    auto& vm = interpreter.vm();
-
     if (callee_reference.is_property_reference()) {
         auto this_value = callee_reference.get_this_value();
-        auto callee = callee_reference.get_value(global_object);
-        if (vm.exception())
-            return {};
+        auto callee = TRY_OR_DISCARD(callee_reference.get_value(global_object));
 
         return { this_value, callee };
     }
@@ -236,7 +232,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         js_undefined(),
         callee_reference.is_unresolvable()
             ? m_callee->execute(interpreter, global_object)
-            : callee_reference.get_value(global_object)
+            : TRY_OR_DISCARD(callee_reference.get_value(global_object))
     };
 }
 
@@ -1074,7 +1070,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     Value base_value;
 
     if (base_reference.is_valid_reference())
-        base_value = base_reference.get_value(global_object);
+        base_value = TRY_OR_DISCARD(base_reference.get_value(global_object));
     else
         base_value = m_object->execute(interpreter, global_object);
 
@@ -1129,13 +1125,10 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
 
-        if (reference.is_unresolvable()) {
+        if (reference.is_unresolvable())
             lhs_result = js_undefined();
-        } else {
-            lhs_result = reference.get_value(global_object);
-            if (interpreter.exception())
-                return {};
-        }
+        else
+            lhs_result = TRY_OR_DISCARD(reference.get_value(global_object));
         VERIFY(!lhs_result.is_empty());
     } else {
         lhs_result = m_lhs->execute(interpreter, global_object);
@@ -1424,9 +1417,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
             return throw_completion(exception->value());
 
         if (reference.is_valid_reference()) {
-            super_class = reference.get_value(global_object);
-            if (auto* exception = interpreter.exception())
-                return throw_completion(exception->value());
+            super_class = TRY(reference.get_value(global_object));
         } else {
             super_class = m_super_class->execute(interpreter, global_object);
             if (auto* exception = interpreter.exception())
@@ -2089,7 +2080,7 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
     if (interpreter.exception())
         return {};
 
-    return reference.get_value(global_object);
+    return TRY_OR_DISCARD(reference.get_value(global_object));
 }
 
 void Identifier::dump(int indent) const
@@ -2180,9 +2171,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     if (interpreter.exception())
         return {};
 
-    auto lhs_result = reference.get_value(global_object);
-    if (interpreter.exception())
-        return {};
+    auto lhs_result = TRY_OR_DISCARD(reference.get_value(global_object));
 
     //  AssignmentExpression : LeftHandSideExpression {&&=, ||=, ??=} AssignmentExpression
     if (m_op == AssignmentOp::AndAssignment || m_op == AssignmentOp::OrAssignment || m_op == AssignmentOp::NullishAssignment) {
@@ -2289,9 +2278,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
     if (interpreter.exception())
         return {};
-    auto old_value = reference.get_value(global_object);
-    if (interpreter.exception())
-        return {};
+    auto old_value = TRY_OR_DISCARD(reference.get_value(global_object));
     old_value = TRY_OR_DISCARD(old_value.to_numeric(global_object));
 
     Value new_value;
@@ -2656,7 +2643,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto reference = to_reference(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    return reference.get_value(global_object);
+    return TRY_OR_DISCARD(reference.get_value(global_object));
 }
 
 bool MemberExpression::ends_in_private_name() const
@@ -2705,7 +2692,7 @@ Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value
 {
     // Note: This is wrapped in an optional to allow base_reference = ...
     Optional<JS::Reference> base_reference = m_base->to_reference(interpreter, global_object);
-    auto base = base_reference->is_unresolvable() ? m_base->execute(interpreter, global_object) : base_reference->get_value(global_object);
+    auto base = base_reference->is_unresolvable() ? m_base->execute(interpreter, global_object) : TRY_OR_DISCARD(base_reference->get_value(global_object));
     if (interpreter.exception())
         return {};
 
@@ -2743,7 +2730,7 @@ Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value
             base = expression->execute(interpreter, global_object);
         } else {
             base_reference = expression->to_reference(interpreter, global_object);
-            base = base_reference->get_value(global_object);
+            base = TRY_OR_DISCARD(base_reference->get_value(global_object));
         }
         if (interpreter.exception())
             return {};

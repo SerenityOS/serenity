@@ -24,7 +24,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
 
     if (is_unresolvable()) {
         if (m_strict) {
-            throw_reference_error(global_object);
+            (void)throw_reference_error(global_object);
             return;
         }
         MUST(global_object.set(m_name, value, Object::ShouldThrowExceptions::No));
@@ -62,38 +62,36 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         (void)m_base_environment->set_mutable_binding(global_object, m_name.as_string(), value, m_strict);
 }
 
-void Reference::throw_reference_error(GlobalObject& global_object) const
+Completion Reference::throw_reference_error(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
     if (!m_name.is_valid())
-        vm.throw_exception<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
+        return vm.throw_completion<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
     else
-        vm.throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
+        return vm.throw_completion<ReferenceError>(global_object, ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
 }
 
 // 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
-Value Reference::get_value(GlobalObject& global_object) const
+ThrowCompletionOr<Value> Reference::get_value(GlobalObject& global_object) const
 {
-    if (!is_valid_reference() || is_unresolvable()) {
-        throw_reference_error(global_object);
-        return {};
-    }
+    if (!is_valid_reference() || is_unresolvable())
+        return throw_reference_error(global_object);
 
     if (is_property_reference()) {
-        auto* base_obj = TRY_OR_DISCARD(m_base_value.to_object(global_object));
+        auto* base_obj = TRY(m_base_value.to_object(global_object));
 
         if (is_private_reference())
-            return TRY_OR_DISCARD(base_obj->private_get(m_private_name));
+            return base_obj->private_get(m_private_name);
 
-        return TRY_OR_DISCARD(base_obj->get(m_name));
+        return base_obj->get(m_name);
     }
 
     VERIFY(m_base_type == BaseType::Environment);
 
     VERIFY(m_base_environment);
     if (m_environment_coordinate.has_value())
-        return TRY_OR_DISCARD(static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict));
-    return TRY_OR_DISCARD(m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict));
+        return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(global_object, m_environment_coordinate->index, m_strict);
+    return m_base_environment->get_binding_value(global_object, m_name.as_string(), m_strict);
 }
 
 // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
