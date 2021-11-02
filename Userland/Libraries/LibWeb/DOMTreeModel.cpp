@@ -129,6 +129,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
             return with_whitespace_collapsed(node.get("text").as_string());
+        if (type == "comment"sv)
+            return String::formatted("<!--{}-->", node.get("data"sv).as_string());
         if (type != "element")
             return node_name;
 
