@@ -29,7 +29,7 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Instant");
     });
 
-    test("items argument must be an object", () => {
+    test("item argument must be an object", () => {
         const instant = new Temporal.Instant(0n);
         for (const value of [123, NaN, Infinity, true, false, null, undefined]) {
             expect(() => {
@@ -38,14 +38,14 @@ describe("errors", () => {
         }
     });
 
-    test("items argument must have a 'calendar' property", () => {
+    test("item argument must have a 'calendar' property", () => {
         const instant = new Temporal.Instant(0n);
         expect(() => {
             instant.toZonedDateTime({});
         }).toThrowWithMessage(TypeError, "Required property calendar is missing or undefined");
     });
 
-    test("items argument must have a 'timeZone' property", () => {
+    test("item argument must have a 'timeZone' property", () => {
         const instant = new Temporal.Instant(0n);
         expect(() => {
             instant.toZonedDateTime({ calendar: {} });
