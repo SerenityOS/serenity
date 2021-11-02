@@ -30,9 +30,9 @@ public:
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
     {
         m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
-        m_audio_muted = m_audio_client->get_muted();
+        m_audio_muted = m_audio_client->is_main_mix_muted();
 
-        m_audio_client->on_muted_state_change = [this](bool muted) {
+        m_audio_client->on_main_mix_muted_state_change = [this](bool muted) {
             if (m_audio_muted == muted)
                 return;
             m_mute_box->set_checked(!m_audio_muted);
@@ -104,7 +104,7 @@ public:
         m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {
             m_mute_box->set_tooltip(is_muted ? "Unmute" : "Mute");
-            m_audio_client->set_muted(is_muted);
+            m_audio_client->set_main_mix_muted(is_muted);
             GUI::Application::the()->hide_tooltip();
         };
     }
@@ -130,7 +130,7 @@ private:
             return;
         }
         if (event.button() == GUI::MouseButton::Secondary) {
-            m_audio_client->set_muted(!m_audio_muted);
+            m_audio_client->set_main_mix_muted(!m_audio_muted);
             update();
         }
     }
