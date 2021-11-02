@@ -16,13 +16,13 @@ namespace Web {
 
 class DOMTreeModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<DOMTreeModel> create(StringView dom_tree)
+    static NonnullRefPtr<DOMTreeModel> create(StringView dom_tree, GUI::TreeView& tree_view)
     {
         auto json_or_error = JsonValue::from_string(dom_tree);
         if (!json_or_error.has_value())
             VERIFY_NOT_REACHED();
 
-        return adopt_ref(*new DOMTreeModel(json_or_error.value().as_object()));
+        return adopt_ref(*new DOMTreeModel(json_or_error.value().as_object(), tree_view));
     }
 
     virtual ~DOMTreeModel() override;
@@ -36,7 +36,7 @@ public:
     GUI::ModelIndex index_for_node(i32 node_id) const;
 
 private:
-    explicit DOMTreeModel(JsonObject);
+    DOMTreeModel(JsonObject, GUI::TreeView&);
 
     ALWAYS_INLINE JsonObject const* get_parent(const JsonObject& o) const
     {
@@ -54,6 +54,7 @@ private:
 
     void map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* child);
 
+    GUI::TreeView& m_tree_view;
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;
     GUI::Icon m_text_icon;
