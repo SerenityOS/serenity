@@ -1550,7 +1550,7 @@ private:
 
     if (interface.is_legacy_platform_object()) {
         generator.append(R"~~~(
-    bool is_named_property_exposed_on_object(JS::PropertyKey const&) const;
+    JS::ThrowCompletionOr<bool> is_named_property_exposed_on_object(JS::PropertyKey const&) const;
     JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> legacy_platform_object_get_own_property_for_get_own_property_slot(JS::PropertyKey const&) const;
     JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> legacy_platform_object_get_own_property_for_set_slot(JS::PropertyKey const&) const;
 )~~~");
@@ -1730,7 +1730,7 @@ static JS::Value wrap_for_legacy_platform_object_get_own_property(JS::GlobalObje
             // https://webidl.spec.whatwg.org/#dfn-named-property-visibility
 
             scoped_generator.append(R"~~~(
-bool @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& property_name) const
+JS::ThrowCompletionOr<bool> @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& property_name) const
 {
     [[maybe_unused]] auto& vm = this->vm();
 
@@ -1750,7 +1750,7 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& pr
 
     // 2. If O has an own property named P, then return false.
     // NOTE: This has to be done manually instead of using Object::has_own_property, as that would use the overrided internal_get_own_property.
-    auto own_property_named_p = TRY_OR_DISCARD(Object::internal_get_own_property(property_name));
+    auto own_property_named_p = MUST(Object::internal_get_own_property(property_name));
 
     if (own_property_named_p.has_value())
         return false;
@@ -1766,18 +1766,18 @@ bool @class_name@::is_named_property_exposed_on_object(JS::PropertyKey const& pr
                 scoped_generator.append(R"~~~(
     // NOTE: Step 3 is not here as the interface doesn't have the LegacyOverrideBuiltIns extended attribute.
     // 4. Let prototype be O.[[GetPrototypeOf]]().
-    auto* prototype = TRY_OR_DISCARD(internal_get_prototype_of());
+    auto* prototype = TRY(internal_get_prototype_of());
 
     // 5. While prototype is not null:
     while (prototype) {
         // FIXME: 1. If prototype is not a named properties object, and prototype has an own property named P, then return false.
         //           (It currently does not check for named property objects)
-        bool prototype_has_own_property_named_p = TRY_OR_DISCARD(prototype->has_own_property(property_name));
+        bool prototype_has_own_property_named_p = TRY(prototype->has_own_property(property_name));
         if (prototype_has_own_property_named_p)
             return false;
 
         // 2. Set prototype to prototype.[[GetPrototypeOf]]().
-        prototype = TRY_OR_DISCARD(prototype->internal_get_prototype_of());
+        prototype = TRY(prototype->internal_get_prototype_of());
     }
 
     // 6. Return true.
@@ -1881,7 +1881,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @class_name@::legacy_pla
             if (interface.supports_named_properties() && ignore_named_props == IgnoreNamedProps::No) {
                 get_own_property_generator.append(R"~~~(
     // 1. If the result of running the named property visibility algorithm with property name P and object O is true, then:
-    if (is_named_property_exposed_on_object(property_name)) {
+    if (TRY(is_named_property_exposed_on_object(property_name))) {
         // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
         auto property_name_string = property_name.to_string();
 )~~~");
@@ -2277,7 +2277,7 @@ JS::ThrowCompletionOr<bool> @class_name@::internal_delete(JS::PropertyKey const&
         if (interface.supports_named_properties() && !interface.extended_attributes.contains("Global")) {
             // ...and the result of calling the named property visibility algorithm with property name P and object O is true, then:
             scoped_generator.append(R"~~~(
-    if (is_named_property_exposed_on_object(property_name)) {
+    if (TRY(is_named_property_exposed_on_object(property_name))) {
 )~~~");
 
             // 1. If O does not implement an interface with a named property deleter, then return false.
@@ -2387,7 +2387,7 @@ JS::ThrowCompletionOr<JS::MarkedValueList> @class_name@::internal_own_property_k
         if (interface.supports_named_properties()) {
             scoped_generator.append(R"~~~(
     for (auto& named_property : impl().supported_property_names()) {
-        if (is_named_property_exposed_on_object(named_property))
+        if (TRY(is_named_property_exposed_on_object(named_property)))
             keys.append(js_string(vm, named_property));
     }
 )~~~");
