@@ -30,6 +30,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(subtract);
     JS_DECLARE_NATIVE_FUNCTION(with);
+    JS_DECLARE_NATIVE_FUNCTION(round);
     JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
     JS_DECLARE_NATIVE_FUNCTION(to_zoned_date_time);
