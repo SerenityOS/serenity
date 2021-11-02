@@ -161,7 +161,7 @@ void Mixer::set_muted(bool muted)
     request_setting_sync();
 
     ClientConnection::for_each([muted](ClientConnection& client) {
-        client.did_change_muted_state({}, muted);
+        client.did_change_main_mix_muted_state({}, muted);
     });
 }
 
