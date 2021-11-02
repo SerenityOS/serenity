@@ -54,6 +54,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.add, add, 1, attr);
+    define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 0, attr);
@@ -351,6 +352,26 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::add)
 
     // 5. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, duration, options).
     return TRY(calendar_date_add(global_object, temporal_date->calendar(), *temporal_date, *duration, options));
+}
+
+// 3.3.20 Temporal.PlainDate.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.subtract
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::subtract)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = TRY(typed_this_object(global_object));
+
+    // 3. Let duration be ? ToTemporalDuration(temporalDurationLike).
+    auto* duration = TRY(to_temporal_duration(global_object, vm.argument(0)));
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 5. Let negatedDuration be ! CreateNegatedTemporalDuration(duration).
+    auto* negated_duration = create_negated_temporal_duration(global_object, *duration);
+
+    // 6. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, negatedDuration, options).
+    return TRY(calendar_date_add(global_object, temporal_date->calendar(), *temporal_date, *negated_duration, options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
