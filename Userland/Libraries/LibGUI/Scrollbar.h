@@ -41,6 +41,13 @@ protected:
     virtual void change_event(Event&) override;
 
 private:
+    enum class GutterClickState {
+        NotPressed,
+        BeforeScrubber,
+        AfterScrubber,
+    } gutter_click_state
+        = GutterClickState::NotPressed;
+
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
