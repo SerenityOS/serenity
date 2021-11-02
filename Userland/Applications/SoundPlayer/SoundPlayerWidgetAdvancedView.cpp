@@ -142,6 +142,9 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
     if (event.key() == Key_Space)
         m_play_button->click();
 
+    if (event.key() == Key_M)
+        toggle_mute();
+
     if (event.key() == Key_S)
         m_stop_button->click();
 
@@ -182,6 +185,7 @@ void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
 
 void SoundPlayerWidgetAdvancedView::mute_changed(bool)
 {
+    // FIXME: Update the volume slider when player is muted
 }
 
 void SoundPlayerWidgetAdvancedView::sync_previous_next_buttons()
