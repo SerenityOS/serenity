@@ -92,6 +92,15 @@ void Player::set_volume(double volume)
     volume_changed(m_volume);
 }
 
+void Player::set_mute(bool muted)
+{
+    if (m_muted != muted) {
+        m_muted = muted;
+        m_audio_client_connection.set_self_muted(muted);
+        mute_changed(muted);
+    }
+}
+
 void Player::set_shuffle_mode(ShuffleMode mode)
 {
     if (m_shuffle_mode != mode) {
@@ -123,6 +132,16 @@ void Player::stop()
 {
     m_playback_manager.stop();
     set_play_state(PlayState::Stopped);
+}
+
+void Player::mute()
+{
+    set_mute(true);
+}
+
+void Player::toggle_mute()
+{
+    set_mute(!m_muted);
 }
 
 void Player::seek(int sample)

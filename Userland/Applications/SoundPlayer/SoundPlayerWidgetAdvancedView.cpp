@@ -171,6 +171,10 @@ void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
 {
 }
 
+void SoundPlayerWidgetAdvancedView::mute_changed(bool)
+{
+}
+
 void SoundPlayerWidgetAdvancedView::sync_previous_next_buttons()
 {
     m_back_button->set_enabled(playlist().size() > 1 && !playlist().shuffling());
