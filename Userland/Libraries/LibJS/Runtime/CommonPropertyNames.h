@@ -342,6 +342,7 @@ namespace JS {
     P(plainDateISO)                          \
     P(plainDateTime)                         \
     P(plainDateTimeISO)                      \
+    P(plainTime)                             \
     P(plainTimeISO)                          \
     P(pop)                                   \
     P(pow)                                   \

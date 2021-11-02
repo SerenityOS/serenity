@@ -9,12 +9,15 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDatePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -58,6 +61,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 0, attr);
+    define_native_function(vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
@@ -429,6 +433,70 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_date_time)
 
     // 5. Return ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], temporalDate.[[Calendar]]).
     return TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_date->calendar()));
+}
+
+// 3.3.27 Temporal.PlainDate.prototype.toZonedDateTime ( item ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.tozoneddatetime
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_zoned_date_time)
+{
+    auto item = vm.argument(0);
+
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = TRY(typed_this_object(global_object));
+
+    auto temporal_time_value = js_undefined();
+    Object* time_zone;
+
+    // 3. If Type(item) is Object, then
+    if (item.is_object()) {
+        // a. Let timeZoneLike be ? Get(item, "timeZone").
+        auto time_zone_like = TRY(item.as_object().get(vm.names.timeZone));
+
+        // b. If timeZoneLike is undefined, then
+        if (time_zone_like.is_undefined()) {
+            // i. Let timeZone be ? ToTemporalTimeZone(item).
+            time_zone = TRY(to_temporal_time_zone(global_object, item));
+
+            // ii. Let temporalTime be undefined.
+        }
+        // c. Else,
+        else {
+            // i. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
+            time_zone = TRY(to_temporal_time_zone(global_object, time_zone_like));
+
+            // ii. Let temporalTime be ? Get(item, "plainTime").
+            temporal_time_value = TRY(item.as_object().get(vm.names.plainTime));
+        }
+    }
+    // 4. Else,
+    else {
+        // a. Let timeZone be ? ToTemporalTimeZone(item).
+        time_zone = TRY(to_temporal_time_zone(global_object, item));
+
+        // b. Let temporalTime be undefined.
+    }
+
+    PlainDateTime* temporal_date_time;
+
+    // 5. If temporalTime is undefined, then
+    if (temporal_time_value.is_undefined()) {
+        // a. Let temporalDateTime be ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], 0, 0, 0, 0, 0, 0, temporalDate.[[Calendar]]).
+        temporal_date_time = TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), 0, 0, 0, 0, 0, 0, temporal_date->calendar()));
+    }
+    // 6. Else,
+    else {
+        // a. Set temporalTime to ? ToTemporalTime(temporalTime).
+        auto* temporal_time = TRY(to_temporal_time(global_object, temporal_time_value));
+
+        // b. Let temporalDateTime be ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], temporalDate.[[Calendar]]).
+        temporal_date_time = TRY(create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_time->calendar()));
+    }
+
+    // 7. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, temporalDateTime, "compatible").
+    auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *temporal_date_time, "compatible"sv));
+
+    // 8. Return ! CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, temporalDate.[[Calendar]]).
+    return MUST(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), *time_zone, temporal_date->calendar()));
 }
 
 // 3.3.28 Temporal.PlainDate.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.tostring
