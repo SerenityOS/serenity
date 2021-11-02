@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "CustomGameDialog.h"
 #include "Field.h"
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
@@ -130,6 +131,10 @@ int main(int argc, char** argv)
     }));
     difficulty_menu.add_action(GUI::Action::create("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
         field.set_field_size(32, 60, 350);
+    }));
+    difficulty_menu.add_separator();
+    difficulty_menu.add_action(GUI::Action::create("&Custom game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+        CustomGameDialog::show(window, field);
     }));
 
     auto& help_menu = window->add_menu("&Help");
