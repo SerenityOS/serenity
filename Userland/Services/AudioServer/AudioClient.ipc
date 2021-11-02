@@ -3,7 +3,7 @@
 endpoint AudioClient
 {
     finished_playing_buffer(i32 buffer_id) =|
-    muted_state_changed(bool muted) =|
+    main_mix_muted_state_changed(bool muted) =|
     main_mix_volume_changed(double volume) =|
     client_volume_changed(double volume) =|
 }
