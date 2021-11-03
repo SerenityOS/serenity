@@ -198,6 +198,12 @@ void Window::hide()
 {
     if (!is_visible())
         return;
+
+    // NOTE: Don't bother asking WindowServer to destroy windows during application teardown.
+    //       All our windows will be automatically garbage-collected by WindowServer anyway.
+    if (GUI::Application::in_teardown())
+        return;
+
     auto destroyed_window_ids = WindowServerConnection::the().destroy_window(m_window_id);
     server_did_destroy();
 
