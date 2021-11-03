@@ -377,39 +377,43 @@ public:
     static NonnullRefPtr<BackgroundStyleValue> create(
         NonnullRefPtr<StyleValue> color,
         NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> position,
         NonnullRefPtr<StyleValue> repeat_x,
         NonnullRefPtr<StyleValue> repeat_y)
     {
-        return adopt_ref(*new BackgroundStyleValue(color, image, repeat_x, repeat_y));
+        return adopt_ref(*new BackgroundStyleValue(color, image, position, repeat_x, repeat_y));
     }
     virtual ~BackgroundStyleValue() override { }
 
     NonnullRefPtr<StyleValue> color() const { return m_color; }
     NonnullRefPtr<StyleValue> image() const { return m_image; }
+    NonnullRefPtr<StyleValue> position() const { return m_position; }
     NonnullRefPtr<StyleValue> repeat_x() const { return m_repeat_x; }
     NonnullRefPtr<StyleValue> repeat_y() const { return m_repeat_y; }
 
     virtual String to_string() const override
     {
-        return String::formatted("{} {} {} {}", m_color->to_string(), m_image->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string());
+        return String::formatted("{} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string());
     }
 
 private:
     BackgroundStyleValue(
         NonnullRefPtr<StyleValue> color,
         NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> position,
         NonnullRefPtr<StyleValue> repeat_x,
         NonnullRefPtr<StyleValue> repeat_y)
         : StyleValue(Type::Background)
         , m_color(color)
         , m_image(image)
+        , m_position(position)
         , m_repeat_x(repeat_x)
         , m_repeat_y(repeat_y)
     {
     }
     NonnullRefPtr<StyleValue> m_color;
     NonnullRefPtr<StyleValue> m_image;
-    // FIXME: background-position
+    NonnullRefPtr<StyleValue> m_position;
     // FIXME: background-size
     NonnullRefPtr<StyleValue> m_repeat_x;
     NonnullRefPtr<StyleValue> m_repeat_y;

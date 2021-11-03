@@ -301,6 +301,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto set_single_background = [&](CSS::BackgroundStyleValue const& background) {
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, background.repeat_x(), document, true);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, background.repeat_y(), document, true);
         };
@@ -323,6 +324,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
         return;
