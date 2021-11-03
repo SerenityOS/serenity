@@ -676,6 +676,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
         auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
         auto maybe_background_attachment = property(CSS::PropertyID::BackgroundAttachment);
+        auto maybe_background_origin = property(CSS::PropertyID::BackgroundOrigin);
+        auto maybe_background_clip = property(CSS::PropertyID::BackgroundClip);
 
         return BackgroundStyleValue::create(
             value_or_default(maybe_background_color, InitialStyleValue::the()),
@@ -683,7 +685,9 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             value_or_default(maybe_background_position, PositionStyleValue::create(PositionEdge::Left, Length::make_px(0), PositionEdge::Top, Length::make_px(0))),
             value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)),
             value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatX)),
-            value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)));
+            value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)),
+            value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
+            value_or_default(maybe_background_clip, IdentifierStyleValue::create(CSS::ValueID::BorderBox)));
     }
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type()));
