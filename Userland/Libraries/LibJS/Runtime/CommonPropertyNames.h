@@ -243,6 +243,7 @@ namespace JS {
     P(hour)                                  \
     P(hourCycle)                             \
     P(hours)                                 \
+    P(hoursInDay)                            \
     P(hypot)                                 \
     P(id)                                    \
     P(ignoreCase)                            \
