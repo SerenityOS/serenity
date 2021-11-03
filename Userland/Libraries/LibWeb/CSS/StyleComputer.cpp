@@ -305,6 +305,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, background.repeat_x(), document, true);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, background.repeat_y(), document, true);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document);
         };
 
         if (value.is_background()) {
@@ -329,6 +331,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document);
         return;
     }
 
@@ -347,6 +351,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::BackgroundClip) {
+        if (value.is_value_list()) {
+            auto& background_clip_list = value.as_value_list().values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_clip_list.is_empty()) {
+                auto& background_clip = background_clip_list.first();
+                style.set_property(CSS::PropertyID::BackgroundClip, background_clip);
+            }
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundClip, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::BackgroundImage) {
         if (value.is_value_list()) {
             auto& background_image_list = value.as_value_list().values();
@@ -359,6 +378,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
 
         style.set_property(CSS::PropertyID::BackgroundImage, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundOrigin) {
+        if (value.is_value_list()) {
+            auto& background_origin_list = value.as_value_list().values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_origin_list.is_empty()) {
+                auto& background_origin = background_origin_list.first();
+                style.set_property(CSS::PropertyID::BackgroundOrigin, background_origin);
+            }
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundOrigin, value);
         return;
     }
 

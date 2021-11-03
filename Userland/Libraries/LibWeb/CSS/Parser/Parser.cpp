@@ -2399,8 +2399,8 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
     RefPtr<StyleValue> background_position;
     // FIXME: Implement background-size.
     RefPtr<StyleValue> background_attachment;
-    // FIXME: Implement background-clip.
-    // FIXME: Implement background-origin.
+    RefPtr<StyleValue> background_clip;
+    RefPtr<StyleValue> background_origin;
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
@@ -2433,6 +2433,23 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
                 return nullptr;
             background_image = value.release_nonnull();
             continue;
+        }
+        if (property_accepts_value(PropertyID::BackgroundOrigin, *value)) {
+            // background-origin and background-clip accept the same values. From the spec:
+            //   "If one <box> value is present then it sets both background-origin and background-clip to that value.
+            //    If two values are present, then the first sets background-origin and the second background-clip."
+            //        - https://www.w3.org/TR/css-backgrounds-3/#background
+            // So, we put the first one in background-origin, then if we get a second, we put it in background-clip.
+            // If we only get one, we copy the value before creating the BackgroundStyleValue.
+            if (!background_origin) {
+                background_origin = value.release_nonnull();
+                continue;
+            }
+            if (!background_clip) {
+                background_clip = value.release_nonnull();
+                continue;
+            }
+            return nullptr;
         }
         if (property_accepts_value(PropertyID::BackgroundPosition, *value)) {
             if (background_position)
@@ -2488,7 +2505,21 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
     if (!background_attachment)
         background_attachment = property_initial_value(PropertyID::BackgroundAttachment);
 
-    return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), background_position.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull(), background_attachment.release_nonnull());
+    if (!background_origin && !background_clip) {
+        background_origin = property_initial_value(PropertyID::BackgroundOrigin);
+        background_clip = property_initial_value(PropertyID::BackgroundClip);
+    } else if (!background_clip) {
+        background_clip = background_origin;
+    }
+
+    return BackgroundStyleValue::create(
+        background_color.release_nonnull(),
+        background_image.release_nonnull(),
+        background_position.release_nonnull(),
+        repeat_x.release_nonnull(), repeat_y.release_nonnull(),
+        background_attachment.release_nonnull(),
+        background_origin.release_nonnull(),
+        background_clip.release_nonnull());
 }
 
 RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
