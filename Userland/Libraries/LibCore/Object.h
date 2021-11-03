@@ -70,6 +70,8 @@ public:                                                                \
     static inline NonnullRefPtr<klass> construct(Args&&... args)       \
     {                                                                  \
         auto obj = adopt_ref(*new Klass(forward<Args>(args)...));      \
+        if constexpr (requires { declval<Klass>().did_construct(); })  \
+            obj->did_construct();                                      \
         return obj;                                                    \
     }
 
