@@ -304,6 +304,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, background.repeat_x(), document, true);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, background.repeat_y(), document, true);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document);
         };
 
         if (value.is_background()) {
@@ -327,6 +328,22 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundAttachment) {
+        if (value.is_value_list()) {
+            auto& background_attachment_list = value.as_value_list().values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_attachment_list.is_empty()) {
+                auto& background_attachment = background_attachment_list.first();
+                style.set_property(CSS::PropertyID::BackgroundAttachment, background_attachment);
+            }
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundAttachment, value);
         return;
     }
 

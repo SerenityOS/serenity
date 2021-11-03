@@ -2398,7 +2398,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
     RefPtr<StyleValue> repeat_y;
     RefPtr<StyleValue> background_position;
     // FIXME: Implement background-size.
-    // FIXME: Implement background-attachment.
+    RefPtr<StyleValue> background_attachment;
     // FIXME: Implement background-clip.
     // FIXME: Implement background-origin.
 
@@ -2416,6 +2416,12 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         if (!value)
             return nullptr;
 
+        if (property_accepts_value(PropertyID::BackgroundAttachment, *value)) {
+            if (background_attachment)
+                return nullptr;
+            background_attachment = value.release_nonnull();
+            continue;
+        }
         if (property_accepts_value(PropertyID::BackgroundColor, *value)) {
             if (background_color)
                 return nullptr;
@@ -2479,8 +2485,10 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         repeat_x = property_initial_value(PropertyID::BackgroundRepeatX);
     if (!repeat_y)
         repeat_y = property_initial_value(PropertyID::BackgroundRepeatY);
+    if (!background_attachment)
+        background_attachment = property_initial_value(PropertyID::BackgroundAttachment);
 
-    return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), background_position.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
+    return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), background_position.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull(), background_attachment.release_nonnull());
 }
 
 RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
