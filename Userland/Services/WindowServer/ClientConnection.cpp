@@ -968,7 +968,7 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
         auto* screen = Screen::find_by_index(screen_index.value());
         if (!screen) {
             dbgln("get_screen_bitmap: Screen {} does not exist!", screen_index.value());
-            return { {} };
+            return { Gfx::ShareableBitmap() };
         }
         if (rect.has_value()) {
             auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
@@ -994,7 +994,7 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
         });
         return bitmap->to_shareable_bitmap();
     }
-    return { {} };
+    return { Gfx::ShareableBitmap() };
 }
 
 Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::get_screen_bitmap_around_cursor(Gfx::IntSize const& size)
