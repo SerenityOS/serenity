@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    Gfx::IntRect crop_region;
+    Optional<Gfx::IntRect> crop_region;
     if (select_region) {
         auto window = GUI::Window::construct();
         auto& container = window->set_main_widget<SelectableLayover>(window);
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
         app->exec();
 
         crop_region = container.region();
-        if (crop_region.is_empty()) {
+        if (crop_region.value().is_empty()) {
             dbgln("cancelled...");
             return 0;
         }
