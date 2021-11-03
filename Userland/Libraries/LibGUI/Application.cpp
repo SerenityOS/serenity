@@ -101,8 +101,16 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     });
 }
 
+static bool s_in_teardown;
+
+bool Application::in_teardown()
+{
+    return s_in_teardown;
+}
+
 Application::~Application()
 {
+    s_in_teardown = true;
     revoke_weak_ptrs();
 }
 

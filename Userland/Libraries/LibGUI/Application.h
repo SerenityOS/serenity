@@ -27,6 +27,8 @@ public:
 
     ~Application();
 
+    static bool in_teardown();
+
     int exec();
     void quit(int = 0);
 
