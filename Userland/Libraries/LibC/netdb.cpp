@@ -33,7 +33,7 @@ static in_addr_t* __gethostbyaddr_address_list_buffer[2];
 // a chicken-and-egg situation. Because of this, the LookupServer endpoint magic
 // is hardcoded here.
 // Keep the name synchronized with LookupServer/LookupServer.ipc.
-static constexpr i32 lookup_server_endpoint_magic = "LookupServer"sv.hash();
+static constexpr u32 lookup_server_endpoint_magic = "LookupServer"sv.hash();
 
 // Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
@@ -115,7 +115,7 @@ hostent* gethostbyname(const char* name)
 
     struct [[gnu::packed]] {
         u32 message_size;
-        i32 endpoint_magic;
+        u32 endpoint_magic;
         i32 message_id;
         i32 name_length;
     } request_header = {
@@ -139,7 +139,7 @@ hostent* gethostbyname(const char* name)
 
     struct [[gnu::packed]] {
         u32 message_size;
-        i32 endpoint_magic;
+        u32 endpoint_magic;
         i32 message_id;
         i32 code;
         u64 addresses_count;
@@ -215,7 +215,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     struct [[gnu::packed]] {
         u32 message_size;
-        i32 endpoint_magic;
+        u32 endpoint_magic;
         i32 message_id;
         i32 address_length;
     } request_header = {
@@ -239,7 +239,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     struct [[gnu::packed]] {
         u32 message_size;
-        i32 endpoint_magic;
+        u32 endpoint_magic;
         i32 message_id;
         i32 code;
         i32 name_length;
