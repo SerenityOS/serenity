@@ -129,44 +129,30 @@ These belong in the `.vscode/settings.json` of Serenity.
 
 ### Custom Tasks
 
-You can create custom tasks (`.vscode/tasks.json`) to quickly compile Serenity. The following are two example tasks, a "just build" task and a "build and run" task for i686 that also give you error highlighting:
+You can create custom tasks (`.vscode/tasks.json`) to quickly compile Serenity.
+The following three example tasks should suffice in most situations, and allow you to specify the build system to use, as well as give you error highlighting.
+
+Note: The Assertion und KUBSan Problem matchers will only run after you have closed qemu.
+
+<details>
+<summary>tasks.json</summary>
 
 ```json
 {
     "tasks": [
         {
-            "label": "build",
+            "label": "build lagom",
             "type": "shell",
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/Build/i686"
-                    ]
-                },
-                {
-                    "source": "gcc",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/Build/i686"
-                    ],
-                    "pattern": [
-                        {
-                            "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
-                            "file": 1,
-                            "location": 2,
-                            "message": 3
-                        }
-                    ]
-                }
-            ],
+            "problemMatcher":[{
+                "base": "$gcc",
+                "fileLocation": ["relative","${workspaceFolder}/Build/lagom"]
+            }],
             "command": [
                 "bash"
             ],
             "args": [
                 "-c",
-                "\"Meta/serenity.sh image\""
+                "\"Meta/serenity.sh build lagom\""
             ],
             "presentation": {
                 "echo": true,
@@ -179,97 +165,153 @@ You can create custom tasks (`.vscode/tasks.json`) to quickly compile Serenity. 
             }
         },
         {
-            "label": "launch",
+            "label": "build",
             "type": "shell",
-            "linux": {
-                "command": "bash",
+            "command": "bash",
                 "args": [
                     "-c",
-                    "\"Meta/serenity.sh run\""
+                    "Meta/serenity.sh build ${input:arch} ${input:compiler}"
+                ],
+                "options": {
+                    "env": {
+                        "SERENITY_RAM_SIZE": "4G",
+                    }
+                },
+                "problemMatcher": [
+                    {
+                        "base": "$gcc",
+                        "fileLocation": [
+                            "relative",
+                            // FIXME: Clang uses ${input:arch}clang
+                            "${workspaceFolder}/Build/${input:arch}"
+                        ]
+                    },
+                    {
+                        "source": "gcc",
+                        "fileLocation": [
+                            "relative",
+                            // FIXME: Clang uses ${input:arch}clang
+                            "${workspaceFolder}/Build/${input:arch}"
+                        ],
+                        "pattern": [
+                            {
+                                "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
+                                "file": 1,
+                                "location": 2,
+                                "message": 3
+                            }
+                        ]
+                    }
+                ]
+        },
+        {
+            "label": "launch",
+            "type": "shell",
+            "command": "bash",
+                "args": [
+                    "-c",
+                    "Meta/serenity.sh run ${input:arch} ${input:compiler}"
                 ],
                 "options": {
                     "env": {
                         // Put your custom run configuration here, e.g. SERENITY_RAM_SIZE
                     }
-                }
-            },
-            "problemMatcher": [
-                {
-                    "source": "Assertion Failed",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/Build/i686"
-                    ],
-                    "pattern": [
-                        {
-                            "regexp": "ASSERTION FAILED: (.*)$",
-                            "message": 1
-                        },
-                        {
-                            "regexp": "^((?:.*)\\.(h|cpp|c|S)):(\\d*)$",
-                            "file":1,
-                            "location":3
-                        }
-                    ]
                 },
-                {
-                    "source": "KUBSan",
-                    "owner": "cpp",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}"
-                    ],
-                    "pattern": [
-                        {
-                            "regexp": "KUBSAN: (.*)",
-                            "message": 0
-                        },
-                        {
-                            "regexp": "KUBSAN: at ../(.*), line (\\d*), column: (\\d*)",
-                            "file": 1,
-                            "line": 2,
-                            "column": 3
-                        }
-                    ]
-                },
-                {
-                    "base": "$gcc",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/Build/i686"
-                    ]
-                },
-                {
-                    "source": "gcc",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/Build/i686"
-                    ],
-                    "pattern": [
-                        {
-                            "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
-                            "file": 1,
-                            "location": 2,
-                            "message": 3
-                        }
-                    ]
-                }
-            ],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "group": "run",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
-            }
+                "problemMatcher": [
+                    {
+                        "base": "$gcc",
+                        "fileLocation": [
+                            "relative",
+                            // FIXME: Clang uses ${input:arch}clang
+                            "${workspaceFolder}/Build/${input:arch}"
+                        ]
+                    },
+                    {
+                        "source": "gcc",
+                        "fileLocation": [
+                            "relative",
+                            // FIXME: Clang uses ${input:arch}clang
+                            "${workspaceFolder}/Build/${input:arch}"
+                        ],
+                        "pattern": [
+                            {
+                                "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
+                                "file": 1,
+                                "location": 2,
+                                "message": 3
+                            }
+                        ]
+                    },
+                    {
+                        "source": "KUBSan",
+                        "owner": "cpp",
+                        "fileLocation": [
+                            "relative",
+                            "${workspaceFolder}"
+                        ],
+                        "pattern": [
+                            {
+                                "regexp": "KUBSAN: (.*)",
+                                "message": 0
+                            },
+                            {
+                                "regexp": "KUBSAN: at ../(.*), line (\\d*), column: (\\d*)",
+                                "file": 1,
+                                "line": 2,
+                                "column": 3
+                            }
+                        ]
+                    },
+                    {
+                        "source": "Assertion Failed",
+                        "owner": "cpp",
+                        "pattern": [
+                            {
+                                "regexp": "ASSERTION FAILED: (.*)$",
+                                "message": 1
+                            },
+                            {
+                                "regexp": "^((?:.*)\\.(h|cpp|c|S)):(\\d*)$",
+                                "file":1,
+                                "location":3
+                            }
+                        ],
+                        "fileLocation": [
+                            "relative",
+                            // FIXME: Clang uses ${input:arch}clang
+                            "${workspaceFolder}/Build/${input:arch}"
+                        ]
+                    }
+                ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "compiler",
+            "description": "Compiler to use",
+            "type": "pickString",
+            "default": "GNU",
+            "options": [
+                "GNU",
+                "Clang"
+            ]
         },
+        {
+            "id": "arch",
+            "description": "Architecture to compile for",
+            "type": "pickString",
+            "default": "i686",
+            "options": [
+                "i686",
+                "x86_64",
+                "aarch64"
+            ]
+        }
     ]
 }
 ```
 
-This can easily be adopted into x86_64 by appending the architecture to the serenity.sh commands.
+</details>
 
 ### License snippet
 
