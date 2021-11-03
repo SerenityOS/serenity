@@ -389,7 +389,7 @@ NonnullOwnPtr<Text::MultiNode> Text::parse_sequence(Vector<Token>::ConstIterator
                 node->children.append(parse_code(tokens));
                 break;
             }
-        } else if (!in_link && (*tokens == "[" || *tokens == "![")) {
+        } else if (*tokens == "[" || *tokens == "![") {
             node->children.append(parse_link(tokens));
         } else if (in_link && *tokens == "](") {
             return node;
