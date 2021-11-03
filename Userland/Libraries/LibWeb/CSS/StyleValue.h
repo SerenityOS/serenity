@@ -380,22 +380,26 @@ public:
         NonnullRefPtr<StyleValue> position,
         NonnullRefPtr<StyleValue> repeat_x,
         NonnullRefPtr<StyleValue> repeat_y,
-        NonnullRefPtr<StyleValue> attachment)
+        NonnullRefPtr<StyleValue> attachment,
+        NonnullRefPtr<StyleValue> origin,
+        NonnullRefPtr<StyleValue> clip)
     {
-        return adopt_ref(*new BackgroundStyleValue(color, image, position, repeat_x, repeat_y, attachment));
+        return adopt_ref(*new BackgroundStyleValue(color, image, position, repeat_x, repeat_y, attachment, origin, clip));
     }
     virtual ~BackgroundStyleValue() override { }
 
     NonnullRefPtr<StyleValue> attachment() const { return m_attachment; }
+    NonnullRefPtr<StyleValue> clip() const { return m_clip; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
     NonnullRefPtr<StyleValue> image() const { return m_image; }
+    NonnullRefPtr<StyleValue> origin() const { return m_origin; }
     NonnullRefPtr<StyleValue> position() const { return m_position; }
     NonnullRefPtr<StyleValue> repeat_x() const { return m_repeat_x; }
     NonnullRefPtr<StyleValue> repeat_y() const { return m_repeat_y; }
 
     virtual String to_string() const override
     {
-        return String::formatted("{} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string(), m_attachment->to_string());
+        return String::formatted("{} {} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
     }
 
 private:
@@ -405,7 +409,9 @@ private:
         NonnullRefPtr<StyleValue> position,
         NonnullRefPtr<StyleValue> repeat_x,
         NonnullRefPtr<StyleValue> repeat_y,
-        NonnullRefPtr<StyleValue> attachment)
+        NonnullRefPtr<StyleValue> attachment,
+        NonnullRefPtr<StyleValue> origin,
+        NonnullRefPtr<StyleValue> clip)
         : StyleValue(Type::Background)
         , m_color(color)
         , m_image(image)
@@ -413,6 +419,8 @@ private:
         , m_repeat_x(repeat_x)
         , m_repeat_y(repeat_y)
         , m_attachment(attachment)
+        , m_origin(origin)
+        , m_clip(clip)
     {
     }
     NonnullRefPtr<StyleValue> m_color;
@@ -422,8 +430,8 @@ private:
     NonnullRefPtr<StyleValue> m_repeat_x;
     NonnullRefPtr<StyleValue> m_repeat_y;
     NonnullRefPtr<StyleValue> m_attachment;
-    // FIXME: background-clip
-    // FIXME: background-origin
+    NonnullRefPtr<StyleValue> m_origin;
+    NonnullRefPtr<StyleValue> m_clip;
 };
 
 class PositionStyleValue final : public StyleValue {

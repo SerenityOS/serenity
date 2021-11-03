@@ -20,6 +20,15 @@
       "scroll"
     ]
   },
+  "background-clip": {
+    "inherited": false,
+    "initial": "border-box",
+    "valid-identifiers": [
+      "border-box",
+      "content-box",
+      "padding-box"
+    ]
+  },
   "background-color": {
     "inherited": false,
     "initial": "transparent",
@@ -38,6 +47,15 @@
     ],
     "valid-identifiers": [
       "none"
+    ]
+  },
+  "background-origin": {
+    "inherited": false,
+    "initial": "padding-box",
+    "valid-identifiers": [
+      "border-box",
+      "content-box",
+      "padding-box"
     ]
   },
   "background-position": {
