@@ -7,6 +7,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCompress/Gzip.h>
+#include <LibCore/File.h>
 #include <LibCoredump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
@@ -273,7 +274,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
     auto name = region->object_name();
 
     String path;
-    if (name.ends_with(".so"))
+    if (Core::File::looks_like_shared_library(name))
         path = String::formatted("/usr/lib/{}", name);
     else {
         path = name;
