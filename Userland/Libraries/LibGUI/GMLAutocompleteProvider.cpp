@@ -153,6 +153,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
 
         if (can_have_declared_layout(class_names.last()) && "layout"sv.matches(pattern))
             identifier_entries.empend("layout: ", partial_input_length, Language::Unspecified, "layout", AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
+        if (class_names.last() == "GUI::ScrollableContainerWidget" && "content_widget"sv.matches(pattern))
+            identifier_entries.empend("content_widget: ", partial_input_length, Language::Unspecified, "content_widget", AutocompleteProvider::Entry::HideAutocompleteAfterApplying::No);
     };
 
     auto register_properties_and_widgets_matching_pattern = [&](String pattern, size_t partial_input_length) {
@@ -223,6 +225,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         if (identifier_string == "layout")
             register_layouts_matching_pattern("*", 0u);
+        if (identifier_string == "content_widget")
+            register_widgets_matching_pattern("*", 0u);
         break;
     default:
         break;
