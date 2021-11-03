@@ -52,6 +52,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.dayOfWeek, day_of_week_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.dayOfYear, day_of_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.weekOfYear, week_of_year_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.hoursInDay, hours_in_day_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.daysInWeek, days_in_week_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.daysInYear, days_in_year_getter, {}, Attribute::Configurable);
@@ -454,6 +455,57 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::week_of_year_getter)
 
     // 7. Return ? CalendarWeekOfYear(calendar, temporalDateTime).
     return TRY(calendar_week_of_year(global_object, calendar, *temporal_date_time));
+}
+
+// 6.3.22 get Temporal.ZonedDateTime.prototype.hoursInDay, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.hoursinday
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::hours_in_day_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
+
+    // 5. Let isoCalendar be ! GetISO8601Calendar().
+    auto* iso_calendar = get_iso8601_calendar(global_object);
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, isoCalendar).
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, *iso_calendar));
+
+    // 7. Let year be temporalDateTime.[[ISOYear]].
+    auto year = temporal_date_time->iso_year();
+
+    // 8. Let month be temporalDateTime.[[ISOMonth]].
+    auto month = temporal_date_time->iso_month();
+
+    // 9. Let day be temporalDateTime.[[ISODay]].
+    auto day = temporal_date_time->iso_day();
+
+    // 10. Let today be ? CreateTemporalDateTime(year, month, day, 0, 0, 0, 0, 0, 0, isoCalendar).
+    auto* today = TRY(create_temporal_date_time(global_object, year, month, day, 0, 0, 0, 0, 0, 0, *iso_calendar));
+
+    // 11. Let tomorrowFields be ? AddISODate(year, month, day, 0, 0, 0, 1, "reject").
+    auto tomorrow_fields = TRY(add_iso_date(global_object, year, month, day, 0, 0, 0, 1, "reject"sv));
+
+    // 12. Let tomorrow be ? CreateTemporalDateTime(tomorrowFields.[[Year]], tomorrowFields.[[Month]], tomorrowFields.[[Day]], 0, 0, 0, 0, 0, 0, isoCalendar).
+    auto* tomorrow = TRY(create_temporal_date_time(global_object, tomorrow_fields.year, tomorrow_fields.month, tomorrow_fields.day, 0, 0, 0, 0, 0, 0, *iso_calendar));
+
+    // 13. Let todayInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, today, "compatible").
+    auto* today_instant = TRY(builtin_time_zone_get_instant_for(global_object, &time_zone, *today, "compatible"sv));
+
+    // 14. Let tomorrowInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, tomorrow, "compatible").
+    auto* tomorrow_instant = TRY(builtin_time_zone_get_instant_for(global_object, &time_zone, *tomorrow, "compatible"sv));
+
+    // 15. Let diffNs be tomorrowInstant.[[Nanoseconds]] − todayInstant.[[Nanoseconds]].
+    auto diff_ns = tomorrow_instant->nanoseconds().big_integer().minus(today_instant->nanoseconds().big_integer());
+
+    // 16. Return 𝔽(diffNs / (3.6 × 10^12)).
+    auto hours_diff_ns = diff_ns.divided_by("3600000000000"_bigint).quotient;
+    return Value(hours_diff_ns.to_double());
 }
 
 // 6.3.23 get Temporal.ZonedDateTime.prototype.daysInWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinweek
