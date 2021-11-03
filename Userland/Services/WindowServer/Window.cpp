@@ -111,6 +111,7 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
     if (parent_window)
         set_parent_window(*parent_window);
     WindowManager::the().add_window(*this);
+    frame().window_was_constructed({});
 }
 
 Window::~Window()
