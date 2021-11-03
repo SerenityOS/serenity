@@ -284,6 +284,39 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     return floored_increment;
 }
 
+// 13.15 ToTemporalDateTimeRoundingIncrement ( normalizedOptions, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetimeroundingincrement
+ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject& global_object, Object const& normalized_options, StringView smallest_unit)
+{
+    double maximum;
+
+    // 1. If smallestUnit is "day", then
+    if (smallest_unit == "day"sv) {
+        // a. Let maximum be 1.
+        maximum = 1;
+    }
+    // 2. Else if smallestUnit is "hour", then
+    else if (smallest_unit == "hour"sv) {
+        // a. Let maximum be 24.
+        maximum = 24;
+    }
+    // 3. Else if smallestUnit is "minute" or "second", then
+    else if (smallest_unit.is_one_of("minute"sv, "second"sv)) {
+        // a. Let maximum be 60.
+        maximum = 60;
+    }
+    // 4. Else,
+    else {
+        // a. Assert: smallestUnit is "millisecond", "microsecond", or "nanosecond".
+        VERIFY(smallest_unit.is_one_of("millisecond"sv, "microsecond"sv, "nanosecond"sv));
+
+        // b. Let maximum be 1000.
+        maximum = 1000;
+    }
+
+    // 5. Return ? ToTemporalRoundingIncrement(normalizedOptions, maximum, false).
+    return to_temporal_rounding_increment(global_object, normalized_options, maximum, false);
+}
+
 // 13.16 ToSecondsStringPrecision ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tosecondsstringprecision
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject& global_object, Object const& normalized_options)
 {
