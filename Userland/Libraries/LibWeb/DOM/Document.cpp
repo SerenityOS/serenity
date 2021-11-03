@@ -1089,13 +1089,13 @@ Bindings::LocationObject* Document::location()
     return window().wrapper()->location_object();
 }
 
-// https://w3c.github.io/page-visibility/#hidden-attribute
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
 bool Document::hidden() const
 {
     return false;
 }
 
-// https://w3c.github.io/page-visibility/#visibilitystate-attribute
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-document-visibilitystate
 String Document::visibility_state() const
 {
     return hidden() ? "hidden" : "visible";
