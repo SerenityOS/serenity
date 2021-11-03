@@ -33,6 +33,9 @@ public:
     bool is_link() const;
     static bool is_link(String const& filename);
 
+    bool looks_like_shared_library() const;
+    static bool looks_like_shared_library(String const& filename);
+
     static bool exists(String const& filename);
     static Result<size_t, OSError> size(String const& filename);
     static bool ensure_parent_directories(String const& path);
