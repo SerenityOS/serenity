@@ -433,7 +433,7 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
 
         String lib_name = object_path.value();
-        if (lib_name.ends_with(".so"))
+        if (Core::File::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 
         FlatPtr base_address = entry.as_object().get("address").to_addr();

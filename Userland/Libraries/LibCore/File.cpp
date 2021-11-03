@@ -147,6 +147,16 @@ bool File::is_link(String const& filename)
     return S_ISLNK(st.st_mode);
 }
 
+bool File::looks_like_shared_library() const
+{
+    return File::looks_like_shared_library(m_filename);
+}
+
+bool File::looks_like_shared_library(const String& filename)
+{
+    return filename.ends_with(".so"sv) || filename.contains(".so."sv);
+}
+
 bool File::exists(String const& filename)
 {
     struct stat st;

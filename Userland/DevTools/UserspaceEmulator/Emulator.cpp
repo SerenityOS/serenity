@@ -15,6 +15,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/StringUtils.h>
+#include <LibCore/File.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -395,7 +396,7 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
         return {};
 
     String lib_path = lib_name;
-    if (lib_name.ends_with(".so"))
+    if (Core::File::looks_like_shared_library(lib_name))
         lib_path = String::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
@@ -432,7 +433,10 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     auto lib_name = address_region->lib_name();
     auto const* first_region = (lib_name.is_null() || lib_name.is_empty()) ? address_region : first_region_for_object(lib_name);
     VERIFY(first_region);
-    auto lib_path = lib_name.ends_with(".so"sv) ? String::formatted("/usr/lib/{}", lib_name) : lib_name;
+    auto lib_path = lib_name;
+    if (Core::File::looks_like_shared_library(lib_name)) {
+        lib_path = String::formatted("/usr/lib/{}", lib_name);
+    }
 
     auto it = m_dynamic_library_cache.find(lib_path);
     auto const& elf = it->value.debug_info->elf();
