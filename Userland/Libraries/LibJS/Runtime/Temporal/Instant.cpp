@@ -263,8 +263,11 @@ ThrowCompletionOr<String> temporal_instant_to_string(GlobalObject& global_object
     }
     // 9. Else,
     else {
-        // a. Let timeZoneString be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-        time_zone_string = TRY(builtin_time_zone_get_offset_string_for(global_object, time_zone, instant));
+        // a. Let offsetNs be ? GetOffsetNanosecondsFor(timeZone, instant).
+        auto offset_ns = TRY(get_offset_nanoseconds_for(global_object, time_zone, instant));
+
+        // b. Let timeZoneString be ! FormatISOTimeZoneOffsetString(offsetNs).
+        time_zone_string = format_iso_time_zone_offset_string(offset_ns);
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.

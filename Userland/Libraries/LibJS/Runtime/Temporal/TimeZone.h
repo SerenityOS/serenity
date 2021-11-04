@@ -45,6 +45,7 @@ BigInt* get_iana_time_zone_next_transition(GlobalObject&, BigInt const& epoch_na
 BigInt* get_iana_time_zone_previous_transition(GlobalObject&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
 ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject&, String const&);
 String format_time_zone_offset_string(double offset_nanoseconds);
+String format_iso_time_zone_offset_string(double offset_nanoseconds);
 ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject&, Value temporal_time_zone_like);
 ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject&, Value time_zone, Instant&);
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(GlobalObject&, Value time_zone, Instant&);

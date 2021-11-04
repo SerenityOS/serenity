@@ -348,7 +348,34 @@ String format_time_zone_offset_string(double offset_nanoseconds)
     return builder.to_string();
 }
 
-// 11.6.10 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
+// 11.6.10 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
+String format_iso_time_zone_offset_string(double offset_nanoseconds)
+{
+    // 1. Assert: offsetNanoseconds is an integer.
+    VERIFY(trunc(offset_nanoseconds) == offset_nanoseconds);
+
+    // 2. Set offsetNanoseconds to ! RoundNumberToIncrement(offsetNanoseconds, 60 × 10^9, "halfExpand").
+    offset_nanoseconds = round_number_to_increment(offset_nanoseconds, 60000000000, "halfExpand"sv);
+
+    // 3. If offsetNanoseconds ≥ 0, let sign be "+"; otherwise, let sign be "-".
+    auto sign = offset_nanoseconds >= 0 ? "+"sv : "-"sv;
+
+    // 4. Set offsetNanoseconds to abs(offsetNanoseconds).
+    offset_nanoseconds = fabs(offset_nanoseconds);
+
+    // 5. Let minutes be offsetNanoseconds / (60 × 10^9) modulo 60.
+    auto minutes = fmod(offset_nanoseconds / 60000000000, 60);
+
+    // 6. Let hours be floor(offsetNanoseconds / (3600 × 10^9)).
+    auto hours = floor(offset_nanoseconds / 3600000000000);
+
+    // 7. Let h be hours, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 8. Let m be minutes, formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 9. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), and m.
+    return String::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes);
+}
+
+// 11.6.11 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
 ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Value temporal_time_zone_like)
 {
     auto& vm = global_object.vm();
@@ -385,7 +412,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
     return TRY(create_temporal_time_zone(global_object, result));
 }
 
-// 11.6.11 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
+// 11.6.12 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
 ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object, Value time_zone, Instant& instant)
 {
     auto& vm = global_object.vm();
@@ -419,7 +446,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
     return offset_nanoseconds;
 }
 
-// 11.6.12 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
+// 11.6.13 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_object, Value time_zone, Instant& instant)
 {
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
@@ -429,7 +456,7 @@ ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(GlobalObject& 
     return format_time_zone_offset_string(offset_nanoseconds);
 }
 
-// 11.6.13 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
+// 11.6.14 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(GlobalObject& global_object, Value time_zone, Instant& instant, Object& calendar)
 {
     // 1. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
@@ -447,7 +474,7 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(Glob
     return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar);
 }
 
-// 11.6.14 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
+// 11.6.15 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
 ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
@@ -459,7 +486,7 @@ ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject& glob
     return disambiguate_possible_instants(global_object, possible_instants, time_zone, date_time, disambiguation);
 }
 
-// 11.6.15 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
+// 11.6.16 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
 ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_object, Vector<Value> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // TODO: MarkedValueList<T> would be nice, then we could pass a Vector<Instant*> here and wouldn't need the casts...
@@ -573,7 +600,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject& global_
     return &static_cast<Instant&>(const_cast<Object&>(instant.as_object()));
 }
 
-// 11.6.16 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
+// 11.6.17 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
 ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& global_object, Value time_zone, PlainDateTime& date_time)
 {
     auto& vm = global_object.vm();
