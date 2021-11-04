@@ -261,7 +261,7 @@ public:
 
     void reload_icon_bitmaps_after_scale_change();
 
-    void reevaluate_hovered_window(Window* = nullptr);
+    void reevaluate_hover_state_for_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
     void switch_to_window_stack(WindowStack&, Window* = nullptr, bool show_overlay = true);
