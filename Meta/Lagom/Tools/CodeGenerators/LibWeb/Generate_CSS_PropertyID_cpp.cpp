@@ -169,37 +169,6 @@ bool is_inherited_property(PropertyID property_id)
     }
 }
 
-bool is_pseudo_property(PropertyID property_id)
-{
-    switch (property_id) {
-)~~~");
-
-    properties.for_each_member([&](auto& name, auto& value) {
-        VERIFY(value.is_object());
-
-        bool pseudo = false;
-        if (value.as_object().has("pseudo")) {
-            auto& pseudo_value = value.as_object().get("pseudo");
-            VERIFY(pseudo_value.is_bool());
-            pseudo = pseudo_value.as_bool();
-        }
-
-        if (pseudo) {
-            auto member_generator = generator.fork();
-            member_generator.set("name:titlecase", title_casify(name));
-            member_generator.append(R"~~~(
-    case PropertyID::@name:titlecase@:
-        return true;
-)~~~");
-        }
-    });
-
-    generator.append(R"~~~(
-    default:
-        return false;
-    }
-}
-
 RefPtr<StyleValue> property_initial_value(PropertyID property_id)
 {
     static HashMap<PropertyID, NonnullRefPtr<StyleValue>> initial_values;

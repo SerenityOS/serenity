@@ -123,13 +123,8 @@ static bool contains(Edge a, Edge b)
     return a == b || b == Edge::All;
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document)
 {
-    if (is_pseudo_property(property_id) && !is_internally_generated_pseudo_property) {
-        dbgln("Ignoring non-internally-generated pseudo property: {}", string_from_property_id(property_id));
-        return;
-    }
-
     auto assign_edge_values = [&style](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
         if (values.size() == 4) {
             style.set_property(top_property, values[0]);
