@@ -27,20 +27,27 @@ UNMAP_AFTER_INIT RefPtr<VMWareMouseDevice> VMWareMouseDevice::try_to_initialize(
 
 void VMWareMouseDevice::irq_handle_byte_read(u8)
 {
-    VERIFY(VMWareBackdoor::the());
-    VERIFY(VMWareBackdoor::the()->vmmouse_is_absolute());
-    // We won't receive complete packets with the backdoor enabled,
-    // we will only get one byte for each event, which we'll just
-    // discard. If we were to wait until we *think* that we got a
-    // full PS/2 packet then we would create a backlog in the VM
-    // because we wouldn't read the appropriate number of mouse
-    // packets from VMWareBackdoor.
-    auto mouse_packet = VMWareBackdoor::the()->receive_mouse_packet();
-    if (mouse_packet.has_value()) {
-        m_entropy_source.add_random_event(mouse_packet.value());
+    auto backdoor = VMWareBackdoor::the();
+    VERIFY(backdoor);
+    VERIFY(backdoor->vmmouse_is_absolute());
+
+    // We will receive 4 bytes from the I8042 controller that we are going to
+    // ignore. Instead, we will check with VMWareBackdoor to see how many bytes
+    // of mouse event data are waiting for us. For each multiple of 4, we
+    // produce a mouse packet.
+    constexpr u8 max_iterations = 128;
+    u8 current_iteration = 0;
+    while (++current_iteration < max_iterations) {
+        auto number_of_mouse_event_bytes = backdoor->read_mouse_status_queue_size();
+        if (number_of_mouse_event_bytes == 0)
+            break;
+        VERIFY(number_of_mouse_event_bytes % 4 == 0);
+
+        auto mouse_packet = backdoor->receive_mouse_packet();
+        m_entropy_source.add_random_event(mouse_packet);
         {
             SpinlockLocker lock(m_queue_lock);
-            m_queue.enqueue(mouse_packet.value());
+            m_queue.enqueue(mouse_packet);
         }
         evaluate_block_conditions();
     }
