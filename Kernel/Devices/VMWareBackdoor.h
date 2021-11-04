@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 #include <Kernel/API/MousePacket.h>
@@ -51,7 +50,8 @@ public:
     void disable_absolute_vmmouse();
     void send(VMWareCommand& command);
 
-    Optional<MousePacket> receive_mouse_packet();
+    u16 read_mouse_status_queue_size();
+    MousePacket receive_mouse_packet();
 
 private:
     void send_high_bandwidth(VMWareCommand& command);
