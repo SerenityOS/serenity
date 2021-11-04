@@ -1662,10 +1662,12 @@ void WindowManager::set_highlight_window(Window* new_highlight_window)
         m_highlight_window = new_highlight_window->make_weak_ptr<Window>();
 
     if (previous_highlight_window) {
+        reevaluate_hover_state_for_window(previous_highlight_window);
         previous_highlight_window->invalidate(true, true);
         Compositor::the().invalidate_screen(previous_highlight_window->frame().render_rect());
     }
     if (new_highlight_window) {
+        reevaluate_hover_state_for_window(new_highlight_window);
         new_highlight_window->invalidate(true, true);
         Compositor::the().invalidate_screen(new_highlight_window->frame().render_rect());
     }
