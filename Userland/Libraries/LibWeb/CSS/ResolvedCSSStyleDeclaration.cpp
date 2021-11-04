@@ -374,21 +374,6 @@ static CSS::ValueID to_css_value_id(CSS::Overflow value)
     VERIFY_NOT_REACHED();
 }
 
-static CSS::ValueID to_css_value_id(CSS::Repeat value)
-{
-    switch (value) {
-    case Repeat::NoRepeat:
-        return CSS::ValueID::NoRepeat;
-    case Repeat::Repeat:
-        return CSS::ValueID::Repeat;
-    case Repeat::Round:
-        return CSS::ValueID::Round;
-    case Repeat::Space:
-        return CSS::ValueID::Space;
-    }
-    VERIFY_NOT_REACHED();
-}
-
 static CSS::ValueID to_css_value_id(CSS::ListStyleType value)
 {
     switch (value) {
@@ -662,8 +647,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
     case CSS::PropertyID::BackgroundRepeat:
         return BackgroundRepeatStyleValue::create(
-            IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat().repeat_x)),
-            IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat().repeat_y)));
+            layout_node.computed_values().background_repeat().repeat_x,
+            layout_node.computed_values().background_repeat().repeat_y);
     case CSS::PropertyID::Background: {
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
         auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
@@ -677,7 +662,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             value_or_default(maybe_background_color, InitialStyleValue::the()),
             value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)),
             value_or_default(maybe_background_position, PositionStyleValue::create(PositionEdge::Left, Length::make_px(0), PositionEdge::Top, Length::make_px(0))),
-            value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(IdentifierStyleValue::create(CSS::ValueID::Repeat), IdentifierStyleValue::create(CSS::ValueID::Repeat))),
+            value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(CSS::Repeat::Repeat, CSS::Repeat::Repeat)),
             value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)),
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
             value_or_default(maybe_background_clip, IdentifierStyleValue::create(CSS::ValueID::BorderBox)));

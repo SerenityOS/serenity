@@ -181,6 +181,22 @@ enum class Repeat : u8 {
     Space,
 };
 
+constexpr StringView to_string(Repeat value)
+{
+    switch (value) {
+    case Repeat::NoRepeat:
+        return "no-repeat"sv;
+    case Repeat::Repeat:
+        return "repeat"sv;
+    case Repeat::Round:
+        return "round"sv;
+    case Repeat::Space:
+        return "space"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 enum class TextAlign {
     Left,
     Center,
@@ -462,30 +478,30 @@ private:
 
 class BackgroundRepeatStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<BackgroundRepeatStyleValue> create(NonnullRefPtr<StyleValue> repeat_x, NonnullRefPtr<StyleValue> repeat_y)
+    static NonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
     {
         return adopt_ref(*new BackgroundRepeatStyleValue(repeat_x, repeat_y));
     }
     virtual ~BackgroundRepeatStyleValue() override { }
 
-    NonnullRefPtr<StyleValue> repeat_x() const { return m_repeat_x; }
-    NonnullRefPtr<StyleValue> repeat_y() const { return m_repeat_y; }
+    Repeat repeat_x() const { return m_repeat_x; }
+    Repeat repeat_y() const { return m_repeat_y; }
 
     virtual String to_string() const override
     {
-        return String::formatted("{} {}", m_repeat_x->to_string(), m_repeat_y->to_string());
+        return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
     }
 
 private:
-    BackgroundRepeatStyleValue(NonnullRefPtr<StyleValue> repeat_x, NonnullRefPtr<StyleValue> repeat_y)
+    BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
         : StyleValue(Type::BackgroundRepeat)
         , m_repeat_x(repeat_x)
         , m_repeat_y(repeat_y)
     {
     }
 
-    NonnullRefPtr<StyleValue> m_repeat_x;
-    NonnullRefPtr<StyleValue> m_repeat_y;
+    Repeat m_repeat_x;
+    Repeat m_repeat_y;
 };
 
 class BorderStyleValue final : public StyleValue {

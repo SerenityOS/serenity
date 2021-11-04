@@ -2702,6 +2702,21 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
         return value_id == ValueID::RepeatX || value_id == ValueID::RepeatY;
     };
 
+    auto as_repeat = [](ValueID identifier) {
+        switch (identifier) {
+        case ValueID::NoRepeat:
+            return Repeat::NoRepeat;
+        case ValueID::Repeat:
+            return Repeat::Repeat;
+        case ValueID::Round:
+            return Repeat::Round;
+        case ValueID::Space:
+            return Repeat::Space;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
     auto& token = tokens.next_token();
     auto maybe_x_value = parse_css_value(context, token);
     if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
@@ -2711,8 +2726,8 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
     if (is_directional_repeat(*x_value)) {
         auto value_id = x_value->to_identifier();
         return BackgroundRepeatStyleValue::create(
-            IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat),
-            IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat));
+            value_id == ValueID::RepeatX ? Repeat::Repeat : Repeat::NoRepeat,
+            value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat);
     }
 
     // See if we have a second value for Y
@@ -2720,13 +2735,13 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
     auto maybe_y_value = parse_css_value(context, second_token);
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
-        return BackgroundRepeatStyleValue::create(x_value, x_value);
+        return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(x_value->to_identifier()));
     }
     tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
         return error();
-    return BackgroundRepeatStyleValue::create(x_value, y_value);
+    return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
 }
 
 RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
