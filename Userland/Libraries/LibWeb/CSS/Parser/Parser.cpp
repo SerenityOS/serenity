@@ -2394,8 +2394,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
 {
     RefPtr<StyleValue> background_color;
     RefPtr<StyleValue> background_image;
-    RefPtr<StyleValue> repeat_x;
-    RefPtr<StyleValue> repeat_y;
+    RefPtr<StyleValue> background_repeat;
     RefPtr<StyleValue> background_position;
     // FIXME: Implement background-size.
     RefPtr<StyleValue> background_attachment;
@@ -2463,30 +2462,14 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             return nullptr;
         }
         if (property_accepts_value(PropertyID::BackgroundRepeat, *value)) {
-            if (repeat_x)
+            if (background_repeat)
                 return nullptr;
-
-            auto value_id = value->to_identifier();
-            if (value_id == ValueID::RepeatX || value_id == ValueID::RepeatY) {
-                repeat_x = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat);
-                repeat_y = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat);
+            tokens.reconsume_current_input_token();
+            if (auto maybe_repeat = parse_single_background_repeat_value(context, tokens)) {
+                background_repeat = maybe_repeat.release_nonnull();
                 continue;
             }
-
-            // Check following value, if it's also a repeat, set both.
-            if (tokens.has_next_token()) {
-                auto next_value = parse_css_value(context, tokens.peek_token());
-                if (next_value && property_accepts_value(PropertyID::BackgroundRepeat, *next_value)) {
-                    tokens.next_token();
-                    repeat_x = value.release_nonnull();
-                    repeat_y = next_value.release_nonnull();
-                    continue;
-                }
-            }
-            auto repeat = value.release_nonnull();
-            repeat_x = repeat;
-            repeat_y = repeat;
-            continue;
+            return nullptr;
         }
 
         return nullptr;
@@ -2498,10 +2481,8 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         background_image = property_initial_value(PropertyID::BackgroundImage);
     if (!background_position)
         background_position = property_initial_value(PropertyID::BackgroundPosition);
-    if (!repeat_x)
-        repeat_x = property_initial_value(PropertyID::BackgroundRepeatX);
-    if (!repeat_y)
-        repeat_y = property_initial_value(PropertyID::BackgroundRepeatY);
+    if (!background_repeat)
+        background_repeat = property_initial_value(PropertyID::BackgroundRepeat);
     if (!background_attachment)
         background_attachment = property_initial_value(PropertyID::BackgroundAttachment);
 
@@ -2516,7 +2497,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         background_color.release_nonnull(),
         background_image.release_nonnull(),
         background_position.release_nonnull(),
-        repeat_x.release_nonnull(), repeat_y.release_nonnull(),
+        background_repeat.release_nonnull(),
         background_attachment.release_nonnull(),
         background_origin.release_nonnull(),
         background_clip.release_nonnull());
@@ -2708,48 +2689,51 @@ RefPtr<StyleValue> Parser::parse_background_position_value(ParsingContext const&
     return parse_single_background_position_value(context, tokens);
 }
 
-RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
 {
+    auto start_position = tokens.position();
+    auto error = [&]() {
+        tokens.rewind_to_position(start_position);
+        return nullptr;
+    };
+
     auto is_directional_repeat = [](StyleValue const& value) -> bool {
         auto value_id = value.to_identifier();
         return value_id == ValueID::RepeatX || value_id == ValueID::RepeatY;
     };
 
-    if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, component_values.first());
-        if (!maybe_value)
-            return nullptr;
-        auto value = maybe_value.release_nonnull();
-        if (!property_accepts_value(PropertyID::BackgroundRepeat, *value))
-            return nullptr;
+    auto& token = tokens.next_token();
+    auto maybe_x_value = parse_css_value(context, token);
+    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
+        return error();
+    auto x_value = maybe_x_value.release_nonnull();
 
-        if (is_directional_repeat(value)) {
-            auto value_id = value->to_identifier();
-            return BackgroundRepeatStyleValue::create(
-                IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat),
-                IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat));
-        }
-        return BackgroundRepeatStyleValue::create(value, value);
+    if (is_directional_repeat(*x_value)) {
+        auto value_id = x_value->to_identifier();
+        return BackgroundRepeatStyleValue::create(
+            IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat),
+            IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat));
     }
 
-    if (component_values.size() == 2) {
-        auto maybe_x_value = parse_css_value(context, component_values[0]);
-        auto maybe_y_value = parse_css_value(context, component_values[1]);
-        if (!maybe_x_value || !maybe_y_value)
-            return nullptr;
-
-        auto x_value = maybe_x_value.release_nonnull();
-        auto y_value = maybe_y_value.release_nonnull();
-        if (!property_accepts_value(PropertyID::BackgroundRepeat, x_value) || !property_accepts_value(PropertyID::BackgroundRepeat, y_value))
-            return nullptr;
-        if (is_directional_repeat(x_value) || is_directional_repeat(y_value))
-            return nullptr;
-        return BackgroundRepeatStyleValue::create(x_value, y_value);
+    // See if we have a second value for Y
+    auto& second_token = tokens.peek_token();
+    auto maybe_y_value = parse_css_value(context, second_token);
+    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
+        // We don't have a second value, so use x for both
+        return BackgroundRepeatStyleValue::create(x_value, x_value);
     }
+    tokens.next_token();
+    auto y_value = maybe_y_value.release_nonnull();
+    if (is_directional_repeat(*y_value))
+        return error();
+    return BackgroundRepeatStyleValue::create(x_value, y_value);
+}
 
+RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
     // FIXME: Handle multiple sets of comma-separated values.
-    dbgln("CSS Parser does not yet support multiple comma-separated values for background-repeat.");
-    return nullptr;
+    return parse_single_background_repeat_value(context, tokens);
 }
 
 RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)

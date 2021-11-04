@@ -673,8 +673,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
         auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
         auto maybe_background_position = property(CSS::PropertyID::BackgroundPosition);
-        auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
-        auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
+        auto maybe_background_repeat = property(CSS::PropertyID::BackgroundRepeat);
         auto maybe_background_attachment = property(CSS::PropertyID::BackgroundAttachment);
         auto maybe_background_origin = property(CSS::PropertyID::BackgroundOrigin);
         auto maybe_background_clip = property(CSS::PropertyID::BackgroundClip);
@@ -683,8 +682,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             value_or_default(maybe_background_color, InitialStyleValue::the()),
             value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)),
             value_or_default(maybe_background_position, PositionStyleValue::create(PositionEdge::Left, Length::make_px(0), PositionEdge::Top, Length::make_px(0))),
-            value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)),
-            value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatX)),
+            value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(IdentifierStyleValue::create(CSS::ValueID::Repeat), IdentifierStyleValue::create(CSS::ValueID::Repeat))),
             value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)),
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
             value_or_default(maybe_background_clip, IdentifierStyleValue::create(CSS::ValueID::BorderBox)));
