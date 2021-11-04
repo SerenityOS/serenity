@@ -121,7 +121,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
     // FIXME: The spec has an issue in this part which makes it unimplementable, namely:
     //        - ParseTemporalMonthDayString doesn't return a [[Calendar]] field, which is required in step 7.
     //        This is a known issue, see https://github.com/tc39/proposal-temporal/issues/1502
-    TODO();
+    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ToTemporalMonthDay");
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday
