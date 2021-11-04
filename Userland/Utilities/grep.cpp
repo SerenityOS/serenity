@@ -129,7 +129,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        auto matches = [&](StringView str, StringView filename = "", bool print_filename = false, bool is_binary = false) {
+        auto matches = [&](StringView str, StringView filename, bool print_filename, bool is_binary) {
             size_t last_printed_char_pos { 0 };
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return false;
