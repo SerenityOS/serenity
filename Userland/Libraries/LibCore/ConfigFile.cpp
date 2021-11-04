@@ -134,10 +134,8 @@ int ConfigFile::read_num_entry(String const& group, String const& key, int defau
 
 bool ConfigFile::read_bool_entry(String const& group, String const& key, bool default_value) const
 {
-    auto value = read_entry(group, key, default_value ? "1" : "0");
-    if (value == "1" || value.to_lowercase() == "true")
-        return 1;
-    return 0;
+    auto value = read_entry(group, key, default_value ? "true" : "false");
+    return value == "1" || value.equals_ignoring_case("true"sv);
 }
 
 void ConfigFile::write_entry(String const& group, String const& key, String const& value)
@@ -152,7 +150,7 @@ void ConfigFile::write_num_entry(String const& group, String const& key, int val
 }
 void ConfigFile::write_bool_entry(String const& group, String const& key, bool value)
 {
-    write_entry(group, key, value ? "1" : "0");
+    write_entry(group, key, value ? "true" : "false");
 }
 void ConfigFile::write_color_entry(String const& group, String const& key, Color value)
 {
