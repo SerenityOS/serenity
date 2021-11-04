@@ -52,8 +52,8 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         auto background_data = Painting::BackgroundData {
             .color = computed_values().background_color(),
             .image = background_image() ? background_image()->bitmap() : nullptr,
-            .repeat_x = computed_values().background_repeat_x(),
-            .repeat_y = computed_values().background_repeat_y()
+            .repeat_x = computed_values().background_repeat().repeat_x,
+            .repeat_y = computed_values().background_repeat().repeat_y
         };
 
         auto top_left_border_radius = computed_values().border_top_left_radius();
