@@ -390,17 +390,20 @@ ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&
     // 2. Let result be the Record { [[Hour]]: undefined, [[Minute]]: undefined, [[Second]]: undefined, [[Millisecond]]: undefined, [[Microsecond]]: undefined, [[Nanosecond]]: undefined }.
     auto result = UnregulatedTemporalTime {};
 
-    // 3. For each row of Table 3, except the header row, in table order, do
+    // 3. Let any be false.
+    auto any = false;
+
+    // 4. For each row of Table 3, except the header row, in table order, do
     for (auto& [internal_slot, property] : temporal_time_like_properties<UnregulatedTemporalTime, double>(vm)) {
         // a. Let property be the Property value of the current row.
 
         // b. Let value be ? Get(temporalTimeLike, property).
         auto value = TRY(temporal_time_like.get(property));
 
-        // c. If value is undefined, then
-        if (value.is_undefined()) {
-            // i. Throw a TypeError exception.
-            return vm.throw_completion<TypeError>(global_object, ErrorType::MissingRequiredProperty, property);
+        // c. If value is not undefined, then
+        if (!value.is_undefined()) {
+            // i. Set any to true.
+            any = true;
         }
 
         // d. Set value to ? ToIntegerThrowOnInfinity(value).
@@ -410,7 +413,13 @@ ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&
         result.*internal_slot = value_number;
     }
 
-    // 4. Return result.
+    // 5. If any is false, then
+    if (!any) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidPlainTimeLikeObject);
+    }
+
+    // 6. Return result.
     return result;
 }
 
