@@ -616,6 +616,8 @@ void Window::set_visible(bool b)
         return;
     m_visible = b;
 
+    WindowManager::the().reevaluate_hover_state_for_window(this);
+
     if (!m_visible)
         WindowManager::the().check_hide_geometry_overlay(*this);
     Compositor::the().invalidate_occlusions();
