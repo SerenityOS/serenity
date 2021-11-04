@@ -195,76 +195,58 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
 
     auto& temporal_time_like = temporal_time_like_argument.as_object();
 
-    // 4. Perform ? RejectTemporalCalendarType(temporalTimeLike).
-    TRY(reject_temporal_calendar_type(global_object, temporal_time_like));
+    // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalTimeLike).
+    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_time_like));
 
-    // 5. Let calendarProperty be ? Get(temporalTimeLike, "calendar").
-    auto calendar_property = TRY(temporal_time_like.get(vm.names.calendar));
-
-    // 6. If calendarProperty is not undefined, then
-    if (!calendar_property.is_undefined()) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "calendar");
-    }
-
-    // 7. Let timeZoneProperty be ? Get(temporalTimeLike, "timeZone").
-    auto time_zone_property = TRY(temporal_time_like.get(vm.names.timeZone));
-
-    // 8. If timeZoneProperty is not undefined, then
-    if (!time_zone_property.is_undefined()) {
-        // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "timeZone");
-    }
-
-    // 9. Let partialTime be ? ToPartialTime(temporalTimeLike).
+    // 5. Let partialTime be ? ToPartialTime(temporalTimeLike).
     auto partial_time = TRY(to_partial_time(global_object, temporal_time_like));
 
-    // 10. Set options to ? GetOptionsObject(options).
+    // 6. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
-    // 11. Let overflow be ? ToTemporalOverflow(options).
+    // 7. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, *options));
 
-    // 12. If partialTime.[[Hour]] is not undefined, then
+    // 8. If partialTime.[[Hour]] is not undefined, then
     //      a. Let hour be partialTime.[[Hour]].
-    // 13. Else,
+    // 9. Else,
     //      a. Let hour be temporalTime.[[ISOHour]].
     auto hour = partial_time.hour.value_or(temporal_time->iso_hour());
 
-    // 14. If partialTime.[[Minute]] is not undefined, then
+    // 10. If partialTime.[[Minute]] is not undefined, then
     //      a. Let minute be partialTime.[[Minute]].
-    // 15. Else,
+    // 11. Else,
     //      a. Let minute be temporalTime.[[ISOMinute]].
     auto minute = partial_time.minute.value_or(temporal_time->iso_minute());
 
-    // 16. If partialTime.[[Second]] is not undefined, then
+    // 12. If partialTime.[[Second]] is not undefined, then
     //      a. Let second be partialTime.[[Second]].
-    // 17. Else,
+    // 13. Else,
     //      a. Let second be temporalTime.[[ISOSecond]].
     auto second = partial_time.second.value_or(temporal_time->iso_second());
 
-    // 18. If partialTime.[[Millisecond]] is not undefined, then
+    // 14. If partialTime.[[Millisecond]] is not undefined, then
     //      a. Let millisecond be partialTime.[[Millisecond]].
-    // 19. Else,
+    // 15. Else,
     //      a. Let millisecond be temporalTime.[[ISOMillisecond]].
     auto millisecond = partial_time.millisecond.value_or(temporal_time->iso_millisecond());
 
-    // 20. If partialTime.[[Microsecond]] is not undefined, then
+    // 16. If partialTime.[[Microsecond]] is not undefined, then
     //      a. Let microsecond be partialTime.[[Microsecond]].
-    // 21. Else,
+    // 17. Else,
     //      a. Let microsecond be temporalTime.[[ISOMicrosecond]].
     auto microsecond = partial_time.microsecond.value_or(temporal_time->iso_microsecond());
 
-    // 22. If partialTime.[[Nanosecond]] is not undefined, then
+    // 18. If partialTime.[[Nanosecond]] is not undefined, then
     //      a. Let nanosecond be partialTime.[[Nanosecond]].
-    // 23. Else,
+    // 19. Else,
     //      a. Let nanosecond be temporalTime.[[ISONanosecond]].
     auto nanosecond = partial_time.nanosecond.value_or(temporal_time->iso_nanosecond());
 
-    // 24. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
+    // 20. Let result be ? RegulateTime(hour, minute, second, millisecond, microsecond, nanosecond, overflow).
     auto result = TRY(regulate_time(global_object, hour, minute, second, millisecond, microsecond, nanosecond, overflow));
 
-    // 25. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    // 21. Return ? CreateTemporalTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     return TRY(create_temporal_time(global_object, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
 }
 
