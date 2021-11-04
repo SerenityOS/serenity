@@ -660,15 +660,10 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return ColorStyleValue::create(layout_node.computed_values().color());
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
-    case CSS::PropertyID::BackgroundRepeatX:
-        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_x()));
-    case CSS::PropertyID::BackgroundRepeatY:
-        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat_y()));
-    case CSS::PropertyID::BackgroundRepeat: {
-        auto maybe_background_repeat_x = property(CSS::PropertyID::BackgroundRepeatX);
-        auto maybe_background_repeat_y = property(CSS::PropertyID::BackgroundRepeatY);
-        return BackgroundRepeatStyleValue::create(value_or_default(maybe_background_repeat_x, IdentifierStyleValue::create(CSS::ValueID::RepeatX)), value_or_default(maybe_background_repeat_y, IdentifierStyleValue::create(CSS::ValueID::RepeatY)));
-    }
+    case CSS::PropertyID::BackgroundRepeat:
+        return BackgroundRepeatStyleValue::create(
+            IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat().repeat_x)),
+            IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().background_repeat().repeat_y)));
     case CSS::PropertyID::Background: {
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
         auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
