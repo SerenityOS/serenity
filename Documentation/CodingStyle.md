@@ -512,6 +512,46 @@ draw_jpg(); // FIXME(joe): Make this code handle jpg in addition to the png supp
 draw_jpg(); // TODO: Make this code handle jpg in addition to the png support.
 ```
 
+Explain *why* the code does something. The code itself should already say what is happening.
+
+###### Wrong:
+
+```cpp
+i++; // Increment i.
+```
+
+```cpp
+// If the user clicks, toggle the timer state.
+catdog_widget.on_click = [&] {
+    if (advice_timer->is_active())
+        advice_timer->stop();
+    else
+        advice_timer->start();
+};
+```
+
+###### Right:
+
+```cpp
+i++; // Go to the next page.
+```
+
+```cpp
+// Let users toggle the advice functionality by clicking on catdog.
+catdog_widget.on_click = [&] {
+    if (advice_timer->is_active())
+        advice_timer->stop();
+    else
+        advice_timer->start();
+};
+```
+
+###### Even better:
+
+```cpp
+page_index++;
+```
+
 ### Overriding Virtual Methods
 
 The declaration of a virtual method inside a class must be declared with the `virtual` keyword. All subclasses of that class must either specify the `override` keyword when overriding the virtual method or the `final` keyword when overriding the virtual method and requiring that no further subclasses can override it.
