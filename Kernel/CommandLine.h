@@ -42,7 +42,7 @@ enum class AHCIResetMode {
 };
 
 class CommandLine {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     static void early_initialize(const char* cmd_line);
@@ -83,6 +83,7 @@ public:
 
 private:
     CommandLine(const String&);
+    ~CommandLine() = delete;
 
     void add_arguments(const Vector<StringView>& args);
     void build_commandline(const String& cmdline_from_bootloader);

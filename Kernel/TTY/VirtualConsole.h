@@ -48,7 +48,6 @@ private:
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {
-    AK_MAKE_ETERNAL
     friend class ConsoleManagement;
     friend class DeviceManagement;
     friend class ConsoleImpl;

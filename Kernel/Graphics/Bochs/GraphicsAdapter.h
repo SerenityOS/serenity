@@ -22,7 +22,7 @@ struct BochsDisplayMMIORegisters;
 
 class BochsGraphicsAdapter final : public GenericGraphicsAdapter
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
     friend class GraphicsManagement;
 
 private:

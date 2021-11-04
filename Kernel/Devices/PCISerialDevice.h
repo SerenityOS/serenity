@@ -14,7 +14,7 @@
 namespace Kernel {
 
 class PCISerialDevice {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     static void detect();
     static SerialDevice& the();

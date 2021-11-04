@@ -17,7 +17,7 @@
 namespace Kernel {
 
 class GenericFramebufferDevice : public BlockDevice {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
     friend class DeviceManagement;
 
 public:

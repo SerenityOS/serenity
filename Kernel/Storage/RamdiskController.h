@@ -18,7 +18,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class RamdiskController final : public StorageController {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
 public:
     static NonnullRefPtr<RamdiskController> initialize();

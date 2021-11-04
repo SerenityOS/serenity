@@ -14,11 +14,12 @@
 namespace Kernel {
 
 class ConsoleManagement {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
     friend class VirtualConsole;
 
 public:
     ConsoleManagement();
+    ~ConsoleManagement() = delete;
 
     static constexpr size_t s_max_virtual_consoles = 6;
 

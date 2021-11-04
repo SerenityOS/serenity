@@ -19,10 +19,12 @@ namespace Kernel {
 
 class PartitionTable;
 class StorageManagement {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     StorageManagement();
+    ~StorageManagement() = delete;
+
     static bool initialized();
     void initialize(StringView boot_argument, bool force_pio);
     static StorageManagement& the();

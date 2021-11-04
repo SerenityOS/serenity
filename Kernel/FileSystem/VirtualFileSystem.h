@@ -34,7 +34,7 @@ struct UidAndGid {
 };
 
 class VirtualFileSystem {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     static void initialize();
     static VirtualFileSystem& the();

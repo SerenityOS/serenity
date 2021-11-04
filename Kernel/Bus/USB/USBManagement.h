@@ -13,10 +13,12 @@
 namespace Kernel::USB {
 
 class USBManagement {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     USBManagement();
+    ~USBManagement() = delete;
+
     static bool initialized();
     static void initialize();
     static USBManagement& the();

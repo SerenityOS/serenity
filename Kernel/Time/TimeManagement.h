@@ -29,10 +29,12 @@ enum class TimePrecision {
 };
 
 class TimeManagement {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     TimeManagement();
+    ~TimeManagement() = delete;
+
     static void initialize(u32 cpu);
     static bool is_initialized();
     static TimeManagement& the();

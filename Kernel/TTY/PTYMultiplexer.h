@@ -15,7 +15,7 @@ namespace Kernel {
 class MasterPTY;
 
 class PTYMultiplexer final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     PTYMultiplexer();
     virtual ~PTYMultiplexer() override;

@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class FullDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
     friend class DeviceManagement;
 
 public:

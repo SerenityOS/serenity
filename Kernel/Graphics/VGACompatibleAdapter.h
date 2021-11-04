@@ -18,7 +18,7 @@ namespace Kernel {
 
 class VGACompatibleAdapter : public GenericGraphicsAdapter
     , public PCI::Device {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     static NonnullRefPtr<VGACompatibleAdapter> initialize_with_preset_resolution(PCI::DeviceIdentifier const&, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
     static NonnullRefPtr<VGACompatibleAdapter> initialize(PCI::DeviceIdentifier const&);

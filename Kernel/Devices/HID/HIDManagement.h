@@ -31,7 +31,7 @@ class KeyboardClient;
 class HIDManagement {
     friend class KeyboardDevice;
     friend class MouseDevice;
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     HIDManagement();

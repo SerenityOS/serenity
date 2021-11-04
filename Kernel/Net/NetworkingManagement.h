@@ -20,7 +20,7 @@ namespace Kernel {
 class NetworkAdapter;
 class NetworkingManagement {
     friend class NetworkAdapter;
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 
 public:
     static NetworkingManagement& the();
@@ -30,6 +30,7 @@ public:
     static KResultOr<NonnullOwnPtr<KString>> generate_interface_name_from_pci_address(PCI::DeviceIdentifier const&);
 
     NetworkingManagement();
+    ~NetworkingManagement() = delete;
 
     void for_each(Function<void(NetworkAdapter&)>);
 

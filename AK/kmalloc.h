@@ -39,6 +39,12 @@ inline size_t malloc_good_size(size_t size) { return size; }
 #endif
 
 #ifdef KERNEL
+#    define AK_INDESTRUCTIBLE                                         \
+    public:                                                           \
+        void operator delete(void*, size_t) { VERIFY_NOT_REACHED(); } \
+                                                                      \
+    private:
+
 #    define AK_MAKE_ETERNAL                                               \
     public:                                                               \
         void* operator new(size_t size) { return kmalloc_eternal(size); } \
@@ -47,6 +53,7 @@ inline size_t malloc_good_size(size_t size) { return size; }
     private:
 #else
 #    define AK_MAKE_ETERNAL
+#    define AK_INDESTRUCTIBLE
 #endif
 
 using std::nothrow;

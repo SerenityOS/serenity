@@ -48,7 +48,7 @@ enum RegisterIndex {
 
 class IntelNativeGraphicsAdapter final
     : public VGACompatibleAdapter {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     struct PLLSettings {
         bool is_valid() const { return (n != 0 && m1 != 0 && m2 != 0 && p1 != 0 && p2 != 0); }

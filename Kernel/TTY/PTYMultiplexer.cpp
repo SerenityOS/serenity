@@ -33,6 +33,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
 
 UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
 {
+    VERIFY_NOT_REACHED();
 }
 
 void PTYMultiplexer::initialize()

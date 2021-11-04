@@ -23,7 +23,7 @@ class AHCIController final : public ATAController
     , public PCI::Device {
     friend class AHCIPortHandler;
     friend class AHCIPort;
-    AK_MAKE_ETERNAL
+
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;

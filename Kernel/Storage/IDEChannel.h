@@ -37,7 +37,7 @@ class IDEController;
 class IDEChannel : public RefCounted<IDEChannel>
     , public IRQHandler {
     friend class IDEController;
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
 public:
     enum class ChannelType : u8 {
         Primary,
