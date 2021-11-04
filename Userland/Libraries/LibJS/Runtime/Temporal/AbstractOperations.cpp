@@ -828,7 +828,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     Optional<StringView> second_part;
     Optional<StringView> fraction_part;
     Optional<StringView> calendar_part;
-    TODO();
+    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseISODateTime");
 
     // 3. Let year be the part of isoString produced by the DateYear production.
     // 4. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
@@ -961,7 +961,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
     // a. Throw a RangeError exception.
     // 3. Let id be the part of isoString produced by the CalendarName production, or undefined if not present.
     Optional<StringView> id_part;
-    TODO();
+    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalCalendarString");
 
     // 4. If id is undefined, then
     if (!id_part.has_value()) {
@@ -1014,9 +1014,9 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
-    (void)global_object;
     (void)iso_string;
-    TODO();
+    auto& vm = global_object.vm();
+    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalDurationString");
 }
 
 // 13.43 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
@@ -1052,7 +1052,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     Optional<StringView> seconds_part;
     Optional<StringView> fraction_part;
     Optional<StringView> name_part;
-    TODO();
+    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalTimeZoneString");
 
     // 4. If z is not undefined, then
     if (z_part.has_value()) {
