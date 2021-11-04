@@ -296,14 +296,14 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
         return;
     }
 
+    m_open_menu_stack.append(menu);
+
     if (!menu.is_empty()) {
         menu.redraw_if_theme_changed();
         auto* window = menu.menu_window();
         VERIFY(window);
         window->set_visible(true);
     }
-
-    m_open_menu_stack.append(menu);
 
     if (as_current_menu || !current_menu()) {
         // Only make this menu the current menu if requested, or if no
