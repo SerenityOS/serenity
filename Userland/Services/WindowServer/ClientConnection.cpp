@@ -616,7 +616,7 @@ void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> c
     for (auto& rect : rects)
         window.invalidate(rect);
     if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0f)
-        WindowManager::the().reevaluate_hovered_window(&window);
+        WindowManager::the().reevaluate_hover_state_for_window(&window);
 
     WindowSwitcher::the().refresh_if_needed();
 }
