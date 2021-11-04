@@ -114,7 +114,7 @@ public:
     i64 to_integer() const
     {
         VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
-        return number_string_value().to_int().value();
+        return number_string_value().to_int<i64>().value();
     }
     bool is_integer_value_signed() const { return number_string_value().starts_with('-') || number_string_value().starts_with('+'); }
 
