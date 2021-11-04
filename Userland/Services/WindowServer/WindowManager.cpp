@@ -588,7 +588,7 @@ void WindowManager::notify_rect_changed(Window& window, Gfx::IntRect const& old_
     if (window.type() == WindowType::Applet)
         AppletManager::the().relayout();
 
-    reevaluate_hovered_window(&window);
+    reevaluate_hover_state_for_window(&window);
 }
 
 void WindowManager::notify_opacity_changed(Window&)
@@ -1284,7 +1284,7 @@ void WindowManager::process_mouse_event(MouseEvent& event)
     process_mouse_event_for_window(result.value(), event);
 }
 
-void WindowManager::reevaluate_hovered_window(Window* updated_window)
+void WindowManager::reevaluate_hover_state_for_window(Window* updated_window)
 {
     if (m_dnd_client || m_resize_window || m_move_window || m_cursor_tracking_button || MenuManager::the().has_open_menu())
         return;
@@ -1492,7 +1492,7 @@ void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& prev
     if (!new_stack_active_input_window)
         pick_new_active_window(nullptr);
 
-    reevaluate_hovered_window();
+    reevaluate_hover_state_for_window();
 
     tell_wms_current_window_stack_changed();
 }
@@ -1766,7 +1766,7 @@ void WindowManager::set_active_window(Window* new_active_window, bool make_input
     if (new_active_window) {
         window_stack.set_active_window(new_active_window);
         notify_new_active_window(*new_active_window);
-        reevaluate_hovered_window(new_active_window);
+        reevaluate_hover_state_for_window(new_active_window);
     }
 
     // Window shapes may have changed (e.g. shadows for inactive/active windows)
