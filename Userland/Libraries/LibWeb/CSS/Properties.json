@@ -78,6 +78,7 @@
     ]
   },
   "background-repeat": {
+    "inherited": false,
     "initial": "repeat",
     "max-values": 2,
     "valid-identifiers": [
@@ -87,21 +88,7 @@
       "repeat-y",
       "round",
       "space"
-    ],
-    "longhands": [
-      "background-repeat-x",
-      "background-repeat-y"
     ]
-  },
-  "background-repeat-x": {
-    "inherited": false,
-    "initial": "repeat",
-    "pseudo": true
-  },
-  "background-repeat-y": {
-    "inherited": false,
-    "initial": "repeat",
-    "pseudo": true
   },
   "border": {
     "longhands": [

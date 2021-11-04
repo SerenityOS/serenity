@@ -688,42 +688,33 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Optional<CSS::Repeat> StyleProperties::background_repeat_x() const
+Optional<BackgroundRepeatData> StyleProperties::background_repeat() const
 {
-    auto value = property(CSS::PropertyID::BackgroundRepeatX);
-    if (!value.has_value())
+    auto value = property(CSS::PropertyID::BackgroundRepeat);
+    if (!value.has_value() || !value.value()->is_background_repeat())
         return {};
-    switch (value.value()->to_identifier()) {
-    case CSS::ValueID::NoRepeat:
-        return CSS::Repeat::NoRepeat;
-    case CSS::ValueID::Repeat:
-        return CSS::Repeat::Repeat;
-    case CSS::ValueID::Round:
-        return CSS::Repeat::Round;
-    case CSS::ValueID::Space:
-        return CSS::Repeat::Space;
-    default:
-        return {};
-    }
-}
+    auto& background_repeat = value.value()->as_background_repeat();
 
-Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
-{
-    auto value = property(CSS::PropertyID::BackgroundRepeatY);
-    if (!value.has_value())
-        return {};
-    switch (value.value()->to_identifier()) {
-    case CSS::ValueID::NoRepeat:
-        return CSS::Repeat::NoRepeat;
-    case CSS::ValueID::Repeat:
-        return CSS::Repeat::Repeat;
-    case CSS::ValueID::Round:
-        return CSS::Repeat::Round;
-    case CSS::ValueID::Space:
-        return CSS::Repeat::Space;
-    default:
-        return {};
-    }
+    auto to_repeat = [](auto value) -> Optional<CSS::Repeat> {
+        switch (value->to_identifier()) {
+        case CSS::ValueID::NoRepeat:
+            return CSS::Repeat::NoRepeat;
+        case CSS::ValueID::Repeat:
+            return CSS::Repeat::Repeat;
+        case CSS::ValueID::Round:
+            return CSS::Repeat::Round;
+        case CSS::ValueID::Space:
+            return CSS::Repeat::Space;
+        default:
+            return {};
+        }
+    };
+    auto repeat_x = to_repeat(background_repeat.repeat_x());
+    auto repeat_y = to_repeat(background_repeat.repeat_y());
+    if (repeat_x.has_value() && repeat_y.has_value())
+        return BackgroundRepeatData { repeat_x.value(), repeat_y.value() };
+
+    return {};
 }
 
 Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const

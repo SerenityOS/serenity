@@ -73,8 +73,7 @@ void Box::paint_background(PaintContext& context)
     Gfx::IntRect background_rect;
     Color background_color = computed_values().background_color();
     const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
-    CSS::Repeat background_repeat_x = computed_values().background_repeat_x();
-    CSS::Repeat background_repeat_y = computed_values().background_repeat_y();
+    CSS::BackgroundRepeatData background_repeat = computed_values().background_repeat();
 
     if (is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
@@ -85,8 +84,7 @@ void Box::paint_background(PaintContext& context)
         if (document().html_element()->should_use_body_background_properties()) {
             background_color = document().background_color(context.palette());
             background_image = document().background_image();
-            background_repeat_x = document().background_repeat_x();
-            background_repeat_y = document().background_repeat_y();
+            background_repeat = { document().background_repeat_x(), document().background_repeat_y() };
         }
     } else {
         background_rect = enclosing_int_rect(padded_rect());
@@ -100,8 +98,8 @@ void Box::paint_background(PaintContext& context)
     auto background_data = Painting::BackgroundData {
         .color = background_color,
         .image = background_image,
-        .repeat_x = background_repeat_x,
-        .repeat_y = background_repeat_y
+        .repeat_x = background_repeat.repeat_x,
+        .repeat_y = background_repeat.repeat_y
     };
     Painting::paint_background(context, background_rect, background_data, normalized_border_radius_data());
 }
