@@ -106,7 +106,8 @@ void ConfigFile::reparse()
                 // We're not in a group yet, create one with the name ""...
                 current_group = &m_groups.ensure("");
             }
-            current_group->set(key_builder.to_string(), value_builder.to_string());
+            auto value_string = value_builder.to_string();
+            current_group->set(key_builder.to_string(), value_string.trim_whitespace(TrimMode::Right));
         }
         }
     }
