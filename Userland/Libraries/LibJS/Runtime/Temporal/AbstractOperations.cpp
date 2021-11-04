@@ -623,8 +623,8 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit)
     return 1000;
 }
 
-// 13.26 RejectTemporalCalendarType ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejecttemporalcalendartype
-ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject& global_object, Object& object)
+// 13.26 RejectObjectWithCalendarOrTimeZone ( object ), https://tc39.es/proposal-temporal/#sec-temporal-rejectobjectwithcalendarortimezone
+ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject& global_object, Object& object)
 {
     auto& vm = global_object.vm();
 
@@ -633,7 +633,25 @@ ThrowCompletionOr<void> reject_temporal_calendar_type(GlobalObject& global_objec
     // 2. If object has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
     if (is<PlainDate>(object) || is<PlainDateTime>(object) || is<PlainMonthDay>(object) || is<PlainTime>(object) || is<PlainYearMonth>(object) || is<ZonedDateTime>(object)) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalPlainTimeWithArgumentMustNotHave, "calendar or timeZone");
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "calendar or timeZone");
+    }
+
+    // 3. Let calendarProperty be ? Get(object, "calendar").
+    auto calendar_property = TRY(object.get(vm.names.calendar));
+
+    // 4. If calendarProperty is not undefined, then
+    if (!calendar_property.is_undefined()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "calendar");
+    }
+
+    // 5. Let timeZoneProperty be ? Get(object, "timeZone").
+    auto time_zone_property = TRY(object.get(vm.names.timeZone));
+
+    // 6. If timeZoneProperty is not undefined, then
+    if (!time_zone_property.is_undefined()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustNotHave, "timeZone");
     }
 
     return {};

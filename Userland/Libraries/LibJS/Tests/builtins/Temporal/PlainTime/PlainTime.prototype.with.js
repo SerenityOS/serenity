@@ -46,7 +46,7 @@ describe("correct behaviour", () => {
             new Temporal.PlainTime().with({
                 calendar: undefined,
             });
-        }).not.toThrowWithMessage(TypeError, "Argument must not have a defined calendar property");
+        }).not.toThrowWithMessage(TypeError, "Object must not have a defined calendar property");
     });
 
     test("argument can have a timeZone property as long as it's undefined", () => {
@@ -54,7 +54,7 @@ describe("correct behaviour", () => {
             new Temporal.PlainTime().with({
                 timeZone: undefined,
             });
-        }).not.toThrowWithMessage(TypeError, "Argument must not have a defined timeZone property");
+        }).not.toThrowWithMessage(TypeError, "Object must not have a defined timeZone property");
     });
 });
 
@@ -140,12 +140,12 @@ describe("errors", () => {
             new Temporal.PlainTime().with({
                 calendar: null,
             });
-        }).toThrowWithMessage(TypeError, "Argument must not have a defined calendar property");
+        }).toThrowWithMessage(TypeError, "Object must not have a defined calendar property");
         expect(() => {
             new Temporal.PlainTime().with({
                 calendar: 1,
             });
-        }).toThrowWithMessage(TypeError, "Argument must not have a defined calendar property");
+        }).toThrowWithMessage(TypeError, "Object must not have a defined calendar property");
     });
 
     test("argument must not have a defined timeZone property", () => {
@@ -153,12 +153,12 @@ describe("errors", () => {
             new Temporal.PlainTime().with({
                 timeZone: null,
             });
-        }).toThrowWithMessage(TypeError, "Argument must not have a defined timeZone property");
+        }).toThrowWithMessage(TypeError, "Object must not have a defined timeZone property");
         expect(() => {
             new Temporal.PlainTime().with({
                 timeZone: 1,
             });
-        }).toThrowWithMessage(TypeError, "Argument must not have a defined timeZone property");
+        }).toThrowWithMessage(TypeError, "Object must not have a defined timeZone property");
     });
 
     test("error when getting calendar", () => {
@@ -187,7 +187,7 @@ describe("errors", () => {
                 new Temporal.PlainTime().with(new typeWithCalendar(1, 1, 1));
             }).toThrowWithMessage(
                 TypeError,
-                "Argument must not have a defined calendar or timeZone property"
+                "Object must not have a defined calendar or timeZone property"
             );
         }
 
@@ -196,7 +196,7 @@ describe("errors", () => {
                 new Temporal.PlainTime().with(new typeWithCalendar(1, 1));
             }).toThrowWithMessage(
                 TypeError,
-                "Argument must not have a defined calendar or timeZone property"
+                "Object must not have a defined calendar or timeZone property"
             );
         }
 
@@ -204,7 +204,7 @@ describe("errors", () => {
             new Temporal.PlainTime().with(new Temporal.ZonedDateTime(1n, {}));
         }).toThrowWithMessage(
             TypeError,
-            "Argument must not have a defined calendar or timeZone property"
+            "Object must not have a defined calendar or timeZone property"
         );
     });
 });
