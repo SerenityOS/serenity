@@ -240,13 +240,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (border_top_right_radius.has_value())
         computed_values.set_border_top_right_radius(border_top_right_radius.value()->to_length());
 
-    auto background_repeat_x = specified_style.background_repeat_x();
-    if (background_repeat_x.has_value())
-        computed_values.set_background_repeat_x(background_repeat_x.value());
-
-    auto background_repeat_y = specified_style.background_repeat_y();
-    if (background_repeat_y.has_value())
-        computed_values.set_background_repeat_y(background_repeat_y.value());
+    auto background_repeat = specified_style.background_repeat();
+    if (background_repeat.has_value())
+        computed_values.set_background_repeat(background_repeat.value());
 
     computed_values.set_display(specified_style.display());
 

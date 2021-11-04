@@ -414,33 +414,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             auto& background_repeat_list = value.as_value_list().values();
             // FIXME: Handle multiple backgrounds.
             if (!background_repeat_list.is_empty()) {
-                auto& maybe_background_repeat = background_repeat_list.first();
-                if (maybe_background_repeat.is_background_repeat()) {
-                    auto& background_repeat = maybe_background_repeat.as_background_repeat();
-                    set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
-                    set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
-                }
+                auto& background_repeat = background_repeat_list.first();
+                style.set_property(CSS::PropertyID::BackgroundRepeat, background_repeat);
             }
             return;
         }
-        if (value.is_background_repeat()) {
-            auto& background_repeat = value.as_background_repeat();
-            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
-            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
-            return;
-        }
-
-        set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, value, document, true);
-        set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundRepeatX || property_id == CSS::PropertyID::BackgroundRepeatY) {
-        auto value_id = value.to_identifier();
-        if (value_id == CSS::ValueID::RepeatX || value_id == CSS::ValueID::RepeatY)
-            return;
-
-        style.set_property(property_id, value);
+        style.set_property(CSS::PropertyID::BackgroundRepeat, value);
         return;
     }
 

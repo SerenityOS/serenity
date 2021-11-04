@@ -379,7 +379,7 @@ CSS::Repeat Document::background_repeat_x() const
     if (!body_layout_node)
         return CSS::Repeat::Repeat;
 
-    return body_layout_node->computed_values().background_repeat_x();
+    return body_layout_node->computed_values().background_repeat().repeat_x;
 }
 
 CSS::Repeat Document::background_repeat_y() const
@@ -392,7 +392,7 @@ CSS::Repeat Document::background_repeat_y() const
     if (!body_layout_node)
         return CSS::Repeat::Repeat;
 
-    return body_layout_node->computed_values().background_repeat_y();
+    return body_layout_node->computed_values().background_repeat().repeat_y;
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
