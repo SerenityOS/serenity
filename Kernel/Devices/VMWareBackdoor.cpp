@@ -183,22 +183,26 @@ void VMWareBackdoor::send(VMWareCommand& command)
         command.dx);
 }
 
-Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
+u16 VMWareBackdoor::read_mouse_status_queue_size()
 {
     VMWareCommand command;
     command.bx = 0;
     command.command = VMMOUSE_STATUS;
     send(command);
+
     if (command.ax == 0xFFFF0000) {
         dbgln_if(PS2MOUSE_DEBUG, "PS2MouseDevice: Resetting VMWare mouse");
         disable_absolute_vmmouse();
         enable_absolute_vmmouse();
-        return {};
+        return 0;
     }
-    int words = command.ax & 0xFFFF;
 
-    if (!words || words % 4)
-        return {};
+    return command.ax & 0xFFFF;
+}
+
+MousePacket VMWareBackdoor::receive_mouse_packet()
+{
+    VMWareCommand command;
     command.size = 4;
     command.command = VMMOUSE_DATA;
     send(command);
