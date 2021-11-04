@@ -44,7 +44,6 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
         }
         evaluate_block_conditions();
     }
-    return;
 }
 
 VMWareMouseDevice::VMWareMouseDevice(const I8042Controller& ps2_controller)
