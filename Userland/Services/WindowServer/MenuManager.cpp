@@ -303,8 +303,7 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
         window->set_visible(true);
     }
 
-    if (m_open_menu_stack.find_if([&menu](auto& other) { return &menu == other.ptr(); }).is_end())
-        m_open_menu_stack.append(menu);
+    m_open_menu_stack.append(menu);
 
     if (as_current_menu || !current_menu()) {
         // Only make this menu the current menu if requested, or if no
