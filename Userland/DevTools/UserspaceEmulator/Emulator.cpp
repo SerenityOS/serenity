@@ -395,7 +395,7 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
         return {};
 
     String lib_path = lib_name;
-    if (region->name().contains(".so"))
+    if (lib_name.ends_with(".so"))
         lib_path = String::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
