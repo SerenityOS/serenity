@@ -127,5 +127,5 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
     }
 
     dbgln("Wavefront: Done.");
-    return adopt_ref(*new Mesh(vertices, tex_coords, triangles));
+    return adopt_ref(*new Mesh(vertices, tex_coords, normals, triangles));
 }
