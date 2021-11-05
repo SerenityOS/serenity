@@ -58,10 +58,30 @@ void Mesh::draw(float uv_scale)
             m_vertex_list.at(triangle.c).y,
             m_vertex_list.at(triangle.c).z);
 
-        // Compute the triangle normal
-        const FloatVector3 vec_ab = vertex_b - vertex_a;
-        const FloatVector3 vec_ac = vertex_c - vertex_a;
-        const FloatVector3 normal = vec_ab.cross(vec_ac).normalized();
+        FloatVector3 normal;
+        if (has_normals()) {
+            const FloatVector3 normal_a(
+                m_normal_list.at(triangle.normal_index0).x,
+                m_normal_list.at(triangle.normal_index0).y,
+                m_normal_list.at(triangle.normal_index0).z);
+
+            const FloatVector3 normal_b(
+                m_normal_list.at(triangle.normal_index1).x,
+                m_normal_list.at(triangle.normal_index1).y,
+                m_normal_list.at(triangle.normal_index1).z);
+
+            const FloatVector3 normal_c(
+                m_normal_list.at(triangle.normal_index2).x,
+                m_normal_list.at(triangle.normal_index2).y,
+                m_normal_list.at(triangle.normal_index2).z);
+
+            normal = (normal_a + normal_b + normal_c).normalized();
+        } else {
+            // Compute the triangle normal
+            const FloatVector3 vec_ab = vertex_b - vertex_a;
+            const FloatVector3 vec_ac = vertex_c - vertex_a;
+            normal = vec_ab.cross(vec_ac).normalized();
+        }
 
         // Compute lighting with a Lambertian color model
         const auto light_intensity = max(light_direction.dot(normal), 0.f);

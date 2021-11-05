@@ -27,6 +27,8 @@ public:
 
     bool is_textured() const { return m_tex_coords.size() > 0; }
 
+    bool has_normals() const { return m_normal_list.size() > 0; }
+
 private:
     Vector<Vertex> m_vertex_list;
     Vector<TexCoord> m_tex_coords;
