@@ -66,7 +66,8 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
     switch (type()) {
     case BinaryOperator::Concatenate: {
         if (lhs_value.type() != SQLType::Text) {
-            VERIFY_NOT_REACHED();
+            context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
+            return Value::null();
         }
         AK::StringBuilder builder;
         builder.append(lhs_value.to_string());
@@ -110,7 +111,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
             context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
             return Value::null();
         }
-        return Value(lhs_bool_maybe.value() && rhs_bool_maybe.value());
+        return Value(lhs_bool_maybe.release_value() && rhs_bool_maybe.release_value());
     }
     case BinaryOperator::Or: {
         auto lhs_bool_maybe = lhs_value.to_bool();
@@ -119,7 +120,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
             context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
             return Value::null();
         }
-        return Value(lhs_bool_maybe.value() || rhs_bool_maybe.value());
+        return Value(lhs_bool_maybe.release_value() || rhs_bool_maybe.release_value());
     }
     default:
         VERIFY_NOT_REACHED();
