@@ -180,10 +180,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         (*ctor)();
     kmalloc_init();
     slab_alloc_init();
-    load_kernel_symbol_table();
-    CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
 
+    load_kernel_symbol_table();
+
+    CommandLine::initialize();
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());

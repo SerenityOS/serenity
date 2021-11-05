@@ -65,7 +65,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& 
 
     for (size_t i = 0; i < 8; ++i)
         s_symbol_count = (s_symbol_count << 4) | parse_hex_digit(*(bufptr++));
-    s_symbols = static_cast<KernelSymbol*>(kmalloc_eternal(sizeof(KernelSymbol) * s_symbol_count));
+    s_symbols = static_cast<KernelSymbol*>(kmalloc(sizeof(KernelSymbol) * s_symbol_count));
     ++bufptr; // skip newline
 
     dmesgln("Loading kernel symbol table...");
@@ -84,7 +84,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& 
         }
         auto& ksym = s_symbols[current_symbol_index];
         ksym.address = kernel_load_base + address;
-        char* name = static_cast<char*>(kmalloc_eternal((bufptr - start_of_name) + 1));
+        char* name = static_cast<char*>(kmalloc((bufptr - start_of_name) + 1));
         memcpy(name, start_of_name, bufptr - start_of_name);
         name[bufptr - start_of_name] = '\0';
         ksym.name = name;
