@@ -67,6 +67,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withPlainTime, with_plain_time, 0, attr);
     define_native_function(vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(vm.names.withTimeZone, with_time_zone, 1, attr);
+    define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.startOfDay, start_of_day, 0, attr);
     define_native_function(vm.names.toInstant, to_instant, 0, attr);
@@ -791,6 +792,20 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_time_zone)
 
     // 4. Return ! CreateTemporalZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, zonedDateTime.[[Calendar]]).
     return MUST(create_temporal_zoned_date_time(global_object, zoned_date_time->nanoseconds(), *time_zone, zoned_date_time->calendar()));
+}
+
+// 6.3.34 Temporal.ZonedDateTime.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withcalendar
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_calendar)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
+    auto* calendar = TRY(to_temporal_calendar(global_object, vm.argument(0)));
+
+    // 4. Return ! CreateTemporalZonedDateTime(zonedDateTime.[[Nanoseconds]], zonedDateTime.[[TimeZone]], calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, zoned_date_time->nanoseconds(), zoned_date_time->time_zone(), *calendar));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
