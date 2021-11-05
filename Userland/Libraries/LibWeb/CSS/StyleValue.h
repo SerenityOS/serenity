@@ -398,12 +398,13 @@ public:
         NonnullRefPtr<StyleValue> color,
         NonnullRefPtr<StyleValue> image,
         NonnullRefPtr<StyleValue> position,
+        NonnullRefPtr<StyleValue> size,
         NonnullRefPtr<StyleValue> repeat,
         NonnullRefPtr<StyleValue> attachment,
         NonnullRefPtr<StyleValue> origin,
         NonnullRefPtr<StyleValue> clip)
     {
-        return adopt_ref(*new BackgroundStyleValue(color, image, position, repeat, attachment, origin, clip));
+        return adopt_ref(*new BackgroundStyleValue(color, image, position, size, repeat, attachment, origin, clip));
     }
     virtual ~BackgroundStyleValue() override { }
 
@@ -414,10 +415,11 @@ public:
     NonnullRefPtr<StyleValue> origin() const { return m_origin; }
     NonnullRefPtr<StyleValue> position() const { return m_position; }
     NonnullRefPtr<StyleValue> repeat() const { return m_repeat; }
+    NonnullRefPtr<StyleValue> size() const { return m_size; }
 
     virtual String to_string() const override
     {
-        return String::formatted("{} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_repeat->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
+        return String::formatted("{} {} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_size->to_string(), m_repeat->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
     }
 
 private:
@@ -425,6 +427,7 @@ private:
         NonnullRefPtr<StyleValue> color,
         NonnullRefPtr<StyleValue> image,
         NonnullRefPtr<StyleValue> position,
+        NonnullRefPtr<StyleValue> size,
         NonnullRefPtr<StyleValue> repeat,
         NonnullRefPtr<StyleValue> attachment,
         NonnullRefPtr<StyleValue> origin,
@@ -433,6 +436,7 @@ private:
         , m_color(color)
         , m_image(image)
         , m_position(position)
+        , m_size(size)
         , m_repeat(repeat)
         , m_attachment(attachment)
         , m_origin(origin)
@@ -442,7 +446,7 @@ private:
     NonnullRefPtr<StyleValue> m_color;
     NonnullRefPtr<StyleValue> m_image;
     NonnullRefPtr<StyleValue> m_position;
-    // FIXME: background-size
+    NonnullRefPtr<StyleValue> m_size;
     NonnullRefPtr<StyleValue> m_repeat;
     NonnullRefPtr<StyleValue> m_attachment;
     NonnullRefPtr<StyleValue> m_origin;
