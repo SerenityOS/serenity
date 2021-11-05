@@ -205,7 +205,7 @@ double day_from_year(i32 y)
 i32 year_from_time(double t)
 {
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
-    return static_cast<i32>(t / (365.0 * MS_PER_DAY) + 1970);
+    return static_cast<i32>(t / (365.2425 * MS_PER_DAY) + 1970);
 }
 
 // InLeapYear(t), https://tc39.es/ecma262/#eqn-InLeapYear
