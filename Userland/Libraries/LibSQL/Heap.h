@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
@@ -32,13 +33,14 @@ class Heap : public Core::Object {
     C_OBJECT(Heap);
 
 public:
-    virtual ~Heap() override { flush(); }
+    virtual ~Heap() override;
 
+    ErrorOr<void> open();
     u32 size() const { return m_end_of_file; }
     ErrorOr<ByteBuffer> read_block(u32);
-    bool write_block(u32, ByteBuffer&);
-    u32 new_record_pointer();
+    [[nodiscard]] u32 new_record_pointer();
     [[nodiscard]] bool has_block(u32 block) const { return block < size(); }
+    [[nodiscard]] bool valid() const { return m_file != nullptr; }
 
     u32 schemas_root() const { return m_schemas_root; }
 
@@ -89,17 +91,18 @@ public:
         m_write_ahead_log.set(block, buffer);
     }
 
-    void flush();
+    ErrorOr<void> flush();
 
 private:
     explicit Heap(String);
 
-    bool seek_block(u32);
-    void read_zero_block();
+    ErrorOr<void> write_block(u32, ByteBuffer&);
+    ErrorOr<void> seek_block(u32);
+    ErrorOr<void> read_zero_block();
     void initialize_zero_block();
     void update_zero_block();
 
-    RefPtr<Core::File> m_file;
+    RefPtr<Core::File> m_file { nullptr };
     u32 m_free_list { 0 };
     u32 m_next_block { 1 };
     u32 m_end_of_file { 1 };
@@ -107,7 +110,7 @@ private:
     u32 m_tables_root { 0 };
     u32 m_table_columns_root { 0 };
     u32 m_version { 0x00000001 };
-    Array<u32, 16> m_user_values;
+    Array<u32, 16> m_user_values { 0 };
     HashMap<u32, ByteBuffer> m_write_ahead_log;
 };
 

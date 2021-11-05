@@ -27,7 +27,10 @@ static bool does_value_data_type_match(SQLType expected, SQLType actual)
 
 RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
 {
-    auto table_def = context.database->get_table(m_schema_name, m_table_name);
+    auto table_def_or_error = context.database->get_table(m_schema_name, m_table_name);
+    if (table_def_or_error.is_error())
+        return SQLResult::construct(SQLCommand::Insert, SQLErrorCode::InternalError, table_def_or_error.release_error());
+    auto table_def = table_def_or_error.release_value();
     if (!table_def) {
         auto schema_name = m_schema_name;
         if (schema_name.is_null() || schema_name.is_empty())
@@ -78,8 +81,8 @@ RefPtr<SQLResult> Insert::execute(ExecutionContext& context) const
     }
 
     for (auto& inserted_row : inserted_rows) {
-        context.database->insert(inserted_row);
-        // FIXME Error handling
+        if (auto maybe_error = context.database->insert(inserted_row); maybe_error.is_error())
+            return SQLResult::construct(SQLCommand::Insert, SQLErrorCode::InternalError, maybe_error.release_error());
     }
 
     return SQLResult::construct(SQLCommand::Insert, 0, m_chained_expressions.size(), 0);

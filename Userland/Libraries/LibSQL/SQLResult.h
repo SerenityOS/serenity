@@ -43,6 +43,8 @@ constexpr char const* command_tag(SQLCommand command)
 
 #define ENUMERATE_SQL_ERRORS(S)                                                          \
     S(NoError, "No error")                                                               \
+    S(InternalError, "{}")                                                               \
+    S(NotYetImplemented, "{}")                                                           \
     S(DatabaseUnavailable, "Database Unavailable")                                       \
     S(StatementUnavailable, "Statement with id '{}' Unavailable")                        \
     S(SyntaxError, "Syntax Error")                                                       \
@@ -144,6 +146,12 @@ private:
     SQLResult(SQLCommand command, SQLErrorCode error_code, String error_argument)
         : m_command(command)
         , m_error({ error_code, move(error_argument) })
+    {
+    }
+
+    SQLResult(SQLCommand command, SQLErrorCode error_code, AK::Error error)
+        : m_command(command)
+        , m_error({ error_code, error.string_literal() })
     {
     }
 

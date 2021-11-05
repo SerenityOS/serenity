@@ -24,26 +24,29 @@ class Database : public Core::Object {
     C_OBJECT(Database);
 
 public:
-    ~Database() override = default;
+    ~Database() override;
 
-    void commit() { m_heap->flush(); }
+    ErrorOr<void> open();
+    bool is_open() const { return m_open; }
+    ErrorOr<void> commit();
 
-    void add_schema(SchemaDef const&);
+    ErrorOr<void> add_schema(SchemaDef const&);
     static Key get_schema_key(String const&);
-    RefPtr<SchemaDef> get_schema(String const&);
+    ErrorOr<RefPtr<SchemaDef>> get_schema(String const&);
 
-    void add_table(TableDef& table);
+    ErrorOr<void> add_table(TableDef& table);
     static Key get_table_key(String const&, String const&);
-    RefPtr<TableDef> get_table(String const&, String const&);
+    ErrorOr<RefPtr<TableDef>> get_table(String const&, String const&);
 
-    Vector<Row> select_all(TableDef const&);
-    Vector<Row> match(TableDef const&, Key const&);
-    bool insert(Row&);
-    bool update(Row&);
+    ErrorOr<Vector<Row>> select_all(TableDef const&);
+    ErrorOr<Vector<Row>> match(TableDef const&, Key const&);
+    ErrorOr<void> insert(Row&);
+    ErrorOr<void> update(Row&);
 
 private:
     explicit Database(String);
 
+    bool m_open { false };
     NonnullRefPtr<Heap> m_heap;
     Serializer m_serializer;
     RefPtr<BTree> m_schemas;
