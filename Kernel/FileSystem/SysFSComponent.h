@@ -26,7 +26,7 @@ struct SysFSInodeData : public OpenFileDescriptionData {
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual StringView name() const { return m_name->view(); }
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return KResult(ENOTIMPL); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual mode_t permissions() const;
