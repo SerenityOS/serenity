@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
+ * Copyright (c) 2021, Pedro Pereira <pmh.pereira@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,9 +23,10 @@ const Color colors[] {
     Color::White
 };
 
-Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Triangle> triangles)
+Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Vertex> normals, Vector<Triangle> triangles)
     : m_vertex_list(move(vertices))
     , m_tex_coords(move(tex_coords))
+    , m_normal_list(move(normals))
     , m_triangle_list(move(triangles))
 {
 }
