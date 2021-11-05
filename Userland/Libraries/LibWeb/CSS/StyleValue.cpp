@@ -37,6 +37,12 @@ BackgroundRepeatStyleValue const& StyleValue::as_background_repeat() const
     return static_cast<BackgroundRepeatStyleValue const&>(*this);
 }
 
+BackgroundSizeStyleValue const& StyleValue::as_background_size() const
+{
+    VERIFY(is_background_size());
+    return static_cast<BackgroundSizeStyleValue const&>(*this);
+}
+
 BorderStyleValue const& StyleValue::as_border() const
 {
     VERIFY(is_border());
