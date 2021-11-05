@@ -151,41 +151,25 @@ private:
 
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
 
-    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
     template<typename T>
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
-
-    [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule();
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
-
-    [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule();
     template<typename T>
     [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
-
-    [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations();
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
-
-    [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration();
     template<typename T>
     [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
-
-    [[nodiscard]] StyleComponentValueRule consume_a_component_value();
     template<typename T>
     [[nodiscard]] StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
-
-    [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
-
-    [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function();
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
     struct GeneralEnclosed {
     };
-    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed();
     template<typename T>
     [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<T>&);
 

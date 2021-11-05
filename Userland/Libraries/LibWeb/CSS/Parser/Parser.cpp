@@ -1111,21 +1111,11 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComp
     return {};
 }
 
-Optional<Parser::GeneralEnclosed> Parser::parse_general_enclosed()
-{
-    return parse_general_enclosed(m_token_stream);
-}
-
 template<typename T>
 Optional<Parser::GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<T>&)
 {
     // FIXME: Actually parse this! https://www.w3.org/TR/mediaqueries-5/#typedef-general-enclosed
     return {};
-}
-
-NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
-{
-    return consume_a_list_of_rules(m_token_stream, top_level);
 }
 
 template<typename T>
@@ -1174,11 +1164,6 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
     return rules;
 }
 
-NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
-{
-    return consume_an_at_rule(m_token_stream);
-}
-
 template<typename T>
 NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
@@ -1216,11 +1201,6 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
         auto value = consume_a_component_value(tokens);
         rule->m_prelude.append(value);
     }
-}
-
-RefPtr<StyleRule> Parser::consume_a_qualified_rule()
-{
-    return consume_a_qualified_rule(m_token_stream);
 }
 
 template<typename T>
@@ -1277,16 +1257,6 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens
     return StyleComponentValueRule(token);
 }
 
-StyleComponentValueRule Parser::consume_a_component_value()
-{
-    return consume_a_component_value(m_token_stream);
-}
-
-NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
-{
-    return consume_a_simple_block(m_token_stream);
-}
-
 template<typename T>
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 {
@@ -1313,11 +1283,6 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
     }
 }
 
-NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
-{
-    return consume_a_function(m_token_stream);
-}
-
 template<typename T>
 NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
 {
@@ -1342,11 +1307,6 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
     }
 
     return function;
-}
-
-Optional<StyleDeclarationRule> Parser::consume_a_declaration()
-{
-    return consume_a_declaration(m_token_stream);
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
@@ -1452,11 +1412,6 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
     return declaration;
 }
 
-Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
-{
-    return consume_a_list_of_declarations(m_token_stream);
-}
-
 template<typename T>
 Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T>& tokens)
 {
@@ -1530,7 +1485,7 @@ RefPtr<CSSRule> Parser::parse_a_rule(TokenStream<T>& tokens)
     if (token.is(Token::Type::EndOfFile)) {
         return {};
     } else if (token.is(Token::Type::AtKeyword)) {
-        auto at_rule = consume_an_at_rule();
+        auto at_rule = consume_an_at_rule(m_token_stream);
         rule = convert_to_rule(at_rule);
     } else {
         auto qualified_rule = consume_a_qualified_rule(tokens);
