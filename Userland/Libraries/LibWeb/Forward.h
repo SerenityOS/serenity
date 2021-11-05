@@ -19,6 +19,7 @@ class Crypto;
 
 namespace Web::CSS {
 class BackgroundRepeatStyleValue;
+class BackgroundSizeStyleValue;
 class BackgroundStyleValue;
 class BorderRadiusStyleValue;
 class BorderStyleValue;
