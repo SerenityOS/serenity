@@ -61,33 +61,42 @@ TEST_CASE(create_schema)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_schema(database);
-    auto schema = database->get_schema("TESTSCHEMA");
-    EXPECT(schema);
+    auto schema_or_error = database->get_schema("TESTSCHEMA");
+    EXPECT(!schema_or_error.is_error());
+    EXPECT(schema_or_error.value());
 }
 
 TEST_CASE(create_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
-    auto table = database->get_table("TESTSCHEMA", "TESTTABLE");
-    EXPECT(table);
+    auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
+    EXPECT(!table_or_error.is_error());
+    EXPECT(table_or_error.value());
 }
 
 TEST_CASE(insert_into_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test', 42 );");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 1);
 
-    auto table = database->get_table("TESTSCHEMA", "TESTTABLE");
+    auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
+    EXPECT(!table_or_error.is_error());
+    auto table = table_or_error.value();
 
     int count = 0;
-    for (auto& row : database->select_all(*table)) {
+    auto rows_or_error = database->select_all(*table);
+    EXPECT(!rows_or_error.is_error());
+    for (auto& row : rows_or_error.value()) {
         EXPECT_EQ(row["TEXTCOLUMN"].to_string(), "Test");
         EXPECT_EQ(row["INTCOLUMN"].to_int().value(), 42);
         count++;
@@ -99,6 +108,7 @@ TEST_CASE(insert_into_table_wrong_data_types)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES (43, 'Test_2');");
     EXPECT(result->inserted() == 0);
@@ -109,6 +119,7 @@ TEST_CASE(insert_into_table_multiple_tuples_wrong_data_types)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ('Test_1', 42), (43, 'Test_2');");
     EXPECT(result->inserted() == 0);
@@ -119,6 +130,7 @@ TEST_CASE(insert_wrong_number_of_values)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ( 42 );");
     EXPECT(result->error().code == SQL::SQLErrorCode::InvalidNumberOfValues);
@@ -129,19 +141,24 @@ TEST_CASE(insert_without_column_names)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ('Test_1', 42), ('Test_2', 43);");
     EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
     EXPECT(result->inserted() == 2);
 
-    auto table = database->get_table("TESTSCHEMA", "TESTTABLE");
-    EXPECT_EQ(database->select_all(*table).size(), 2u);
+    auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
+    EXPECT(!table_or_error.is_error());
+    auto rows_or_error = database->select_all(*(table_or_error.value()));
+    EXPECT(!rows_or_error.is_error());
+    EXPECT_EQ(rows_or_error.value().size(), 2u);
 }
 
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
@@ -162,6 +179,7 @@ TEST_CASE(select_with_column_names)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
@@ -183,6 +201,7 @@ TEST_CASE(select_with_nonexisting_column_name)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
@@ -201,6 +220,7 @@ TEST_CASE(select_with_where)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_table(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
@@ -224,6 +244,7 @@ TEST_CASE(select_cross_join)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_two_tables(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable1 ( TextColumn1, IntColumn ) VALUES "
@@ -260,6 +281,7 @@ TEST_CASE(select_inner_join)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
     create_two_tables(database);
     auto result = execute(database,
         "INSERT INTO TestSchema.TestTable1 ( TextColumn1, IntColumn ) VALUES "

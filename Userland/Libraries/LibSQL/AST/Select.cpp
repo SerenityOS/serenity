@@ -16,11 +16,15 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
     NonnullRefPtrVector<ResultColumn> columns;
     for (auto& table_descriptor : table_or_subquery_list()) {
         if (!table_descriptor.is_table())
-            TODO();
-        auto table = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
+            return SQLResult::construct(SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented");
+        auto table_def_or_error = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
+        if (table_def_or_error.is_error())
+            return SQLResult::construct(SQLCommand::Select, SQLErrorCode::InternalError, table_def_or_error.error());
+        auto table = table_def_or_error.value();
         if (!table) {
-            return SQLResult::construct(SQL::SQLCommand::Select, SQL::SQLErrorCode::TableDoesNotExist, table_descriptor.table_name());
+            return SQLResult::construct(SQLCommand::Select, SQLErrorCode::TableDoesNotExist, table_descriptor.table_name());
         }
+
         if (result_column_list().size() == 1 && result_column_list()[0].type() == ResultType::All) {
             for (auto& col : table->columns()) {
                 columns.append(
@@ -36,7 +40,7 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
         for (auto& col : result_column_list()) {
             if (col.type() == ResultType::All)
                 // FIXME can have '*' for example in conjunction with computed columns
-                return SQLResult::construct(SQL::SQLCommand::Select, SQL::SQLErrorCode::SyntaxError, "*");
+                return SQLResult::construct(SQL::SQLCommand::Select, SQLErrorCode::SyntaxError, "*");
             columns.append(col);
         }
     }
@@ -51,15 +55,21 @@ RefPtr<SQLResult> Select::execute(ExecutionContext& context) const
 
     for (auto& table_descriptor : table_or_subquery_list()) {
         if (!table_descriptor.is_table())
-            TODO();
-        auto table = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
+            return SQLResult::construct(SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented");
+        auto table_def_or_error = context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name());
+        if (table_def_or_error.is_error())
+            return SQLResult::construct(SQLCommand::Select, SQLErrorCode::InternalError, table_def_or_error.error());
+        auto table = table_def_or_error.value();
         if (table->num_columns() == 0)
             continue;
         auto old_descriptor_size = descriptor->size();
         descriptor->extend(table->to_tuple_descriptor());
         for (auto cartesian_row = rows.first(); cartesian_row.size() == old_descriptor_size; cartesian_row = rows.first()) {
             rows.remove(0);
-            for (auto& table_row : context.database->select_all(*table)) {
+            auto table_rows_or_error = context.database->select_all(*table);
+            if (table_rows_or_error.is_error())
+                return SQLResult::construct(SQLCommand::Create, SQLErrorCode::InternalError, table_rows_or_error.error());
+            for (auto& table_row : table_rows_or_error.value()) {
                 auto new_row = cartesian_row;
                 new_row.extend(table_row);
                 rows.append(new_row);

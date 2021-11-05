@@ -18,13 +18,28 @@ namespace SQL {
 Heap::Heap(String file_name)
 {
     set_name(move(file_name));
+}
+
+Heap::~Heap()
+{
+    if (m_file && !m_write_ahead_log.is_empty()) {
+        if (auto maybe_error = flush(); maybe_error.is_error())
+            warnln("~Heap({}): {}", name(), maybe_error.error());
+    }
+}
+
+ErrorOr<void> Heap::open()
+{
     size_t file_size = 0;
     struct stat stat_buffer;
     if (stat(name().characters(), &stat_buffer) != 0) {
         if (errno != ENOENT) {
-            perror("stat");
-            VERIFY_NOT_REACHED();
+            warnln("Heap::open({}): could not stat: {}"sv, name(), strerror(errno));
+            return Error::from_string_literal("Heap::open(): could not stat file"sv);
         }
+    } else if (!S_ISREG(stat_buffer.st_mode)) {
+        warnln("Heap::open({}): can only use regular files"sv, name());
+        return Error::from_string_literal("Heap::open(): can only use regular files"sv);
     } else {
         file_size = stat_buffer.st_size;
     }
@@ -33,30 +48,43 @@ Heap::Heap(String file_name)
 
     auto file_or_error = Core::File::open(name(), Core::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {
-        warnln("Couldn't open '{}': {}", name(), file_or_error.error());
-        VERIFY_NOT_REACHED();
+        warnln("Heap::open({}): could not open: {}"sv, name(), file_or_error.error());
+        return Error::from_string_literal("Heap::open(): could not open file"sv);
     }
     m_file = file_or_error.value();
-    if (file_size > 0)
-        read_zero_block();
-    else
+    if (file_size > 0) {
+        if (auto error_maybe = read_zero_block(); error_maybe.is_error()) {
+            m_file = nullptr;
+            return error_maybe.error();
+        }
+    } else {
         initialize_zero_block();
-    dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", file_name, size());
+    }
+    dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", name(), size());
+    return {};
 }
 
 ErrorOr<ByteBuffer> Heap::read_block(u32 block)
 {
+    if (m_file.is_null()) {
+        warnln("Heap({})::read_block({}): Heap file not opened"sv, name(), block);
+        return Error::from_string_literal("Heap()::read_block(): Heap file not opened"sv);
+    }
     auto buffer_or_empty = m_write_ahead_log.get(block);
     if (buffer_or_empty.has_value())
         return buffer_or_empty.value();
 
-    VERIFY(block < m_next_block);
+    if (block >= m_next_block) {
+        warnln("Heap({})::read_block({}): block # out of range (>= {})"sv, name(), block, m_next_block);
+        return Error::from_string_literal("Heap()::read_block(): block # out of range"sv);
+    }
     dbgln_if(SQL_DEBUG, "Read heap block {}", block);
-    if (!seek_block(block))
-        VERIFY_NOT_REACHED();
+    TRY(seek_block(block));
     auto ret = m_file->read(BLOCKSIZE);
-    if (ret.is_empty())
-        return Error::from_string_literal("Could not read block"sv);
+    if (ret.is_empty()) {
+        warnln("Heap({})::read_block({}): Could not read block"sv, name(), block);
+        return Error::from_string_literal("Heap()::read_block(): Could not read block"sv);
+    }
     dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
         *ret.offset_pointer(0), *ret.offset_pointer(1),
         *ret.offset_pointer(2), *ret.offset_pointer(3),
@@ -65,18 +93,28 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
     return ret;
 }
 
-bool Heap::write_block(u32 block, ByteBuffer& buffer)
+ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
 {
-    dbgln_if(SQL_DEBUG, "write_block({}): m_next_block {}", block, m_next_block);
-    VERIFY(block <= m_next_block);
-    if (!seek_block(block))
-        VERIFY_NOT_REACHED();
+    if (m_file.is_null()) {
+        warnln("Heap({})::write_block({}): Heap file not opened"sv, name(), block);
+        return Error::from_string_literal("Heap()::write_block(): Heap file not opened"sv);
+    }
+    if (block > m_next_block) {
+        warnln("Heap({})::write_block({}): block # out of range (> {})"sv, name(), block, m_next_block);
+        return Error::from_string_literal("Heap()::write_block(): block # out of range"sv);
+    }
+    TRY(seek_block(block));
     dbgln_if(SQL_DEBUG, "Write heap block {} size {}", block, buffer.size());
-    VERIFY(buffer.size() <= BLOCKSIZE);
+    if (buffer.size() > BLOCKSIZE) {
+        warnln("Heap({})::write_block({}): Oversized block ({} > {})"sv, name(), block, buffer.size(), BLOCKSIZE);
+        return Error::from_string_literal("Heap()::write_block(): Oversized block"sv);
+    }
     auto sz = buffer.size();
     if (sz < BLOCKSIZE) {
-        if (buffer.try_resize(BLOCKSIZE).is_error())
-            return false;
+        if (buffer.try_resize(BLOCKSIZE).is_error()) {
+            warnln("Heap({})::write_block({}): Could not align block of size {} to {}"sv, name(), block, buffer.size(), BLOCKSIZE);
+            return Error::from_string_literal("Heap()::write_block(): Could not align block"sv);
+        }
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }
     dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
@@ -87,35 +125,39 @@ bool Heap::write_block(u32 block, ByteBuffer& buffer)
     if (m_file->write(buffer.data(), (int)buffer.size())) {
         if (block == m_end_of_file)
             m_end_of_file++;
-        return true;
+        return {};
     }
-    return false;
+    warnln("Heap({})::write_block({}): Could not full write block"sv, name(), block);
+    return Error::from_string_literal("Heap()::write_block(): Could not full write block"sv);
 }
 
-bool Heap::seek_block(u32 block)
+ErrorOr<void> Heap::seek_block(u32 block)
 {
+    if (m_file.is_null()) {
+        warnln("Heap({})::seek_block({}): Heap file not opened"sv, name(), block);
+        return Error::from_string_literal("Heap()::seek_block(): Heap file not opened"sv);
+    }
     if (block == m_end_of_file) {
         off_t pos;
         if (!m_file->seek(0, Core::SeekMode::FromEndPosition, &pos)) {
-            warnln("Could not seek block {} from file {}, which is at the end of the file", block, name());
-            warnln("FD: {} Position: {} error: {}", m_file->fd(), pos, m_file->error_string());
-            return false;
+            warnln("Heap({})::seek_block({}): Error seeking end of file: {}"sv, name(), block, m_file->error_string());
+            return Error::from_string_literal("Heap()::seek_block(): Error seeking end of file"sv);
         }
     } else if (block > m_end_of_file) {
-        warnln("Seeking block {} of file {} which is beyond the end of the file", block, name());
-        return false;
+        warnln("Heap({})::seek_block({}): Cannot seek beyond end of file at block {}"sv, name(), block, m_end_of_file);
+        return Error::from_string_literal("Heap()::seek_block(): Cannot seek beyond end of file"sv);
     } else {
         if (!m_file->seek(block * BLOCKSIZE)) {
-            warnln("Could not seek block {} of file {}. The current size is {} blocks",
-                block, name(), m_end_of_file);
-            return false;
+            warnln("Heap({})::seek_block({}): Error seeking: {}"sv, name(), block, m_file->error_string());
+            return Error::from_string_literal("Heap()::seek_block(): Error seeking: {}"sv);
         }
     }
-    return true;
+    return {};
 }
 
 u32 Heap::new_record_pointer()
 {
+    VERIFY(!m_file.is_null());
     if (m_free_list) {
         auto block_or_error = read_block(m_free_list);
         if (block_or_error.is_error()) {
@@ -130,8 +172,9 @@ u32 Heap::new_record_pointer()
     return m_next_block++;
 }
 
-void Heap::flush()
+ErrorOr<void> Heap::flush()
 {
+    VERIFY(!m_file.is_null());
     Vector<u32> blocks;
     for (auto& wal_entry : m_write_ahead_log) {
         blocks.append(wal_entry.key);
@@ -143,13 +186,14 @@ void Heap::flush()
             VERIFY_NOT_REACHED();
         }
         dbgln_if(SQL_DEBUG, "Flushing block {} to {}", block, name());
-        write_block(block, buffer_or_empty.value());
+        TRY(write_block(block, buffer_or_empty.value()));
     }
     m_write_ahead_log.clear();
     dbgln_if(SQL_DEBUG, "WAL flushed. Heap size = {}", size());
+    return {};
 }
 
-constexpr static const char* FILE_ID = "SerenitySQL ";
+constexpr static StringView FILE_ID = "SerenitySQL "sv;
 constexpr static int VERSION_OFFSET = 12;
 constexpr static int SCHEMAS_ROOT_OFFSET = 16;
 constexpr static int TABLES_ROOT_OFFSET = 20;
@@ -157,18 +201,17 @@ constexpr static int TABLE_COLUMNS_ROOT_OFFSET = 24;
 constexpr static int FREE_LIST_OFFSET = 28;
 constexpr static int USER_VALUES_OFFSET = 32;
 
-void Heap::read_zero_block()
+ErrorOr<void> Heap::read_zero_block()
 {
-    char file_id[256];
     auto bytes_or_error = read_block(0);
     if (bytes_or_error.is_error())
-        VERIFY_NOT_REACHED();
+        return bytes_or_error.error();
     auto buffer = bytes_or_error.value();
-    memcpy(file_id, buffer.offset_pointer(0), strlen(FILE_ID));
-    file_id[strlen(FILE_ID)] = 0;
-    if (strncmp(file_id, FILE_ID, strlen(FILE_ID)) != 0) {
-        warnln("Corrupt zero page in {}", name());
-        VERIFY_NOT_REACHED();
+    auto file_id_buffer = buffer.slice(0, FILE_ID.length());
+    auto file_id = StringView(file_id_buffer);
+    if (file_id != FILE_ID) {
+        warnln("{}: Zero page corrupt. This is probably not a {} heap file"sv, name(), FILE_ID);
+        return Error::from_string_literal("Heap()::read_zero_block(): Zero page corrupt. This is probably not a SerenitySQL heap file"sv);
     }
     dbgln_if(SQL_DEBUG, "Read zero block from {}", name());
     memcpy(&m_version, buffer.offset_pointer(VERSION_OFFSET), sizeof(u32));
@@ -187,6 +230,7 @@ void Heap::read_zero_block()
             dbgln_if(SQL_DEBUG, "User value {}: {}", ix, m_user_values[ix]);
         }
     }
+    return {};
 }
 
 void Heap::update_zero_block()
@@ -205,7 +249,7 @@ void Heap::update_zero_block()
 
     // FIXME: Handle an OOM failure here.
     auto buffer = ByteBuffer::create_zeroed(BLOCKSIZE).release_value();
-    buffer.overwrite(0, FILE_ID, strlen(FILE_ID));
+    buffer.overwrite(0, FILE_ID.characters_without_null_termination(), FILE_ID.length());
     buffer.overwrite(VERSION_OFFSET, &m_version, sizeof(u32));
     buffer.overwrite(SCHEMAS_ROOT_OFFSET, &m_schemas_root, sizeof(u32));
     buffer.overwrite(TABLES_ROOT_OFFSET, &m_tables_root, sizeof(u32));
