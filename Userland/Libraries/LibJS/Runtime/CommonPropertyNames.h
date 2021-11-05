@@ -487,6 +487,7 @@ namespace JS {
     P(withCalendar)                          \
     P(withPlainDate)                         \
     P(withPlainTime)                         \
+    P(withTimeZone)                          \
     P(writable)                              \
     P(year)                                  \
     P(yearMonthFromFields)                   \
