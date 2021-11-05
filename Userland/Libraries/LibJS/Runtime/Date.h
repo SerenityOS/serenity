@@ -90,6 +90,7 @@ u16 day_within_year(double);
 u8 date_from_time(double);
 u16 days_in_year(i32);
 double day_from_year(i32);
+double time_from_year(i32);
 i32 year_from_time(double);
 bool in_leap_year(double);
 u8 month_from_time(double);

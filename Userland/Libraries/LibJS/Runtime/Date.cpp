@@ -201,11 +201,28 @@ double day_from_year(i32 y)
     return 365 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
 }
 
+// TimeFromYear(y), https://tc39.es/ecma262/#eqn-TimeFromYear
+double time_from_year(i32 y)
+{
+    // msPerDay × DayFromYear(y)
+    return MS_PER_DAY * day_from_year(y);
+}
+
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
 i32 year_from_time(double t)
 {
     // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
-    return static_cast<i32>(t / (365.2425 * MS_PER_DAY) + 1970);
+
+    // Approximation using average number of milliseconds per year. We might have to adjust this guess afterwards.
+    auto year = static_cast<i32>(t / (365.2425 * MS_PER_DAY) + 1970);
+
+    auto year_t = time_from_year(year);
+    if (year_t > t)
+        year--;
+    else if (year_t + days_in_year(year) * MS_PER_DAY <= t)
+        year++;
+
+    return year;
 }
 
 // InLeapYear(t), https://tc39.es/ecma262/#eqn-InLeapYear
