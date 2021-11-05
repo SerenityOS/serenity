@@ -90,7 +90,7 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
     } else {
         String path_string = path.to_string();
         String full_path;
-        if (name.contains(".so"sv))
+        if (path_string.ends_with(".so"sv))
             full_path = String::formatted("/usr/lib/{}", path);
         else
             full_path = path_string;
