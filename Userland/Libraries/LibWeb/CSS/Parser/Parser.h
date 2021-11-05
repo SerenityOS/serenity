@@ -193,58 +193,58 @@ private:
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
 
     Optional<float> try_parse_float(StringView string);
-    Optional<Color> parse_color(ParsingContext const&, StyleComponentValueRule const&);
-    Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
+    Optional<Color> parse_color(StyleComponentValueRule const&);
+    Optional<Length> parse_length(StyleComponentValueRule const&);
 
     enum class AllowedDataUrlType {
         None,
         Image,
     };
-    Optional<AK::URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    Optional<AK::URL> parse_url_function(StyleComponentValueRule const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
     Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_css_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_builtin_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_dynamic_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_length_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_numeric_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_identifier_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_color_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_string_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_background_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_background_image_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_background_position_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_position_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_background_repeat_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_repeat_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_background_size_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_size_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_border_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_border_radius_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_border_radius_shorthand_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_box_shadow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_flex_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_flex_flow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_font_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_font_family_value(ParsingContext const&, Vector<StyleComponentValueRule> const&, size_t start_index = 0);
-    RefPtr<StyleValue> parse_list_style_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_overflow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_text_decoration_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_transform_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_css_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_builtin_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_dynamic_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_length_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_numeric_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_identifier_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_color_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_string_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_image_value(StyleComponentValueRule const&);
+    RefPtr<StyleValue> parse_background_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_background_image_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_single_background_position_value(TokenStream<StyleComponentValueRule>&);
+    RefPtr<StyleValue> parse_background_position_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>&);
+    RefPtr<StyleValue> parse_background_repeat_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_single_background_size_value(TokenStream<StyleComponentValueRule>&);
+    RefPtr<StyleValue> parse_background_size_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_border_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_box_shadow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_font_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_font_family_value(Vector<StyleComponentValueRule> const&, size_t start_index = 0);
+    RefPtr<StyleValue> parse_list_style_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_overflow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_text_decoration_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_transform_value(Vector<StyleComponentValueRule> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    Optional<CalculatedStyleValue::CalcValue> parse_calc_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>& tokens);
-    OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(TokenStream<StyleComponentValueRule>&);
+    Optional<CalculatedStyleValue::CalcValue> parse_calc_value(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(TokenStream<StyleComponentValueRule>&);
+    Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens);
+    OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<StyleComponentValueRule> const&);
 
     Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
     Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);

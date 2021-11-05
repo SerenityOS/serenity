@@ -1706,7 +1706,7 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_
     return lists;
 }
 
-Optional<AK::URL> Parser::parse_url_function(ParsingContext const& context, StyleComponentValueRule const& component_value, AllowedDataUrlType allowed_data_url_type)
+Optional<AK::URL> Parser::parse_url_function(StyleComponentValueRule const& component_value, AllowedDataUrlType allowed_data_url_type)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
     // FIXME: Handle data: urls (RFC2397)
@@ -1728,7 +1728,7 @@ Optional<AK::URL> Parser::parse_url_function(ParsingContext const& context, Styl
             return {};
         }
 
-        return context.complete_url(url_string);
+        return m_context.complete_url(url_string);
     };
 
     if (component_value.is(Token::Type::Url)) {
@@ -1783,7 +1783,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
                 if (token.is(Token::Type::String)) {
                     url = m_context.complete_url(token.token().string());
                 } else {
-                    url = parse_url_function(m_context, token);
+                    url = parse_url_function(token);
                 }
 
                 // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
@@ -1972,7 +1972,7 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
@@ -1988,13 +1988,13 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ParsingContext const&, StyleCompo
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_dynamic_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is_function()) {
         auto& function = component_value.function();
 
         if (function.name().equals_ignoring_case("calc")) {
-            auto calc_expression = parse_calc_expression(context, function.values());
+            auto calc_expression = parse_calc_expression(function.values());
             // FIXME: Either produce a string value of calc() here, or do so in CalculatedStyleValue::to_string().
             if (calc_expression)
                 return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull());
@@ -2014,7 +2014,7 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(ParsingContext const& context, St
     return {};
 }
 
-Optional<Length> Parser::parse_length(ParsingContext const& context, StyleComponentValueRule const& component_value)
+Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_value)
 {
     Length::Type type = Length::Type::Undefined;
     Optional<float> numeric_value;
@@ -2071,7 +2071,7 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
         if (value_string == "0") {
             type = Length::Type::Px;
             numeric_value = 0;
-        } else if (context.in_quirks_mode() && property_has_quirk(context.current_property_id(), Quirk::UnitlessLength)) {
+        } else if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)) {
             // https://quirks.spec.whatwg.org/#quirky-length-value
             // FIXME: Disallow quirk when inside a CSS sub-expression (like `calc()`)
             // "The <quirky-length> value must not be supported in arguments to CSS expressions other than the rect()
@@ -2087,7 +2087,7 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
     return Length(numeric_value.value(), type);
 }
 
-RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_length_value(StyleComponentValueRule const& component_value)
 {
     // Numbers with no units can be lengths, in two situations:
     // 1) We're in quirks mode, and it's an integer.
@@ -2099,8 +2099,8 @@ RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, Sty
     // Right now, it instead is quietly converted to an Identifier when needed.
     if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Percentage)
         || (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
-        || (context.in_quirks_mode() && component_value.is(Token::Type::Number) && component_value.token().m_value.string_view() != "0"sv)) {
-        auto length = parse_length(context, component_value);
+        || (m_context.in_quirks_mode() && component_value.is(Token::Type::Number) && component_value.token().m_value.string_view() != "0"sv)) {
+        auto length = parse_length(component_value);
         if (length.has_value())
             return LengthStyleValue::create(length.value());
     }
@@ -2108,7 +2108,7 @@ RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, Sty
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
@@ -2124,7 +2124,7 @@ RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleCompo
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_identifier_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_identifier_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
@@ -2135,7 +2135,7 @@ RefPtr<StyleValue> Parser::parse_identifier_value(ParsingContext const&, StyleCo
     return {};
 }
 
-Optional<Color> Parser::parse_color(ParsingContext const& context, StyleComponentValueRule const& component_value)
+Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_value)
 {
     // https://www.w3.org/TR/css-color-3/
     if (component_value.is(Token::Type::Ident)) {
@@ -2301,7 +2301,7 @@ Optional<Color> Parser::parse_color(ParsingContext const& context, StyleComponen
     }
 
     // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
-    if (context.in_quirks_mode() && property_has_quirk(context.current_property_id(), Quirk::HashlessHexColor)) {
+    if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::HashlessHexColor)) {
         // The value of a quirky color is obtained from the possible component values using the following algorithm,
         // aborting on the first step that returns a value:
 
@@ -2363,16 +2363,16 @@ Optional<Color> Parser::parse_color(ParsingContext const& context, StyleComponen
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_color_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_color_value(StyleComponentValueRule const& component_value)
 {
-    auto color = parse_color(context, component_value);
+    auto color = parse_color(component_value);
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_string_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_string_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::String))
         return StringStyleValue::create(component_value.token().string());
@@ -2380,9 +2380,9 @@ RefPtr<StyleValue> Parser::parse_string_value(ParsingContext const&, StyleCompon
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_image_value(StyleComponentValueRule const& component_value)
 {
-    auto url = parse_url_function(context, component_value, AllowedDataUrlType::Image);
+    auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
     if (url.has_value())
         return ImageStyleValue::create(url.value());
     // FIXME: Handle gradients.
@@ -2390,7 +2390,7 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule> const& component_values)
 {
     RefPtr<StyleValue> background_color;
     RefPtr<StyleValue> background_image;
@@ -2411,7 +2411,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             break;
         }
 
-        auto value = parse_css_value(context, part);
+        auto value = parse_css_value(part);
         if (!value)
             return nullptr;
 
@@ -2454,14 +2454,14 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             if (background_position)
                 return nullptr;
             tokens.reconsume_current_input_token();
-            if (auto maybe_background_position = parse_single_background_position_value(context, tokens)) {
+            if (auto maybe_background_position = parse_single_background_position_value(tokens)) {
                 background_position = maybe_background_position.release_nonnull();
 
                 // Attempt to parse `/ <background-size>`
                 auto before_slash = tokens.position();
                 auto& maybe_slash = tokens.next_token();
                 if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == "/"sv) {
-                    if (auto maybe_background_size = parse_single_background_size_value(context, tokens)) {
+                    if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
                         background_size = maybe_background_size.release_nonnull();
                         continue;
                     }
@@ -2477,7 +2477,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             if (background_repeat)
                 return nullptr;
             tokens.reconsume_current_input_token();
-            if (auto maybe_repeat = parse_single_background_repeat_value(context, tokens)) {
+            if (auto maybe_repeat = parse_single_background_repeat_value(tokens)) {
                 background_repeat = maybe_repeat.release_nonnull();
                 continue;
             }
@@ -2518,10 +2518,10 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         background_clip.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_image_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, component_values.first());
+        auto maybe_value = parse_css_value(component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
@@ -2535,7 +2535,7 @@ RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& co
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     // NOTE: This *looks* like it parses a <position>, but it doesn't. From the spec:
     //      "Note: The background-position property also accepts a three-value syntax.
@@ -2603,8 +2603,8 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext
         if (seen_items == 2)
             break;
 
-        auto& token = tokens.peek_token();
-        auto maybe_value = parse_css_value(context, token);
+        auto& token = tokens.next_token();
+        auto maybe_value = parse_css_value(token);
         if (!maybe_value || !property_accepts_value(PropertyID::BackgroundPosition, *maybe_value))
             break;
         tokens.next_token();
@@ -2627,7 +2627,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext
                 Length offset = zero_offset;
                 bool offset_provided = false;
                 if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_length(context, tokens.peek_token());
+                    auto maybe_offset = parse_length(tokens.peek_token());
                     if (maybe_offset.has_value()) {
                         offset = maybe_offset.value();
                         offset_provided = true;
@@ -2639,7 +2639,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext
                 Length offset = zero_offset;
                 bool offset_provided = false;
                 if (tokens.has_next_token()) {
-                    auto maybe_offset = parse_length(context, tokens.peek_token());
+                    auto maybe_offset = parse_length(tokens.peek_token());
                     if (maybe_offset.has_value()) {
                         offset = maybe_offset.value();
                         offset_provided = true;
@@ -2697,14 +2697,14 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(ParsingContext
         vertical->edge, vertical->offset);
 }
 
-RefPtr<StyleValue> Parser::parse_background_position_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_position_value(Vector<StyleComponentValueRule> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_position_value(context, tokens);
+    return parse_single_background_position_value(tokens);
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -2733,7 +2733,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
     };
 
     auto& token = tokens.next_token();
-    auto maybe_x_value = parse_css_value(context, token);
+    auto maybe_x_value = parse_css_value(token);
     if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
         return error();
     auto x_value = maybe_x_value.release_nonnull();
@@ -2747,7 +2747,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
 
     // See if we have a second value for Y
     auto& second_token = tokens.peek_token();
-    auto maybe_y_value = parse_css_value(context, second_token);
+    auto maybe_y_value = parse_css_value(second_token);
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
         return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(x_value->to_identifier()));
@@ -2759,14 +2759,14 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(ParsingContext c
     return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
 }
 
-RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_repeat_value(Vector<StyleComponentValueRule> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_repeat_value(context, tokens);
+    return parse_single_background_repeat_value(tokens);
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_size_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -2774,7 +2774,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(ParsingContext con
         return nullptr;
     };
 
-    auto maybe_x_value = parse_css_value(context, tokens.next_token());
+    auto maybe_x_value = parse_css_value(tokens.next_token());
     if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_x_value))
         return error();
     auto x_value = maybe_x_value.release_nonnull();
@@ -2782,7 +2782,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(ParsingContext con
     if (x_value->to_identifier() == ValueID::Cover || x_value->to_identifier() == ValueID::Contain)
         return x_value;
 
-    auto maybe_y_value = parse_css_value(context, tokens.peek_token());
+    auto maybe_y_value = parse_css_value(tokens.peek_token());
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value))
         return BackgroundSizeStyleValue::create(x_value->to_length(), x_value->to_length());
     tokens.next_token();
@@ -2794,14 +2794,14 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(ParsingContext con
     return error();
 }
 
-RefPtr<StyleValue> Parser::parse_background_size_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_size_value(Vector<StyleComponentValueRule> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_size_value(context, tokens);
+    return parse_single_background_size_value(tokens);
 }
 
-RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -2811,7 +2811,7 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vec
     RefPtr<StyleValue> border_style;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, part);
+        auto value = parse_css_value(part);
         if (!value)
             return nullptr;
 
@@ -2847,11 +2847,11 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vec
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 2) {
-        auto horizontal = parse_length(context, component_values[0]);
-        auto vertical = parse_length(context, component_values[1]);
+        auto horizontal = parse_length(component_values[0]);
+        auto vertical = parse_length(component_values[1]);
         if (horizontal.has_value() && vertical.has_value())
             return BorderRadiusStyleValue::create(horizontal.value(), vertical.value());
 
@@ -2859,7 +2859,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(ParsingContext const& conte
     }
 
     if (component_values.size() == 1) {
-        auto radius = parse_length(context, component_values[0]);
+        auto radius = parse_length(component_values[0]);
         if (radius.has_value())
             return BorderRadiusStyleValue::create(radius.value(), radius.value());
         return nullptr;
@@ -2868,7 +2868,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(ParsingContext const& conte
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const& component_values)
 {
     auto top_left = [&](Vector<Length>& radii) { return radii[0]; };
     auto top_right = [&](Vector<Length>& radii) {
@@ -2922,7 +2922,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext co
             continue;
         }
 
-        auto maybe_length = parse_length(context, value);
+        auto maybe_length = parse_length(value);
         if (!maybe_length.has_value())
             return nullptr;
         if (reading_vertical) {
@@ -2950,11 +2950,11 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext co
     return StyleValueList::create(move(border_radii));
 }
 
-RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule> const& component_values)
 {
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = parse_identifier_value(context, component_values.first());
+        auto ident = parse_identifier_value(component_values.first());
         if (ident && ident->to_identifier() == ValueID::None)
             return ident;
     }
@@ -2968,28 +2968,28 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
     if (component_values.size() < 3 || component_values.size() > 4)
         return nullptr;
 
-    auto maybe_x = parse_length(context, component_values[0]);
+    auto maybe_x = parse_length(component_values[0]);
     if (!maybe_x.has_value())
         return nullptr;
     offset_x = maybe_x.value();
 
-    auto maybe_y = parse_length(context, component_values[1]);
+    auto maybe_y = parse_length(component_values[1]);
     if (!maybe_y.has_value())
         return nullptr;
     offset_y = maybe_y.value();
 
     if (component_values.size() == 3) {
-        auto parsed_color = parse_color(context, component_values[2]);
+        auto parsed_color = parse_color(component_values[2]);
         if (!parsed_color.has_value())
             return nullptr;
         color = parsed_color.value();
     } else if (component_values.size() == 4) {
-        auto maybe_blur_radius = parse_length(context, component_values[2]);
+        auto maybe_blur_radius = parse_length(component_values[2]);
         if (!maybe_blur_radius.has_value())
             return nullptr;
         blur_radius = maybe_blur_radius.value();
 
-        auto parsed_color = parse_color(context, component_values[3]);
+        auto parsed_color = parse_color(component_values[3]);
         if (!parsed_color.has_value())
             return nullptr;
         color = parsed_color.value();
@@ -2998,10 +2998,10 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
     return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
 }
 
-RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
-        auto value = parse_css_value(context, component_values[0]);
+        auto value = parse_css_value(component_values[0]);
         if (!value)
             return nullptr;
 
@@ -3024,7 +3024,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     RefPtr<StyleValue> flex_basis;
 
     for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = parse_css_value(context, component_values[i]);
+        auto value = parse_css_value(component_values[i]);
         if (!value)
             return nullptr;
 
@@ -3043,7 +3043,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
 
             // Flex-shrink may optionally follow directly after.
             if (i + 1 < component_values.size()) {
-                auto second_value = parse_css_value(context, component_values[i + 1]);
+                auto second_value = parse_css_value(component_values[i + 1]);
                 if (second_value && property_accepts_value(PropertyID::FlexShrink, *second_value)) {
                     flex_shrink = second_value.release_nonnull();
                     i++;
@@ -3072,7 +3072,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() > 2)
         return nullptr;
@@ -3081,7 +3081,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
     RefPtr<StyleValue> flex_wrap;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, part);
+        auto value = parse_css_value(part);
         if (!value)
             return nullptr;
         if (property_accepts_value(PropertyID::FlexDirection, *value)) {
@@ -3106,7 +3106,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> const& component_values)
 {
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
@@ -3122,7 +3122,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     int normal_count = 0;
 
     for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = parse_css_value(context, component_values[i]);
+        auto value = parse_css_value(component_values[i]);
         if (!value)
             return nullptr;
 
@@ -3152,7 +3152,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
             if (i + 2 < component_values.size()) {
                 auto maybe_solidus = component_values[i + 1];
                 if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == "/"sv) {
-                    auto maybe_line_height = parse_css_value(context, component_values[i + 2]);
+                    auto maybe_line_height = parse_css_value(component_values[i + 2]);
                     if (!(maybe_line_height && property_accepts_value(PropertyID::LineHeight, *maybe_line_height)))
                         return nullptr;
                     line_height = maybe_line_height.release_nonnull();
@@ -3161,7 +3161,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
             }
 
             // Consume font-families
-            auto maybe_font_families = parse_font_family_value(context, component_values, i + 1);
+            auto maybe_font_families = parse_font_family_value(component_values, i + 1);
             if (!maybe_font_families)
                 return nullptr;
             font_families = maybe_font_families.release_nonnull();
@@ -3190,7 +3190,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values, size_t start_index)
+RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRule> const& component_values, size_t start_index)
 {
     auto is_generic_font_family = [](ValueID identifier) -> bool {
         switch (identifier) {
@@ -3239,7 +3239,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context
         }
         if (part.is(Token::Type::Ident)) {
             // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
-            auto maybe_ident = parse_css_value(context, part);
+            auto maybe_ident = parse_css_value(part);
             if (maybe_ident) {
                 // CSS-wide keywords are not allowed
                 if (maybe_ident->is_builtin())
@@ -3280,7 +3280,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context
     return StyleValueList::create(move(font_families));
 }
 
-RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_list_style_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -3291,7 +3291,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     int found_nones = 0;
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, part);
+        auto value = parse_css_value(part);
         if (!value)
             return nullptr;
 
@@ -3350,10 +3350,10 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_overflow_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(context, component_values.first());
+        auto maybe_value = parse_css_value(component_values.first());
         if (!maybe_value)
             return nullptr;
         auto value = maybe_value.release_nonnull();
@@ -3363,8 +3363,8 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = parse_css_value(context, component_values[0]);
-        auto maybe_y_value = parse_css_value(context, component_values[1]);
+        auto maybe_x_value = parse_css_value(component_values[0]);
+        auto maybe_y_value = parse_css_value(component_values[1]);
 
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
@@ -3379,7 +3379,7 @@ RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, V
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -3390,7 +3390,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& con
     // FIXME: Implement 'text-decoration-thickness' parameter. https://www.w3.org/TR/css-text-decor-4/#text-decoration-width-property
 
     for (auto& part : component_values) {
-        auto value = parse_css_value(context, part);
+        auto value = parse_css_value(part);
         if (!value)
             return nullptr;
 
@@ -3433,7 +3433,7 @@ static Optional<CSS::TransformFunction> parse_transform_function_name(StringView
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_transform_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule> const& component_values)
 {
     NonnullRefPtrVector<StyleValue> transformations;
 
@@ -3453,12 +3453,12 @@ RefPtr<StyleValue> Parser::parse_transform_value(ParsingContext const& context, 
         NonnullRefPtrVector<StyleValue> values;
         for (auto& value : part.function().values()) {
             if (value.is(Token::Type::Dimension)) {
-                auto maybe_length = parse_length(context, value);
+                auto maybe_length = parse_length(value);
                 if (!maybe_length.has_value())
                     return nullptr;
                 values.append(LengthStyleValue::create(maybe_length.release_value()));
             } else if (value.is(Token::Type::Number)) {
-                auto number = parse_numeric_value(context, value);
+                auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
             } else {
                 dbgln("FIXME: Unsupported value type for transformation!");
@@ -3507,30 +3507,30 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         return ParsingResult::SyntaxError;
 
     if (component_values.size() == 1) {
-        if (auto parsed_value = parse_builtin_value(m_context, component_values.first()))
+        if (auto parsed_value = parse_builtin_value(component_values.first()))
             return parsed_value.release_nonnull();
     }
 
     // Special-case property handling
     switch (property_id) {
     case PropertyID::Background:
-        if (auto parsed_value = parse_background_value(m_context, component_values))
+        if (auto parsed_value = parse_background_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundImage:
-        if (auto parsed_value = parse_background_image_value(m_context, component_values))
+        if (auto parsed_value = parse_background_image_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundPosition:
-        if (auto parsed_value = parse_background_position_value(m_context, component_values))
+        if (auto parsed_value = parse_background_position_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundRepeat:
-        if (auto parsed_value = parse_background_repeat_value(m_context, component_values))
+        if (auto parsed_value = parse_background_repeat_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundSize:
-        if (auto parsed_value = parse_background_size_value(m_context, component_values))
+        if (auto parsed_value = parse_background_size_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Border:
@@ -3538,54 +3538,54 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     case PropertyID::BorderLeft:
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
-        if (auto parsed_value = parse_border_value(m_context, component_values))
+        if (auto parsed_value = parse_border_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BorderTopLeftRadius:
     case PropertyID::BorderTopRightRadius:
     case PropertyID::BorderBottomRightRadius:
     case PropertyID::BorderBottomLeftRadius:
-        if (auto parsed_value = parse_border_radius_value(m_context, component_values))
+        if (auto parsed_value = parse_border_radius_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BorderRadius:
-        if (auto parsed_value = parse_border_radius_shorthand_value(m_context, component_values))
+        if (auto parsed_value = parse_border_radius_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BoxShadow:
-        if (auto parsed_value = parse_box_shadow_value(m_context, component_values))
+        if (auto parsed_value = parse_box_shadow_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Flex:
-        if (auto parsed_value = parse_flex_value(m_context, component_values))
+        if (auto parsed_value = parse_flex_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::FlexFlow:
-        if (auto parsed_value = parse_flex_flow_value(m_context, component_values))
+        if (auto parsed_value = parse_flex_flow_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Font:
-        if (auto parsed_value = parse_font_value(m_context, component_values))
+        if (auto parsed_value = parse_font_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::FontFamily:
-        if (auto parsed_value = parse_font_family_value(m_context, component_values))
+        if (auto parsed_value = parse_font_family_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::ListStyle:
-        if (auto parsed_value = parse_list_style_value(m_context, component_values))
+        if (auto parsed_value = parse_list_style_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Overflow:
-        if (auto parsed_value = parse_overflow_value(m_context, component_values))
+        if (auto parsed_value = parse_overflow_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::TextDecoration:
-        if (auto parsed_value = parse_text_decoration_value(m_context, component_values))
+        if (auto parsed_value = parse_text_decoration_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Transform:
-        if (auto parsed_value = parse_transform_value(m_context, component_values))
+        if (auto parsed_value = parse_transform_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     default:
@@ -3593,7 +3593,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     }
 
     if (component_values.size() == 1) {
-        if (auto parsed_value = parse_css_value(m_context, component_values.first())) {
+        if (auto parsed_value = parse_css_value(component_values.first())) {
             if (property_accepts_value(property_id, *parsed_value))
                 return parsed_value.release_nonnull();
         }
@@ -3604,7 +3604,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     if (property_maximum_value_count(property_id) > 1) {
         NonnullRefPtrVector<StyleValue> parsed_values;
         for (auto& component_value : component_values) {
-            auto parsed_value = parse_css_value(m_context, component_value);
+            auto parsed_value = parse_css_value(component_value);
             if (!parsed_value || !property_accepts_value(property_id, *parsed_value))
                 return ParsingResult::SyntaxError;
             parsed_values.append(parsed_value.release_nonnull());
@@ -3616,31 +3616,31 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     return ParsingResult::SyntaxError;
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& component_value)
 {
-    if (auto builtin = parse_builtin_value(context, component_value))
+    if (auto builtin = parse_builtin_value(component_value))
         return builtin;
 
-    if (auto dynamic = parse_dynamic_value(context, component_value))
+    if (auto dynamic = parse_dynamic_value(component_value))
         return dynamic;
 
     // We parse colors before numbers, to catch hashless hex colors.
-    if (auto color = parse_color_value(context, component_value))
+    if (auto color = parse_color_value(component_value))
         return color;
 
-    if (auto length = parse_length_value(context, component_value))
+    if (auto length = parse_length_value(component_value))
         return length;
 
-    if (auto numeric = parse_numeric_value(context, component_value))
+    if (auto numeric = parse_numeric_value(component_value))
         return numeric;
 
-    if (auto identifier = parse_identifier_value(context, component_value))
+    if (auto identifier = parse_identifier_value(component_value))
         return identifier;
 
-    if (auto string = parse_string_value(context, component_value))
+    if (auto string = parse_string_value(component_value))
         return string;
 
-    if (auto image = parse_image_value(context, component_value))
+    if (auto image = parse_image_value(component_value))
         return image;
 
     return {};
@@ -3947,19 +3947,19 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     return syntax_error();
 }
 
-OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_expression(ParsingContext const& context, Vector<StyleComponentValueRule> const& values)
+OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_expression(Vector<StyleComponentValueRule> const& values)
 {
     auto tokens = TokenStream(values);
-    return parse_calc_sum(context, tokens);
+    return parse_calc_sum(tokens);
 }
 
-Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto current_token = tokens.next_token();
 
     if (current_token.is_block() && current_token.block().is_paren()) {
         auto block_values = TokenStream(current_token.block().values());
-        auto parsed_calc_sum = parse_calc_sum(context, block_values);
+        auto parsed_calc_sum = parse_calc_sum(block_values);
         if (!parsed_calc_sum)
             return {};
         return (CalculatedStyleValue::CalcValue) { parsed_calc_sum.release_nonnull() };
@@ -3973,7 +3973,7 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(ParsingContex
     }
 
     if (current_token.is(Token::Type::Dimension) || current_token.is(Token::Type::Percentage)) {
-        auto maybe_length = parse_length(context, current_token);
+        auto maybe_length = parse_length(current_token);
         if (maybe_length.has_value() && !maybe_length.value().is_undefined())
             return (CalculatedStyleValue::CalcValue) { maybe_length.value() };
         return {};
@@ -3982,7 +3982,7 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(ParsingContex
     return {};
 }
 
-OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
 {
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
@@ -4000,7 +4000,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
         tokens.next_token();
         tokens.skip_whitespace();
         product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Multiply;
-        auto parsed_calc_value = parse_calc_value(context, tokens);
+        auto parsed_calc_value = parse_calc_value(tokens);
         if (!parsed_calc_value.has_value())
             return nullptr;
         product_with_operator->value = { parsed_calc_value.release_value() };
@@ -4009,7 +4009,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
         tokens.next_token();
         tokens.skip_whitespace();
         product_with_operator->op = CalculatedStyleValue::CalcProductPartWithOperator::Divide;
-        auto parsed_calc_number_value = parse_calc_number_value(context, tokens);
+        auto parsed_calc_number_value = parse_calc_number_value(tokens);
         if (!parsed_calc_number_value.has_value())
             return nullptr;
         product_with_operator->value = { parsed_calc_number_value.release_value() };
@@ -4020,7 +4020,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     return product_with_operator;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
 {
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
@@ -4046,7 +4046,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
         return nullptr;
     }
 
-    auto parsed_calc_value = parse_calc_number_value(context, tokens);
+    auto parsed_calc_value = parse_calc_number_value(tokens);
     if (!parsed_calc_value.has_value())
         return nullptr;
     number_product_with_operator->value = parsed_calc_value.release_value();
@@ -4054,19 +4054,19 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     return number_product_with_operator;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
         CalculatedStyleValue::CalcNumberValue(0),
         NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
 
-    auto first_calc_number_value_or_error = parse_calc_number_value(context, tokens);
+    auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
     if (!first_calc_number_value_or_error.has_value())
         return nullptr;
     calc_number_product->first_calc_number_value = first_calc_number_value_or_error.release_value();
 
     while (tokens.has_next_token()) {
-        auto number_product_with_operator = parse_calc_number_product_part_with_operator(context, tokens);
+        auto number_product_with_operator = parse_calc_number_product_part_with_operator(tokens);
         if (!number_product_with_operator)
             break;
         calc_number_product->zero_or_more_additional_calc_number_values.append(number_product_with_operator.release_nonnull());
@@ -4075,7 +4075,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_produc
     return calc_number_product;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
 {
     if (!(tokens.peek_token().is(Token::Type::Delim)
             && tokens.peek_token().token().delim().is_one_of("+"sv, "-"sv)
@@ -4094,21 +4094,21 @@ OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_n
     else
         return nullptr;
 
-    auto calc_number_product = parse_calc_number_product(context, tokens);
+    auto calc_number_product = parse_calc_number_product(tokens);
     if (!calc_number_product)
         return nullptr;
     return make<CalculatedStyleValue::CalcNumberSumPartWithOperator>(op, calc_number_product.release_nonnull());
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto first_calc_number_product_or_error = parse_calc_number_product(context, tokens);
+    auto first_calc_number_product_or_error = parse_calc_number_product(tokens);
     if (!first_calc_number_product_or_error)
         return nullptr;
 
     NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberSumPartWithOperator> additional {};
     while (tokens.has_next_token()) {
-        auto calc_sum_part = parse_calc_number_sum_part_with_operator(context, tokens);
+        auto calc_sum_part = parse_calc_number_sum_part_with_operator(tokens);
         if (!calc_sum_part)
             return nullptr;
         additional.append(calc_sum_part.release_nonnull());
@@ -4120,13 +4120,13 @@ OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(Parsin
     return calc_number_sum;
 }
 
-Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto& first = tokens.peek_token();
     if (first.is_block() && first.block().is_paren()) {
         tokens.next_token();
         auto block_values = TokenStream(first.block().values());
-        auto calc_number_sum = parse_calc_number_sum(context, block_values);
+        auto calc_number_sum = parse_calc_number_sum(block_values);
         if (calc_number_sum)
             return { calc_number_sum.release_nonnull() };
     }
@@ -4141,19 +4141,19 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
     return try_the_number.value();
 }
 
-OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
         CalculatedStyleValue::CalcValue(0),
         NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
 
-    auto first_calc_value_or_error = parse_calc_value(context, tokens);
+    auto first_calc_value_or_error = parse_calc_value(tokens);
     if (!first_calc_value_or_error.has_value())
         return nullptr;
     calc_product->first_calc_value = first_calc_value_or_error.release_value();
 
     while (tokens.has_next_token()) {
-        auto product_with_operator = parse_calc_product_part_with_operator(context, tokens);
+        auto product_with_operator = parse_calc_product_part_with_operator(tokens);
         if (!product_with_operator)
             break;
         calc_product->zero_or_more_additional_calc_values.append(product_with_operator.release_nonnull());
@@ -4162,7 +4162,7 @@ OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(ParsingCont
     return calc_product;
 }
 
-OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
 {
     // The following has to have the shape of <Whitespace><+ or -><Whitespace>
     // But the first whitespace gets eaten in parse_calc_product_part_with_operator().
@@ -4183,21 +4183,21 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     else
         return nullptr;
 
-    auto calc_product = parse_calc_product(context, tokens);
+    auto calc_product = parse_calc_product(tokens);
     if (!calc_product)
         return nullptr;
     return make<CalculatedStyleValue::CalcSumPartWithOperator>(op, calc_product.release_nonnull());
 };
 
-OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto parsed_calc_product = parse_calc_product(context, tokens);
+    auto parsed_calc_product = parse_calc_product(tokens);
     if (!parsed_calc_product)
         return nullptr;
 
     NonnullOwnPtrVector<CalculatedStyleValue::CalcSumPartWithOperator> additional {};
     while (tokens.has_next_token()) {
-        auto calc_sum_part = parse_calc_sum_part_with_operator(context, tokens);
+        auto calc_sum_part = parse_calc_sum_part_with_operator(tokens);
         if (!calc_sum_part)
             return nullptr;
         additional.append(calc_sum_part.release_nonnull());
