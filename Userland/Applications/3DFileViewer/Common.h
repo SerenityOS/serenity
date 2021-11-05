@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
+ * Copyright (c) 2021, Pedro Pereira <pmh.pereira@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,4 +31,8 @@ struct Triangle {
     GLuint tex_coord_index0;
     GLuint tex_coord_index1;
     GLuint tex_coord_index2;
+
+    GLuint normal_index0;
+    GLuint normal_index1;
+    GLuint normal_index2;
 };
