@@ -64,6 +64,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.withPlainTime, with_plain_time, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.startOfDay, start_of_day, 0, attr);
     define_native_function(vm.names.toInstant, to_instant, 0, attr);
@@ -700,6 +701,48 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::era_year_getter)
 
     // 7. Return ? CalendarEraYear(calendar, plainDateTime).
     return TRY(calendar_era_year(global_object, calendar, *plain_date_time));
+}
+
+// 6.3.31 Temporal.ZonedDateTime.prototype.withPlainTime ( [ plainTimeLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withplaintime
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_plain_time)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    PlainTime* plain_time = nullptr;
+
+    // 3. If plainTimeLike is undefined, then
+    if (vm.argument(0).is_undefined()) {
+        // a. Let plainTime be ? CreateTemporalTime(0, 0, 0, 0, 0, 0).
+        plain_time = TRY(create_temporal_time(global_object, 0, 0, 0, 0, 0, 0));
+    }
+    // 4. Else,
+    else {
+        // a. Let plainTime be ? ToTemporalTime(plainTimeLike).
+        plain_time = TRY(to_temporal_time(global_object, vm.argument(0)));
+    }
+
+    // 5. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 6. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
+
+    // 7. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 8. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
+
+    // 9. Let resultPlainDateTime be ? CreateTemporalDateTime(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainTime.[[ISOHour]], plainTime.[[ISOMinute]], plainTime.[[ISOSecond]], plainTime.[[ISOMillisecond]], plainTime.[[ISOMicrosecond]], plainTime.[[ISONanosecond]], calendar).
+    auto* result_plain_date_time = TRY(create_temporal_date_time(global_object, plain_date_time->iso_year(), plain_date_time->iso_month(), plain_date_time->iso_day(), plain_time->iso_hour(), plain_time->iso_minute(), plain_time->iso_second(), plain_time->iso_millisecond(), plain_time->iso_microsecond(), plain_time->iso_nanosecond(), calendar));
+
+    // 10. Set instant to ? BuiltinTimeZoneGetInstantFor(timeZone, resultPlainDateTime, "compatible").
+    instant = TRY(builtin_time_zone_get_instant_for(global_object, &time_zone, *result_plain_date_time, "compatible"sv));
+
+    // 11. Return ! CreateTemporalZonedDateTime(instant.[[Nanoseconds]], timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, instant->nanoseconds(), time_zone, calendar));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
