@@ -418,6 +418,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::BackgroundSize) {
+        if (value.is_value_list()) {
+            auto& background_size_list = value.as_value_list().values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_size_list.is_empty()) {
+                auto& background_size = background_size_list.first();
+                style.set_property(CSS::PropertyID::BackgroundSize, background_size);
+            }
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundSize, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Margin) {
         if (value.is_value_list()) {
             auto& values_list = value.as_value_list();
