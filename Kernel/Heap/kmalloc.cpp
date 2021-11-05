@@ -30,7 +30,7 @@ static constexpr size_t CHUNK_SIZE = 64;
 #endif
 
 #define POOL_SIZE (2 * MiB)
-#define ETERNAL_RANGE_SIZE (4 * MiB)
+#define ETERNAL_RANGE_SIZE (256 * KiB)
 
 namespace std {
 const nothrow_t nothrow;
