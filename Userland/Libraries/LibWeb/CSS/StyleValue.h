@@ -246,6 +246,7 @@ public:
     enum class Type {
         Background,
         BackgroundRepeat,
+        BackgroundSize,
         Border,
         BorderRadius,
         BoxShadow,
@@ -277,6 +278,7 @@ public:
 
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
+    bool is_background_size() const { return type() == Type::BackgroundSize; }
     bool is_border() const { return type() == Type::Border; }
     bool is_border_radius() const { return type() == Type::BorderRadius; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
@@ -305,6 +307,7 @@ public:
 
     BackgroundStyleValue const& as_background() const;
     BackgroundRepeatStyleValue const& as_background_repeat() const;
+    BackgroundSizeStyleValue const& as_background_size() const;
     BorderRadiusStyleValue const& as_border_radius() const;
     BorderStyleValue const& as_border() const;
     BoxShadowStyleValue const& as_box_shadow() const;
@@ -331,6 +334,7 @@ public:
 
     BackgroundStyleValue& as_background() { return const_cast<BackgroundStyleValue&>(const_cast<StyleValue const&>(*this).as_background()); }
     BackgroundRepeatStyleValue& as_background_repeat() { return const_cast<BackgroundRepeatStyleValue&>(const_cast<StyleValue const&>(*this).as_background_repeat()); }
+    BackgroundSizeStyleValue& as_background_size() { return const_cast<BackgroundSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_background_size()); }
     BorderRadiusStyleValue& as_border_radius() { return const_cast<BorderRadiusStyleValue&>(const_cast<StyleValue const&>(*this).as_border_radius()); }
     BorderStyleValue& as_border() { return const_cast<BorderStyleValue&>(const_cast<StyleValue const&>(*this).as_border()); }
     BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
@@ -502,6 +506,35 @@ private:
 
     Repeat m_repeat_x;
     Repeat m_repeat_y;
+};
+
+// NOTE: This is not used for identifier sizes, like `cover` and `contain`.
+class BackgroundSizeStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BackgroundSizeStyleValue> create(Length size_x, Length size_y)
+    {
+        return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
+    }
+    virtual ~BackgroundSizeStyleValue() override { }
+
+    Length size_x() const { return m_size_x; }
+    Length size_y() const { return m_size_y; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("{} {}", m_size_x.to_string(), m_size_y.to_string());
+    }
+
+private:
+    BackgroundSizeStyleValue(Length size_x, Length size_y)
+        : StyleValue(Type::BackgroundSize)
+        , m_size_x(size_x)
+        , m_size_y(size_y)
+    {
+    }
+
+    Length m_size_x;
+    Length m_size_y;
 };
 
 class BorderStyleValue final : public StyleValue {
