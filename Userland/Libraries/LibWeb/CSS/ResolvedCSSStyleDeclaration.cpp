@@ -653,6 +653,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
         auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
         auto maybe_background_position = property(CSS::PropertyID::BackgroundPosition);
+        auto maybe_background_size = property(CSS::PropertyID::BackgroundSize);
         auto maybe_background_repeat = property(CSS::PropertyID::BackgroundRepeat);
         auto maybe_background_attachment = property(CSS::PropertyID::BackgroundAttachment);
         auto maybe_background_origin = property(CSS::PropertyID::BackgroundOrigin);
@@ -662,6 +663,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             value_or_default(maybe_background_color, InitialStyleValue::the()),
             value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)),
             value_or_default(maybe_background_position, PositionStyleValue::create(PositionEdge::Left, Length::make_px(0), PositionEdge::Top, Length::make_px(0))),
+            value_or_default(maybe_background_size, IdentifierStyleValue::create(CSS::ValueID::Auto)),
             value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(CSS::Repeat::Repeat, CSS::Repeat::Repeat)),
             value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)),
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
