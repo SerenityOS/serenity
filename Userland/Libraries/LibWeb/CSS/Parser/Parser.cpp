@@ -2751,6 +2751,41 @@ RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& c
     return parse_single_background_repeat_value(context, tokens);
 }
 
+RefPtr<StyleValue> Parser::parse_single_background_size_value(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
+{
+    auto start_position = tokens.position();
+    auto error = [&]() {
+        tokens.rewind_to_position(start_position);
+        return nullptr;
+    };
+
+    auto maybe_x_value = parse_css_value(context, tokens.next_token());
+    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_x_value))
+        return error();
+    auto x_value = maybe_x_value.release_nonnull();
+
+    if (x_value->to_identifier() == ValueID::Cover || x_value->to_identifier() == ValueID::Contain)
+        return x_value;
+
+    auto maybe_y_value = parse_css_value(context, tokens.peek_token());
+    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value))
+        return BackgroundSizeStyleValue::create(x_value->to_length(), x_value->to_length());
+    tokens.next_token();
+    auto y_value = maybe_y_value.release_nonnull();
+
+    if (x_value->has_length() && y_value->has_length())
+        return BackgroundSizeStyleValue::create(x_value->to_length(), y_value->to_length());
+
+    return error();
+}
+
+RefPtr<StyleValue> Parser::parse_background_size_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    // FIXME: Handle multiple sets of comma-separated values.
+    return parse_single_background_size_value(context, tokens);
+}
+
 RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() > 3)
@@ -3471,6 +3506,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundRepeat:
         if (auto parsed_value = parse_background_repeat_value(m_context, component_values))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
+    case PropertyID::BackgroundSize:
+        if (auto parsed_value = parse_background_size_value(m_context, component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Border:

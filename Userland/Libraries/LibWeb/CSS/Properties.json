@@ -90,6 +90,20 @@
       "space"
     ]
   },
+  "background-size": {
+    "inherited": false,
+    "initial": "auto",
+    "max-values": 2,
+    "valid-types": [
+      "length",
+      "percentage"
+    ],
+    "valid-identifiers": [
+      "auto",
+      "cover",
+      "contain"
+    ]
+  },
   "border": {
     "longhands": [
       "border-width",
