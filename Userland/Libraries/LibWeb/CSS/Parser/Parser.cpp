@@ -2394,9 +2394,9 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
 {
     RefPtr<StyleValue> background_color;
     RefPtr<StyleValue> background_image;
-    RefPtr<StyleValue> background_repeat;
     RefPtr<StyleValue> background_position;
-    // FIXME: Implement background-size.
+    RefPtr<StyleValue> background_size;
+    RefPtr<StyleValue> background_repeat;
     RefPtr<StyleValue> background_attachment;
     RefPtr<StyleValue> background_clip;
     RefPtr<StyleValue> background_origin;
@@ -2456,7 +2456,19 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
             tokens.reconsume_current_input_token();
             if (auto maybe_background_position = parse_single_background_position_value(context, tokens)) {
                 background_position = maybe_background_position.release_nonnull();
-                // FIXME: background-size optionally goes here, after a '/'
+
+                // Attempt to parse `/ <background-size>`
+                auto before_slash = tokens.position();
+                auto& maybe_slash = tokens.next_token();
+                if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == "/"sv) {
+                    if (auto maybe_background_size = parse_single_background_size_value(context, tokens)) {
+                        background_size = maybe_background_size.release_nonnull();
+                        continue;
+                    }
+                    return nullptr;
+                }
+
+                tokens.rewind_to_position(before_slash);
                 continue;
             }
             return nullptr;
@@ -2481,6 +2493,8 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         background_image = property_initial_value(PropertyID::BackgroundImage);
     if (!background_position)
         background_position = property_initial_value(PropertyID::BackgroundPosition);
+    if (!background_size)
+        background_size = property_initial_value(PropertyID::BackgroundSize);
     if (!background_repeat)
         background_repeat = property_initial_value(PropertyID::BackgroundRepeat);
     if (!background_attachment)
@@ -2497,6 +2511,7 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         background_color.release_nonnull(),
         background_image.release_nonnull(),
         background_position.release_nonnull(),
+        background_size.release_nonnull(),
         background_repeat.release_nonnull(),
         background_attachment.release_nonnull(),
         background_origin.release_nonnull(),
