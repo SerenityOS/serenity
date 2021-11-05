@@ -92,31 +92,31 @@ void Mesh::draw(float uv_scale)
         glColor4f(color.x(), color.y(), color.z(), color.w());
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v) * uv_scale);
+            glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index0).v) * uv_scale);
 
         // Vertex 1
         glVertex3f(
-            m_vertex_list.at(m_triangle_list[i].a).x,
-            m_vertex_list.at(m_triangle_list[i].a).y,
-            m_vertex_list.at(m_triangle_list[i].a).z);
+            m_vertex_list.at(triangle.a).x,
+            m_vertex_list.at(triangle.a).y,
+            m_vertex_list.at(triangle.a).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v) * uv_scale);
+            glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index1).v) * uv_scale);
 
         // Vertex 2
         glVertex3f(
-            m_vertex_list.at(m_triangle_list[i].b).x,
-            m_vertex_list.at(m_triangle_list[i].b).y,
-            m_vertex_list.at(m_triangle_list[i].b).z);
+            m_vertex_list.at(triangle.b).x,
+            m_vertex_list.at(triangle.b).y,
+            m_vertex_list.at(triangle.b).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v) * uv_scale);
+            glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index2).v) * uv_scale);
 
         // Vertex 3
         glVertex3f(
-            m_vertex_list.at(m_triangle_list[i].c).x,
-            m_vertex_list.at(m_triangle_list[i].c).y,
-            m_vertex_list.at(m_triangle_list[i].c).z);
+            m_vertex_list.at(triangle.c).x,
+            m_vertex_list.at(triangle.c).y,
+            m_vertex_list.at(triangle.c).z);
 
         glEnd();
     }
