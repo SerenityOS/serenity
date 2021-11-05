@@ -14,7 +14,7 @@
 namespace Kernel {
 
 class MemoryDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
+    AK_INDESTRUCTIBLE
     friend class DeviceManagement;
 
 public:

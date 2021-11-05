@@ -20,9 +20,9 @@ class SlabAllocator {
 public:
     SlabAllocator() = default;
 
-    void init(size_t size)
+    void init(void* base, size_t size)
     {
-        m_base = kmalloc_eternal(size);
+        m_base = base;
         m_end = (u8*)m_base + size;
         FreeSlab* slabs = (FreeSlab*)m_base;
         m_slab_count = size / templated_slab_size;
@@ -105,6 +105,12 @@ private:
     static_assert(AssertSize<FreeSlab, templated_slab_size>());
 };
 
+alignas(4096) static u8 slab_allocator_16_storage[128 * KiB];
+alignas(4096) static u8 slab_allocator_32_storage[128 * KiB];
+alignas(4096) static u8 slab_allocator_64_storage[512 * KiB];
+alignas(4096) static u8 slab_allocator_128_storage[512 * KiB];
+alignas(4096) static u8 slab_allocator_256_storage[128 * KiB];
+
 static SlabAllocator<16> s_slab_allocator_16;
 static SlabAllocator<32> s_slab_allocator_32;
 static SlabAllocator<64> s_slab_allocator_64;
@@ -127,11 +133,11 @@ void for_each_allocator(Callback callback)
 
 UNMAP_AFTER_INIT void slab_alloc_init()
 {
-    s_slab_allocator_16.init(128 * KiB);
-    s_slab_allocator_32.init(128 * KiB);
-    s_slab_allocator_64.init(512 * KiB);
-    s_slab_allocator_128.init(512 * KiB);
-    s_slab_allocator_256.init(128 * KiB);
+    s_slab_allocator_16.init(slab_allocator_16_storage, sizeof(slab_allocator_16_storage));
+    s_slab_allocator_32.init(slab_allocator_32_storage, sizeof(slab_allocator_32_storage));
+    s_slab_allocator_64.init(slab_allocator_64_storage, sizeof(slab_allocator_64_storage));
+    s_slab_allocator_128.init(slab_allocator_128_storage, sizeof(slab_allocator_128_storage));
+    s_slab_allocator_256.init(slab_allocator_256_storage, sizeof(slab_allocator_256_storage));
 }
 
 void* slab_alloc(size_t slab_size)

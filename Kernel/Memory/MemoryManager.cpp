@@ -49,6 +49,7 @@ namespace Kernel::Memory {
 // run. If we do, then Singleton would get re-initialized, causing
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
+
 RecursiveSpinlock s_mm_lock { LockRank::MemoryManager };
 
 MemoryManager& MemoryManager::the()
@@ -64,7 +65,6 @@ bool MemoryManager::is_initialized()
 UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 {
     s_the = this;
-
     SpinlockLocker lock(s_mm_lock);
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());

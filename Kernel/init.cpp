@@ -180,17 +180,15 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         (*ctor)();
     kmalloc_init();
     slab_alloc_init();
-
     load_kernel_symbol_table();
+    CommandLine::initialize();
+    Memory::MemoryManager::initialize(0);
 
     DeviceManagement::initialize();
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
     DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
     s_bsp_processor.initialize(0);
-
-    CommandLine::initialize();
-    Memory::MemoryManager::initialize(0);
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(+start_of_safemem_text != +end_of_safemem_text);

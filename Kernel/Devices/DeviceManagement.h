@@ -24,10 +24,11 @@
 namespace Kernel {
 
 class DeviceManagement {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     DeviceManagement();
+    ~DeviceManagement() = delete;
     static void initialize();
     static DeviceManagement& the();
     void attach_null_device(NullDevice const&);

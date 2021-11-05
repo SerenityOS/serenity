@@ -121,10 +121,11 @@ private:
 };
 
 class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
-    AK_MAKE_ETERNAL;
+    AK_INDESTRUCTIBLE;
 
 public:
     KernelRng();
+    ~KernelRng() = delete;
     static KernelRng& the();
 
     void wait_for_entropy();
