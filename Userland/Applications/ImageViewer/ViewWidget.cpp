@@ -47,7 +47,7 @@ void ViewWidget::clear()
 
 void ViewWidget::flip(Gfx::Orientation orientation)
 {
-    m_bitmap = m_bitmap->flipped(orientation);
+    m_bitmap = m_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
     set_scale(m_scale);
 
     resize_window();
