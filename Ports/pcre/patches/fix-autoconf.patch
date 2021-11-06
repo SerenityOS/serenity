@@ -1,12 +1,12 @@
-diff -Naur pcre-8.44/config.sub pcre-8.44.serenity/config.sub
---- pcre-8.44/config.sub	2020-02-12 18:17:31.000000000 +0100
-+++ pcre-8.44.serenity/config.sub	2021-04-12 01:21:59.467797075 +0200
-@@ -1390,7 +1390,7 @@
- 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
- 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
- 	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
--	      | -midnightbsd*)
-+	      | -midnightbsd* | -serenity*)
- 	# Remember, each alternative MUST END IN *, to match a version number.
- 		;;
- 	-qnx*)
+diff -ur a/config.sub b/config.sub
+--- a/config.sub	2021-06-15 17:52:53.000000000 +0200
++++ b/config.sub	2021-11-06 02:02:32.208608392 +0100
+@@ -1690,7 +1690,7 @@
+ 	# Now accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
