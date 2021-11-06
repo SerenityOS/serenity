@@ -14,6 +14,7 @@
 
 #    include <AK/Assertions.h>
 #    include <AK/Atomic.h>
+#    include <AK/Error.h>
 #    include <AK/Format.h>
 #    include <AK/NonnullRefPtr.h>
 #    include <AK/StdLibExtras.h>
@@ -345,6 +346,15 @@ template<typename T, class... Args>
 inline RefPtr<T> try_make_ref_counted(Args&&... args)
 {
     return adopt_ref_if_nonnull(new (nothrow) T { forward<Args>(args)... });
+}
+
+template<typename T>
+inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
+{
+    auto result = adopt_ref_if_nonnull(object);
+    if (!result)
+        return ENOMEM;
+    return result.release_nonnull();
 }
 
 }
