@@ -9,6 +9,7 @@
 #include <AK/Iterator.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <errno_numbers.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,12 +94,14 @@ int main(int argc, char** argv)
 
     dbgln_if(SYSCALL_1_DEBUG, "Calling {} {:p} {:p} {:p}\n", arg[0], arg[1], arg[2], arg[3]);
     int rc = syscall(arg[0], arg[1], arg[2], arg[3]);
-    if (rc == -1)
-        perror("syscall");
     if (output_buffer)
         fwrite(outbuf, 1, sizeof(outbuf), stdout);
 
-    warnln("Syscall return: {}", rc);
+    if (-rc >= 0 && -rc < EMAXERRNO) {
+        warnln("Syscall return: {} ({})", rc, strerror(-rc));
+    } else {
+        warnln("Syscall return: {} (?)", rc);
+    }
     return 0;
 }
 
