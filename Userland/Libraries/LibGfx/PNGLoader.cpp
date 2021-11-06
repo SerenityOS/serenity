@@ -47,7 +47,7 @@ struct [[gnu::packed]] PaletteEntry {
     u8 r;
     u8 g;
     u8 b;
-    //u8 a;
+    // u8 a;
 };
 
 template<typename T>
@@ -603,13 +603,13 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
-
-    if (!context.bitmap) {
+    auto bitmap_or_error = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
+    if (bitmap_or_error.is_error()) {
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
+    context.bitmap = bitmap_or_error.release_value();
     return unfilter(context);
 }
 
@@ -705,7 +705,11 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
         }
     }
 
-    subimage_context.bitmap = Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height });
+    auto bitmap_or_error = Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height });
+    if (bitmap_or_error.is_error())
+        return false;
+
+    subimage_context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     if (!unfilter(subimage_context)) {
         subimage_context.bitmap = nullptr;
         return false;
@@ -723,9 +727,10 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 static bool decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
-    context.bitmap = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
-    if (!context.bitmap)
+    auto bitmap_or_error = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
+    if (bitmap_or_error.is_error())
         return false;
+    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     for (int pass = 1; pass <= 7; ++pass) {
         if (!decode_adam7_pass(context, streamer, pass))

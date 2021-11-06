@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     auto const& track = optional_track.value();
     auto const video_track = track.video_track().value();
 
-    auto image = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(video_track.pixel_height, video_track.pixel_width));
+    auto image = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(video_track.pixel_height, video_track.pixel_width)).release_value_but_fixme_should_propagate_errors();
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();

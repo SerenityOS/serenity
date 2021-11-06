@@ -60,7 +60,7 @@ private:
 
 Cube::Cube()
 {
-    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT });
+    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }).release_value_but_fixme_should_propagate_errors();
 
     m_accumulated_time = 0;
     m_cycles = 0;

@@ -67,12 +67,10 @@ static bool size_would_overflow(BitmapFormat format, IntSize const& size, int sc
     return Checked<size_t>::multiplication_would_overflow(pitch, size.height() * scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, IntSize const& size, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create(BitmapFormat format, IntSize const& size, int scale_factor)
 {
-    auto backing_store_or_error = Bitmap::allocate_backing_store(format, size, scale_factor);
-    if (backing_store_or_error.is_error())
-        return nullptr;
-    return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store_or_error.release_value()));
+    auto backing_store = TRY(Bitmap::allocate_backing_store(format, size, scale_factor));
+    return AK::adopt_nonnull_ref_or_enomem(new (nothrow) Bitmap(format, size, scale_factor, backing_store));
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_shareable(BitmapFormat format, IntSize const& size, int scale_factor)
@@ -250,9 +248,10 @@ RefPtr<Bitmap> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffe
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
-    auto bitmap = Bitmap::try_create(format, { width, height }, scale_factor);
-    if (!bitmap)
+    auto bitmap_or_error = Bitmap::try_create(format, { width, height }, scale_factor);
+    if (bitmap_or_error.is_error())
         return {};
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     bitmap->m_palette = new RGBA32[palette_size];
     memcpy(bitmap->m_palette, palette.data(), palette_size * sizeof(RGBA32));
@@ -309,26 +308,17 @@ Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, IntSize const&
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::clone() const
 {
-    auto new_bitmap = Bitmap::try_create(format(), size(), scale());
-
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Bitmap::try_create(format(), size(), scale()));
 
     VERIFY(size_in_bytes() == new_bitmap->size_in_bytes());
     memcpy(new_bitmap->scanline(0), scanline(0), size_in_bytes());
 
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale());
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale()));
 
     auto w = this->physical_width();
     auto h = this->physical_height();
@@ -344,16 +334,12 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::rotated(Gfx::RotationDirection rotat
         }
     }
 
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::flipped(Gfx::Orientation orientation) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { width(), height() }, scale());
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(this->format(), { width(), height() }, scale()));
 
     auto w = this->physical_width();
     auto h = this->physical_height();
@@ -367,7 +353,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::flipped(Gfx::Orientation orientation
         }
     }
 
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
@@ -376,11 +362,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
     if (sx == 1 && sy == 1)
         return NonnullRefPtr { *this };
 
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { width() * sx, height() * sy }, scale());
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { width() * sx, height() * sy }, scale()));
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -399,7 +381,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
         }
     }
 
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 // http://fourier.eng.hmc.edu/e161/lectures/resize/node3.html
@@ -412,11 +394,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
     int scaled_width = (int)ceilf(sx * (float)width());
     int scaled_height = (int)ceilf(sy * (float)height());
 
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale());
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale()));
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -483,16 +461,12 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
     // Bottom-right pixel
     new_bitmap->set_pixel(new_width - 1, new_height - 1, get_pixel(physical_width() - 1, physical_height() - 1));
 
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { crop.width(), crop.height() }, 1);
-    if (!new_bitmap) {
-        // FIXME: Propagate the *real* error, once we have it.
-        return Error::from_errno(ENOMEM);
-    }
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { crop.width(), crop.height() }, 1));
 
     for (int y = 0; y < crop.height(); ++y) {
         for (int x = 0; x < crop.width(); ++x) {
@@ -505,7 +479,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop) const
             }
         }
     }
-    return new_bitmap.release_nonnull();
+    return new_bitmap;
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() const

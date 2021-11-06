@@ -112,12 +112,12 @@ void CompositorScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
     if (m_screen_can_set_buffer)
         m_back_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0)).release_value_but_fixme_should_propagate_errors();
     else
-        m_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
+        m_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
     m_back_painter->translate(-screen.rect().location());
 
     m_temp_bitmap = nullptr;
-    m_temp_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
+    m_temp_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
     m_temp_painter->translate(-screen.rect().location());
 }
@@ -949,7 +949,7 @@ void CompositorScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& curso
     auto& wm = WindowManager::the();
 
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size() || m_cursor_back_bitmap->scale() != screen.scale_factor()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), screen.scale_factor());
+        m_cursor_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 

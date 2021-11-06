@@ -478,7 +478,7 @@ static Gfx::IntSize closest_multiple(const Gfx::IntSize& min_size, size_t step)
 }
 
 SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
-    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)) }
+    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors() }
     , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, RASTERIZER_BLOCK_SIZE))) }
 {
 }
@@ -547,7 +547,7 @@ void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
 {
     wait_for_all_threads();
 
-    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE));
+    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors();
     m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
 }
 

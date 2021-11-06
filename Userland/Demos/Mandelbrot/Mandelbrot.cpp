@@ -35,7 +35,7 @@ public:
 
     void resize(Gfx::IntSize const& size)
     {
-        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size);
+        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size).release_value_but_fixme_should_propagate_errors();
         correct_aspect();
         calculate();
     }

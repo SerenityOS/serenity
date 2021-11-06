@@ -94,9 +94,12 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     auto clipping_bitmap_or_error = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping.data.data());
     if (clipping_bitmap_or_error.is_error())
         return nullptr;
-    auto clipping_bitmap = clipping_bitmap_or_error.release_value();
+    auto clipping_bitmap = clipping_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     for (int y = 0; y < clipping_bitmap->physical_height(); ++y) {
         for (int x = 0; x < clipping_bitmap->physical_width(); ++x) {
