@@ -353,7 +353,7 @@ inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
 {
     auto result = adopt_ref_if_nonnull(object);
     if (!result)
-        return ENOMEM;
+        return Error::from_errno(ENOMEM);
     return result.release_nonnull();
 }
 
