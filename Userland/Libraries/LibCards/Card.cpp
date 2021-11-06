@@ -172,8 +172,7 @@ void Card::clear_and_draw(GUI::Painter& painter, const Color& background_color)
 
 NonnullRefPtr<Gfx::Bitmap> Card::invert_bitmap(Gfx::Bitmap& bitmap)
 {
-    auto inverted_bitmap = bitmap.clone();
-    VERIFY(inverted_bitmap);
+    auto inverted_bitmap = bitmap.clone().release_value_but_fixme_should_propagate_errors();
     for (int y = 0; y < inverted_bitmap->height(); y++) {
         for (int x = 0; x < inverted_bitmap->width(); x++) {
             inverted_bitmap->set_pixel(x, y, inverted_bitmap->get_pixel(x, y).inverted());

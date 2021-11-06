@@ -239,11 +239,12 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
             auto& emblem = size < 32 ? *s_symlink_emblem_small : *s_symlink_emblem;
             auto original_bitmap = target_icon.bitmap_for_size(size);
             VERIFY(original_bitmap);
-            auto generated_bitmap = original_bitmap->clone();
-            if (!generated_bitmap) {
+            auto generated_bitmap_or_error = original_bitmap->clone();
+            if (generated_bitmap_or_error.is_error()) {
                 dbgln("Failed to clone {}x{} icon for symlink variant", size, size);
                 return s_symlink_icon;
             }
+            auto generated_bitmap = generated_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
             GUI::Painter painter(*generated_bitmap);
             painter.blit({ size - emblem.width(), size - emblem.height() }, emblem, emblem.rect());
 

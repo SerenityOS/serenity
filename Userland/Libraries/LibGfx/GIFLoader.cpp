@@ -733,8 +733,14 @@ ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
         m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
     }
 
+    auto image_or_error = m_context->frame_buffer->clone();
+    if (image_or_error.is_error()) {
+        m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
+        return {};
+    }
+
     ImageFrameDescriptor frame {};
-    frame.image = m_context->frame_buffer->clone();
+    frame.image = image_or_error.release_value_but_fixme_should_propagate_errors();
     frame.duration = m_context->images.at(i).duration * 10;
 
     if (frame.duration <= 10) {
