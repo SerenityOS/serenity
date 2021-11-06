@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         options |= PosixFlags::Insensitive;
 
     auto grep_logic = [&](auto&& re) {
-        if (re.parser_result.error != Error::NoError) {
+        if (re.parser_result.error != regex::Error::NoError) {
             return 1;
         }
 

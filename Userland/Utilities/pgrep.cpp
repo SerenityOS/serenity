@@ -32,7 +32,7 @@ int main(int argc, char** argv)
         options |= PosixFlags::Insensitive;
 
     Regex<PosixExtended> re(pattern, options);
-    if (re.parser_result.error != Error::NoError) {
+    if (re.parser_result.error != regex::Error::NoError) {
         return 1;
     }
 
