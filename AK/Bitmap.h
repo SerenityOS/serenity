@@ -16,33 +16,30 @@
 
 namespace AK {
 
-class Bitmap {
+class Bitmap : public BitmapView {
     AK_MAKE_NONCOPYABLE(Bitmap);
 
 public:
     Bitmap() = default;
 
     Bitmap(size_t size, bool default_value)
-        : m_size(size)
+        : BitmapView(static_cast<u8*>(kmalloc(ceil_div(size, static_cast<size_t>(8)))), size)
+        , m_is_owning(true)
     {
-        VERIFY(m_size != 0);
-        m_data = static_cast<u8*>(kmalloc(size_in_bytes()));
+        VERIFY(size != 0);
         fill(default_value);
     }
 
     Bitmap(u8* data, size_t size, bool is_owning = false)
-        : m_data(data)
-        , m_size(size)
+        : BitmapView(data, size)
         , m_is_owning(is_owning)
     {
     }
 
-    [[nodiscard]] BitmapView const view() const { return { m_data, m_size }; }
-
     Bitmap(Bitmap&& other)
-        : m_data(exchange(other.m_data, nullptr))
-        , m_size(exchange(other.m_size, 0))
+        : BitmapView(exchange(other.m_data, nullptr), exchange(other.m_size, 0))
     {
+        m_is_owning = exchange(other.m_is_owning, false);
     }
 
     Bitmap& operator=(Bitmap&& other)
@@ -63,14 +60,7 @@ public:
         m_data = nullptr;
     }
 
-    [[nodiscard]] size_t size() const { return m_size; }
-    [[nodiscard]] size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
-
-    [[nodiscard]] bool get(size_t index) const
-    {
-        VERIFY(index < m_size);
-        return 0 != (m_data[index / 8] & (1u << (index % 8)));
-    }
+    [[nodiscard]] BitmapView const view() const { return *this; }
 
     void set(size_t index, bool value)
     {
@@ -81,13 +71,10 @@ public:
             m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
     }
 
-    [[nodiscard]] size_t count_slow(bool value) const { return count_in_range(0, m_size, value); }
-    [[nodiscard]] size_t count_in_range(size_t start, size_t len, bool value) const { return view().count_in_range(start, len, value); }
-
-    [[nodiscard]] bool is_null() const { return !m_data; }
-
     [[nodiscard]] u8* data() { return m_data; }
-    [[nodiscard]] u8 const* data() const { return m_data; }
+
+    // [[nodiscard]] u8 const* data() const { return m_data; }
+    // ^BitmapView
 
     void grow(size_t size, bool default_value)
     {
@@ -188,30 +175,9 @@ public:
         __builtin_memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
-    Optional<size_t> find_one_anywhere_set(size_t hint = 0) const { return view().find_one_anywhere<true>(hint); }
-    Optional<size_t> find_one_anywhere_unset(size_t hint = 0) const { return view().find_one_anywhere<false>(hint); }
-
-    Optional<size_t> find_first_set() const { return view().find_first<true>(); }
-    Optional<size_t> find_first_unset() const { return view().find_first<false>(); }
-
-    Optional<size_t> find_next_range_of_unset_bits(size_t& from, size_t min_length = 1, size_t max_length = max_size) const
-    {
-        return view().find_next_range_of_unset_bits(from, min_length, max_length);
-    }
-
-    Optional<size_t> find_longest_range_of_unset_bits(size_t max_length, size_t& found_range_size) const
-    {
-        return view().find_longest_range_of_unset_bits(max_length, found_range_size);
-    }
-
-    Optional<size_t> find_first_fit(size_t minimum_length) const { return view().find_first_fit(minimum_length); }
-    Optional<size_t> find_best_fit(size_t minimum_length) const { return view().find_best_fit(minimum_length); }
-
     static constexpr size_t max_size = 0xffffffff;
 
 private:
-    u8* m_data { nullptr };
-    size_t m_size { 0 };
     bool m_is_owning { true };
 };
 
