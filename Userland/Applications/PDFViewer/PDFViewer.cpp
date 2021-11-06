@@ -152,10 +152,10 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
     if (page.rotate != 0) {
         int rotation_count = (page.rotate / 90) % 4;
         if (rotation_count == 3) {
-            bitmap = bitmap->rotated(Gfx::RotationDirection::CounterClockwise);
+            bitmap = bitmap->rotated(Gfx::RotationDirection::CounterClockwise).release_value_but_fixme_should_propagate_errors();
         } else {
             for (int i = 0; i < rotation_count; i++)
-                bitmap = bitmap->rotated(Gfx::RotationDirection::Clockwise);
+                bitmap = bitmap->rotated(Gfx::RotationDirection::Clockwise).release_value_but_fixme_should_propagate_errors();
         }
     }
 

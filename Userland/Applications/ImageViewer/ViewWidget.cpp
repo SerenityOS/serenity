@@ -55,7 +55,7 @@ void ViewWidget::flip(Gfx::Orientation orientation)
 
 void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
 {
-    m_bitmap = m_bitmap->rotated(rotation_direction);
+    m_bitmap = m_bitmap->rotated(rotation_direction).release_value_but_fixme_should_propagate_errors();
     set_scale(m_scale);
 
     resize_window();
