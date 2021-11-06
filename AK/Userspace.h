@@ -20,7 +20,6 @@ class Userspace {
 public:
     Userspace() = default;
 
-    operator bool() const { return m_ptr; }
     operator FlatPtr() const { return (FlatPtr)m_ptr; }
 
     // Disable default implementations that would use surprising integer promotion.
@@ -36,6 +35,8 @@ public:
     {
     }
 
+    explicit operator bool() const { return m_ptr != 0; }
+
     FlatPtr ptr() const { return m_ptr; }
     T unsafe_userspace_ptr() const { return (T)m_ptr; }
 #else
@@ -43,6 +44,8 @@ public:
         : m_ptr(ptr)
     {
     }
+
+    explicit operator bool() const { return m_ptr != nullptr; }
 
     T ptr() const { return m_ptr; }
 #endif

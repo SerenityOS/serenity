@@ -52,7 +52,7 @@ public:
     explicit StringView(String&&) = delete;
     explicit StringView(FlyString&&) = delete;
 
-    [[nodiscard]] constexpr bool is_null() const { return !m_characters; }
+    [[nodiscard]] constexpr bool is_null() const { return m_characters == nullptr; }
     [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
 
     [[nodiscard]] constexpr char const* characters_without_null_termination() const { return m_characters; }
@@ -151,18 +151,18 @@ public:
     constexpr bool operator==(const char* cstring) const
     {
         if (is_null())
-            return !cstring;
+            return cstring == nullptr;
         if (!cstring)
             return false;
         // NOTE: `m_characters` is not guaranteed to be null-terminated, but `cstring` is.
         const char* cp = cstring;
         for (size_t i = 0; i < m_length; ++i) {
-            if (!*cp)
+            if (*cp == '\0')
                 return false;
             if (m_characters[i] != *(cp++))
                 return false;
         }
-        return !*cp;
+        return *cp == '\0';
     }
 
     constexpr bool operator!=(const char* cstring) const
@@ -180,7 +180,7 @@ public:
             return false;
         if (length() != other.length())
             return false;
-        return !__builtin_memcmp(m_characters, other.m_characters, m_length);
+        return __builtin_memcmp(m_characters, other.m_characters, m_length) == 0;
     }
 
     constexpr bool operator!=(StringView other) const

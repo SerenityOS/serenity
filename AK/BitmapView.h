@@ -86,7 +86,7 @@ public:
         return count;
     }
 
-    [[nodiscard]] bool is_null() const { return !m_data; }
+    [[nodiscard]] bool is_null() const { return m_data == nullptr; }
 
     [[nodiscard]] const u8* data() const { return m_data; }
 
@@ -279,7 +279,7 @@ public:
             size_t trailing_bits = size() % 32;
             for (size_t i = 0; i < trailing_bits; ++i) {
                 if (!get(first_trailing_bit + i)) {
-                    if (!free_chunks)
+                    if (free_chunks == 0)
                         *start_of_free_chunks = first_trailing_bit + i;
                     if (++free_chunks >= min_length)
                         return min(free_chunks, max_length);
@@ -313,7 +313,7 @@ public:
         }
 
         found_range_size = max_region_size;
-        if (max_region_size) {
+        if (max_region_size != 0) {
             return max_region_start;
         }
         return {};
