@@ -75,8 +75,7 @@ Card::Card(Type type, uint8_t value)
         s_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
         Gfx::Painter bg_painter(*s_background);
 
-        auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png");
-        VERIFY(!image.is_null());
+        auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png").release_value_but_fixme_should_propagate_errors();
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
         auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);

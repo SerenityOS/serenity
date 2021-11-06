@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     container.layout()->add_spacer();
 
     auto& flag_image = container.add<GUI::Label>();
-    flag_image.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png"));
+    flag_image.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png").release_value_but_fixme_should_propagate_errors());
     flag_image.set_fixed_width(16);
 
     auto& flag_label = container.add<GUI::Label>();
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
     auto& time_image = container.add<GUI::Label>();
     time_image.set_fixed_width(16);
-    time_image.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/timer.png"));
+    time_image.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/timer.png").release_value_but_fixme_should_propagate_errors());
 
     auto& time_label = container.add<GUI::Label>();
     time_label.set_fixed_width(50);

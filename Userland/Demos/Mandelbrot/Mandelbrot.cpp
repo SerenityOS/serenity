@@ -400,7 +400,7 @@ int main(int argc, char** argv)
     auto& mandelbrot = window->set_main_widget<Mandelbrot>();
 
     auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"),
+    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors(),
         [&](GUI::Action&) {
             Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())

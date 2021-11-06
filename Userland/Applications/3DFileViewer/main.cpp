@@ -250,7 +250,9 @@ bool GLContextWidget::load_file(Core::File& file, String const& filename)
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
     if (Core::File::exists(texture_path)) {
-        texture_image = Gfx::Bitmap::try_load_from_file(texture_path);
+        auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(texture_path);
+        if (!bitmap_or_error.is_error())
+            texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
         auto result = FileSystemAccessClient::Client::the().request_file(window()->window_id(), builder.string_view(), Core::OpenMode::ReadOnly);
 
@@ -258,7 +260,9 @@ bool GLContextWidget::load_file(Core::File& file, String const& filename)
             return false;
         }
 
-        texture_image = Gfx::Bitmap::try_load_from_fd_and_close(*result.fd, *result.chosen_file);
+        auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(*result.fd, *result.chosen_file);
+        if (!bitmap_or_error.is_error())
+            texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     }
 
     GLuint tex;

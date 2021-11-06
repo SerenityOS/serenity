@@ -10,9 +10,9 @@
 MailboxTreeModel::MailboxTreeModel(AccountHolder const& account_holder)
     : m_account_holder(account_holder)
 {
-    m_mail_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-mail.png"));
-    m_folder_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-folder.png"));
-    m_account_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/home-directory.png"));
+    m_mail_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-mail.png").release_value_but_fixme_should_propagate_errors());
+    m_folder_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-folder.png").release_value_but_fixme_should_propagate_errors());
+    m_account_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/home-directory.png").release_value_but_fixme_should_propagate_errors());
 }
 
 MailboxTreeModel::~MailboxTreeModel()

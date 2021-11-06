@@ -110,15 +110,15 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-RefPtr<Bitmap> Bitmap::try_load_from_file(String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
 {
     int fd = open(path.characters(), O_RDONLY);
     if (fd < 0)
-        return nullptr;
+        return Error::from_errno(errno);
     return try_load_from_fd_and_close(fd, path, scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
@@ -144,20 +144,22 @@ RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, in
             bmp->m_size.set_width(bmp->width() / scale_factor);
             bmp->m_size.set_height(bmp->height() / scale_factor);
             bmp->m_scale = scale_factor;
-            return bmp;
+            return bmp.release_nonnull();
         }
     }
 
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                           \
-        auto file = MappedFile::map_from_fd_and_close(fd, path);                                           \
-        if (!file.is_error())                                                                              \
-            return load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), path); \
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                           \
+    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                                      \
+        auto file = MappedFile::map_from_fd_and_close(fd, path);                                                      \
+        if (!file.is_error()) {                                                                                       \
+            if (auto bitmap = load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), path)) \
+                return bitmap.release_nonnull();                                                                      \
+        }                                                                                                             \
     }
     ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
 
-    return nullptr;
+    return Error::from_string_literal("Gfx::Bitmap unable to load from fd"sv);
 }
 
 Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)

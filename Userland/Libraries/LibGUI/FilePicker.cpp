@@ -75,11 +75,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     case Mode::OpenMultiple:
     case Mode::OpenFolder:
         set_title("Open");
-        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"));
+        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors());
         break;
     case Mode::Save:
         set_title("Save as");
-        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"));
+        set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors());
         break;
     }
     resize(560, 320);
@@ -115,7 +115,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     };
 
     auto open_parent_directory_action = Action::create(
-        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
+        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png").release_value_but_fixme_should_propagate_errors(), [this](const Action&) {
             set_path(String::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -129,7 +129,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
+        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](const Action&) {
             String value;
             if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
                 auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));

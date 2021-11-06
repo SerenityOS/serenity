@@ -617,17 +617,18 @@ static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
 static RefPtr<Gfx::Bitmap> render_thumbnail(StringView const& path)
 {
-    auto png_bitmap = Gfx::Bitmap::try_load_from_file(path);
-    if (!png_bitmap)
+    auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path);
+    if (bitmap_or_error.is_error())
         return nullptr;
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
-    double scale = min(32 / (double)png_bitmap->width(), 32 / (double)png_bitmap->height());
+    double scale = min(32 / (double)bitmap->width(), 32 / (double)bitmap->height());
 
     auto thumbnail = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
-    auto destination = Gfx::IntRect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale)).centered_within(thumbnail->rect());
+    auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
 
     Painter painter(*thumbnail);
-    painter.draw_scaled_bitmap(destination, *png_bitmap, png_bitmap->rect());
+    painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect());
     return thumbnail;
 }
 

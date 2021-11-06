@@ -31,7 +31,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     unstaged_header.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& refresh_button = unstaged_header.add<GUI::Button>();
-    refresh_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"));
+    refresh_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors());
     refresh_button.set_fixed_size(16, 16);
     refresh_button.set_tooltip("refresh");
     refresh_button.on_click = [this](int) { refresh(); };
@@ -42,7 +42,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     unstaged_header.set_fixed_height(20);
     m_unstaged_files = unstaged.add<GitFilesView>(
         [this](const auto& file) { stage_file(file); },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_nonnull());
+        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_value_but_fixme_should_propagate_errors());
     m_unstaged_files->on_selection_change = [this] {
         const auto& index = m_unstaged_files->selection().first();
         const auto& selected = index.data().as_string();
@@ -56,7 +56,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     staged_header.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& commit_button = staged_header.add<GUI::Button>();
-    commit_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"));
+    commit_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png").release_value_but_fixme_should_propagate_errors());
     commit_button.set_fixed_size(16, 16);
     commit_button.set_tooltip("commit");
     commit_button.on_click = [this](int) { commit(); };
@@ -67,7 +67,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(
         [this](const auto& file) { unstage_file(file); },
-        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png").release_nonnull());
+        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png").release_value_but_fixme_should_propagate_errors());
 }
 
 bool GitWidget::initialize()

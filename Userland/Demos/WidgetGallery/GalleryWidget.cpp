@@ -73,9 +73,9 @@ GalleryWidget::GalleryWidget()
         m_label_frame->set_frame_thickness(value);
     };
 
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"));
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladybug.png"));
+    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png").release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladybug.png").release_value_but_fixme_should_propagate_errors());
 
     m_icon_button = basics_tab.find_descendant_of_type_named<GUI::Button>("icon_button");
     m_icon_button->set_icon(*m_button_icons[2]);
@@ -95,7 +95,7 @@ GalleryWidget::GalleryWidget()
     m_text_editor = basics_tab.find_descendant_of_type_named<GUI::TextEditor>("text_editor");
 
     m_font_button = basics_tab.find_descendant_of_type_named<GUI::Button>("font_button");
-    m_font_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"));
+    m_font_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors());
 
     m_font_button->on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), &m_text_editor->font(), false);
@@ -105,7 +105,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_file_button = basics_tab.find_descendant_of_type_named<GUI::Button>("file_button");
-    m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"));
+    m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png").release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
@@ -115,7 +115,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_input_button = basics_tab.find_descendant_of_type_named<GUI::Button>("input_button");
-    m_input_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"));
+    m_input_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png").release_value_but_fixme_should_propagate_errors());
 
     m_input_button->on_click = [&](auto) {
         String value;
@@ -133,7 +133,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_msgbox_button = basics_tab.find_descendant_of_type_named<GUI::Button>("msgbox_button");
-    m_msgbox_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png"));
+    m_msgbox_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png").release_value_but_fixme_should_propagate_errors());
 
     m_msgbox_type = GUI::MessageBox::Type::None;
     m_msgbox_input_type = GUI::MessageBox::InputType::OK;
