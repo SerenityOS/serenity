@@ -137,8 +137,9 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
 }
 
 // 12.1.7 CalendarDateAdd ( calendar, date, duration, options [ , dateAdd ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
-ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, PlainDate& date, Duration& duration, Object* options, FunctionObject* date_add)
+ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
 {
+    // NOTE: `date` is a `Value` because we sometimes need to pass a PlainDate, sometimes a PlainDateTime, and sometimes undefined.
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(calendar) is Object.
@@ -148,7 +149,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Obj
         date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
 
     // 3. Let addedDate be ? Call(dateAdd, calendar, « date, duration, options »).
-    auto added_date = TRY(call(global_object, date_add ?: js_undefined(), &calendar, &date, &duration, options ?: js_undefined()));
+    auto added_date = TRY(call(global_object, date_add ?: js_undefined(), &calendar, date, &duration, options ?: js_undefined()));
 
     // 4. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
     auto* added_date_object = TRY(added_date.to_object(global_object));

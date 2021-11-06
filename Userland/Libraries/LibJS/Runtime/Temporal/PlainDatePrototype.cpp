@@ -355,7 +355,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::add)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, duration, options).
-    return TRY(calendar_date_add(global_object, temporal_date->calendar(), *temporal_date, *duration, options));
+    return TRY(calendar_date_add(global_object, temporal_date->calendar(), temporal_date, *duration, options));
 }
 
 // 3.3.20 Temporal.PlainDate.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.subtract
@@ -375,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::subtract)
     auto* negated_duration = create_negated_temporal_duration(global_object, *duration);
 
     // 6. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, negatedDuration, options).
-    return TRY(calendar_date_add(global_object, temporal_date->calendar(), *temporal_date, *negated_duration, options));
+    return TRY(calendar_date_add(global_object, temporal_date->calendar(), temporal_date, *negated_duration, options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
