@@ -19,26 +19,28 @@ static constexpr Array bitmask_last_byte = { 0x00, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3
 
 class BitmapView {
 public:
+    BitmapView() = default;
+
     BitmapView(u8* data, size_t size)
         : m_data(data)
         , m_size(size)
     {
     }
 
-    size_t size() const { return m_size; }
-    size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
-    bool get(size_t index) const
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
+    [[nodiscard]] bool get(size_t index) const
     {
         VERIFY(index < m_size);
         return 0 != (m_data[index / 8] & (1u << (index % 8)));
     }
 
-    size_t count_slow(bool value) const
+    [[nodiscard]] size_t count_slow(bool value) const
     {
         return count_in_range(0, m_size, value);
     }
 
-    size_t count_in_range(size_t start, size_t len, bool value) const
+    [[nodiscard]] size_t count_in_range(size_t start, size_t len, bool value) const
     {
         VERIFY(start < m_size);
         VERIFY(start + len <= m_size);
@@ -84,9 +86,9 @@ public:
         return count;
     }
 
-    bool is_null() const { return !m_data; }
+    [[nodiscard]] bool is_null() const { return !m_data; }
 
-    const u8* data() const { return m_data; }
+    [[nodiscard]] const u8* data() const { return m_data; }
 
     template<bool VALUE>
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
@@ -358,7 +360,7 @@ public:
 
     static constexpr size_t max_size = 0xffffffff;
 
-private:
+protected:
     u8* m_data { nullptr };
     size_t m_size { 0 };
 };
