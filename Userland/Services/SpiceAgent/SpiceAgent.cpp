@@ -133,7 +133,9 @@ void SpiceAgent::on_message_received()
 
         m_just_set_clip = true;
         if (type == ClipboardType::Text) {
-            auto anon_buffer = Core::AnonymousBuffer::create_with_size(data_buffer.size());
+            auto anon_buffer_or_error = Core::AnonymousBuffer::create_with_size(data_buffer.size());
+            VERIFY(!anon_buffer_or_error.is_error());
+            auto anon_buffer = anon_buffer_or_error.release_value();
             memcpy(anon_buffer.data<void>(), data_buffer.data(), data_buffer.size());
             m_clipboard_connection.async_set_clipboard_data(anon_buffer, "text/plain", {});
             return;

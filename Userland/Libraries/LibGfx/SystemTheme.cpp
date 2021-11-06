@@ -29,7 +29,7 @@ void set_system_theme(Core::AnonymousBuffer buffer)
 
 Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
 {
-    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme));
+    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme)).release_value();
 
     auto* data = buffer.data<SystemTheme>();
 

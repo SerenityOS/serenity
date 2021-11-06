@@ -106,11 +106,12 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
 
 void Clipboard::set_data(ReadonlyBytes const& data, String const& type, HashMap<String, String> const& metadata)
 {
-    auto buffer = Core::AnonymousBuffer::create_with_size(data.size());
-    if (!buffer.is_valid()) {
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
+    if (buffer_or_error.is_error()) {
         dbgln("GUI::Clipboard::set_data() failed to create a buffer");
         return;
     }
+    auto buffer = buffer_or_error.release_value();
     if (!data.is_empty())
         memcpy(buffer.data<void>(), data.data(), data.size());
 

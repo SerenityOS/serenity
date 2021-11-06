@@ -193,7 +193,10 @@ bool decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
     if (!decoder.decode(anon_file))
         return false;
 
-    buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
+    auto new_buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
+    if (new_buffer_or_error.is_error())
+        return false;
+    buffer = new_buffer_or_error.release_value();
     return buffer.is_valid();
 }
 

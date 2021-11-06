@@ -62,7 +62,9 @@ void ClipboardServerConnection::set_bitmap(Gfx::Bitmap const& bitmap)
     metadata.set("format", String::number((int)bitmap.format()));
     metadata.set("pitch", String::number(bitmap.pitch()));
     ReadonlyBytes data { bitmap.scanline(0), bitmap.size_in_bytes() };
-    auto buffer = Core::AnonymousBuffer::create_with_size(bitmap.size_in_bytes());
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(bitmap.size_in_bytes());
+    VERIFY(!buffer_or_error.is_error());
+    auto buffer = buffer_or_error.release_value();
     memcpy(buffer.data<u8>(), data.data(), data.size());
     this->async_set_clipboard_data(buffer, "image/x-serenityos", metadata);
 }
