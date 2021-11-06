@@ -56,10 +56,12 @@ public:
     {
     }
 
-    ErrorOr(ErrnoCode errno)
-        : m_error(Error::from_errno(errno))
+#ifdef __serenity__
+    ErrorOr(ErrnoCode code)
+        : m_error(Error::from_errno(code))
     {
     }
+#endif
 
     ErrorOr(Error&& error)
         : m_error(move(error))
