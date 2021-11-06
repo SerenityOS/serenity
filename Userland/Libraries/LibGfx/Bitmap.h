@@ -90,7 +90,7 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    [[nodiscard]] static RefPtr<Bitmap> try_create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize const&, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static RefPtr<Bitmap> try_load_from_file(String const& path, int scale_factor = 1);
@@ -98,7 +98,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<RGBA32> const& palette);
     [[nodiscard]] static RefPtr<Bitmap> try_create_from_serialized_byte_buffer(ByteBuffer&& buffer);
 
-    static bool is_path_a_supported_image_format(const StringView& path)
+    static bool is_path_a_supported_image_format(StringView const& path)
     {
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
     if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
@@ -124,9 +124,9 @@ public:
     ~Bitmap();
 
     [[nodiscard]] u8* scanline_u8(int physical_y);
-    [[nodiscard]] const u8* scanline_u8(int physical_y) const;
+    [[nodiscard]] u8 const* scanline_u8(int physical_y) const;
     [[nodiscard]] RGBA32* scanline(int physical_y);
-    [[nodiscard]] const RGBA32* scanline(int physical_y) const;
+    [[nodiscard]] RGBA32 const* scanline(int physical_y) const;
 
     [[nodiscard]] IntRect rect() const { return { {}, m_size }; }
     [[nodiscard]] IntSize size() const { return m_size; }
@@ -213,7 +213,7 @@ public:
     template<StorageFormat>
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
     [[nodiscard]] Color get_pixel(int physical_x, int physical_y) const;
-    [[nodiscard]] Color get_pixel(const IntPoint& physical_position) const
+    [[nodiscard]] Color get_pixel(IntPoint const& physical_position) const
     {
         return get_pixel(physical_position.x(), physical_position.y());
     }
@@ -221,7 +221,7 @@ public:
     template<StorageFormat>
     void set_pixel(int physical_x, int physical_y, Color);
     void set_pixel(int physical_x, int physical_y, Color);
-    void set_pixel(const IntPoint& physical_position, Color color)
+    void set_pixel(IntPoint const& physical_position, Color color)
     {
         set_pixel(physical_position.x(), physical_position.y(), color);
     }
@@ -238,12 +238,12 @@ public:
 
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
-    Bitmap(BitmapFormat, const IntSize&, int, size_t pitch, void*);
-    Bitmap(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int, const Vector<RGBA32>& palette);
+    Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);
+    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int, Vector<RGBA32> const& palette);
 
     static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
 
-    void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
+    void allocate_palette_from_format(BitmapFormat, Vector<RGBA32> const& source_palette);
 
     IntSize m_size;
     int m_scale;
@@ -262,10 +262,10 @@ inline u8* Bitmap::scanline_u8(int y)
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
-inline const u8* Bitmap::scanline_u8(int y) const
+inline u8 const* Bitmap::scanline_u8(int y) const
 {
     VERIFY(y >= 0 && y < physical_height());
-    return reinterpret_cast<const u8*>(m_data) + (y * m_pitch);
+    return reinterpret_cast<u8 const*>(m_data) + (y * m_pitch);
 }
 
 inline RGBA32* Bitmap::scanline(int y)
@@ -273,9 +273,9 @@ inline RGBA32* Bitmap::scanline(int y)
     return reinterpret_cast<RGBA32*>(scanline_u8(y));
 }
 
-inline const RGBA32* Bitmap::scanline(int y) const
+inline RGBA32 const* Bitmap::scanline(int y) const
 {
-    return reinterpret_cast<const RGBA32*>(scanline_u8(y));
+    return reinterpret_cast<RGBA32 const*>(scanline_u8(y));
 }
 
 template<>
