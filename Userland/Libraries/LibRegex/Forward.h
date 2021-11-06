@@ -34,7 +34,6 @@ class RegexStringView;
 }
 
 using regex::ECMA262Parser;
-using regex::Error;
 using regex::Lexer;
 using regex::PosixExtendedParser;
 using regex::RegexStringView;

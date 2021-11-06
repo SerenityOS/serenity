@@ -81,5 +81,4 @@ inline String get_error_string(Error error)
 }
 }
 
-using regex::Error;
 using regex::get_error_string;
