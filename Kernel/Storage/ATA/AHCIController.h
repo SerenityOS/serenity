@@ -41,14 +41,13 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&);
+    UNMAP_AFTER_INIT AHCIController(PCI::DeviceIdentifier const&, NonnullOwnPtr<Memory::Region> hba_region);
     UNMAP_AFTER_INIT KResult initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
     NonnullOwnPtr<Memory::Region> m_hba_region;

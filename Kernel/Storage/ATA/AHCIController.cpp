@@ -17,7 +17,8 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<AHCIController>> AHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto controller = TRY(adopt_nonnull_ref_or_enomem(new AHCIController(pci_device_identifier)));
+    auto hba_region = TRY(MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_device_identifier.address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new AHCIController(pci_device_identifier, move(hba_region))));
     TRY(controller->initialize_hba(pci_device_identifier));
     return controller;
 }
@@ -87,10 +88,10 @@ volatile AHCI::HBA& AHCIController::hba() const
     return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
 }
 
-AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
+AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> hba_region)
     : ATAController()
     , PCI::Device(pci_device_identifier.address())
-    , m_hba_region(default_hba_region())
+    , m_hba_region(move(hba_region))
     , m_capabilities(capabilities())
 {
 }
@@ -130,11 +131,6 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
         (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::SADM)) != 0,
         (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::DESO)) != 0
     };
-}
-
-NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
-{
-    return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite).release_value();
 }
 
 AHCIController::~AHCIController()
