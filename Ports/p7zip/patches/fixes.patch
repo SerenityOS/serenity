@@ -19,7 +19,7 @@ index 469e325..32388ac 100644
  )
  
 +IF(SERENITYOS)
-+  TARGET_LINK_LIBRARIES(7za ${CMAKE_THREAD_LIBS_INIT} dl iconv)
++  TARGET_LINK_LIBRARIES(7za ${CMAKE_THREAD_LIBS_INIT} dl iconv pthread)
 +ENDIF(SERENITYOS)
  
  IF(APPLE)
@@ -37,3 +37,41 @@ index 497d197..fa402c6 100644
    
    #if !defined(ENV_BEOS) && !defined(ANDROID_NDK)
  
+--- a/7zip/CMAKE/7z_/CMakeLists.txt	2021-11-06 03:56:46.251920013 -0700
++++ b/7zip/CMAKE/7z_/CMakeLists.txt	2021-11-06 03:57:06.883896751 -0700
+@@ -101,6 +101,10 @@
+
+ link_directories(${DL_LIB_PATH})
+
++IF(SERENITYOS)
++  TARGET_LINK_LIBRARIES(7z_ ${CMAKE_THREAD_LIBS_INIT} dl iconv pthread)
++ENDIF(SERENITYOS)
++
+ IF(APPLE)
+    TARGET_LINK_LIBRARIES(7z_ ${COREFOUNDATION_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+ ELSE(APPLE)
+
+--- a/7zip/CMAKE/7zr/CMakeLists.txt	2021-11-06 04:02:15.647809299 -0700
++++ b/7zip/CMAKE/7zr/CMakeLists.txt	2021-11-06 04:02:28.807814262 -0700
+@@ -183,6 +183,10 @@
+ )
+
+
++IF(SERENITYOS)
++  TARGET_LINK_LIBRARIES(7zr ${CMAKE_THREAD_LIBS_INIT} dl iconv pthread)
++ENDIF(SERENITYOS)
++
+ IF(APPLE)
+    TARGET_LINK_LIBRARIES(7zr ${COREFOUNDATION_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+ ELSE(APPLE)
+
+--- a/7zip/CMAKE/CMakeLists.txt	2021-11-06 04:16:04.848820892 -0700
++++ b/7zip/CMAKE/CMakeLists.txt	2021-11-06 04:16:18.604844736 -0700
+@@ -21,7 +21,7 @@
+
+ add_definitions(-DENV_HAVE_GCCVISIBILITYPATCH)
+
+-SET(CMAKE_CXX_FLAGS "-fvisibility=hidden -fvisibility-inlines-hidden -std=gnu++11")
++SET(CMAKE_CXX_FLAGS "-fvisibility=hidden -fvisibility-inlines-hidden -std=gnu++11 -ldl -liconv -lpthread")
+
+ add_subdirectory(7za)

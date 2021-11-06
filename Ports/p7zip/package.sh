@@ -9,7 +9,9 @@ configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 workdir=$port-$version/CPP
 
 post_fetch() {
+    run_replace_in_file "s/\r//" 7zip/CMAKE/7z_/CMakeLists.txt
     run_replace_in_file "s/\r//" 7zip/CMAKE/7za/CMakeLists.txt
+    run_replace_in_file "s/\r//" 7zip/CMAKE/7zr/CMakeLists.txt
 }
 
 configure() {
