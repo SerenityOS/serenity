@@ -207,9 +207,10 @@ void Rasterizer::draw_path(Gfx::Path& path)
 
 RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 {
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, m_size);
-    if (!bitmap)
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, m_size);
+    if (bitmap_or_error.is_error())
         return {};
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     Color base_color = Color::from_rgb(0xffffff);
     for (int y = 0; y < m_size.height(); y++) {
         float accumulator = 0.0;

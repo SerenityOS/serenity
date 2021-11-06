@@ -1063,8 +1063,11 @@ static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& m
 
 static bool compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>& macroblocks)
 {
-    context.bitmap = Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
-    if (!context.bitmap)
+    auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
+    if (bitmap_or_error.is_error())
+        return false;
+    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    if (bitmap_or_error.is_error())
         return false;
 
     for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {

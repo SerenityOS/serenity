@@ -292,12 +292,18 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
     size_t start_frame = context.current_frame + 1;
     if (context.state < GIFLoadingContext::State::FrameComplete) {
         start_frame = 0;
-        context.frame_buffer = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
-        if (!context.frame_buffer)
-            return false;
-        context.prev_frame_buffer = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
-        if (!context.prev_frame_buffer)
-            return false;
+        {
+            auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
+            if (bitmap_or_error.is_error())
+                return false;
+            context.frame_buffer = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        }
+        {
+            auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
+            if (bitmap_or_error.is_error())
+                return false;
+            context.prev_frame_buffer = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        }
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
     }

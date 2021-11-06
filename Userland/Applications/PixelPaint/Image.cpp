@@ -168,10 +168,11 @@ Result<void, String> Image::write_to_file(const String& file_path) const
 
 RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap = Gfx::Bitmap::try_create(format, m_size);
-    if (!bitmap)
+    auto bitmap_or_error = Gfx::Bitmap::try_create(format, m_size);
+    if (bitmap_or_error.is_error())
         return nullptr;
-    GUI::Painter painter(*bitmap);
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    GUI::Painter painter(bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
     return bitmap;
 }

@@ -41,8 +41,8 @@ private:
 
 Canvas::Canvas()
 {
-    m_bitmap_1x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 1);
-    m_bitmap_2x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 2);
+    m_bitmap_1x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 1).release_value_but_fixme_should_propagate_errors();
+    m_bitmap_2x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 2).release_value_but_fixme_should_propagate_errors();
 
     // m_bitmap_1x and m_bitmap_2x have the same logical size, so LibGfx will try to draw them at the same physical size:
     // When drawing on a 2x backing store it'd scale m_bitmap_1x up 2x and paint m_bitmap_2x at its physical size.
