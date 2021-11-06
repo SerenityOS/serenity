@@ -535,7 +535,7 @@ private:
     ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, const UserOrKernelBuffer&, size_t);
 
-    ErrorOr<FlatPtr> do_statvfs(StringView path, statvfs* buf);
+    ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
     ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
