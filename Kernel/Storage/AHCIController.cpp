@@ -154,8 +154,8 @@ KResult AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_i
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
-    m_handlers.append(AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(),
-        AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+    auto port_handler = TRY(AHCIPortHandler::try_create(*this, pci_device_identifier.interrupt_line().value(), AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+    m_handlers.append(port_handler);
     return KSuccess;
 }
 

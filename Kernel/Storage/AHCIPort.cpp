@@ -8,6 +8,7 @@
 // please look at Documentation/Kernel/AHCILocking.md
 
 #include <AK/Atomic.h>
+#include <AK/Try.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
@@ -20,9 +21,10 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+KResultOr<NonnullRefPtr<AHCIPort>> AHCIPort::try_create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    return adopt_ref(*new AHCIPort(handler, registers, port_index));
+    auto port = TRY(adopt_nonnull_ref_or_enomem(new AHCIPort(handler, registers, port_index)));
+    return port;
 }
 
 AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)

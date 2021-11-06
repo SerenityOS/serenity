@@ -37,7 +37,7 @@ class AHCIPort
     friend class AHCIController;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIPort>> try_create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }

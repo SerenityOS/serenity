@@ -4,14 +4,35 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPortHandler> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+KResultOr<NonnullRefPtr<AHCIPortHandler>> AHCIPortHandler::try_create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
 {
-    return adopt_ref(*new AHCIPortHandler(controller, irq, taken_ports));
+    auto port_handler = TRY(adopt_nonnull_ref_or_enomem(new AHCIPortHandler(controller, irq, taken_ports)));
+    TRY(port_handler->initialize_ports());
+    return port_handler;
+}
+
+KResult AHCIPortHandler::initialize_ports()
+{
+    if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Aggressive) {
+        for (auto index : m_taken_ports.to_vector()) {
+            auto port = TRY(AHCIPort::try_create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index));
+            m_handled_ports.set(index, port);
+            port->reset();
+        }
+        return KSuccess;
+    }
+    for (auto index : m_taken_ports.to_vector()) {
+        auto port = TRY(AHCIPort::try_create(*this, static_cast<volatile AHCI::PortRegisters&>(m_parent_controller->hba().port_regs[index]), index));
+        m_handled_ports.set(index, port);
+        port->initialize_without_reset();
+    }
+    return KSuccess;
 }
 
 AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
@@ -30,20 +51,6 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
     // Clear pending interrupts, if there are any!
     m_pending_ports_interrupts.set_all();
     enable_irq();
-
-    if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Aggressive) {
-        for (auto index : taken_ports.to_vector()) {
-            auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
-            m_handled_ports.set(index, port);
-            port->reset();
-        }
-        return;
-    }
-    for (auto index : taken_ports.to_vector()) {
-        auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
-        m_handled_ports.set(index, port);
-        port->initialize_without_reset();
-    }
 }
 
 void AHCIPortHandler::enumerate_ports(Function<void(const AHCIPort&)> callback) const
