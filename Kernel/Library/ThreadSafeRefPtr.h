@@ -35,7 +35,7 @@ struct RefPtrTraits {
 
     ALWAYS_INLINE static FlatPtr as_bits(T* ptr)
     {
-        VERIFY(!((FlatPtr)ptr & 1));
+        VERIFY(((FlatPtr)ptr & 1) == 0);
         return (FlatPtr)ptr;
     }
 
@@ -49,13 +49,13 @@ struct RefPtrTraits {
 
     ALWAYS_INLINE static bool is_null(FlatPtr bits)
     {
-        return !(bits & ~(FlatPtr)1);
+        return (bits & ~(FlatPtr)1) == 0;
     }
 
     ALWAYS_INLINE static FlatPtr exchange(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        VERIFY(!(new_value & 1));
+        VERIFY((new_value & 1) == 0);
         FlatPtr expected = atomic_var.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
             expected &= ~(FlatPtr)1; // only if lock bit is not set
@@ -71,7 +71,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static bool exchange_if_null(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        VERIFY(!(new_value & 1));
+        VERIFY((new_value & 1) == 0);
         for (;;) {
             FlatPtr expected = default_null_value; // only if lock bit is not set
             if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
@@ -95,19 +95,19 @@ struct RefPtrTraits {
         FlatPtr bits;
         for (;;) {
             bits = atomic_var.fetch_or(1, AK::MemoryOrder::memory_order_acq_rel);
-            if (!(bits & 1))
+            if ((bits & 1) == 0)
                 break;
 #ifdef KERNEL
             Kernel::Processor::wait_check();
 #endif
         }
-        VERIFY(!(bits & 1));
+        VERIFY((bits & 1) == 0);
         return bits;
     }
 
     ALWAYS_INLINE static void unlock(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
-        VERIFY(!(new_value & 1));
+        VERIFY((new_value & 1) == 0);
         atomic_var.store(new_value, AK::MemoryOrder::memory_order_release);
     }
 
