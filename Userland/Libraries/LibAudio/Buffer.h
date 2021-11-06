@@ -181,7 +181,7 @@ public:
 
 private:
     explicit Buffer(const Vector<Frame> samples)
-        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Frame)))
+        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Frame)).release_value())
         , m_id(allocate_id())
         , m_sample_count(samples.size())
     {

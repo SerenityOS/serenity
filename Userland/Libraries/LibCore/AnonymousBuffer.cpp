@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibIPC/File.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/mman.h>
 
 #if defined(__serenity__)
@@ -26,40 +26,33 @@ static int memfd_create(const char* name, unsigned int flags)
 
 namespace Core {
 
-AnonymousBuffer AnonymousBuffer::create_with_size(size_t size)
+ErrorOr<AnonymousBuffer> AnonymousBuffer::create_with_size(size_t size)
 {
     int fd = -1;
 #if defined(__serenity__)
     fd = anon_create(round_up_to_power_of_two(size, PAGE_SIZE), O_CLOEXEC);
-    if (fd < 0) {
-        perror("anon_create");
-        return {};
-    }
+    if (fd < 0)
+        return AK::Error::from_errno(errno);
 #elif defined(__linux__)
     fd = memfd_create("", MFD_CLOEXEC);
-    if (fd < 0) {
-        perror("memfd_create");
-        return {};
-    }
+    if (fd < 0)
+        return Error::from_errno(errno);
     if (ftruncate(fd, size) < 0) {
         close(fd);
-        perror("ftruncate");
-        return {};
+        return Error::from_errno(errno);
     }
 #endif
     if (fd < 0)
-        return {};
+        return AK::Error::from_errno(errno);
     return create_from_anon_fd(fd, size);
 }
 
-RefPtr<AnonymousBufferImpl> AnonymousBufferImpl::create(int fd, size_t size)
+ErrorOr<NonnullRefPtr<AnonymousBufferImpl>> AnonymousBufferImpl::create(int fd, size_t size)
 {
     auto* data = mmap(nullptr, round_up_to_power_of_two(size, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
-    if (data == MAP_FAILED) {
-        perror("mmap");
-        return {};
-    }
-    return adopt_ref(*new AnonymousBufferImpl(fd, size, data));
+    if (data == MAP_FAILED)
+        return AK::Error::from_errno(errno);
+    return AK::adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousBufferImpl(fd, size, data));
 }
 
 AnonymousBufferImpl::~AnonymousBufferImpl()
@@ -72,12 +65,10 @@ AnonymousBufferImpl::~AnonymousBufferImpl()
     VERIFY(rc == 0);
 }
 
-AnonymousBuffer AnonymousBuffer::create_from_anon_fd(int fd, size_t size)
+ErrorOr<AnonymousBuffer> AnonymousBuffer::create_from_anon_fd(int fd, size_t size)
 {
-    auto impl = AnonymousBufferImpl::create(fd, size);
-    if (!impl)
-        return {};
-    return AnonymousBuffer(impl.release_nonnull());
+    auto impl = TRY(AnonymousBufferImpl::create(fd, size));
+    return AnonymousBuffer(move(impl));
 }
 
 AnonymousBuffer::AnonymousBuffer(NonnullRefPtr<AnonymousBufferImpl> impl)

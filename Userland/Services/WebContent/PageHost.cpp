@@ -34,7 +34,9 @@ PageHost::~PageHost()
 void PageHost::setup_palette()
 {
     // FIXME: Get the proper palette from our peer somehow
-    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(Gfx::SystemTheme));
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(sizeof(Gfx::SystemTheme));
+    VERIFY(!buffer_or_error.is_error());
+    auto buffer = buffer_or_error.release_value();
     auto* theme = buffer.data<Gfx::SystemTheme>();
     theme->color[(int)Gfx::ColorRole::Window] = Color::Magenta;
     theme->color[(int)Gfx::ColorRole::WindowText] = Color::Cyan;

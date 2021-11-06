@@ -635,14 +635,14 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         window.swap_backing_stores();
     } else {
         // FIXME: Plumb scale factor here eventually.
-        Core::AnonymousBuffer buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
-        if (!buffer.is_valid()) {
+        auto buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
+        if (buffer_or_error.is_error()) {
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
         }
         auto backing_store = Gfx::Bitmap::try_create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
-            move(buffer),
+            buffer_or_error.release_value(),
             size,
             1,
             {});

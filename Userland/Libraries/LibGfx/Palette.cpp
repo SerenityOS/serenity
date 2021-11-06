@@ -44,7 +44,7 @@ String PaletteImpl::path(PathRole role) const
 
 NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
-    auto new_theme_buffer = Core::AnonymousBuffer::create_with_size(m_theme_buffer.size());
+    auto new_theme_buffer = Core::AnonymousBuffer::create_with_size(m_theme_buffer.size()).release_value();
     memcpy(new_theme_buffer.data<SystemTheme>(), &theme(), m_theme_buffer.size());
     return adopt_ref(*new PaletteImpl(move(new_theme_buffer)));
 }

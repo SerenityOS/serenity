@@ -81,10 +81,10 @@ RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& 
     const auto pitch = minimum_pitch(size.width() * scale_factor, format);
     const auto data_size = size_in_bytes(pitch, size.height() * scale_factor);
 
-    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
-    if (!buffer.is_valid())
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
+    if (buffer_or_error.is_error())
         return nullptr;
-    return Bitmap::try_create_with_anonymous_buffer(format, buffer, size, scale_factor, {});
+    return Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, scale_factor, {});
 }
 
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const BackingStore& backing_store)
@@ -525,10 +525,10 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
     if (m_buffer.is_valid())
         return *this;
-    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
-    if (!buffer.is_valid())
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
+    if (buffer_or_error.is_error())
         return nullptr;
-    auto bitmap = Bitmap::try_create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector());
+    auto bitmap = Bitmap::try_create_with_anonymous_buffer(m_format, buffer_or_error.release_value(), size(), scale(), palette_to_vector());
     if (!bitmap)
         return nullptr;
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
