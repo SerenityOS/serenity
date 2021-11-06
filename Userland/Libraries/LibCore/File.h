@@ -70,7 +70,7 @@ public:
 
     static String real_path_for(String const& filename);
     static String read_link(String const& link_path);
-    static Result<void, OSError> link_file(String const& dst_path, String const& src_path);
+    static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
     struct RemoveError {
         String file;
