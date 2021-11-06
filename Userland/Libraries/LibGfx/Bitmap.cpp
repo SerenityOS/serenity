@@ -395,15 +395,17 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::flipped(Gfx::Orientation orientation
     return new_bitmap.release_nonnull();
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::scaled(int sx, int sy) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
 {
     VERIFY(sx >= 0 && sy >= 0);
     if (sx == 1 && sy == 1)
-        return this;
+        return NonnullRefPtr { *this };
 
     auto new_bitmap = Gfx::Bitmap::try_create(format(), { width() * sx, height() * sy }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    if (!new_bitmap) {
+        // FIXME: Propagate the *real* error, once we have it.
+        return Error::from_errno(ENOMEM);
+    }
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -422,11 +424,11 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(int sx, int sy) const
         }
     }
 
-    return new_bitmap;
+    return new_bitmap.release_nonnull();
 }
 
 // http://fourier.eng.hmc.edu/e161/lectures/resize/node3.html
-RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 {
     VERIFY(sx >= 0.0f && sy >= 0.0f);
     if (floorf(sx) == sx && floorf(sy) == sy)
@@ -436,8 +438,10 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     int scaled_height = (int)ceilf(sy * (float)height());
 
     auto new_bitmap = Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    if (!new_bitmap) {
+        // FIXME: Propagate the *real* error, once we have it.
+        return Error::from_errno(ENOMEM);
+    }
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -504,7 +508,7 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     // Bottom-right pixel
     new_bitmap->set_pixel(new_width - 1, new_height - 1, get_pixel(physical_width() - 1, physical_height() - 1));
 
-    return new_bitmap;
+    return new_bitmap.release_nonnull();
 }
 
 RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
