@@ -83,7 +83,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address, IncludeSourceP
     if (!s_cache.contains(full_path)) {
         auto mapped_file = MappedFile::map(full_path);
         if (mapped_file.is_error()) {
-            dbgln("Failed to map {}: {}", full_path, mapped_file.error().string());
+            dbgln("Failed to map {}: {}", full_path, mapped_file.error());
             s_cache.set(full_path, {});
             return {};
         }

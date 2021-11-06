@@ -74,7 +74,7 @@ int main()
 
         auto file_or_error = MappedFile::map(coredump_path);
         if (file_or_error.is_error()) {
-            dbgln("Unable to map coredump {}: {}", coredump_path, file_or_error.error().string());
+            dbgln("Unable to map coredump {}: {}", coredump_path, file_or_error.error());
             continue;
         }
 

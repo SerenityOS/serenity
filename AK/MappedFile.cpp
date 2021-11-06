@@ -15,36 +15,33 @@
 
 namespace AK {
 
-Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(String const& path)
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(String const& path)
 {
     int fd = open(path.characters(), O_RDONLY | O_CLOEXEC, 0);
     if (fd < 0)
-        return OSError(errno);
+        return Error::from_errno(errno);
 
     return map_from_fd_and_close(fd, path);
 }
 
-Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] String const& path)
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] String const& path)
 {
-    if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
-        return OSError(errno);
-    }
+    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0)
+        return Error::from_errno(errno);
 
     ScopeGuard fd_close_guard = [fd] {
         close(fd);
     };
 
     struct stat st;
-    if (fstat(fd, &st) < 0) {
-        auto saved_errno = errno;
-        return OSError(saved_errno);
-    }
+    if (fstat(fd, &st) < 0)
+        return Error::from_errno(errno);
 
     auto size = st.st_size;
     auto* ptr = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
 
     if (ptr == MAP_FAILED)
-        return OSError(errno);
+        return Error::from_errno(errno);
 
 #ifdef __serenity__
     if (set_mmap_name(ptr, size, path.characters()) < 0) {

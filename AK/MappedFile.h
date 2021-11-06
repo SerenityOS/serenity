@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/OSError.h>
 #include <AK/RefCounted.h>
 #include <AK/Result.h>
 
@@ -19,8 +19,8 @@ class MappedFile : public RefCounted<MappedFile> {
     AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    static Result<NonnullRefPtr<MappedFile>, OSError> map(String const& path);
-    static Result<NonnullRefPtr<MappedFile>, OSError> map_from_fd_and_close(int fd, String const& path);
+    static ErrorOr<NonnullRefPtr<MappedFile>> map(String const& path);
+    static ErrorOr<NonnullRefPtr<MappedFile>> map_from_fd_and_close(int fd, String const& path);
     ~MappedFile();
 
     void* data() { return m_data; }

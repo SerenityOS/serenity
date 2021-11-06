@@ -31,7 +31,7 @@ Result<void, String> ProjectLoader::try_load_from_fd_and_close(int fd, StringVie
 
         auto file_or_error = MappedFile::map_from_fd_and_close(fd, path);
         if (file_or_error.is_error())
-            return String::formatted("Unable to mmap file {}", file_or_error.error().string());
+            return String::formatted("Unable to mmap file {}", file_or_error.error());
 
         auto& mapped_file = *file_or_error.value();
         // FIXME: Find a way to avoid the memory copy here.

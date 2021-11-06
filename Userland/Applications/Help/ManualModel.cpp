@@ -9,6 +9,7 @@
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibGUI/FilteringProxyModel.h>
 
@@ -59,7 +60,7 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
     return page->path();
 }
 
-Result<StringView, OSError> ManualModel::page_view(const String& path) const
+ErrorOr<StringView> ManualModel::page_view(String const& path) const
 {
     if (path.is_empty())
         return StringView {};
@@ -71,12 +72,10 @@ Result<StringView, OSError> ManualModel::page_view(const String& path) const
             return StringView { mapped_file.value()->bytes() };
     }
 
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return file_or_error.error();
+    auto file = TRY(MappedFile::map(path));
 
-    StringView view { file_or_error.value()->bytes() };
-    m_mapped_files.set(path, file_or_error.release_value());
+    StringView view { file->bytes() };
+    m_mapped_files.set(path, move(file));
     return view;
 }
 
