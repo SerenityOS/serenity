@@ -1,11 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=cmatrix
 useconfigure=true
-version=git
+version=3112b127babe72d2222059edd2d7eb7fb8bddfb1
 depends=("ncurses")
-workdir=cmatrix-master
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
-files="https://github.com/abishekvashok/cmatrix/archive/refs/heads/master.zip cmatrix.zip c32ca7562e58fb1fd7a96ebdfbe51c5de060709d39b67fce3c0bc42547e0ccb2"
+files="https://github.com/abishekvashok/cmatrix/archive/${version}.tar.gz ${port}-${version}.tar.gz a1d313d49a39cb5ae3a1c675872712f9f871114a161c38cbe94ce78967825f87"
 auth_type=sha256
 launcher_name=cmatrix
 launcher_category=Games
