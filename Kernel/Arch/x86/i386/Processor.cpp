@@ -172,7 +172,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     regs.cs = GDT_SELECTOR_CODE0;
     regs.ds = GDT_SELECTOR_DATA0;
     regs.es = GDT_SELECTOR_DATA0;
-    regs.gs = GDT_SELECTOR_DATA0;
+    regs.fs = GDT_SELECTOR_DATA0;
     regs.ss = GDT_SELECTOR_DATA0;
     regs.gs = GDT_SELECTOR_PROC;
     return stack_top;
