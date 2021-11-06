@@ -157,16 +157,18 @@ MainWidget::MainWidget()
     m_replace_all_action = GUI::Action::create("Replace &All", { Mod_Ctrl, Key_F2 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
+        auto length_delta = substitute.length() - needle.length();
         if (needle.is_empty())
             return;
         if (m_use_regex)
             m_editor->document().update_regex_matches(needle);
 
-        auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_use_regex, m_match_case);
+        auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
         while (found_range.is_valid()) {
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
-            found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_use_regex, m_match_case);
+            auto next_start = GUI::TextPosition(found_range.end().line(), found_range.end().column() + length_delta);
+            found_range = m_editor->document().find_next(needle, next_start, GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
         }
     });
 
