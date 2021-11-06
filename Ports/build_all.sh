@@ -49,7 +49,6 @@ for file in *; do
                 popd > /dev/null
                 continue
             fi
-            built_ports="$built_ports $port $(./package.sh showproperty depends) "
 
             if [ "$clean" == true ]; then
                 if [ "$verbose" == true ]; then
@@ -64,6 +63,8 @@ for file in *; do
                 else
                     echo "ERROR: Build of ${port} was not successful!"
                     some_failed=true
+                    popd > /dev/null
+                    continue
                 fi
             else
                 if ./package.sh > /dev/null 2>&1; then
@@ -71,8 +72,12 @@ for file in *; do
                 else
                     echo "ERROR: Build of ${port} was not successful!"
                     some_failed=true
+                    popd > /dev/null
+                    continue
                 fi
             fi
+
+            built_ports="$built_ports $port $(./package.sh showproperty depends) "
         popd > /dev/null
     fi
 done
