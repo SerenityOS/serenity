@@ -28,7 +28,7 @@ private:
 
 // The C++ standard specifies that the nothrow allocation tag should live in the std namespace.
 // Otherwise, `new (std::nothrow)` calls wouldn't get resolved.
-namespace std {
+namespace std { // NOLINT(cert-dcl58-cpp) These declarations must be in ::std and we are not using <new>
 struct nothrow_t {
     explicit nothrow_t() = default;
 };
