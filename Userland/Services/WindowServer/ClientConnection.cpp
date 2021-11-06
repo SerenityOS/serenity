@@ -640,13 +640,16 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
         }
-        auto backing_store = Gfx::Bitmap::try_create_with_anonymous_buffer(
+        auto backing_store_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             buffer_or_error.release_value(),
             size,
             1,
             {});
-        window.set_backing_store(move(backing_store), serial);
+        if (backing_store_or_error.is_error()) {
+            did_misbehave("");
+        }
+        window.set_backing_store(backing_store_or_error.release_value(), serial);
     }
 
     if (flush_immediately)
