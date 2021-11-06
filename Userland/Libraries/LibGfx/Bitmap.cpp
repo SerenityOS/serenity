@@ -67,10 +67,10 @@ static bool size_would_overflow(BitmapFormat format, const IntSize& size, int sc
 
 RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    auto backing_store = Bitmap::try_allocate_backing_store(format, size, scale_factor);
-    if (!backing_store.has_value())
+    auto backing_store_or_error = Bitmap::allocate_backing_store(format, size, scale_factor);
+    if (backing_store_or_error.is_error())
         return nullptr;
-    return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store.value()));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store_or_error.release_value()));
 }
 
 RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
@@ -607,10 +607,10 @@ ShareableBitmap Bitmap::to_shareable_bitmap() const
     return ShareableBitmap(*bitmap);
 }
 
-Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
+ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return {};
+        return AK::Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
 
     const auto pitch = minimum_pitch(size.width() * scale_factor, format);
     const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
@@ -622,11 +622,9 @@ Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, I
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
-    if (data == MAP_FAILED) {
-        perror("mmap");
-        return {};
-    }
-    return { { data, pitch, data_size_in_bytes } };
+    if (data == MAP_FAILED)
+        return AK::Error::from_errno(errno);
+    return BackingStore { data, pitch, data_size_in_bytes };
 }
 
 void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA32>& source_palette)
