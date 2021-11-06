@@ -74,6 +74,29 @@ Date:   Mon Jan 20 22:12:04 2020 +0100
 Kernel: Add a basic implementation of unveil()
 ```
 
+### Readonly atexit
+
+[Readonly atexit](https://isopenbsdsecu.re/mitigations/atexit_hardening/) is a mitigation originating from OpenBSD.
+Thanks to it, an attacker can no longer use the atexit region to escalate from arbitrary-write to code-execution.
+
+It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/553361d83f7bc6499dc4821eff9b23a6549bd99c),
+and was later [improved](https://github.com/SerenityOS/serenity/commit/fb003d71c2becf0b3ea148aad08642e5a7ea35bc)
+to incur no additional cost during program initialization and finalization:
+
+```
+commit 553361d83f7bc6499dc4821eff9b23a6549bd99c
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Sat Jan 30 10:34:41 2021 +0100
+
+LibC: Protect the atexit() handler list when not writing to it
+
+Remap the list of atexit handlers as read-only while we're not actively
+writing to it. This prevents an attacker from using a memory write
+primitive to gain code execution via the atexit list.
+
+This is based on a technique used in OpenBSD. :^)
+```
+
 ### Syscall call-from verification
 
 [Syscall call-from verification](https://marc.info/?l=openbsd-tech&m=157488907117170&w=2) is
