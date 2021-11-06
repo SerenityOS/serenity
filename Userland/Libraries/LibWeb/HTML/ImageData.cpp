@@ -26,10 +26,10 @@ RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, i
 
     auto data_handle = JS::make_handle(data);
 
-    auto bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
-    if (!bitmap)
+    auto bitmap_or_error = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
+    if (bitmap_or_error.is_error())
         return nullptr;
-    return adopt_ref(*new ImageData(bitmap.release_nonnull(), move(data_handle)));
+    return adopt_ref(*new ImageData(bitmap_or_error.release_value(), move(data_handle)));
 }
 
 ImageData::ImageData(NonnullRefPtr<Gfx::Bitmap> bitmap, JS::Handle<JS::Uint8ClampedArray> data)

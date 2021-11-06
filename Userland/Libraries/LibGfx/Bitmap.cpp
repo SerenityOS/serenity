@@ -105,10 +105,10 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_wrapper(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow"sv);
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
