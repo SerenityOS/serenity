@@ -347,11 +347,13 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::clone() const
     return new_bitmap.release_nonnull();
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
     auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    if (!new_bitmap) {
+        // FIXME: Propagate the *real* error, once we have it.
+        return Error::from_errno(ENOMEM);
+    }
 
     auto w = this->physical_width();
     auto h = this->physical_height();
@@ -367,7 +369,7 @@ RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) c
         }
     }
 
-    return new_bitmap;
+    return new_bitmap.release_nonnull();
 }
 
 RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const

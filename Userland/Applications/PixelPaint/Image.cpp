@@ -518,8 +518,7 @@ void Image::flip(Gfx::Orientation orientation)
 void Image::rotate(Gfx::RotationDirection direction)
 {
     for (auto& layer : m_layers) {
-        auto rotated = layer.bitmap().rotated(direction);
-        VERIFY(rotated);
+        auto rotated = layer.bitmap().rotated(direction).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*rotated);
         layer.did_modify_bitmap(rect());
     }

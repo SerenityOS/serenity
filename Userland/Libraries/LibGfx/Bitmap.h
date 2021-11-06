@@ -111,7 +111,7 @@ public:
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> clone() const;
 
-    [[nodiscard]] RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> rotated(Gfx::RotationDirection) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> scaled(int sx, int sy) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> scaled(float sx, float sy) const;
