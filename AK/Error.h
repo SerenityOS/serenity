@@ -78,6 +78,8 @@ public:
     T release_value() { return m_value.release_value(); }
     Error release_error() { return m_error.release_value(); }
 
+    T release_value_but_fixme_should_propagate_errors() { return release_value(); }
+
 private:
     Optional<T> m_value;
     Optional<Error> m_error;
