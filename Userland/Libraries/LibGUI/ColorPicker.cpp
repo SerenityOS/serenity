@@ -184,7 +184,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     : Dialog(parent_window)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"));
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png").release_value_but_fixme_should_propagate_errors());
     set_title(title);
     set_resizable(false);
     resize(458, 326);

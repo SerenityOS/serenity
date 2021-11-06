@@ -43,11 +43,11 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
 
-    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png");
-    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png");
-    m_stop_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop.png");
-    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png");
-    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png");
+    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png").release_value_but_fixme_should_propagate_errors();
+    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png").release_value_but_fixme_should_propagate_errors();
+    m_stop_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop.png").release_value_but_fixme_should_propagate_errors();
+    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors();
+    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors();
 
     m_visualization = m_player_view->add<BarsVisualizationWidget>();
 

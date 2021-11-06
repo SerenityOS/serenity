@@ -16,10 +16,10 @@
 SnakeGame::SnakeGame()
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png"));
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png"));
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png"));
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png"));
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png").release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png").release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png").release_value_but_fixme_should_propagate_errors());
+    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png").release_value_but_fixme_should_propagate_errors());
     reset();
 
     m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);

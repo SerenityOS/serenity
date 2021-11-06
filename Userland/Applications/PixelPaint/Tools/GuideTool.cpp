@@ -142,7 +142,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
         m_context_menu->add_action(GUI::Action::create(
-            "Set &Offset", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/gear.png"), [this](auto&) {
+            "Set &Offset", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/gear.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 if (!m_context_menu_guide)
                     return;
                 auto dialog = EditGuideDialog::construct(
@@ -160,7 +160,7 @@ void GuideTool::on_context_menu(Layer*, GUI::ContextMenuEvent& event)
             },
             editor()));
         m_context_menu->add_action(GUI::Action::create(
-            "&Delete Guide", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"), [this](auto&) {
+            "&Delete Guide", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 if (!m_context_menu_guide)
                     return;
                 editor()->remove_guide(*m_context_menu_guide);

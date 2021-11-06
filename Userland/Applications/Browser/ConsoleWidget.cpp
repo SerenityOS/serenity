@@ -60,7 +60,7 @@ ConsoleWidget::ConsoleWidget()
 
     auto& clear_button = bottom_container.add<GUI::Button>();
     clear_button.set_fixed_size(22, 22);
-    clear_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"));
+    clear_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png").release_value_but_fixme_should_propagate_errors());
     clear_button.set_tooltip("Clear the console output");
     clear_button.on_click = [this](auto) {
         clear_output();

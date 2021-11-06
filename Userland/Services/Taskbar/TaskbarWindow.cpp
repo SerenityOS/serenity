@@ -78,7 +78,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
     m_task_button_container->layout()->set_spacing(3);
 
-    m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
+    m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
 
     m_applet_area_container = main_widget.add<GUI::Frame>();
     m_applet_area_container->set_frame_thickness(1);

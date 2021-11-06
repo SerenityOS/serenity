@@ -357,10 +357,10 @@ static Gfx::Bitmap const& circle_bitmap(bool checked, bool changing)
 void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& rect, Palette const&, bool is_checked, bool is_being_pressed)
 {
     if (!s_unfilled_circle_bitmap) {
-        s_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/unfilled-radio-circle.png");
-        s_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/filled-radio-circle.png");
-        s_changing_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-filled-radio-circle.png");
-        s_changing_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-unfilled-radio-circle.png");
+        s_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/unfilled-radio-circle.png").release_value_but_fixme_should_propagate_errors();
+        s_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/filled-radio-circle.png").release_value_but_fixme_should_propagate_errors();
+        s_changing_filled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-filled-radio-circle.png").release_value_but_fixme_should_propagate_errors();
+        s_changing_unfilled_circle_bitmap = Bitmap::try_load_from_file("/res/icons/serenity/changing-unfilled-radio-circle.png").release_value_but_fixme_should_propagate_errors();
     }
 
     auto& bitmap = circle_bitmap(is_checked, is_being_pressed);

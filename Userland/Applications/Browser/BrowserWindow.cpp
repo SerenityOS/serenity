@@ -238,7 +238,7 @@ void BrowserWindow::build_menus()
 
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
-    search_engine_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"));
+    search_engine_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors());
     bool search_engine_set = false;
     auto add_search_engine = [&](auto& name, auto& url_format) {
         auto action = GUI::Action::create_checkable(
@@ -301,7 +301,7 @@ void BrowserWindow::build_menus()
     }
 
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
-    color_scheme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"));
+    color_scheme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png").release_value_but_fixme_should_propagate_errors());
     {
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser", "Preferences", "ColorScheme", "auto"));
         m_color_scheme_actions.set_exclusive(true);

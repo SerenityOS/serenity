@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     GUI::ActionGroup board_theme_action_group;
     board_theme_action_group.set_exclusive(true);
     auto& board_theme_menu = style_menu.add_submenu("Board Theme");
-    board_theme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/chess/mini-board.png"));
+    board_theme_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/chess/mini-board.png").release_value_but_fixme_should_propagate_errors());
 
     for (auto& theme : Vector({ "Beige", "Green", "Blue" })) {
         auto action = GUI::Action::create_checkable(theme, [&](auto& action) {

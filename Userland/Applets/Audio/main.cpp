@@ -46,11 +46,11 @@ public:
                 update();
         };
 
-        m_volume_level_bitmaps.append({ 66, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png") });
-        m_volume_level_bitmaps.append({ 33, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png") });
-        m_volume_level_bitmaps.append({ 1, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png") });
-        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png") });
-        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png") });
+        m_volume_level_bitmaps.append({ 66, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png").release_value_but_fixme_should_propagate_errors() });
+        m_volume_level_bitmaps.append({ 33, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png").release_value_but_fixme_should_propagate_errors() });
+        m_volume_level_bitmaps.append({ 1, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png").release_value_but_fixme_should_propagate_errors() });
+        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png").release_value_but_fixme_should_propagate_errors() });
+        m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png").release_value_but_fixme_should_propagate_errors() });
 
         m_slider_window = add<GUI::Window>(window());
         m_slider_window->set_frameless(true);

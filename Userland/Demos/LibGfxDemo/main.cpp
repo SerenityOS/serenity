@@ -108,7 +108,7 @@ void Canvas::draw()
     painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
 
-    auto bg = Gfx::Bitmap::try_load_from_file("/res/html/misc/90s-bg.png");
+    auto bg = Gfx::Bitmap::try_load_from_file("/res/html/misc/90s-bg.png").release_value_but_fixme_should_propagate_errors();
     painter.draw_tiled_bitmap({ 20, 260, 480, 320 }, *bg);
 
     painter.draw_line({ 40, 480 }, { 20, 260 }, Color::Red);
@@ -129,7 +129,7 @@ void Canvas::draw()
     path.close();
     painter.fill_path(path, Color::Yellow, Gfx::Painter::WindingRule::EvenOdd);
 
-    auto buggie = Gfx::Bitmap::try_load_from_file("/res/graphics/buggie.png");
+    auto buggie = Gfx::Bitmap::try_load_from_file("/res/graphics/buggie.png").release_value_but_fixme_should_propagate_errors();
     painter.blit({ 280, 280 }, *buggie, buggie->rect(), 0.5);
     painter.draw_scaled_bitmap({ 360, 280, buggie->rect().width() * 2, buggie->rect().height() * 2 }, *buggie, buggie->rect());
 

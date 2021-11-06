@@ -63,7 +63,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 {
     resize(530, 365);
     set_title("Spreadsheet Functions Help");
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"));
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors());
     set_accessory(true);
 
     auto& widget = set_main_widget<GUI::Widget>();

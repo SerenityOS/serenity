@@ -73,7 +73,7 @@ public:
             cursor.name = LexicalPath::basename(cursor.path);
 
             // FIXME: Animated cursor bitmaps
-            auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
+            auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();
             auto cursor_bitmap_rect = cursor_bitmap->rect();
 
             cursor.params = Gfx::CursorParams::parse_from_filename(cursor.name, cursor_bitmap_rect.center()).constrained(*cursor_bitmap);
@@ -158,7 +158,7 @@ public:
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            icon_set.big_icon = Gfx::Bitmap::try_load_from_file(path);
+            icon_set.big_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
             icon_set.name = LexicalPath::basename(path);
             m_icon_sets.append(move(icon_set));
         }
@@ -172,7 +172,7 @@ public:
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            icon_set.little_icon = Gfx::Bitmap::try_load_from_file(path);
+            icon_set.little_icon = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
             icon_set.name = LexicalPath::basename(path);
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {

@@ -534,7 +534,7 @@ void DirectoryView::handle_selection_change()
 
 void DirectoryView::setup_actions()
 {
-    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [&](GUI::Action const&) {
+    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
@@ -546,7 +546,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [&](GUI::Action const&) {
+    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
@@ -572,7 +572,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         spawn_terminal(path());
     });
 
@@ -588,21 +588,21 @@ void DirectoryView::setup_actions()
         window());
 
     m_view_as_icons_action = GUI::Action::create_checkable(
-        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](GUI::Action const&) {
+        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Icon);
             Config::write_string("FileManager", "DirectoryView", "ViewMode", "Icon");
         },
         window());
 
     m_view_as_table_action = GUI::Action::create_checkable(
-        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [&](GUI::Action const&) {
+        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Table);
             Config::write_string("FileManager", "DirectoryView", "ViewMode", "Table");
         },
         window());
 
     m_view_as_columns_action = GUI::Action::create_checkable(
-        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [&](GUI::Action const&) {
+        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Columns);
             Config::write_string("FileManager", "DirectoryView", "ViewMode", "Columns");
         },

@@ -27,7 +27,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, String title, St
 
     auto& key_icon_label = *widget.find_descendant_of_type_named<GUI::Label>("key_icon_label");
 
-    key_icon_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/key.png"));
+    key_icon_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/key.png").release_value_but_fixme_should_propagate_errors());
 
     auto& server_label = *widget.find_descendant_of_type_named<GUI::Label>("server_label");
     server_label.set_text(move(server));

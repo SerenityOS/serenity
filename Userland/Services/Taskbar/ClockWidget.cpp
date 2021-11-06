@@ -61,7 +61,7 @@ ClockWidget::ClockWidget()
     m_prev_date = navigation_container.add<GUI::Button>();
     m_prev_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_prev_date->set_fixed_size(24, 24);
-    m_prev_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"));
+    m_prev_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors());
     m_prev_date->on_click = [&](auto) {
         unsigned view_month = m_calendar->view_month();
         unsigned view_year = m_calendar->view_year();
@@ -95,7 +95,7 @@ ClockWidget::ClockWidget()
     m_next_date = navigation_container.add<GUI::Button>();
     m_next_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_next_date->set_fixed_size(24, 24);
-    m_next_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"));
+    m_next_date->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors());
     m_next_date->on_click = [&](auto) {
         unsigned view_month = m_calendar->view_month();
         unsigned view_year = m_calendar->view_year();
@@ -145,7 +145,7 @@ ClockWidget::ClockWidget()
     m_jump_to_button = settings_container.add<GUI::Button>();
     m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_jump_to_button->set_fixed_size(24, 24);
-    m_jump_to_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png"));
+    m_jump_to_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png").release_value_but_fixme_should_propagate_errors());
     m_jump_to_button->set_tooltip("Jump to today");
     m_jump_to_button->on_click = [this](auto) {
         jump_to_current_date();
@@ -154,7 +154,7 @@ ClockWidget::ClockWidget()
     m_calendar_launcher = settings_container.add<GUI::Button>();
     m_calendar_launcher->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_calendar_launcher->set_fixed_size(24, 24);
-    m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png"));
+    m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png").release_value_but_fixme_should_propagate_errors());
     m_calendar_launcher->set_tooltip("Calendar");
     m_calendar_launcher->on_click = [](auto) {
         Core::Process::spawn("/bin/Calendar"sv);
