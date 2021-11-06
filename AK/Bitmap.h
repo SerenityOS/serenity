@@ -37,7 +37,6 @@ public:
     {
     }
 
-    [[nodiscard]] BitmapView view() { return { m_data, m_size }; }
     [[nodiscard]] BitmapView const view() const { return { m_data, m_size }; }
 
     Bitmap(Bitmap&& other)
