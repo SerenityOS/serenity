@@ -25,6 +25,7 @@ constexpr auto call_will_be_destroyed_if_present(const T* object) -> decltype(co
     return {};
 }
 
+// NOLINTNEXTLINE(cert-dcl50-cpp) variadic argument used to implement "is detected" pattern
 constexpr auto call_will_be_destroyed_if_present(...) -> FalseType
 {
     return {};
@@ -37,6 +38,7 @@ constexpr auto call_one_ref_left_if_present(const T* object) -> decltype(const_c
     return {};
 }
 
+// NOLINTNEXTLINE(cert-dcl50-cpp) variadic argument used to implement "is detected" pattern
 constexpr auto call_one_ref_left_if_present(...) -> FalseType
 {
     return {};
