@@ -15,6 +15,7 @@ typedef void (*AtExitFunction)(void*);
 extern void __libc_init();
 extern void __malloc_init();
 extern void __stdio_init();
+extern void __begin_atexit_locking();
 extern void _init();
 extern bool __environ_is_malloced;
 extern bool __stdio_is_initialized;
