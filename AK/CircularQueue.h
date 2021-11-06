@@ -33,7 +33,7 @@ public:
         m_size = 0;
     }
 
-    bool is_empty() const { return !m_size; }
+    bool is_empty() const { return m_size == 0; }
     size_t size() const { return m_size; }
 
     size_t capacity() const { return Capacity; }

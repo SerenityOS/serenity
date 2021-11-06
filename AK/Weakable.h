@@ -66,7 +66,7 @@ public:
 
     bool is_null() const
     {
-        return !unsafe_ptr<void>();
+        return unsafe_ptr<void>() == nullptr;
     }
 
     void revoke()

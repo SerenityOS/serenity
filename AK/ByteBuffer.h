@@ -118,7 +118,7 @@ public:
         return data()[i];
     }
 
-    [[nodiscard]] bool is_empty() const { return !m_size; }
+    [[nodiscard]] bool is_empty() const { return m_size == 0; }
     [[nodiscard]] size_t size() const { return m_size; }
 
     [[nodiscard]] u8* data() { return m_inline ? m_inline_buffer : m_outline_buffer; }

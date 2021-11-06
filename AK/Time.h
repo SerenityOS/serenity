@@ -50,7 +50,7 @@ inline bool is_leap_year(int year)
 
 inline int days_in_year(int year)
 {
-    return 365 + is_leap_year(year);
+    return 365 + (is_leap_year(year) ? 1 : 0);
 }
 
 inline int years_to_days_since_epoch(int year)
@@ -163,7 +163,7 @@ public:
     // Rounds towards -inf (it was the easiest to implement).
     [[nodiscard]] timeval to_timeval() const;
 
-    [[nodiscard]] bool is_zero() const { return !m_seconds && !m_nanoseconds; }
+    [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
     bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
