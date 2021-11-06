@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <LibC/bits/pthread_integration.h>
+#include <LibC/mallocdefs.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +26,21 @@ struct AtExitEntry {
     bool has_been_called { false };
 };
 
-// We'll re-allocate the region if it ends up being too small at runtime
-static size_t atexit_entry_region_size = 2 * PAGE_SIZE;
+// We'll re-allocate the region if it ends up being too small at runtime.
+// Invariant: atexit_entry_region_capacity * sizeof(AtExitEntry) does not overflow.
+static size_t atexit_entry_region_capacity = (2 * PAGE_SIZE) / sizeof(AtExitEntry);
+
+static size_t atexit_region_bytes(size_t capacity = atexit_entry_region_capacity)
+{
+    return PAGE_ROUND_UP(capacity * sizeof(AtExitEntry));
+}
+
+static size_t atexit_next_capacity()
+{
+    size_t original_num_bytes = atexit_region_bytes();
+    VERIFY(!Checked<size_t>::addition_would_overflow(original_num_bytes, PAGE_SIZE));
+    return (original_num_bytes + PAGE_SIZE) / sizeof(AtExitEntry);
+}
 
 static AtExitEntry* atexit_entries;
 static size_t atexit_entry_count = 0;
@@ -38,7 +52,7 @@ static bool atexit_region_should_lock = false;
 
 static void lock_atexit_handlers()
 {
-    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_entry_region_size, PROT_READ) < 0) {
+    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_region_bytes(), PROT_READ) < 0) {
         perror("lock_atexit_handlers");
         _exit(1);
     }
@@ -46,7 +60,7 @@ static void lock_atexit_handlers()
 
 static void unlock_atexit_handlers()
 {
-    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_entry_region_size, PROT_READ | PROT_WRITE) < 0) {
+    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_region_bytes(), PROT_READ | PROT_WRITE) < 0) {
         perror("unlock_atexit_handlers");
         _exit(1);
     }
@@ -64,7 +78,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
 
     // allocate initial atexit region
     if (!atexit_entries) {
-        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_entry_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_region_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (atexit_entries == MAP_FAILED) {
             __pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap");
@@ -73,13 +87,10 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     }
 
     // reallocate atexit region, increasing size by PAGE_SIZE
-    if ((atexit_entry_count) >= (atexit_entry_region_size / sizeof(AtExitEntry))) {
-        if (Checked<size_t>::addition_would_overflow(atexit_entry_region_size, PAGE_SIZE)) {
-            __pthread_mutex_unlock(&atexit_mutex);
-            return -1;
-        }
-        dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_atexit: Growing exit handler region from {} to {}", atexit_entry_region_size, atexit_entry_region_size + PAGE_SIZE);
-        size_t new_atexit_region_size = atexit_entry_region_size + PAGE_SIZE;
+    if (atexit_entry_count >= atexit_entry_region_capacity) {
+        size_t new_capacity = atexit_next_capacity();
+        size_t new_atexit_region_size = atexit_region_bytes(new_capacity);
+        dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_atexit: Growing exit handler region from {} entries to {} entries", atexit_entry_region_capacity, new_capacity);
 
         auto* new_atexit_entries = (AtExitEntry*)mmap(nullptr, new_atexit_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (new_atexit_entries == MAP_FAILED) {
@@ -87,13 +98,14 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
             perror("__cxa_atexit mmap (new size)");
             return -1;
         }
-        memcpy(new_atexit_entries, atexit_entries, atexit_entry_region_size);
-        if (munmap(atexit_entries, atexit_entry_region_size) < 0) {
+        // Note: We must make sure to only copy initialized entries, as even touching uninitialized bytes will trigger UBSan.
+        memcpy(new_atexit_entries, atexit_entries, atexit_entry_count * sizeof(AtExitEntry));
+        if (munmap(atexit_entries, atexit_region_bytes()) < 0) {
             perror("__cxa_atexit munmap old region");
             // leak the old region on failure
         }
         atexit_entries = new_atexit_entries;
-        atexit_entry_region_size = new_atexit_region_size;
+        atexit_entry_region_capacity = new_capacity;
     }
 
     unlock_atexit_handlers();
