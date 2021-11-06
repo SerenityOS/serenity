@@ -52,6 +52,8 @@ public:
     void handle_interrupt();
 
 private:
+    UNMAP_AFTER_INIT KResult prepare_for_first_initialization();
+
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 

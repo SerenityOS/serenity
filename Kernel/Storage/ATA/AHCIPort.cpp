@@ -24,6 +24,7 @@ namespace Kernel {
 KResultOr<NonnullRefPtr<AHCIPort>> AHCIPort::try_create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
     auto port = TRY(adopt_nonnull_ref_or_enomem(new AHCIPort(handler, registers, port_index)));
+    TRY(port->prepare_for_first_initialization());
     return port;
 }
 
@@ -36,29 +37,41 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
 {
     if (is_interface_disabled()) {
         m_disabled_by_firmware = true;
-        return;
     }
+}
 
-    m_command_list_page = MM.allocate_supervisor_physical_page();
-    m_fis_receive_page = MM.allocate_supervisor_physical_page();
-    if (m_command_list_page.is_null() || m_fis_receive_page.is_null())
-        return;
+UNMAP_AFTER_INIT KResult AHCIPort::prepare_for_first_initialization()
+{
+    if (m_disabled_by_firmware)
+        return KSuccess;
+
+    auto command_list_page = MM.allocate_supervisor_physical_page();
+    auto fis_receive_page = MM.allocate_supervisor_physical_page();
+    if (command_list_page.is_null() || fis_receive_page.is_null())
+        return KResult(ENOMEM);
+    m_command_list_page = command_list_page;
+    m_fis_receive_page = fis_receive_page;
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_command_list_page->paddr());
 
     for (size_t index = 0; index < 1; index++) {
-        m_dma_buffers.append(MM.allocate_supervisor_physical_page().release_nonnull());
+        auto page = MM.allocate_supervisor_physical_page();
+        if (!page)
+            return KResult(ENOMEM);
+        m_dma_buffers.append(page.release_nonnull());
     }
     for (size_t index = 0; index < 1; index++) {
-        m_command_table_pages.append(MM.allocate_supervisor_physical_page().release_nonnull());
+        auto page = MM.allocate_supervisor_physical_page();
+        if (!page)
+            return KResult(ENOMEM);
+        m_command_table_pages.append(page.release_nonnull());
     }
 
-    auto region_or_error = MM.allocate_kernel_region(m_command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-    if (region_or_error.is_error())
-        TODO();
-    m_command_list_region = region_or_error.release_value();
+    auto command_list_region = TRY(MM.allocate_kernel_region(m_command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No));
+    m_command_list_region = move(command_list_region);
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
+    return KSuccess;
 }
 
 void AHCIPort::clear_sata_error_register() const
