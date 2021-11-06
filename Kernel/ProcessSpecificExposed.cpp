@@ -198,6 +198,13 @@ KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
         description_object.add("blocking", description->is_blocking());
         description_object.add("can_read", description->can_read());
         description_object.add("can_write", description->can_write());
+        Inode* inode = description->inode();
+        if (inode != nullptr) {
+            auto inode_object = description_object.add_object("inode");
+            inode_object.add("fsid", inode->fsid());
+            inode_object.add("index", inode->index().value());
+            inode_object.finish();
+        }
         count++;
     });
 
