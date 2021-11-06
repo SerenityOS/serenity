@@ -113,8 +113,8 @@ public:
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> rotated(Gfx::RotationDirection) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> flipped(Gfx::Orientation) const;
-    [[nodiscard]] RefPtr<Gfx::Bitmap> scaled(int sx, int sy) const;
-    [[nodiscard]] RefPtr<Gfx::Bitmap> scaled(float sx, float sy) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(int sx, int sy) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(float sx, float sy) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> cropped(Gfx::IntRect) const;
     [[nodiscard]] RefPtr<Bitmap> to_bitmap_backed_by_anonymous_buffer() const;
     [[nodiscard]] ByteBuffer serialize_to_byte_buffer() const;
