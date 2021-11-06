@@ -16,9 +16,11 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<IDEController>> IDEController::try_to_initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
 {
-    return adopt_ref(*new IDEController(device_identifier, force_pio));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new IDEController(device_identifier)));
+    TRY(controller->initialize(force_pio));
+    return controller;
 }
 
 KResult IDEController::reset()
@@ -61,7 +63,7 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& device_identifier)
     : ATAController()
     , PCI::Device(device_identifier.address())
     , m_prog_if(device_identifier.prog_if())
@@ -69,7 +71,6 @@ UNMAP_AFTER_INIT IDEController::IDEController(PCI::DeviceIdentifier const& devic
 {
     PCI::enable_io_space(device_identifier.address());
     PCI::enable_memory_space(device_identifier.address());
-    initialize(force_pio);
 }
 
 UNMAP_AFTER_INIT IDEController::~IDEController()
@@ -121,7 +122,7 @@ static const char* detect_controller_type(u8 programming_value)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
+UNMAP_AFTER_INIT KResult IDEController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
     dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
@@ -174,6 +175,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     }
 
     m_channels[1].enable_irq();
+    return KSuccess;
 }
 
 RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const

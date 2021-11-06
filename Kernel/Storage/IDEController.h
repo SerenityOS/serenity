@@ -21,7 +21,7 @@ class IDEController final : public ATAController
     , public PCI::Device {
     AK_MAKE_ETERNAL
 public:
-    static NonnullRefPtr<IDEController> initialize(PCI::DeviceIdentifier const&, bool force_pio);
+    static KResultOr<NonnullRefPtr<IDEController>> try_to_initialize(PCI::DeviceIdentifier const&, bool force_pio);
     virtual ~IDEController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
@@ -37,10 +37,10 @@ public:
 private:
     bool is_pci_native_mode_enabled_on_primary_channel() const;
     bool is_pci_native_mode_enabled_on_secondary_channel() const;
-    IDEController(PCI::DeviceIdentifier const&, bool force_pio);
+    explicit IDEController(PCI::DeviceIdentifier const&);
 
     RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
-    void initialize(bool force_pio);
+    KResult initialize(bool force_pio);
     void detect_disks();
 
     NonnullRefPtrVector<IDEChannel> m_channels;

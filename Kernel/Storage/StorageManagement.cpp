@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
             PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
                 if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
                     && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::IDEController)) {
-                    m_controllers.append(IDEController::initialize(device_identifier, force_pio));
+                    m_controllers.append(IDEController::try_to_initialize(device_identifier, force_pio).release_value());
                 }
             });
         }
