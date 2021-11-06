@@ -974,8 +974,12 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
             return { Gfx::ShareableBitmap() };
         }
         if (rect.has_value()) {
-            auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
-            return bitmap->to_shareable_bitmap();
+            auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
+            if (bitmap_or_error.is_error()) {
+                dbgln("get_screen_bitmap: Failed to crop screenshot: {}", bitmap_or_error.error());
+                return { Gfx::ShareableBitmap() };
+            }
+            return bitmap_or_error.release_value()->to_shareable_bitmap();
         }
         auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen);
         return bitmap.to_shareable_bitmap();
@@ -1022,8 +1026,12 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
     if (intersecting_with_screens == 1) {
         auto& screen = Screen::closest_to_rect(rect);
         auto crop_rect = rect.translated(-screen.rect().location()) * screen_scale_factor;
-        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
-        return bitmap->to_shareable_bitmap();
+        auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
+        if (bitmap_or_error.is_error()) {
+            dbgln("get_screen_bitmap_around_cursor: Failed to crop screenshot: {}", bitmap_or_error.error());
+            return { {} };
+        }
+        return bitmap_or_error.release_value()->to_shareable_bitmap();
     }
 
     if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1)) {
