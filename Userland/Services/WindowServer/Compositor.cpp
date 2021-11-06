@@ -104,13 +104,13 @@ void CompositorScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 
     auto size = screen.size();
     m_front_bitmap = nullptr;
-    m_front_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0));
+    m_front_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0)).release_value_but_fixme_should_propagate_errors();
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_front_painter->translate(-screen.rect().location());
 
     m_back_bitmap = nullptr;
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0));
+        m_back_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0)).release_value_but_fixme_should_propagate_errors();
     else
         m_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
