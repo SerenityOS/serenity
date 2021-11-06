@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
+#include <AK/Try.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DDSLoader.h>
@@ -73,21 +74,17 @@ RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int 
     return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store_or_error.release_value()));
 }
 
-RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow"sv);
 
     const auto pitch = minimum_pitch(size.width() * scale_factor, format);
     const auto data_size = size_in_bytes(pitch, size.height() * scale_factor);
 
-    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
-    if (buffer_or_error.is_error())
-        return nullptr;
-    auto bitmap_or_error = Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, scale_factor, {});
-    if (bitmap_or_error.is_error())
-        return nullptr;
-    return bitmap_or_error.release_value();
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE)));
+    auto bitmap = TRY(Bitmap::try_create_with_anonymous_buffer(format, buffer, size, scale_factor, {}));
+    return bitmap;
 }
 
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const BackingStore& backing_store)

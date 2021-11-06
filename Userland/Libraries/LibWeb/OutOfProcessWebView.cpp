@@ -141,14 +141,14 @@ void OutOfProcessWebView::handle_resize()
     if (available_size().is_empty())
         return;
 
-    if (auto new_bitmap = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
-        m_client_state.front_bitmap.bitmap = move(new_bitmap);
+    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
+        m_client_state.front_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
     }
 
-    if (auto new_bitmap = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
-        m_client_state.back_bitmap.bitmap = move(new_bitmap);
+    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
+        m_client_state.back_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
     }
