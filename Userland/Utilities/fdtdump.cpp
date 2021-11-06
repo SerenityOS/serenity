@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     // FIXME: Figure out how to do this sanely from stdin
     auto maybe_file = MappedFile::map(filename);
     if (maybe_file.is_error()) {
-        warnln("Unable to dump device tree from file {}: {}", filename, maybe_file.error().string());
+        warnln("Unable to dump device tree from file {}: {}", filename, maybe_file.error());
         return 1;
     }
     auto file = maybe_file.release_value();
