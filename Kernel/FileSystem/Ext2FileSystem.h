@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/BitmapView.h>
+#include <AK/Bitmap.h>
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -176,7 +176,7 @@ private:
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
         NonnullOwnPtr<KBuffer> buffer;
-        BitmapView bitmap(u32 blocks_per_group) { return BitmapView { buffer->data(), blocks_per_group }; }
+        Bitmap bitmap(u32 blocks_per_group) { return Bitmap { buffer->data(), blocks_per_group }; }
     };
 
     ErrorOr<CachedBitmap*> get_bitmap_block(BlockIndex);

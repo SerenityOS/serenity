@@ -32,14 +32,6 @@ public:
         VERIFY(index < m_size);
         return 0 != (m_data[index / 8] & (1u << (index % 8)));
     }
-    void set(size_t index, bool value) const
-    {
-        VERIFY(index < m_size);
-        if (value)
-            m_data[index / 8] |= static_cast<u8>((1u << (index % 8)));
-        else
-            m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
-    }
 
     size_t count_slow(bool value) const
     {
