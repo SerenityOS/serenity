@@ -25,8 +25,8 @@ class BMIDEChannel final : public IDEChannel {
     friend class PATADiskDevice;
 
 public:
-    static NonnullRefPtr<BMIDEChannel> create(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
-    static NonnullRefPtr<BMIDEChannel> create(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    static KResultOr<NonnullRefPtr<BMIDEChannel>> try_create(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    static KResultOr<NonnullRefPtr<BMIDEChannel>> try_create(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     virtual ~BMIDEChannel() override {};
 
     virtual bool is_dma_enabled() const override { return true; };
@@ -34,7 +34,7 @@ public:
 private:
     BMIDEChannel(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     BMIDEChannel(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
-    void initialize();
+    virtual KResult initialize() override;
 
     void complete_current_request(AsyncDeviceRequest::RequestResult);
 

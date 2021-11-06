@@ -7,6 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
+#include <AK/Try.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
@@ -22,14 +23,18 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<IDEChannel>> IDEChannel::try_create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, io_group, type));
+    auto channel = TRY(adopt_nonnull_ref_or_enomem(new IDEChannel(controller, io_group, type)));
+    TRY(channel->initialize());
+    return channel;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<IDEChannel>> IDEChannel::try_create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, irq, io_group, type));
+    auto channel = TRY(adopt_nonnull_ref_or_enomem(new IDEChannel(controller, irq, io_group, type)));
+    TRY(channel->initialize());
+    return channel;
 }
 
 RefPtr<StorageDevice> IDEChannel::master_device() const
@@ -42,7 +47,7 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
     return m_slave;
 }
 
-UNMAP_AFTER_INIT void IDEChannel::initialize()
+UNMAP_AFTER_INIT KResult IDEChannel::initialize()
 {
     disable_irq();
     dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
@@ -64,18 +69,19 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
     // Wait up to 30 seconds before failing
     if (!wait_until_not_busy(false, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on master stuck");
-        return;
+        return KResult(EBUSY);
     }
     // Wait up to 30 seconds before failing
     if (!wait_until_not_busy(true, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on slave stuck");
-        return;
+        return KResult(EBUSY);
     }
 
     detect_disks();
 
     // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
     clear_pending_interrupts();
+    return KSuccess;
 }
 
 UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
@@ -84,7 +90,6 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq,
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
-    initialize();
 }
 
 UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
@@ -93,7 +98,6 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
-    initialize();
 }
 
 void IDEChannel::clear_pending_interrupts() const

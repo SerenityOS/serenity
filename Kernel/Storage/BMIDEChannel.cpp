@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA.h>
@@ -13,37 +14,40 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<BMIDEChannel>> BMIDEChannel::try_create(const IDEController& ide_controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
-    return adopt_ref(*new BMIDEChannel(ide_controller, io_group, type));
+    auto channel = TRY(adopt_nonnull_ref_or_enomem(new BMIDEChannel(ide_controller, io_group, type)));
+    TRY(channel->initialize());
+    return channel;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<BMIDEChannel>> BMIDEChannel::try_create(const IDEController& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
 {
-    return adopt_ref(*new BMIDEChannel(ide_controller, irq, io_group, type));
+    auto channel = TRY(adopt_nonnull_ref_or_enomem(new BMIDEChannel(ide_controller, irq, io_group, type)));
+    TRY(channel->initialize());
+    return channel;
 }
 
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, io_group, type)
 {
-    initialize();
 }
 
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, irq, io_group, type)
 {
-    initialize();
 }
 
-UNMAP_AFTER_INIT void BMIDEChannel::initialize()
+UNMAP_AFTER_INIT KResult BMIDEChannel::initialize()
 {
+    TRY(IDEChannel::initialize());
     VERIFY(m_io_group.bus_master_base().has_value());
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(m_parent_controller->pci_address());
     m_prdt_page = MM.allocate_supervisor_physical_page();
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     if (m_dma_buffer_page.is_null() || m_prdt_page.is_null())
-        return;
+        return ENOMEM;
     {
         auto region_or_error = MM.allocate_kernel_region(m_prdt_page->paddr(), PAGE_SIZE, "IDE PRDT", Memory::Region::Access::ReadWrite);
         if (region_or_error.is_error())
@@ -61,6 +65,7 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
 
     // clear bus master interrupt status
     m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
+    return KSuccess;
 }
 
 static void print_ide_status(u8 status)

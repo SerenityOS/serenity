@@ -86,8 +86,8 @@ public:
     };
 
 public:
-    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type);
-    static NonnullRefPtr<IDEChannel> create(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
+    static KResultOr<NonnullRefPtr<IDEChannel>> try_create(const IDEController&, IOAddressGroup, ChannelType type);
+    static KResultOr<NonnullRefPtr<IDEChannel>> try_create(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -99,9 +99,10 @@ public:
 
 private:
     void complete_current_request(AsyncDeviceRequest::RequestResult);
-    void initialize();
 
 protected:
+    virtual KResult initialize();
+
     enum class LBAMode : u8 {
         None, // CHS
         TwentyEightBit,

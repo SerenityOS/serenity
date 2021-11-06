@@ -6,6 +6,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Try.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
@@ -149,29 +150,41 @@ UNMAP_AFTER_INIT KResult IDEController::initialize(bool force_pio)
     }
 
     if (is_pci_native_mode_enabled_on_primary_channel()) {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        if (force_pio) {
+            auto channel = TRY(IDEChannel::try_create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+            m_channels.append(channel);
+        } else {
+            auto channel = TRY(BMIDEChannel::try_create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+            m_channels.append(channel);
+        }
     } else {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        if (force_pio) {
+            auto channel = TRY(IDEChannel::try_create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+            m_channels.append(channel);
+        } else {
+            auto channel = TRY(BMIDEChannel::try_create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+            m_channels.append(channel);
+        }
     }
 
     m_channels[0].enable_irq();
 
     if (is_pci_native_mode_enabled_on_secondary_channel()) {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        if (force_pio) {
+            auto channel = TRY(IDEChannel::try_create(*this, irq_line, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+            m_channels.append(channel);
+        } else {
+            auto channel = TRY(BMIDEChannel::try_create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+            m_channels.append(channel);
+        }
     } else {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        if (force_pio) {
+            auto channel = TRY(IDEChannel::try_create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+            m_channels.append(channel);
+        } else {
+            auto channel = TRY(BMIDEChannel::try_create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+            m_channels.append(channel);
+        }
     }
 
     m_channels[1].enable_irq();
