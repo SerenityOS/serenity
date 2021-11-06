@@ -125,7 +125,7 @@ TEST_CASE(parser_error_parens)
     PosixExtendedParser p(l);
     p.parse();
     EXPECT(p.has_error());
-    EXPECT(p.error() == Error::EmptySubExpression);
+    EXPECT(p.error() == regex::Error::EmptySubExpression);
 }
 
 TEST_CASE(parser_error_special_characters_used_at_wrong_place)
@@ -145,7 +145,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
-        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+        EXPECT(p.error() == regex::Error::InvalidRepetitionMarker);
 
         // After vertical line
         b.clear();
@@ -155,7 +155,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
-        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+        EXPECT(p.error() == regex::Error::InvalidRepetitionMarker);
 
         // After circumflex
         b.clear();
@@ -165,7 +165,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
-        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+        EXPECT(p.error() == regex::Error::InvalidRepetitionMarker);
 
         // After dollar
         b.clear();
@@ -175,7 +175,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
-        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+        EXPECT(p.error() == regex::Error::InvalidRepetitionMarker);
 
         // After left parens
         b.clear();
@@ -186,7 +186,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
-        EXPECT(p.error() == Error::InvalidRepetitionMarker);
+        EXPECT(p.error() == regex::Error::InvalidRepetitionMarker);
     }
 }
 
@@ -199,25 +199,25 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
     l.set_source("|asdf");
     p.parse();
     EXPECT(p.has_error());
-    EXPECT(p.error() == Error::EmptySubExpression);
+    EXPECT(p.error() == regex::Error::EmptySubExpression);
 
     // Last in ere
     l.set_source("asdf|");
     p.parse();
     EXPECT(p.has_error());
-    EXPECT(p.error() == Error::EmptySubExpression);
+    EXPECT(p.error() == regex::Error::EmptySubExpression);
 
     // After left parens
     l.set_source("(|asdf)");
     p.parse();
     EXPECT(p.has_error());
-    EXPECT(p.error() == Error::EmptySubExpression);
+    EXPECT(p.error() == regex::Error::EmptySubExpression);
 
     // Proceed right parens
     l.set_source("(asdf)|");
     p.parse();
     EXPECT(p.has_error());
-    EXPECT(p.error() == Error::EmptySubExpression);
+    EXPECT(p.error() == regex::Error::EmptySubExpression);
 }
 
 TEST_CASE(catch_all_first)
@@ -687,7 +687,7 @@ TEST_CASE(ECMA262_match)
             regex_dbg.print_bytecode(re);
             dbgln("\n");
         }
-        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.parser_result.error, regex::Error::NoError);
         EXPECT_EQ(re.match(test.subject).success, test.matches);
     }
 }
@@ -734,7 +734,7 @@ TEST_CASE(ECMA262_unicode_match)
             dbgln("\n");
         }
 
-        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.parser_result.error, regex::Error::NoError);
         EXPECT_EQ(re.match(view).success, test.matches);
     }
 }
@@ -809,7 +809,7 @@ TEST_CASE(ECMA262_property_match)
             dbgln("\n");
         }
 
-        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.parser_result.error, regex::Error::NoError);
         EXPECT_EQ(re.match(view).success, test.matches);
     }
 }
@@ -842,7 +842,7 @@ TEST_CASE(replace)
             regex_dbg.print_bytecode(re);
             dbgln("\n");
         }
-        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.parser_result.error, regex::Error::NoError);
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
     }
 }
