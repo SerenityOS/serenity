@@ -306,7 +306,7 @@ GalleryWidget::GalleryWidget()
 
     m_cursors_tableview->on_activation = [&](const GUI::ModelIndex& index) {
         auto icon_index = index.model()->index(index.row(), MouseCursorModel::Column::Bitmap);
-        window()->set_cursor(icon_index.data().as_bitmap());
+        m_cursors_tableview->set_override_cursor(NonnullRefPtr<Gfx::Bitmap>(icon_index.data().as_bitmap()));
     };
 
     auto& icons_tab = tab_widget.add_tab<GUI::Widget>("Icons");
