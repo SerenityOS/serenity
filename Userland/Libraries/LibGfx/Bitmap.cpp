@@ -511,11 +511,13 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
     return new_bitmap.release_nonnull();
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop) const
 {
     auto new_bitmap = Gfx::Bitmap::try_create(format(), { crop.width(), crop.height() }, 1);
-    if (!new_bitmap)
-        return nullptr;
+    if (!new_bitmap) {
+        // FIXME: Propagate the *real* error, once we have it.
+        return Error::from_errno(ENOMEM);
+    }
 
     for (int y = 0; y < crop.height(); ++y) {
         for (int x = 0; x < crop.width(); ++x) {
@@ -528,7 +530,7 @@ RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
             }
         }
     }
-    return new_bitmap;
+    return new_bitmap.release_nonnull();
 }
 
 RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const

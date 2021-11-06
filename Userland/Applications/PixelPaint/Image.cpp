@@ -187,7 +187,10 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     if (!full_bitmap)
         return {};
 
-    return full_bitmap->cropped(selection_rect);
+    auto cropped_bitmap_or_error = full_bitmap->cropped(selection_rect);
+    if (cropped_bitmap_or_error.is_error())
+        return nullptr;
+    return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
 Result<void, String> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
@@ -529,8 +532,7 @@ void Image::rotate(Gfx::RotationDirection direction)
 void Image::crop(Gfx::IntRect const& cropped_rect)
 {
     for (auto& layer : m_layers) {
-        auto cropped = layer.bitmap().cropped(cropped_rect);
-        VERIFY(cropped);
+        auto cropped = layer.bitmap().cropped(cropped_rect).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*cropped);
         layer.did_modify_bitmap(rect());
     }
