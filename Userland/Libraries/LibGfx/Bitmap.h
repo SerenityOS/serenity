@@ -109,7 +109,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] RefPtr<Gfx::Bitmap> clone() const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> clone() const;
 
     [[nodiscard]] RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;

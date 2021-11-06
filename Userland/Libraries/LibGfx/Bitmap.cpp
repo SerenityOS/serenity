@@ -332,17 +332,19 @@ Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize&
         allocate_palette_from_format(m_format, palette);
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::clone() const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::clone() const
 {
     auto new_bitmap = Bitmap::try_create(format(), size(), scale());
 
-    if (!new_bitmap)
-        return nullptr;
+    if (!new_bitmap) {
+        // FIXME: Propagate the *real* error, once we have it.
+        return Error::from_errno(ENOMEM);
+    }
 
     VERIFY(size_in_bytes() == new_bitmap->size_in_bytes());
     memcpy(new_bitmap->scanline(0), scanline(0), size_in_bytes());
 
-    return new_bitmap;
+    return new_bitmap.release_nonnull();
 }
 
 RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
