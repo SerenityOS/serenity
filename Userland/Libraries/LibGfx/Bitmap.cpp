@@ -84,7 +84,10 @@ RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& 
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
     if (buffer_or_error.is_error())
         return nullptr;
-    return Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, scale_factor, {});
+    auto bitmap_or_error = Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, scale_factor, {});
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    return bitmap_or_error.release_value();
 }
 
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const BackingStore& backing_store)
@@ -221,12 +224,12 @@ static bool check_size(const IntSize& size, int scale_factor, BitmapFormat forma
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_with_anonymous_buffer size overflow");
 
-    return adopt_ref(*new Bitmap(format, move(buffer), size, scale_factor, palette));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Bitmap(format, move(buffer), size, scale_factor, palette));
 }
 
 /// Read a bitmap as described by:
@@ -528,9 +531,10 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
     if (buffer_or_error.is_error())
         return nullptr;
-    auto bitmap = Bitmap::try_create_with_anonymous_buffer(m_format, buffer_or_error.release_value(), size(), scale(), palette_to_vector());
-    if (!bitmap)
+    auto bitmap_or_error = Bitmap::try_create_with_anonymous_buffer(m_format, buffer_or_error.release_value(), size(), scale(), palette_to_vector());
+    if (bitmap_or_error.is_error())
         return nullptr;
+    auto bitmap = bitmap_or_error.release_value();
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
     return bitmap;
 }

@@ -869,13 +869,13 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
     }
 
     // FIXME: Plumb scale factor here eventually.
-    auto bitmap = Gfx::Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, 1, {});
-    if (!bitmap) {
+    auto bitmap_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(format, buffer_or_error.release_value(), size, 1, {});
+    if (bitmap_or_error.is_error()) {
         VERIFY(size.width() <= INT16_MAX);
         VERIFY(size.height() <= INT16_MAX);
         return {};
     }
-    return make<WindowBackingStore>(bitmap.release_nonnull());
+    return make<WindowBackingStore>(bitmap_or_error.release_value());
 }
 
 void Window::set_modal(bool modal)
