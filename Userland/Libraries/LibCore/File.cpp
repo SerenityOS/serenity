@@ -498,7 +498,7 @@ Result<void, File::CopyError> File::copy_directory(String const& dst_path, Strin
     return {};
 }
 
-Result<void, OSError> File::link_file(String const& dst_path, String const& src_path)
+ErrorOr<void> File::link_file(String const& dst_path, String const& src_path)
 {
     int duplicate_count = 0;
     while (access(get_duplicate_name(dst_path, duplicate_count).characters(), F_OK) == 0) {
@@ -507,11 +507,8 @@ Result<void, OSError> File::link_file(String const& dst_path, String const& src_
     if (duplicate_count != 0) {
         return link_file(get_duplicate_name(dst_path, duplicate_count), src_path);
     }
-    int rc = symlink(src_path.characters(), dst_path.characters());
-    if (rc < 0) {
-        return OSError(errno);
-    }
-
+    if (symlink(src_path.characters(), dst_path.characters()) < 0)
+        return Error::from_errno(errno);
     return {};
 }
 
