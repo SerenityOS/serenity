@@ -155,7 +155,7 @@ public:
 
     inline static bool has_current()
     {
-        return Processor::current_thread();
+        return Processor::current_thread() != nullptr;
     }
 
     template<typename EntryFunction>
@@ -459,7 +459,7 @@ public:
     Mutex& ptrace_lock() { return m_ptrace_lock; }
 
     bool has_promises() const { return m_protected_values.has_promises; }
-    bool has_promised(Pledge pledge) const { return m_protected_values.promises & (1u << (u32)pledge); }
+    bool has_promised(Pledge pledge) const { return (m_protected_values.promises & (1U << (u32)pledge)) != 0; }
 
     VeilState veil_state() const
     {

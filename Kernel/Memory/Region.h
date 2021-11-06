@@ -57,13 +57,13 @@ public:
     [[nodiscard]] VirtualRange const& range() const { return m_range; }
     [[nodiscard]] VirtualAddress vaddr() const { return m_range.base(); }
     [[nodiscard]] size_t size() const { return m_range.size(); }
-    [[nodiscard]] bool is_readable() const { return m_access & Access::Read; }
-    [[nodiscard]] bool is_writable() const { return m_access & Access::Write; }
-    [[nodiscard]] bool is_executable() const { return m_access & Access::Execute; }
+    [[nodiscard]] bool is_readable() const { return (m_access & Access::Read) == Access::Read; }
+    [[nodiscard]] bool is_writable() const { return (m_access & Access::Write) == Access::Write; }
+    [[nodiscard]] bool is_executable() const { return (m_access & Access::Execute) == Access::Execute; }
 
-    [[nodiscard]] bool has_been_readable() const { return m_access & Access::HasBeenReadable; }
-    [[nodiscard]] bool has_been_writable() const { return m_access & Access::HasBeenWritable; }
-    [[nodiscard]] bool has_been_executable() const { return m_access & Access::HasBeenExecutable; }
+    [[nodiscard]] bool has_been_readable() const { return (m_access & Access::HasBeenReadable) == Access::HasBeenReadable; }
+    [[nodiscard]] bool has_been_writable() const { return (m_access & Access::HasBeenWritable) == Access::HasBeenWritable; }
+    [[nodiscard]] bool has_been_executable() const { return (m_access & Access::HasBeenExecutable) == Access::HasBeenExecutable; }
 
     [[nodiscard]] bool is_cacheable() const { return m_cacheable; }
     [[nodiscard]] StringView name() const { return m_name ? m_name->view() : StringView {}; }
@@ -223,26 +223,26 @@ public:
 
 AK_ENUM_BITWISE_OPERATORS(Region::Access)
 
-inline Region::Access prot_to_region_access_flags(int prot)
+inline constexpr Region::Access prot_to_region_access_flags(int prot)
 {
     Region::Access access = Region::Access::None;
-    if (prot & PROT_READ)
+    if ((prot & PROT_READ) == PROT_READ)
         access |= Region::Access::Read;
-    if (prot & PROT_WRITE)
+    if ((prot & PROT_WRITE) == PROT_WRITE)
         access |= Region::Access::Write;
-    if (prot & PROT_EXEC)
+    if ((prot & PROT_EXEC) == PROT_EXEC)
         access |= Region::Access::Execute;
     return access;
 }
 
-inline int region_access_flags_to_prot(Region::Access access)
+inline constexpr int region_access_flags_to_prot(Region::Access access)
 {
     int prot = 0;
-    if (access & Region::Access::Read)
+    if ((access & Region::Access::Read) == Region::Access::Read)
         prot |= PROT_READ;
-    if (access & Region::Access::Write)
+    if ((access & Region::Access::Write) == Region::Access::Write)
         prot |= PROT_WRITE;
-    if (access & Region::Access::Execute)
+    if ((access & Region::Access::Execute) == Region::Access::Execute)
         prot |= PROT_EXEC;
     return prot;
 }

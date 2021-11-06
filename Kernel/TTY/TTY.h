@@ -41,10 +41,10 @@ public:
     }
 
     ErrorOr<void> set_termios(const termios&);
-    bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
-    bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
-    bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
-    bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
+    bool should_generate_signals() const { return (m_termios.c_lflag & ISIG) == ISIG; }
+    bool should_flush_on_signal() const { return (m_termios.c_lflag & NOFLSH) != NOFLSH; }
+    bool should_echo_input() const { return (m_termios.c_lflag & ECHO) == ECHO; }
+    bool in_canonical_mode() const { return (m_termios.c_lflag & ICANON) == ICANON; }
 
     void set_default_termios();
     void hang_up();

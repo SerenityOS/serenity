@@ -100,7 +100,7 @@ ALWAYS_INLINE void write_gs_ptr(u32 offset, FlatPtr val)
 
 ALWAYS_INLINE bool are_interrupts_enabled()
 {
-    return cpu_flags() & 0x200;
+    return (cpu_flags() & 0x200) != 0;
 }
 
 FlatPtr read_cr0();

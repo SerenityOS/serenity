@@ -39,7 +39,7 @@ public:
         VERIFY(is_locked());
         track_lock_release(m_rank);
         m_lock.store(0, AK::memory_order_release);
-        if (prev_flags & 0x200)
+        if ((prev_flags & 0x200) != 0)
             sti();
         else
             cli();
@@ -101,7 +101,7 @@ public:
             track_lock_release(m_rank);
             m_lock.store(0, AK::memory_order_release);
         }
-        if (prev_flags & 0x200)
+        if ((prev_flags & 0x200) != 0)
             sti();
         else
             cli();

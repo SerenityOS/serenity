@@ -24,7 +24,7 @@ public:
 
     ~InterruptDisabler()
     {
-        if (m_flags & 0x200)
+        if ((m_flags & 0x200) != 0)
             sti();
     }
 
