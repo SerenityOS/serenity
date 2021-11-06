@@ -187,22 +187,22 @@ int main(int argc, char** argv)
             GUI::Desktop::the().set_wallpaper(widget.path());
         });
 
-    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png"),
+    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"),
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"),
+    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png"),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-last.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::Last);
         });

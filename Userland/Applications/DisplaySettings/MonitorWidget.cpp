@@ -19,7 +19,7 @@ namespace DisplaySettings {
 MonitorWidget::MonitorWidget()
 {
     m_desktop_resolution = GUI::Desktop::the().rect().size();
-    m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png");
+    m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png").release_value_but_fixme_should_propagate_errors();
     m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 });
     m_monitor_rect = { { 12, 13 }, m_desktop_bitmap->size() };
     set_fixed_size(304, 201);
@@ -34,7 +34,7 @@ bool MonitorWidget::set_wallpaper(String path)
         [path](auto&) {
             RefPtr<Gfx::Bitmap> bmp;
             if (!path.is_empty())
-                bmp = Gfx::Bitmap::try_load_from_file(path);
+                bmp = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
             return bmp;
         },
 

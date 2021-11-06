@@ -91,7 +91,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& file_menu = window.add_menu("&File");
 
     m_new_image_action = GUI::Action::create(
-        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
+        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size());
@@ -198,7 +198,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_copy_merged_action = GUI::Action::create(
-        "Copy &Merged", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"),
+        "Copy &Merged", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
@@ -434,7 +434,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto& layer_menu = window.add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(
-        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png"), [&](auto&) {
+        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;
@@ -461,11 +461,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             m_layer_list_widget->cycle_through_selection(-1);
         }));
     layer_menu.add_action(GUI::Action::create(
-        "Select &Top Layer", { 0, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/top-layer.png"), [&](auto&) {
+        "Select &Top Layer", { 0, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/top-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_layer_list_widget->select_top_layer();
         }));
     layer_menu.add_action(GUI::Action::create(
-        "Select B&ottom Layer", { 0, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bottom-layer.png"), [&](auto&) {
+        "Select B&ottom Layer", { 0, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bottom-layer.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_layer_list_widget->select_bottom_layer();
         }));
     layer_menu.add_separator();
@@ -514,7 +514,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
     layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create(
-        "&Remove Active Layer", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"), [&](auto&) {
+        "&Remove Active Layer", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;

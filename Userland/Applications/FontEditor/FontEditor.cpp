@@ -92,7 +92,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     };
 
     auto& reload_button = textbox_button_container.add<GUI::Button>();
-    reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"));
+    reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors());
     reload_button.set_fixed_width(22);
     reload_button.on_click = [&](auto) {
         static int i = 1;
@@ -131,7 +131,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
 
-    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
+    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (window()->is_modified()) {
             auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (result == GUI::Dialog::ExecResult::ExecYes) {
@@ -214,7 +214,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
         redo();
     });
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
         m_font_preview_window->show();
@@ -227,7 +227,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     });
     m_show_metadata_action->set_checked(true);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:", "Go to Glyph") == GUI::InputBox::ExecOK && !input.is_empty()) {
             int code_point = strtoul(&input[0], nullptr, 16);
@@ -238,7 +238,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         }
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
-    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         bool search_wrapped = false;
         for (int i = m_glyph_map_widget->selected_glyph() - 1;; --i) {
             if (i < 0 && !search_wrapped) {
@@ -256,7 +256,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         }
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         bool search_wrapped = false;
         for (int i = m_glyph_map_widget->selected_glyph() + 1;; ++i) {
             if (i > 0x10FFFF && !search_wrapped) {
@@ -327,7 +327,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     };
     move_glyph_button.set_checkable(true);
-    move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"));
+    move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png").release_value_but_fixme_should_propagate_errors());
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");

@@ -19,8 +19,8 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         layout()->set_margins(4);
         set_fill_with_background_color(true);
 
-        m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png");
-        m_network_disconnected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png");
+        m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png").release_value_but_fixme_should_propagate_errors();
+        m_network_disconnected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png").release_value_but_fixme_should_propagate_errors();
 
         m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size());
         {

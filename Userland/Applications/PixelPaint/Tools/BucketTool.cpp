@@ -20,9 +20,7 @@ namespace PixelPaint {
 
 BucketTool::BucketTool()
 {
-    auto bucket_icon = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png");
-    if (!bucket_icon.is_null())
-        m_cursor = bucket_icon.release_nonnull();
+    m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors();
 }
 
 BucketTool::~BucketTool()

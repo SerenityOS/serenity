@@ -30,7 +30,7 @@ void DesktopSettingsWidget::create_frame()
     load_from_gml(desktop_settings_gml);
 
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
-    light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png"));
+    light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png").release_value_but_fixme_should_propagate_errors());
 
     m_virtual_desktop_rows_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("virtual_desktop_rows_spinbox");
     m_virtual_desktop_columns_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("virtual_desktop_columns_spinbox");

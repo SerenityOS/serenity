@@ -158,7 +158,7 @@ int main(int argc, char** argv)
         update_disassembly_model();
     };
 
-    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png"), [&](auto& action) {
+    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         disassembly_view.set_visible(action.is_checked());
         update_disassembly_model();
     });
@@ -277,7 +277,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     auto window = GUI::Window::construct();
     window->set_title(String::formatted("Profiling {}({})", process_name, pid));
     window->resize(240, 100);
-    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"));
+    window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();
 
     auto& widget = window->set_main_widget<GUI::Widget>();
@@ -305,7 +305,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
 bool generate_profile(pid_t& pid)
 {
     if (!pid) {
-        auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"));
+        auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
         if (process_chooser->exec() == GUI::Dialog::ExecCancel)
             return false;
         pid = process_chooser->pid();
