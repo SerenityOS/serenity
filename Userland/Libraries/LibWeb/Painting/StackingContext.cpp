@@ -117,14 +117,14 @@ void StackingContext::paint(PaintContext& context)
         return;
 
     if (opacity < 1.0f) {
-        auto bitmap = context.painter().target();
-        auto new_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap->size());
-        if (!new_bitmap)
+        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, context.painter().target()->size());
+        if (bitmap_or_error.is_error())
             return;
-        Gfx::Painter painter(*new_bitmap);
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        Gfx::Painter painter(bitmap);
         PaintContext paint_context(painter, context.palette(), context.scroll_offset());
         paint_internal(paint_context);
-        context.painter().blit(Gfx::IntPoint(m_box.absolute_position()), *new_bitmap, Gfx::IntRect(m_box.absolute_rect()), opacity);
+        context.painter().blit(Gfx::IntPoint(m_box.absolute_position()), bitmap, Gfx::IntRect(m_box.absolute_rect()), opacity);
     } else {
         paint_internal(context);
     }

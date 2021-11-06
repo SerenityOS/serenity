@@ -94,7 +94,7 @@ public:
         if (&target == &source && (!apply_cache.m_target || !apply_cache.m_target->size().contains(source_rect.size()))) {
             // TODO: We probably don't need the entire source_rect, we could inflate
             // the target_rect appropriately
-            apply_cache.m_target = Gfx::Bitmap::try_create(source.format(), source_rect.size());
+            apply_cache.m_target = Gfx::Bitmap::try_create(source.format(), source_rect.size()).release_value_but_fixme_should_propagate_errors();
             target_rect.translate_by(-target_rect.location());
         }
 

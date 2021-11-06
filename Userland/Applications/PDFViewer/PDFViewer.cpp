@@ -145,7 +145,7 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 
     auto height = static_cast<float>(this->height() - 2 * frame_thickness() - PAGE_PADDING * 2) * zoom_scale_factor;
     auto width = height / page_scale_factor;
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
 
     PDF::Renderer::render(*m_document, page, bitmap);
 

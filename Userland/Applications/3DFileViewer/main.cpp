@@ -57,7 +57,7 @@ private:
     GLContextWidget()
         : m_mesh_loader(adopt_own(*new WavefrontOBJLoader()))
     {
-        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT });
+        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
         m_context = GL::create_context(*m_bitmap);
 
         start_timer(20);

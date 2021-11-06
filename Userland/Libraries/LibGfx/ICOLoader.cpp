@@ -241,9 +241,10 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
         return false;
     }
 
-    desc.bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, { desc.width, desc.height });
-    if (!desc.bitmap)
+    auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRA8888, { desc.width, desc.height });
+    if (bitmap_or_error.is_error())
         return false;
+    desc.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     Bitmap& bitmap = *desc.bitmap;
     const u8* image_base = context.data + desc.offset + sizeof(info);
     const BMP_ARGB* data_base = (const BMP_ARGB*)image_base;

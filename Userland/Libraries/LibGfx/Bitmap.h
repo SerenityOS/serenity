@@ -90,7 +90,7 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    [[nodiscard]] static RefPtr<Bitmap> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize const&, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_file(String const& path, int scale_factor = 1);

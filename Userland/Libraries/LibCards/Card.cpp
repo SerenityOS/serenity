@@ -64,7 +64,7 @@ static RefPtr<Gfx::Bitmap> s_background_inverted;
 
 Card::Card(Type type, uint8_t value)
     : m_rect(Gfx::IntRect({}, { width, height }))
-    , m_front(*Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }))
+    , m_front(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors())
     , m_type(type)
     , m_value(value)
 {
@@ -72,7 +72,7 @@ Card::Card(Type type, uint8_t value)
     Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
-        s_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+        s_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
         Gfx::Painter bg_painter(*s_background);
 
         auto image = Gfx::Bitmap::try_load_from_file("/res/icons/cards/buggie-deck.png").release_value_but_fixme_should_propagate_errors();

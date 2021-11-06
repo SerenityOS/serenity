@@ -22,7 +22,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png").release_value_but_fixme_should_propagate_errors();
         m_network_disconnected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png").release_value_but_fixme_should_propagate_errors();
 
-        m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size());
+        m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size()).release_value_but_fixme_should_propagate_errors();
         {
             Gfx::Painter painter(*m_network_link_down_bitmap);
             painter.blit_filtered({}, *m_network_connected_bitmap, m_network_connected_bitmap->rect(), [](Color color) {

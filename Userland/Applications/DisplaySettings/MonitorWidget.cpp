@@ -20,7 +20,7 @@ MonitorWidget::MonitorWidget()
 {
     m_desktop_resolution = GUI::Desktop::the().rect().size();
     m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png").release_value_but_fixme_should_propagate_errors();
-    m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 });
+    m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 }).release_value_but_fixme_should_propagate_errors();
     m_monitor_rect = { { 12, 13 }, m_desktop_bitmap->size() };
     set_fixed_size(304, 201);
 }

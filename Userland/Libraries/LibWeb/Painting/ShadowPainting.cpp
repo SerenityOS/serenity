@@ -30,11 +30,12 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
     if (bitmap_rect.is_empty())
         return;
 
-    auto new_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap_rect.size());
-    if (!new_bitmap) {
-        dbgln("Unable to allocate temporary bitmap for box-shadow rendering");
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap_rect.size());
+    if (bitmap_or_error.is_error()) {
+        dbgln("Unable to allocate temporary bitmap for box-shadow rendering: {}", bitmap_or_error.error());
         return;
     }
+    auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     Gfx::Painter painter(*new_bitmap);
     painter.fill_rect({ { 2 * box_shadow_data.blur_radius, 2 * box_shadow_data.blur_radius }, content_rect.size() }, box_shadow_data.color);

@@ -986,7 +986,8 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
-    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1)) {
+    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
@@ -1034,7 +1035,8 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
         return bitmap_or_error.release_value()->to_shareable_bitmap();
     }
 
-    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1)) {
+    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
         Gfx::Painter painter(*bitmap);
         auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();

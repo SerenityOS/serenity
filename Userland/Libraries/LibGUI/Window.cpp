@@ -903,8 +903,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
 
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
-    m_icon = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, icon_size);
-    VERIFY(m_icon);
+    m_icon = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, icon_size).release_value_but_fixme_should_propagate_errors();
     if (icon) {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());

@@ -1187,11 +1187,14 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
 
     const u32 width = abs(context.dib.core.width);
     const u32 height = abs(context.dib.core.height);
-    context.bitmap = Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) });
-    if (!context.bitmap) {
-        dbgln("BMP appears to have overly large dimensions");
+
+    auto bitmap_or_error = Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) });
+    if (bitmap_or_error.is_error()) {
+        // FIXME: Propagate the *real* error.
         return false;
     }
+
+    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     ByteBuffer rle_buffer;
     ReadonlyBytes bytes { context.file_bytes + context.data_offset, context.file_size - context.data_offset };

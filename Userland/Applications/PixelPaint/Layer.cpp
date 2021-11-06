@@ -19,11 +19,11 @@ RefPtr<Layer> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size
     if (size.width() > 16384 || size.height() > 16384)
         return nullptr;
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size);
-    if (!bitmap)
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size);
+    if (bitmap_or_error.is_error())
         return nullptr;
 
-    return adopt_ref(*new Layer(image, *bitmap, move(name)));
+    return adopt_ref(*new Layer(image, bitmap_or_error.release_value_but_fixme_should_propagate_errors(), move(name)));
 }
 
 RefPtr<Layer> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
@@ -101,7 +101,10 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
     }
     auto selection_rect = selection.bounding_rect();
 
-    auto result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    auto result = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     VERIFY(result->has_alpha_channel());
 
     for (int y = selection_rect.top(); y <= selection_rect.bottom(); y++) {
