@@ -117,4 +117,5 @@ struct Formatter<Error> : Formatter<FormatString> {
 
 }
 
+using AK::Error;
 using AK::ErrorOr;
