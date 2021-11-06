@@ -32,9 +32,13 @@ static AtExitEntry* atexit_entries;
 static size_t atexit_entry_count = 0;
 static pthread_mutex_t atexit_mutex = __PTHREAD_MUTEX_INITIALIZER;
 
+// During startup, it is sufficiently unlikely that the attacker can exploit any write primitive.
+// We use this to avoid unnecessary syscalls to mprotect.
+static bool atexit_region_should_lock = false;
+
 static void lock_atexit_handlers()
 {
-    if (mprotect(atexit_entries, atexit_entry_region_size, PROT_READ) < 0) {
+    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_entry_region_size, PROT_READ) < 0) {
         perror("lock_atexit_handlers");
         _exit(1);
     }
@@ -42,10 +46,16 @@ static void lock_atexit_handlers()
 
 static void unlock_atexit_handlers()
 {
-    if (mprotect(atexit_entries, atexit_entry_region_size, PROT_READ | PROT_WRITE) < 0) {
+    if (atexit_region_should_lock && mprotect(atexit_entries, atexit_entry_region_size, PROT_READ | PROT_WRITE) < 0) {
         perror("unlock_atexit_handlers");
         _exit(1);
     }
+}
+
+void __begin_atexit_locking()
+{
+    atexit_region_should_lock = true;
+    lock_atexit_handlers();
 }
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle)
@@ -54,7 +64,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
 
     // allocate initial atexit region
     if (!atexit_entries) {
-        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_entry_region_size, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_entry_region_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (atexit_entries == MAP_FAILED) {
             __pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap");
