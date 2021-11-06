@@ -49,6 +49,12 @@ public:
         this->shutdown();
     }
 
+    void shutdown_with_error(Error const& error)
+    {
+        dbgln("{} (id={}) had error ({}), disconnecting.", *this, m_client_id, error);
+        this->shutdown();
+    }
+
     int client_id() const { return m_client_id; }
 
     virtual void die() = 0;
