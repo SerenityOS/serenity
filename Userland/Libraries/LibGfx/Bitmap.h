@@ -241,7 +241,7 @@ private:
     Bitmap(BitmapFormat, const IntSize&, int, size_t pitch, void*);
     Bitmap(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int, const Vector<RGBA32>& palette);
 
-    static Optional<BackingStore> try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
+    static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
 
     void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
 
