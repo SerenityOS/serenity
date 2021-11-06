@@ -123,7 +123,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     float sh = (float)m_desktop_bitmap->height() / (float)m_desktop_resolution.height();
 
     auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
-    auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh);
+    auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh).release_value_but_fixme_should_propagate_errors();
 
     if (m_desktop_wallpaper_mode == "center") {
         auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());

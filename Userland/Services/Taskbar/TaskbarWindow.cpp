@@ -310,8 +310,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
                 if (icon->height() != taskbar_icon_size() || icon->width() != taskbar_icon_size()) {
                     auto sw = taskbar_icon_size() / (float)icon->width();
                     auto sh = taskbar_icon_size() / (float)icon->height();
-                    auto scaled_bitmap = icon->scaled(sw, sh);
-                    window->button()->set_icon(move(scaled_bitmap));
+                    auto scaled_bitmap_or_error = icon->scaled(sw, sh);
+                    if (scaled_bitmap_or_error.is_error())
+                        window->button()->set_icon(nullptr);
+                    else
+                        window->button()->set_icon(scaled_bitmap_or_error.release_value());
                 } else {
                     window->button()->set_icon(icon);
                 }
