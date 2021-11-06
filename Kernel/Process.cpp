@@ -509,7 +509,7 @@ siginfo_t Process::wait_info()
     siginfo.si_pid = pid().value();
     siginfo.si_uid = uid().value();
 
-    if (m_protected_values.termination_signal) {
+    if (m_protected_values.termination_signal != 0) {
         siginfo.si_status = m_protected_values.termination_signal;
         siginfo.si_code = CLD_KILLED;
     } else {
@@ -633,7 +633,7 @@ void Process::finalize()
     {
         // FIXME: PID/TID BUG
         if (auto parent_thread = Thread::from_tid(ppid().value())) {
-            if (!(parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT))
+            if ((parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 parent_thread->send_signal(SIGCHLD, this);
         }
     }

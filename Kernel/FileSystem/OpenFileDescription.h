@@ -40,8 +40,8 @@ public:
 
     void set_rw_mode(int options)
     {
-        set_readable(options & O_RDONLY);
-        set_writable(options & O_WRONLY);
+        set_readable((options & O_RDONLY) == O_RDONLY);
+        set_writable((options & O_WRONLY) == O_WRONLY);
     }
 
     ErrorOr<void> close();

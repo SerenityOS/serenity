@@ -714,7 +714,7 @@ public:
         virtual bool setup_blocker() override;
 
         bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
-        bool is_wait() const { return !(m_wait_options & WNOWAIT); }
+        bool is_wait() const { return (m_wait_options & WNOWAIT) != WNOWAIT; }
 
     private:
         void do_was_disowned();

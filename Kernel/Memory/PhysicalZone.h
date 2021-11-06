@@ -33,7 +33,7 @@ public:
     void dump() const;
     size_t available() const { return m_page_count - (m_used_chunks / 2); }
 
-    bool is_empty() const { return !available(); }
+    bool is_empty() const { return available() == 0; }
 
     PhysicalAddress base() const { return m_base_address; }
     bool contains(PhysicalAddress paddr) const

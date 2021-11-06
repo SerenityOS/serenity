@@ -18,7 +18,7 @@ public:
     static ErrorOr<NonnullOwnPtr<ThreadTracer>> try_create(ProcessID tracer) { return adopt_nonnull_own_or_enomem(new (nothrow) ThreadTracer(tracer)); }
 
     ProcessID tracer_pid() const { return m_tracer_pid; }
-    bool has_pending_signal(u32 signal) const { return m_pending_signals & (1 << (signal - 1)); }
+    bool has_pending_signal(u32 signal) const { return (m_pending_signals & (1 << (signal - 1))) != 0; }
     void set_signal(u32 signal) { m_pending_signals |= (1 << (signal - 1)); }
     void unset_signal(u32 signal) { m_pending_signals &= ~(1 << (signal - 1)); }
 

@@ -246,7 +246,7 @@ u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
         VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
         set_state(Thread::Runnable);
     };
-    if (Processor::current_in_irq()) {
+    if (Processor::current_in_irq() != 0) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
@@ -267,7 +267,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         if (!should_be_stopped() && !is_stopped())
             unblock();
     };
-    if (Processor::current_in_irq()) {
+    if (Processor::current_in_irq() != 0) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
@@ -580,7 +580,8 @@ bool Thread::tick()
         ++m_process->m_ticks_in_user;
         ++m_ticks_in_user;
     }
-    return --m_ticks_left;
+    --m_ticks_left;
+    return m_ticks_left != 0;
 }
 
 void Thread::check_dispatch_pending_signal()
@@ -588,7 +589,7 @@ void Thread::check_dispatch_pending_signal()
     auto result = DispatchSignalResult::Continue;
     {
         SpinlockLocker scheduler_lock(g_scheduler_lock);
-        if (pending_signals_for_state()) {
+        if (pending_signals_for_state() != 0) {
             SpinlockLocker lock(m_lock);
             result = dispatch_one_pending_signal();
         }
@@ -633,11 +634,11 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     }
 
     m_pending_signals |= 1 << (signal - 1);
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
 
     if (m_state == Stopped) {
         SpinlockLocker lock(m_lock);
-        if (pending_signals_for_state()) {
+        if (pending_signals_for_state() != 0) {
             dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
             resume_from_stopped();
         }
@@ -653,7 +654,7 @@ u32 Thread::update_signal_mask(u32 signal_mask)
     SpinlockLocker lock(g_scheduler_lock);
     auto previous_signal_mask = m_signal_mask;
     m_signal_mask = signal_mask;
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -671,7 +672,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
         m_signal_mask &= ~signal_set;
     else
         m_signal_mask |= signal_set;
-    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -711,7 +712,7 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
 
     u8 signal = 1;
     for (; signal < 32; ++signal) {
-        if (signal_candidates & (1 << (signal - 1))) {
+        if ((signal_candidates & (1 << (signal - 1))) != 0) {
             break;
         }
     }
@@ -724,7 +725,7 @@ DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker lock(m_lock);
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
-    if (!(signal_candidates & (1 << (signal - 1))))
+    if ((signal_candidates & (1 << (signal - 1))) == 0)
         return DispatchSignalResult::Continue;
     return dispatch_signal(signal);
 }
@@ -853,7 +854,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
 
     auto& process = this->process();
     auto tracer = process.tracer();
@@ -914,13 +915,13 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
-    if (action.flags & SA_NODEFER)
+    if ((action.flags & SA_NODEFER) == SA_NODEFER)
         new_signal_mask &= ~(1 << (signal - 1));
     else
         new_signal_mask |= 1 << (signal - 1);
 
     m_signal_mask |= new_signal_mask;
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
 
     auto setup_stack = [&](RegisterState& state) {
         FlatPtr stack = state.userspace_sp();
@@ -1121,7 +1122,7 @@ struct RecognizedSymbol {
 
 static bool symbolicate(RecognizedSymbol const& symbol, Process& process, StringBuilder& builder)
 {
-    if (!symbol.address)
+    if (symbol.address == 0)
         return false;
 
     bool mask_kernel_addresses = !process.is_superuser();
@@ -1201,7 +1202,7 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
 
-    if (process().m_master_tls_size)
+    if (process().m_master_tls_size != 0)
         memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
 
     return {};
