@@ -506,8 +506,7 @@ void Image::set_path(String path)
 void Image::flip(Gfx::Orientation orientation)
 {
     for (auto& layer : m_layers) {
-        auto flipped = layer.bitmap().flipped(orientation);
-        VERIFY(flipped);
+        auto flipped = layer.bitmap().flipped(orientation).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*flipped);
         layer.did_modify_bitmap(rect());
     }
