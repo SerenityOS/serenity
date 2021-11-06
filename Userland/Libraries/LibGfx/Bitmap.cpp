@@ -533,17 +533,12 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop) const
     return new_bitmap.release_nonnull();
 }
 
-RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
     if (m_buffer.is_valid())
-        return *this;
-    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
-    if (buffer_or_error.is_error())
-        return nullptr;
-    auto bitmap_or_error = Bitmap::try_create_with_anonymous_buffer(m_format, buffer_or_error.release_value(), size(), scale(), palette_to_vector());
-    if (bitmap_or_error.is_error())
-        return nullptr;
-    auto bitmap = bitmap_or_error.release_value();
+        return NonnullRefPtr { *this };
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE)));
+    auto bitmap = TRY(Bitmap::try_create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector()));
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
     return bitmap;
 }
@@ -612,12 +607,12 @@ void Bitmap::set_volatile()
     return true;
 }
 
-ShareableBitmap Bitmap::to_shareable_bitmap() const
+Gfx::ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
-    auto bitmap = to_bitmap_backed_by_anonymous_buffer();
-    if (!bitmap)
+    auto bitmap_or_error = to_bitmap_backed_by_anonymous_buffer();
+    if (bitmap_or_error.is_error())
         return {};
-    return ShareableBitmap(*bitmap);
+    return Gfx::ShareableBitmap { bitmap_or_error.release_value_but_fixme_should_propagate_errors(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
 }
 
 ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)

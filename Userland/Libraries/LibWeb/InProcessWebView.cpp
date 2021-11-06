@@ -119,8 +119,8 @@ void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& 
         return;
     Gfx::ShareableBitmap shareable_bitmap;
     if (bitmap)
-        shareable_bitmap = Gfx::ShareableBitmap(*bitmap);
-    on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), shareable_bitmap);
+        shareable_bitmap = bitmap->to_shareable_bitmap();
+    on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), move(shareable_bitmap));
 }
 
 void InProcessWebView::page_did_click_link(const AK::URL& url, const String& target, unsigned modifiers)
