@@ -6,7 +6,7 @@
 
 #include <AK/Try.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Storage/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/AHCIPortHandler.h>
 
 namespace Kernel {
 

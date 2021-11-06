@@ -7,9 +7,9 @@
 #include <AK/Try.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATA.h>
-#include <Kernel/Storage/BMIDEChannel.h>
-#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/ATA/ATA.h>
+#include <Kernel/Storage/ATA/BMIDEChannel.h>
+#include <Kernel/Storage/ATA/IDEController.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
