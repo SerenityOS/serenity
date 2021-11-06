@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Bitmap.h>
 #include <AK/Checked.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
+#include <AK/NeverDestroyed.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/mallocdefs.h>
 #include <assert.h>
@@ -23,12 +25,11 @@ struct AtExitEntry {
     AtExitFunction method { nullptr };
     void* parameter { nullptr };
     void* dso_handle { nullptr };
-    bool has_been_called { false };
 };
 
 // We'll re-allocate the region if it ends up being too small at runtime.
 // Invariant: atexit_entry_region_capacity * sizeof(AtExitEntry) does not overflow.
-static size_t atexit_entry_region_capacity = (2 * PAGE_SIZE) / sizeof(AtExitEntry);
+static size_t atexit_entry_region_capacity = PAGE_SIZE / sizeof(AtExitEntry);
 
 static size_t atexit_region_bytes(size_t capacity = atexit_entry_region_capacity)
 {
@@ -45,6 +46,11 @@ static size_t atexit_next_capacity()
 static AtExitEntry* atexit_entries;
 static size_t atexit_entry_count = 0;
 static pthread_mutex_t atexit_mutex = __PTHREAD_MUTEX_INITIALIZER;
+
+// The C++ compiler automagically registers the destructor of this object with __cxa_atexit.
+// However, we can't control the order in which these destructors are run, so we might still want to access this data after the registered entry.
+// Hence, we will call the destructor manually, when we know it is safe to do so.
+static NeverDestroyed<Bitmap> atexit_called_entries;
 
 // During startup, it is sufficiently unlikely that the attacker can exploit any write primitive.
 // We use this to avoid unnecessary syscalls to mprotect.
@@ -109,7 +115,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     }
 
     unlock_atexit_handlers();
-    atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle, false };
+    atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle };
     lock_atexit_handlers();
 
     __pthread_mutex_unlock(&atexit_mutex);
@@ -128,18 +134,19 @@ void __cxa_finalize(void* dso_handle)
 
     __pthread_mutex_lock(&atexit_mutex);
 
+    if (atexit_entry_count > atexit_called_entries->size())
+        atexit_called_entries->grow(atexit_entry_count, false);
+
     ssize_t entry_index = atexit_entry_count;
 
     dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: {} entries in the finalizer list", entry_index);
 
     while (--entry_index >= 0) {
         auto& exit_entry = atexit_entries[entry_index];
-        bool needs_calling = !exit_entry.has_been_called && (!dso_handle || dso_handle == exit_entry.dso_handle);
+        bool needs_calling = !atexit_called_entries->get(entry_index) && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
             dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
-            unlock_atexit_handlers();
-            exit_entry.has_been_called = true;
-            lock_atexit_handlers();
+            atexit_called_entries->set(entry_index, true);
             __pthread_mutex_unlock(&atexit_mutex);
             exit_entry.method(exit_entry.parameter);
             __pthread_mutex_lock(&atexit_mutex);
