@@ -15,12 +15,14 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+KResultOr<NonnullRefPtr<AHCIController>> AHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref(*new AHCIController(pci_device_identifier));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new AHCIController(pci_device_identifier)));
+    TRY(controller->initialize_hba(pci_device_identifier));
+    return controller;
 }
 
-bool AHCIController::reset()
+KResult AHCIController::reset()
 {
     hba().control_regs.ghc = 1;
 
@@ -30,18 +32,20 @@ bool AHCIController::reset()
     size_t retry = 0;
 
     while (true) {
-        if (retry > 1000)
-            return false;
+        if (retry > 1000) {
+            dmesgln("{}: AHCI controller reset failed", pci_address());
+            return KResult(EBUSY);
+        }
         if (!(hba().control_regs.ghc & 1))
             break;
         IO::delay(1000);
         retry++;
     }
     // The HBA is locked or hung if we waited more than 1 second!
-    return true;
+    return KSuccess;
 }
 
-bool AHCIController::shutdown()
+KResult AHCIController::shutdown()
 {
     TODO();
 }
@@ -89,7 +93,6 @@ AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifie
     , m_hba_region(default_hba_region())
     , m_capabilities(capabilities())
 {
-    initialize_hba(pci_device_identifier);
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
@@ -138,12 +141,9 @@ AHCIController::~AHCIController()
 {
 }
 
-void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
+KResult AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    if (!reset()) {
-        dmesgln("{}: AHCI controller reset failed", pci_address());
-        return;
-    }
+    TRY(reset());
     dmesgln("{}: AHCI controller reset", pci_address());
     dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
 
@@ -156,6 +156,7 @@ void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_iden
     enable_global_interrupts();
     m_handlers.append(AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(),
         AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+    return KSuccess;
 }
 
 void AHCIController::disable_global_interrupts() const

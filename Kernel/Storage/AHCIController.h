@@ -25,12 +25,12 @@ class AHCIController final : public ATAController
     friend class AHCIPort;
     AK_MAKE_ETERNAL
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    UNMAP_AFTER_INIT static KResultOr<NonnullRefPtr<AHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
-    virtual bool reset() override;
-    virtual bool shutdown() override;
+    virtual KResult reset() override;
+    virtual KResult shutdown() override;
     virtual size_t devices_count() const override;
     virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
@@ -42,7 +42,7 @@ private:
     void enable_global_interrupts() const;
 
     UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&);
-    UNMAP_AFTER_INIT void initialize_hba(PCI::DeviceIdentifier const&);
+    UNMAP_AFTER_INIT KResult initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;

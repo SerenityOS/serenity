@@ -31,8 +31,8 @@ public:
     virtual size_t devices_count() const = 0;
 
 protected:
-    virtual bool reset() = 0;
-    virtual bool shutdown() = 0;
+    virtual KResult reset() = 0;
+    virtual KResult shutdown() = 0;
 
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) = 0;
 };

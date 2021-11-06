@@ -25,8 +25,8 @@ public:
     virtual ~RamdiskController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
-    virtual bool reset() override;
-    virtual bool shutdown() override;
+    virtual KResult reset() override;
+    virtual KResult shutdown() override;
     virtual size_t devices_count() const override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 

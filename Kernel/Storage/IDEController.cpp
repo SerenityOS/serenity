@@ -21,12 +21,12 @@ UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::Dev
     return adopt_ref(*new IDEController(device_identifier, force_pio));
 }
 
-bool IDEController::reset()
+KResult IDEController::reset()
 {
     TODO();
 }
 
-bool IDEController::shutdown()
+KResult IDEController::shutdown()
 {
     TODO();
 }

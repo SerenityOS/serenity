@@ -16,12 +16,12 @@ NonnullRefPtr<RamdiskController> RamdiskController::initialize()
     return adopt_ref(*new RamdiskController());
 }
 
-bool RamdiskController::reset()
+KResult RamdiskController::reset()
 {
     TODO();
 }
 
-bool RamdiskController::shutdown()
+KResult RamdiskController::shutdown()
 {
     TODO();
 }
