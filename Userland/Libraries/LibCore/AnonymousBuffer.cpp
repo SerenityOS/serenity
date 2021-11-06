@@ -32,7 +32,7 @@ ErrorOr<AnonymousBuffer> AnonymousBuffer::create_with_size(size_t size)
 #if defined(__serenity__)
     fd = anon_create(round_up_to_power_of_two(size, PAGE_SIZE), O_CLOEXEC);
     if (fd < 0)
-        return AK::Error::from_errno(errno);
+        return Error::from_errno(errno);
 #elif defined(__linux__)
     fd = memfd_create("", MFD_CLOEXEC);
     if (fd < 0)
@@ -43,7 +43,7 @@ ErrorOr<AnonymousBuffer> AnonymousBuffer::create_with_size(size_t size)
     }
 #endif
     if (fd < 0)
-        return AK::Error::from_errno(errno);
+        return Error::from_errno(errno);
     return create_from_anon_fd(fd, size);
 }
 
@@ -51,7 +51,7 @@ ErrorOr<NonnullRefPtr<AnonymousBufferImpl>> AnonymousBufferImpl::create(int fd, 
 {
     auto* data = mmap(nullptr, round_up_to_power_of_two(size, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
     if (data == MAP_FAILED)
-        return AK::Error::from_errno(errno);
+        return Error::from_errno(errno);
     return AK::adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousBufferImpl(fd, size, data));
 }
 

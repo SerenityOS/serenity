@@ -610,7 +610,7 @@ ShareableBitmap Bitmap::to_shareable_bitmap() const
 ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return AK::Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
+        return Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
 
     const auto pitch = minimum_pitch(size.width() * scale_factor, format);
     const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
@@ -623,7 +623,7 @@ ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSiz
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
     if (data == MAP_FAILED)
-        return AK::Error::from_errno(errno);
+        return Error::from_errno(errno);
     return BackingStore { data, pitch, data_size_in_bytes };
 }
 
