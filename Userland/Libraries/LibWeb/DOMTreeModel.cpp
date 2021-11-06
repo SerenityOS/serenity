@@ -120,8 +120,8 @@ static String with_whitespace_collapsed(const StringView& string)
 GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto node_name = node.get("name").as_string();
-    auto type = node.get("type").as_string_or("unknown");
+    auto node_name = node.get("name"sv).as_string();
+    auto type = node.get("type"sv).as_string_or("unknown");
 
     if (role == GUI::ModelRole::ForegroundColor) {
         // FIXME: Allow models to return a foreground color *role*.
@@ -145,18 +145,18 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         return m_text_icon;
     }
     if (role == GUI::ModelRole::Display) {
-        if (type == "text")
-            return with_whitespace_collapsed(node.get("text").as_string());
+        if (type == "text"sv)
+            return with_whitespace_collapsed(node.get("text"sv).as_string());
         if (type == "comment"sv)
             return String::formatted("<!--{}-->", node.get("data"sv).as_string());
-        if (type != "element")
+        if (type != "element"sv)
             return node_name;
 
         StringBuilder builder;
         builder.append('<');
         builder.append(node_name.to_lowercase());
         if (node.has("attributes")) {
-            auto attributes = node.get("attributes").as_object();
+            auto attributes = node.get("attributes"sv).as_object();
             attributes.for_each_member([&builder](auto& name, JsonValue const& value) {
                 builder.append(' ');
                 builder.append(name);
@@ -175,7 +175,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
     m_dom_node_to_parent_map.set(node, parent);
-    m_node_id_to_dom_node_map.set(node->get("id").to_i32(), node);
+    m_node_id_to_dom_node_map.set(node->get("id"sv).to_i32(), node);
 
     auto const* children = get_children(*node);
     if (!children)
