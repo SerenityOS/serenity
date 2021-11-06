@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Definitions.h>
