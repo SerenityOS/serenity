@@ -24,6 +24,7 @@
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
 
@@ -111,38 +112,10 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
 
 RefPtr<Bitmap> Bitmap::try_load_from_file(String const& path, int scale_factor)
 {
-    if (scale_factor > 1 && path.starts_with("/res/")) {
-        LexicalPath lexical_path { path };
-        StringBuilder highdpi_icon_path;
-        highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append('/');
-        highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendff("-{}x.", scale_factor);
-        highdpi_icon_path.append(lexical_path.extension());
-
-        RefPtr<Bitmap> bmp;
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
-        bmp = load_##Name(highdpi_icon_path.to_string());
-        ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
-        if (bmp) {
-            VERIFY(bmp->width() % scale_factor == 0);
-            VERIFY(bmp->height() % scale_factor == 0);
-            bmp->m_size.set_width(bmp->width() / scale_factor);
-            bmp->m_size.set_height(bmp->height() / scale_factor);
-            bmp->m_scale = scale_factor;
-            return bmp;
-        }
-    }
-
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
-        return load_##Name(path);
-    ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
-
-    return nullptr;
+    int fd = open(path.characters(), O_RDONLY);
+    if (fd < 0)
+        return nullptr;
+    return try_load_from_fd_and_close(fd, path, scale_factor);
 }
 
 RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
