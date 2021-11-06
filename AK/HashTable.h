@@ -181,7 +181,7 @@ public:
             swap(a.m_collection_data, b.m_collection_data);
     }
 
-    [[nodiscard]] bool is_empty() const { return !m_size; }
+    [[nodiscard]] bool is_empty() const { return m_size == 0; }
     [[nodiscard]] size_t size() const { return m_size; }
     [[nodiscard]] size_t capacity() const { return m_capacity; }
 

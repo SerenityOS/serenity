@@ -60,7 +60,7 @@ public:
     {
         if (length() != other.length())
             return false;
-        return !__builtin_memcmp(characters(), other.characters(), length());
+        return __builtin_memcmp(characters(), other.characters(), length()) == 0;
     }
 
     unsigned hash() const

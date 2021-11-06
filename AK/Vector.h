@@ -520,7 +520,7 @@ public:
 
     ErrorOr<void> try_append(StorageType const* values, size_t count)
     {
-        if (!count)
+        if (count == 0)
             return {};
         TRY(try_grow_capacity(size() + count));
         TypedTransfer<StorageType>::copy(slot(m_size), values, count);
@@ -569,7 +569,7 @@ public:
 
     ErrorOr<void> try_prepend(StorageType const* values, size_t count)
     {
-        if (!count)
+        if (count == 0)
             return {};
         TRY(try_grow_capacity(size() + count));
         TypedTransfer<StorageType>::move(slot(count), slot(0), m_size);
@@ -645,7 +645,7 @@ public:
         if (new_size == size())
             return;
 
-        if (!new_size) {
+        if (new_size == 0) {
             if (keep_capacity)
                 clear_with_capacity();
             else
