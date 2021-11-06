@@ -327,7 +327,7 @@ ThrowCompletionOr<TemporalPlainDateTime> add_date_time(GlobalObject& global_obje
     auto* date_duration = TRY(create_temporal_duration(global_object, years, months, weeks, days + time_result.days, 0, 0, 0, 0, 0, 0));
 
     // 5. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
-    auto* added_date = TRY(calendar_date_add(global_object, calendar, *date_part, *date_duration, options));
+    auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
 
     // 6. Return the Record { [[Year]]: addedDate.[[ISOYear]], [[Month]]: addedDate.[[ISOMonth]], [[Day]]: addedDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return TemporalPlainDateTime { .year = added_date->iso_year(), .month = added_date->iso_month(), .day = added_date->iso_day(), .hour = time_result.hour, .minute = time_result.minute, .second = time_result.second, .millisecond = time_result.millisecond, .microsecond = time_result.microsecond, .nanosecond = time_result.nanosecond };
