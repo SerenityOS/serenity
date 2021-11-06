@@ -211,7 +211,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFo
 /// - palette count
 /// - palette data (= palette count * BGRA8888)
 /// - image data (= actual size * u8)
-RefPtr<Bitmap> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 {
     InputMemoryStream stream { buffer };
     size_t actual_size;
@@ -229,35 +229,31 @@ RefPtr<Bitmap> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffe
     };
 
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))
-        return {};
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     palette.ensure_capacity(palette_size);
     for (size_t i = 0; i < palette_size; ++i) {
         if (!read(palette[i]))
-            return {};
+            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
     }
 
     if (stream.remaining() < actual_size)
-        return {};
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
-    auto bitmap_or_error = Bitmap::try_create(format, { width, height }, scale_factor);
-    if (bitmap_or_error.is_error())
-        return {};
-    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY(Bitmap::try_create(format, { width, height }, scale_factor));
 
     bitmap->m_palette = new RGBA32[palette_size];
     memcpy(bitmap->m_palette, palette.data(), palette_size * sizeof(RGBA32));
 
     data.copy_to({ bitmap->scanline(0), bitmap->size_in_bytes() });
-
     return bitmap;
 }
 
