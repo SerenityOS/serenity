@@ -39,7 +39,11 @@ RefPtr<Layer> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bit
 
 RefPtr<Layer> Layer::try_create_snapshot(Image& image, Layer const& layer)
 {
-    auto snapshot = try_create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
+    auto new_bitmap_or_error = layer.bitmap().clone();
+    if (new_bitmap_or_error.is_error())
+        return nullptr;
+
+    auto snapshot = try_create_with_bitmap(image, new_bitmap_or_error.release_value_but_fixme_should_propagate_errors(), layer.name());
     /*
         We set these properties directly because calling the setters might 
         notify the image of an update on the newly created layer, but this 
