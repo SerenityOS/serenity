@@ -555,19 +555,10 @@ index ad2820b32..deaa2c380 100644
  if (EXISTS "${LLVM_CMAKE_PATH}")
    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 97e33f315..bfb221230 100644
+index 97e33f315..179bd2a67 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -958,6 +958,8 @@ typedef unsigned int   char32_t;
- #  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
- #elif defined(__MVS__)
- #  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
-+#elif defined(__serenity__) && !defined(KERNEL)
-+#  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
- #endif
- 
- #if defined(__APPLE__)
-@@ -1148,6 +1150,7 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
+@@ -1148,6 +1148,7 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
        defined(__sun__) || \
        defined(__MVS__) || \
        defined(_AIX) || \
@@ -645,6 +636,28 @@ index 8e584005d..f29f3453e 100644
  #    define _LIBCPP_HAS_CATOPEN 1
  #    include <nl_types.h>
  #  endif
+diff --git a/libcxx/include/new b/libcxx/include/new
+index aefc08c16..7ee71d16b 100644
+--- a/libcxx/include/new
++++ b/libcxx/include/new
+@@ -310,7 +310,7 @@ inline _LIBCPP_INLINE_VISIBILITY void __libcpp_deallocate_unsized(void* __ptr, s
+ // Returns the allocated memory, or `nullptr` on failure.
+ inline _LIBCPP_INLINE_VISIBILITY
+ void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
+-#if defined(_LIBCPP_MSVCRT_LIKE)
++#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
+   return ::_aligned_malloc(__size, __alignment);
+ #else
+   void* __result = nullptr;
+@@ -322,7 +322,7 @@ void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
+ 
+ inline _LIBCPP_INLINE_VISIBILITY
+ void __libcpp_aligned_free(void* __ptr) {
+-#if defined(_LIBCPP_MSVCRT_LIKE)
++#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
+   ::_aligned_free(__ptr);
+ #else
+   ::free(__ptr);
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
 index 7880c733f..87b25cf42 100644
 --- a/libcxx/src/include/config_elast.h
