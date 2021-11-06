@@ -58,6 +58,8 @@ private:
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;
     GUI::Icon m_text_icon;
+    GUI::Icon m_script_icon;
+    GUI::Icon m_style_icon;
     JsonObject m_dom_tree;
     HashMap<JsonObject const*, JsonObject const*> m_dom_node_to_parent_map;
     HashMap<i32, JsonObject const*> m_node_id_to_dom_node_map;

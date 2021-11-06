@@ -20,7 +20,9 @@ DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
 {
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"));
     m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
-    m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"));
+    m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-text.png"));
+    m_script_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-javascript.png"));
+    m_style_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-css.png"));
 
     map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
@@ -130,10 +132,15 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     }
 
     if (role == GUI::ModelRole::Icon) {
-        if (type == "document")
+        if (type == "document"sv)
             return m_document_icon;
-        if (type == "element")
+        if (type == "element"sv) {
+            if (node_name == "SCRIPT"sv)
+                return m_script_icon;
+            if (node_name == "STYLE"sv)
+                return m_style_icon;
             return m_element_icon;
+        }
         // FIXME: More node type icons?
         return m_text_icon;
     }
