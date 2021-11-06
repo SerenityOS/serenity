@@ -141,9 +141,8 @@ constexpr bool is_constant_evaluated()
     constexpr type abs(type num)                    \
     {                                               \
         if (is_constant_evaluated())                \
-            return num < zero ? -num : num;         \
-        else                                        \
-            return __builtin_##intrinsic(num);      \
+            return num < (zero) ? -num : num;       \
+        return __builtin_##intrinsic(num);          \
     }
 
 __DEFINE_GENERIC_ABS(int, 0, abs);
