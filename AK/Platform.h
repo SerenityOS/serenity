@@ -29,7 +29,7 @@
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
-#if !defined(__clang__)
+#if !defined(__clang__) && !defined(__CLION_IDE_)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
 
