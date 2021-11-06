@@ -39,6 +39,7 @@ int _entry(int argc, char** argv, char** env)
 
     environ = env;
     __environ_is_malloced = false;
+    __begin_atexit_locking();
 
     _init();
 
