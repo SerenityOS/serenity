@@ -21,6 +21,22 @@ KeyboardMapperWidget::KeyboardMapperWidget()
     create_frame();
 }
 
+bool KeyboardMapperWidget::request_close()
+{
+    if (!window()->is_modified())
+        return true;
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_filename);
+    if (result == GUI::MessageBox::ExecYes) {
+        ErrorOr<void> error_or = save();
+        if (error_or.is_error())
+            show_error_to_user(error_or.error());
+
+        if (!window()->is_modified())
+            return true;
+    }
+    return result == GUI::MessageBox::ExecNo;
+}
+
 void KeyboardMapperWidget::create_frame()
 {
     set_fill_with_background_color(true);

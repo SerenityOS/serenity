@@ -47,6 +47,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
+            if (!keyboard_mapper_widget->request_close())
+                return;
+
             Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open", "/res/keymaps/");
             if (!path.has_value())
                 return;
@@ -98,6 +101,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (keyboard_mapper_widget->request_close())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     window->show();
 
