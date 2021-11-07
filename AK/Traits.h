@@ -9,6 +9,8 @@
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
+#include <AK/StringHash.h>
+#include <string.h>
 
 namespace AK {
 
@@ -37,7 +39,7 @@ requires(IsIntegral<T>) struct Traits<T> : public GenericTraits<T> {
 };
 
 template<typename T>
-requires(IsPointer<T>) struct Traits<T> : public GenericTraits<T> {
+requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
     static unsigned hash(T p) { return ptr_hash((FlatPtr)p); }
     static constexpr bool is_trivial() { return true; }
 };
@@ -46,6 +48,13 @@ template<Enum T>
 struct Traits<T> : public GenericTraits<T> {
     static unsigned hash(T value) { return Traits<UnderlyingType<T>>::hash(to_underlying(value)); }
     static constexpr bool is_trivial() { return Traits<UnderlyingType<T>>::is_trivial(); }
+};
+
+template<typename T>
+requires(Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {
+    static unsigned hash(T const value) { return string_hash(value, strlen(value)); }
+    static constexpr bool equals(T const a, T const b) { return strcmp(a, b); }
+    static constexpr bool is_trivial() { return true; }
 };
 
 }
