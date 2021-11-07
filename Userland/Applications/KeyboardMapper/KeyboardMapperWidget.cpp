@@ -124,6 +124,7 @@ ErrorOr<void> KeyboardMapperWidget::load_map_from_file(const String& filename)
         radio_button.set_checked(radio_button.name() == "map");
     }
 
+    window()->set_modified(false);
     update_window_title();
     return {};
 }
