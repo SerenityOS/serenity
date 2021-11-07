@@ -113,7 +113,7 @@ void ConnectionBase::wait_for_socket_to_become_readable()
     }
 }
 
-Result<Vector<u8>, bool> ConnectionBase::read_as_much_as_possible_from_socket_without_blocking()
+ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without_blocking()
 {
     Vector<u8> bytes;
 
@@ -130,12 +130,11 @@ Result<Vector<u8>, bool> ConnectionBase::read_as_much_as_possible_from_socket_wi
                 break;
             perror("recv");
             exit(1);
-            return false;
         }
         if (nread == 0) {
             if (bytes.is_empty()) {
                 deferred_invoke([this] { shutdown(); });
-                return false;
+                return Error::from_string_literal("IPC connection EOF"sv);
             }
             break;
         }
@@ -150,7 +149,7 @@ Result<Vector<u8>, bool> ConnectionBase::read_as_much_as_possible_from_socket_wi
     return bytes;
 }
 
-bool ConnectionBase::drain_messages_from_peer()
+ErrorOr<void> ConnectionBase::drain_messages_from_peer()
 {
     auto bytes = TRY(read_as_much_as_possible_from_socket_without_blocking());
 
@@ -161,17 +160,14 @@ bool ConnectionBase::drain_messages_from_peer()
         // Sometimes we might receive a partial message. That's okay, just stash away
         // the unprocessed bytes and we'll prepend them to the next incoming message
         // in the next run of this function.
-        auto remaining_bytes_result = ByteBuffer::copy(bytes.span().slice(index));
-        if (!remaining_bytes_result.has_value()) {
-            dbgln("{}::drain_messages_from_peer: Failed to allocate buffer", static_cast<Core::Object const&>(*this));
-            return false;
-        }
+        auto maybe_remaining_bytes = ByteBuffer::copy(bytes.span().slice(index));
+        if (!maybe_remaining_bytes.has_value())
+            return Error::from_string_literal("drain_messages_from_peer: Failed to allocate buffer"sv);
         if (!m_unprocessed_bytes.is_empty()) {
-            dbgln("{}::drain_messages_from_peer: Already have unprocessed bytes", static_cast<Core::Object const&>(*this));
             shutdown();
-            return false;
+            return Error::from_string_literal("drain_messages_from_peer: Already have unprocessed bytes"sv);
         }
-        m_unprocessed_bytes = remaining_bytes_result.release_value();
+        m_unprocessed_bytes = maybe_remaining_bytes.release_value();
     }
 
     if (!m_unprocessed_messages.is_empty()) {
@@ -179,7 +175,7 @@ bool ConnectionBase::drain_messages_from_peer()
             handle_messages();
         });
     }
-    return true;
+    return {};
 }
 
 OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id)
@@ -199,7 +195,7 @@ OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32
             break;
 
         wait_for_socket_to_become_readable();
-        if (!drain_messages_from_peer())
+        if (drain_messages_from_peer().is_error())
             break;
     }
     return {};
