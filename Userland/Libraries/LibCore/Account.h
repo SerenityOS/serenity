@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -34,8 +33,8 @@ public:
     };
 
     static Account self(Read options = Read::All);
-    static Result<Account, String> from_name(const char* username, Read options = Read::All);
-    static Result<Account, String> from_uid(uid_t uid, Read options = Read::All);
+    static ErrorOr<Account> from_name(char const* username, Read options = Read::All);
+    static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);
 
     bool authenticate(SecretString const& password) const;
     bool login() const;
@@ -68,7 +67,7 @@ public:
     bool sync();
 
 private:
-    static Result<Account, String> from_passwd(const passwd&, const spwd&);
+    static ErrorOr<Account> from_passwd(passwd const&, spwd const&);
 
     Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
