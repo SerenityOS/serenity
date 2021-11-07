@@ -224,6 +224,18 @@ ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object,
     return option.as_string().string();
 }
 
+// 13.10 ToTemporalOffset ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
+ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Return ? GetOption(normalizedOptions, "offset", « String », « "prefer", "use", "ignore", "reject" », fallback).
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, { OptionType::String }, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
 // 13.11 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, Object const& normalized_options)
 {
@@ -948,6 +960,27 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
 
     // 8. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[TimeZoneOffsetString]]: offsetString }.
     return TemporalInstant { .year = result.year, .month = result.month, .day = result.day, .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .time_zone_offset = move(offset_string) };
+}
+
+// 13.36 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject& global_object, String const& iso_string)
+{
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalZonedDateTimeString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ! ParseISODateTime(isoString).
+    auto result = MUST(parse_iso_date_time(global_object, iso_string));
+
+    // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
+    auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
+
+    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: timeZoneResult.[[Z]], [[TimeZoneOffsetString]]: timeZoneResult.[[OffsetString]], [[TimeZoneName]]: timeZoneResult.[[Name]] }.
+    // NOTE: This returns the two structs together instead of separated to avoid a copy in ToTemporalZonedDateTime, as the spec tries to put the result of InterpretTemporalDateTimeFields and ParseTemporalZonedDateTimeString into the same `result` variable.
+    // InterpretTemporalDateTimeFields returns an ISODateTime, so the moved in `result` here is subsequently moved into ParseTemporalZonedDateTimeString's `result` variable.
+    return TemporalZonedDateTime { .date_time = move(result), .time_zone = move(time_zone_result) };
 }
 
 // 13.37 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
