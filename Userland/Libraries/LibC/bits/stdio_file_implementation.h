@@ -61,6 +61,8 @@ public:
 
     void reopen(int fd, int mode);
 
+    u8 const* readptr(size_t& available_size);
+
     enum Flags : u8 {
         None = 0,
         LastRead = 1,

@@ -369,6 +369,11 @@ void FILE::reopen(int fd, int mode)
     m_eof = false;
 }
 
+u8 const* FILE::readptr(size_t& available_size)
+{
+    return m_buffer.begin_dequeue(available_size);
+}
+
 FILE::Buffer::~Buffer()
 {
     if (m_data_is_malloced)
@@ -1321,6 +1326,23 @@ void __fpurge(FILE* stream)
 {
     ScopedFileLock lock(stream);
     stream->purge();
+}
+
+char const* __freadptr(FILE* stream, size_t* sizep)
+{
+    VERIFY(stream);
+    VERIFY(sizep);
+
+    ScopedFileLock lock(stream);
+
+    size_t available_size;
+    u8 const* ptr = stream->readptr(available_size);
+
+    if (available_size == 0)
+        return nullptr;
+
+    *sizep = available_size;
+    return reinterpret_cast<char const*>(ptr);
 }
 }
 
