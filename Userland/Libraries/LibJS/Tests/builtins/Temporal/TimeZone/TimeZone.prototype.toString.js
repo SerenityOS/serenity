@@ -4,8 +4,20 @@ describe("correct behavior", () => {
     });
 
     test("basic functionality", () => {
-        const timeZone = new Temporal.TimeZone("UTC");
-        expect(timeZone.toString()).toBe("UTC");
+        const values = [
+            ["utc", "UTC"],
+            ["Utc", "UTC"],
+            ["UTC", "UTC"],
+            ["+00:00", "+00:00"],
+            ["+00:00:00", "+00:00"],
+            ["+00:00:00.000", "+00:00"],
+            ["+12:34:56.789", "+12:34:56.789"],
+            ["+12:34:56.789000", "+12:34:56.789"],
+            ["-01:00", "-01:00"],
+        ];
+        for (const [arg, expected] of values) {
+            expect(new Temporal.TimeZone(arg).toString()).toBe(expected);
+        }
     });
 });
 
