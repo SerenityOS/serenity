@@ -47,6 +47,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.abs, abs, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -314,6 +315,18 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
 
 // 7.3.23 Temporal.Duration.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_json)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = TRY(typed_this_object(global_object));
+
+    // 3. Return ! TemporalDurationToString(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "auto").
+    return js_string(vm, temporal_duration_to_string(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), "auto"sv));
+}
+
+// 7.3.24 Temporal.Duration.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tolocalestring
+// NOTE: This is the minimum toLocaleString implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_locale_string)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
