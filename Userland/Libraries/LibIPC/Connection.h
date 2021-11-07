@@ -8,7 +8,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/Result.h>
 #include <AK/Try.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -50,8 +49,8 @@ protected:
 
     OwnPtr<IPC::Message> wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id);
     void wait_for_socket_to_become_readable();
-    Result<Vector<u8>, bool> read_as_much_as_possible_from_socket_without_blocking();
-    bool drain_messages_from_peer();
+    ErrorOr<Vector<u8>> read_as_much_as_possible_from_socket_without_blocking();
+    ErrorOr<void> drain_messages_from_peer();
 
     void post_message(MessageBuffer);
     void handle_messages();
@@ -76,7 +75,8 @@ public:
     {
         m_notifier->on_ready_to_read = [this] {
             NonnullRefPtr protect = *this;
-            drain_messages_from_peer();
+            // FIXME: Do something about errors.
+            (void)drain_messages_from_peer();
             handle_messages();
         };
     }
