@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
@@ -27,6 +28,9 @@ void ZonedDateTimeConstructor::initialize(GlobalObject& global_object)
 
     // 6.2.1 Temporal.ZonedDateTime.prototype, https://tc39.es/proposal-temporal/#sec-temporal-zoneddatetime-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_zoned_date_time_prototype(), 0);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
@@ -62,6 +66,35 @@ ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& n
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
     return TRY(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
+}
+
+// 6.2.2 Temporal.ZonedDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
+{
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    auto item = vm.argument(0);
+
+    // 2. If Type(item) is Object and item has an [[InitializedTemporalZonedDateTime]] internal slot, then
+    if (item.is_object() && is<ZonedDateTime>(item.as_object())) {
+        auto& item_object = static_cast<ZonedDateTime&>(item.as_object());
+
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)TRY(to_temporal_overflow(global_object, *options));
+
+        // b. Perform ? ToTemporalDisambiguation(options).
+        (void)TRY(to_temporal_disambiguation(global_object, *options));
+
+        // c. Perform ? ToTemporalOffset(options, "reject").
+        (void)TRY(to_temporal_offset(global_object, *options, "reject"));
+
+        // d. Return ! CreateTemporalZonedDateTime(item.[[Nanoseconds]], item.[[TimeZone]], item.[[Calendar]]).
+        return MUST(create_temporal_zoned_date_time(global_object, item_object.nanoseconds(), item_object.time_zone(), item_object.calendar()));
+    }
+
+    // 3. Return ? ToTemporalZonedDateTime(item, options).
+    return TRY(to_temporal_zoned_date_time(global_object, item, options));
 }
 
 }
