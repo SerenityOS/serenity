@@ -58,6 +58,12 @@ public:
     {
     }
 
+    template<typename U>
+    ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T>>)
+        : m_value(forward<U>(value))
+    {
+    }
+
 #ifdef __serenity__
     ErrorOr(ErrnoCode code)
         : m_error(Error::from_errno(code))
@@ -73,6 +79,9 @@ public:
     ErrorOr(ErrorOr&& other) = default;
     ErrorOr(ErrorOr const& other) = default;
     ~ErrorOr() = default;
+
+    ErrorOr& operator=(ErrorOr&& other) = default;
+    ErrorOr& operator=(ErrorOr const& other) = default;
 
     T& value() { return m_value.value(); }
     Error& error() { return m_error.value(); }
@@ -98,10 +107,20 @@ public:
     {
     }
 
+#ifdef __serenity__
+    ErrorOr(ErrnoCode code)
+        : m_error(Error::from_errno(code))
+    {
+    }
+#endif
+
     ErrorOr() = default;
     ErrorOr(ErrorOr&& other) = default;
-    ErrorOr(const ErrorOr& other) = default;
+    ErrorOr(ErrorOr const& other) = default;
     ~ErrorOr() = default;
+
+    ErrorOr& operator=(ErrorOr&& other) = default;
+    ErrorOr& operator=(ErrorOr const& other) = default;
 
     ErrorType& error() { return m_error.value(); }
     bool is_error() const { return m_error.has_value(); }
