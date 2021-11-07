@@ -575,6 +575,12 @@ using Decay = typename __decay<T>::type;
 
 template<typename T, typename U>
 inline constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
+
+template<typename T, typename U>
+inline constexpr bool IsHashCompatible = false;
+template<typename T>
+inline constexpr bool IsHashCompatible<T, T> = true;
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
@@ -605,6 +611,7 @@ using AK::Detail::IsEnum;
 using AK::Detail::IsFloatingPoint;
 using AK::Detail::IsFunction;
 using AK::Detail::IsFundamental;
+using AK::Detail::IsHashCompatible;
 using AK::Detail::IsIntegral;
 using AK::Detail::IsLvalueReference;
 using AK::Detail::IsMoveAssignable;
