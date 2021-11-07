@@ -53,6 +53,7 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(Glob
 ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(GlobalObject&, Value time_zone, PlainDateTime&, StringView disambiguation);
 ThrowCompletionOr<Instant*> disambiguate_possible_instants(GlobalObject&, Vector<Value> const& possible_instants, Value time_zone, PlainDateTime&, StringView disambiguation);
 ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject&, Value time_zone, PlainDateTime&);
+ThrowCompletionOr<bool> time_zone_equals(GlobalObject&, Object& one, Object& two);
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const&);
 
