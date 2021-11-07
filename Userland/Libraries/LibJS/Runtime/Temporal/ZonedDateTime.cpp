@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +34,220 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_nanoseconds);
     visitor.visit(&m_time_zone);
     visitor.visit(&m_calendar);
+}
+
+// 6.5.1 InterpretISODateTimeOffset ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour ), https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset
+ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, OffsetBehavior offset_behavior, double offset_nanoseconds, Value time_zone, StringView disambiguation, StringView offset_option, MatchBehavior match_behavior)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: offsetNanoseconds is an integer.
+    VERIFY(trunc(offset_nanoseconds) == offset_nanoseconds);
+
+    // 2. Let calendar be ! GetISO8601Calendar().
+    auto* calendar = get_iso8601_calendar(global_object);
+
+    // 3. Let dateTime be ? CreateTemporalDateTime(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar).
+    auto* date_time = TRY(create_temporal_date_time(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, *calendar));
+
+    // 4. If offsetBehaviour is wall, or offsetOption is "ignore", then
+    if (offset_behavior == OffsetBehavior::Wall || offset_option == "ignore"sv) {
+        // a. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
+        auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));
+
+        // b. Return instant.[[Nanoseconds]].
+        return &instant->nanoseconds();
+    }
+
+    // 5. If offsetBehaviour is exact, or offsetOption is "use", then
+    if (offset_behavior == OffsetBehavior::Exact || offset_option == "use"sv) {
+        // a. Let epochNanoseconds be ! GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
+        auto* epoch_nanoseconds = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+
+        // b. Return epochNanoseconds − offsetNanoseconds.
+        auto offset_nanoseconds_bigint = Crypto::SignedBigInteger::create_from((i64)offset_nanoseconds);
+        return js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
+    }
+
+    // 6. Assert: offsetBehaviour is option.
+    VERIFY(offset_behavior == OffsetBehavior::Option);
+
+    // 7. Assert: offsetOption is "prefer" or "reject".
+    VERIFY(offset_option.is_one_of("prefer"sv, "reject"sv));
+
+    // 8. Let possibleInstants be ? GetPossibleInstantsFor(timeZone, dateTime).
+    auto possible_instants = TRY(get_possible_instants_for(global_object, time_zone, *date_time));
+
+    // 9. For each element candidate of possibleInstants, do
+    for (auto& candidate_value : possible_instants) {
+        // TODO: As per the comment in disambiguate_possible_instants, having a MarkedValueList<T> would allow us to remove this cast.
+        auto& candidate = static_cast<Instant&>(candidate_value.as_object());
+
+        // a. Let candidateNanoseconds be ? GetOffsetNanosecondsFor(timeZone, candidate).
+        auto candidate_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, candidate));
+
+        // b. If candidateNanoseconds = offsetNanoseconds, then
+        if (candidate_nanoseconds == offset_nanoseconds) {
+            // i. Return candidate.[[Nanoseconds]].
+            return &candidate.nanoseconds();
+        }
+
+        // c. If matchBehaviour is match minutes, then
+        if (match_behavior == MatchBehavior::MatchMinutes) {
+            // i. Let roundedCandidateNanoseconds be ! RoundNumberToIncrement(candidateNanoseconds, 60 × 10^9, "halfExpand").
+            auto rounded_candidate_nanoseconds = round_number_to_increment(candidate_nanoseconds, 60000000000, "halfExpand"sv);
+
+            // ii. If roundedCandidateNanoseconds = offsetNanoseconds, then
+            if (rounded_candidate_nanoseconds == offset_nanoseconds) {
+                // 1. Return candidate.[[Nanoseconds]].
+                return &candidate.nanoseconds();
+            }
+        }
+    }
+
+    // 10. If offsetOption is "reject", throw a RangeError exception.
+    if (offset_option == "reject"sv)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeOffset);
+
+    // 11. Let instant be ? DisambiguatePossibleInstants(possibleInstants, timeZone, dateTime, disambiguation).
+    auto* instant = TRY(disambiguate_possible_instants(global_object, possible_instants, time_zone, *date_time, disambiguation));
+
+    // 12. Return instant.[[Nanoseconds]].
+    return &instant->nanoseconds();
+}
+
+// 6.5.2 ToTemporalZonedDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime
+ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& global_object, Value item, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    if (!options)
+        options = Object::create(global_object, nullptr);
+
+    // 2. Let offsetBehaviour be option.
+    auto offset_behavior = OffsetBehavior::Option;
+
+    // 3. Let matchBehaviour be match exactly.
+    auto match_behavior = MatchBehavior::MatchExactly;
+
+    Object* calendar = nullptr;
+    Object* time_zone = nullptr;
+    Optional<String> offset_string;
+    ISODateTime result;
+
+    // 4. If Type(item) is Object, then
+    if (item.is_object()) {
+        auto& item_object = item.as_object();
+
+        // a. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        if (is<ZonedDateTime>(item_object)) {
+            // i. Return item.
+            return &static_cast<ZonedDateTime&>(item_object);
+        }
+
+        // b. Let calendar be ? GetTemporalCalendarWithISODefault(item).
+        calendar = TRY(get_temporal_calendar_with_iso_default(global_object, item_object));
+
+        // c. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
+        auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
+
+        // d. Append "timeZone" to fieldNames.
+        field_names.append("timeZone");
+
+        // e. Append "offset" to fieldNames.
+        field_names.append("offset");
+
+        // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
+        auto* fields = TRY(prepare_temporal_fields(global_object, item_object, field_names, { "timeZone"sv }));
+
+        // g. Let timeZone be ? Get(fields, "timeZone").
+        auto time_zone_value = TRY(fields->get(vm.names.timeZone));
+
+        // h. Set timeZone to ? ToTemporalTimeZone(timeZone).
+        time_zone = TRY(to_temporal_time_zone(global_object, time_zone_value));
+
+        // i. Let offsetString be ? Get(fields, "offset").
+        auto offset_string_value = TRY(fields->get(vm.names.offset));
+
+        // j. If offsetString is undefined, then
+        if (offset_string_value.is_undefined()) {
+            // i. Set offsetBehaviour to wall.
+            offset_behavior = OffsetBehavior::Wall;
+        }
+        // k. Else,
+        else {
+            // i. Set offsetString to ? ToString(offsetString).
+            offset_string = TRY(offset_string_value.to_string(global_object));
+        }
+
+        // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
+        result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));
+    }
+    // 5. Else,
+    else {
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)TRY(to_temporal_overflow(global_object, *options));
+
+        // b. Let string be ? ToString(item).
+        auto string = TRY(item.to_string(global_object));
+
+        // c. Let result be ? ParseTemporalZonedDateTimeString(string).
+        auto parsed_result = TRY(parse_temporal_zoned_date_time_string(global_object, string));
+
+        // NOTE: The ISODateTime struct inside parsed_result will be moved into `result` at the end of this path to avoid mismatching names.
+        //       Thus, all remaining references to `result` in this path actually refers to `parsed_result`.
+
+        // d. Assert: result.[[TimeZoneName]] is not undefined.
+        VERIFY(parsed_result.time_zone.name.has_value());
+
+        // e. Let offsetString be result.[[TimeZoneOffsetString]].
+        offset_string = move(parsed_result.time_zone.offset);
+
+        // f. If result.[[TimeZoneZ]] is true, then
+        if (parsed_result.time_zone.z) {
+            // i. Set offsetBehaviour to exact.
+            offset_behavior = OffsetBehavior::Exact;
+        }
+        // g. Else if offsetString is undefined, then
+        else if (!offset_string.has_value()) {
+            // i. Set offsetBehaviour to wall.
+            offset_behavior = OffsetBehavior::Wall;
+        }
+
+        // h. Let timeZone be ? CreateTemporalTimeZone(result.[[TimeZoneName]]).
+        time_zone = TRY(create_temporal_time_zone(global_object, *parsed_result.time_zone.name));
+
+        // i. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, js_string(vm, parsed_result.date_time.calendar.value())));
+
+        // j. Set matchBehaviour to match minutes.
+        match_behavior = MatchBehavior::MatchMinutes;
+
+        // See NOTE above about why this is done.
+        result = move(parsed_result.date_time);
+    }
+
+    // 6. Let offsetNanoseconds be 0.
+    double offset_nanoseconds = 0;
+
+    // 7. If offsetBehaviour is option, then
+    if (offset_behavior == OffsetBehavior::Option) {
+        // a. Set offsetNanoseconds to ? ParseTimeZoneOffsetString(offsetString).
+        offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
+    }
+
+    // 8. Let disambiguation be ? ToTemporalDisambiguation(options).
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+
+    // 9. Let offsetOption be ? ToTemporalOffset(options, "reject").
+    auto offset_option = TRY(to_temporal_offset(global_object, *options, "reject"));
+
+    // 10. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour).
+    auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_nanoseconds, time_zone, disambiguation, offset_option, match_behavior));
+
+    // 11. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar));
 }
 
 // 6.5.3 CreateTemporalZonedDateTime ( epochNanoseconds, timeZone, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalzoneddatetime

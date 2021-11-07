@@ -78,6 +78,11 @@ struct TemporalYearMonth {
     Optional<String> calendar = {};
 };
 
+struct TemporalZonedDateTime {
+    ISODateTime date_time;
+    TemporalTimeZone time_zone;
+};
+
 struct SecondsStringPrecision {
     Variant<StringView, u8> precision;
     String unit;
@@ -92,6 +97,7 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
+ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, Object const& normalized_options, StringView smallest_unit);
@@ -109,6 +115,7 @@ i64 round_number_to_increment(double, u64 increment, StringView rounding_mode);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
