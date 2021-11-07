@@ -72,7 +72,7 @@ Result<void, String> ProjectTemplate::create_project(const String& name, const S
         auto result = Core::File::copy_file_or_directory(path, content_path());
         dbgln("Copying {} -> {}", content_path(), path);
         if (result.is_error())
-            return String::formatted("Failed to copy template contents. Error code: {}", result.error().error_code);
+            return String::formatted("Failed to copy template contents. Error code: {}", static_cast<Error const&>(result.error()));
     } else {
         dbgln("No template content directory found for '{}', creating an empty directory for the project.", m_id);
         int rc;

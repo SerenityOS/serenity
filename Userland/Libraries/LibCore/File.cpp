@@ -347,7 +347,7 @@ static String get_duplicate_name(String const& path, int duplicate_count)
     return duplicated_name.build();
 }
 
-Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
+ErrorOr<void, File::CopyError> File::copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
 {
     if (add_duplicate_file_marker == AddDuplicateFileMarker::Yes) {
         int duplicate_count = 0;
@@ -361,23 +361,23 @@ Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_pat
 
     auto source_or_error = File::open(src_path, OpenMode::ReadOnly);
     if (source_or_error.is_error())
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     auto& source = *source_or_error.value();
 
     struct stat src_stat;
     if (fstat(source.fd(), &src_stat) < 0)
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     if (source.is_directory()) {
         if (recursion_mode == RecursionMode::Disallowed)
-            return CopyError { OSError(errno), true };
+            return CopyError { errno, true };
         return copy_directory(dst_path, src_path, src_stat);
     }
 
     if (link_mode == LinkMode::Allowed) {
         if (link(src_path.characters(), dst_path.characters()) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
 
         return {};
     }
@@ -385,31 +385,31 @@ Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_pat
     return copy_file(dst_path, src_stat, source, preserve_mode);
 }
 
-Result<void, File::CopyError> File::copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode preserve_mode)
+ErrorOr<void, File::CopyError> File::copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode preserve_mode)
 {
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
         if (errno != EISDIR)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
 
         auto dst_dir_path = String::formatted("{}/{}", dst_path, LexicalPath::basename(source.filename()));
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
     }
 
     ScopeGuard close_fd_guard([dst_fd]() { ::close(dst_fd); });
 
     if (src_stat.st_size > 0) {
         if (ftruncate(dst_fd, src_stat.st_size) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
     }
 
     for (;;) {
         char buffer[32768];
         ssize_t nread = ::read(source.fd(), buffer, sizeof(buffer));
         if (nread < 0) {
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
         }
         if (nread == 0)
             break;
@@ -418,7 +418,7 @@ Result<void, File::CopyError> File::copy_file(String const& dst_path, struct sta
         while (remaining_to_write) {
             ssize_t nwritten = ::write(dst_fd, bufptr, remaining_to_write);
             if (nwritten < 0)
-                return CopyError { OSError(errno), false };
+                return CopyError { errno, false };
 
             VERIFY(nwritten > 0);
             remaining_to_write -= nwritten;
@@ -433,27 +433,27 @@ Result<void, File::CopyError> File::copy_file(String const& dst_path, struct sta
         my_umask |= 06000;
 
     if (fchmod(dst_fd, src_stat.st_mode & ~my_umask) < 0)
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
         if (fchown(dst_fd, src_stat.st_uid, src_stat.st_gid) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
 
         // FIXME: Implement utimens() and use it here.
         struct utimbuf timbuf;
         timbuf.actime = src_stat.st_atime;
         timbuf.modtime = src_stat.st_mtime;
         if (utime(dst_path.characters(), &timbuf) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
     }
 
     return {};
 }
 
-Result<void, File::CopyError> File::copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode link, PreserveMode preserve_mode)
+ErrorOr<void, File::CopyError> File::copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode link, PreserveMode preserve_mode)
 {
     if (mkdir(dst_path.characters(), 0755) < 0)
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     String src_rp = File::real_path_for(src_path);
     src_rp = String::formatted("{}/", src_rp);
@@ -461,11 +461,11 @@ Result<void, File::CopyError> File::copy_directory(String const& dst_path, Strin
     dst_rp = String::formatted("{}/", dst_rp);
 
     if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp))
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     DirIterator di(src_path, DirIterator::SkipDots);
     if (di.has_error())
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     while (di.has_next()) {
         String filename = di.next_path();
@@ -481,18 +481,18 @@ Result<void, File::CopyError> File::copy_directory(String const& dst_path, Strin
     umask(my_umask);
 
     if (chmod(dst_path.characters(), src_stat.st_mode & ~my_umask) < 0)
-        return CopyError { OSError(errno), false };
+        return CopyError { errno, false };
 
     if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
         if (chown(dst_path.characters(), src_stat.st_uid, src_stat.st_gid) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
 
         // FIXME: Implement utimens() and use it here.
         struct utimbuf timbuf;
         timbuf.actime = src_stat.st_atime;
         timbuf.modtime = src_stat.st_atime;
         if (utime(dst_path.characters(), &timbuf) < 0)
-            return CopyError { OSError(errno), false };
+            return CopyError { errno, false };
     }
 
     return {};

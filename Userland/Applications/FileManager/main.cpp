@@ -1169,7 +1169,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
                 continue;
 
             if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
-                auto error_message = String::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, result.error().error_code);
+                auto error_message = String::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, static_cast<Error const&>(result.error()));
                 GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
                 had_accepted_copy = true;

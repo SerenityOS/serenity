@@ -231,7 +231,7 @@ Result<void, String> CSVExportDialogPage::move_into(const String& target)
             Core::File::AddDuplicateFileMarker::No);
 
         if (result.is_error())
-            return String { result.error().error_code.string() };
+            return String::formatted("{}", static_cast<Error const&>(result.error()));
 
         return {};
     }

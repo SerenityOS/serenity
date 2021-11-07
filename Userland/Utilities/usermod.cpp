@@ -125,7 +125,7 @@ int main(int argc, char** argv)
                         Core::File::AddDuplicateFileMarker::No);
 
                     if (result.is_error()) {
-                        warnln("usermod: could not move directory {} : {}", target_account.home_directory().characters(), result.error().error_code);
+                        warnln("usermod: could not move directory {} : {}", target_account.home_directory().characters(), static_cast<Error const&>(result.error()));
                         return 1;
                     }
                     rc = unlink(target_account.home_directory().characters());
