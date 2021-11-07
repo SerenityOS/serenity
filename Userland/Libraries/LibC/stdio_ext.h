@@ -15,6 +15,7 @@ int __freading(FILE*);
 int __fwriting(FILE*);
 void __fpurge(FILE*);
 
+size_t __freadahead(FILE*);
 const char* __freadptr(FILE*, size_t*);
 void __fseterr(FILE*);
 

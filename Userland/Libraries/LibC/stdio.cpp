@@ -1358,6 +1358,17 @@ void __fpurge(FILE* stream)
     stream->purge();
 }
 
+size_t __freadahead(FILE* stream)
+{
+    VERIFY(stream);
+
+    ScopedFileLock lock(stream);
+
+    size_t available_size;
+    stream->readptr(available_size);
+    return available_size;
+}
+
 const char* __freadptr(FILE* stream, size_t* sizep)
 {
     VERIFY(stream);
