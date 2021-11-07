@@ -61,6 +61,20 @@ wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
     return original_dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsdup.html
+wchar_t* wcsdup(const wchar_t* str)
+{
+    size_t length = wcslen(str);
+    wchar_t* new_str = (wchar_t*)malloc(sizeof(wchar_t) * (length + 1));
+
+    if (!new_str) {
+        errno = ENOMEM;
+        return nullptr;
+    }
+
+    return wcscpy(new_str, str);
+}
+
 wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
 {
     wchar_t* original_dest = dest;
