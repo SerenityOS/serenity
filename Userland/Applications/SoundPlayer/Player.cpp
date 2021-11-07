@@ -38,7 +38,7 @@ Player::Player(Audio::ClientConnection& audio_client_connection)
     };
 }
 
-void Player::play_file_path(StringView path)
+void Player::play_file_path(String const& path)
 {
     if (path.is_null())
         return;
