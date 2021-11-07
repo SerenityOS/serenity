@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/IterationDecision.h>
 #include <AK/StdLibExtras.h>
 
@@ -31,6 +32,9 @@ concept Enum = IsEnum<T>;
 
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
+
+template<typename T>
+concept AnyString = Detail::IsConstructible<StringView, T>;
 
 // FIXME: remove once Clang formats these properly.
 // clang-format off
