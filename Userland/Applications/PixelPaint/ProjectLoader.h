@@ -18,7 +18,7 @@ public:
     ProjectLoader() = default;
     ~ProjectLoader() = default;
 
-    Result<void, String> try_load_from_fd_and_close(int fd, StringView path);
+    ErrorOr<void> try_load_from_fd_and_close(int fd, StringView path);
 
     bool is_raw_image() const { return m_is_raw_image; }
     bool has_image() const { return !m_image.is_null(); }

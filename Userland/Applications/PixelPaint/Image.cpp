@@ -25,15 +25,14 @@
 
 namespace PixelPaint {
 
-RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& size)
 {
-    if (size.is_empty())
-        return nullptr;
+    VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return nullptr;
+        return Error::from_string_literal("Image size too large"sv);
 
-    return adopt_ref(*new Image(size));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Image(size));
 }
 
 Image::Image(Gfx::IntSize const& size)
@@ -56,42 +55,34 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     }
 }
 
-RefPtr<Gfx::Bitmap> Image::try_decode_bitmap(ReadonlyBytes const& bitmap_data)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = ImageDecoderClient::Client::construct();
 
     // FIXME: Find a way to avoid the memory copying here.
-    auto decoded_image_or_error = client->decode_image(bitmap_data);
-    if (!decoded_image_or_error.has_value())
-        return nullptr;
+    auto maybe_decoded_image = client->decode_image(bitmap_data);
+    if (!maybe_decoded_image.has_value())
+        return Error::from_string_literal("Image decode failed"sv);
 
     // FIXME: Support multi-frame images?
-    auto decoded_image = decoded_image_or_error.release_value();
+    auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
-        return nullptr;
-    return move(decoded_image.frames[0].bitmap);
+        return Error::from_string_literal("Image decode failed (no frames)"sv);
+    return decoded_image.frames[0].bitmap.release_nonnull();
 }
 
-RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
-    auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
-    if (!image)
-        return nullptr;
-
-    auto layer = Layer::try_create_with_bitmap(*image, *bitmap, "Background");
-    if (!layer)
-        return nullptr;
-
-    image->add_layer(layer.release_nonnull());
+    auto image = TRY(try_create_with_size({ bitmap->width(), bitmap->height() }));
+    auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
+    image->add_layer(move(layer));
     return image;
 }
 
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(JsonObject const& json)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject const& json)
 {
-    auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
-    if (!image)
-        return String { "Image memory allocation failed" };
+    auto image = TRY(try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() }));
 
     auto layers_value = json.get("layers");
     for (auto& layer_value : layers_value.as_array().values()) {
@@ -101,21 +92,16 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
         if (!bitmap_data.has_value())
-            return String { "Base64 decode failed"sv };
+            return Error::from_string_literal("Base64 decode failed"sv);
 
-        auto bitmap = try_decode_bitmap(bitmap_data.value());
-        if (!bitmap)
-            return String { "Layer bitmap decode failed"sv };
-
-        auto layer = Layer::try_create_with_bitmap(*image, bitmap.release_nonnull(), name);
-        if (!layer)
-            return String { "Layer allocation failed"sv };
+        auto bitmap = TRY(try_decode_bitmap(bitmap_data.value()));
+        auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
         auto width = layer_object.get("width").to_i32();
         auto height = layer_object.get("height").to_i32();
 
         if (width != layer->size().width() || height != layer->size().height())
-            return String { "Decoded layer bitmap has wrong size"sv };
+            return Error::from_string_literal("Decoded layer bitmap has wrong size"sv);
 
         image->add_layer(*layer);
 
@@ -125,7 +111,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
         layer->set_selected(layer_object.get("selected").as_bool());
     }
 
-    return image.release_nonnull();
+    return image;
 }
 
 void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
@@ -238,29 +224,24 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
     did_modify_layer_stack();
 }
 
-RefPtr<Image> Image::take_snapshot() const
+ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
-    auto snapshot = try_create_with_size(m_size);
-    if (!snapshot)
-        return nullptr;
+    auto snapshot = TRY(try_create_with_size(m_size));
     for (const auto& layer : m_layers) {
-        auto layer_snapshot = Layer::try_create_snapshot(*snapshot, layer);
-        if (!layer_snapshot)
-            return nullptr;
-        snapshot->add_layer(layer_snapshot.release_nonnull());
+        auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
+        snapshot->add_layer(move(layer_snapshot));
     }
     return snapshot;
 }
 
-void Image::restore_snapshot(Image const& snapshot)
+ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 {
     m_layers.clear();
     select_layer(nullptr);
 
     bool layer_selected = false;
-    for (const auto& snapshot_layer : snapshot.m_layers) {
-        auto layer = Layer::try_create_snapshot(*this, snapshot_layer);
-        VERIFY(layer);
+    for (auto const& snapshot_layer : snapshot.m_layers) {
+        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
         if (layer->is_selected()) {
             select_layer(layer.ptr());
             layer_selected = true;
@@ -272,6 +253,7 @@ void Image::restore_snapshot(Image const& snapshot)
         select_layer(&layer(0));
 
     did_modify_layer_stack();
+    return {};
 }
 
 size_t Image::index_of(Layer const& layer) const
@@ -470,14 +452,15 @@ void Image::did_change_rect(Gfx::IntRect const& a_modified_rect)
 }
 
 ImageUndoCommand::ImageUndoCommand(Image& image)
-    : m_snapshot(image.take_snapshot())
+    : m_snapshot(image.take_snapshot().release_value_but_fixme_should_propagate_errors())
     , m_image(image)
 {
 }
 
 void ImageUndoCommand::undo()
 {
-    m_image.restore_snapshot(*m_snapshot);
+    // FIXME: Handle errors.
+    (void)m_image.restore_snapshot(*m_snapshot);
 }
 
 void ImageUndoCommand::redo()
