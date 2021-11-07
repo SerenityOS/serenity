@@ -25,9 +25,9 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String name);
-    static RefPtr<Layer> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
-    static RefPtr<Layer> try_create_snapshot(Image&, Layer const&);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize const&, String name);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
+    static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
 
     ~Layer() { }
 
