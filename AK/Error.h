@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <AK/Try.h>
 
 #if defined(__serenity__) && defined(KERNEL)
 #    include <LibC/errno_numbers.h>
