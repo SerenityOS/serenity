@@ -20,7 +20,6 @@
 #include <AK/MappedFile.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <AK/Result.h>
 #include <AK/Variant.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Forward.h>
@@ -142,7 +141,7 @@ struct ProcessFilter {
 
 class Profile {
 public:
-    static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(const StringView& path);
+    static ErrorOr<NonnullOwnPtr<Profile>> load_from_perfcore_file(const StringView& path);
 
     GUI::Model& model();
     GUI::Model& samples_model();

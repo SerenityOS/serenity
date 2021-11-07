@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
-        GUI::MessageBox::show(nullptr, profile_or_error.error(), "Profiler", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("{}", profile_or_error.error()), "Profiler", GUI::MessageBox::Type::Error);
         return 0;
     }
 
