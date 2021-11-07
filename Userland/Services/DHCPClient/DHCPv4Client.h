@@ -7,9 +7,9 @@
 #pragma once
 
 #include "DHCPv4.h"
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/UDPServer.h>
@@ -53,7 +53,7 @@ public:
         Vector<InterfaceDescriptor> ready;
         Vector<InterfaceDescriptor> not_ready;
     };
-    static Result<Interfaces, String> get_discoverable_interfaces();
+    static ErrorOr<Interfaces> get_discoverable_interfaces();
 
 private:
     explicit DHCPv4Client();
