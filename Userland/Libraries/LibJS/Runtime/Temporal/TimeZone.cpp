@@ -646,4 +646,25 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
     return { move(list) };
 }
 
+// 11.6.18 TimeZoneEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
+ThrowCompletionOr<bool> time_zone_equals(GlobalObject& global_object, Object& one, Object& two)
+{
+    // 1. If one and two are the same Object value, return true.
+    if (&one == &two)
+        return true;
+
+    // 2. Let timeZoneOne be ? ToString(one).
+    auto time_zone_one = TRY(Value(&one).to_string(global_object));
+
+    // 3. Let timeZoneTwo be ? ToString(two).
+    auto time_zone_two = TRY(Value(&two).to_string(global_object));
+
+    // 4. If timeZoneOne is timeZoneTwo, return true.
+    if (time_zone_one == time_zone_two)
+        return true;
+
+    // 5. Return false.
+    return false;
+}
+
 }
