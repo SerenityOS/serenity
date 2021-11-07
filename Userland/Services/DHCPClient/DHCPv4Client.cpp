@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/Random.h>
+#include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
@@ -161,20 +162,16 @@ void DHCPv4Client::try_discover_ifs()
     }
 }
 
-Result<DHCPv4Client::Interfaces, String> DHCPv4Client::get_discoverable_interfaces()
+ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
 {
-    auto file = Core::File::construct("/proc/net/adapters");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Error: Failed to open /proc/net/adapters: {}", file->error_string());
-        return String { file->error_string() };
-    }
+    auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
 
     if (!json.has_value() || !json.value().is_array()) {
         dbgln("Error: No network adapters available");
-        return String { "No network adapters available" };
+        return Error::from_string_literal("No network adapters available"sv);
     }
 
     Vector<InterfaceDescriptor> ifnames_to_immediately_discover, ifnames_to_attempt_later;
