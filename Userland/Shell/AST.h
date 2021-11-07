@@ -84,7 +84,7 @@ struct Rewiring : public RefCounted<Rewiring> {
 };
 
 struct Redirection : public RefCounted<Redirection> {
-    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const = 0;
+    virtual ErrorOr<NonnullRefPtr<Rewiring>> apply() const = 0;
     virtual ~Redirection();
     virtual bool is_path_redirection() const { return false; }
     virtual bool is_fd_redirection() const { return false; }
@@ -94,7 +94,7 @@ struct Redirection : public RefCounted<Redirection> {
 struct CloseRedirection : public Redirection {
     int fd { -1 };
 
-    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
+    virtual ErrorOr<NonnullRefPtr<Rewiring>> apply() const override;
     virtual ~CloseRedirection();
     CloseRedirection(int fd)
         : fd(fd)
@@ -120,7 +120,7 @@ struct PathRedirection : public Redirection {
         return adopt_ref(*new PathRedirection(move(path), fd, direction));
     }
 
-    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
+    virtual ErrorOr<NonnullRefPtr<Rewiring>> apply() const override;
     virtual ~PathRedirection();
 
 private:
@@ -148,7 +148,7 @@ public:
 
     virtual ~FdRedirection();
 
-    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override
+    virtual ErrorOr<NonnullRefPtr<Rewiring>> apply() const override
     {
         return adopt_ref(*new Rewiring(old_fd, new_fd, other_pipe_end, action));
     }
