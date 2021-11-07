@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
@@ -87,7 +86,7 @@ static String canonicalize_path(String path)
     return LexicalPath::join(cwd, move(path)).string();
 }
 
-Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type event_mask)
+ErrorOr<bool> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type event_mask)
 {
     String canonical_path = canonicalize_path(move(path));
 
@@ -110,7 +109,7 @@ Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::T
 
     int wd = inode_watcher_add_watch(m_watcher_fd, canonical_path.characters(), canonical_path.length(), static_cast<unsigned>(kernel_mask));
     if (wd < 0)
-        return String::formatted("Could not watch file '{}' : {}", canonical_path, strerror(errno));
+        return Error::from_errno(errno);
 
     m_path_to_wd.set(canonical_path, wd);
     m_wd_to_path.set(wd, canonical_path);
@@ -119,7 +118,7 @@ Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::T
     return true;
 }
 
-Result<bool, String> FileWatcherBase::remove_watch(String path)
+ErrorOr<bool> FileWatcherBase::remove_watch(String path)
 {
     String canonical_path = canonicalize_path(move(path));
 
@@ -129,10 +128,8 @@ Result<bool, String> FileWatcherBase::remove_watch(String path)
         return false;
     }
 
-    int rc = inode_watcher_remove_watch(m_watcher_fd, it->value);
-    if (rc < 0) {
-        return String::formatted("Could not stop watching file '{}' : {}", path, strerror(errno));
-    }
+    if (inode_watcher_remove_watch(m_watcher_fd, it->value) < 0)
+        return Error::from_errno(errno);
 
     m_path_to_wd.remove(it);
     m_wd_to_path.remove(it->value);
@@ -172,12 +169,11 @@ Optional<FileWatcherEvent> BlockingFileWatcher::wait_for_event()
     return event;
 }
 
-Result<NonnullRefPtr<FileWatcher>, String> FileWatcher::create(InodeWatcherFlags flags)
+ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags flags)
 {
     auto watcher_fd = create_inode_watcher(static_cast<unsigned>(flags | InodeWatcherFlags::CloseOnExec));
-    if (watcher_fd < 0) {
-        return String::formatted("FileWatcher: Could not create InodeWatcher: {}", strerror(errno));
-    }
+    if (watcher_fd < 0)
+        return Error::from_errno(errno);
 
     auto notifier = Notifier::construct(watcher_fd, Notifier::Event::Read);
     return adopt_ref(*new FileWatcher(watcher_fd, move(notifier)));
