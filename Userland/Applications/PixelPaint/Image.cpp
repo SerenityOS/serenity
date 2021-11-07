@@ -163,12 +163,9 @@ ErrorOr<void> Image::write_to_file(const String& file_path) const
     return {};
 }
 
-RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap_or_error = Gfx::Bitmap::try_create(format, m_size);
-    if (bitmap_or_error.is_error())
-        return nullptr;
-    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY(Gfx::Bitmap::try_create(format, m_size));
     GUI::Painter painter(bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
     return bitmap;
@@ -181,9 +178,10 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     auto selection_rect = selection.bounding_rect();
 
     // FIXME: Add a way to only compose a certain part of the image
-    auto full_bitmap = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
-    if (!full_bitmap)
+    auto bitmap_or_error = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
+    if (bitmap_or_error.is_error())
         return {};
+    auto full_bitmap = bitmap_or_error.release_value();
 
     auto cropped_bitmap_or_error = full_bitmap->cropped(selection_rect);
     if (cropped_bitmap_or_error.is_error())
@@ -199,9 +197,7 @@ ErrorOr<void> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_chan
         return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = try_compose_bitmap(bitmap_format);
-    if (!bitmap)
-        return Error::from_string_literal("Failed to allocate bitmap for encoding"sv);
+    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
@@ -220,9 +216,7 @@ ErrorOr<void> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_chan
         return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = try_compose_bitmap(bitmap_format);
-    if (!bitmap)
-        return Error::from_string_literal("Failed to allocate bitmap for encoding"sv);
+    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
     if (!file->write(encoded_data.data(), encoded_data.size()))
