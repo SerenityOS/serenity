@@ -14,6 +14,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
+#include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
@@ -214,15 +215,13 @@ void Profile::rebuild_tree()
 Optional<MappedObject> g_kernel_debuginfo_object;
 OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
-Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
+ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(const StringView& path)
 {
-    auto file = Core::File::construct(path);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return String::formatted("Unable to open {}, error: {}", path, file->error_string());
+    auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
     auto json = JsonValue::from_string(file->read_all());
     if (!json.has_value() || !json.value().is_object())
-        return String { "Invalid perfcore format (not a JSON object)" };
+        return Error::from_string_literal("Invalid perfcore format (not a JSON object)"sv);
 
     auto& object = json.value().as_object();
 
@@ -237,7 +236,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
     auto strings_value = object.get_ptr("strings"sv);
     if (!strings_value || !strings_value->is_array())
-        return String { "Malformed profile (strings is not an array)" };
+        return Error::from_string_literal("Malformed profile (strings is not an array)"sv);
 
     HashMap<FlatPtr, String> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
@@ -247,7 +246,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
     auto events_value = object.get_ptr("events");
     if (!events_value || !events_value->is_array())
-        return String { "Malformed profile (events is not an array)" };
+        return Error::from_string_literal("Malformed profile (events is not an array)"sv);
 
     auto& perf_events = events_value->as_array();
 
@@ -419,7 +418,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     }
 
     if (events.is_empty())
-        return String { "No events captured (targeted process was never on CPU)" };
+        return Error::from_string_literal("No events captured (targeted process was never on CPU)"sv);
 
     quick_sort(all_processes, [](auto& a, auto& b) {
         if (a.pid == b.pid)
@@ -432,7 +431,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     for (auto& it : all_processes)
         processes.append(move(it));
 
-    return adopt_own(*new Profile(move(processes), move(events)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Profile(move(processes), move(events)));
 }
 
 void ProfileNode::sort_children()
