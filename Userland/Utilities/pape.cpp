@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -45,15 +46,41 @@ static int handle_set_pape(const String& name)
     return 0;
 };
 
+static int handle_set_random()
+{
+    Vector<String> wallpapers;
+    Core::DirIterator di("/res/wallpapers", Core::DirIterator::SkipDots);
+    if (di.has_error()) {
+        warnln("DirIterator: {}", di.error_string());
+        return 1;
+    }
+    while (di.has_next()) {
+        wallpapers.append(di.next_full_path());
+    }
+    wallpapers.remove_all_matching([](const String& wallpaper) { return wallpaper == GUI::Desktop::the().wallpaper(); });
+    if (wallpapers.is_empty()) {
+        warnln("pape: No wallpapers found");
+        return 1;
+    }
+    auto& wallpaper = wallpapers.at(get_random_uniform(wallpapers.size()));
+    if (!GUI::Desktop::the().set_wallpaper(wallpaper)) {
+        warnln("pape: Failed to set wallpaper {}", wallpaper);
+        return 1;
+    }
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     bool show_all = false;
     bool show_current = false;
+    bool set_random = false;
     const char* name = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');
     args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c');
+    args_parser.add_option(set_random, "Set random wallpaper", "set-random", 'r');
     args_parser.add_positional_argument(name, "Wallpaper to set", "name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -63,6 +90,8 @@ int main(int argc, char** argv)
         return handle_show_all();
     else if (show_current)
         return handle_show_current();
+    else if (set_random)
+        return handle_set_random();
 
     return handle_set_pape(name);
 }
