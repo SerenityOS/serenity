@@ -374,6 +374,11 @@ u8 const* FILE::readptr(size_t& available_size)
     return m_buffer.begin_dequeue(available_size);
 }
 
+void FILE::readptr_increase(size_t increment)
+{
+    m_buffer.did_dequeue(increment);
+}
+
 FILE::Buffer::~Buffer()
 {
     if (m_data_is_malloced)
@@ -1354,6 +1359,15 @@ char const* __freadptr(FILE* stream, size_t* sizep)
 
     *sizep = available_size;
     return reinterpret_cast<char const*>(ptr);
+}
+
+void __freadptrinc(FILE* stream, size_t increment)
+{
+    VERIFY(stream);
+
+    ScopedFileLock lock(stream);
+
+    stream->readptr_increase(increment);
 }
 }
 

@@ -17,5 +17,6 @@ void __fpurge(FILE*);
 
 size_t __freadahead(FILE*);
 char const* __freadptr(FILE*, size_t*);
+void __freadptrinc(FILE*, size_t);
 
 __END_DECLS
