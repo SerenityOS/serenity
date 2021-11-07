@@ -35,13 +35,13 @@ Protocol::~Protocol()
     VERIFY_NOT_REACHED();
 }
 
-Result<Protocol::Pipe, String> Protocol::get_pipe_for_request()
+ErrorOr<Protocol::Pipe> Protocol::get_pipe_for_request()
 {
     int fd_pair[2] { 0 };
     if (pipe(fd_pair) != 0) {
         auto saved_errno = errno;
         dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
-        return String { strerror(saved_errno) };
+        return Error::from_errno(saved_errno);
     }
     fcntl(fd_pair[1], F_SETFL, fcntl(fd_pair[1], F_GETFL) | O_NONBLOCK);
     return Pipe { fd_pair[0], fd_pair[1] };
