@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationPrototype.h>
 #include <math.h>
@@ -44,6 +45,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.negated, negated, 0, attr);
     define_native_function(vm.names.abs, abs, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -280,6 +282,33 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
     return TRY(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
+}
+
+// 7.3.22 Temporal.Duration.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = TRY(typed_this_object(global_object));
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+
+    // 4. Let precision be ? ToSecondsStringPrecision(options).
+    auto precision = TRY(to_seconds_string_precision(global_object, *options));
+
+    // 5. If precision.[[Unit]] is "minute", throw a RangeError exception.
+    if (precision.unit == "minute"sv)
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, "minute"sv, "smallestUnit"sv);
+
+    // 6. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 7. Let result be ? RoundDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
+    auto result = TRY(round_duration(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), precision.increment, precision.unit, rounding_mode));
+
+    // 8. Return ! TemporalDurationToString(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], precision.[[Precision]]).
+    return js_string(vm, temporal_duration_to_string(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, precision.precision));
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof

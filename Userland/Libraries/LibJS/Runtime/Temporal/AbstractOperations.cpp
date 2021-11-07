@@ -719,6 +719,21 @@ String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u
     return String::formatted("{}.{}", seconds_string, fraction_string);
 }
 
+// 13.28 Sign ( n ), https://tc39.es/proposal-temporal/#sec-temporal-sign
+double sign(double n)
+{
+    // 1. If n is NaN, n is +0𝔽, or n is −0𝔽, return n.
+    if (isnan(n) || n == 0)
+        return n;
+
+    // 2. If n < +0𝔽, return −1𝔽.
+    if (n < 0)
+        return -1;
+
+    // 3. Return 1𝔽.
+    return 1;
+}
+
 // 13.29 ConstrainToRange ( x, minimum, maximum ), https://tc39.es/proposal-temporal/#sec-temporal-constraintorange
 double constrain_to_range(double x, double minimum, double maximum)
 {
