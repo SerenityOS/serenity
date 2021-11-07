@@ -386,7 +386,12 @@ public:
 
     void format_result(void* res)
     {
-        m_builder.appendff(") = {}\n", res);
+        if (res == MAP_FAILED)
+            m_builder.append(") = MAP_FAILED\n");
+        else if (FlatPtr(res) > FlatPtr(-EMAXERRNO))
+            m_builder.appendff(") = {} {}\n", res, errno_name(-static_cast<int>(FlatPtr(res))));
+        else
+            m_builder.appendff(") = {}\n", res);
     }
 
     void format_result()
