@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
@@ -209,6 +210,12 @@ public:
         return find(value) != end();
     }
 
+    template<Concepts::HashCompatible<T> K>
+    requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] bool contains(K const& value) const
+    {
+        return find(value) != end();
+    }
+
     using Iterator = Conditional<IsOrdered,
         OrderedHashTableIterator<HashTable, T, BucketType>,
         HashTableIterator<HashTable, T, BucketType>>;
@@ -328,6 +335,32 @@ public:
     [[nodiscard]] ConstIterator find(T const& value) const
     {
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
+    }
+    // FIXME: Use some Traits to get the comparison operation
+    // FIXME: Support for predicates, while guaranteeing that the predicate call
+    //        does not call a non trivial constructor each time invoked
+    template<Concepts::HashCompatible<T> K>
+    requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] Iterator find(K const& value)
+    {
+        return find(Traits<K>::hash(value), [&](auto& other) { return value == other; });
+    }
+
+    template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
+    requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] Iterator find(K const& value, TUnaryPredicate predicate)
+    {
+        return find(Traits<K>::hash(value), move(predicate));
+    }
+
+    template<Concepts::HashCompatible<T> K>
+    requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] ConstIterator find(K const& value) const
+    {
+        return find(Traits<K>::hash(value), [&](auto& other) { return value == other; });
+    }
+
+    template<Concepts::HashCompatible<T> K, typename TUnaryPredicate>
+    requires(IsSame<TraitsForT, Traits<T>>) [[nodiscard]] ConstIterator find(K const& value, TUnaryPredicate predicate) const
+    {
+        return find(Traits<K>::hash(value), move(predicate));
     }
 
     bool remove(const T& value)
