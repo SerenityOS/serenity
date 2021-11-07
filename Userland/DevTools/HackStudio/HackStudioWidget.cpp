@@ -546,17 +546,16 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             }
 
             bool is_directory = S_ISDIR(st.st_mode);
-            auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed, false);
-            if (result.is_error()) {
+            if (auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed, false); !result.is_error()) {
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
-                        String::formatted("Removing directory {} from the project failed: {}", error.file, error.error_code),
+                        String::formatted("Removing directory {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
                         "Removal failed",
                         GUI::MessageBox::Type::Error);
                 } else {
                     GUI::MessageBox::show(window(),
-                        String::formatted("Removing file {} from the project failed: {}", error.file, error.error_code),
+                        String::formatted("Removing file {} from the project failed: {}", error.file, static_cast<Error const&>(error)),
                         "Removal failed",
                         GUI::MessageBox::Type::Error);
                 }

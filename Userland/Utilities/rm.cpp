@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed, force);
 
         if (result.is_error()) {
-            warnln("rm: cannot remove '{}': {}", path, result.error().error_code);
+            warnln("rm: cannot remove '{}': {}", path, static_cast<Error const&>(result.error()));
             had_errors = true;
         }
 

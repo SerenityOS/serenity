@@ -512,19 +512,19 @@ ErrorOr<void> File::link_file(String const& dst_path, String const& src_path)
     return {};
 }
 
-Result<void, File::RemoveError> File::remove(String const& path, RecursionMode mode, bool force)
+ErrorOr<void, File::RemoveError> File::remove(String const& path, RecursionMode mode, bool force)
 {
     struct stat path_stat;
     if (lstat(path.characters(), &path_stat) < 0) {
         if (!force)
-            return RemoveError { path, OSError(errno) };
+            return RemoveError { path, errno };
         return {};
     }
 
     if (S_ISDIR(path_stat.st_mode) && mode == RecursionMode::Allowed) {
         auto di = DirIterator(path, DirIterator::SkipParentAndBaseDir);
         if (di.has_error())
-            return RemoveError { path, OSError(di.error()) };
+            return RemoveError { path, di.error() };
 
         while (di.has_next()) {
             auto result = remove(di.next_full_path(), RecursionMode::Allowed, true);
@@ -533,10 +533,10 @@ Result<void, File::RemoveError> File::remove(String const& path, RecursionMode m
         }
 
         if (rmdir(path.characters()) < 0 && !force)
-            return RemoveError { path, OSError(errno) };
+            return RemoveError { path, errno };
     } else {
         if (unlink(path.characters()) < 0 && !force)
-            return RemoveError { path, OSError(errno) };
+            return RemoveError { path, errno };
     }
 
     return {};

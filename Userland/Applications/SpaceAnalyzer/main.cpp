@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
                 auto retry_message_result = GUI::MessageBox::show(window,
                     String::formatted("Failed to delete \"{}\": {}. Retry?",
                         deletion_result.error().file,
-                        deletion_result.error().error_code.string()),
+                        static_cast<Error const&>(deletion_result.error())),
                     "Deletion failed",
                     GUI::MessageBox::Type::Error,
                     GUI::MessageBox::InputType::YesNo);
