@@ -10,6 +10,7 @@
 #include "../XSV.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
+#include <string.h>
 
 TEST_CASE(should_parse_valid_data)
 {

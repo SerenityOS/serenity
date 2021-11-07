@@ -15,6 +15,7 @@
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Palette.h>
+#include <string.h>
 
 REGISTER_WIDGET(PixelPaint, PaletteWidget);
 
@@ -263,7 +264,7 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_path(String const& fil
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
-        return String { file_or_error.error().string() };
+        return String { strerror(file_or_error.error().code()) };
 
     auto& file = *file_or_error.value();
     return load_palette_file(file);

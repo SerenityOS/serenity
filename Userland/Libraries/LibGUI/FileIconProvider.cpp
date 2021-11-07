@@ -16,6 +16,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

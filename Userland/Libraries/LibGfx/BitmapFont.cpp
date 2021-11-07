@@ -11,6 +11,7 @@
 #include <LibCore/FileStream.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/FontStyleMapping.h>
+#include <string.h>
 
 namespace Gfx {
 

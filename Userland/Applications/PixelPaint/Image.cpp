@@ -159,7 +159,7 @@ Result<void, String> Image::write_to_file(const String& file_path) const
 
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
     if (file_or_error.is_error())
-        return String { file_or_error.error().string() };
+        return String { strerror(file_or_error.error().code()) };
 
     if (!file_or_error.value()->write(builder.string_view()))
         return String { file_or_error.value()->error_string() };

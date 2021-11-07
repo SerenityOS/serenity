@@ -34,7 +34,7 @@ static int perform_delete(Vector<String> const& sources);
 static int execute_work_items(Vector<WorkItem> const& items);
 static void report_error(String message);
 static void report_warning(String message);
-static AK::Result<AK::NonnullRefPtr<Core::File>, AK::OSError> open_destination_file(String const& destination);
+static ErrorOr<NonnullRefPtr<Core::File>> open_destination_file(String const& destination);
 static String deduplicate_destination_file_name(String const& destination);
 
 int main(int argc, char** argv)
@@ -379,10 +379,10 @@ int execute_work_items(Vector<WorkItem> const& items)
     return 0;
 }
 
-AK::Result<AK::NonnullRefPtr<Core::File>, AK::OSError> open_destination_file(String const& destination)
+ErrorOr<NonnullRefPtr<Core::File>> open_destination_file(String const& destination)
 {
     auto destination_file_or_error = Core::File::open(destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate | Core::OpenMode::MustBeNew));
-    if (destination_file_or_error.is_error() && destination_file_or_error.error().error() == EEXIST) {
+    if (destination_file_or_error.is_error() && destination_file_or_error.error().code() == EEXIST) {
         return open_destination_file(deduplicate_destination_file_name(destination));
     }
     return destination_file_or_error;

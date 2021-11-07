@@ -11,6 +11,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
+#include <string.h>
 
 static int x_offset;
 static int y_offset;

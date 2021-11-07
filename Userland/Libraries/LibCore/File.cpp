@@ -27,11 +27,11 @@
 
 namespace Core {
 
-Result<NonnullRefPtr<File>, OSError> File::open(String filename, OpenMode mode, mode_t permissions)
+ErrorOr<NonnullRefPtr<File>> File::open(String filename, OpenMode mode, mode_t permissions)
 {
     auto file = File::construct(move(filename));
     if (!file->open_impl(mode, permissions))
-        return OSError(file->error());
+        return Error::from_errno(file->error());
     return file;
 }
 
