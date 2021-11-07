@@ -296,8 +296,12 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
             had_any_output = true;
         }
 
-        if (!had_any_output)
-            format_builder.put_literal("0");
+        if (!had_any_output) {
+            if constexpr (requires { BitflagDerivative::default_; })
+                format_builder.put_literal(BitflagDerivative::default_);
+            else
+                format_builder.put_literal("0");
+        }
     }
 };
 }
@@ -432,8 +436,10 @@ static void format_exit(FormattedSyscallBuilder& builder, int status)
 
 struct OpenOptions : BitflagBase {
     static constexpr auto options = {
-        BITFLAG(O_RDWR), BITFLAG(O_RDONLY), BITFLAG(O_WRONLY), BITFLAG(O_APPEND), BITFLAG(O_CREAT)
-        // TODO: etc...
+        BITFLAG(O_RDWR), BITFLAG(O_RDONLY), BITFLAG(O_WRONLY),
+        BITFLAG(O_EXEC), BITFLAG(O_CREAT), BITFLAG(O_EXCL), BITFLAG(O_NOCTTY),
+        BITFLAG(O_TRUNC), BITFLAG(O_APPEND), BITFLAG(O_NONBLOCK), BITFLAG(O_DIRECTORY),
+        BITFLAG(O_NOFOLLOW), BITFLAG(O_CLOEXEC), BITFLAG(O_DIRECT)
     };
 };
 
@@ -583,80 +589,34 @@ static void format_connect(FormattedSyscallBuilder& builder, int socket, const s
     builder.add_arguments(socket, copy_from_process(address_p), address_len);
 }
 
+struct MsgOptions : BitflagBase {
+    static constexpr auto options = {
+        BITFLAG(MSG_TRUNC), BITFLAG(MSG_CTRUNC), BITFLAG(MSG_PEEK),
+        BITFLAG(MSG_OOB), BITFLAG(MSG_DONTWAIT)
+        // TODO: add MSG_WAITALL once its definition is added
+    };
+};
+
 static void format_recvmsg(FormattedSyscallBuilder& builder, int socket, struct msghdr* message, int flags)
 {
     // TODO: format message
-    builder.add_arguments(socket, message);
-
-    Vector<StringView> active_flags;
-    if (flags & MSG_OOB)
-        active_flags.append("MSG_OOB");
-    if (flags & MSG_PEEK)
-        active_flags.append("MSG_PEEK");
-    // TODO: add MSG_WAITALL once its definition is added
-    if (!active_flags.is_empty()) {
-        StringBuilder sbuilder;
-        sbuilder.join(" | ", active_flags);
-        builder.add_argument(sbuilder.to_string());
-    } else
-        builder.add_argument("0");
+    builder.add_arguments(socket, message, MsgOptions { flags });
 }
 
-struct MmapFlags {
-    int value;
+struct MmapFlags : BitflagBase {
+    static constexpr auto options = {
+        BITFLAG(MAP_SHARED), BITFLAG(MAP_PRIVATE), BITFLAG(MAP_FIXED), BITFLAG(MAP_ANONYMOUS),
+        BITFLAG(MAP_RANDOMIZED), BITFLAG(MAP_STACK), BITFLAG(MAP_NORESERVE), BITFLAG(MAP_PURGEABLE)
+    };
+    static constexpr StringView default_ = "MAP_FILE";
 };
 
-struct MemoryProtectionFlags {
-    int value;
+struct MemoryProtectionFlags : BitflagBase {
+    static constexpr auto options = {
+        BITFLAG(PROT_READ), BITFLAG(PROT_WRITE), BITFLAG(PROT_EXEC)
+    };
+    static constexpr StringView default_ = "PROT_NONE";
 };
-
-namespace AK {
-template<>
-struct Formatter<MmapFlags> : StandardFormatter {
-    void format(FormatBuilder& format_builder, MmapFlags value)
-    {
-        auto& builder = format_builder.builder();
-        auto flags = value.value;
-        Vector<StringView> active_flags;
-        if (flags & MAP_SHARED)
-            active_flags.append("MAP_SHARED");
-        if (flags & MAP_PRIVATE)
-            active_flags.append("MAP_PRIVATE");
-        if (flags & MAP_FIXED)
-            active_flags.append("MAP_FIXED");
-        if (flags & MAP_RANDOMIZED)
-            active_flags.append("MAP_RANDOMIZED");
-        if (flags & MAP_STACK)
-            active_flags.append("MAP_STACK");
-        if (flags & MAP_NORESERVE)
-            active_flags.append("MAP_NORESERVE");
-        if (flags & MAP_PURGEABLE)
-            active_flags.append("MAP_PURGEABLE");
-        builder.join(" | ", active_flags);
-    }
-};
-
-template<>
-struct Formatter<MemoryProtectionFlags> : StandardFormatter {
-    void format(FormatBuilder& format_builder, MemoryProtectionFlags value)
-    {
-        auto& builder = format_builder.builder();
-        int prot = value.value;
-        Vector<StringView> active_prot;
-        if (prot == PROT_NONE)
-            active_prot.append("PROT_NONE");
-        else {
-            if (prot & PROT_READ)
-                active_prot.append("PROT_READ");
-            if (prot & PROT_WRITE)
-                active_prot.append("PROT_WRITE");
-            if (prot & PROT_EXEC)
-                active_prot.append("PROT_EXEC");
-        }
-        builder.join(" | ", active_prot);
-    }
-};
-}
 
 static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
