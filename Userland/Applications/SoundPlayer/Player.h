@@ -32,10 +32,10 @@ public:
     explicit Player(Audio::ClientConnection& audio_client_connection);
     virtual ~Player() { }
 
-    void play_file_path(StringView path);
+    void play_file_path(String const& path);
 
     Playlist& playlist() { return m_playlist; }
-    StringView loaded_filename() const { return m_loaded_filename; }
+    String const& loaded_filename() const { return m_loaded_filename; }
 
     PlayState play_state() const { return m_play_state; }
     void set_play_state(PlayState);
@@ -84,6 +84,6 @@ private:
     Audio::ClientConnection& m_audio_client_connection;
     PlaybackManager m_playback_manager;
 
-    StringView m_loaded_filename;
+    String m_loaded_filename;
     double m_volume { 0 };
 };
