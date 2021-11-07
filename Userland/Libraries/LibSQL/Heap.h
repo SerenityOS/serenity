@@ -8,6 +8,7 @@
 
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
