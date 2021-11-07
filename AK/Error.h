@@ -28,12 +28,13 @@ public:
     int code() const { return m_code; }
     StringView string_literal() const { return m_string_literal; }
 
-private:
+protected:
     Error(int code)
         : m_code(code)
     {
     }
 
+private:
     Error(StringView string_literal)
         : m_string_literal(string_literal)
     {
@@ -43,7 +44,7 @@ private:
     StringView m_string_literal;
 };
 
-template<typename T>
+template<typename T, typename ErrorType = Error>
 class [[nodiscard]] ErrorOr {
 public:
     ErrorOr(T const& value)
@@ -63,7 +64,7 @@ public:
     }
 #endif
 
-    ErrorOr(Error&& error)
+    ErrorOr(ErrorType&& error)
         : m_error(move(error))
     {
     }
@@ -78,20 +79,20 @@ public:
     bool is_error() const { return m_error.has_value(); }
 
     T release_value() { return m_value.release_value(); }
-    Error release_error() { return m_error.release_value(); }
+    ErrorType release_error() { return m_error.release_value(); }
 
     T release_value_but_fixme_should_propagate_errors() { return release_value(); }
 
 private:
     Optional<T> m_value;
-    Optional<Error> m_error;
+    Optional<ErrorType> m_error;
 };
 
 // Partial specialization for void value type
-template<>
-class [[nodiscard]] ErrorOr<void> {
+template<typename ErrorType>
+class [[nodiscard]] ErrorOr<void, ErrorType> {
 public:
-    ErrorOr(Error error)
+    ErrorOr(ErrorType error)
         : m_error(move(error))
     {
     }
@@ -101,12 +102,13 @@ public:
     ErrorOr(const ErrorOr& other) = default;
     ~ErrorOr() = default;
 
-    Error& error() { return m_error.value(); }
+    ErrorType& error() { return m_error.value(); }
     bool is_error() const { return m_error.has_value(); }
-    Error release_error() { return m_error.release_value(); }
+    ErrorType release_error() { return m_error.release_value(); }
+    void release_value() { }
 
 private:
-    Optional<Error> m_error;
+    Optional<ErrorType> m_error;
 };
 
 template<>
