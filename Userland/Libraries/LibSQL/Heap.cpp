@@ -44,7 +44,7 @@ Heap::Heap(String file_name)
     dbgln_if(SQL_DEBUG, "Heap file {} opened. Size = {}", file_name, size());
 }
 
-Result<ByteBuffer, String> Heap::read_block(u32 block)
+ErrorOr<ByteBuffer> Heap::read_block(u32 block)
 {
     auto buffer_or_empty = m_write_ahead_log.get(block);
     if (buffer_or_empty.has_value())
@@ -56,7 +56,7 @@ Result<ByteBuffer, String> Heap::read_block(u32 block)
         VERIFY_NOT_REACHED();
     auto ret = m_file->read(BLOCKSIZE);
     if (ret.is_empty())
-        return String("Could not read block");
+        return Error::from_string_literal("Could not read block"sv);
     dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
         *ret.offset_pointer(0), *ret.offset_pointer(1),
         *ret.offset_pointer(2), *ret.offset_pointer(3),
