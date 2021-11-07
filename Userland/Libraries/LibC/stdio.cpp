@@ -67,6 +67,8 @@ public:
 
     void reopen(int fd, int mode);
 
+    const u8* readptr(size_t& available_size);
+
     enum Flags : u8 {
         None = 0,
         LastRead = 1,
@@ -457,6 +459,11 @@ void FILE::reopen(int fd, int mode)
     m_mode = mode;
     m_error = 0;
     m_eof = false;
+}
+
+const u8* FILE::readptr(size_t& available_size)
+{
+    return m_buffer.begin_dequeue(available_size);
 }
 
 FILE::Buffer::~Buffer()
@@ -1349,6 +1356,23 @@ void __fpurge(FILE* stream)
 {
     ScopedFileLock lock(stream);
     stream->purge();
+}
+
+const char* __freadptr(FILE* stream, size_t* sizep)
+{
+    VERIFY(stream);
+    VERIFY(sizep);
+
+    ScopedFileLock lock(stream);
+
+    size_t available_size;
+    const u8* ptr = stream->readptr(available_size);
+
+    if (available_size == 0)
+        return nullptr;
+
+    *sizep = available_size;
+    return reinterpret_cast<const char*>(ptr);
 }
 
 void __fseterr(FILE* stream)
