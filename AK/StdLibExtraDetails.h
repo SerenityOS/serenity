@@ -557,6 +557,22 @@ inline constexpr bool IsSpecializationOf = false;
 template<template<typename...> typename U, typename... Us>
 inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 
+template<typename T>
+struct __decay {
+    typedef Detail::RemoveCVReference<T> type;
+};
+template<typename T>
+struct __decay<T[]> {
+    typedef T* type;
+};
+template<typename T, decltype(sizeof(T)) N>
+struct __decay<T[N]> {
+    typedef T* type;
+};
+// FIXME: Function decay
+template<typename T>
+using Decay = typename __decay<T>::type;
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
