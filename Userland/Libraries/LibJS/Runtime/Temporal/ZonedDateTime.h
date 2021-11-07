@@ -40,6 +40,19 @@ struct NanosecondsToDaysResult {
     double day_length;
 };
 
+enum class OffsetBehavior {
+    Option,
+    Exact,
+    Wall,
+};
+
+enum class MatchBehavior {
+    MatchExactly,
+    MatchMinutes,
+};
+
+ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, OffsetBehavior offset_behavior, double offset_nanoseconds, Value time_zone, StringView disambiguation, StringView offset_option, MatchBehavior match_behavior);
+ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject&, Value item, Object* options = nullptr);
 ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject&, BigInt const& epoch_nanoseconds, Object& time_zone, Object& calendar, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject&, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options = nullptr);
 ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject&, BigInt const& nanoseconds, Value relative_to);
