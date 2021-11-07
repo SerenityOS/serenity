@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
+ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -24,7 +24,7 @@ KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
     return process->sid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$setsid()
+ErrorOr<FlatPtr> Process::sys$setsid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -45,7 +45,7 @@ KResultOr<FlatPtr> Process::sys$setsid()
     return sid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
+ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -57,7 +57,7 @@ KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
     return process->pgid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getpgrp()
+ErrorOr<FlatPtr> Process::sys$getpgrp()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -77,7 +77,7 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
     return sid;
 }
 
-KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
+ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);

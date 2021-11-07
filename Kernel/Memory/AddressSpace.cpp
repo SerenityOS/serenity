@@ -15,7 +15,7 @@
 
 namespace Kernel::Memory {
 
-KResultOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const* parent)
+ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const* parent)
 {
     auto page_directory = TRY(PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr));
     auto space = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(page_directory)));
@@ -32,7 +32,7 @@ AddressSpace::~AddressSpace()
 {
 }
 
-KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
+ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 {
     if (!size)
         return EINVAL;
@@ -49,7 +49,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         PerformanceManager::add_unmap_perf_event(Process::current(), whole_region->range());
 
         deallocate_region(*whole_region);
-        return KSuccess;
+        return {};
     }
 
     if (auto* old_region = find_region_containing(range_to_unmap)) {
@@ -77,13 +77,13 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
         PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
 
-        return KSuccess;
+        return {};
     }
 
     // Try again while checking multiple regions at a time.
     auto const& regions = find_regions_intersecting(range_to_unmap);
     if (regions.is_empty())
-        return KSuccess;
+        return {};
 
     // Check if any of the regions is not mmap'ed, to not accidentally
     // error out with just half a region map left.
@@ -126,10 +126,10 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
     PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
 
-    return KSuccess;
+    return {};
 }
 
-KResultOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
+ErrorOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = page_round_up(size);
@@ -138,7 +138,7 @@ KResultOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, s
     return page_directory().range_allocator().try_allocate_specific(vaddr, size);
 }
 
-KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
+ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
 {
     OwnPtr<KString> region_name;
     if (!source_region.name().is_null())
@@ -158,7 +158,7 @@ KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_
     return region;
 }
 
-KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
+ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
     OwnPtr<KString> region_name;
@@ -170,7 +170,7 @@ KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, Stri
     return add_region(move(region));
 }
 
-KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     VERIFY(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
@@ -264,7 +264,7 @@ Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& rang
     return regions;
 }
 
-KResultOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
+ErrorOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     SpinlockLocker lock(m_lock);
@@ -274,13 +274,13 @@ KResultOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-KResultOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
+ErrorOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
 {
     VirtualRange old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
 
     VERIFY(!remaining_ranges_after_unmap.is_empty());
-    auto try_make_replacement_region = [&](VirtualRange const& new_range) -> KResultOr<Region*> {
+    auto try_make_replacement_region = [&](VirtualRange const& new_range) -> ErrorOr<Region*> {
         VERIFY(old_region_range.contains(new_range));
         size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
         return try_allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);

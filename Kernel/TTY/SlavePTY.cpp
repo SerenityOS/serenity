@@ -78,7 +78,7 @@ void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, size_t size)
         evaluate_block_conditions();
 }
 
-KResultOr<size_t> SlavePTY::on_tty_write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> SlavePTY::on_tty_write(const UserOrKernelBuffer& data, size_t size)
 {
     m_time_of_last_write = kgettimeofday().to_truncated_seconds();
     return m_master->on_slave_write(data, size);
@@ -96,17 +96,17 @@ bool SlavePTY::can_read(const OpenFileDescription& description, size_t offset) c
     return TTY::can_read(description, offset);
 }
 
-KResultOr<size_t> SlavePTY::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> SlavePTY::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_master->is_closed())
         return 0;
     return TTY::read(description, offset, buffer, size);
 }
 
-KResult SlavePTY::close()
+ErrorOr<void> SlavePTY::close()
 {
     m_master->notify_slave_closed({});
-    return KSuccess;
+    return {};
 }
 
 FileBlockerSet& SlavePTY::blocker_set()

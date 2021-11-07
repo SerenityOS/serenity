@@ -33,12 +33,12 @@ bool NullDevice::can_read(const OpenFileDescription&, size_t) const
     return true;
 }
 
-KResultOr<size_t> NullDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
+ErrorOr<size_t> NullDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     return 0;
 }
 
-KResultOr<size_t> NullDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
+ErrorOr<size_t> NullDevice::write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
 {
     return buffer_size;
 }

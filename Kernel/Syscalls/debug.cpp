@@ -11,21 +11,21 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$dump_backtrace()
+ErrorOr<FlatPtr> Process::sys$dump_backtrace()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     dump_backtrace();
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
+ErrorOr<FlatPtr> Process::sys$dbgputch(u8 ch)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     dbgputch(ch);
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, size_t size)
+ErrorOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, size_t size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (size == 0)

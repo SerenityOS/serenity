@@ -52,7 +52,7 @@ void Inode::sync()
     fs().flush_writes();
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const
+ErrorOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const
 {
     auto builder = TRY(KBufferBuilder::try_create());
 
@@ -76,7 +76,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* descri
     return entire_file.release_nonnull();
 }
 
-KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
@@ -106,27 +106,27 @@ void Inode::will_be_destroyed()
         (void)flush_metadata();
 }
 
-KResult Inode::set_atime(time_t)
+ErrorOr<void> Inode::set_atime(time_t)
 {
     return ENOTIMPL;
 }
 
-KResult Inode::set_ctime(time_t)
+ErrorOr<void> Inode::set_ctime(time_t)
 {
     return ENOTIMPL;
 }
 
-KResult Inode::set_mtime(time_t)
+ErrorOr<void> Inode::set_mtime(time_t)
 {
     return ENOTIMPL;
 }
 
-KResult Inode::increment_link_count()
+ErrorOr<void> Inode::increment_link_count()
 {
     return ENOTIMPL;
 }
 
-KResult Inode::decrement_link_count()
+ErrorOr<void> Inode::decrement_link_count()
 {
     return ENOTIMPL;
 }
@@ -169,7 +169,7 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     m_watchers.remove(&watcher);
 }
 
-KResultOr<NonnullRefPtr<FIFO>> Inode::fifo()
+ErrorOr<NonnullRefPtr<FIFO>> Inode::fifo()
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(metadata().is_fifo());
@@ -178,7 +178,7 @@ KResultOr<NonnullRefPtr<FIFO>> Inode::fifo()
     if (!m_fifo)
         m_fifo = TRY(FIFO::try_create(metadata().uid));
 
-    return *m_fifo;
+    return NonnullRefPtr { *m_fifo };
 }
 
 void Inode::set_metadata_dirty(bool metadata_dirty)
@@ -242,7 +242,7 @@ void Inode::did_delete_self()
     }
 }
 
-KResult Inode::prepare_to_write_data()
+ErrorOr<void> Inode::prepare_to_write_data()
 {
     // FIXME: It's a poor design that filesystems are expected to call this before writing out data.
     //        We should funnel everything through an interface at the VirtualFileSystem layer so this can happen from a single place.
@@ -254,7 +254,7 @@ KResult Inode::prepare_to_write_data()
         dbgln("Inode::prepare_to_write_data(): Stripping SUID/SGID bits from {}", identifier());
         return chmod(metadata.mode & ~(04000 | 02000));
     }
-    return KSuccess;
+    return {};
 }
 
 RefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
@@ -269,7 +269,7 @@ static inline bool range_overlap(T start1, T len1, T start2, T len2)
     return ((start1 < start2 + len2) || len2 == 0) && ((start2 < start1 + len1) || len1 == 0);
 }
 
-static inline KResult normalize_flock(OpenFileDescription const& description, flock& lock)
+static inline ErrorOr<void> normalize_flock(OpenFileDescription const& description, flock& lock)
 {
     off_t start;
     switch (lock.l_whence) {
@@ -286,10 +286,10 @@ static inline KResult normalize_flock(OpenFileDescription const& description, fl
         return EINVAL;
     }
     lock = { lock.l_type, SEEK_SET, start, lock.l_len, 0 };
-    return KSuccess;
+    return {};
 }
 
-KResult Inode::can_apply_flock(OpenFileDescription const& description, flock const& new_lock) const
+ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flock const& new_lock) const
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
@@ -298,7 +298,7 @@ KResult Inode::can_apply_flock(OpenFileDescription const& description, flock con
     if (new_lock.l_type == F_UNLCK) {
         for (auto& lock : m_flocks) {
             if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
-                return KSuccess;
+                return {};
         }
         return EINVAL;
     }
@@ -313,10 +313,10 @@ KResult Inode::can_apply_flock(OpenFileDescription const& description, flock con
         if (new_lock.l_type == F_WRLCK)
             return EAGAIN;
     }
-    return KSuccess;
+    return {};
 }
 
-KResult Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
+ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
 {
     flock new_lock = {};
     TRY(copy_from_user(&new_lock, input_lock));
@@ -330,17 +330,17 @@ KResult Inode::apply_flock(Process const& process, OpenFileDescription const& de
         for (size_t i = 0; i < m_flocks.size(); ++i) {
             if (&description == m_flocks[i].owner && m_flocks[i].start == new_lock.l_start && m_flocks[i].len == new_lock.l_len) {
                 m_flocks.remove(i);
-                return KSuccess;
+                return {};
             }
         }
         return EINVAL;
     }
 
     m_flocks.append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type });
-    return KSuccess;
+    return {};
 }
 
-KResult Inode::get_flock(OpenFileDescription const& description, Userspace<flock*> reference_lock) const
+ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace<flock*> reference_lock) const
 {
     flock lookup = {};
     TRY(copy_from_user(&lookup, reference_lock));

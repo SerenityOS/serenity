@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
 
@@ -19,7 +19,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(const TCPSocket&)>);
-    static KResultOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     enum class Direction {
@@ -136,8 +136,8 @@ public:
     void set_duplicate_acks(u32 acks) { m_duplicate_acks = acks; }
     u32 duplicate_acks() const { return m_duplicate_acks; }
 
-    KResult send_ack(bool allow_duplicate = false);
-    KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0, RoutingDecision* = nullptr);
+    ErrorOr<void> send_ack(bool allow_duplicate = false);
+    ErrorOr<void> send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0, RoutingDecision* = nullptr);
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
     bool should_delay_next_ack() const;
@@ -147,7 +147,7 @@ public:
 
     static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
-    KResultOr<NonnullRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
+    ErrorOr<NonnullRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
@@ -155,7 +155,7 @@ public:
 
     void retransmit_packets();
 
-    virtual KResult close() override;
+    virtual ErrorOr<void> close() override;
 
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
 
@@ -170,13 +170,13 @@ private:
 
     virtual void shut_down_for_writing() override;
 
-    virtual KResultOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
-    virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
-    virtual KResult protocol_connect(OpenFileDescription&, ShouldBlock) override;
-    virtual KResultOr<u16> protocol_allocate_local_port() override;
+    virtual ErrorOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
+    virtual ErrorOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) override;
+    virtual ErrorOr<u16> protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
-    virtual KResult protocol_bind() override;
-    virtual KResult protocol_listen(bool did_allocate_port) override;
+    virtual ErrorOr<void> protocol_bind() override;
+    virtual ErrorOr<void> protocol_listen(bool did_allocate_port) override;
 
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();

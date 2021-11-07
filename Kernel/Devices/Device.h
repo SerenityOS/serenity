@@ -15,10 +15,10 @@
 //   - BlockDevice (random access)
 //   - CharacterDevice (sequential)
 #include <AK/DoublyLinkedList.h>
+#include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/SysFS.h>
@@ -40,7 +40,7 @@ public:
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
@@ -51,7 +51,7 @@ public:
     void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
 
     template<typename AsyncRequestType, typename... Args>
-    KResultOr<NonnullRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
+    ErrorOr<NonnullRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
     {
         auto request = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AsyncRequestType(*this, forward<Args>(args)...)));
         SpinlockLocker lock(m_requests_lock);

@@ -120,7 +120,7 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
     return true;
 }
 
-KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -188,7 +188,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     Memory::Region* region = nullptr;
 
-    auto range = TRY([&]() -> KResultOr<Memory::VirtualRange> {
+    auto range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
         if (map_randomized) {
             return address_space().page_directory().range_allocator().try_allocate_randomized(Memory::page_round_up(size), alignment);
         }
@@ -250,7 +250,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     return region->vaddr().get();
 }
 
-static KResultOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
+static ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
 {
     if (Memory::page_round_up_would_wrap(size))
         return EINVAL;
@@ -267,7 +267,7 @@ static KResultOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr a
     return Memory::VirtualRange { base, end - base.get() };
 }
 
-KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
+ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -406,7 +406,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
     return EINVAL;
 }
 
-KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
+ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -441,7 +441,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
     return EINVAL;
 }
 
-KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -465,14 +465,15 @@ KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mm
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
+ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return address_space().unmap_mmap_range(VirtualAddress { addr }, size);
+    TRY(address_space().unmap_mmap_range(VirtualAddress { addr }, size));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -509,7 +510,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
     return ENOTIMPL;
 }
 
-KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
+ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -564,7 +565,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
-KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
+ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (address_space().enforces_syscall_regions())

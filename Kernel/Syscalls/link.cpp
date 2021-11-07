@@ -10,17 +10,18 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(cpath);
     auto params = TRY(copy_typed_from_user(user_params));
     auto old_path = TRY(try_copy_kstring_from_user(params.old_path));
     auto new_path = TRY(try_copy_kstring_from_user(params.new_path));
-    return VirtualFileSystem::the().link(old_path->view(), new_path->view(), current_directory());
+    TRY(VirtualFileSystem::the().link(old_path->view(), new_path->view(), current_directory()));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(cpath);
@@ -28,7 +29,8 @@ KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_para
 
     auto target = TRY(get_syscall_path_argument(params.target));
     auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
-    return VirtualFileSystem::the().symlink(target->view(), linkpath->view(), current_directory());
+    TRY(VirtualFileSystem::the().symlink(target->view(), linkpath->view(), current_directory()));
+    return 0;
 }
 
 }

@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
+ErrorOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
 {
     auto custody = TRY(VirtualFileSystem::the().resolve_path(path, current_directory(), nullptr, 0));
     auto& inode = custody->inode();
@@ -58,10 +58,11 @@ KResultOr<FlatPtr> Process::do_statvfs(StringView path, statvfs* buf)
         }
     }
 
-    return copy_to_user(buf, &kernelbuf);
+    TRY(copy_to_user(buf, &kernelbuf));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
@@ -71,7 +72,7 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
     return do_statvfs(path->view(), params.buf);
 }
 
-KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
+ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);

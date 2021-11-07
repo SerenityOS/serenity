@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/RefCounted.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 
@@ -17,13 +17,13 @@ class USBController : public RefCounted<USBController> {
 public:
     virtual ~USBController() = default;
 
-    virtual KResult initialize() = 0;
+    virtual ErrorOr<void> initialize() = 0;
 
-    virtual KResult reset() = 0;
-    virtual KResult stop() = 0;
-    virtual KResult start() = 0;
+    virtual ErrorOr<void> reset() = 0;
+    virtual ErrorOr<void> stop() = 0;
+    virtual ErrorOr<void> start() = 0;
 
-    virtual KResultOr<size_t> submit_control_transfer(Transfer&) = 0;
+    virtual ErrorOr<size_t> submit_control_transfer(Transfer&) = 0;
 
     u8 allocate_address();
 

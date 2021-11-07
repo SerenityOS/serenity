@@ -38,7 +38,7 @@ SpinlockProtected<Thread::GlobalList>& Thread::all_instances()
     return *s_list;
 }
 
-KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
+ErrorOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
 {
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
@@ -805,7 +805,7 @@ static void push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
     stack -= sizeof(FlatPtr);
     auto result = copy_to_user((FlatPtr*)stack, &data);
-    VERIFY(result.is_success());
+    VERIFY(!result.is_error());
 }
 
 void Thread::resume_from_stopped()
@@ -1027,7 +1027,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *trap->regs;
 }
 
-KResultOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
+ErrorOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
 {
     auto clone = TRY(Thread::try_create(process));
     auto signal_action_data_span = m_signal_action_data.span();
@@ -1184,11 +1184,11 @@ size_t Thread::thread_specific_region_size() const
     return align_up_to(process().m_master_tls_size, thread_specific_region_alignment()) + sizeof(ThreadSpecificData);
 }
 
-KResult Thread::make_thread_specific_region(Badge<Process>)
+ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
 {
     // The process may not require a TLS region, or allocate TLS later with sys$allocate_tls (which is what dynamically loaded programs do)
     if (!process().m_master_tls_region)
-        return KSuccess;
+        return {};
 
     auto range = TRY(process().address_space().try_allocate_range({}, thread_specific_region_size()));
     auto* region = TRY(process().address_space().allocate_region(range, "Thread-specific", PROT_READ | PROT_WRITE));
@@ -1204,7 +1204,7 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
 
-    return KSuccess;
+    return {};
 }
 
 RefPtr<Thread> Thread::from_tid(ThreadID tid)

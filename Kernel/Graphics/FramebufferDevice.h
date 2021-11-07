@@ -24,29 +24,29 @@ class FramebufferDevice final : public GenericFramebufferDevice {
 public:
     static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
 
-    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
     virtual void deactivate_writes() override;
     virtual void activate_writes() override;
 
-    virtual KResult try_to_initialize() override;
+    virtual ErrorOr<void> try_to_initialize() override;
 
     virtual bool multihead_support() const override { return false; }
     virtual bool flushing_support() const override { return false; }
     virtual bool partial_flushing_support() const override { return false; }
     virtual size_t heads_count() const override { return 1; }
-    virtual KResultOr<size_t> buffer_length(size_t head) const override;
-    virtual KResultOr<size_t> pitch(size_t head) const override;
-    virtual KResultOr<size_t> height(size_t head) const override;
-    virtual KResultOr<size_t> width(size_t head) const override;
-    virtual KResultOr<size_t> vertical_offset(size_t head) const override;
-    virtual KResultOr<bool> vertical_offseted(size_t head) const override;
+    virtual ErrorOr<size_t> buffer_length(size_t head) const override;
+    virtual ErrorOr<size_t> pitch(size_t head) const override;
+    virtual ErrorOr<size_t> height(size_t head) const override;
+    virtual ErrorOr<size_t> width(size_t head) const override;
+    virtual ErrorOr<size_t> vertical_offset(size_t head) const override;
+    virtual ErrorOr<bool> vertical_offseted(size_t head) const override;
 
 private:
-    virtual KResult set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
-    virtual KResult set_head_buffer(size_t head, bool second_buffer) override;
-    virtual KResult flush_head_buffer(size_t head) override;
-    virtual KResult flush_rectangle(size_t head, FBRect const&) override;
+    virtual ErrorOr<void> set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
+    virtual ErrorOr<void> set_head_buffer(size_t head, bool second_buffer) override;
+    virtual ErrorOr<void> flush_head_buffer(size_t head) override;
+    virtual ErrorOr<void> flush_rectangle(size_t head, FBRect const&) override;
 
     FramebufferDevice(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
 

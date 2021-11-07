@@ -18,13 +18,13 @@ namespace Kernel::Memory {
 
 class AddressSpace {
 public:
-    static KResultOr<NonnullOwnPtr<AddressSpace>> try_create(AddressSpace const* parent);
+    static ErrorOr<NonnullOwnPtr<AddressSpace>> try_create(AddressSpace const* parent);
     ~AddressSpace();
 
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
-    KResultOr<Region*> add_region(NonnullOwnPtr<Region>);
+    ErrorOr<Region*> add_region(NonnullOwnPtr<Region>);
 
     size_t region_count() const { return m_regions.size(); }
 
@@ -33,17 +33,17 @@ public:
 
     void dump_regions();
 
-    KResult unmap_mmap_range(VirtualAddress, size_t);
+    ErrorOr<void> unmap_mmap_range(VirtualAddress, size_t);
 
-    KResultOr<VirtualRange> try_allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
+    ErrorOr<VirtualRange> try_allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
-    KResultOr<Region*> allocate_region_with_vmobject(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
-    KResultOr<Region*> allocate_region(VirtualRange const&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    ErrorOr<Region*> allocate_region_with_vmobject(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    ErrorOr<Region*> allocate_region(VirtualRange const&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     void deallocate_region(Region& region);
     NonnullOwnPtr<Region> take_region(Region& region);
 
-    KResultOr<Region*> try_allocate_split_region(Region const& source_region, VirtualRange const&, size_t offset_in_vmobject);
-    KResultOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, VirtualRange const&);
+    ErrorOr<Region*> try_allocate_split_region(Region const& source_region, VirtualRange const&, size_t offset_in_vmobject);
+    ErrorOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, VirtualRange const&);
 
     Region* find_region_from_range(VirtualRange const&);
     Region* find_region_containing(VirtualRange const&);

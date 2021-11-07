@@ -7,12 +7,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
@@ -47,24 +47,24 @@ public:
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
 
-    KResultOr<NonnullOwnPtr<KBuffer>> read_entire(OpenFileDescription* = nullptr) const;
+    ErrorOr<NonnullOwnPtr<KBuffer>> read_entire(OpenFileDescription* = nullptr) const;
 
-    virtual KResult attach(OpenFileDescription&) { return KSuccess; }
+    virtual ErrorOr<void> attach(OpenFileDescription&) { return {}; }
     virtual void detach(OpenFileDescription&) { }
     virtual void did_seek(OpenFileDescription&, off_t) { }
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
-    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
-    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) = 0;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
-    virtual KResult remove_child(const StringView& name) = 0;
-    virtual KResult chmod(mode_t) = 0;
-    virtual KResult chown(UserID, GroupID) = 0;
-    virtual KResult truncate(u64) { return KSuccess; }
-    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
+    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) = 0;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
+    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) = 0;
+    virtual ErrorOr<void> remove_child(const StringView& name) = 0;
+    virtual ErrorOr<void> chmod(mode_t) = 0;
+    virtual ErrorOr<void> chown(UserID, GroupID) = 0;
+    virtual ErrorOr<void> truncate(u64) { return {}; }
+    virtual ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
-    virtual KResultOr<int> get_block_address(int) { return ENOTSUP; }
+    virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 
     LocalSocket* socket() { return m_socket.ptr(); }
     const LocalSocket* socket() const { return m_socket.ptr(); }
@@ -75,13 +75,13 @@ public:
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
-    virtual KResult set_atime(time_t);
-    virtual KResult set_ctime(time_t);
-    virtual KResult set_mtime(time_t);
-    virtual KResult increment_link_count();
-    virtual KResult decrement_link_count();
+    virtual ErrorOr<void> set_atime(time_t);
+    virtual ErrorOr<void> set_ctime(time_t);
+    virtual ErrorOr<void> set_mtime(time_t);
+    virtual ErrorOr<void> increment_link_count();
+    virtual ErrorOr<void> decrement_link_count();
 
-    virtual KResult flush_metadata() = 0;
+    virtual ErrorOr<void> flush_metadata() = 0;
 
     void will_be_destroyed();
 
@@ -96,17 +96,17 @@ public:
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
-    KResultOr<NonnullRefPtr<FIFO>> fifo();
+    ErrorOr<NonnullRefPtr<FIFO>> fifo();
 
-    KResult can_apply_flock(OpenFileDescription const&, flock const&) const;
-    KResult apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>);
-    KResult get_flock(OpenFileDescription const&, Userspace<flock*>) const;
+    ErrorOr<void> can_apply_flock(OpenFileDescription const&, flock const&) const;
+    ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>);
+    ErrorOr<void> get_flock(OpenFileDescription const&, Userspace<flock*>) const;
     void remove_flocks_for_description(OpenFileDescription const&);
 
 protected:
     Inode(FileSystem&, InodeIndex);
     void set_metadata_dirty(bool);
-    KResult prepare_to_write_data();
+    ErrorOr<void> prepare_to_write_data();
 
     void did_add_child(InodeIdentifier const& child_id, String const& name);
     void did_remove_child(InodeIdentifier const& child_id, String const& name);

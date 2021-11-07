@@ -62,7 +62,7 @@ Vector<StringView> parts(StringView const& path)
     return path.split_view('/');
 }
 
-KResultOr<NonnullOwnPtr<KString>> try_join(StringView const& first, StringView const& second)
+ErrorOr<NonnullOwnPtr<KString>> try_join(StringView const& first, StringView const& second)
 {
     VERIFY(is_canonical(first));
     VERIFY(is_canonical(second));

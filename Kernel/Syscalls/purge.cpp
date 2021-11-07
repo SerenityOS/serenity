@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$purge(int mode)
+ErrorOr<FlatPtr> Process::sys$purge(int mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
@@ -22,7 +22,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
     if (mode & PURGE_ALL_VOLATILE) {
         NonnullRefPtrVector<Memory::AnonymousVMObject> vmobjects;
         {
-            KResult result(KSuccess);
+            ErrorOr<void> result;
             Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_anonymous()) {
                     // In the event that the append fails, only attempt to continue
@@ -36,7 +36,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
             });
 
             if (result.is_error())
-                return result.error();
+                return result.release_error();
         }
         for (auto& vmobject : vmobjects) {
             purged_page_count += vmobject.purge();
@@ -45,7 +45,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
     if (mode & PURGE_ALL_CLEAN_INODE) {
         NonnullRefPtrVector<Memory::InodeVMObject> vmobjects;
         {
-            KResult result(KSuccess);
+            ErrorOr<void> result;
             Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode()) {
                     // In the event that the append fails, only attempt to continue
@@ -59,7 +59,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
             });
 
             if (result.is_error())
-                return result.error();
+                return result.release_error();
         }
         for (auto& vmobject : vmobjects) {
             purged_page_count += vmobject.release_all_clean_pages();

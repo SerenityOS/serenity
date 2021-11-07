@@ -56,7 +56,7 @@ void VirtualRangeAllocator::carve_from_region(VirtualRange const& from, VirtualR
     }
 }
 
-KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_randomized(size_t size, size_t alignment)
+ErrorOr<VirtualRange> VirtualRangeAllocator::try_allocate_randomized(size_t size, size_t alignment)
 {
     if (!size)
         return EINVAL;
@@ -80,7 +80,7 @@ KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_randomized(size_t si
     return try_allocate_anywhere(size, alignment);
 }
 
-KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_anywhere(size_t size, size_t alignment)
+ErrorOr<VirtualRange> VirtualRangeAllocator::try_allocate_anywhere(size_t size, size_t alignment)
 {
     if (!size)
         return EINVAL;
@@ -129,7 +129,7 @@ KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_anywhere(size_t size
     return ENOMEM;
 }
 
-KResultOr<VirtualRange> VirtualRangeAllocator::try_allocate_specific(VirtualAddress base, size_t size)
+ErrorOr<VirtualRange> VirtualRangeAllocator::try_allocate_specific(VirtualAddress base, size_t size)
 {
     if (!size)
         return EINVAL;

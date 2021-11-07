@@ -38,10 +38,10 @@ private:
     virtual StringView class_name() const override { return "VirtIOConsolePort"sv; }
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
     static unsigned next_device_id;
     u16 m_receive_queue {};

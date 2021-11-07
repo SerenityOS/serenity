@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$map_time_page()
+ErrorOr<FlatPtr> Process::sys$map_time_page()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
@@ -22,7 +22,7 @@ KResultOr<FlatPtr> Process::sys$map_time_page()
     return region->vaddr().get();
 }
 
-KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
+ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
@@ -31,10 +31,11 @@ KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<time
         return EINVAL;
 
     auto ts = TimeManagement::the().current_time(clock_id).to_timespec();
-    return copy_to_user(user_ts, &ts);
+    TRY(copy_to_user(user_ts, &ts));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
+ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(settime);
@@ -54,7 +55,7 @@ KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<cons
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
@@ -93,7 +94,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (user_old_delta) {

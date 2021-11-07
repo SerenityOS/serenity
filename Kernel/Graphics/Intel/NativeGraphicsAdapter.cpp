@@ -643,7 +643,7 @@ void IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_width != 0);
     m_framebuffer_device = FramebufferDevice::create(*this, address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
-    // FIXME: Would be nice to be able to return a KResult here.
+    // FIXME: Would be nice to be able to return a ErrorOr<void> here.
     auto framebuffer_result = m_framebuffer_device->try_to_initialize();
     VERIFY(!framebuffer_result.is_error());
 }

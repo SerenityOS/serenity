@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Span.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/UnixTypes.h>
@@ -86,7 +86,7 @@ struct InodeMetadata {
     bool is_setuid() const { return Kernel::is_setuid(mode); }
     bool is_setgid() const { return Kernel::is_setgid(mode); }
 
-    KResult stat(stat& buffer) const
+    ErrorOr<void> stat(stat& buffer) const
     {
         if (!is_valid())
             return EIO;
@@ -106,7 +106,7 @@ struct InodeMetadata {
         buffer.st_mtim.tv_nsec = 0;
         buffer.st_ctim.tv_sec = ctime;
         buffer.st_ctim.tv_nsec = 0;
-        return KSuccess;
+        return {};
     }
 
     InodeIdentifier inode;

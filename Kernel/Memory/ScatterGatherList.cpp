@@ -12,7 +12,7 @@ RefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest&
 {
     auto maybe_vm_object = AnonymousVMObject::try_create_with_physical_pages(allocated_pages);
     if (maybe_vm_object.is_error()) {
-        // FIXME: Would be nice to be able to return a KResultOr here.
+        // FIXME: Would be nice to be able to return a ErrorOr here.
         return {};
     }
     return adopt_ref_if_nonnull(new (nothrow) ScatterGatherList(maybe_vm_object.release_value(), request, device_block_size));

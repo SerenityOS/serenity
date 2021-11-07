@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 
@@ -18,16 +18,16 @@ class UHCIController;
 
 class UHCIRootHub {
 public:
-    static KResultOr<NonnullOwnPtr<UHCIRootHub>> try_create(NonnullRefPtr<UHCIController>);
+    static ErrorOr<NonnullOwnPtr<UHCIRootHub>> try_create(NonnullRefPtr<UHCIController>);
 
     UHCIRootHub(NonnullRefPtr<UHCIController>);
     ~UHCIRootHub() = default;
 
-    KResult setup(Badge<UHCIController>);
+    ErrorOr<void> setup(Badge<UHCIController>);
 
     u8 device_address() const { return m_hub->address(); }
 
-    KResultOr<size_t> handle_control_transfer(Transfer& transfer);
+    ErrorOr<size_t> handle_control_transfer(Transfer& transfer);
 
     void check_for_port_updates() { m_hub->check_for_port_updates(); }
 

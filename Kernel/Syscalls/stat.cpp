@@ -11,17 +11,18 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
+ErrorOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto description = TRY(fds().open_file_description(fd));
     stat buffer = {};
     TRY(description->stat(buffer));
-    return copy_to_user(user_statbuf, &buffer);
+    TRY(copy_to_user(user_statbuf, &buffer));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
@@ -43,7 +44,8 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
     auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(path->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     stat statbuf = {};
     TRY(metadata.stat(statbuf));
-    return copy_to_user(params.statbuf, &statbuf);
+    TRY(copy_to_user(params.statbuf, &statbuf));
+    return 0;
 }
 
 }

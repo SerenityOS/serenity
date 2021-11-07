@@ -44,7 +44,7 @@ namespace Kernel {
 void dump_backtrace(PrintToScreen) { }
 
 // KString.cpp
-KResultOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&) { return ENOMEM; }
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&) { return ENOMEM; }
 void KString::operator delete(void*) { }
 
 // SafeMem.h

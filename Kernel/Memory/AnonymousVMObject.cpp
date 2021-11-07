@@ -13,7 +13,7 @@
 
 namespace Kernel::Memory {
 
-KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
+ErrorOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 {
     // We need to acquire our lock so we copy a sane state
     SpinlockLocker lock(m_lock);
@@ -66,7 +66,7 @@ KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
     return clone;
 }
 
-KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy strategy)
+ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy strategy)
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
@@ -76,7 +76,7 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_s
     return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
 }
 
-KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
+ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
 {
     auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size);
     if (contiguous_physical_pages.is_empty())
@@ -85,7 +85,7 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physic
     return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
 }
 
-KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
+ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
@@ -97,12 +97,12 @@ KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgea
     return vmobject;
 }
 
-KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
+ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(physical_pages));
 }
 
-KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
+ErrorOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     if (paddr.offset(size) < paddr) {
         dbgln("Shenanigans! try_create_for_physical_range({}, {}) would wrap around", paddr, size);
@@ -182,7 +182,7 @@ size_t AnonymousVMObject::purge()
     return total_pages_purged;
 }
 
-KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
+ErrorOr<void> AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 {
     VERIFY(is_purgeable());
 
@@ -190,7 +190,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
     was_purged = m_was_purged;
     if (m_volatile == is_volatile)
-        return KSuccess;
+        return {};
 
     if (is_volatile) {
         // When a VMObject is made volatile, it gives up all of its committed memory.
@@ -210,7 +210,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
         m_was_purged = false;
 
         for_each_region([&](auto& region) { region.remap(); });
-        return KSuccess;
+        return {};
     }
     // When a VMObject is made non-volatile, we try to commit however many pages are not currently available.
     // If that fails, we return false to indicate that memory allocation failed.
@@ -223,7 +223,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
     if (!committed_pages_needed) {
         m_volatile = false;
-        return KSuccess;
+        return {};
     }
 
     m_unused_committed_pages = TRY(MM.commit_user_physical_pages(committed_pages_needed));
@@ -236,7 +236,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
     m_volatile = false;
     m_was_purged = false;
     for_each_region([&](auto& region) { region.remap(); });
-    return KSuccess;
+    return {};
 }
 
 NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Region>)

@@ -26,15 +26,15 @@ public:
 protected:
     explicit SysFSUSBDeviceInformation(USB::Device& device);
 
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
 
     IntrusiveListNode<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>> m_list_node;
 
     NonnullRefPtr<USB::Device> m_device;
 
 private:
-    KResult try_generate(KBufferBuilder&);
-    virtual KResult refresh_data(OpenFileDescription& description) const override;
+    ErrorOr<void> try_generate(KBufferBuilder&);
+    virtual ErrorOr<void> refresh_data(OpenFileDescription& description) const override;
     mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
 };
 
@@ -46,7 +46,7 @@ public:
     void plug(USB::Device&);
     void unplug(USB::Device&);
 
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
 private:

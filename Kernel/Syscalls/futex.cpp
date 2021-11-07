@@ -22,7 +22,7 @@ void Process::clear_futex_queues_on_exec()
     m_futex_queues.clear();
 }
 
-KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));

@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
+ErrorOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(fattr);
@@ -23,7 +23,8 @@ KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t p
         // Not a bug!
         buf = { now, now };
     }
-    return VirtualFileSystem::the().utime(path->view(), current_directory(), buf.actime, buf.modtime);
+    TRY(VirtualFileSystem::the().utime(path->view(), current_directory(), buf.actime, buf.modtime));
+    return 0;
 }
 
 }

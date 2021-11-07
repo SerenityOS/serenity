@@ -9,12 +9,12 @@
 
 namespace Kernel::Memory {
 
-KResultOr<NonnullRefPtr<PrivateInodeVMObject>> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
+ErrorOr<NonnullRefPtr<PrivateInodeVMObject>> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, inode.size()));
 }
 
-KResultOr<NonnullRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
+ErrorOr<NonnullRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
 {
     return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) PrivateInodeVMObject(*this));
 }

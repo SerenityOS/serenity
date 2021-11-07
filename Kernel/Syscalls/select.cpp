@@ -14,7 +14,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -121,7 +121,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
     return marked_fd_count;
 }
 
-KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
