@@ -76,4 +76,18 @@ ThrowCompletionOr<T*> ordinary_create_from_constructor(GlobalObject& global_obje
     return global_object.heap().allocate<T>(global_object, forward<Args>(args)..., *prototype);
 }
 
+// x modulo y, https://tc39.es/ecma262/#eqn-modulo
+template<typename T>
+T modulo(T x, T y)
+{
+    // The notation “x modulo y” (y must be finite and non-zero) computes a value k of the same sign as y (or zero) such that abs(k) < abs(y) and x - k = q × y for some integer q.
+    VERIFY(y != 0);
+    if constexpr (IsFloatingPoint<T>) {
+        VERIFY(isfinite(y));
+        return fmod(fmod(x, y) + y, y);
+    } else {
+        return ((x % y) + y) % y;
+    }
+}
+
 }
