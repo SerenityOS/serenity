@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$alarm(unsigned seconds)
+ErrorOr<FlatPtr> Process::sys$alarm(unsigned seconds)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);

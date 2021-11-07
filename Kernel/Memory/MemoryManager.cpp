@@ -705,7 +705,7 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     return region->handle_fault(fault);
 }
 
-KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
@@ -714,7 +714,7 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_regio
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
@@ -723,7 +723,7 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t si
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
@@ -732,7 +732,7 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalA
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
-KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
@@ -742,7 +742,7 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmob
     return region;
 }
 
-KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
@@ -750,7 +750,7 @@ KResultOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmob
     return allocate_kernel_region_with_vmobject(range, vmobject, name, access, cacheable);
 }
 
-KResultOr<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)
+ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
     SpinlockLocker lock(s_mm_lock);

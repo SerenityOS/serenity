@@ -91,7 +91,7 @@ private:
     virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
     virtual KString const& tty_name() const override { return *m_tty_name; }
     virtual void echo(u8) override;
 

@@ -54,36 +54,36 @@ public:
         return offset_buffer;
     }
 
-    KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
-    KResult write(const void* src, size_t offset, size_t len);
-    KResult write(const void* src, size_t len)
+    ErrorOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
+    ErrorOr<void> write(const void* src, size_t offset, size_t len);
+    ErrorOr<void> write(const void* src, size_t len)
     {
         return write(src, 0, len);
     }
-    KResult write(ReadonlyBytes bytes)
+    ErrorOr<void> write(ReadonlyBytes bytes)
     {
         return write(bytes.data(), bytes.size());
     }
 
-    KResult read(void* dest, size_t offset, size_t len) const;
-    KResult read(void* dest, size_t len) const
+    ErrorOr<void> read(void* dest, size_t offset, size_t len) const;
+    ErrorOr<void> read(void* dest, size_t len) const
     {
         return read(dest, 0, len);
     }
 
-    KResult read(Bytes bytes) const
+    ErrorOr<void> read(Bytes bytes) const
     {
         return read(bytes.data(), bytes.size());
     }
 
-    KResult memset(int value, size_t offset, size_t len);
-    KResult memset(int value, size_t len)
+    ErrorOr<void> memset(int value, size_t offset, size_t len);
+    ErrorOr<void> memset(int value, size_t len)
     {
         return memset(value, 0, len);
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    KResultOr<size_t> write_buffered(size_t offset, size_t len, F f)
+    ErrorOr<size_t> write_buffered(size_t offset, size_t len, F f)
     {
         if (!m_buffer)
             return EFAULT;
@@ -100,10 +100,10 @@ public:
         while (nwritten < len) {
             auto to_copy = min(sizeof(buffer), len - nwritten);
             Bytes bytes { buffer, to_copy };
-            KResultOr<size_t> copied_or_error = f(bytes);
+            ErrorOr<size_t> copied_or_error = f(bytes);
             if (copied_or_error.is_error())
-                return copied_or_error.error();
-            auto copied = copied_or_error.value();
+                return copied_or_error.release_error();
+            auto copied = copied_or_error.release_value();
             VERIFY(copied <= to_copy);
             TRY(write(buffer, nwritten, copied));
             nwritten += copied;
@@ -113,13 +113,13 @@ public:
         return nwritten;
     }
     template<size_t BUFFER_BYTES, typename F>
-    KResultOr<size_t> write_buffered(size_t len, F f)
+    ErrorOr<size_t> write_buffered(size_t len, F f)
     {
         return write_buffered<BUFFER_BYTES, F>(0, len, f);
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    KResultOr<size_t> read_buffered(size_t offset, size_t len, F f) const
+    ErrorOr<size_t> read_buffered(size_t offset, size_t len, F f) const
     {
         if (!m_buffer)
             return EFAULT;
@@ -136,10 +136,10 @@ public:
             auto to_copy = min(sizeof(buffer), len - nread);
             TRY(read(buffer, nread, to_copy));
             ReadonlyBytes read_only_bytes { buffer, to_copy };
-            KResultOr<size_t> copied_or_error = f(read_only_bytes);
+            ErrorOr<size_t> copied_or_error = f(read_only_bytes);
             if (copied_or_error.is_error())
-                return copied_or_error.error();
-            auto copied = copied_or_error.value();
+                return copied_or_error.release_error();
+            auto copied = copied_or_error.release_value();
             VERIFY(copied <= to_copy);
             nread += copied;
             if (copied < to_copy)
@@ -148,7 +148,7 @@ public:
         return nread;
     }
     template<size_t BUFFER_BYTES, typename F>
-    KResultOr<size_t> read_buffered(size_t len, F f) const
+    ErrorOr<size_t> read_buffered(size_t len, F f) const
     {
         return read_buffered<BUFFER_BYTES, F>(0, len, f);
     }

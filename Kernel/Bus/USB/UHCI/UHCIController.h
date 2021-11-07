@@ -33,24 +33,24 @@ class UHCIController final
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
-    static KResultOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static ErrorOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~UHCIController() override;
 
     virtual StringView purpose() const override { return "UHCI"sv; }
 
-    virtual KResult initialize() override;
-    virtual KResult reset() override;
-    virtual KResult stop() override;
-    virtual KResult start() override;
+    virtual ErrorOr<void> initialize() override;
+    virtual ErrorOr<void> reset() override;
+    virtual ErrorOr<void> stop() override;
+    virtual ErrorOr<void> start() override;
     void spawn_port_proc();
 
     void do_debug_transfer();
 
-    virtual KResultOr<size_t> submit_control_transfer(Transfer& transfer) override;
+    virtual ErrorOr<size_t> submit_control_transfer(Transfer& transfer) override;
 
     void get_port_status(Badge<UHCIRootHub>, u8, HubStatus&);
-    KResult set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
-    KResult clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
+    ErrorOr<void> set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
+    ErrorOr<void> clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
 
 private:
     explicit UHCIController(PCI::DeviceIdentifier const& pci_device_identifier);
@@ -75,12 +75,12 @@ private:
 
     virtual bool handle_irq(const RegisterState&) override;
 
-    KResult create_structures();
+    ErrorOr<void> create_structures();
     void setup_schedule();
     size_t poll_transfer_queue(QueueHead& transfer_queue);
 
     TransferDescriptor* create_transfer_descriptor(Pipe& pipe, PacketID direction, size_t data_len);
-    KResult create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td);
+    ErrorOr<void> create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td);
     void free_descriptor_chain(TransferDescriptor* first_descriptor);
 
     QueueHead* allocate_queue_head();

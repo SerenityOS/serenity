@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
+ErrorOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
@@ -34,7 +34,7 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     return fd_allocation.fd;
 }
 
-KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
@@ -52,13 +52,14 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     return TRY(inode_watcher->register_inode(custody->inode(), params.event_mask));
 }
 
-KResultOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
+ErrorOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto description = TRY(fds().open_file_description(fd));
     if (!description->is_inode_watcher())
         return EBADF;
-    return description->inode_watcher()->unregister_by_wd(wd);
+    TRY(description->inode_watcher()->unregister_by_wd(wd));
+    return 0;
 }
 
 }

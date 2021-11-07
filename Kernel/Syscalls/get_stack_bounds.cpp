@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_base, Userspace<size_t*> user_stack_size)
+ErrorOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_base, Userspace<size_t*> user_stack_size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto& regs = Thread::current()->get_register_dump_from_stack();
@@ -22,7 +22,8 @@ KResultOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_
     FlatPtr stack_base = stack_region->range().base().get();
     size_t stack_size = stack_region->size();
     TRY(copy_to_user(user_stack_base, &stack_base));
-    return copy_to_user(user_stack_size, &stack_size);
+    TRY(copy_to_user(user_stack_size, &stack_size));
+    return 0;
 }
 
 }

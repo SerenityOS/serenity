@@ -10,7 +10,7 @@ extern bool g_in_early_boot;
 
 namespace Kernel {
 
-KResultOr<NonnullOwnPtr<KString>> KString::try_create(StringView string)
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView string)
 {
     char* characters = nullptr;
     size_t length = string.length();
@@ -28,7 +28,7 @@ NonnullOwnPtr<KString> KString::must_create(StringView string)
     return KString::try_create(string).release_value();
 }
 
-KResultOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t length, char*& characters)
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t length, char*& characters)
 {
     size_t allocation_size = sizeof(KString) + (sizeof(char) * length) + sizeof(char);
     auto* slot = kmalloc(allocation_size);
@@ -46,7 +46,7 @@ NonnullOwnPtr<KString> KString::must_create_uninitialized(size_t length, char*& 
     return KString::try_create_uninitialized(length, characters).release_value();
 }
 
-KResultOr<NonnullOwnPtr<KString>> KString::try_clone() const
+ErrorOr<NonnullOwnPtr<KString>> KString::try_clone() const
 {
     return try_create(view());
 }

@@ -23,8 +23,8 @@ public:
     static void free_process();
 
     // ^File
-    KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
-    KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
 protected:
     KCOVDevice();
@@ -34,9 +34,9 @@ protected:
     virtual bool can_read(const OpenFileDescription&, size_t) const override final { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override final { return true; }
     virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
 };
 
 }

@@ -14,7 +14,7 @@ KCOVInstance::KCOVInstance(ProcessID pid)
     m_pid = pid;
 }
 
-KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
+ErrorOr<void> KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
 {
     if (buffer_size_in_entries < 2 || buffer_size_in_entries > KCOV_MAX_ENTRIES)
         return EINVAL;
@@ -34,7 +34,7 @@ KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
         Memory::Region::Access::ReadWrite));
 
     m_buffer = (u64*)m_kernel_region->vaddr().as_ptr();
-    return KSuccess;
+    return {};
 }
 
 void KCOVInstance::buffer_add_pc(u64 pc)

@@ -24,7 +24,7 @@ ProcessGroup::~ProcessGroup()
     });
 }
 
-KResultOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID pgid)
+ErrorOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID pgid)
 {
     auto process_group = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessGroup(pgid)));
     process_groups().with([&](auto& groups) {
@@ -33,9 +33,9 @@ KResultOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_create(ProcessGroupID p
     return process_group;
 }
 
-KResultOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
+ErrorOr<NonnullRefPtr<ProcessGroup>> ProcessGroup::try_find_or_create(ProcessGroupID pgid)
 {
-    return process_groups().with([&](auto& groups) -> KResultOr<NonnullRefPtr<ProcessGroup>> {
+    return process_groups().with([&](auto& groups) -> ErrorOr<NonnullRefPtr<ProcessGroup>> {
         for (auto& group : groups) {
             if (group.pgid() == pgid)
                 return group;

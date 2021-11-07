@@ -34,14 +34,14 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
     });
 }
 
-KResultOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
+ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
     auto client_buffer = TRY(DoubleBuffer::try_create());
     auto server_buffer = TRY(DoubleBuffer::try_create());
     return adopt_nonnull_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
 }
 
-KResultOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
+ErrorOr<SocketPair> LocalSocket::try_create_connected_pair(int type)
 {
     auto socket = TRY(LocalSocket::try_create(type));
     auto description1 = TRY(OpenFileDescription::try_create(*socket));
@@ -106,7 +106,7 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
     get_local_address(address, address_size);
 }
 
-KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
+ErrorOr<void> LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
@@ -125,9 +125,9 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
     auto result = VirtualFileSystem::the().open(path->view(), O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current().current_directory(), owner);
     if (result.is_error()) {
-        if (result.error() == EEXIST)
+        if (result.error().code() == EEXIST)
             return set_so_error(EADDRINUSE);
-        return result.error();
+        return result.release_error();
     }
 
     auto file = move(result.value());
@@ -141,10 +141,10 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     m_path = move(path);
     m_bound = true;
-    return KSuccess;
+    return {};
 }
 
-KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock)
+ErrorOr<void> LocalSocket::connect(OpenFileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock)
 {
     VERIFY(!m_bound);
     if (address_size != sizeof(sockaddr_un))
@@ -191,7 +191,7 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
 
     if (is_connected()) {
         set_connect_side_role(Role::Connected);
-        return KSuccess;
+        return {};
     }
 
     auto unblock_flags = Thread::OpenFileDescriptionBlocker::BlockFlags::None;
@@ -207,10 +207,10 @@ KResult LocalSocket::connect(OpenFileDescription& description, Userspace<const s
         return set_so_error(ECONNREFUSED);
     }
     set_connect_side_role(Role::Connected);
-    return KSuccess;
+    return {};
 }
 
-KResult LocalSocket::listen(size_t backlog)
+ErrorOr<void> LocalSocket::listen(size_t backlog)
 {
     MutexLocker locker(mutex());
     if (type() != SOCK_STREAM)
@@ -222,10 +222,10 @@ KResult LocalSocket::listen(size_t backlog)
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) listening with backlog={}", this, backlog);
 
-    return KSuccess;
+    return {};
 }
 
-KResult LocalSocket::attach(OpenFileDescription& description)
+ErrorOr<void> LocalSocket::attach(OpenFileDescription& description)
 {
     VERIFY(!m_accept_side_fd_open);
     if (m_connect_side_role == Role::None) {
@@ -237,7 +237,7 @@ KResult LocalSocket::attach(OpenFileDescription& description)
     }
 
     evaluate_block_conditions();
-    return KSuccess;
+    return {};
 }
 
 void LocalSocket::detach(OpenFileDescription& description)
@@ -290,7 +290,7 @@ bool LocalSocket::can_write(const OpenFileDescription& description, size_t) cons
     return false;
 }
 
-KResultOr<size_t> LocalSocket::sendto(OpenFileDescription& description, const UserOrKernelBuffer& data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
+ErrorOr<size_t> LocalSocket::sendto(OpenFileDescription& description, const UserOrKernelBuffer& data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
 {
     if (!has_attached_peer(description))
         return set_so_error(EPIPE);
@@ -323,7 +323,7 @@ DoubleBuffer* LocalSocket::send_buffer_for(OpenFileDescription& description)
     return nullptr;
 }
 
-KResultOr<size_t> LocalSocket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&)
+ErrorOr<size_t> LocalSocket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&)
 {
     auto* socket_buffer = receive_buffer_for(description);
     if (!socket_buffer)
@@ -355,7 +355,7 @@ StringView LocalSocket::socket_path() const
     return m_path->view();
 }
 
-KResultOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescription& description) const
+ErrorOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescription& description) const
 {
     StringBuilder builder;
     builder.append("socket:");
@@ -381,7 +381,7 @@ KResultOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescrip
     return KString::try_create(builder.to_string());
 }
 
-KResult LocalSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
+ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
@@ -402,12 +402,12 @@ KResult LocalSocket::getsockopt(OpenFileDescription& description, int level, int
             TRY(copy_to_user(static_ptr_cast<ucred*>(value), &m_origin));
             size = sizeof(ucred);
             TRY(copy_to_user(value_size, &size));
-            return KSuccess;
+            return {};
         case Role::Connected:
             TRY(copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor));
             size = sizeof(ucred);
             TRY(copy_to_user(value_size, &size));
-            return KSuccess;
+            return {};
         case Role::Connecting:
             return ENOTCONN;
         default:
@@ -420,7 +420,7 @@ KResult LocalSocket::getsockopt(OpenFileDescription& description, int level, int
     }
 }
 
-KResult LocalSocket::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
+ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case FIONREAD: {
@@ -432,17 +432,17 @@ KResult LocalSocket::ioctl(OpenFileDescription& description, unsigned request, U
     return ENOTTY;
 }
 
-KResult LocalSocket::chmod(OpenFileDescription&, mode_t mode)
+ErrorOr<void> LocalSocket::chmod(OpenFileDescription&, mode_t mode)
 {
     auto inode = m_inode.strong_ref();
     if (inode)
         return inode->chmod(mode);
 
     m_prebind_mode = mode & 0777;
-    return KSuccess;
+    return {};
 }
 
-KResult LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
+ErrorOr<void> LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
 {
     auto inode = m_inode.strong_ref();
     if (inode)
@@ -454,7 +454,7 @@ KResult LocalSocket::chown(OpenFileDescription&, UserID uid, GroupID gid)
 
     m_prebind_uid = uid;
     m_prebind_gid = gid;
-    return KSuccess;
+    return {};
 }
 
 NonnullRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(const OpenFileDescription& description)
@@ -477,7 +477,7 @@ NonnullRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(const Op
     VERIFY_NOT_REACHED();
 }
 
-KResult LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description)
+ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -489,10 +489,10 @@ KResult LocalSocket::sendfd(OpenFileDescription const& socket_description, Nonnu
         return set_so_error(EBUSY);
     if (!queue.try_append(move(passing_description)))
         return set_so_error(ENOMEM);
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(const OpenFileDescription& socket_description)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(const OpenFileDescription& socket_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -506,10 +506,10 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(const OpenFile
     return queue.take_first();
 }
 
-KResult LocalSocket::try_set_path(StringView path)
+ErrorOr<void> LocalSocket::try_set_path(StringView path)
 {
     m_path = TRY(KString::try_create(path));
-    return KSuccess;
+    return {};
 }
 
 }

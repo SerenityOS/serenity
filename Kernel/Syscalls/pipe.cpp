@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
+ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -40,7 +40,7 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 
     TRY(copy_to_user(&pipefd[0], &reader_fd_allocation.fd));
     TRY(copy_to_user(&pipefd[1], &writer_fd_allocation.fd));
-    return KSuccess;
+    return 0;
 }
 
 }

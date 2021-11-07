@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
+ErrorOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     switch (domain) {
     case AF_LOCAL:
@@ -65,7 +65,7 @@ RefPtr<Socket> Socket::accept()
     return client;
 }
 
-KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
+ErrorOr<void> Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
     dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
     MutexLocker locker(mutex());
@@ -74,10 +74,10 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     if (!m_pending.try_append(peer))
         return set_so_error(ENOMEM);
     evaluate_block_conditions();
-    return KSuccess;
+    return {};
 }
 
-KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
+ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
 {
     if (level != SOL_SOCKET)
         return ENOPROTOOPT;
@@ -87,12 +87,12 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (user_value_size != sizeof(timeval))
             return EINVAL;
         m_send_timeout = TRY(copy_time_from_user(static_ptr_cast<timeval const*>(user_value)));
-        return KSuccess;
+        return {};
     case SO_RCVTIMEO:
         if (user_value_size != sizeof(timeval))
             return EINVAL;
         m_receive_timeout = TRY(copy_time_from_user(static_ptr_cast<timeval const*>(user_value)));
-        return KSuccess;
+        return {};
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
@@ -102,11 +102,11 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (!device)
             return ENODEV;
         m_bound_interface = move(device);
-        return KSuccess;
+        return {};
     }
     case SO_KEEPALIVE:
         // FIXME: Obviously, this is not a real keepalive.
-        return KSuccess;
+        return {};
     case SO_TIMESTAMP:
         if (user_value_size != sizeof(int))
             return EINVAL;
@@ -120,14 +120,14 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
             m_timestamp = 0;
             return ENOTSUP;
         }
-        return KSuccess;
+        return {};
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
     }
 }
 
-KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
+ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     socklen_t size;
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
@@ -160,11 +160,16 @@ KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspac
     case SO_ERROR: {
         if (size < sizeof(int))
             return EINVAL;
-        int errno = so_error().error();
+        int errno;
+        if (so_error().is_error())
+            errno = so_error().error().code();
+        else
+            errno = 0;
         TRY(copy_to_user(static_ptr_cast<int*>(value), &errno));
         size = sizeof(int);
         TRY(copy_to_user(value_size, &size));
-        return set_so_error(KSuccess);
+        clear_so_error();
+        return {};
     }
     case SO_BINDTODEVICE:
         if (size < IFNAMSIZ)
@@ -200,7 +205,7 @@ KResult Socket::getsockopt(OpenFileDescription&, int level, int option, Userspac
     }
 }
 
-KResultOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (is_shut_down_for_reading())
         return 0;
@@ -208,14 +213,14 @@ KResultOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKern
     return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
-KResultOr<size_t> Socket::write(OpenFileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> Socket::write(OpenFileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return set_so_error(EPIPE);
     return sendto(description, data, size, 0, {}, 0);
 }
 
-KResult Socket::shutdown(int how)
+ErrorOr<void> Socket::shutdown(int how)
 {
     MutexLocker locker(mutex());
     if (type() == SOCK_STREAM && !is_connected())
@@ -228,14 +233,14 @@ KResult Socket::shutdown(int how)
         shut_down_for_reading();
     m_shut_down_for_reading |= (how & SHUT_RD) != 0;
     m_shut_down_for_writing |= (how & SHUT_WR) != 0;
-    return KSuccess;
+    return {};
 }
 
-KResult Socket::stat(::stat& st) const
+ErrorOr<void> Socket::stat(::stat& st) const
 {
     memset(&st, 0, sizeof(st));
     st.st_mode = S_IFSOCK;
-    return KSuccess;
+    return {};
 }
 
 void Socket::set_connected(bool connected)

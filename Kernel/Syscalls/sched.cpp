@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$yield()
+ErrorOr<FlatPtr> Process::sys$yield()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
@@ -16,7 +16,7 @@ KResultOr<FlatPtr> Process::sys$yield()
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
+ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -41,7 +41,7 @@ KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct s
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
+ErrorOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -68,7 +68,8 @@ KResultOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched
         priority
     };
 
-    return copy_to_user(user_param, &param);
+    TRY(copy_to_user(user_param, &param));
+    return 0;
 }
 
 }

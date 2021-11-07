@@ -90,7 +90,7 @@ bool ConsolePort::can_read(const OpenFileDescription&, size_t) const
     return m_receive_buffer->used_bytes() > 0;
 }
 
-KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -100,10 +100,7 @@ KResultOr<size_t> ConsolePort::read(OpenFileDescription& desc, u64, UserOrKernel
     if (!can_read(desc, size))
         return EAGAIN;
 
-    auto bytes_copied_or_error = m_receive_buffer->copy_data_out(size, buffer);
-    if (bytes_copied_or_error.is_error())
-        return bytes_copied_or_error.error();
-    auto bytes_copied = bytes_copied_or_error.release_value();
+    auto bytes_copied = TRY(m_receive_buffer->copy_data_out(size, buffer));
     m_receive_buffer->reclaim_space(m_receive_buffer->start_of_used(), bytes_copied);
 
     if (m_receive_buffer_exhausted && m_receive_buffer->used_bytes() == 0) {
@@ -123,7 +120,7 @@ bool ConsolePort::can_write(const OpenFileDescription&, size_t) const
     return m_console.get_queue(m_transmit_queue).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
@@ -157,7 +154,7 @@ KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserO
     return total_bytes_copied;
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
 {
     if (!m_open)
         m_console.send_open_control_message(m_port, true);

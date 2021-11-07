@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -26,16 +26,16 @@ struct SysFSInodeData : public OpenFileDescriptionData {
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual StringView name() const { return m_name->view(); }
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return KResult(ENOTIMPL); }
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual mode_t permissions() const;
-    virtual KResult truncate(u64) { return EPERM; }
-    virtual KResult set_mtime(time_t) { return ENOTIMPL; }
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
-    virtual KResult refresh_data(OpenFileDescription&) const { return KSuccess; }
+    virtual ErrorOr<void> truncate(u64) { return EPERM; }
+    virtual ErrorOr<void> set_mtime(time_t) { return ENOTIMPL; }
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
+    virtual ErrorOr<void> refresh_data(OpenFileDescription&) const { return {}; }
 
-    virtual KResultOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const&) const;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const&) const;
 
     InodeIndex component_index() const { return m_component_index; };
 
@@ -51,10 +51,10 @@ private:
 
 class SysFSDirectory : public SysFSComponent {
 public:
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
-    virtual KResultOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
     explicit SysFSDirectory(StringView name);

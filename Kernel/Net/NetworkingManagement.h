@@ -27,7 +27,7 @@ public:
     static bool is_initialized();
     bool initialize();
 
-    static KResultOr<NonnullOwnPtr<KString>> generate_interface_name_from_pci_address(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullOwnPtr<KString>> generate_interface_name_from_pci_address(PCI::DeviceIdentifier const&);
 
     NetworkingManagement();
 

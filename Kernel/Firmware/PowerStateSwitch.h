@@ -24,9 +24,9 @@ class PowerStateSwitchNode final : public SysFSComponent {
 public:
     static NonnullRefPtr<PowerStateSwitchNode> must_create(FirmwareSysFSDirectory&);
     virtual mode_t permissions() const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
-    virtual KResult truncate(u64) override;
-    virtual KResult set_mtime(time_t) { return KSuccess; }
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
+    virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> set_mtime(time_t) { return {}; }
 
 private:
     PowerStateSwitchNode(FirmwareSysFSDirectory&);

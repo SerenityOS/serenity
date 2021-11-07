@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -66,12 +66,12 @@ private:
 class ProcFSExposedComponent : public RefCounted<ProcFSExposedComponent> {
 public:
     StringView name() const { return m_name->view(); }
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
-    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return EROFS; }
-    virtual KResult truncate(u64) { return EPERM; }
-    virtual KResult set_mtime(time_t) { return ENOTIMPL; }
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return EROFS; }
+    virtual ErrorOr<void> truncate(u64) { return EPERM; }
+    virtual ErrorOr<void> set_mtime(time_t) { return ENOTIMPL; }
 
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }
@@ -79,12 +79,12 @@ public:
     time_t modified_time() const { return TimeManagement::now().to_timeval().tv_sec; }
 
     virtual void prepare_for_deletion() { }
-    virtual KResult refresh_data(OpenFileDescription&) const
+    virtual ErrorOr<void> refresh_data(OpenFileDescription&) const
     {
-        return KSuccess;
+        return {};
     }
 
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -105,8 +105,8 @@ class ProcFSExposedDirectory
     friend class ProcFSComponentRegistry;
 
 public:
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     void add_component(const ProcFSExposedComponent&);
 
     virtual void prepare_for_deletion() override
@@ -117,7 +117,7 @@ public:
     }
     virtual mode_t required_mode() const override { return 0555; }
 
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
 
 protected:
     explicit ProcFSExposedDirectory(StringView name);
@@ -128,9 +128,9 @@ protected:
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
 public:
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
 
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
+    virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
 
 protected:
     virtual bool acquire_link(KBufferBuilder& builder) = 0;
@@ -142,12 +142,12 @@ class ProcFSRootDirectory final : public ProcFSExposedDirectory {
     friend class ProcFSComponentRegistry;
 
 public:
-    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     static NonnullRefPtr<ProcFSRootDirectory> must_create();
     virtual ~ProcFSRootDirectory();
 
 private:
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     ProcFSRootDirectory();
 };
 
@@ -159,7 +159,7 @@ class ProcFSGlobalInformation : public ProcFSExposedComponent {
 public:
     virtual ~ProcFSGlobalInformation() override {};
 
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
+    virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
 
     virtual mode_t required_mode() const override { return 0444; }
 
@@ -168,8 +168,8 @@ protected:
         : ProcFSExposedComponent(name)
     {
     }
-    virtual KResult refresh_data(OpenFileDescription&) const override;
-    virtual KResult try_generate(KBufferBuilder&) = 0;
+    virtual ErrorOr<void> refresh_data(OpenFileDescription&) const override;
+    virtual ErrorOr<void> try_generate(KBufferBuilder&) = 0;
 
     mutable Mutex m_refresh_lock;
 };
@@ -187,13 +187,13 @@ protected:
 
 private:
     // ^ProcFSGlobalInformation
-    virtual KResult try_generate(KBufferBuilder&) override final;
+    virtual ErrorOr<void> try_generate(KBufferBuilder&) override final;
 
     // ^ProcFSExposedComponent
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) override final;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) override final;
     virtual mode_t required_mode() const override final { return 0644; }
-    virtual KResult truncate(u64) override final;
-    virtual KResult set_mtime(time_t) override final;
+    virtual ErrorOr<void> truncate(u64) override final;
+    virtual ErrorOr<void> set_mtime(time_t) override final;
 };
 
 }

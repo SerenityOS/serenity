@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
+static ErrorOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
 {
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
@@ -24,7 +24,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
             return EBUSY;
 
         caller.set_wait_for_tracer_at_next_execve(true);
-        return KSuccess;
+        return 0;
     }
 
     // FIXME: PID/TID BUG
@@ -57,7 +57,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         if (peer->state() != Thread::State::Stopped) {
             peer->send_signal(SIGSTOP, &caller);
         }
-        return KSuccess;
+        return 0;
     }
 
     auto* tracer = peer_process.tracer();
@@ -126,7 +126,8 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
     case PT_POKE:
         if (!Memory::is_user_address(VirtualAddress { params.addr }))
             return EFAULT;
-        return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
+        TRY(peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data));
+        return 0;
 
     case PT_PEEKDEBUG: {
         Kernel::Syscall::SC_ptrace_peek_params peek_params {};
@@ -136,22 +137,23 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         break;
     }
     case PT_POKEDEBUG:
-        return peer->poke_debug_register(reinterpret_cast<uintptr_t>(params.addr), params.data);
+        TRY(peer->poke_debug_register(reinterpret_cast<uintptr_t>(params.addr), params.data));
+        return 0;
     default:
         return EINVAL;
     }
 
-    return KSuccess;
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(ptrace);
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto result = handle_ptrace(params, *this);
-    return result.is_error() ? result.error().error() : result.value();
+    return result.is_error() ? result.error().code() : result.value();
 }
 
 /**
@@ -164,7 +166,7 @@ bool Process::has_tracee_thread(ProcessID tracer_pid)
     return false;
 }
 
-KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
+ErrorOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 {
     // This function can be called from the context of another
     // process that called PT_PEEK
@@ -174,7 +176,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
     return data;
 }
 
-KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
+ErrorOr<void> Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
     Memory::VirtualRange range = { VirtualAddress(address), sizeof(u32) };
     auto* region = address_space().find_region_containing(range);
@@ -204,7 +206,7 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
     return copy_to_user(address, &data);
 }
 
-KResultOr<u32> Thread::peek_debug_register(u32 register_index)
+ErrorOr<u32> Thread::peek_debug_register(u32 register_index)
 {
     u32 data;
     switch (register_index) {
@@ -232,7 +234,7 @@ KResultOr<u32> Thread::peek_debug_register(u32 register_index)
     return data;
 }
 
-KResult Thread::poke_debug_register(u32 register_index, u32 data)
+ErrorOr<void> Thread::poke_debug_register(u32 register_index, u32 data)
 {
     switch (register_index) {
     case 0:
@@ -253,7 +255,7 @@ KResult Thread::poke_debug_register(u32 register_index, u32 data)
     default:
         return EINVAL;
     }
-    return KSuccess;
+    return {};
 }
 
 }

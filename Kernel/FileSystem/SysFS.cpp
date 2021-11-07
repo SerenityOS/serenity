@@ -46,7 +46,7 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
     return adopt_ref(*new (nothrow) SysFSRootDirectory);
 }
 
-KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
@@ -56,7 +56,7 @@ KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(F
         InodeIdentifier identifier = { fsid, component.component_index() };
         callback({ component.name(), identifier, 0 });
     }
-    return KSuccess;
+    return {};
 }
 
 SysFSRootDirectory::SysFSRootDirectory()
@@ -69,7 +69,7 @@ SysFSRootDirectory::SysFSRootDirectory()
     m_buses_directory = buses_directory;
 }
 
-KResultOr<NonnullRefPtr<SysFS>> SysFS::try_create()
+ErrorOr<NonnullRefPtr<SysFS>> SysFS::try_create()
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFS);
 }
@@ -82,10 +82,10 @@ SysFS::~SysFS()
 {
 }
 
-KResult SysFS::initialize()
+ErrorOr<void> SysFS::initialize()
 {
     m_root_inode = TRY(SysFSComponentRegistry::the().root_directory().to_inode(*this));
-    return KSuccess;
+    return {};
 }
 
 Inode& SysFS::root_inode()
@@ -93,7 +93,7 @@ Inode& SysFS::root_inode()
     return *m_root_inode;
 }
 
-KResultOr<NonnullRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
+ErrorOr<NonnullRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
 }
@@ -115,22 +115,22 @@ void SysFSInode::did_seek(OpenFileDescription& description, off_t new_offset)
     }
 }
 
-KResult SysFSInode::attach(OpenFileDescription& description)
+ErrorOr<void> SysFSInode::attach(OpenFileDescription& description)
 {
     return m_associated_component->refresh_data(description);
 }
 
-KResultOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
+ErrorOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* fd) const
 {
     return m_associated_component->read_bytes(offset, count, buffer, fd);
 }
 
-KResult SysFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> SysFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::lookup(StringView)
+ErrorOr<NonnullRefPtr<Inode>> SysFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -148,52 +148,52 @@ InodeMetadata SysFSInode::metadata() const
     return metadata;
 }
 
-KResult SysFSInode::flush_metadata()
+ErrorOr<void> SysFSInode::flush_metadata()
 {
-    return KSuccess;
+    return {};
 }
 
-KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
+ErrorOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* fd)
 {
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
 
-KResult SysFSInode::add_child(Inode&, StringView const&, mode_t)
+ErrorOr<void> SysFSInode::add_child(Inode&, StringView const&, mode_t)
 {
     return EROFS;
 }
 
-KResult SysFSInode::remove_child(StringView const&)
+ErrorOr<void> SysFSInode::remove_child(StringView const&)
 {
     return EROFS;
 }
 
-KResult SysFSInode::chmod(mode_t)
+ErrorOr<void> SysFSInode::chmod(mode_t)
 {
     return EPERM;
 }
 
-KResult SysFSInode::chown(UserID, GroupID)
+ErrorOr<void> SysFSInode::chown(UserID, GroupID)
 {
     return EPERM;
 }
 
-KResult SysFSInode::set_mtime(time_t time)
+ErrorOr<void> SysFSInode::set_mtime(time_t time)
 {
     return m_associated_component->set_mtime(time);
 }
 
-KResult SysFSInode::truncate(u64 size)
+ErrorOr<void> SysFSInode::truncate(u64 size)
 {
     return m_associated_component->truncate(size);
 }
 
-KResultOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
+ErrorOr<NonnullRefPtr<SysFSDirectoryInode>> SysFSDirectoryInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSDirectoryInode(sysfs, component));
 }
@@ -219,13 +219,13 @@ InodeMetadata SysFSDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResult SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(fs().m_lock);
     return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);

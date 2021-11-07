@@ -24,13 +24,13 @@ namespace Kernel {
 
 class [[nodiscard]] KBuffer {
 public:
-    static KResultOr<NonnullOwnPtr<KBuffer>> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto region = TRY(MM.allocate_kernel_region(Memory::page_round_up(size), name, access, strategy));
         return TRY(adopt_nonnull_own_or_enomem(new (nothrow) KBuffer { size, move(region) }));
     }
 
-    static KResultOr<NonnullOwnPtr<KBuffer>> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto buffer = TRY(try_create_with_size(bytes.size(), access, name, strategy));
         memcpy(buffer->data(), bytes.data(), bytes.size());

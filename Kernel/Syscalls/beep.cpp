@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$beep()
+ErrorOr<FlatPtr> Process::sys$beep()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     PCSpeaker::tone_on(440);
