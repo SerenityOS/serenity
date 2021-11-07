@@ -150,19 +150,16 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     }
 }
 
-Result<void, String> Image::write_to_file(const String& file_path) const
+ErrorOr<void> Image::write_to_file(const String& file_path) const
 {
     StringBuilder builder;
     JsonObjectSerializer json(builder);
     serialize_as_json(json);
     json.finish();
 
-    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
-    if (file_or_error.is_error())
-        return String { strerror(file_or_error.error().code()) };
-
-    if (!file_or_error.value()->write(builder.string_view()))
-        return String { file_or_error.value()->error_string() };
+    auto file = TRY(Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)));
+    if (!file->write(builder.string_view()))
+        return Error::from_errno(file->error());
     return {};
 }
 
@@ -194,42 +191,42 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-Result<void, String> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
     auto file = Core::File::construct();
     file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
     if (file->has_error())
-        return String { file->error_string() };
+        return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = try_compose_bitmap(bitmap_format);
     if (!bitmap)
-        return String { "Failed to allocate bitmap for encoding"sv };
+        return Error::from_string_literal("Failed to allocate bitmap for encoding"sv);
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
 
     if (!file->write(encoded_data.data(), encoded_data.size()))
-        return String { "Failed to write encoded BMP data to file"sv };
+        return Error::from_errno(file->error());
 
     return {};
 }
 
-Result<void, String> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
     auto file = Core::File::construct();
     file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
     if (file->has_error())
-        return String { file->error_string() };
+        return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = try_compose_bitmap(bitmap_format);
     if (!bitmap)
-        return String { "Failed to allocate bitmap for encoding"sv };
+        return Error::from_string_literal("Failed to allocate bitmap for encoding"sv);
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
     if (!file->write(encoded_data.data(), encoded_data.size()))
-        return String { "Failed to write encoded PNG data to file"sv };
+        return Error::from_errno(file->error());
 
     return {};
 }
