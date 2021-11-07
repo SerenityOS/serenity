@@ -47,7 +47,7 @@ public:
     [[nodiscard]] size_t size() const { return m_members.size(); }
     [[nodiscard]] bool is_empty() const { return m_members.is_empty(); }
 
-    [[nodiscard]] JsonValue const& get(String const& key) const
+    [[nodiscard]] JsonValue const& get(StringView key) const
     {
         auto* value = get_ptr(key);
         static JsonValue* s_null_value { nullptr };
@@ -59,7 +59,7 @@ public:
         return *value;
     }
 
-    [[nodiscard]] JsonValue const* get_ptr(String const& key) const
+    [[nodiscard]] JsonValue const* get_ptr(StringView key) const
     {
         auto it = m_members.find(key);
         if (it == m_members.end())
@@ -67,63 +67,63 @@ public:
         return &(*it).value;
     }
 
-    [[nodiscard]] [[nodiscard]] bool has(String const& key) const
+    [[nodiscard]] [[nodiscard]] bool has(StringView key) const
     {
         return m_members.contains(key);
     }
 
-    [[nodiscard]] bool has_null(String const& key) const
+    [[nodiscard]] bool has_null(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_null();
     }
-    [[nodiscard]] bool has_bool(String const& key) const
+    [[nodiscard]] bool has_bool(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_bool();
     }
-    [[nodiscard]] bool has_string(String const& key) const
+    [[nodiscard]] bool has_string(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_string();
     }
-    [[nodiscard]] bool has_i32(String const& key) const
+    [[nodiscard]] bool has_i32(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_i32();
     }
-    [[nodiscard]] bool has_u32(String const& key) const
+    [[nodiscard]] bool has_u32(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_u32();
     }
-    [[nodiscard]] bool has_i64(String const& key) const
+    [[nodiscard]] bool has_i64(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_i64();
     }
-    [[nodiscard]] bool has_u64(String const& key) const
+    [[nodiscard]] bool has_u64(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_u64();
     }
-    [[nodiscard]] bool has_number(String const& key) const
+    [[nodiscard]] bool has_number(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_number();
     }
-    [[nodiscard]] bool has_array(String const& key) const
+    [[nodiscard]] bool has_array(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_array();
     }
-    [[nodiscard]] bool has_object(String const& key) const
+    [[nodiscard]] bool has_object(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_object();
     }
 #ifndef KERNEL
-    [[nodiscard]] [[nodiscard]] bool has_double(String const& key) const
+    [[nodiscard]] [[nodiscard]] bool has_double(StringView key) const
     {
         auto* value = get_ptr(key);
         return value && value->is_double();
