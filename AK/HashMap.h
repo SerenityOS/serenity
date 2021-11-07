@@ -91,6 +91,19 @@ public:
         return m_table.find(hash, predicate);
     }
 
+    // FIXME: Use some sort of Traits to get the comparison operation
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] IteratorType find(Key const& value)
+    {
+        return m_table.find(Traits<Key>::hash(value), [&](auto& entry) { return value == entry.key; });
+    }
+
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] ConstIteratorType find(Key const& value) const
+    {
+        return m_table.find(Traits<Key>::hash(value), [&](auto& entry) { return value == entry.key; });
+    }
+
     void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
     ErrorOr<void> try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
@@ -118,9 +131,42 @@ public:
         return (*it).value;
     }
 
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename Traits<V>::PeekType> get(const Key& key) const requires(!IsPointer<typename Traits<V>::PeekType>)
+    {
+        auto it = find(key);
+        if (it == end())
+            return {};
+        return (*it).value;
+    }
+
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename Traits<V>::ConstPeekType> get(const Key& key) const requires(IsPointer<typename Traits<V>::PeekType>)
+    {
+        auto it = find(key);
+        if (it == end())
+            return {};
+        return (*it).value;
+    }
+
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename Traits<V>::PeekType> get(const Key& key) requires(!IsConst<typename Traits<V>::PeekType>)
+    {
+        auto it = find(key);
+        if (it == end())
+            return {};
+        return (*it).value;
+    }
+
     [[nodiscard]] bool contains(const K& key) const
     {
         return find(key) != end();
+    }
+
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] bool contains(Key const& value)
+    {
+        return find(value) != end();
     }
 
     void remove(IteratorType it)
