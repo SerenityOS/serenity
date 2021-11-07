@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,6 +32,7 @@ void ZonedDateTimeConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
@@ -95,6 +97,19 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
 
     // 3. Return ? ToTemporalZonedDateTime(item, options).
     return TRY(to_temporal_zoned_date_time(global_object, item, options));
+}
+
+// 6.2.3 Temporal.ZonedDateTime.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.compare
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::compare)
+{
+    // 1. Set one to ? ToTemporalZonedDateTime(one).
+    auto* one = TRY(to_temporal_zoned_date_time(global_object, vm.argument(0)));
+
+    // 2. Set two to ? ToTemporalZonedDateTime(two).
+    auto* two = TRY(to_temporal_zoned_date_time(global_object, vm.argument(1)));
+
+    // 3. Return 𝔽(! CompareEpochNanoseconds(one.[[Nanoseconds]], two.[[Nanoseconds]])).
+    return Value(compare_epoch_nanoseconds(one->nanoseconds(), two->nanoseconds()));
 }
 
 }
