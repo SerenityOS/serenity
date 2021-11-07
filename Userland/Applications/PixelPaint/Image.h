@@ -70,9 +70,9 @@ public:
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
     void serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    Result<void, String> write_to_file(String const& file_path) const;
-    Result<void, String> export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel);
-    Result<void, String> export_png_to_fd_and_close(int fd, bool preserve_alpha_channel);
+    ErrorOr<void> write_to_file(String const& file_path) const;
+    ErrorOr<void> export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel);
+    ErrorOr<void> export_png_to_fd_and_close(int fd, bool preserve_alpha_channel);
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
