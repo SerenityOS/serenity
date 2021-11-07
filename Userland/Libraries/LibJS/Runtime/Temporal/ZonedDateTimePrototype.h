@@ -53,6 +53,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(with_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(with_time_zone);
     JS_DECLARE_NATIVE_FUNCTION(with_calendar);
+    JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(start_of_day);
     JS_DECLARE_NATIVE_FUNCTION(to_instant);
