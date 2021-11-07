@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
+#include <LibWasm/AbstractMachine/Validator.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
@@ -89,9 +90,30 @@ void WebAssemblyObject::visit_edges(Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
 {
-    // FIXME: Implement this once module validation is implemented in LibWasm.
-    dbgln("Hit WebAssemblyObject::validate() stub!");
-    return JS::Value { true };
+    // 1. Let stableBytes be a copy of the bytes held by the buffer bytes.
+    // Note: There's no need to copy the bytes here as the buffer data cannot change while we're compiling the module.
+    auto buffer = TRY(vm.argument(0).to_object(global_object));
+
+    // 2. Compile stableBytes as a WebAssembly module and store the results as module.
+    auto maybe_module = parse_module(global_object, buffer);
+
+    // 3. If module is error, return false.
+    if (maybe_module.is_error())
+        return JS::Value(false);
+
+    // Drop the module from the cache, we're never going to refer to it.
+    ScopeGuard drop_from_cache {
+        [&] {
+            s_compiled_modules.take_last();
+        }
+    };
+
+    // 3 continued - our "compile" step is lazy with validation, explicitly do the validation.
+    if (s_abstract_machine.validate(s_compiled_modules[maybe_module.value()].module).is_error())
+        return JS::Value(false);
+
+    // 4. Return true.
+    return JS::Value(true);
 }
 
 JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::Object* buffer_object)
@@ -121,6 +143,11 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::GlobalObject& global_object, JS::
     if (module_result.is_error()) {
         // FIXME: Throw CompileError instead.
         return vm.throw_completion<JS::TypeError>(global_object, Wasm::parse_error_to_string(module_result.error()));
+    }
+
+    if (auto validation_result = WebAssemblyObject::s_abstract_machine.validate(module_result.value()); validation_result.is_error()) {
+        // FIXME: Throw CompileError instead.
+        return vm.throw_completion<JS::TypeError>(global_object, validation_result.error().error_string);
     }
 
     WebAssemblyObject::s_compiled_modules.append(make<WebAssemblyObject::CompiledWebAssemblyModule>(module_result.release_value()));
