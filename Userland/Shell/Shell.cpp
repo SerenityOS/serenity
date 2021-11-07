@@ -603,8 +603,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     auto resolve_redirection = [&](auto& redirection) -> IterationDecision {
         auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
-            if (!rewiring_result.error().is_empty())
-                warnln("error: {}", rewiring_result.error());
+            warnln("error: {}", rewiring_result.error());
             return IterationDecision::Break;
         }
         auto& rewiring = rewiring_result.value();
