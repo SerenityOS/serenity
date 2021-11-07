@@ -35,7 +35,7 @@ public:
     static bool is_link(String const& filename);
 
     static bool exists(String const& filename);
-    static Result<size_t, OSError> size(String const& filename);
+    static ErrorOr<size_t> size(String const& filename);
     static bool ensure_parent_directories(String const& path);
     static String current_working_directory();
     static String absolute_path(String const& path);
