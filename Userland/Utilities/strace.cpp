@@ -249,6 +249,59 @@ static T copy_from_process(const T* source)
     return value;
 }
 
+struct BitflagOption {
+    int value;
+    StringView name;
+};
+
+#define BITFLAG(NAME) \
+    BitflagOption { NAME, #NAME }
+
+struct BitflagBase {
+    int flagset;
+    // Derivatives must define 'options', like so:
+    // static constexpr auto options = { BITFLAG(O_CREAT), BITFLAG(O_DIRECTORY) };
+};
+
+namespace AK {
+template<typename BitflagDerivative>
+    requires(IsBaseOf<BitflagBase, BitflagDerivative>) && requires { BitflagDerivative::options; }
+struct Formatter<BitflagDerivative> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    void format(FormatBuilder& format_builder, BitflagDerivative const& value)
+    {
+        bool had_any_output = false;
+        int remaining = value.flagset;
+
+        for (BitflagOption const& option : BitflagDerivative::options) {
+            if ((remaining & option.value) != option.value)
+                continue;
+            remaining &= ~option.value;
+            if (had_any_output)
+                format_builder.put_literal(" | ");
+            format_builder.put_literal(option.name);
+            had_any_output = true;
+        }
+
+        if (remaining != 0) {
+            // No more BitflagOptions are available. Any remaining flags are unrecognized.
+            if (had_any_output)
+                format_builder.put_literal(" | ");
+            format_builder.builder().appendff("0x{:x} (?)", static_cast<unsigned>(remaining));
+            had_any_output = true;
+        }
+
+        if (!had_any_output)
+            format_builder.put_literal("0");
+    }
+};
+}
+
 struct PointerArgument {
     const void* value;
 };
@@ -377,6 +430,13 @@ static void format_exit(FormattedSyscallBuilder& builder, int status)
     builder.add_argument(status);
 }
 
+struct OpenOptions : BitflagBase {
+    static constexpr auto options = {
+        BITFLAG(O_RDWR), BITFLAG(O_RDONLY), BITFLAG(O_WRONLY), BITFLAG(O_APPEND), BITFLAG(O_CREAT)
+        // TODO: etc...
+    };
+};
+
 static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
 {
     auto params = copy_from_process(params_p);
@@ -388,24 +448,7 @@ static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_param
 
     builder.add_string_argument(params.path);
 
-    Vector<StringView> active_flags;
-    if (params.options & O_RDWR)
-        active_flags.append("O_RDWR");
-    else if (params.options & O_RDONLY)
-        active_flags.append("O_RDONLY");
-    else if (params.options & O_WRONLY)
-        active_flags.append("O_WRONLY");
-
-    if (params.options & O_APPEND)
-        active_flags.append("O_APPEND");
-    if (params.options & O_CREAT)
-        active_flags.append("O_CREAT");
-    // TODO: etc...
-
-    // TODO: add to FormattedSyscallBuilder
-    StringBuilder sbuilder;
-    sbuilder.join(" | ", active_flags);
-    builder.add_argument(sbuilder.to_string());
+    builder.add_argument(OpenOptions { params.options });
 
     if (params.options & O_CREAT)
         builder.add_argument("{:04o}", params.mode);
