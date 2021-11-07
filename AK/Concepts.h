@@ -36,6 +36,9 @@ concept SameAs = IsSame<T, U>;
 template<typename T>
 concept AnyString = Detail::IsConstructible<StringView, T>;
 
+template<typename T, typename U>
+concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;
+
 // FIXME: remove once Clang formats these properly.
 // clang-format off
 template<typename Func, typename... Args>
