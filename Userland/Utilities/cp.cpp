@@ -61,7 +61,7 @@ int main(int argc, char** argv)
             if (result.error().tried_recursing)
                 warnln("cp: -R not specified; omitting directory '{}'", source);
             else
-                warnln("cp: unable to copy '{}' to '{}': {}", source, destination_path, result.error().error_code);
+                warnln("cp: unable to copy '{}' to '{}': {}", source, destination_path, static_cast<Error const&>(result.error()));
             return 1;
         }
 

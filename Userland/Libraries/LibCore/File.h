@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/OSError.h>
 #include <AK/Result.h>
 #include <AK/String.h>
@@ -59,14 +60,18 @@ public:
         PermissionsOwnershipTimestamps,
     };
 
-    struct CopyError {
-        OSError error_code;
+    struct CopyError : public Error {
+        CopyError(int error_code, bool t)
+            : Error(error_code)
+            , tried_recursing(t)
+        {
+        }
         bool tried_recursing;
     };
 
-    static Result<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
-    static Result<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
-    static Result<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
     static String real_path_for(String const& filename);
     static String read_link(String const& link_path);
