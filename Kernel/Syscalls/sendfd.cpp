@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
+ErrorOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sendfd);
@@ -25,10 +25,11 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 
     auto passing_description = TRY(fds().open_file_description(fd));
     auto& local_socket = static_cast<LocalSocket&>(socket);
-    return local_socket.sendfd(*socket_description, move(passing_description));
+    TRY(local_socket.sendfd(*socket_description, move(passing_description)));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
+ErrorOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(recvfd);

@@ -16,7 +16,7 @@ public:
     TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 
     virtual ~BlockBasedFileSystem() override;
-    virtual KResult initialize() override;
+    virtual ErrorOr<void> initialize() override;
 
     u64 logical_block_size() const { return m_logical_block_size; };
 
@@ -26,8 +26,8 @@ public:
 protected:
     explicit BlockBasedFileSystem(OpenFileDescription&);
 
-    KResult read_block(BlockIndex, UserOrKernelBuffer*, size_t count, size_t offset = 0, bool allow_cache = true) const;
-    KResult read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;
+    ErrorOr<void> read_block(BlockIndex, UserOrKernelBuffer*, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    ErrorOr<void> read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;
 
     bool raw_read(BlockIndex, UserOrKernelBuffer&);
     bool raw_write(BlockIndex, const UserOrKernelBuffer&);
@@ -35,8 +35,8 @@ protected:
     bool raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer&);
     bool raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer&);
 
-    KResult write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, size_t offset = 0, bool allow_cache = true);
-    KResult write_blocks(BlockIndex, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
+    ErrorOr<void> write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, size_t offset = 0, bool allow_cache = true);
+    ErrorOr<void> write_blocks(BlockIndex, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
 
     u64 m_logical_block_size { 512 };
 

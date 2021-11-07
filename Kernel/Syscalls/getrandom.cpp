@@ -13,7 +13,7 @@ namespace Kernel {
 // We don't use the flag yet, but we could use it for distinguishing
 // random source like Linux, unlike the OpenBSD equivalent. However, if we
 // do, we should be able of the caveats that Linux has dealt with.
-KResultOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
+ErrorOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);

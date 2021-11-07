@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Mutex.h>
@@ -31,7 +31,7 @@ public:
     static void sync();
     static void lock_all();
 
-    virtual KResult initialize() = 0;
+    virtual ErrorOr<void> initialize() = 0;
     virtual StringView class_name() const = 0;
     virtual Inode& root_inode() = 0;
     virtual bool supports_watchers() const { return false; }
@@ -43,7 +43,7 @@ public:
     virtual unsigned total_inode_count() const { return 0; }
     virtual unsigned free_inode_count() const { return 0; }
 
-    virtual KResult prepare_to_unmount() { return KSuccess; }
+    virtual ErrorOr<void> prepare_to_unmount() { return {}; }
 
     struct DirectoryEntryView {
         DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);

@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
+ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto description = TRY(fds().open_file_description(fd));
@@ -19,9 +19,10 @@ KResultOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
         int non_blocking;
         TRY(copy_from_user(&non_blocking, Userspace<const int*>(arg)));
         description->set_blocking(non_blocking == 0);
-        return KSuccess;
+        return 0;
     }
-    return description->file().ioctl(*description, request, arg);
+    TRY(description->file().ioctl(*description, request, arg));
+    return 0;
 }
 
 }

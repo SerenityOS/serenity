@@ -21,7 +21,7 @@ public:
     static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
-    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
 private:
     MemoryDevice();
@@ -30,8 +30,8 @@ private:
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return false; }
     virtual bool is_seekable() const override { return true; }
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; }
 
     virtual void did_seek(OpenFileDescription&, off_t) override;
 

@@ -21,7 +21,7 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread)
+NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread)
 {
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
@@ -55,13 +55,13 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
     return backtrace;
 }
 
-KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
+ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
     int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3);
 }
 
-KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
+ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
     FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     if (count() >= capacity())
@@ -160,7 +160,7 @@ KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID ti
     event.tid = tid.value();
     event.timestamp = TimeManagement::the().uptime_ms();
     at(m_count++) = event;
-    return KSuccess;
+    return {};
 }
 
 PerformanceEvent& PerformanceEventBuffer::at(size_t index)
@@ -171,7 +171,7 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 }
 
 template<typename Serializer>
-KResult PerformanceEventBuffer::to_json_impl(Serializer& object) const
+ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
         auto strings = object.add_array("strings");
@@ -270,10 +270,10 @@ KResult PerformanceEventBuffer::to_json_impl(Serializer& object) const
     }
     array.finish();
     object.finish();
-    return KSuccess;
+    return {};
 }
 
-KResult PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
+ErrorOr<void> PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 {
     JsonObjectSerializer object(builder);
     return to_json_impl(object);
@@ -312,7 +312,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
     }
 }
 
-KResultOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)
+ErrorOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)
 {
     FlatPtr string_id = m_strings.size();
 

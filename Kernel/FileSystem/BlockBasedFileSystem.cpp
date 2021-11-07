@@ -114,7 +114,7 @@ BlockBasedFileSystem::~BlockBasedFileSystem()
 {
 }
 
-KResult BlockBasedFileSystem::initialize()
+ErrorOr<void> BlockBasedFileSystem::initialize()
 {
     VERIFY(block_size() != 0);
     auto cached_block_data = TRY(KBuffer::try_create_with_size(DiskCache::EntryCount * block_size()));
@@ -124,22 +124,22 @@ KResult BlockBasedFileSystem::initialize()
     m_cache.with_exclusive([&](auto& cache) {
         cache = move(disk_cache);
     });
-    return KSuccess;
+    return {};
 }
 
-KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
+ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
 
-    return m_cache.with_exclusive([&](auto& cache) -> KResult {
+    return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             flush_specific_block_if_needed(index);
             auto base_offset = index.value() * block_size() + offset;
             auto nwritten = TRY(file_description().write(base_offset, data, count));
             VERIFY(nwritten == count);
-            return KSuccess;
+            return {};
         }
 
         auto& entry = cache->get(index);
@@ -151,7 +151,7 @@ KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBu
 
         cache->mark_dirty(entry);
         entry.has_data = true;
-        return KSuccess;
+        return {};
     });
 }
 
@@ -195,29 +195,29 @@ bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, cons
     return true;
 }
 
-KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
+ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
         TRY(write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache));
     }
-    return KSuccess;
+    return {};
 }
 
-KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
+ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
 
-    return m_cache.with_exclusive([&](auto& cache) -> KResult {
+    return m_cache.with_exclusive([&](auto& cache) -> ErrorOr<void> {
         if (!allow_cache) {
             const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
             auto base_offset = index.value() * block_size() + offset;
             auto nread = TRY(file_description().read(*buffer, base_offset, count));
             VERIFY(nread == count);
-            return KSuccess;
+            return {};
         }
 
         auto& entry = cache->get(index);
@@ -230,11 +230,11 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
         }
         if (buffer)
             TRY(buffer->write(entry.data + offset, count));
-        return KSuccess;
+        return {};
     });
 }
 
-KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
+ErrorOr<void> BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
     VERIFY(m_logical_block_size);
     if (!count)
@@ -247,7 +247,7 @@ KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, User
         out = out.offset(block_size());
     }
 
-    return KSuccess;
+    return {};
 }
 
 void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)

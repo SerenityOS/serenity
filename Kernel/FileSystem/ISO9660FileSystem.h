@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/EnumBits.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RecursionDecision.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
@@ -291,7 +291,7 @@ public:
         //       We need it as an OwnPtr to default-construct this struct.
         OwnPtr<KBuffer> blocks;
 
-        static KResultOr<NonnullRefPtr<DirectoryEntry>> try_create(u32 extent, u32 length, OwnPtr<KBuffer> blocks)
+        static ErrorOr<NonnullRefPtr<DirectoryEntry>> try_create(u32 extent, u32 length, OwnPtr<KBuffer> blocks)
         {
             return adopt_nonnull_ref_or_enomem(new (nothrow) DirectoryEntry(extent, length, move(blocks)));
         }
@@ -305,10 +305,10 @@ public:
         }
     };
 
-    static KResultOr<NonnullRefPtr<ISO9660FS>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<ISO9660FS>> try_create(OpenFileDescription&);
 
     virtual ~ISO9660FS() override;
-    virtual KResult initialize() override;
+    virtual ErrorOr<void> initialize() override;
     virtual StringView class_name() const override { return "ISO9660FS"sv; }
     virtual Inode& root_inode() override;
 
@@ -317,18 +317,18 @@ public:
 
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
-    KResultOr<NonnullRefPtr<DirectoryEntry>> directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record);
+    ErrorOr<NonnullRefPtr<DirectoryEntry>> directory_entry_for_record(Badge<ISO9660DirectoryIterator>, ISO::DirectoryRecordHeader const* record);
 
 private:
     ISO9660FS(OpenFileDescription&);
 
-    KResult parse_volume_set();
-    KResult create_root_inode();
-    KResult calculate_inode_count() const;
+    ErrorOr<void> parse_volume_set();
+    ErrorOr<void> create_root_inode();
+    ErrorOr<void> calculate_inode_count() const;
 
     u32 calculate_directory_entry_cache_key(ISO::DirectoryRecordHeader const&);
 
-    KResult visit_directory_record(ISO::DirectoryRecordHeader const& record, Function<KResultOr<RecursionDecision>(ISO::DirectoryRecordHeader const*)> const& visitor) const;
+    ErrorOr<void> visit_directory_record(ISO::DirectoryRecordHeader const& record, Function<ErrorOr<RecursionDecision>(ISO::DirectoryRecordHeader const*)> const& visitor) const;
 
     OwnPtr<ISO::PrimaryVolumeDescriptor> m_primary_volume;
     RefPtr<ISO9660Inode> m_root_inode;
@@ -347,21 +347,21 @@ public:
     ISO9660FS const& fs() const { return static_cast<ISO9660FS const&>(Inode::fs()); }
 
     // ^Inode
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
-    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
-    virtual KResult flush_metadata() override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
-    virtual KResult remove_child(const StringView& name) override;
-    virtual KResult chmod(mode_t) override;
-    virtual KResult chown(UserID, GroupID) override;
-    virtual KResult truncate(u64) override;
-    virtual KResult set_atime(time_t) override;
-    virtual KResult set_ctime(time_t) override;
-    virtual KResult set_mtime(time_t) override;
+    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<void> flush_metadata() override;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override;
+    virtual ErrorOr<void> remove_child(const StringView& name) override;
+    virtual ErrorOr<void> chmod(mode_t) override;
+    virtual ErrorOr<void> chown(UserID, GroupID) override;
+    virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> set_atime(time_t) override;
+    virtual ErrorOr<void> set_ctime(time_t) override;
+    virtual ErrorOr<void> set_mtime(time_t) override;
     virtual void one_ref_left() override;
 
 private:
@@ -371,7 +371,7 @@ private:
     static constexpr size_t max_file_identifier_length = 256 - sizeof(ISO::DirectoryRecordHeader);
 
     ISO9660Inode(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView const& name);
-    static KResultOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView const& name);
+    static ErrorOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView const& name);
 
     static InodeIndex get_inode_index(ISO::DirectoryRecordHeader const& record, StringView const& name);
     static StringView get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer);

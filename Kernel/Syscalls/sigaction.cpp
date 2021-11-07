@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
+ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);
@@ -41,15 +41,16 @@ KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> 
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
+ErrorOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto pending_signals = Thread::current()->pending_signals();
-    return copy_to_user(set, &pending_signals);
+    TRY(copy_to_user(set, &pending_signals));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
+ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);
@@ -73,24 +74,24 @@ KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
+ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;
 
 #if ARCH(I386)
-    //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
+    // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     u32* stack_ptr = (u32*)registers.userspace_esp;
     u32 smuggled_eax = *stack_ptr;
 
-    //pop the stored eax, ebp, return address, handler and signal code
+    // pop the stored eax, ebp, return address, handler and signal code
     stack_ptr += 5;
 
     Thread::current()->m_signal_mask = *stack_ptr;
     stack_ptr++;
 
-    //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
+    // pop edi, esi, ebp, esp, ebx, edx, ecx and eax
     memcpy(&registers.edi, stack_ptr, 8 * sizeof(FlatPtr));
     stack_ptr += 8;
 
@@ -103,17 +104,17 @@ KResultOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& regist
     registers.userspace_esp = registers.esp;
     return smuggled_eax;
 #else
-    //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
+    // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     FlatPtr* stack_ptr = (FlatPtr*)registers.userspace_rsp;
     FlatPtr smuggled_rax = *stack_ptr;
 
-    //pop the stored rax, rbp, return address, handler and signal code
+    // pop the stored rax, rbp, return address, handler and signal code
     stack_ptr += 5;
 
     Thread::current()->m_signal_mask = *stack_ptr;
     stack_ptr++;
 
-    //pop rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax, r8, r9, r10, r11, r12, r13, r14 and r15
+    // pop rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax, r8, r9, r10, r11, r12, r13, r14 and r15
     memcpy(&registers.rdi, stack_ptr, 16 * sizeof(FlatPtr));
     stack_ptr += 16;
 

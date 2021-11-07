@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/UnixTypes.h>

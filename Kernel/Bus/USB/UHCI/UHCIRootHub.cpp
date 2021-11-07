@@ -83,7 +83,7 @@ static USBHubDescriptor uhci_root_hub_hub_descriptor = {
     0x0,                                  // Self-powered
 };
 
-KResultOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullRefPtr<UHCIController> uhci_controller)
+ErrorOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullRefPtr<UHCIController> uhci_controller)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) UHCIRootHub(uhci_controller));
 }
@@ -93,7 +93,7 @@ UHCIRootHub::UHCIRootHub(NonnullRefPtr<UHCIController> uhci_controller)
 {
 }
 
-KResult UHCIRootHub::setup(Badge<UHCIController>)
+ErrorOr<void> UHCIRootHub::setup(Badge<UHCIController>)
 {
     m_hub = TRY(Hub::try_create_root_hub(m_uhci_controller, Device::DeviceSpeed::FullSpeed));
 
@@ -104,10 +104,10 @@ KResult UHCIRootHub::setup(Badge<UHCIController>)
     // NOTE: The root hub is no longer on the default address.
     TRY(m_hub->enumerate_and_power_on_hub());
 
-    return KSuccess;
+    return {};
 }
 
-KResultOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
+ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
 {
     auto& request = transfer.request();
     auto* request_data = transfer.buffer().as_ptr() + sizeof(USBRequestData);

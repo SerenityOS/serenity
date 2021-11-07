@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
+ErrorOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(rpath);
@@ -19,7 +19,7 @@ KResultOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t p
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$fchdir(int fd)
+ErrorOr<FlatPtr> Process::sys$fchdir(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
@@ -32,7 +32,7 @@ KResultOr<FlatPtr> Process::sys$fchdir(int fd)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
+ErrorOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(rpath);

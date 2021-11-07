@@ -16,13 +16,13 @@ namespace Kernel {
 
 static Atomic<int> s_next_fifo_id = 1;
 
-KResultOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
+ErrorOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
 {
     auto buffer = TRY(DoubleBuffer::try_create());
     return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
     auto description = TRY(OpenFileDescription::try_create(*this));
     attach(direction);
@@ -30,7 +30,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Directi
     return description;
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
 {
     MutexLocker locker(m_open_lock);
 
@@ -109,7 +109,7 @@ bool FIFO::can_write(const OpenFileDescription&, size_t) const
     return m_buffer->space_for_writing() || !m_readers;
 }
 
-KResultOr<size_t> FIFO::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> FIFO::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_buffer->is_empty()) {
         if (!m_writers)
@@ -120,7 +120,7 @@ KResultOr<size_t> FIFO::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& b
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, &Process::current());
@@ -132,16 +132,16 @@ KResultOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBu
     return m_buffer->write(buffer, size);
 }
 
-KResultOr<NonnullOwnPtr<KString>> FIFO::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> FIFO::pseudo_path(const OpenFileDescription&) const
 {
     return KString::try_create(String::formatted("fifo:{}", m_fifo_id));
 }
 
-KResult FIFO::stat(::stat& st) const
+ErrorOr<void> FIFO::stat(::stat& st) const
 {
     memset(&st, 0, sizeof(st));
     st.st_mode = S_IFIFO;
-    return KSuccess;
+    return {};
 }
 
 }

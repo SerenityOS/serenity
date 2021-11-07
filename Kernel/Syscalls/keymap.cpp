@@ -11,7 +11,7 @@ namespace Kernel {
 
 constexpr size_t map_name_max_size = 50;
 
-KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(setkeymap);
@@ -37,7 +37,7 @@ KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(getkeymap);
@@ -55,7 +55,7 @@ KResultOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_
     if (params.map_name.size < keymap_name.length())
         return ENAMETOOLONG;
     TRY(copy_to_user(params.map_name.data, keymap_name.characters(), keymap_name.length()));
-    return KSuccess;
+    return 0;
 }
 
 }

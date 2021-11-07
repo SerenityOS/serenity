@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
+ErrorOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -20,7 +20,8 @@ KResultOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_le
     auto description = TRY(fds().open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
-    return description->truncate(static_cast<u64>(length));
+    TRY(description->truncate(static_cast<u64>(length)));
+    return 0;
 }
 
 }

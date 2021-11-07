@@ -22,16 +22,16 @@
 
 namespace Kernel {
 
-KResult GenericFramebufferDevice::verify_head_index(int head_index) const
+ErrorOr<void> GenericFramebufferDevice::verify_head_index(int head_index) const
 {
     if (head_index < 0)
-        return KResult(EINVAL);
+        return Error::from_errno(EINVAL);
     if (!multihead_support() && head_index > 0)
-        return KResult(ENOTSUP);
-    return KSuccess;
+        return Error::from_errno(ENOTSUP);
+    return {};
 }
 
-KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -40,7 +40,7 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
         FBProperties properties;
         auto adapter = m_graphics_adapter.strong_ref();
         if (!adapter)
-            return KResult(EIO);
+            return Error::from_errno(EIO);
         properties.multihead_support = multihead_support();
         properties.flushing_support = flushing_support();
         properties.doublebuffer_support = adapter->double_framebuffering_capable();
@@ -67,13 +67,13 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
         TRY(verify_head_index(head_resolution.head_index));
 
         if (head_resolution.pitch < 0)
-            return KResult(EINVAL);
+            return Error::from_errno(EINVAL);
         if (head_resolution.width < 0)
-            return KResult(EINVAL);
+            return Error::from_errno(EINVAL);
         if (head_resolution.height < 0)
-            return KResult(EINVAL);
+            return Error::from_errno(EINVAL);
         TRY(set_head_resolution(head_resolution.head_index, head_resolution.width, head_resolution.height, head_resolution.pitch));
-        return KSuccess;
+        return {};
     }
     case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
@@ -82,9 +82,9 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
         if (head_vertical_buffer_offset.offseted < 0 || head_vertical_buffer_offset.offseted > 1)
-            return KResult(EINVAL);
+            return Error::from_errno(EINVAL);
         TRY(set_head_buffer(head_vertical_buffer_offset.head_index, head_vertical_buffer_offset.offseted));
-        return KSuccess;
+        return {};
     }
     case FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
@@ -97,12 +97,12 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
     }
     case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
         if (!partial_flushing_support())
-            return KResult(ENOTSUP);
+            return Error::from_errno(ENOTSUP);
         auto user_flush_rects = static_ptr_cast<FBFlushRects*>(arg);
         FBFlushRects flush_rects;
         TRY(copy_from_user(&flush_rects, user_flush_rects));
         if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
-            return KResult(EFAULT);
+            return Error::from_errno(EFAULT);
         MutexLocker locker(m_flushing_lock);
         if (flush_rects.count > 0) {
             for (unsigned i = 0; i < flush_rects.count; i++) {
@@ -111,11 +111,11 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
                 TRY(flush_rectangle(flush_rects.buffer_index, user_dirty_rect));
             }
         }
-        return KSuccess;
+        return {};
     };
     case FB_IOCTL_FLUSH_HEAD: {
         if (!flushing_support())
-            return KResult(ENOTSUP);
+            return Error::from_errno(ENOTSUP);
         // Note: We accept a FBRect, but we only really care about the head_index value.
         auto user_rect = static_ptr_cast<FBRect*>(arg);
         FBRect rect;
@@ -123,7 +123,7 @@ KResult GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, 
         TRY(verify_head_index(rect.head_index));
 
         TRY(flush_head_buffer(rect.head_index));
-        return KSuccess;
+        return {};
     }
     default:
         return EINVAL;

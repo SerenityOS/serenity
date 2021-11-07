@@ -81,15 +81,15 @@ NEVER_INLINE NAKED void syscall_asm_entry()
 
 namespace Syscall {
 
-static KResultOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
+static ErrorOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
 
 UNMAP_AFTER_INIT void initialize()
 {
     register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
 }
 
-using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> KResultOr<FlatPtr>;
-using HandlerWithRegisterState = auto (Process::*)(RegisterState&) -> KResultOr<FlatPtr>;
+using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
+using HandlerWithRegisterState = auto (Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
 
 struct HandlerMetadata {
     Handler handler;
@@ -102,7 +102,7 @@ static const HandlerMetadata s_syscall_table[] = {
 };
 #undef __ENUMERATE_SYSCALL
 
-KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4)
+ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4)
 {
     VERIFY_INTERRUPTS_ENABLED();
     auto current_thread = Thread::current();
@@ -148,7 +148,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         }
     }
 
-    KResultOr<FlatPtr> result { FlatPtr(nullptr) };
+    ErrorOr<FlatPtr> result { FlatPtr(nullptr) };
     if (function == SC_fork || function == SC_sigreturn) {
         // These syscalls want the RegisterState& rather than individual parameters.
         auto handler = bit_cast<HandlerWithRegisterState>(syscall_metadata.handler);
@@ -214,7 +214,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3, arg4);
 
     if (result.is_error()) {
-        regs.set_return_reg(result.error().error());
+        regs.set_return_reg(-result.error().code());
     } else {
         regs.set_return_reg(result.value());
     }

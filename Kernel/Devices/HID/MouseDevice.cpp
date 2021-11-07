@@ -24,7 +24,7 @@ bool MouseDevice::can_read(const OpenFileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     VERIFY(size > 0);
     size_t nread = 0;

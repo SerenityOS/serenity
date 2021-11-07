@@ -24,13 +24,13 @@ public:
         Writer
     };
 
-    static KResultOr<NonnullRefPtr<FIFO>> try_create(UserID);
+    static ErrorOr<NonnullRefPtr<FIFO>> try_create(UserID);
     virtual ~FIFO() override;
 
     UserID uid() const { return m_uid; }
 
-    KResultOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
-    KResultOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
@@ -40,12 +40,12 @@ public:
 
 private:
     // ^File
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResult stat(::stat&) const override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<void> stat(::stat&) const override;
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
     virtual StringView class_name() const override { return "FIFO"sv; }
     virtual bool is_fifo() const override { return true; }
 

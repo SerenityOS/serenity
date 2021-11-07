@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
+ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_PROMISE(stdio);
@@ -27,7 +27,8 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
         memcpy(buf.nodename, name.characters(), name.length() + 1);
     });
 
-    return copy_to_user(user_buf, &buf);
+    TRY(copy_to_user(user_buf, &buf));
+    return 0;
 }
 
 }

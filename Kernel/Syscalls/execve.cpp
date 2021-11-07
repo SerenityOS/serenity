@@ -68,7 +68,7 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     return true;
 }
 
-static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, NonnullOwnPtrVector<KString> const& arguments,
+static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, NonnullOwnPtrVector<KString> const& arguments,
     NonnullOwnPtrVector<KString> const& environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
@@ -80,21 +80,21 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
         new_sp -= sizeof(FlatPtr);
         Userspace<FlatPtr*> stack_ptr = new_sp;
         auto result = copy_to_user(stack_ptr, &value);
-        VERIFY(result.is_success());
+        VERIFY(!result.is_error());
     };
 
     auto push_aux_value_on_new_stack = [&new_sp](auxv_t value) {
         new_sp -= sizeof(auxv_t);
         Userspace<auxv_t*> stack_ptr = new_sp;
         auto result = copy_to_user(stack_ptr, &value);
-        VERIFY(result.is_success());
+        VERIFY(!result.is_error());
     };
 
     auto push_string_on_new_stack = [&new_sp](StringView string) {
         new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
         Userspace<FlatPtr*> stack_ptr = new_sp;
         auto result = copy_to_user(stack_ptr, string.characters_without_null_termination(), string.length() + 1);
-        VERIFY(result.is_success());
+        VERIFY(!result.is_error());
     };
 
     Vector<FlatPtr> argv_entries;
@@ -162,7 +162,7 @@ struct RequiredLoadRange {
     FlatPtr end { 0 };
 };
 
-static KResultOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& program_description)
+static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& program_description)
 {
     auto& inode = *(program_description.inode());
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
@@ -192,7 +192,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(OpenFileDescription&
     return range;
 };
 
-static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
+static ErrorOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
 {
     constexpr FlatPtr load_range_start = 0x08000000;
     constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
@@ -251,7 +251,7 @@ enum class ShouldAllowSyscalls {
     Yes,
 };
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, OpenFileDescription& object_description,
+static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, OpenFileDescription& object_description,
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
@@ -280,7 +280,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 
     Memory::MemoryManager::enter_address_space(*new_space);
 
-    auto load_tls_section = [&](auto& program_header) -> KResult {
+    auto load_tls_section = [&](auto& program_header) -> ErrorOr<void> {
         VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
         VERIFY(program_header.size_in_memory());
 
@@ -295,10 +295,10 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         master_tls_alignment = program_header.alignment();
 
         TRY(copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image()));
-        return KSuccess;
+        return {};
     };
 
-    auto load_writable_section = [&](auto& program_header) -> KResult {
+    auto load_writable_section = [&](auto& program_header) -> ErrorOr<void> {
         // Writable section: create a copy in memory.
         VERIFY(program_header.alignment() == PAGE_SIZE);
 
@@ -330,12 +330,12 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
         auto page_offset = program_header.vaddr();
         page_offset.mask(~PAGE_MASK);
         TRY(copy_to_user((u8*)region->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image()));
-        return KSuccess;
+        return {};
     };
 
-    auto load_section = [&](auto& program_header) -> KResult {
+    auto load_section = [&](auto& program_header) -> ErrorOr<void> {
         if (program_header.size_in_memory() == 0)
-            return KSuccess;
+            return {};
 
         if (program_header.is_writable())
             return load_writable_section(program_header);
@@ -359,10 +359,10 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
             region->set_syscall_region(true);
         if (program_header.offset() == 0)
             load_base_address = (FlatPtr)region->vaddr().as_ptr();
-        return KSuccess;
+        return {};
     };
 
-    auto load_elf_program_header = [&](auto& program_header) -> KResult {
+    auto load_elf_program_header = [&](auto& program_header) -> ErrorOr<void> {
         if (program_header.type() == PT_TLS)
             return load_tls_section(program_header);
 
@@ -370,11 +370,11 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
             return load_section(program_header);
 
         // NOTE: We ignore other program header types.
-        return KSuccess;
+        return {};
     };
 
     TRY([&] {
-        KResult result = KSuccess;
+        ErrorOr<void> result;
         elf_image.for_each_program_header([&](ELF::Image::ProgramHeader const& program_header) {
             result = load_elf_program_header(program_header);
             return result.is_error() ? IterationDecision::Break : IterationDecision::Continue;
@@ -403,7 +403,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     };
 }
 
-KResultOr<LoadResult>
+ErrorOr<LoadResult>
 Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
     RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
@@ -433,7 +433,7 @@ Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
     return interpreter_load_result;
 }
 
-KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
+ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
     RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
@@ -555,10 +555,7 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    auto make_stack_result = make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), m_arguments, m_environment, move(auxv));
-    if (make_stack_result.is_error())
-        return make_stack_result.error();
-    FlatPtr new_userspace_sp = make_stack_result.value();
+    auto new_userspace_sp = TRY(make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), m_arguments, m_environment, move(auxv)));
 
     if (wait_for_tracer_at_next_execve()) {
         // Make sure we release the ptrace lock here or the tracer will block forever.
@@ -632,7 +629,7 @@ KResult Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_descrip
     [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical());
-    return KSuccess;
+    return {};
 }
 
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
@@ -673,7 +670,7 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
     return auxv;
 }
 
-static KResultOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
+static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
 {
     int word_start = 2;
     size_t word_length = 0;
@@ -711,9 +708,9 @@ static KResultOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
-    // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
+    // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELF::validate_program_headers(main_executable_header, file_size, (u8 const*)&main_executable_header, main_executable_header_size, &interpreter_path)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
@@ -745,7 +742,7 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
             return ENOEXEC;
         }
 
-        // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
+        // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
@@ -776,7 +773,7 @@ KResultOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executa
     return nullptr;
 }
 
-KResult Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -859,10 +856,10 @@ KResult Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> 
     if (prev_flags & 0x200)
         sti();
     Processor::leave_critical();
-    return KSuccess;
+    return {};
 }
 
-KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(exec);
@@ -876,9 +873,9 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
 
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    auto copy_user_strings = [](const auto& list, auto& output) -> KResult {
+    auto copy_user_strings = [](const auto& list, auto& output) -> ErrorOr<void> {
         if (!list.length)
-            return KSuccess;
+            return {};
         Checked<size_t> size = sizeof(*list.strings);
         size *= list.length;
         if (size.has_overflow())
@@ -892,7 +889,7 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
             if (!output.try_append(move(string)))
                 return ENOMEM;
         }
-        return KSuccess;
+        return {};
     };
 
     NonnullOwnPtrVector<KString> arguments;
@@ -901,8 +898,9 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     NonnullOwnPtrVector<KString> environment;
     TRY(copy_user_strings(params.environment, environment));
 
-    auto result = exec(move(path), move(arguments), move(environment));
-    VERIFY(result.is_error()); // We should never continue after a successful exec!
-    return result.error();
+    TRY(exec(move(path), move(arguments), move(environment)));
+    // We should never continue after a successful exec!
+    VERIFY_NOT_REACHED();
 }
+
 }

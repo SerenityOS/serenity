@@ -40,7 +40,7 @@ void TCPSocket::set_state(State new_state)
 
     if (new_state == State::Established && m_direction == Direction::Outgoing) {
         set_role(Role::Connected);
-        [[maybe_unused]] auto rc = set_so_error(KSuccess);
+        clear_so_error();
     }
 
     if (new_state == State::TimeWait) {
@@ -97,10 +97,10 @@ RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
         return {};
     });
 }
-KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
-    return sockets_by_tuple().with_exclusive([&](auto& table) -> KResultOr<NonnullRefPtr<TCPSocket>> {
+    return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<NonnullRefPtr<TCPSocket>> {
         if (table.contains(tuple))
             return EEXIST;
 
@@ -154,14 +154,14 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
     auto scratch_buffer = TRY(KBuffer::try_create_with_size(65536));
     return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
-KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
+ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
@@ -172,7 +172,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     return payload_size;
 }
 
-KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
+ErrorOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
 {
     RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -183,14 +183,14 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     return data_length;
 }
 
-KResult TCPSocket::send_ack(bool allow_duplicate)
+ErrorOr<void> TCPSocket::send_ack(bool allow_duplicate)
 {
     if (!allow_duplicate && m_last_ack_number_sent == m_ack_number)
-        return KSuccess;
+        return {};
     return send_tcp_packet(TCPFlags::ACK);
 }
 
-KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size, RoutingDecision* user_routing_decision)
+ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
     RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -227,7 +227,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     if (payload) {
         if (auto result = payload->read(tcp_packet.payload(), payload_size); result.is_error()) {
             routing_decision.adapter->release_packet_buffer(*packet);
-            return set_so_error(result);
+            return set_so_error(result.release_error());
         }
     }
 
@@ -260,7 +260,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         routing_decision.adapter->release_packet_buffer(*packet);
     }
 
-    return KSuccess;
+    return {};
 }
 
 void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
@@ -362,7 +362,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
     return ~(checksum & 0xffff);
 }
 
-KResult TCPSocket::protocol_bind()
+ErrorOr<void> TCPSocket::protocol_bind()
 {
     if (has_specific_local_address() && !m_adapter) {
         m_adapter = NetworkingManagement::the().from_ipv4_address(local_address());
@@ -370,10 +370,10 @@ KResult TCPSocket::protocol_bind()
             return set_so_error(EADDRNOTAVAIL);
     }
 
-    return KSuccess;
+    return {};
 }
 
-KResult TCPSocket::protocol_listen(bool did_allocate_port)
+ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
 {
     if (!did_allocate_port) {
         bool ok = sockets_by_tuple().with_exclusive([&](auto& table) -> bool {
@@ -389,10 +389,10 @@ KResult TCPSocket::protocol_listen(bool did_allocate_port)
     set_direction(Direction::Passive);
     set_state(State::Listen);
     set_setup_state(SetupState::Completed);
-    return KSuccess;
+    return {};
 }
 
-KResult TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBlock should_block)
+ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBlock should_block)
 {
     MutexLocker locker(mutex());
 
@@ -403,7 +403,7 @@ KResult TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBloc
         set_local_address(routing_decision.adapter->ipv4_address());
 
     if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error())
-        return result.error_or_port.error();
+        return result.error_or_port.release_error();
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
@@ -430,20 +430,20 @@ KResult TCPSocket::protocol_connect(OpenFileDescription& description, ShouldBloc
             else
                 return set_so_error(ECONNREFUSED);
         }
-        return KSuccess;
+        return {};
     }
 
     return set_so_error(EINPROGRESS);
 }
 
-KResultOr<u16> TCPSocket::protocol_allocate_local_port()
+ErrorOr<u16> TCPSocket::protocol_allocate_local_port()
 {
     constexpr u16 first_ephemeral_port = 32768;
     constexpr u16 last_ephemeral_port = 60999;
     constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    return sockets_by_tuple().with_exclusive([&](auto& table) -> KResultOr<u16> {
+    return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<u16> {
         for (u16 port = first_scan_port;;) {
             IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
 
@@ -490,7 +490,7 @@ void TCPSocket::shut_down_for_writing()
     }
 }
 
-KResult TCPSocket::close()
+ErrorOr<void> TCPSocket::close()
 {
     MutexLocker locker(mutex());
     auto result = IPv4Socket::close();

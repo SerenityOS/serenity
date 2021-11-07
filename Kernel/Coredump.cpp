@@ -30,7 +30,7 @@ namespace Kernel {
     return region.name().starts_with("LibJS:"sv) || region.name().starts_with("malloc:"sv);
 }
 
-KResultOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
+ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
@@ -56,7 +56,7 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescrip
     ++m_num_program_headers; // +1 for NOTE segment
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = TRY(VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody()));
@@ -73,7 +73,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(P
         UidAndGid { process.uid(), process.gid() }));
 }
 
-KResult Coredump::write_elf_header()
+ErrorOr<void> Coredump::write_elf_header()
 {
     ElfW(Ehdr) elf_file_header;
     elf_file_header.e_ident[EI_MAG0] = 0x7f;
@@ -115,10 +115,10 @@ KResult Coredump::write_elf_header()
 
     TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr))));
 
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::write_program_headers(size_t notes_size)
+ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(ElfW(Ehdr)) + m_num_program_headers * sizeof(ElfW(Phdr));
     for (auto& region : m_process->address_space().regions()) {
@@ -162,10 +162,10 @@ KResult Coredump::write_program_headers(size_t notes_size)
 
     TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr))));
 
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::write_regions()
+ErrorOr<void> Coredump::write_regions()
 {
     for (auto& region : m_process->address_space().regions()) {
         VERIFY(!region->is_kernel());
@@ -195,16 +195,16 @@ KResult Coredump::write_regions()
             TRY(m_description->write(src_buffer.value(), PAGE_SIZE));
         }
     }
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::write_notes_segment(ReadonlyBytes notes_segment)
+ErrorOr<void> Coredump::write_notes_segment(ReadonlyBytes notes_segment)
 {
     TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(notes_segment.data())), notes_segment.size()));
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::create_notes_process_data(auto& builder) const
+ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
 {
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
@@ -230,10 +230,10 @@ KResult Coredump::create_notes_process_data(auto& builder) const
     }
 
     TRY(builder.append('\0'));
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::create_notes_threads_data(auto& builder) const
+ErrorOr<void> Coredump::create_notes_threads_data(auto& builder) const
 {
     for (auto& thread : m_process->threads_for_coredump({})) {
         ELF::Core::ThreadInfo info {};
@@ -245,10 +245,10 @@ KResult Coredump::create_notes_threads_data(auto& builder) const
 
         TRY(builder.append_bytes(ReadonlyBytes { &info, sizeof(info) }));
     }
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::create_notes_regions_data(auto& builder) const
+ErrorOr<void> Coredump::create_notes_regions_data(auto& builder) const
 {
     size_t region_index = 0;
     for (auto& region : m_process->address_space().regions()) {
@@ -274,10 +274,10 @@ KResult Coredump::create_notes_regions_data(auto& builder) const
         else
             TRY(builder.append(name.characters_without_null_termination(), name.length() + 1));
     }
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::create_notes_metadata_data(auto& builder) const
+ErrorOr<void> Coredump::create_notes_metadata_data(auto& builder) const
 {
     ELF::Core::Metadata metadata {};
     metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
@@ -290,10 +290,10 @@ KResult Coredump::create_notes_metadata_data(auto& builder) const
         });
     }
     TRY(builder.append('\0'));
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::create_notes_segment_data(auto& builder) const
+ErrorOr<void> Coredump::create_notes_segment_data(auto& builder) const
 {
     TRY(create_notes_process_data(builder));
     TRY(create_notes_threads_data(builder));
@@ -304,10 +304,10 @@ KResult Coredump::create_notes_segment_data(auto& builder) const
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
     TRY(builder.append(ReadonlyBytes { &null_entry, sizeof(null_entry) }));
 
-    return KSuccess;
+    return {};
 }
 
-KResult Coredump::write()
+ErrorOr<void> Coredump::write()
 {
     SpinlockLocker lock(m_process->address_space().get_lock());
     ScopedAddressSpaceSwitcher switcher(m_process);

@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<DevTmpFS>> DevTmpFS::try_create()
+ErrorOr<NonnullRefPtr<DevTmpFS>> DevTmpFS::try_create()
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS);
 }
@@ -32,10 +32,10 @@ DevTmpFS::~DevTmpFS()
 {
 }
 
-KResult DevTmpFS::initialize()
+ErrorOr<void> DevTmpFS::initialize()
 {
     m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSRootDirectoryInode(*this)));
-    return KSuccess;
+    return {};
 }
 
 Inode& DevTmpFS::root_inode()
@@ -55,37 +55,37 @@ DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, unsigned major_number, unsigned minor
 {
 }
 
-KResultOr<size_t> DevTmpFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> DevTmpFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResult DevTmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> DevTmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevTmpFSInode::lookup(StringView)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
 
-KResult DevTmpFSInode::flush_metadata()
+ErrorOr<void> DevTmpFSInode::flush_metadata()
 {
-    return KSuccess;
+    return {};
 }
 
-KResultOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
-{
-    VERIFY_NOT_REACHED();
-}
-
-KResultOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
 
-KResult DevTmpFSInode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+{
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> DevTmpFSInode::add_child(Inode&, const StringView&, mode_t)
 {
     VERIFY_NOT_REACHED();
 }
@@ -134,30 +134,30 @@ InodeMetadata DevTmpFSInode::metadata() const
     return metadata;
 }
 
-KResult DevTmpFSInode::remove_child(const StringView&)
+ErrorOr<void> DevTmpFSInode::remove_child(const StringView&)
 {
     VERIFY_NOT_REACHED();
 }
 
-KResult DevTmpFSInode::chmod(mode_t mode)
+ErrorOr<void> DevTmpFSInode::chmod(mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
     mode &= 0777;
     if (m_mode == mode)
-        return KSuccess;
+        return {};
     m_mode = mode;
-    return KSuccess;
+    return {};
 }
 
-KResult DevTmpFSInode::chown(UserID uid, GroupID gid)
+ErrorOr<void> DevTmpFSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
     m_uid = uid;
     m_gid = gid;
-    return KSuccess;
+    return {};
 }
 
-KResult DevTmpFSInode::truncate(u64)
+ErrorOr<void> DevTmpFSInode::truncate(u64)
 {
     return EPERM;
 }
@@ -177,7 +177,7 @@ DevTmpFSLinkInode::DevTmpFSLinkInode(DevTmpFS& fs, NonnullOwnPtr<KString> name)
 {
 }
 
-KResultOr<size_t> DevTmpFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> DevTmpFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
@@ -186,7 +186,7 @@ KResultOr<size_t> DevTmpFSLinkInode::read_bytes(off_t offset, size_t, UserOrKern
     return m_link->length();
 }
 
-KResultOr<size_t> DevTmpFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> DevTmpFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     auto new_string = TRY(buffer.try_copy_into_kstring(count));
 
@@ -210,7 +210,7 @@ DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode()
 {
 }
 
-KResult DevTmpFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock);
     callback({ ".", identifier(), 0 });
@@ -219,10 +219,10 @@ KResult DevTmpFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::
         InodeIdentifier identifier = { fsid(), node.index() };
         callback({ node.name(), identifier, 0 });
     }
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
@@ -230,27 +230,27 @@ KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
             return node;
         }
     }
-    return KResult(ENOENT);
+    return Error::from_errno(ENOENT);
 }
 
-KResult DevTmpFSDirectoryInode::remove_child(const StringView& name)
+ErrorOr<void> DevTmpFSDirectoryInode::remove_child(const StringView& name)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
         if (node.name() == name) {
             m_nodes.remove(node);
-            return KSuccess;
+            return {};
         }
     }
-    return KResult(ENOENT);
+    return Error::from_errno(ENOENT);
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {
         if (node.name() == name)
-            return KResult(EEXIST);
+            return Error::from_errno(EEXIST);
     }
 
     InodeMetadata metadata;
@@ -288,12 +288,12 @@ DevTmpFSRootDirectoryInode::DevTmpFSRootDirectoryInode(DevTmpFS& fs)
 DevTmpFSRootDirectoryInode::~DevTmpFSRootDirectoryInode()
 {
 }
-KResult DevTmpFSRootDirectoryInode::chmod(mode_t)
+ErrorOr<void> DevTmpFSRootDirectoryInode::chmod(mode_t)
 {
     return EPERM;
 }
 
-KResult DevTmpFSRootDirectoryInode::chown(UserID, GroupID)
+ErrorOr<void> DevTmpFSRootDirectoryInode::chown(UserID, GroupID)
 {
     return EPERM;
 }
@@ -314,30 +314,30 @@ StringView DevTmpFSDeviceInode::name() const
     return m_name->view();
 }
 
-KResultOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
+ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
-        return KResult(ENODEV);
+        return Error::from_errno(ENODEV);
     if (!device->can_read(*description, offset))
-        return KResult(ENOTIMPL);
+        return Error::from_errno(ENOTIMPL);
     auto result = const_cast<Device&>(*device).read(*description, offset, buffer, count);
     if (result.is_error())
         return result;
     return result.value();
 }
 
-KResultOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* description)
+ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* description)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
     if (!device)
-        return KResult(ENODEV);
+        return Error::from_errno(ENODEV);
     if (!device->can_write(*description, offset))
-        return KResult(ENOTIMPL);
+        return Error::from_errno(ENOTIMPL);
     auto result = const_cast<Device&>(*device).write(*description, offset, buffer, count);
     if (result.is_error())
         return result;

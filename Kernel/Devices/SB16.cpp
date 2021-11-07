@@ -113,7 +113,7 @@ UNMAP_AFTER_INIT void SB16::initialize()
     set_sample_rate(m_sample_rate);
 }
 
-KResult SB16::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> SB16::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
@@ -126,7 +126,7 @@ KResult SB16::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg
             return EINVAL;
         if (m_sample_rate != sample_rate_value)
             set_sample_rate(sample_rate_value);
-        return KSuccess;
+        return {};
     }
     default:
         return EINVAL;
@@ -186,7 +186,7 @@ bool SB16::can_read(OpenFileDescription const&, size_t) const
     return false;
 }
 
-KResultOr<size_t> SB16::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
+ErrorOr<size_t> SB16::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     return 0;
 }
@@ -246,7 +246,7 @@ void SB16::wait_for_irq()
     disable_irq();
 }
 
-KResultOr<size_t> SB16::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
+ErrorOr<size_t> SB16::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
 {
     if (!m_dma_region) {
         auto page = MM.allocate_supervisor_physical_page();

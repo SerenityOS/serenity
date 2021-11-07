@@ -81,7 +81,7 @@ public:
     void* get_private() const { return m_private; }
 
     template<typename... Args>
-    KResult write_to_buffer(UserOrKernelBuffer& buffer, Args... args)
+    ErrorOr<void> write_to_buffer(UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.write(forward<Args>(args)...);
@@ -90,7 +90,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
-    KResultOr<size_t> write_to_buffer_buffered(UserOrKernelBuffer& buffer, Args... args)
+    ErrorOr<size_t> write_to_buffer_buffered(UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
@@ -99,7 +99,7 @@ public:
     }
 
     template<typename... Args>
-    KResult read_from_buffer(const UserOrKernelBuffer& buffer, Args... args)
+    ErrorOr<void> read_from_buffer(const UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read(forward<Args>(args)...);
@@ -108,7 +108,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
-    KResultOr<size_t> read_from_buffer_buffered(const UserOrKernelBuffer& buffer, Args... args)
+    ErrorOr<size_t> read_from_buffer_buffered(const UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);

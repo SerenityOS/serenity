@@ -8,13 +8,13 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #ifdef KERNEL
-#    include <Kernel/API/KResult.h>
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Arch/ScopedCritical.h>
 #endif
@@ -498,16 +498,14 @@ inline RefPtr<T> try_make_ref_counted(Args&&... args)
     return adopt_ref_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
 
-#ifdef KERNEL
 template<typename T>
-inline Kernel::KResultOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
+inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
 {
     auto result = adopt_ref_if_nonnull(object);
     if (!result)
-        return ENOMEM;
+        return Error::from_errno(ENOMEM);
     return result.release_nonnull();
 }
-#endif
 
 }
 

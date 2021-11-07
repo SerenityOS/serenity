@@ -29,12 +29,12 @@ UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(StringView name)
 {
 }
 
-KResultOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
-        return KSuccess;
+        return 0;
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
     TRY(buffer.write(blob->data() + offset, nread));
@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddr
 {
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> DMIEntryPointExposedBlob::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> DMIEntryPointExposedBlob::try_to_generate_buffer() const
 {
     auto dmi_blob = Memory::map_typed<u8>((m_dmi_entry_point), m_dmi_entry_point_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_dmi_entry_point_length });
@@ -66,7 +66,7 @@ UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_s
 {
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> SMBIOSExposedTable::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> SMBIOSExposedTable::try_to_generate_buffer() const
 {
     auto dmi_blob = Memory::map_typed<u8>((m_smbios_structure_table), m_smbios_structure_table_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
@@ -90,7 +90,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
 }
 
-UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<BIOSSysFSDirectory>> BIOSSysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<BIOSSysFSDirectory>> BIOSSysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
 {
     auto bios_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BIOSSysFSDirectory(firmware_directory)));
     bios_directory->create_components();

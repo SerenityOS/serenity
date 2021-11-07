@@ -36,7 +36,7 @@ InodeIndex Process::ProcessProcFSTraits::component_index() const
     return SegmentedProcFSIndex::build_segmented_index_for_pid_directory(process->pid());
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const ProcFS& procfs_instance) const
 {
     auto process = m_process.strong_ref();
     if (!process)
@@ -45,7 +45,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const Pro
     return TRY(ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid()));
 }
 
-KResult Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     auto process = m_process.strong_ref();
     if (!process)
@@ -62,7 +62,7 @@ KResult Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Funct
     callback({ "cwd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink) }, DT_LNK });
     callback({ "perf_events", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents) }, DT_REG });
     callback({ "vm", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats) }, DT_REG });
-    return KSuccess;
+    return {};
 }
 
 }

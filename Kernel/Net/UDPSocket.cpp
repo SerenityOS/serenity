@@ -54,12 +54,12 @@ UDPSocket::~UDPSocket()
     });
 }
 
-KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+ErrorOr<NonnullRefPtr<UDPSocket>> UDPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) UDPSocket(protocol, move(receive_buffer)));
 }
 
-KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
+ErrorOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
@@ -69,7 +69,7 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     return read_size;
 }
 
-KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
+ErrorOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -92,21 +92,21 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     return data_length;
 }
 
-KResult UDPSocket::protocol_connect(OpenFileDescription&, ShouldBlock)
+ErrorOr<void> UDPSocket::protocol_connect(OpenFileDescription&, ShouldBlock)
 {
     set_role(Role::Connected);
     set_connected(true);
-    return KSuccess;
+    return {};
 }
 
-KResultOr<u16> UDPSocket::protocol_allocate_local_port()
+ErrorOr<u16> UDPSocket::protocol_allocate_local_port()
 {
     constexpr u16 first_ephemeral_port = 32768;
     constexpr u16 last_ephemeral_port = 60999;
     constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    return sockets_by_port().with_exclusive([&](auto& table) -> KResultOr<u16> {
+    return sockets_by_port().with_exclusive([&](auto& table) -> ErrorOr<u16> {
         for (u16 port = first_scan_port;;) {
             auto it = table.find(port);
             if (it == table.end()) {
@@ -124,13 +124,13 @@ KResultOr<u16> UDPSocket::protocol_allocate_local_port()
     });
 }
 
-KResult UDPSocket::protocol_bind()
+ErrorOr<void> UDPSocket::protocol_bind()
 {
-    return sockets_by_port().with_exclusive([&](auto& table) -> KResult {
+    return sockets_by_port().with_exclusive([&](auto& table) -> ErrorOr<void> {
         if (table.contains(local_port()))
             return set_so_error(EADDRINUSE);
         table.set(local_port(), this);
-        return KSuccess;
+        return {};
     });
 }
 

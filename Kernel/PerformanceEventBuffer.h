@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/API/KResult.h>
+#include <AK/Error.h>
 #include <Kernel/KBuffer.h>
 
 namespace Kernel {
@@ -101,10 +101,10 @@ class PerformanceEventBuffer {
 public:
     static OwnPtr<PerformanceEventBuffer> try_create_with_size(size_t buffer_size);
 
-    KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
-    KResult append_with_ip_and_bp(ProcessID pid, ThreadID tid, FlatPtr eip, FlatPtr ebp,
+    ErrorOr<void> append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
+    ErrorOr<void> append_with_ip_and_bp(ProcessID pid, ThreadID tid, FlatPtr eip, FlatPtr ebp,
         int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
-    KResult append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
+    ErrorOr<void> append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
         int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
 
     void clear()
@@ -119,17 +119,17 @@ public:
         return const_cast<PerformanceEventBuffer&>(*this).at(index);
     }
 
-    KResult to_json(KBufferBuilder&) const;
+    ErrorOr<void> to_json(KBufferBuilder&) const;
 
     void add_process(const Process&, ProcessEventType event_type);
 
-    KResultOr<FlatPtr> register_string(NonnullOwnPtr<KString>);
+    ErrorOr<FlatPtr> register_string(NonnullOwnPtr<KString>);
 
 private:
     explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
 
     template<typename Serializer>
-    KResult to_json_impl(Serializer&) const;
+    ErrorOr<void> to_json_impl(Serializer&) const;
 
     PerformanceEvent& at(size_t index);
 

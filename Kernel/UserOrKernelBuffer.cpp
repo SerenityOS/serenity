@@ -15,7 +15,7 @@ bool UserOrKernelBuffer::is_kernel_buffer() const
     return !Memory::is_user_address(VirtualAddress(m_buffer));
 }
 
-KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size_t size) const
+ErrorOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size_t size) const
 {
     if (!m_buffer)
         return EINVAL;
@@ -29,7 +29,7 @@ KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size
     return KString::try_create(ReadonlyBytes { m_buffer, size });
 }
 
-KResult UserOrKernelBuffer::write(void const* src, size_t offset, size_t len)
+ErrorOr<void> UserOrKernelBuffer::write(void const* src, size_t offset, size_t len)
 {
     if (!m_buffer)
         return EFAULT;
@@ -38,10 +38,10 @@ KResult UserOrKernelBuffer::write(void const* src, size_t offset, size_t len)
         return copy_to_user(m_buffer + offset, src, len);
 
     memcpy(m_buffer + offset, src, len);
-    return KSuccess;
+    return {};
 }
 
-KResult UserOrKernelBuffer::read(void* dest, size_t offset, size_t len) const
+ErrorOr<void> UserOrKernelBuffer::read(void* dest, size_t offset, size_t len) const
 {
     if (!m_buffer)
         return EFAULT;
@@ -50,10 +50,10 @@ KResult UserOrKernelBuffer::read(void* dest, size_t offset, size_t len) const
         return copy_from_user(dest, m_buffer + offset, len);
 
     memcpy(dest, m_buffer + offset, len);
-    return KSuccess;
+    return {};
 }
 
-KResult UserOrKernelBuffer::memset(int value, size_t offset, size_t len)
+ErrorOr<void> UserOrKernelBuffer::memset(int value, size_t offset, size_t len)
 {
     if (!m_buffer)
         return EFAULT;
@@ -62,7 +62,7 @@ KResult UserOrKernelBuffer::memset(int value, size_t offset, size_t len)
         return memset_user(m_buffer + offset, value, len);
 
     ::memset(m_buffer + offset, value, len);
-    return KSuccess;
+    return {};
 }
 
 }

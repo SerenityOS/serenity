@@ -26,7 +26,7 @@ InodeFile::~InodeFile()
 {
 }
 
-KResultOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
+ErrorOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -39,7 +39,7 @@ KResultOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, 
     return nread;
 }
 
-KResultOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
+ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -50,12 +50,12 @@ KResultOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset,
         Thread::current()->did_file_write(nwritten);
         evaluate_block_conditions();
         if (mtime_result.is_error())
-            return mtime_result;
+            return mtime_result.release_error();
     }
     return nwritten;
 }
 
-KResult InodeFile::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
+ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case FIBMAP: {
@@ -81,7 +81,7 @@ KResult InodeFile::ioctl(OpenFileDescription& description, unsigned request, Use
     }
 }
 
-KResultOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<Memory::InodeVMObject> vmobject;
@@ -93,33 +93,33 @@ KResultOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription
     return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
 }
 
-KResultOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(const OpenFileDescription&) const
 {
     // If it has an inode, then it has a path, and therefore the caller should have been able to get a custody at some point.
     VERIFY_NOT_REACHED();
 }
 
-KResult InodeFile::truncate(u64 size)
+ErrorOr<void> InodeFile::truncate(u64 size)
 {
     TRY(m_inode->truncate(size));
     TRY(m_inode->set_mtime(kgettimeofday().to_truncated_seconds()));
-    return KSuccess;
+    return {};
 }
 
-KResult InodeFile::sync()
+ErrorOr<void> InodeFile::sync()
 {
     m_inode->sync();
-    return KSuccess;
+    return {};
 }
 
-KResult InodeFile::chown(OpenFileDescription& description, UserID uid, GroupID gid)
+ErrorOr<void> InodeFile::chown(OpenFileDescription& description, UserID uid, GroupID gid)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
     return VirtualFileSystem::the().chown(*description.custody(), uid, gid);
 }
 
-KResult InodeFile::chmod(OpenFileDescription& description, mode_t mode)
+ErrorOr<void> InodeFile::chmod(OpenFileDescription& description, mode_t mode)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());

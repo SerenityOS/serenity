@@ -59,19 +59,19 @@ PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, 
 {
 }
 
-KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
-        return KSuccess;
+        return 0;
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
     TRY(buffer.write(blob->data() + offset, nread));
     return nread;
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
 {
     String value;
     switch (m_field_bytes_width) {

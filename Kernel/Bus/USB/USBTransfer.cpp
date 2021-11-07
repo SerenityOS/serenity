@@ -9,7 +9,7 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length)
+ErrorOr<NonnullRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length)
 {
     // Initialize data buffer for transfer
     // This will definitely need to be refactored in the future, I doubt this will scale well...

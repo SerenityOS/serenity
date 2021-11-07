@@ -19,7 +19,7 @@ RefPtr<GraphicsAdapter> FramebufferDevice::adapter() const
     return static_cast<GraphicsAdapter&>(*adapter);
 }
 
-KResultOr<size_t> FramebufferDevice::buffer_length(size_t head) const
+ErrorOr<size_t> FramebufferDevice::buffer_length(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -28,7 +28,7 @@ KResultOr<size_t> FramebufferDevice::buffer_length(size_t head) const
     MutexLocker locker(m_resolution_lock);
     return display_info().rect.width * display_info().rect.height * 4;
 }
-KResultOr<size_t> FramebufferDevice::pitch(size_t head) const
+ErrorOr<size_t> FramebufferDevice::pitch(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -37,7 +37,7 @@ KResultOr<size_t> FramebufferDevice::pitch(size_t head) const
     MutexLocker locker(m_resolution_lock);
     return display_info().rect.width * 4;
 }
-KResultOr<size_t> FramebufferDevice::height(size_t head) const
+ErrorOr<size_t> FramebufferDevice::height(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -46,7 +46,7 @@ KResultOr<size_t> FramebufferDevice::height(size_t head) const
     MutexLocker locker(m_resolution_lock);
     return display_info().rect.height;
 }
-KResultOr<size_t> FramebufferDevice::width(size_t head) const
+ErrorOr<size_t> FramebufferDevice::width(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -55,7 +55,7 @@ KResultOr<size_t> FramebufferDevice::width(size_t head) const
     MutexLocker locker(m_resolution_lock);
     return display_info().rect.width;
 }
-KResultOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
+ErrorOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -63,7 +63,7 @@ KResultOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
     VERIFY(head == 0);
     return 0;
 }
-KResultOr<bool> FramebufferDevice::vertical_offseted(size_t head) const
+ErrorOr<bool> FramebufferDevice::vertical_offseted(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
@@ -72,14 +72,14 @@ KResultOr<bool> FramebufferDevice::vertical_offseted(size_t head) const
     return false;
 }
 
-KResult FramebufferDevice::set_head_resolution(size_t head, size_t width, size_t height, size_t)
+ErrorOr<void> FramebufferDevice::set_head_resolution(size_t head, size_t width, size_t height, size_t)
 {
     // Note: This class doesn't support multihead setup (yet!).
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally have a value different than 0, assert.
     VERIFY(head == 0);
     if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
-        return KResult(ENOTSUP);
+        return Error::from_errno(ENOTSUP);
 
     auto& info = display_info();
 
@@ -92,22 +92,22 @@ KResult FramebufferDevice::set_head_resolution(size_t head, size_t width, size_t
         .height = (u32)height,
     };
 
-    // FIXME: Would be nice to be able to return KResultOr here.
+    // FIXME: Would be nice to be able to return ErrorOr here.
     TRY(create_framebuffer());
-    return KSuccess;
+    return {};
 }
-KResult FramebufferDevice::set_head_buffer(size_t, bool)
+ErrorOr<void> FramebufferDevice::set_head_buffer(size_t, bool)
 {
-    return KResult(ENOTSUP);
+    return Error::from_errno(ENOTSUP);
 }
-KResult FramebufferDevice::flush_head_buffer(size_t)
+ErrorOr<void> FramebufferDevice::flush_head_buffer(size_t)
 {
     // Note: This class doesn't support flushing.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method
     // so if we happen to accidentally reach this code, assert.
     VERIFY_NOT_REACHED();
 }
-KResult FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& rect)
+ErrorOr<void> FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& rect)
 {
     MutexLocker locker(adapter()->operation_lock());
     Protocol::Rect dirty_rect {
@@ -116,9 +116,9 @@ KResult FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& re
         .width = rect.width,
         .height = rect.height
     };
-    // FIXME: Find a better KResult here.
+    // FIXME: Find a better ErrorOr<void> here.
     if (!m_are_writes_active)
-        return KResult(EIO);
+        return Error::from_errno(EIO);
     auto& buffer = buffer_from_index(buffer_index);
     transfer_framebuffer_data_to_host(dirty_rect, buffer);
     if (&buffer == m_current_buffer) {
@@ -137,7 +137,7 @@ KResult FramebufferDevice::flush_rectangle(size_t buffer_index, FBRect const& re
             buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
         }
     }
-    return KSuccess;
+    return {};
 }
 
 FramebufferDevice::FramebufferDevice(GraphicsAdapter const& adapter, ScanoutID scanout)
@@ -155,7 +155,7 @@ FramebufferDevice::~FramebufferDevice()
 {
 }
 
-KResult FramebufferDevice::create_framebuffer()
+ErrorOr<void> FramebufferDevice::create_framebuffer()
 {
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
@@ -179,7 +179,7 @@ KResult FramebufferDevice::create_framebuffer()
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
 
-    return KSuccess;
+    return {};
 }
 
 void FramebufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
@@ -255,7 +255,7 @@ void FramebufferDevice::set_buffer(int buffer_index)
     buffer.dirty_rect = {};
 }
 
-KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
@@ -295,7 +295,7 @@ void FramebufferDevice::deactivate_writes()
     if (m_userspace_mmap_region) {
         auto* region = m_userspace_mmap_region.unsafe_ptr();
         auto maybe_vm_object = m_framebuffer_sink_vmobject->try_clone();
-        // FIXME: Would be nice to be able to return a KResult here.
+        // FIXME: Would be nice to be able to return a ErrorOr<void> here.
         VERIFY(!maybe_vm_object.is_error());
         region->set_vmobject(maybe_vm_object.release_value());
         region->remap();

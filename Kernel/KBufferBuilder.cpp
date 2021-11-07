@@ -46,7 +46,7 @@ OwnPtr<KBuffer> KBufferBuilder::build()
     return move(m_buffer);
 }
 
-KResultOr<KBufferBuilder> KBufferBuilder::try_create()
+ErrorOr<KBufferBuilder> KBufferBuilder::try_create()
 {
     auto buffer = TRY(KBuffer::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite));
     return KBufferBuilder { move(buffer) };
@@ -57,47 +57,47 @@ KBufferBuilder::KBufferBuilder(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-KResult KBufferBuilder::append_bytes(ReadonlyBytes bytes)
+ErrorOr<void> KBufferBuilder::append_bytes(ReadonlyBytes bytes)
 {
     if (!check_expand(bytes.size()))
         return ENOMEM;
     memcpy(insertion_ptr(), bytes.data(), bytes.size());
     m_size += bytes.size();
-    return KSuccess;
+    return {};
 }
 
-KResult KBufferBuilder::append(const StringView& str)
+ErrorOr<void> KBufferBuilder::append(const StringView& str)
 {
     if (str.is_empty())
-        return KSuccess;
+        return {};
     if (!check_expand(str.length()))
         return ENOMEM;
     memcpy(insertion_ptr(), str.characters_without_null_termination(), str.length());
     m_size += str.length();
-    return KSuccess;
+    return {};
 }
 
-KResult KBufferBuilder::append(const char* characters, int length)
+ErrorOr<void> KBufferBuilder::append(const char* characters, int length)
 {
     if (!length)
-        return KSuccess;
+        return {};
     if (!check_expand(length))
         return ENOMEM;
     memcpy(insertion_ptr(), characters, length);
     m_size += length;
-    return KSuccess;
+    return {};
 }
 
-KResult KBufferBuilder::append(char ch)
+ErrorOr<void> KBufferBuilder::append(char ch)
 {
     if (!check_expand(1))
         return ENOMEM;
     insertion_ptr()[0] = ch;
     m_size += 1;
-    return KSuccess;
+    return {};
 }
 
-KResult KBufferBuilder::append_escaped_for_json(const StringView& string)
+ErrorOr<void> KBufferBuilder::append_escaped_for_json(const StringView& string)
 {
     for (auto ch : string) {
         switch (ch) {
@@ -123,7 +123,7 @@ KResult KBufferBuilder::append_escaped_for_json(const StringView& string)
                 TRY(append(ch));
         }
     }
-    return KSuccess;
+    return {};
 }
 
 }

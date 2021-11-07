@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
+ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
     // FIXME: Don't make a temporary String here
     auto pts_name = TRY(KString::try_create(String::formatted("/dev/pts/{}", index)));
@@ -58,14 +58,14 @@ KString const& MasterPTY::pts_name() const
     return *m_pts_name;
 }
 
-KResultOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_slave && m_buffer->is_empty())
         return 0;
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_slave)
         return EIO;
@@ -94,7 +94,7 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-KResultOr<size_t> MasterPTY::on_slave_write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> MasterPTY::on_slave_write(const UserOrKernelBuffer& data, size_t size)
 {
     if (m_closed)
         return EIO;
@@ -108,7 +108,7 @@ bool MasterPTY::can_write_from_slave() const
     return m_buffer->space_for_writing();
 }
 
-KResult MasterPTY::close()
+ErrorOr<void> MasterPTY::close()
 {
     InterruptDisabler disabler;
     // After the closing OpenFileDescription dies, slave is the only thing keeping me alive.
@@ -118,10 +118,10 @@ KResult MasterPTY::close()
     if (m_slave)
         m_slave->hang_up();
 
-    return KSuccess;
+    return {};
 }
 
-KResult MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
+ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     if (!m_slave)
@@ -131,7 +131,7 @@ KResult MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Use
     return EINVAL;
 }
 
-KResultOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
 {
     // FIXME: Replace this and others of this pattern by KString::formatted()
     return KString::try_create(String::formatted("ptm:{}", m_pts_name));

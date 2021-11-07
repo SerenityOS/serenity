@@ -11,7 +11,7 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
+ErrorOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
 {
     return adopt_nonnull_own_or_enomem(new (nothrow) Pipe(controller, type, direction, endpoint_address, max_packet_size, poll_interval, device_address));
 }
@@ -47,7 +47,7 @@ Pipe::Pipe(USBController const& controller, Type type, Direction direction, u8 e
 {
 }
 
-KResultOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data)
+ErrorOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data)
 {
     USBRequestData usb_request;
 

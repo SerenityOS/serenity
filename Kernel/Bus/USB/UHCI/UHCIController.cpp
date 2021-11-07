@@ -62,7 +62,7 @@ static constexpr u16 UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is u
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
-KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
     auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
@@ -70,7 +70,7 @@ KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::
     return controller;
 }
 
-KResult UHCIController::initialize()
+ErrorOr<void> UHCIController::initialize()
 {
     dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
     dmesgln("UHCI: I/O base {}", m_io_base);
@@ -93,7 +93,7 @@ UNMAP_AFTER_INIT UHCIController::~UHCIController()
 {
 }
 
-KResult UHCIController::reset()
+ErrorOr<void> UHCIController::reset()
 {
     TRY(stop());
 
@@ -126,10 +126,10 @@ KResult UHCIController::reset()
     write_usbintr(0);
     dbgln("UHCI: Reset completed");
 
-    return KSuccess;
+    return {};
 }
 
-UNMAP_AFTER_INIT KResult UHCIController::create_structures()
+UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
 {
     m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
 
@@ -173,7 +173,7 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
         m_transfer_descriptor_pool->print_pool_information();
     }
 
-    return KSuccess;
+    return {};
 }
 
 UNMAP_AFTER_INIT void UHCIController::setup_schedule()
@@ -245,7 +245,7 @@ TransferDescriptor* UHCIController::allocate_transfer_descriptor()
     return m_transfer_descriptor_pool->try_take_free_descriptor();
 }
 
-KResult UHCIController::stop()
+ErrorOr<void> UHCIController::stop()
 {
     write_usbcmd(read_usbcmd() & ~UHCI_USBCMD_RUN);
     // FIXME: Timeout
@@ -253,10 +253,10 @@ KResult UHCIController::stop()
         if (read_usbsts() & UHCI_USBSTS_HOST_CONTROLLER_HALTED)
             break;
     }
-    return KSuccess;
+    return {};
 }
 
-KResult UHCIController::start()
+ErrorOr<void> UHCIController::start()
 {
     write_usbcmd(read_usbcmd() | UHCI_USBCMD_RUN);
     // FIXME: Timeout
@@ -268,7 +268,7 @@ KResult UHCIController::start()
 
     m_root_hub = TRY(UHCIRootHub::try_create(*this));
     TRY(m_root_hub->setup({}));
-    return KSuccess;
+    return {};
 }
 
 TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, PacketID direction, size_t data_len)
@@ -303,7 +303,7 @@ TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, Packe
     return td;
 }
 
-KResult UHCIController::create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td)
+ErrorOr<void> UHCIController::create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td)
 {
     // We need to create `n` transfer descriptors based on the max
     // size of each transfer (which we've learned from the device already by reading
@@ -345,7 +345,7 @@ KResult UHCIController::create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& 
 
     *last_td = current_td;
     *td_chain = first_td;
-    return KSuccess;
+    return {};
 }
 
 void UHCIController::free_descriptor_chain(TransferDescriptor* first_descriptor)
@@ -361,7 +361,7 @@ void UHCIController::free_descriptor_chain(TransferDescriptor* first_descriptor)
     }
 }
 
-KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
+ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 {
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
     bool direction_in = (transfer.request().request_type & USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST) == USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST;
@@ -589,7 +589,7 @@ void UHCIController::reset_port(u8 port)
     m_port_reset_change_statuses |= (1 << port);
 }
 
-KResult UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
+ErrorOr<void> UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
 {
     // The check is done by UHCIRootHub.
     VERIFY(port < NUMBER_OF_ROOT_PORTS);
@@ -621,10 +621,10 @@ KResult UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubFeature
         return EINVAL;
     }
 
-    return KSuccess;
+    return {};
 }
 
-KResult UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
+ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
 {
     // The check is done by UHCIRootHub.
     VERIFY(port < NUMBER_OF_ROOT_PORTS);
@@ -670,7 +670,7 @@ KResult UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatu
     else
         write_portsc2(port_data);
 
-    return KSuccess;
+    return {};
 }
 
 }

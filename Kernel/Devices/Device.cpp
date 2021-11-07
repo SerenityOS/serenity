@@ -44,7 +44,7 @@ SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory con
     : SysFSDirectory("block"sv, devices_directory)
 {
 }
-KResult SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
@@ -57,7 +57,7 @@ KResult SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Functio
             callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
         }
     });
-    return KSuccess;
+    return {};
 }
 RefPtr<SysFSComponent> SysFSBlockDevicesDirectory::lookup(StringView name)
 {
@@ -80,7 +80,7 @@ SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirec
     : SysFSDirectory("char"sv, devices_directory)
 {
 }
-KResult SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
@@ -93,7 +93,7 @@ KResult SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Fun
             callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
         }
     });
-    return KSuccess;
+    return {};
 }
 RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
 {
@@ -140,7 +140,7 @@ Device::~Device()
     VERIFY(m_state == State::BeingRemoved);
 }
 
-KResultOr<NonnullOwnPtr<KString>> Device::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(const OpenFileDescription&) const
 {
     return KString::try_create(String::formatted("device:{},{}", major(), minor()));
 }

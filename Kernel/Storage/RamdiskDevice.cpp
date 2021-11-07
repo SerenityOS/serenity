@@ -55,13 +55,13 @@ void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)
     if ((offset + length > base + size) || (offset + length < base)) {
         request.complete(AsyncDeviceRequest::Failure);
     } else {
-        auto result = KResult(KSuccess);
+        ErrorOr<void> result;
         if (request.request_type() == AsyncBlockDeviceRequest::Read) {
             result = request.buffer().write(offset, length);
         } else {
             result = request.buffer().read(offset, length);
         }
-        request.complete(result.is_success() ? AsyncDeviceRequest::Success : AsyncDeviceRequest::MemoryFault);
+        request.complete(!result.is_error() ? AsyncDeviceRequest::Success : AsyncDeviceRequest::MemoryFault);
     }
 }
 

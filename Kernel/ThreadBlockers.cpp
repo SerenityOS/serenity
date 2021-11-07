@@ -68,7 +68,7 @@ auto Thread::Blocker::end_blocking(Badge<Thread>, bool did_timeout) -> BlockResu
     return block_result();
 }
 
-Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value)
+Thread::JoinBlocker::JoinBlocker(Thread& joinee, ErrorOr<void>& try_join_result, void*& joinee_exit_value)
     : m_joinee(joinee)
     , m_joinee_exit_value(joinee_exit_value)
     , m_try_join_result(try_join_result)
@@ -601,7 +601,7 @@ void Thread::WaitBlockerSet::finalize()
     }
 }
 
-Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, KResultOr<siginfo_t>& result)
+Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
     : m_wait_options(wait_options)
     , m_result(result)
     , m_waitee(move(waitee))

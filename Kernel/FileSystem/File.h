@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Forward.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
@@ -78,28 +78,28 @@ public:
     virtual void before_removing() { }
     virtual ~File();
 
-    virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options);
-    virtual KResult close();
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options);
+    virtual ErrorOr<void> close();
 
     virtual bool can_read(const OpenFileDescription&, size_t) const = 0;
     virtual bool can_write(const OpenFileDescription&, size_t) const = 0;
 
-    virtual KResult attach(OpenFileDescription&);
+    virtual ErrorOr<void> attach(OpenFileDescription&);
     virtual void detach(OpenFileDescription&);
     virtual void did_seek(OpenFileDescription&, off_t) { }
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
-    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
-    virtual KResult stat(::stat&) const { return EBADF; }
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
+    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
+    virtual ErrorOr<void> stat(::stat&) const { return EBADF; }
 
     // Although this might be better described "name" or "description", these terms already have other meanings.
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const = 0;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const = 0;
 
-    virtual KResult truncate(u64) { return EINVAL; }
-    virtual KResult sync() { return EINVAL; }
-    virtual KResult chown(OpenFileDescription&, UserID, GroupID) { return EBADF; }
-    virtual KResult chmod(OpenFileDescription&, mode_t) { return EBADF; }
+    virtual ErrorOr<void> truncate(u64) { return EINVAL; }
+    virtual ErrorOr<void> sync() { return EINVAL; }
+    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) { return EBADF; }
+    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) { return EBADF; }
 
     virtual StringView class_name() const = 0;
 

@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/Error.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Devices/ConsoleDevice.h>
@@ -51,7 +51,7 @@ public:
     ConsoleDevice& console_device();
 
     template<typename DeviceType, typename... Args>
-    static inline KResultOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
+    static inline ErrorOr<NonnullRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
         auto device = TRY(adopt_nonnull_ref_or_enomem(new DeviceType(forward<Args>(args)...)));
         device->after_inserting();

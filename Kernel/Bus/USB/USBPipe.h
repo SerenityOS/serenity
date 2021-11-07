@@ -41,7 +41,7 @@ public:
     };
 
 public:
-    static KResultOr<NonnullOwnPtr<Pipe>> try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval = 0);
+    static ErrorOr<NonnullOwnPtr<Pipe>> try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval = 0);
 
     Type type() const { return m_type; }
     Direction direction() const { return m_direction; }
@@ -57,7 +57,7 @@ public:
     void set_toggle(bool toggle) { m_data_toggle = toggle; }
     void set_device_address(i8 addr) { m_device_address = addr; }
 
-    KResultOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
+    ErrorOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
 
     Pipe(USBController const& controller, Type type, Direction direction, u16 max_packet_size);
     Pipe(USBController const& controller, Type type, Direction direction, USBEndpointDescriptor& endpoint);

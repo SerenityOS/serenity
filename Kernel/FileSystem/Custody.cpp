@@ -21,15 +21,15 @@ static MutexProtected<Custody::AllCustodiesList>& all_custodies()
     return s_all_custodies;
 }
 
-KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
+ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
-    return all_custodies().with_exclusive([&](auto& all_custodies) -> KResultOr<NonnullRefPtr<Custody>> {
+    return all_custodies().with_exclusive([&](auto& all_custodies) -> ErrorOr<NonnullRefPtr<Custody>> {
         for (Custody& custody : all_custodies) {
             if (custody.parent() == parent
                 && custody.name() == name
                 && &custody.inode() == &inode
                 && custody.mount_flags() == mount_flags) {
-                return custody;
+                return NonnullRefPtr { custody };
             }
         }
 
@@ -66,7 +66,7 @@ Custody::~Custody()
 {
 }
 
-KResultOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
+ErrorOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
 {
     if (!parent())
         return KString::try_create("/"sv);

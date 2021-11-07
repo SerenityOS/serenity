@@ -22,34 +22,34 @@ struct SocketPair {
 class LocalSocket final : public Socket {
 
 public:
-    static KResultOr<NonnullRefPtr<LocalSocket>> try_create(int type);
-    static KResultOr<SocketPair> try_create_connected_pair(int type);
+    static ErrorOr<NonnullRefPtr<LocalSocket>> try_create(int type);
+    static ErrorOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    KResult sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
-    KResultOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
+    ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
 
     static void for_each(Function<void(const LocalSocket&)>);
 
     StringView socket_path() const;
-    KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
+    ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
 
     // ^Socket
-    virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResult connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
-    virtual KResult listen(size_t) override;
+    virtual ErrorOr<void> bind(Userspace<const sockaddr*>, socklen_t) override;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual ErrorOr<void> listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
-    virtual KResult attach(OpenFileDescription&) override;
+    virtual ErrorOr<void> attach(OpenFileDescription&) override;
     virtual void detach(OpenFileDescription&) override;
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
-    virtual KResult getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResult chown(OpenFileDescription&, UserID, GroupID) override;
-    virtual KResult chmod(OpenFileDescription&, mode_t) override;
+    virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
+    virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) override;
+    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) override;
 
 private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
@@ -69,7 +69,7 @@ private:
             evaluate_block_conditions();
     }
 
-    KResult try_set_path(StringView);
+    ErrorOr<void> try_set_path(StringView);
 
     // The inode this socket is bound to.
     WeakPtr<Inode> m_inode;

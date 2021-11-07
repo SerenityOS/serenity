@@ -65,7 +65,7 @@ void KCOVDevice::free_process()
     delete kcov_instance;
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
 {
     auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())
@@ -77,9 +77,8 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
     return File::open(options);
 }
 
-KResult KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    KResult return_value = KSuccess;
     auto thread = Thread::current();
     auto tid = thread->tid();
     auto pid = thread->pid();
@@ -90,48 +89,34 @@ KResult KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void
 
     SpinlockLocker locker(kcov_instance->spinlock());
     switch (request) {
-    case KCOV_SETBUFSIZE: {
-        if (kcov_instance->state() >= KCOVInstance::TRACING) {
-            return_value = EBUSY;
-            break;
-        }
-        return_value = kcov_instance->buffer_allocate((FlatPtr)arg.unsafe_userspace_ptr());
-        break;
-    }
-    case KCOV_ENABLE: {
-        if (kcov_instance->state() >= KCOVInstance::TRACING) {
-            return_value = EBUSY;
-            break;
-        }
-        if (!kcov_instance->has_buffer()) {
-            return_value = ENOBUFS;
-            break;
-        }
+    case KCOV_SETBUFSIZE:
+        if (kcov_instance->state() >= KCOVInstance::TRACING)
+            return EBUSY;
+        return kcov_instance->buffer_allocate((FlatPtr)arg.unsafe_userspace_ptr());
+    case KCOV_ENABLE:
+        if (kcov_instance->state() >= KCOVInstance::TRACING)
+            return EBUSY;
+        if (!kcov_instance->has_buffer())
+            return ENOBUFS;
         VERIFY(kcov_instance->state() == KCOVInstance::OPENED);
         kcov_instance->set_state(KCOVInstance::TRACING);
         thread_instance->set(tid, kcov_instance);
-        break;
-    }
+        return {};
     case KCOV_DISABLE: {
         auto maybe_kcov_instance = thread_instance->get(tid);
-        if (!maybe_kcov_instance.has_value()) {
-            return_value = ENOENT;
-            break;
-        }
+        if (!maybe_kcov_instance.has_value())
+            return ENOENT;
         VERIFY(kcov_instance->state() == KCOVInstance::TRACING);
         kcov_instance->set_state(KCOVInstance::OPENED);
         thread_instance->remove(tid);
-        break;
+        return {};
     }
-    default: {
-        return_value = EINVAL;
+    default:
+        return EINVAL;
     }
-    };
-
-    return return_value;
 }
 
-KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto pid = process.pid();
     auto maybe_kcov_instance = proc_instance->get(pid);

@@ -16,7 +16,7 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
+ErrorOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
 {
     auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
     auto device = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(pipe))));
@@ -56,7 +56,7 @@ Device::~Device()
 {
 }
 
-KResult Device::enumerate_device()
+ErrorOr<void> Device::enumerate_device()
 {
     USBDeviceDescriptor dev_descriptor {};
 
@@ -118,7 +118,7 @@ KResult Device::enumerate_device()
     dbgln_if(USB_DEBUG, "USB Device: Set address to {}", m_address);
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
-    return KSuccess;
+    return {};
 }
 
 }

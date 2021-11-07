@@ -19,7 +19,7 @@ namespace Kernel::USB {
 
 class Transfer : public RefCounted<Transfer> {
 public:
-    static KResultOr<NonnullRefPtr<Transfer>> try_create(Pipe&, u16 length);
+    static ErrorOr<NonnullRefPtr<Transfer>> try_create(Pipe&, u16 length);
 
 public:
     Transfer() = delete;

@@ -24,7 +24,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Custody& custody)
 {
     auto inode_file = TRY(InodeFile::create(custody.inode()));
     auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(move(inode_file))));
@@ -34,7 +34,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(Cu
     return description;
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(File& file)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> OpenFileDescription::try_create(File& file)
 {
     auto description = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) OpenFileDescription(file)));
     TRY(description->attach());
@@ -64,7 +64,7 @@ OpenFileDescription::~OpenFileDescription()
         m_inode->remove_flocks_for_description(*this);
 }
 
-KResult OpenFileDescription::attach()
+ErrorOr<void> OpenFileDescription::attach()
 {
     if (m_inode)
         TRY(m_inode->attach(*this));
@@ -97,7 +97,7 @@ Thread::FileBlocker::BlockFlags OpenFileDescription::should_unblock(Thread::File
     return unblock_flags;
 }
 
-KResult OpenFileDescription::stat(::stat& buffer)
+ErrorOr<void> OpenFileDescription::stat(::stat& buffer)
 {
     MutexLocker locker(m_lock);
     // FIXME: This is due to the Device class not overriding File::stat().
@@ -106,7 +106,7 @@ KResult OpenFileDescription::stat(::stat& buffer)
     return m_file->stat(buffer);
 }
 
-KResultOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
+ErrorOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
 {
     MutexLocker locker(m_lock);
     if (!m_file->is_seekable())
@@ -147,21 +147,21 @@ KResultOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-KResultOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, u64 offset, size_t count)
+ErrorOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, u64 offset, size_t count)
 {
     if (Checked<u64>::addition_would_overflow(offset, count))
         return EOVERFLOW;
     return m_file->read(*this, offset, buffer, count);
 }
 
-KResultOr<size_t> OpenFileDescription::write(u64 offset, UserOrKernelBuffer const& data, size_t data_size)
+ErrorOr<size_t> OpenFileDescription::write(u64 offset, UserOrKernelBuffer const& data, size_t data_size)
 {
     if (Checked<u64>::addition_would_overflow(offset, data_size))
         return EOVERFLOW;
     return m_file->write(*this, offset, data, data_size);
 }
 
-KResultOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t count)
+ErrorOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
@@ -173,7 +173,7 @@ KResultOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t c
     return nread;
 }
 
-KResultOr<size_t> OpenFileDescription::write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> OpenFileDescription::write(const UserOrKernelBuffer& data, size_t size)
 {
     MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
@@ -195,7 +195,7 @@ bool OpenFileDescription::can_read() const
     return m_file->can_read(*this, offset());
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> OpenFileDescription::read_entire_file()
+ErrorOr<NonnullOwnPtr<KBuffer>> OpenFileDescription::read_entire_file()
 {
     // HACK ALERT: (This entire function)
     VERIFY(m_file->is_inode());
@@ -203,7 +203,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> OpenFileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-KResultOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
+ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
     MutexLocker locker(m_lock, Mutex::Mode::Shared);
     if (!is_directory())
@@ -214,7 +214,7 @@ KResultOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& outpu
         return EIO;
 
     size_t remaining = size;
-    KResult error = KSuccess;
+    ErrorOr<void> error;
     u8 stack_buffer[PAGE_SIZE];
     Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
     OutputMemoryStream stream { temp_buffer };
@@ -238,7 +238,7 @@ KResultOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& outpu
         return true;
     };
 
-    KResult result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) {
+    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) {
         size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
         if (serialized_size > stream.remaining()) {
             if (!flush_stream_to_output_buffer()) {
@@ -257,12 +257,12 @@ KResultOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& outpu
         // We should only return EFAULT when the userspace buffer is too small,
         // so that userspace can reliably use it as a signal to increase its
         // buffer size.
-        VERIFY(result != EFAULT);
-        return result;
+        VERIFY(result.error().code() != EFAULT);
+        return result.release_error();
     }
 
     if (error.is_error())
-        return error;
+        return error.release_error();
     return size - remaining;
 }
 
@@ -342,21 +342,21 @@ MasterPTY* OpenFileDescription::master_pty()
     return static_cast<MasterPTY*>(m_file.ptr());
 }
 
-KResult OpenFileDescription::close()
+ErrorOr<void> OpenFileDescription::close()
 {
     if (m_file->attach_count() > 0)
-        return KSuccess;
+        return {};
     return m_file->close();
 }
 
-KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::original_absolute_path() const
+ErrorOr<NonnullOwnPtr<KString>> OpenFileDescription::original_absolute_path() const
 {
     if (!m_custody)
         return ENOENT;
     return m_custody->try_serialize_absolute_path();
 }
 
-KResultOr<NonnullOwnPtr<KString>> OpenFileDescription::pseudo_path() const
+ErrorOr<NonnullOwnPtr<KString>> OpenFileDescription::pseudo_path() const
 {
     if (m_custody)
         return m_custody->try_serialize_absolute_path();
@@ -370,19 +370,19 @@ InodeMetadata OpenFileDescription::metadata() const
     return {};
 }
 
-KResultOr<Memory::Region*> OpenFileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> OpenFileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     MutexLocker locker(m_lock);
     return m_file->mmap(process, *this, range, offset, prot, shared);
 }
 
-KResult OpenFileDescription::truncate(u64 length)
+ErrorOr<void> OpenFileDescription::truncate(u64 length)
 {
     MutexLocker locker(m_lock);
     return m_file->truncate(length);
 }
 
-KResult OpenFileDescription::sync()
+ErrorOr<void> OpenFileDescription::sync()
 {
     MutexLocker locker(m_lock);
     return m_file->sync();
@@ -428,13 +428,13 @@ void OpenFileDescription::set_file_flags(u32 flags)
     m_file_flags = flags;
 }
 
-KResult OpenFileDescription::chmod(mode_t mode)
+ErrorOr<void> OpenFileDescription::chmod(mode_t mode)
 {
     MutexLocker locker(m_lock);
     return m_file->chmod(*this, mode);
 }
 
-KResult OpenFileDescription::chown(UserID uid, GroupID gid)
+ErrorOr<void> OpenFileDescription::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_lock);
     return m_file->chown(*this, uid, gid);
@@ -445,7 +445,7 @@ FileBlockerSet& OpenFileDescription::blocker_set()
     return m_file->blocker_set();
 }
 
-KResult OpenFileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
+ErrorOr<void> OpenFileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
 {
     if (!m_inode)
         return EBADF;
@@ -453,7 +453,7 @@ KResult OpenFileDescription::apply_flock(Process const& process, Userspace<flock
     return m_inode->apply_flock(process, *this, lock);
 }
 
-KResult OpenFileDescription::get_flock(Userspace<flock*> lock) const
+ErrorOr<void> OpenFileDescription::get_flock(Userspace<flock*> lock) const
 {
     if (!m_inode)
         return EBADF;

@@ -28,15 +28,15 @@ public:
 private:
     // ^TTY
     virtual KString const& tty_name() const override;
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
     virtual void echo(u8) override;
 
     // ^CharacterDevice
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual StringView class_name() const override { return "SlavePTY"sv; }
-    virtual KResult close() override;
+    virtual ErrorOr<void> close() override;
 
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index, NonnullOwnPtr<KString> pts_name);

@@ -24,7 +24,7 @@ struct WatchDescription {
     Inode& inode;
     unsigned event_mask;
 
-    static KResultOr<NonnullOwnPtr<WatchDescription>> create(int wd, Inode& inode, unsigned event_mask)
+    static ErrorOr<NonnullOwnPtr<WatchDescription>> create(int wd, Inode& inode, unsigned event_mask)
     {
         return adopt_nonnull_own_or_enomem(new (nothrow) WatchDescription(wd, inode, event_mask));
     }
@@ -40,24 +40,24 @@ private:
 
 class InodeWatcher final : public File {
 public:
-    static KResultOr<NonnullRefPtr<InodeWatcher>> try_create();
+    static ErrorOr<NonnullRefPtr<InodeWatcher>> try_create();
     virtual ~InodeWatcher() override;
 
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     // Can't write to an inode watcher.
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EIO; }
-    virtual KResult close() override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EIO; }
+    virtual ErrorOr<void> close() override;
 
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
     virtual StringView class_name() const override { return "InodeWatcher"sv; };
     virtual bool is_inode_watcher() const override { return true; }
 
     void notify_inode_event(Badge<Inode>, InodeIdentifier, InodeWatcherEvent::Type, String const& name = {});
 
-    KResultOr<int> register_inode(Inode&, unsigned event_mask);
-    KResult unregister_by_wd(int);
+    ErrorOr<int> register_inode(Inode&, unsigned event_mask);
+    ErrorOr<void> unregister_by_wd(int);
     void unregister_by_inode(Badge<Inode>, InodeIdentifier);
 
 private:

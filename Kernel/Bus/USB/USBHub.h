@@ -80,18 +80,18 @@ static constexpr u16 PORT_STATUS_RESET_CHANGED = (1 << 4);
 
 class Hub : public Device {
 public:
-    static KResultOr<NonnullRefPtr<Hub>> try_create_root_hub(NonnullRefPtr<USBController>, DeviceSpeed);
-    static KResultOr<NonnullRefPtr<Hub>> try_create_from_device(Device const&);
+    static ErrorOr<NonnullRefPtr<Hub>> try_create_root_hub(NonnullRefPtr<USBController>, DeviceSpeed);
+    static ErrorOr<NonnullRefPtr<Hub>> try_create_from_device(Device const&);
 
     virtual ~Hub() override = default;
 
-    KResult enumerate_and_power_on_hub();
+    ErrorOr<void> enumerate_and_power_on_hub();
 
-    KResult get_port_status(u8, HubStatus&);
-    KResult clear_port_feature(u8, HubFeatureSelector);
-    KResult set_port_feature(u8, HubFeatureSelector);
+    ErrorOr<void> get_port_status(u8, HubStatus&);
+    ErrorOr<void> clear_port_feature(u8, HubFeatureSelector);
+    ErrorOr<void> set_port_feature(u8, HubFeatureSelector);
 
-    KResult reset_port(u8);
+    ErrorOr<void> reset_port(u8);
 
     void check_for_port_updates();
 

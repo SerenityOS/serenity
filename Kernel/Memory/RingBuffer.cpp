@@ -29,7 +29,7 @@ bool RingBuffer::copy_data_in(const UserOrKernelBuffer& buffer, size_t offset, s
     return true;
 }
 
-KResultOr<size_t> RingBuffer::copy_data_out(size_t size, UserOrKernelBuffer& buffer) const
+ErrorOr<size_t> RingBuffer::copy_data_out(size_t size, UserOrKernelBuffer& buffer) const
 {
     auto start = m_start_of_used % m_capacity_in_bytes;
     auto num_bytes = min(min(m_num_used_bytes, size), m_capacity_in_bytes - start);
@@ -37,7 +37,7 @@ KResultOr<size_t> RingBuffer::copy_data_out(size_t size, UserOrKernelBuffer& buf
     return num_bytes;
 }
 
-KResultOr<PhysicalAddress> RingBuffer::reserve_space(size_t size)
+ErrorOr<PhysicalAddress> RingBuffer::reserve_space(size_t size)
 {
     if (m_capacity_in_bytes < m_num_used_bytes + size)
         return ENOSPC;

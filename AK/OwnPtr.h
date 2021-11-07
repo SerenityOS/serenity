@@ -6,13 +6,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
-#ifdef KERNEL
-#    include <Kernel/API/KResult.h>
-#else
-#    include <AK/Error.h>
-#endif
 
 #define OWNPTR_SCRUB_BYTE 0xf0
 
@@ -209,16 +205,6 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
     return {};
 }
 
-#ifdef KERNEL
-template<typename T>
-inline Kernel::KResultOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
-{
-    auto result = adopt_own_if_nonnull(object);
-    if (!result)
-        return ENOMEM;
-    return result.release_nonnull();
-}
-#else
 template<typename T>
 inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
 {
@@ -227,7 +213,6 @@ inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
         return ENOMEM;
     return result.release_nonnull();
 }
-#endif
 
 template<typename T, class... Args>
 requires(IsConstructible<T, Args...>) inline OwnPtr<T> try_make(Args&&... args)

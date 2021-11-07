@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
@@ -24,7 +24,7 @@ class Custody : public RefCountedBase {
 public:
     bool unref() const;
 
-    static KResultOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
+    static ErrorOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
     ~Custody();
 
@@ -33,7 +33,7 @@ public:
     Inode& inode() { return *m_inode; }
     Inode const& inode() const { return *m_inode; }
     StringView name() const { return m_name->view(); }
-    KResultOr<NonnullOwnPtr<KString>> try_serialize_absolute_path() const;
+    ErrorOr<NonnullOwnPtr<KString>> try_serialize_absolute_path() const;
     String absolute_path() const;
 
     int mount_flags() const { return m_mount_flags; }

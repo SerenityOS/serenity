@@ -187,7 +187,7 @@ NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
     auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
 
     if (auto result = file_system->initialize(); result.is_error()) {
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result);
+        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
     }
     return file_system;
 }

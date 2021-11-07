@@ -107,7 +107,7 @@ ProcFSExposedLink::ProcFSExposedLink(StringView name)
     : ProcFSExposedComponent(name)
 {
 }
-KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
+ErrorOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFSGlobalInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
 
@@ -115,13 +115,13 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
     VERIFY(buffer.user_or_kernel_ptr());
 
     if (!description)
-        return KResult(EIO);
+        return Error::from_errno(EIO);
 
     MutexLocker locker(m_refresh_lock);
 
     if (!description->data()) {
         dbgln("ProcFSGlobalInformation: Do not have cached data!");
-        return KResult(EIO);
+        return Error::from_errno(EIO);
     }
 
     auto& typed_cached_data = static_cast<ProcFSInodeData&>(*description->data());
@@ -135,7 +135,7 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
     return nread;
 }
 
-KResult ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) const
+ErrorOr<void> ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) const
 {
     MutexLocker lock(m_refresh_lock);
     auto& cached_data = description.data();
@@ -150,15 +150,15 @@ KResult ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) 
     typed_cached_data.buffer = builder.build();
     if (!typed_cached_data.buffer)
         return ENOMEM;
-    return KSuccess;
+    return {};
 }
 
-KResult ProcFSSystemBoolean::try_generate(KBufferBuilder& builder)
+ErrorOr<void> ProcFSSystemBoolean::try_generate(KBufferBuilder& builder)
 {
     return builder.appendff("{}\n", static_cast<int>(value()));
 }
 
-KResultOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription*)
+ErrorOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription*)
 {
     if (count != 1)
         return EINVAL;
@@ -174,45 +174,45 @@ KResultOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, const Us
     return 1;
 }
 
-KResult ProcFSSystemBoolean::truncate(u64 size)
+ErrorOr<void> ProcFSSystemBoolean::truncate(u64 size)
 {
     if (size != 0)
         return EPERM;
-    return KSuccess;
+    return {};
 }
 
-KResult ProcFSSystemBoolean::set_mtime(time_t)
+ErrorOr<void> ProcFSSystemBoolean::set_mtime(time_t)
 {
-    return KSuccess;
+    return {};
 }
 
-KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(offset == 0);
     MutexLocker locker(m_lock);
     auto builder = TRY(KBufferBuilder::try_create());
     if (!const_cast<ProcFSExposedLink&>(*this).acquire_link(builder))
-        return KResult(EFAULT);
+        return Error::from_errno(EFAULT);
     auto blob = builder.build();
     if (!blob)
-        return KResult(EFAULT);
+        return Error::from_errno(EFAULT);
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
     TRY(buffer.write(blob->data() + offset, nread));
     return nread;
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
 {
     return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
 {
     return TRY(ProcFSGlobalInode::try_create(procfs_instance, *this));
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
 {
     return TRY(ProcFSDirectoryInode::try_create(procfs_instance, *this));
 }
@@ -222,7 +222,7 @@ void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
     TODO();
 }
 
-KResultOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(StringView name)
+ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(StringView name)
 {
     for (auto& component : m_components) {
         if (component.name() == name) {
@@ -232,12 +232,12 @@ KResultOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(
     return ENOENT;
 }
 
-KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
     auto parent_directory = m_parent_directory.strong_ref();
     if (parent_directory.is_null())
-        return KResult(EINVAL);
+        return Error::from_errno(EINVAL);
     callback({ ".", { fsid, component_index() }, DT_DIR });
     callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR });
 
@@ -245,7 +245,7 @@ KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bo
         InodeIdentifier identifier = { fsid, component.component_index() };
         callback({ component.name(), identifier, 0 });
     }
-    return KSuccess;
+    return {};
 }
 
 }

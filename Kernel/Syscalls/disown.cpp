@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$disown(ProcessID pid)
+ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(proc);

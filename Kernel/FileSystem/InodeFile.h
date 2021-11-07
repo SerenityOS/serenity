@@ -14,7 +14,7 @@ class Inode;
 
 class InodeFile final : public File {
 public:
-    static KResultOr<NonnullRefPtr<InodeFile>> create(NonnullRefPtr<Inode>&& inode)
+    static ErrorOr<NonnullRefPtr<InodeFile>> create(NonnullRefPtr<Inode>&& inode)
     {
         auto file = adopt_ref_if_nonnull(new (nothrow) InodeFile(move(inode)));
         if (!file)
@@ -30,18 +30,18 @@ public:
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
 
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
-    virtual KResult stat(::stat& buffer) const override { return inode().metadata().stat(buffer); }
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
+    virtual ErrorOr<void> stat(::stat& buffer) const override { return inode().metadata().stat(buffer); }
 
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
-    virtual KResult truncate(u64) override;
-    virtual KResult sync() override;
-    virtual KResult chown(OpenFileDescription&, UserID, GroupID) override;
-    virtual KResult chmod(OpenFileDescription&, mode_t) override;
+    virtual ErrorOr<void> truncate(u64) override;
+    virtual ErrorOr<void> sync() override;
+    virtual ErrorOr<void> chown(OpenFileDescription&, UserID, GroupID) override;
+    virtual ErrorOr<void> chmod(OpenFileDescription&, mode_t) override;
 
     virtual StringView class_name() const override { return "InodeFile"sv; }
 

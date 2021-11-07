@@ -40,9 +40,9 @@ void PTYMultiplexer::initialize()
     the().after_inserting();
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 {
-    return m_freelist.with_exclusive([&](auto& freelist) -> KResultOr<NonnullRefPtr<OpenFileDescription>> {
+    return m_freelist.with_exclusive([&](auto& freelist) -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
         if (freelist.is_empty())
             return EBUSY;
 

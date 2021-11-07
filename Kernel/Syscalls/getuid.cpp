@@ -8,55 +8,55 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$getuid()
+ErrorOr<FlatPtr> Process::sys$getuid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return uid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getgid()
+ErrorOr<FlatPtr> Process::sys$getgid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return gid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$geteuid()
+ErrorOr<FlatPtr> Process::sys$geteuid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return euid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getegid()
+ErrorOr<FlatPtr> Process::sys$getegid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return egid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> ruid, Userspace<UserID*> euid, Userspace<UserID*> suid)
+ErrorOr<FlatPtr> Process::sys$getresuid(Userspace<UserID*> ruid, Userspace<UserID*> euid, Userspace<UserID*> suid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     TRY(copy_to_user(ruid, &m_protected_values.uid));
     TRY(copy_to_user(euid, &m_protected_values.euid));
     TRY(copy_to_user(suid, &m_protected_values.suid));
-    return KSuccess;
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> rgid, Userspace<GroupID*> egid, Userspace<GroupID*> sgid)
+ErrorOr<FlatPtr> Process::sys$getresgid(Userspace<GroupID*> rgid, Userspace<GroupID*> egid, Userspace<GroupID*> sgid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     TRY(copy_to_user(rgid, &m_protected_values.gid));
     TRY(copy_to_user(egid, &m_protected_values.egid));
     TRY(copy_to_user(sgid, &m_protected_values.sgid));
-    return KSuccess;
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_gids)
+ErrorOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_gids)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -64,7 +64,8 @@ KResultOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_g
         return extra_gids().size();
     if (count != extra_gids().size())
         return EINVAL;
-    return copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count);
+    TRY(copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count));
+    return 0;
 }
 
 }

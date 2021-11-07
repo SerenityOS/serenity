@@ -18,12 +18,12 @@
 
 namespace Kernel {
 
-KResultOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const
+ErrorOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
     auto thread = Thread::from_tid(thread_id);
     if (!thread)
-        return KResult(ESRCH);
+        return Error::from_errno(ESRCH);
     bool show_kernel_addresses = Process::current().is_superuser();
     bool kernel_address_added = false;
     for (auto address : Processor::capture_stack_trace(*thread, 1024)) {
@@ -37,10 +37,11 @@ KResultOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBu
     }
 
     array.finish();
-    return KSuccess;
+    // FIXME: This return value seems useless.
+    return 0;
 }
 
-KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 });
     callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
@@ -50,12 +51,12 @@ KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSyst
         InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
         callback({ String::number(tid), identifier, 0 });
     });
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
 {
-    KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
+    ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
 
     // FIXME: Try to exit the loop earlier
     for_each_thread([&](const Thread& thread) {
@@ -64,7 +65,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& p
         if (name.to_int() == tid) {
             auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
             if (maybe_inode.is_error()) {
-                thread_stack_inode = maybe_inode.error();
+                thread_stack_inode = maybe_inode.release_error();
                 return;
             }
 
@@ -73,11 +74,11 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& p
     });
 
     if (thread_stack_inode.is_error())
-        return thread_stack_inode.error();
+        return thread_stack_inode.release_error();
     return thread_stack_inode.release_value();
 }
 
-KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
+ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
 {
     auto file_description = TRY(m_fds.open_file_description(fd));
     // Note: These links are not guaranteed to point to actual VFS paths, just like in other kernels.
@@ -86,7 +87,7 @@ KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBuffer
     return data->length();
 }
 
-KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 });
     callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
@@ -101,10 +102,10 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
         callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
         count++;
     });
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())
@@ -116,7 +117,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(cons
     return TRY(ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid()));
 }
 
-KResult Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
 {
     JsonObjectSerializer obj { builder };
 #define __ENUMERATE_PLEDGE_PROMISE(x) \
@@ -132,10 +133,10 @@ KResult Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
     }
 #undef __ENUMERATE_PLEDGE_PROMISE
     obj.finish();
-    return KSuccess;
+    return {};
 }
 
-KResult Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
     for (auto& unveiled_path : unveiled_paths()) {
@@ -157,25 +158,25 @@ KResult Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
         obj.add("permissions", permissions_builder.to_string());
     }
     array.finish();
-    return KSuccess;
+    return {};
 }
 
-KResult Process::procfs_get_perf_events(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_perf_events(KBufferBuilder& builder) const
 {
     InterruptDisabler disabler;
     if (!perf_events()) {
         dbgln("ProcFS: No perf events for {}", pid());
-        return KResult(ENOBUFS);
+        return Error::from_errno(ENOBUFS);
     }
     return perf_events()->to_json(builder);
 }
 
-KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
     if (fds().open_count() == 0) {
         array.finish();
-        return KSuccess;
+        return {};
     }
 
     size_t count = 0;
@@ -209,10 +210,10 @@ KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
     });
 
     array.finish();
-    return KSuccess;
+    return {};
 }
 
-KResult Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
     {
@@ -254,10 +255,10 @@ KResult Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
         }
     }
     array.finish();
-    return KSuccess;
+    return {};
 }
 
-KResult Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
 {
     return builder.append_bytes(const_cast<Process&>(*this).current_directory().absolute_path().bytes());
 }
@@ -269,11 +270,11 @@ mode_t Process::binary_link_required_mode() const
     return m_procfs_traits->required_mode();
 }
 
-KResult Process::procfs_get_binary_link(KBufferBuilder& builder) const
+ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
 {
     auto* custody = executable();
     if (!custody)
-        return KResult(ENOEXEC);
+        return Error::from_errno(ENOEXEC);
     return builder.append(custody->absolute_path().bytes());
 }
 

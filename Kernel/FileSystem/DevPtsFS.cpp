@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<DevPtsFS>> DevPtsFS::try_create()
+ErrorOr<NonnullRefPtr<DevPtsFS>> DevPtsFS::try_create()
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFS);
 }
@@ -25,7 +25,7 @@ DevPtsFS::~DevPtsFS()
 {
 }
 
-KResult DevPtsFS::initialize()
+ErrorOr<void> DevPtsFS::initialize()
 {
     m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(*this, 1, nullptr)));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
@@ -34,7 +34,7 @@ KResult DevPtsFS::initialize()
     m_root_inode->m_metadata.gid = 0;
     m_root_inode->m_metadata.size = 0;
     m_root_inode->m_metadata.mtime = mepoch;
-    return KSuccess;
+    return {};
 }
 
 static unsigned inode_index_to_pty_index(InodeIndex inode_index)
@@ -53,7 +53,7 @@ Inode& DevPtsFS::root_inode()
     return *m_root_inode;
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 {
     if (inode_id.index() == 1)
         return *m_root_inode;
@@ -85,12 +85,12 @@ DevPtsFSInode::~DevPtsFSInode()
 {
 }
 
-KResultOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
+ErrorOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
+ErrorOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -105,7 +105,7 @@ InodeMetadata DevPtsFSInode::metadata() const
     return m_metadata;
 }
 
-KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     if (identifier().index() > 1)
         return ENOTDIR;
@@ -121,10 +121,10 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::Directory
         }
     });
 
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
 {
     VERIFY(identifier().index() == 1);
 
@@ -135,7 +135,7 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (!pty_index.has_value())
         return ENOENT;
 
-    return SlavePTY::all_instances().with([&](auto& list) -> KResultOr<NonnullRefPtr<Inode>> {
+    return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<NonnullRefPtr<Inode>> {
         for (SlavePTY& slave_pty : list) {
             if (slave_pty.index() != pty_index.value())
                 continue;
@@ -145,32 +145,32 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     });
 }
 
-KResult DevPtsFSInode::flush_metadata()
+ErrorOr<void> DevPtsFSInode::flush_metadata()
 {
-    return KSuccess;
+    return {};
 }
 
-KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
-{
-    return EROFS;
-}
-
-KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<void> DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
 {
     return EROFS;
 }
 
-KResult DevPtsFSInode::remove_child(const StringView&)
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
 
-KResult DevPtsFSInode::chmod(mode_t)
+ErrorOr<void> DevPtsFSInode::remove_child(const StringView&)
 {
     return EROFS;
 }
 
-KResult DevPtsFSInode::chown(UserID, GroupID)
+ErrorOr<void> DevPtsFSInode::chmod(mode_t)
+{
+    return EROFS;
+}
+
+ErrorOr<void> DevPtsFSInode::chown(UserID, GroupID)
 {
     return EROFS;
 }

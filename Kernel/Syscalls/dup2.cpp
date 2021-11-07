@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$dup2(int old_fd, int new_fd)
+ErrorOr<FlatPtr> Process::sys$dup2(int old_fd, int new_fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);

@@ -31,7 +31,7 @@ class KCOVInstance final {
 public:
     explicit KCOVInstance(ProcessID pid);
 
-    KResult buffer_allocate(size_t buffer_size_in_entries);
+    ErrorOr<void> buffer_allocate(size_t buffer_size_in_entries);
     bool has_buffer() const { return m_buffer != nullptr; }
     void buffer_add_pc(u64 pc);
 

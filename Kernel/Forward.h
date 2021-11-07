@@ -32,7 +32,6 @@ class Inode;
 class InodeIdentifier;
 class InodeWatcher;
 class KBuffer;
-class KResult;
 class LocalSocket;
 class Mutex;
 class MasterPTY;
@@ -87,8 +86,6 @@ class VirtualRangeAllocator;
 class Spinlock;
 template<typename LockType>
 class SpinlockLocker;
-template<typename T>
-class KResultOr;
 
 struct InodeMetadata;
 struct TrapFrame;

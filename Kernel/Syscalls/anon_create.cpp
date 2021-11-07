@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
+ErrorOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);

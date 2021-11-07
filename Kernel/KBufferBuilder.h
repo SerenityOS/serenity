@@ -18,21 +18,21 @@ class KBufferBuilder {
 public:
     using OutputType = KBuffer;
 
-    static KResultOr<KBufferBuilder> try_create();
+    static ErrorOr<KBufferBuilder> try_create();
 
     KBufferBuilder(KBufferBuilder&&) = default;
     KBufferBuilder& operator=(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
-    KResult append(const StringView&);
-    KResult append(char);
-    KResult append(const char*, int);
+    ErrorOr<void> append(const StringView&);
+    ErrorOr<void> append(char);
+    ErrorOr<void> append(const char*, int);
 
-    KResult append_escaped_for_json(const StringView&);
-    KResult append_bytes(ReadonlyBytes);
+    ErrorOr<void> append_escaped_for_json(const StringView&);
+    ErrorOr<void> append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>
-    KResult appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    ErrorOr<void> appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;

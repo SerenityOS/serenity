@@ -24,9 +24,9 @@ public:
     static PTYMultiplexer& the();
 
     // ^CharacterDevice
-    virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return 0; }
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return 0; }
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return 0; }
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return 0; }
     virtual bool can_read(const OpenFileDescription&, size_t) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, size_t) const override { return true; }
 

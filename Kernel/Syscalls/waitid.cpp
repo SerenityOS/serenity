@@ -10,16 +10,16 @@
 
 namespace Kernel {
 
-KResultOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options)
+ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options)
 {
-    KResultOr<siginfo_t> result = KResult(KSuccess);
+    ErrorOr<siginfo_t> result = siginfo_t {};
     if (Thread::current()->block<Thread::WaitBlocker>({}, options, move(waitee), result).was_interrupted())
         return EINTR;
-    VERIFY(!result.is_error() || (options & WNOHANG) || result.error() != KSuccess);
+    VERIFY(!result.is_error() || (options & WNOHANG));
     return result;
 }
 
-KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
@@ -55,7 +55,8 @@ KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params
     dbgln_if(PROCESS_DEBUG, "sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
     auto siginfo = TRY(do_waitid(move(waitee), params.options));
-    return copy_to_user(params.infop, &siginfo);
+    TRY(copy_to_user(params.infop, &siginfo));
+    return 0;
 }
 
 }

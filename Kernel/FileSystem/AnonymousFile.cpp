@@ -19,7 +19,7 @@ AnonymousFile::~AnonymousFile()
 {
 }
 
-KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
+ErrorOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     if (offset != 0)
         return EINVAL;
@@ -30,7 +30,7 @@ KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescrip
     return process.address_space().allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
 }
 
-KResultOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(const OpenFileDescription&) const
 {
     return KString::try_create(":anonymous-file:"sv);
 }

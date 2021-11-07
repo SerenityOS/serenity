@@ -74,7 +74,7 @@ RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& na
     return found_adapter;
 }
 
-KResultOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_from_pci_address(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_from_pci_address(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(device_identifier.class_code().value() == 0x2);
     // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot

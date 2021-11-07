@@ -15,25 +15,25 @@ namespace Kernel {
 
 class Coredump {
 public:
-    static KResultOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
+    static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
 
     ~Coredump() = default;
-    KResult write();
+    ErrorOr<void> write();
 
 private:
     Coredump(NonnullRefPtr<Process>, NonnullRefPtr<OpenFileDescription>);
-    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
 
-    KResult write_elf_header();
-    KResult write_program_headers(size_t notes_size);
-    KResult write_regions();
-    KResult write_notes_segment(ReadonlyBytes);
+    ErrorOr<void> write_elf_header();
+    ErrorOr<void> write_program_headers(size_t notes_size);
+    ErrorOr<void> write_regions();
+    ErrorOr<void> write_notes_segment(ReadonlyBytes);
 
-    KResult create_notes_segment_data(auto&) const;
-    KResult create_notes_process_data(auto&) const;
-    KResult create_notes_threads_data(auto&) const;
-    KResult create_notes_regions_data(auto&) const;
-    KResult create_notes_metadata_data(auto&) const;
+    ErrorOr<void> create_notes_segment_data(auto&) const;
+    ErrorOr<void> create_notes_process_data(auto&) const;
+    ErrorOr<void> create_notes_threads_data(auto&) const;
+    ErrorOr<void> create_notes_regions_data(auto&) const;
+    ErrorOr<void> create_notes_metadata_data(auto&) const;
 
     NonnullRefPtr<Process> m_process;
     NonnullRefPtr<OpenFileDescription> m_description;

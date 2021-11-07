@@ -20,9 +20,9 @@ class Plan9FS final : public FileBackedFileSystem {
 
 public:
     virtual ~Plan9FS() override;
-    static KResultOr<NonnullRefPtr<Plan9FS>> try_create(OpenFileDescription&);
+    static ErrorOr<NonnullRefPtr<Plan9FS>> try_create(OpenFileDescription&);
 
-    virtual KResult initialize() override;
+    virtual ErrorOr<void> initialize() override;
 
     virtual bool supports_watchers() const override { return false; }
 
@@ -74,7 +74,7 @@ private:
         bool completed { false };
         const u16 tag;
         OwnPtr<Message> message;
-        KResult result { KSuccess };
+        ErrorOr<void> result;
 
         ReceiveCompletion(u16 tag);
         ~ReceiveCompletion();
@@ -116,11 +116,11 @@ private:
     virtual StringView class_name() const override { return "Plan9FS"sv; }
 
     bool is_complete(const ReceiveCompletion&);
-    KResult post_message(Message&, RefPtr<ReceiveCompletion>);
-    KResult do_read(u8* buffer, size_t);
-    KResult read_and_dispatch_one_message();
-    KResult post_message_and_wait_for_a_reply(Message&);
-    KResult post_message_and_explicitly_ignore_reply(Message&);
+    ErrorOr<void> post_message(Message&, RefPtr<ReceiveCompletion>);
+    ErrorOr<void> do_read(u8* buffer, size_t);
+    ErrorOr<void> read_and_dispatch_one_message();
+    ErrorOr<void> post_message_and_wait_for_a_reply(Message&);
+    ErrorOr<void> post_message_and_explicitly_ignore_reply(Message&);
 
     ProtocolVersion parse_protocol_version(const StringView&) const;
     size_t adjust_buffer_size(size_t size) const;
@@ -155,21 +155,21 @@ public:
 
     // ^Inode
     virtual InodeMetadata metadata() const override;
-    virtual KResult flush_metadata() override;
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
-    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
-    virtual KResult remove_child(const StringView& name) override;
-    virtual KResult chmod(mode_t) override;
-    virtual KResult chown(UserID, GroupID) override;
-    virtual KResult truncate(u64) override;
+    virtual ErrorOr<void> flush_metadata() override;
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
+    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override;
+    virtual ErrorOr<void> remove_child(const StringView& name) override;
+    virtual ErrorOr<void> chmod(mode_t) override;
+    virtual ErrorOr<void> chown(UserID, GroupID) override;
+    virtual ErrorOr<void> truncate(u64) override;
 
 private:
     Plan9FSInode(Plan9FS&, u32 fid);
-    static KResultOr<NonnullRefPtr<Plan9FSInode>> try_create(Plan9FS&, u32 fid);
+    static ErrorOr<NonnullRefPtr<Plan9FSInode>> try_create(Plan9FS&, u32 fid);
 
     enum class GetAttrMask : u64 {
         Mode = 0x1,
@@ -206,7 +206,7 @@ private:
 
     // Mode in which the file is already open, using SerenityOS constants.
     int m_open_mode { 0 };
-    KResult ensure_open_for_mode(int mode);
+    ErrorOr<void> ensure_open_for_mode(int mode);
 
     Plan9FS& fs() { return reinterpret_cast<Plan9FS&>(Inode::fs()); }
     Plan9FS& fs() const
