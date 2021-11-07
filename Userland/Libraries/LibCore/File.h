@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/OSError.h>
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <sys/stat.h>
@@ -20,7 +18,7 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static Result<NonnullRefPtr<File>, OSError> open(String filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullRefPtr<File>> open(String filename, OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
     void set_filename(const String filename) { m_filename = move(filename); }

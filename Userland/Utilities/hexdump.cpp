@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
+#include <string.h>
 
 static constexpr size_t LINE_LENGTH_BYTES = 16;
 

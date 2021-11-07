@@ -22,6 +22,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
+#include <string.h>
 #include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.

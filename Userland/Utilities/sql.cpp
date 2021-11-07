@@ -178,7 +178,7 @@ private:
             auto file_name = m_input_file_chain.take_first();
             auto file_or_error = Core::File::open(file_name, Core::OpenMode::ReadOnly);
             if (file_or_error.is_error()) {
-                warnln("Input file {} could not be opened: {}", file_name, file_or_error.error().string());
+                warnln("Input file {} could not be opened: {}", file_name, file_or_error.error());
                 return {};
             }
             m_input_file = file_or_error.value();
