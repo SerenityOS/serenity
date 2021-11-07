@@ -57,8 +57,7 @@ void KeyboardMapperWidget::create_frame()
                 else
                     map[index] = value[0];
 
-                m_modified = true;
-                update_window_title();
+                window()->set_modified(true);
             }
         };
 
@@ -180,7 +179,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
     TRY(file->write(file_content.bytes()));
     file->close();
 
-    m_modified = false;
+    window()->set_modified(false);
     m_filename = filename;
     update_window_title();
     return {};
@@ -241,9 +240,7 @@ void KeyboardMapperWidget::update_window_title()
 {
     StringBuilder sb;
     sb.append(m_filename);
-    if (m_modified)
-        sb.append(" (*)");
-    sb.append(" - Keyboard Mapper");
+    sb.append("[*] - Keyboard Mapper");
 
     window()->set_title(sb.to_string());
 }
