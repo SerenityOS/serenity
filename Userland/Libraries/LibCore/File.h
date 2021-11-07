@@ -72,11 +72,15 @@ public:
     static String read_link(String const& link_path);
     static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
-    struct RemoveError {
+    struct RemoveError : public Error {
+        RemoveError(String f, int error_code)
+            : Error(error_code)
+            , file(move(f))
+        {
+        }
         String file;
-        OSError error_code;
     };
-    static Result<void, RemoveError> remove(String const& path, RecursionMode, bool force);
+    static ErrorOr<void, RemoveError> remove(String const& path, RecursionMode, bool force);
 
     virtual bool open(OpenMode) override;
 
