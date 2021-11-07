@@ -7,8 +7,7 @@
 #pragma once
 
 #ifndef KERNEL
-#    include <AK/OSError.h>
-#    include <AK/Result.h>
+#    include <AK/Error.h>
 #endif
 #include <AK/String.h>
 #include <Kernel/API/KeyCode.h>
@@ -24,7 +23,7 @@ public:
 
 #ifndef KERNEL
     int set_system_map();
-    static Result<CharacterMap, OSError> fetch_system_map();
+    static ErrorOr<CharacterMap> fetch_system_map();
 #endif
 
     u32 get_char(KeyEvent) const;
