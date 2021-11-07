@@ -94,9 +94,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto image = PixelPaint::Image::try_create_with_size(dialog->image_size());
-                auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background");
-                VERIFY(bg_layer);
+                auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
+                auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
                 bg_layer->bitmap().fill(Color::White);
                 auto image_title = dialog->image_name().trim_whitespace();
@@ -219,8 +218,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (!bitmap)
             return;
 
-        auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
-        VERIFY(layer);
+        auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
         editor->selection().clear();
@@ -440,12 +438,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
-                if (!layer) {
-                    GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size().to_string()));
+                auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
+                if (layer_or_error.is_error()) {
+                    GUI::MessageBox::show_error(&window, String::formatted("Unable to create layer with size {}", dialog->size()));
                     return;
                 }
-                editor->image().add_layer(layer.release_nonnull());
+                editor->image().add_layer(layer_or_error.release_value());
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
             }
@@ -529,9 +527,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
                 editor->set_active_layer(&next_active_layer);
             } else {
-                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background");
-                VERIFY(layer);
-                editor->image().add_layer(layer.release_nonnull());
+                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background").release_value_but_fixme_should_propagate_errors();
+                editor->image().add_layer(move(layer));
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
             }
@@ -741,10 +738,9 @@ void MainWidget::open_image_fd(int fd, String const& path)
 
 void MainWidget::create_default_image()
 {
-    auto image = Image::try_create_with_size({ 480, 360 });
+    auto image = Image::try_create_with_size({ 480, 360 }).release_value_but_fixme_should_propagate_errors();
 
-    auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background");
-    VERIFY(bg_layer);
+    auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*bg_layer);
     bg_layer->bitmap().fill(Color::White);
 

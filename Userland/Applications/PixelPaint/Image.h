@@ -46,11 +46,11 @@ protected:
 
 class Image : public RefCounted<Image> {
 public:
-    static RefPtr<Image> try_create_with_size(Gfx::IntSize const&);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_json(JsonObject const&);
-    static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
+    static ErrorOr<NonnullRefPtr<Image>> try_create_with_size(Gfx::IntSize const&);
+    static ErrorOr<NonnullRefPtr<Image>> try_create_from_pixel_paint_json(JsonObject const&);
+    static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
 
-    static RefPtr<Gfx::Bitmap> try_decode_bitmap(const ReadonlyBytes& bitmap_data);
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(ReadonlyBytes);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_compose_bitmap(Gfx::BitmapFormat format) const;
@@ -64,8 +64,8 @@ public:
     Gfx::IntRect rect() const { return { {}, m_size }; }
 
     void add_layer(NonnullRefPtr<Layer>);
-    RefPtr<Image> take_snapshot() const;
-    void restore_snapshot(Image const&);
+    ErrorOr<NonnullRefPtr<Image>> take_snapshot() const;
+    ErrorOr<void> restore_snapshot(Image const&);
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
 
