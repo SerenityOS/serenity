@@ -40,14 +40,13 @@ int CharacterMap::set_system_map()
     return setkeymap(m_character_map_name.characters(), m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, m_character_map_data.shift_altgr_map);
 }
 
-Result<CharacterMap, OSError> CharacterMap::fetch_system_map()
+ErrorOr<CharacterMap> CharacterMap::fetch_system_map()
 {
     CharacterMapData map_data;
     char keymap_name[50 + 1] = { 0 };
 
-    if (getkeymap(keymap_name, sizeof(keymap_name), map_data.map, map_data.shift_map, map_data.alt_map, map_data.altgr_map, map_data.shift_altgr_map) < 0) {
-        return OSError(errno);
-    }
+    if (getkeymap(keymap_name, sizeof(keymap_name), map_data.map, map_data.shift_map, map_data.alt_map, map_data.altgr_map, map_data.shift_altgr_map) < 0)
+        return Error::from_errno(errno);
 
     return CharacterMap { keymap_name, map_data };
 }
