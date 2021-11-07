@@ -6,13 +6,11 @@
 
 #pragma once
 
-#include <AK/OSError.h>
-#include <AK/Result.h>
-#include <AK/String.h>
+#include <AK/Error.h>
 #include <LibCore/SecretString.h>
 
 namespace Core {
 
-Result<SecretString, OSError> get_password(const StringView& prompt = "Password: "sv);
+ErrorOr<SecretString> get_password(StringView prompt = "Password: "sv);
 
 }

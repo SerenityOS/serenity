@@ -35,12 +35,12 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (interactive_password) {
-        auto password_or_err = Core::get_password();
-        if (password_or_err.is_error()) {
-            warnln("{}", password_or_err.error().string());
+        auto password_or_error = Core::get_password();
+        if (password_or_error.is_error()) {
+            warnln("{}", password_or_error.error());
             return 1;
         }
-        password = password_or_err.release_value();
+        password = password_or_error.release_value();
     } else {
         auto standard_input = Core::File::standard_input();
         password = Core::SecretString::take_ownership(standard_input->read_all());
