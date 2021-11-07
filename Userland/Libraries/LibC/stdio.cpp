@@ -68,6 +68,7 @@ public:
     void reopen(int fd, int mode);
 
     const u8* readptr(size_t& available_size);
+    void readptr_increase(size_t increment);
 
     enum Flags : u8 {
         None = 0,
@@ -464,6 +465,11 @@ void FILE::reopen(int fd, int mode)
 const u8* FILE::readptr(size_t& available_size)
 {
     return m_buffer.begin_dequeue(available_size);
+}
+
+void FILE::readptr_increase(size_t increment)
+{
+    m_buffer.did_dequeue(increment);
 }
 
 FILE::Buffer::~Buffer()
@@ -1384,6 +1390,15 @@ const char* __freadptr(FILE* stream, size_t* sizep)
 
     *sizep = available_size;
     return reinterpret_cast<const char*>(ptr);
+}
+
+void __freadptrinc(FILE* stream, size_t increment)
+{
+    VERIFY(stream);
+
+    ScopedFileLock lock(stream);
+
+    stream->readptr_increase(increment);
 }
 
 void __fseterr(FILE* stream)
