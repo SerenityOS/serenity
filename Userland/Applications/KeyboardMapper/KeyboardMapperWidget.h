@@ -44,6 +44,5 @@ private:
     String m_filename;
     Keyboard::CharacterMapData m_character_map;
     String m_current_map_name;
-    bool m_modified { false };
     bool m_automatic_modifier { false };
 };
