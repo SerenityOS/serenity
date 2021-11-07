@@ -205,3 +205,10 @@ test("multiline stateful match", () => {
     );
     expect(res.index).toBe(231);
 });
+
+test("string coercion", () => {
+    let result = /1/.exec(1);
+    expect(result.length).toBe(1);
+    expect(result[0]).toBe("1");
+    expect(result.index).toBe(0);
+});

@@ -241,8 +241,8 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
     }
 
     MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
-    MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
     MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
+    MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
 
     return array;
 }
