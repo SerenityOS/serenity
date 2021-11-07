@@ -140,7 +140,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             if (node_name == "STYLE"sv)
                 return m_style_icon;
             if (node_name == "LINK"sv)
-                if (node.has("attributes"sv) && node.get("attributes"sv).as_object().get("rel"sv).as_string_or("unknown") == "stylesheet"sv)
+                if (node.has("attributes"sv) && node.get("attributes"sv).as_object().get("rel"sv).as_string_or(""sv) == "stylesheet"sv)
                     return m_style_icon;
             return m_element_icon;
         }
