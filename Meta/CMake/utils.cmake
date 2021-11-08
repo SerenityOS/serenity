@@ -47,8 +47,15 @@ function(serenity_libc target_name fs_name)
     add_library(${target_name} SHARED ${SOURCES})
     install(TARGETS ${target_name} DESTINATION usr/lib)
     set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    # Avoid creating a dependency cycle between system libraries and the C++ standard library. This is necessary
+    # to ensure that initialization functions will be called in the right order (libc++ must come after LibPthread).
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(${target_name} PRIVATE -static-libstdc++)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
         target_link_libraries(${target_name} clang_rt.builtins)
+        # FIXME: Implement -static-libstdc++ in the next toolchain update.
+        target_link_options(${target_name} PRIVATE -nostdlib++ -Wl,-Bstatic -lc++ -Wl,-Bdynamic)
+        target_link_options(${target_name} PRIVATE -Wl,--no-dependent-libraries)
     endif()
     target_link_directories(LibC PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
     serenity_generated_sources(${target_name})
