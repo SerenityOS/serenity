@@ -1260,4 +1260,53 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     return result;
 }
 
+// 13.49 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
+ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(fields) is Object.
+
+    // 2. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* result = Object::create(global_object, global_object.object_prototype());
+
+    // 3. Let any be false.
+    auto any = false;
+
+    // 4. For each value property of fieldNames, do
+    for (auto& property : field_names) {
+        // a. Let value be ? Get(fields, property).
+        auto value = TRY(fields.get(property));
+
+        // b. If value is not undefined, then
+        if (!value.is_undefined()) {
+            // i. Set any to true.
+            any = true;
+
+            // ii. If property is in the Property column of Table 13, then
+            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
+            // 2. Set value to ? Conversion(value).
+            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
+                value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
+            else if (property.is_one_of("month"sv, "day"sv))
+                value = Value(TRY(to_positive_integer(global_object, value)));
+            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
+                value = TRY(value.to_primitive_string(global_object));
+
+            // NOTE: According to the spec this is step 4c, but I believe that's incorrect. See https://github.com/tc39/proposal-temporal/issues/1910.
+            // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
+            MUST(result->create_data_property_or_throw(property, value));
+        }
+    }
+
+    // 5. If any is false, then
+    if (!any) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalObjectMustHaveOneOf, String::join(", "sv, field_names));
+    }
+
+    // 6. Return result.
+    return result;
+}
+
 }
