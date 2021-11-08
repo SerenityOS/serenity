@@ -19,6 +19,7 @@ public:
     virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value);
     virtual void config_i32_did_change(String const& domain, String const& group, String const& key, i32 value);
     virtual void config_bool_did_change(String const& domain, String const& group, String const& key, bool value);
+    virtual void config_key_was_removed(String const& domain, String const& group, String const& key);
 
 protected:
     Listener();
