@@ -2345,6 +2345,42 @@ RefPtr<StyleValue> Parser::parse_image_value(StyleComponentValueRule const& comp
     return {};
 }
 
+template<typename ParseFunction>
+RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<StyleComponentValueRule> const& component_values, ParseFunction parse_one_value)
+{
+    auto tokens = TokenStream { component_values };
+    auto first = parse_one_value(tokens);
+    if (!first || !tokens.has_next_token())
+        return first;
+
+    NonnullRefPtrVector<StyleValue> values;
+    values.append(first.release_nonnull());
+
+    while (tokens.has_next_token()) {
+        if (!tokens.next_token().is(Token::Type::Comma))
+            return {};
+
+        if (auto maybe_value = parse_one_value(tokens)) {
+            values.append(maybe_value.release_nonnull());
+            continue;
+        }
+        return {};
+    }
+
+    return StyleValueList::create(move(values));
+}
+
+RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<StyleComponentValueRule> const& component_values)
+{
+    return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> RefPtr<StyleValue> {
+        auto& token = tokens.next_token();
+        if (auto value = parse_css_value(token); value && property_accepts_value(m_context.current_property_id(), *value))
+            return value;
+        tokens.reconsume_current_input_token();
+        return nullptr;
+    });
+}
+
 RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule> const& component_values)
 {
     RefPtr<StyleValue> background_color;
@@ -2471,23 +2507,6 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
         background_attachment.release_nonnull(),
         background_origin.release_nonnull(),
         background_clip.release_nonnull());
-}
-
-RefPtr<StyleValue> Parser::parse_background_image_value(Vector<StyleComponentValueRule> const& component_values)
-{
-    if (component_values.size() == 1) {
-        auto maybe_value = parse_css_value(component_values.first());
-        if (!maybe_value)
-            return nullptr;
-        auto value = maybe_value.release_nonnull();
-        if (property_accepts_value(PropertyID::BackgroundImage, *value))
-            return value;
-        return nullptr;
-    }
-
-    // FIXME: Handle multiple sets of comma-separated values.
-    dbgln("CSS Parser does not yet support multiple comma-separated values for background-image.");
-    return nullptr;
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<StyleComponentValueRule>& tokens)
@@ -2652,13 +2671,6 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         vertical->edge, vertical->offset);
 }
 
-RefPtr<StyleValue> Parser::parse_background_position_value(Vector<StyleComponentValueRule> const& component_values)
-{
-    auto tokens = TokenStream { component_values };
-    // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_position_value(tokens);
-}
-
 RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto start_position = tokens.position();
@@ -2714,13 +2726,6 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Styl
     return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
 }
 
-RefPtr<StyleValue> Parser::parse_background_repeat_value(Vector<StyleComponentValueRule> const& component_values)
-{
-    auto tokens = TokenStream { component_values };
-    // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_repeat_value(tokens);
-}
-
 RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto start_position = tokens.position();
@@ -2747,13 +2752,6 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<StyleC
         return BackgroundSizeStyleValue::create(x_value->to_length(), y_value->to_length());
 
     return error();
-}
-
-RefPtr<StyleValue> Parser::parse_background_size_value(Vector<StyleComponentValueRule> const& component_values)
-{
-    auto tokens = TokenStream { component_values };
-    // FIXME: Handle multiple sets of comma-separated values.
-    return parse_single_background_size_value(tokens);
 }
 
 RefPtr<StyleValue> Parser::parse_border_value(Vector<StyleComponentValueRule> const& component_values)
@@ -3472,20 +3470,23 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         if (auto parsed_value = parse_background_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
+    case PropertyID::BackgroundAttachment:
+    case PropertyID::BackgroundClip:
     case PropertyID::BackgroundImage:
-        if (auto parsed_value = parse_background_image_value(component_values))
+    case PropertyID::BackgroundOrigin:
+        if (auto parsed_value = parse_simple_comma_separated_value_list(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundPosition:
-        if (auto parsed_value = parse_background_position_value(component_values))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_position_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundRepeat:
-        if (auto parsed_value = parse_background_repeat_value(component_values))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_repeat_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BackgroundSize:
-        if (auto parsed_value = parse_background_size_value(component_values))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_size_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Border:
