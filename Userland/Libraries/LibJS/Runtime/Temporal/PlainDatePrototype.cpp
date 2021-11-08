@@ -58,6 +58,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.subtract, subtract, 1, attr);
+    define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 0, attr);
@@ -376,6 +377,49 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::subtract)
 
     // 6. Return ? CalendarDateAdd(temporalDate.[[Calendar]], temporalDate, negatedDuration, options).
     return TRY(calendar_date_add(global_object, temporal_date->calendar(), temporal_date, *negated_duration, options));
+}
+
+// 3.3.21 Temporal.PlainDate.prototype.with ( temporalDateLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
+{
+    auto temporal_date_like = vm.argument(0);
+
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = TRY(typed_this_object(global_object));
+
+    // 3. If Type(temporalDateLike) is not Object, then
+    if (!temporal_date_like.is_object()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_date_like.to_string_without_side_effects());
+    }
+
+    // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateLike).
+    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_date_like.as_object()));
+
+    // 5. Let calendar be temporalDate.[[Calendar]].
+    auto& calendar = temporal_date->calendar();
+
+    // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
+
+    // 7. Let partialDate be ? PreparePartialTemporalFields(temporalDateLike, fieldNames).
+    auto* partial_date = TRY(prepare_partial_temporal_fields(global_object, temporal_date_like.as_object(), field_names));
+
+    // 8. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 9. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
+    auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
+
+    // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialDate).
+    fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_date));
+
+    // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+
+    // 12. Return ? DateFromFields(calendar, fields, options).
+    return TRY(date_from_fields(global_object, calendar, *fields, *options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
