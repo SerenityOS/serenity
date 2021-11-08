@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <sys/utsname.h>
 #include <syscall.h>
 #include <termios.h>
 
@@ -94,6 +95,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$mremap(arg1);
     case SC_gettid:
         return virt$gettid();
+    case SC_sysconf:
+        return virt$sysconf(arg1);
     case SC_getpid:
         return virt$getpid();
     case SC_getsid:
@@ -246,6 +249,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$ftruncate(arg1, arg2);
     case SC_umask:
         return virt$umask(arg1);
+    case SC_uname:
+        return virt$uname(arg1);
     case SC_chown:
         return virt$chown(arg1);
     case SC_msyscall:
@@ -485,6 +490,14 @@ int Emulator::virt$ftruncate(int fd, FlatPtr length_addr)
     off_t length;
     mmu().copy_from_vm(&length, length_addr, sizeof(off_t));
     return syscall(SC_ftruncate, fd, &length);
+}
+
+int Emulator::virt$uname(FlatPtr params_addr)
+{
+    struct utsname local_uname;
+    auto rc = syscall(SC_uname, &local_uname);
+    mmu().copy_to_vm(params_addr, &local_uname, sizeof(local_uname));
+    return rc;
 }
 
 mode_t Emulator::virt$umask(mode_t mask)
@@ -1594,6 +1607,11 @@ int Emulator::virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size)
 int Emulator::virt$beep()
 {
     return syscall(SC_beep);
+}
+
+u32 Emulator::virt$sysconf(u32 name)
+{
+    return syscall(SC_sysconf, name);
 }
 
 int Emulator::virt$msyscall(FlatPtr)

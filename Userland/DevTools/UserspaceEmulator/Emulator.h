@@ -148,6 +148,7 @@ private:
     int virt$purge(int mode);
     u32 virt$mmap(u32);
     FlatPtr virt$mremap(FlatPtr);
+    u32 virt$sysconf(u32 name);
     u32 virt$mount(u32);
     u32 virt$munmap(FlatPtr address, size_t size);
     u32 virt$gettid();
@@ -231,6 +232,7 @@ private:
     int virt$beep();
     int virt$ftruncate(int fd, FlatPtr length_addr);
     mode_t virt$umask(mode_t);
+    int virt$uname(FlatPtr params_addr);
     int virt$anon_create(size_t, int);
     int virt$recvfd(int, int);
     int virt$sendfd(int, int);
