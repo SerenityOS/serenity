@@ -40,6 +40,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -184,6 +185,49 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::era_year_getter)
 
     // 4. Return ? CalendarEraYear(calendar, plainYearMonth).
     return TRY(calendar_era_year(global_object, calendar, *plain_year_month));
+}
+
+// 9.3.11 Temporal.PlainYearMonth.prototype.with ( temporalYearMonthLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::with)
+{
+    auto temporal_year_month_like = vm.argument(0);
+
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = TRY(typed_this_object(global_object));
+
+    // 3. If Type(temporalYearMonthLike) is not Object, then
+    if (!temporal_year_month_like.is_object()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_year_month_like.to_string_without_side_effects());
+    }
+
+    // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalYearMonthLike).
+    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_year_month_like.as_object()));
+
+    // 5. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month->calendar();
+
+    // 6. Let fieldNames be ? CalendarFields(calendar, « "month", "monthCode", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "month"sv, "monthCode"sv, "year"sv }));
+
+    // 7. Let partialYearMonth be ? PreparePartialTemporalFields(temporalYearMonthLike, fieldNames).
+    auto* partial_year_month = TRY(prepare_partial_temporal_fields(global_object, temporal_year_month_like.as_object(), field_names));
+
+    // 8. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 9. Let fields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
+    auto* fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
+
+    // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialYearMonth).
+    fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_year_month));
+
+    // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+
+    // 12. Return ? YearMonthFromFields(calendar, fields, options).
+    return TRY(year_month_from_fields(global_object, calendar, *fields, options));
 }
 
 // 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
