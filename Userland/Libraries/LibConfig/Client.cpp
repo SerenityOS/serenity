@@ -60,6 +60,11 @@ void Client::write_bool(StringView domain, StringView group, StringView key, boo
     async_write_bool_value(domain, group, key, value);
 }
 
+void Client::remove_key(StringView domain, StringView group, StringView key)
+{
+    async_remove_key(domain, group, key);
+}
+
 void Client::notify_changed_string_value(String const& domain, String const& group, String const& key, String const& value)
 {
     Listener::for_each([&](auto& listener) {
@@ -78,6 +83,13 @@ void Client::notify_changed_bool_value(String const& domain, String const& group
 {
     Listener::for_each([&](auto& listener) {
         listener.config_bool_did_change(domain, group, key, value);
+    });
+}
+
+void Client::notify_removed_key(const String& domain, const String& group, const String& key)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_key_was_removed(domain, group, key);
     });
 }
 

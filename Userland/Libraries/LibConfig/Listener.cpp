@@ -41,4 +41,8 @@ void Listener::config_bool_did_change(String const&, String const&, String const
 {
 }
 
+void Listener::config_key_was_removed(String const&, String const&, String const&)
+{
+}
+
 }
