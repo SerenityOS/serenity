@@ -23,6 +23,14 @@ struct CachedDomain {
 static HashMap<String, NonnullOwnPtr<CachedDomain>> s_cache;
 static constexpr int s_disk_sync_delay_ms = 5'000;
 
+static void for_each_monitoring_connection(String const& domain, ClientConnection* excluded_connection, Function<void(ClientConnection&)> callback)
+{
+    for (auto& it : s_connections) {
+        if (it.value->is_monitoring_domain(domain) && (!excluded_connection || it.value != excluded_connection))
+            callback(*it.value);
+    }
+}
+
 static Core::ConfigFile& ensure_domain_config(String const& domain)
 {
     auto it = s_cache.find(domain);
@@ -37,18 +45,24 @@ static Core::ConfigFile& ensure_domain_config(String const& domain)
     VERIFY(!result.is_error());
     watcher_or_error.value()->on_change = [config, domain](auto&) {
         auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes);
-        // FIXME: Detect removed keys.
+        for (auto& group : config->groups()) {
+            for (auto& key : config->keys(group)) {
+                if (!new_config->has_key(group, key)) {
+                    for_each_monitoring_connection(domain, nullptr, [&domain, &group, &key](ClientConnection& connection) {
+                        connection.async_notify_removed_key(domain, group, key);
+                    });
+                }
+            }
+        }
         // FIXME: Detect type of keys.
         for (auto& group : new_config->groups()) {
             for (auto& key : new_config->keys(group)) {
                 auto old_value = config->read_entry(group, key);
                 auto new_value = new_config->read_entry(group, key);
                 if (old_value != new_value) {
-                    for (auto& it : s_connections) {
-                        if (it.value->is_monitoring_domain(domain)) {
-                            it.value->async_notify_changed_string_value(domain, group, key, new_value);
-                        }
-                    }
+                    for_each_monitoring_connection(domain, nullptr, [&domain, &group, &key, &new_value](ClientConnection& connection) {
+                        connection.async_notify_changed_string_value(domain, group, key, new_value);
+                    });
                 }
             }
         }
@@ -176,10 +190,9 @@ void ClientConnection::write_string_value(String const& domain, String const& gr
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for (auto& it : s_connections) {
-        if (it.value != this && it.value->m_monitored_domains.contains(domain))
-            it.value->async_notify_changed_string_value(domain, group, key, value);
-    }
+    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ClientConnection& connection) {
+        connection.async_notify_changed_string_value(domain, group, key, value);
+    });
 }
 
 void ClientConnection::write_i32_value(String const& domain, String const& group, String const& key, i32 value)
@@ -196,10 +209,9 @@ void ClientConnection::write_i32_value(String const& domain, String const& group
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for (auto& it : s_connections) {
-        if (it.value != this && it.value->m_monitored_domains.contains(domain))
-            it.value->async_notify_changed_i32_value(domain, group, key, value);
-    }
+    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ClientConnection& connection) {
+        connection.async_notify_changed_i32_value(domain, group, key, value);
+    });
 }
 
 void ClientConnection::write_bool_value(String const& domain, String const& group, String const& key, bool value)
@@ -216,10 +228,27 @@ void ClientConnection::write_bool_value(String const& domain, String const& grou
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for (auto& it : s_connections) {
-        if (it.value != this && it.value->m_monitored_domains.contains(domain))
-            it.value->async_notify_changed_bool_value(domain, group, key, value);
-    }
+    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ClientConnection& connection) {
+        connection.async_notify_changed_bool_value(domain, group, key, value);
+    });
+}
+
+void ClientConnection::remove_key(String const& domain, String const& group, String const& key)
+{
+    if (!validate_access(domain, group, key))
+        return;
+
+    auto& config = ensure_domain_config(domain);
+    if (!config.has_key(group, key))
+        return;
+
+    config.remove_entry(group, key);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
+
+    for_each_monitoring_connection(domain, this, [&domain, &group, &key](ClientConnection& connection) {
+        connection.async_notify_removed_key(domain, group, key);
+    });
 }
 
 }
