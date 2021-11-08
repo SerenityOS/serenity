@@ -222,14 +222,14 @@ void abort()
     _abort();
 }
 
-static HashTable<const char*> s_malloced_environment_variables;
+static HashTable<FlatPtr> s_malloced_environment_variables;
 
 static void free_environment_variable_if_needed(const char* var)
 {
-    if (!s_malloced_environment_variables.contains(var))
+    if (!s_malloced_environment_variables.contains((FlatPtr)var))
         return;
     free(const_cast<char*>(var));
-    s_malloced_environment_variables.remove(var);
+    s_malloced_environment_variables.remove((FlatPtr)var);
 }
 
 char* getenv(const char* name)
@@ -304,7 +304,7 @@ int setenv(const char* name, const char* value, int overwrite)
     auto length = strlen(name) + strlen(value) + 2;
     auto* var = (char*)malloc(length);
     snprintf(var, length, "%s=%s", name, value);
-    s_malloced_environment_variables.set(var);
+    s_malloced_environment_variables.set((FlatPtr)var);
     return putenv(var);
 }
 
