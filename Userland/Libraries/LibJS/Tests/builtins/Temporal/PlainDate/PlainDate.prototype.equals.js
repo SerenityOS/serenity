@@ -7,7 +7,7 @@ describe("correct behavior", () => {
         const calendar = { hello: "friends" };
         const firstPlainDate = new Temporal.PlainDate(1, 1, 1, calendar);
         const secondPlainDate = new Temporal.PlainDate(0, 1, 1, calendar);
-        expect(firstPlainDate.equals(firstPlainDate));
-        expect(!firstPlainDate.equals(secondPlainDate));
+        expect(firstPlainDate.equals(firstPlainDate)).toBeTrue();
+        expect(firstPlainDate.equals(secondPlainDate)).toBeFalse();
     });
 });
