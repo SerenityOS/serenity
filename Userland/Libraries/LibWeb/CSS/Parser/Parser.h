@@ -198,14 +198,14 @@ private:
     RefPtr<StyleValue> parse_color_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_string_value(StyleComponentValueRule const&);
     RefPtr<StyleValue> parse_image_value(StyleComponentValueRule const&);
+    template<typename ParseFunction>
+    RefPtr<StyleValue> parse_comma_separated_value_list(Vector<StyleComponentValueRule> const&, ParseFunction);
+    RefPtr<StyleValue> parse_simple_comma_separated_value_list(Vector<StyleComponentValueRule> const&);
+
     RefPtr<StyleValue> parse_background_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_background_image_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_single_background_position_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_position_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_repeat_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_single_background_size_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_background_size_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
