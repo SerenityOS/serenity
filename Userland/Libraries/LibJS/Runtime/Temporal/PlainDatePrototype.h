@@ -40,6 +40,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(subtract);
+    JS_DECLARE_NATIVE_FUNCTION(with);
     JS_DECLARE_NATIVE_FUNCTION(with_calendar);
     JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
