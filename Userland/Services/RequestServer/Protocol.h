@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <AK/Result.h>
 #include <AK/URL.h>
 #include <RequestServer/Forward.h>
 
@@ -28,7 +27,7 @@ protected:
         int read_fd { -1 };
         int write_fd { -1 };
     };
-    static Result<Pipe, String> get_pipe_for_request();
+    static ErrorOr<Pipe> get_pipe_for_request();
 
 private:
     String m_name;

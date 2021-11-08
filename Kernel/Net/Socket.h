@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
-#include <Kernel/API/KResult.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -27,7 +27,7 @@ class OpenFileDescription;
 
 class Socket : public File {
 public:
-    static KResultOr<NonnullRefPtr<Socket>> create(int domain, int type, int protocol);
+    static ErrorOr<NonnullRefPtr<Socket>> create(int domain, int type, int protocol);
     virtual ~Socket() override;
 
     int domain() const { return m_domain; }
@@ -76,20 +76,20 @@ public:
     bool can_accept() const { return !m_pending.is_empty(); }
     RefPtr<Socket> accept();
 
-    KResult shutdown(int how);
+    ErrorOr<void> shutdown(int how);
 
-    virtual KResult bind(Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResult connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
-    virtual KResult listen(size_t) = 0;
+    virtual ErrorOr<void> bind(Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
+    virtual ErrorOr<void> listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual KResultOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResultOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
+    virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
 
-    virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
-    virtual KResult getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
+    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<const void*>, socklen_t);
+    virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
     ProcessID origin_pid() const { return m_origin.pid; }
     UserID origin_uid() const { return m_origin.uid; }
@@ -102,10 +102,10 @@ public:
     Mutex& mutex() { return m_mutex; }
 
     // ^File
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
-    virtual KResult stat(::stat&) const override;
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override = 0;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
+    virtual ErrorOr<void> stat(::stat&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }
     const Time& receive_timeout() const { return m_receive_timeout; }
@@ -118,7 +118,7 @@ public:
 protected:
     Socket(int domain, int type, int protocol);
 
-    KResult queue_connection_from(NonnullRefPtr<Socket>);
+    ErrorOr<void> queue_connection_from(NonnullRefPtr<Socket>);
 
     size_t backlog() const { return m_backlog; }
     void set_backlog(size_t backlog) { m_backlog = backlog; }
@@ -130,11 +130,23 @@ protected:
 
     Role m_role { Role::None };
 
-    KResult so_error() const { return m_so_error; }
-    KResult set_so_error(KResult error)
+    ErrorOr<void> so_error() const { return m_so_error; }
+
+    Error set_so_error(ErrnoCode error_code)
+    {
+        auto error = Error::from_errno(error_code);
+        m_so_error = error;
+        return error;
+    }
+    Error set_so_error(Error error)
     {
         m_so_error = error;
         return error;
+    }
+
+    void clear_so_error()
+    {
+        m_so_error = {};
     }
 
     void set_origin(Process const&);
@@ -166,7 +178,7 @@ private:
     Time m_send_timeout {};
     int m_timestamp { 0 };
 
-    KResult m_so_error { KSuccess };
+    ErrorOr<void> m_so_error;
 
     NonnullRefPtrVector<Socket> m_pending;
 };

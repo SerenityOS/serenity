@@ -16,6 +16,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -65,8 +66,8 @@ static void initialize_if_needed()
 
     auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini");
 
-    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png");
-    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png");
+    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png").release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png").release_value_but_fixme_should_propagate_errors();
 
     s_hard_disk_icon = Icon::default_icon("hard-disk");
     s_directory_icon = Icon::default_icon("filetype-folder");
@@ -239,11 +240,12 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
             auto& emblem = size < 32 ? *s_symlink_emblem_small : *s_symlink_emblem;
             auto original_bitmap = target_icon.bitmap_for_size(size);
             VERIFY(original_bitmap);
-            auto generated_bitmap = original_bitmap->clone();
-            if (!generated_bitmap) {
+            auto generated_bitmap_or_error = original_bitmap->clone();
+            if (generated_bitmap_or_error.is_error()) {
                 dbgln("Failed to clone {}x{} icon for symlink variant", size, size);
                 return s_symlink_icon;
             }
+            auto generated_bitmap = generated_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
             GUI::Painter painter(*generated_bitmap);
             painter.blit({ size - emblem.width(), size - emblem.height() }, emblem, emblem.rect());
 

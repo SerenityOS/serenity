@@ -79,12 +79,12 @@ private:
 PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     : m_preview_palette(preview_palette)
 {
-    m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
-    m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
+    m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
+    m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
 
-    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png");
-    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png");
-    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png");
+    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png").release_value_but_fixme_should_propagate_errors();
+    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors();
+    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors();
 
     VERIFY(m_active_window_icon);
     VERIFY(m_inactive_window_icon);
@@ -105,15 +105,17 @@ PreviewWidget::~PreviewWidget()
 void PreviewWidget::load_theme_bitmaps()
 {
     auto load_bitmap = [](String const& path, String& last_path, RefPtr<Gfx::Bitmap>& bitmap) {
+        bitmap = nullptr;
         if (path.is_empty()) {
             last_path = String::empty();
-            bitmap = nullptr;
         } else if (last_path != path) {
-            bitmap = Gfx::Bitmap::try_load_from_file(path);
-            if (bitmap)
-                last_path = path;
-            else
+            auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path);
+            if (bitmap_or_error.is_error()) {
                 last_path = String::empty();
+            } else {
+                last_path = path;
+                bitmap = bitmap_or_error.release_value();
+            }
         }
     };
 

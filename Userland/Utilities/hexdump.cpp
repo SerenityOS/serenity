@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
+#include <string.h>
 
 static constexpr size_t LINE_LENGTH_BYTES = 16;
 
@@ -62,8 +63,10 @@ int main(int argc, char** argv)
     size_t contents_size = 0;
 
     int nread;
-    do {
+    while (true) {
         nread = file->read(&contents[contents_size], BUFSIZ - contents_size);
+        if (nread <= 0)
+            break;
         contents_size += nread;
         // Print as many complete lines as we can (possibly none).
         size_t offset;
@@ -71,9 +74,13 @@ int main(int argc, char** argv)
             print_line(&contents[offset], LINE_LENGTH_BYTES);
         }
         contents_size -= offset;
-        // Regions cannot overlap due to above static_assert.
-        memcpy(&contents[0], &contents[offset], contents_size);
-    } while (nread);
+        VERIFY(contents_size < LINE_LENGTH_BYTES);
+        // If we managed to make the buffer exactly full, &contents[BUFSIZ] would blow up.
+        if (contents_size > 0) {
+            // Regions cannot overlap due to above static_assert.
+            memcpy(&contents[0], &contents[offset], contents_size);
+        }
+    }
     VERIFY(contents_size <= LINE_LENGTH_BYTES - 1);
     if (contents_size > 0)
         print_line(&contents[0], contents_size);

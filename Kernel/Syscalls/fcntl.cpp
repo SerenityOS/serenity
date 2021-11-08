@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
+ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
@@ -40,9 +40,11 @@ KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
     case F_ISTTY:
         return description->is_tty();
     case F_GETLK:
-        return description->get_flock(Userspace<flock*>(arg));
+        TRY(description->get_flock(Userspace<flock*>(arg)));
+        return 0;
     case F_SETLK:
-        return description->apply_flock(Process::current(), Userspace<const flock*>(arg));
+        TRY(description->apply_flock(Process::current(), Userspace<const flock*>(arg)));
+        return 0;
     default:
         return EINVAL;
     }

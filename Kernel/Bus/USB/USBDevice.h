@@ -27,13 +27,13 @@ public:
     };
 
 public:
-    static KResultOr<NonnullRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
+    static ErrorOr<NonnullRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
 
     Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
     Device(Device const& device, NonnullOwnPtr<Pipe> default_pipe);
     virtual ~Device();
 
-    KResult enumerate_device();
+    ErrorOr<void> enumerate_device();
 
     u8 port() const { return m_device_port; }
     DeviceSpeed speed() const { return m_device_speed; }

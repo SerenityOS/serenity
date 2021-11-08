@@ -25,7 +25,7 @@ public:
 
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;
-    Result<StringView, OSError> page_view(const String& path) const;
+    ErrorOr<StringView> page_view(String const& path) const;
 
     void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;

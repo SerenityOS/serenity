@@ -46,11 +46,11 @@ bool Cursor::load(const StringView& filename, const StringView& default_filename
     bool did_load_any = false;
 
     auto load_bitmap = [&](const StringView& path, int scale_factor) {
-        auto bitmap = Gfx::Bitmap::try_load_from_file(path, scale_factor);
-        if (bitmap) {
-            did_load_any = true;
-            m_bitmaps.set(scale_factor, bitmap.release_nonnull());
-        }
+        auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path, scale_factor);
+        if (bitmap_or_error.is_error())
+            return;
+        did_load_any = true;
+        m_bitmaps.set(scale_factor, bitmap_or_error.release_value());
     };
 
     Screen::for_each_scale_factor_in_use([&](int scale_factor) {

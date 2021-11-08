@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         exclude_pattern = config->read_entry("Global", "NotTestsPattern", "$^"); // default is match nothing (aka match end then beginning)
 
     Regex<PosixExtended> exclude_regex(exclude_pattern, {});
-    if (exclude_regex.parser_result.error != Error::NoError) {
+    if (exclude_regex.parser_result.error != regex::Error::NoError) {
         warnln("Exclude pattern \"{}\" is invalid", exclude_pattern);
         return 1;
     }
@@ -346,7 +346,7 @@ int main(int argc, char** argv)
     // in the Testrunner
     auto skip_regex_pattern = config->read_entry("Global", "SkipRegex", "$^");
     Regex<PosixExtended> skip_regex { skip_regex_pattern, {} };
-    if (skip_regex.parser_result.error != Error::NoError) {
+    if (skip_regex.parser_result.error != regex::Error::NoError) {
         warnln("SkipRegex pattern \"{}\" is invalid", skip_regex_pattern);
         return 1;
     }

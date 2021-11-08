@@ -25,8 +25,8 @@ union MMX {
     c8x8 v8;
     i16x4 v16;
     i32x2 v32;
-    i16x4 v16u;
-    i32x2 v32u;
+    u16x4 v16u;
+    u32x2 v32u;
 };
 static_assert(AssertSize<MMX, sizeof(u64)>());
 
@@ -48,7 +48,7 @@ public:
     ALWAYS_INLINE void set_c2(bool val) { m_fpu_c2 = val; }
     ALWAYS_INLINE void set_c3(bool val) { m_fpu_c3 = val; }
 
-    long double fpu_get(u8 index) const;
+    long double fpu_get(u8 index);
 
     void fpu_push(long double value);
     long double fpu_pop();
@@ -85,12 +85,12 @@ private:
         NEAREST = 0b00,
         DOWN = 0b01,
         UP = 0b10,
-        TRUNK = 0b11
+        TRUNC = 0b11
     };
 
     void fpu_dump_env()
     {
-        reportln("Exceptions: #I:{} #D:{} #O:{} #D:{} #U:{} #P:{} #SF:{} Summary:{}",
+        reportln("Exceptions: #I:{} #D:{} #Z:{} #O:{} #U:{} #P:{} #SF:{} Summary:{}",
             m_fpu_error_invalid,
             m_fpu_error_denorm,
             m_fpu_error_zero_div,
@@ -99,7 +99,7 @@ private:
             m_fpu_error_precision,
             m_fpu_error_stackfault,
             m_fpu_error_summary);
-        reportln("Masks: #I:{} #D:{} #O:{} #D:{} #U:{} #P:{}",
+        reportln("Masks: #I:{} #D:{} #Z:{} #O:{} #U:{} #P:{}",
             m_fpu_mask_invalid,
             m_fpu_mask_denorm,
             m_fpu_mask_zero_div,
@@ -110,7 +110,10 @@ private:
         reportln("fpu-stacktop: {}", m_fpu_stack_top);
         reportln("fpu-stack /w stacktop (real):");
         for (u8 i = 0; i < 8; ++i) {
-            reportln("\t{} ({}): fp {} ({}), mmx (:x016)", i, (u8)((m_fpu_stack_top + i) % 8), m_storage[(m_fpu_stack_top + i) % 8].fp, fpu_is_set(i) ? "set" : "free", m_storage[(m_fpu_stack_top + i) % 8].mmx.raw);
+            reportln("\t{} ({}): fp {} ({}), mmx {:016x}",
+                i, (u8)((m_fpu_stack_top + i) % 8),
+                m_storage[(m_fpu_stack_top + i) % 8].fp, fpu_is_set(i) ? "set" : "free",
+                m_storage[(m_fpu_stack_top + i) % 8].mmx.raw);
         }
     }
 
@@ -122,7 +125,7 @@ private:
         case FPU_Exception::InvalidOperation:
             return "Invalid Operation";
         case FPU_Exception::DenormalizedOperand:
-            return "Denormalized Operant";
+            return "Denormalized Operand";
         case FPU_Exception::ZeroDivide:
             return "Divide by Zero";
         case FPU_Exception::Overflow:
@@ -246,7 +249,7 @@ private:
         set_tag_from_value_absolute((m_fpu_stack_top + index) % 8, val);
     }
 
-    ALWAYS_INLINE bool fpu_isnan(u8 index) const
+    ALWAYS_INLINE bool fpu_isnan(u8 index)
     {
         return isnan(fpu_get(index));
     }
@@ -279,7 +282,6 @@ private:
     }
     void warn_if_mmx_absolute(u8 index) const;
     void warn_if_fpu_absolute(u8 index) const;
-    void warn_if_fpu_not_set_absolute(u8 index) const;
 
     void mmx_common() { m_fpu_tw = 0; }
 
@@ -289,12 +291,7 @@ private:
         long double fp;
         struct {
             MMX mmx;
-            Conditional<sizeof(long double) == 16,
-                u64,
-                Conditional<sizeof(long double) == 12,
-                    u32,
-                    u16>>
-                __high;
+            u16 __high;
         };
     } m_storage[8];
 

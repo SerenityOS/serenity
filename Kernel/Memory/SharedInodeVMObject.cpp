@@ -9,7 +9,7 @@
 
 namespace Kernel::Memory {
 
-KResultOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with_inode(Inode& inode)
+ErrorOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
     if (auto shared_vmobject = inode.shared_vmobject())
@@ -19,7 +19,7 @@ KResultOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_wi
     return vmobject;
 }
 
-KResultOr<NonnullRefPtr<VMObject>> SharedInodeVMObject::try_clone()
+ErrorOr<NonnullRefPtr<VMObject>> SharedInodeVMObject::try_clone()
 {
     return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) SharedInodeVMObject(*this));
 }

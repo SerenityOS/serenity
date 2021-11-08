@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     auto toolbar = main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto calendar = main_widget.find_descendant_of_type_named<GUI::Calendar>("calendar");
 
-    auto prev_date_action = GUI::Action::create({}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"), [&](const GUI::Action&) {
+    auto prev_date_action = GUI::Action::create({}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         unsigned view_month = calendar->view_month();
         unsigned view_year = calendar->view_year();
         if (calendar->mode() == GUI::Calendar::Month) {
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         calendar->update_tiles(view_year, view_month);
     });
 
-    auto next_date_action = GUI::Action::create({}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"), [&](const GUI::Action&) {
+    auto next_date_action = GUI::Action::create({}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         unsigned view_month = calendar->view_month();
         unsigned view_year = calendar->view_year();
         if (calendar->mode() == GUI::Calendar::Month) {
@@ -83,22 +83,22 @@ int main(int argc, char** argv)
         calendar->update_tiles(view_year, view_month);
     });
 
-    auto add_event_action = GUI::Action::create("&Add Event", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/add-event.png"), [&](const GUI::Action&) {
+    auto add_event_action = GUI::Action::create("&Add Event", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/add-event.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         AddEventDialog::show(calendar->selected_date(), window);
     });
 
-    auto jump_to_action = GUI::Action::create("Jump to &Today", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png"), [&](const GUI::Action&) {
+    auto jump_to_action = GUI::Action::create("Jump to &Today", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-date.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         calendar->set_selected_date(Core::DateTime::now());
         calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
     });
 
-    auto view_month_action = GUI::Action::create_checkable("&Month View", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-month-view.png"), [&](const GUI::Action&) {
+    auto view_month_action = GUI::Action::create_checkable("&Month View", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/calendar-month-view.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         if (calendar->mode() == GUI::Calendar::Year)
             calendar->toggle_mode();
     });
     view_month_action->set_checked(true);
 
-    auto view_year_action = GUI::Action::create_checkable("&Year View", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+    auto view_year_action = GUI::Action::create_checkable("&Year View", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         if (calendar->mode() == GUI::Calendar::Month)
             calendar->toggle_mode();
     });
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     };
 
     auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/add-event.png"),
+    file_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/add-event.png").release_value_but_fixme_should_propagate_errors(),
         [&](const GUI::Action&) {
             AddEventDialog::show(calendar->selected_date(), window);
         }));

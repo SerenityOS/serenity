@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,6 +69,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(vm.names.withTimeZone, with_time_zone, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
+    define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.startOfDay, start_of_day, 0, attr);
     define_native_function(vm.names.toInstant, to_instant, 0, attr);
@@ -806,6 +808,28 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with_calendar)
 
     // 4. Return ! CreateTemporalZonedDateTime(zonedDateTime.[[Nanoseconds]], zonedDateTime.[[TimeZone]], calendar).
     return MUST(create_temporal_zoned_date_time(global_object, zoned_date_time->nanoseconds(), zoned_date_time->time_zone(), *calendar));
+}
+
+// 6.3.40 Temporal.ZonedDateTime.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::equals)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. Set other to ? ToTemporalZonedDateTime(other).
+    auto* other = TRY(to_temporal_zoned_date_time(global_object, vm.argument(0)));
+
+    // 4. If zonedDateTime.[[Nanoseconds]] ≠ other.[[Nanoseconds]], return false.
+    if (zoned_date_time->nanoseconds().big_integer() != other->nanoseconds().big_integer())
+        return Value(false);
+
+    // 5. If ? TimeZoneEquals(zonedDateTime.[[TimeZone]], other.[[TimeZone]]) is false, return false.
+    if (!TRY(time_zone_equals(global_object, zoned_date_time->time_zone(), other->time_zone())))
+        return Value(false);
+
+    // 6. Return ? CalendarEquals(zonedDateTime.[[Calendar]], other.[[Calendar]]).
+    return Value(TRY(calendar_equals(global_object, zoned_date_time->calendar(), other->calendar())));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof

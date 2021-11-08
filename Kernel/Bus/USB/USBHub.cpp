@@ -14,7 +14,7 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed)
+ErrorOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed)
 {
     // NOTE: Enumeration does not happen here, as the controller must know what the device address is at all times during enumeration to intercept requests.
     auto pipe = TRY(Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0));
@@ -22,7 +22,7 @@ KResultOr<NonnullRefPtr<Hub>> Hub::try_create_root_hub(NonnullRefPtr<USBControll
     return hub;
 }
 
-KResultOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
+ErrorOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
 {
     auto pipe = TRY(Pipe::try_create_pipe(device.controller(), Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, device.device_descriptor().max_packet_size, device.address()));
     auto hub = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Hub(device, move(pipe))));
@@ -40,7 +40,7 @@ Hub::Hub(Device const& device, NonnullOwnPtr<Pipe> default_pipe)
 {
 }
 
-KResult Hub::enumerate_and_power_on_hub()
+ErrorOr<void> Hub::enumerate_and_power_on_hub()
 {
     // USBDevice::enumerate_device must be called before this.
     VERIFY(m_address > 0);
@@ -85,11 +85,11 @@ KResult Hub::enumerate_and_power_on_hub()
 
     memcpy(&m_hub_descriptor, &descriptor, sizeof(USBHubDescriptor));
 
-    return KSuccess;
+    return {};
 }
 
 // USB 2.0 Specification Section 11.24.2.7
-KResult Hub::get_port_status(u8 port, HubStatus& hub_status)
+ErrorOr<void> Hub::get_port_status(u8 port, HubStatus& hub_status)
 {
     // Ports are 1-based.
     if (port == 0 || port > m_hub_descriptor.number_of_downstream_ports)
@@ -103,29 +103,29 @@ KResult Hub::get_port_status(u8 port, HubStatus& hub_status)
         return EIO;
     }
 
-    return KSuccess;
+    return {};
 }
 
 // USB 2.0 Specification Section 11.24.2.2
-KResult Hub::clear_port_feature(u8 port, HubFeatureSelector feature_selector)
+ErrorOr<void> Hub::clear_port_feature(u8 port, HubFeatureSelector feature_selector)
 {
     // Ports are 1-based.
     if (port == 0 || port > m_hub_descriptor.number_of_downstream_ports)
         return EINVAL;
 
     TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_CLASS | USB_REQUEST_RECIPIENT_OTHER, HubRequest::CLEAR_FEATURE, feature_selector, port, 0, nullptr));
-    return KSuccess;
+    return {};
 }
 
 // USB 2.0 Specification Section 11.24.2.13
-KResult Hub::set_port_feature(u8 port, HubFeatureSelector feature_selector)
+ErrorOr<void> Hub::set_port_feature(u8 port, HubFeatureSelector feature_selector)
 {
     // Ports are 1-based.
     if (port == 0 || port > m_hub_descriptor.number_of_downstream_ports)
         return EINVAL;
 
     TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_CLASS | USB_REQUEST_RECIPIENT_OTHER, HubRequest::SET_FEATURE, feature_selector, port, 0, nullptr));
-    return KSuccess;
+    return {};
 }
 
 void Hub::remove_children_from_sysfs()
@@ -140,16 +140,14 @@ void Hub::check_for_port_updates()
         dbgln_if(USB_DEBUG, "USB Hub: Checking for port updates on port {}...", port_number);
 
         HubStatus port_status {};
-        auto result = get_port_status(port_number, port_status);
-        if (result.is_error()) {
+        if (auto result = get_port_status(port_number, port_status); result.is_error()) {
             dbgln("USB Hub: Error occurred when getting status for port {}: {}. Checking next port instead.", port_number, result.error());
             continue;
         }
 
         if (port_status.change & PORT_STATUS_CONNECT_STATUS_CHANGED) {
             // Clear the connection status change notification.
-            result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_CONNECTION);
-            if (result.is_error()) {
+            if (auto result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_CONNECTION); result.is_error()) {
                 dbgln("USB Hub: Error occurred when clearing port connection change for port {}: {}.", port_number, result.error());
                 return;
             }
@@ -174,8 +172,7 @@ void Hub::check_for_port_updates()
                     IO::delay(debounce_disconnect_check_interval);
                     debounce_timer += debounce_disconnect_check_interval;
 
-                    result = get_port_status(port_number, port_status);
-                    if (result.is_error()) {
+                    if (auto result = get_port_status(port_number, port_status); result.is_error()) {
                         dbgln("USB Hub: Error occurred when getting status while debouncing port {}: {}.", port_number, result.error());
                         return;
                     }
@@ -185,8 +182,8 @@ void Hub::check_for_port_updates()
 
                     dbgln_if(USB_DEBUG, "USB Hub: Connection status changed while debouncing, resetting debounce timer.");
                     debounce_timer = 0;
-                    result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_CONNECTION);
-                    if (result.is_error()) {
+
+                    if (auto result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_CONNECTION); result.is_error()) {
                         dbgln("USB Hub: Error occurred when clearing port connection change while debouncing port {}: {}.", port_number, result.error());
                         return;
                     }
@@ -194,8 +191,7 @@ void Hub::check_for_port_updates()
 
                 // Reset the port
                 dbgln_if(USB_DEBUG, "USB Hub: Debounce finished. Driving reset...");
-                result = set_port_feature(port_number, HubFeatureSelector::PORT_RESET);
-                if (result.is_error()) {
+                if (auto result = set_port_feature(port_number, HubFeatureSelector::PORT_RESET); result.is_error()) {
                     dbgln("USB Hub: Error occurred when resetting port {}: {}.", port_number, result.error());
                     return;
                 }
@@ -207,8 +203,7 @@ void Hub::check_for_port_updates()
                     constexpr u16 reset_delay = 10 * 1000;
                     IO::delay(reset_delay);
 
-                    result = get_port_status(port_number, port_status);
-                    if (result.is_error()) {
+                    if (auto result = get_port_status(port_number, port_status); result.is_error()) {
                         dbgln("USB Hub: Error occurred when getting status while resetting port {}: {}.", port_number, result.error());
                         return;
                     }
@@ -218,8 +213,8 @@ void Hub::check_for_port_updates()
                 }
 
                 // Stop asserting reset. This also causes the port to become enabled.
-                result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_RESET);
-                if (result.is_error()) {
+
+                if (auto result = clear_port_feature(port_number, HubFeatureSelector::C_PORT_RESET); result.is_error()) {
                     dbgln("USB Hub: Error occurred when resetting port {}: {}.", port_number, result.error());
                     return;
                 }
@@ -233,8 +228,7 @@ void Hub::check_for_port_updates()
 
                 // The port is ready to go. This is where we start communicating with the device to set up a driver for it.
 
-                result = get_port_status(port_number, port_status);
-                if (result.is_error()) {
+                if (auto result = get_port_status(port_number, port_status); result.is_error()) {
                     dbgln("USB Hub: Error occurred when getting status for port {} after reset: {}.", port_number, result.error());
                     return;
                 }

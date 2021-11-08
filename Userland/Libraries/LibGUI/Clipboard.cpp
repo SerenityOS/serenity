@@ -91,8 +91,15 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     if (!format.has_value() || format.value() == 0)
         return nullptr;
 
-    auto clipping_bitmap = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping.data.data());
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    auto clipping_bitmap_or_error = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping.data.data());
+    if (clipping_bitmap_or_error.is_error())
+        return nullptr;
+    auto clipping_bitmap = clipping_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
     for (int y = 0; y < clipping_bitmap->physical_height(); ++y) {
         for (int x = 0; x < clipping_bitmap->physical_width(); ++x) {
@@ -106,11 +113,12 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
 
 void Clipboard::set_data(ReadonlyBytes const& data, String const& type, HashMap<String, String> const& metadata)
 {
-    auto buffer = Core::AnonymousBuffer::create_with_size(data.size());
-    if (!buffer.is_valid()) {
+    auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
+    if (buffer_or_error.is_error()) {
         dbgln("GUI::Clipboard::set_data() failed to create a buffer");
         return;
     }
+    auto buffer = buffer_or_error.release_value();
     if (!data.is_empty())
         memcpy(buffer.data<void>(), data.data(), data.size());
 

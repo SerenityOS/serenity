@@ -18,7 +18,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
@@ -42,19 +42,21 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
     if (params.flags & MS_REMOUNT) {
         // We're not creating a new mount, we're updating an existing one!
-        return VirtualFileSystem::the().remount(target_custody, params.flags & ~MS_REMOUNT);
+        TRY(VirtualFileSystem::the().remount(target_custody, params.flags & ~MS_REMOUNT));
+        return 0;
     }
 
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
         if (description_or_error.is_error())
-            return description_or_error.error();
+            return description_or_error.release_error();
         auto description = description_or_error.release_value();
         if (!description->custody()) {
             // We only support bind-mounting inodes, not arbitrary files.
             return ENODEV;
         }
-        return VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags);
+        TRY(VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags));
+        return 0;
     }
 
     RefPtr<FileSystem> fs;
@@ -108,10 +110,11 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         return ENOMEM;
 
     TRY(fs->initialize());
-    return VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags);
+    TRY(VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
+ErrorOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
@@ -122,7 +125,8 @@ KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, s
     auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
     auto custody = TRY(VirtualFileSystem::the().resolve_path(mountpoint->view(), current_directory()));
     auto& guest_inode = custody->inode();
-    return VirtualFileSystem::the().unmount(guest_inode);
+    TRY(VirtualFileSystem::the().unmount(guest_inode));
+    return 0;
 }
 
 }

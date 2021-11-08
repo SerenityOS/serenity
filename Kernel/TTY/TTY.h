@@ -21,12 +21,12 @@ class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
 
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual KResultOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
 
     virtual KString const& tty_name() const = 0;
 
@@ -40,7 +40,7 @@ public:
         return 0;
     }
 
-    KResult set_termios(const termios&);
+    ErrorOr<void> set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
@@ -50,7 +50,7 @@ public:
     void hang_up();
 
 protected:
-    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
+    virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);

@@ -35,7 +35,7 @@ public:
     virtual ~Heap() override { flush(); }
 
     u32 size() const { return m_end_of_file; }
-    Result<ByteBuffer, String> read_block(u32);
+    ErrorOr<ByteBuffer> read_block(u32);
     bool write_block(u32, ByteBuffer&);
     u32 new_record_pointer();
     [[nodiscard]] bool has_block(u32 block) const { return block < size(); }

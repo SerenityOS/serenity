@@ -31,7 +31,7 @@ private:
         : m_variables(move(variables))
         , m_regs(regs)
     {
-        m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
+        m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
     }
     NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo> m_variables;
     PtraceRegisters m_regs;

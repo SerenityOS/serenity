@@ -278,7 +278,7 @@ bool KeyboardDevice::can_read(const OpenFileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
     SpinlockLocker lock(m_queue_lock);
@@ -292,13 +292,11 @@ KResultOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBu
 
         lock.unlock();
 
-        auto result = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](Bytes bytes) {
+        auto result = TRY(buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](Bytes bytes) {
             memcpy(bytes.data(), &event, sizeof(Event));
             return bytes.size();
-        });
-        if (result.is_error())
-            return result.error();
-        VERIFY(result.value() == sizeof(Event));
+        }));
+        VERIFY(result == sizeof(Event));
         nread += sizeof(Event);
 
         lock.lock();
@@ -306,7 +304,7 @@ KResultOr<size_t> KeyboardDevice::read(OpenFileDescription&, u64, UserOrKernelBu
     return nread;
 }
 
-KResult KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case KEYBOARD_IOCTL_GET_NUM_LOCK: {
@@ -319,7 +317,7 @@ KResult KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<
         if (num_lock_value != 0 && num_lock_value != 1)
             return EINVAL;
         m_num_lock_on = !!num_lock_value;
-        return KSuccess;
+        return {};
     }
     case KEYBOARD_IOCTL_GET_CAPS_LOCK: {
         auto output = static_ptr_cast<bool*>(arg);
@@ -330,7 +328,7 @@ KResult KeyboardDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<
         if (caps_lock_value != 0 && caps_lock_value != 1)
             return EINVAL;
         m_caps_lock_on = !!caps_lock_value;
-        return KSuccess;
+        return {};
     }
     default:
         return EINVAL;

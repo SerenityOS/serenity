@@ -52,19 +52,20 @@ bool MultiScaleBitmaps::load(StringView const& filename, StringView const& defau
     m_bitmaps.clear(); // If we're reloading the bitmaps get rid of the old ones
 
     auto add_bitmap = [&](StringView const& path, int scale_factor) {
-        auto bitmap = Gfx::Bitmap::try_load_from_file(path, scale_factor);
-        if (bitmap) {
-            auto bitmap_format = bitmap->format();
-            if (m_format == Gfx::BitmapFormat::Invalid || m_format == bitmap_format) {
-                if (m_format == Gfx::BitmapFormat::Invalid)
-                    m_format = bitmap_format;
+        auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path, scale_factor);
+        if (bitmap_or_error.is_error())
+            return;
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        auto bitmap_format = bitmap->format();
+        if (m_format == Gfx::BitmapFormat::Invalid || m_format == bitmap_format) {
+            if (m_format == Gfx::BitmapFormat::Invalid)
+                m_format = bitmap_format;
 
-                did_load_any = true;
-                m_bitmaps.set(scale_factor, bitmap.release_nonnull());
-            } else {
-                // Gracefully ignore, we have at least one bitmap already
-                dbgln("Bitmap {} (scale {}) has format inconsistent with the other per-scale bitmaps", path, bitmap->scale());
-            }
+            did_load_any = true;
+            m_bitmaps.set(scale_factor, move(bitmap));
+        } else {
+            // Gracefully ignore, we have at least one bitmap already
+            dbgln("Bitmap {} (scale {}) has format inconsistent with the other per-scale bitmaps", path, bitmap->scale());
         }
     };
 

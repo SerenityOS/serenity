@@ -19,8 +19,8 @@ namespace DisplaySettings {
 MonitorWidget::MonitorWidget()
 {
     m_desktop_resolution = GUI::Desktop::the().rect().size();
-    m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png");
-    m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 });
+    m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png").release_value_but_fixme_should_propagate_errors();
+    m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 }).release_value_but_fixme_should_propagate_errors();
     m_monitor_rect = { { 12, 13 }, m_desktop_bitmap->size() };
     set_fixed_size(304, 201);
 }
@@ -34,7 +34,7 @@ bool MonitorWidget::set_wallpaper(String path)
         [path](auto&) {
             RefPtr<Gfx::Bitmap> bmp;
             if (!path.is_empty())
-                bmp = Gfx::Bitmap::try_load_from_file(path);
+                bmp = Gfx::Bitmap::try_load_from_file(path).release_value_but_fixme_should_propagate_errors();
             return bmp;
         },
 
@@ -123,7 +123,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     float sh = (float)m_desktop_bitmap->height() / (float)m_desktop_resolution.height();
 
     auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
-    auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh);
+    auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh).release_value_but_fixme_should_propagate_errors();
 
     if (m_desktop_wallpaper_mode == "center") {
         auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());

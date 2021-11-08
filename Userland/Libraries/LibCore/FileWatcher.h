@@ -12,7 +12,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/Result.h>
 #include <AK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
@@ -39,8 +38,8 @@ class FileWatcherBase {
 public:
     virtual ~FileWatcherBase() { }
 
-    Result<bool, String> add_watch(String path, FileWatcherEvent::Type event_mask);
-    Result<bool, String> remove_watch(String path);
+    ErrorOr<bool> add_watch(String path, FileWatcherEvent::Type event_mask);
+    ErrorOr<bool> remove_watch(String path);
     bool is_watching(String const& path) const { return m_path_to_wd.find(path) != m_path_to_wd.end(); }
 
 protected:
@@ -69,7 +68,7 @@ class FileWatcher final : public FileWatcherBase
     AK_MAKE_NONCOPYABLE(FileWatcher);
 
 public:
-    static Result<NonnullRefPtr<FileWatcher>, String> create(InodeWatcherFlags = InodeWatcherFlags::None);
+    static ErrorOr<NonnullRefPtr<FileWatcher>> create(InodeWatcherFlags = InodeWatcherFlags::None);
     ~FileWatcher();
 
     Function<void(FileWatcherEvent const&)> on_change;

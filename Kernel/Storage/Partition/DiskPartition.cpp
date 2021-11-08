@@ -47,7 +47,7 @@ void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
     request.add_sub_request(sub_request_or_error.release_value());
 }
 
-KResultOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
+ErrorOr<size_t> DiskPartition::read(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::read offset={}, adjust={}, len={}", fd.offset(), adjust, len);
@@ -61,7 +61,7 @@ bool DiskPartition::can_read(const OpenFileDescription& fd, size_t offset) const
     return m_device.strong_ref()->can_read(fd, offset + adjust);
 }
 
-KResultOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
+ErrorOr<size_t> DiskPartition::write(OpenFileDescription& fd, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned adjust = m_metadata.start_block() * block_size();
     dbgln_if(OFFD_DEBUG, "DiskPartition::write offset={}, adjust={}, len={}", offset, adjust, len);

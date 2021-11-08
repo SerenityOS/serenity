@@ -57,10 +57,10 @@ MailSettingsWindow::MailSettingsWindow()
     mail_widget.load_from_gml(mail_settings_window_gml);
 
     auto& server_settings_image_label = *main_widget.find_descendant_of_type_named<GUI::Label>("server_settings_image_label");
-    server_settings_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mail-server-settings.png"));
+    server_settings_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mail-server-settings.png").release_value_but_fixme_should_propagate_errors());
 
     auto& user_settings_image_label = *main_widget.find_descendant_of_type_named<GUI::Label>("user_settings_image_label");
-    user_settings_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mail-user-settings.png"));
+    user_settings_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mail-user-settings.png").release_value_but_fixme_should_propagate_errors());
 
     m_server_inputbox = *main_widget.find_descendant_of_type_named<GUI::TextBox>("server_input");
     m_server_inputbox->set_text(Config::read_string("Mail", "Connection", "Server", ""));

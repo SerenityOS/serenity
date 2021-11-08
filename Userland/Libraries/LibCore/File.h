@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <AK/OSError.h>
-#include <AK/Result.h>
+#include <AK/Error.h>
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
 #include <sys/stat.h>
@@ -19,7 +18,7 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static Result<NonnullRefPtr<File>, OSError> open(String filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullRefPtr<File>> open(String filename, OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
     void set_filename(const String filename) { m_filename = move(filename); }
@@ -34,7 +33,7 @@ public:
     static bool is_link(String const& filename);
 
     static bool exists(String const& filename);
-    static Result<size_t, OSError> size(String const& filename);
+    static ErrorOr<size_t> size(String const& filename);
     static bool ensure_parent_directories(String const& path);
     static String current_working_directory();
     static String absolute_path(String const& path);
@@ -59,24 +58,32 @@ public:
         PermissionsOwnershipTimestamps,
     };
 
-    struct CopyError {
-        OSError error_code;
+    struct CopyError : public Error {
+        CopyError(int error_code, bool t)
+            : Error(error_code)
+            , tried_recursing(t)
+        {
+        }
         bool tried_recursing;
     };
 
-    static Result<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
-    static Result<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
-    static Result<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
     static String real_path_for(String const& filename);
     static String read_link(String const& link_path);
-    static Result<void, OSError> link_file(String const& dst_path, String const& src_path);
+    static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
-    struct RemoveError {
+    struct RemoveError : public Error {
+        RemoveError(String f, int error_code)
+            : Error(error_code)
+            , file(move(f))
+        {
+        }
         String file;
-        OSError error_code;
     };
-    static Result<void, RemoveError> remove(String const& path, RecursionMode, bool force);
+    static ErrorOr<void, RemoveError> remove(String const& path, RecursionMode, bool force);
 
     virtual bool open(OpenMode) override;
 

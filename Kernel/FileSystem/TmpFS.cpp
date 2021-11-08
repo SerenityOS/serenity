@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<TmpFS>> TmpFS::try_create()
+ErrorOr<NonnullRefPtr<TmpFS>> TmpFS::try_create()
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS);
 }
@@ -23,10 +23,10 @@ TmpFS::~TmpFS()
 {
 }
 
-KResult TmpFS::initialize()
+ErrorOr<void> TmpFS::initialize()
 {
     m_root_inode = TRY(TmpFSInode::try_create_root(*this));
-    return KSuccess;
+    return {};
 }
 
 Inode& TmpFS::root_inode()
@@ -59,7 +59,7 @@ unsigned TmpFS::next_inode_index()
     return m_next_inode_index++;
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFS::get_inode(InodeIdentifier identifier) const
+ErrorOr<NonnullRefPtr<Inode>> TmpFS::get_inode(InodeIdentifier identifier) const
 {
     MutexLocker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(identifier.fsid() == fsid());
@@ -82,14 +82,14 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-KResultOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
+ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, InodeIdentifier parent)
 {
     auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, parent)));
     fs.register_inode(inode);
     return inode;
 }
 
-KResultOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
+ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
     auto now = kgettimeofday().to_truncated_seconds();
@@ -107,7 +107,7 @@ InodeMetadata TmpFSInode::metadata() const
     return m_metadata;
 }
 
-KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
@@ -120,10 +120,10 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
     for (auto& child : m_children) {
         callback({ child.name->view(), child.inode->identifier(), 0 });
     }
-    return KSuccess;
+    return {};
 }
 
-KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(!is_directory());
@@ -142,7 +142,7 @@ KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     return size;
 }
 
-KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, OpenFileDescription*)
+ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, OpenFileDescription*)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());
@@ -185,7 +185,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
     return size;
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
@@ -216,7 +216,7 @@ void TmpFSInode::notify_watchers()
     set_metadata_dirty(false);
 }
 
-KResult TmpFSInode::flush_metadata()
+ErrorOr<void> TmpFSInode::flush_metadata()
 {
     // We don't really have any metadata that could become dirty.
     // The only reason we even call set_metadata_dirty() is
@@ -224,29 +224,29 @@ KResult TmpFSInode::flush_metadata()
     // switched to a different mechanism, we can stop ever marking
     // our metadata as dirty at all.
     set_metadata_dirty(false);
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::chmod(mode_t mode)
+ErrorOr<void> TmpFSInode::chmod(mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
 
     m_metadata.mode = mode;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::chown(UserID uid, GroupID gid)
+ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 
     m_metadata.uid = uid;
     m_metadata.gid = gid;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -269,7 +269,7 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t
     return child;
 }
 
-KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
+ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
 {
     VERIFY(is_directory());
     VERIFY(child.fsid() == fsid());
@@ -286,16 +286,16 @@ KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
     MutexLocker locker(m_inode_lock);
     m_children.append(*child_entry);
     did_add_child(child.identifier(), name);
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::remove_child(StringView const& name)
+ErrorOr<void> TmpFSInode::remove_child(StringView const& name)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
 
     if (name == "." || name == "..")
-        return KSuccess;
+        return {};
 
     auto* child = find_child_by_name(name);
     if (!child)
@@ -307,10 +307,10 @@ KResult TmpFSInode::remove_child(StringView const& name)
     did_remove_child(child_id, name);
     // Balanced by `new` in add_child()
     delete child;
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::truncate(u64 size)
+ErrorOr<void> TmpFSInode::truncate(u64 size)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());
@@ -333,34 +333,34 @@ KResult TmpFSInode::truncate(u64 size)
 
     m_metadata.size = size;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::set_atime(time_t time)
+ErrorOr<void> TmpFSInode::set_atime(time_t time)
 {
     MutexLocker locker(m_inode_lock);
 
     m_metadata.atime = time;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::set_ctime(time_t time)
+ErrorOr<void> TmpFSInode::set_ctime(time_t time)
 {
     MutexLocker locker(m_inode_lock);
 
     m_metadata.ctime = time;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
-KResult TmpFSInode::set_mtime(time_t t)
+ErrorOr<void> TmpFSInode::set_mtime(time_t t)
 {
     MutexLocker locker(m_inode_lock);
 
     m_metadata.mtime = t;
     notify_watchers();
-    return KSuccess;
+    return {};
 }
 
 void TmpFSInode::one_ref_left()

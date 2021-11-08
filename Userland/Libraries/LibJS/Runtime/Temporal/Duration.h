@@ -7,8 +7,12 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS::Temporal {
@@ -84,6 +88,27 @@ struct BalancedDuration {
     double nanoseconds;
 };
 
+// Used by MoveRelativeDate to temporarily hold values
+struct MoveRelativeDateResult {
+    Handle<PlainDateTime> relative_to;
+    double days;
+};
+
+// Used by RoundDuration to temporarily hold values
+struct RoundedDuration {
+    double years;
+    double months;
+    double weeks;
+    double days;
+    double hours;
+    double minutes;
+    double seconds;
+    double milliseconds;
+    double microseconds;
+    double nanoseconds;
+    double remainder;
+};
+
 // Table 7: Properties of a TemporalDurationLike, https://tc39.es/proposal-temporal/#table-temporal-temporaldurationlike-properties
 
 template<typename StructT, typename ValueT>
@@ -118,6 +143,24 @@ ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject&, double year
 Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration);
 BigInt* total_duration_nanoseconds(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift);
 ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
+ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDateTime& relative_to, Duration& duration);
+ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject&, ZonedDateTime&, double years, double months, double weeks, double days);
+ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
 ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
+String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
+
+// 7.5.15 DaysUntil ( earlier, later ), https://tc39.es/proposal-temporal/#sec-temporal-daysuntil
+template<typename EarlierObjectType, typename LaterObjectType>
+double days_until(GlobalObject& global_object, EarlierObjectType& earlier, LaterObjectType& later)
+{
+    // 1. Assert: earlier and later both have [[ISOYear]], [[ISOMonth]], and [[ISODay]] internal slots.
+    // NOTE: We could enforce this via concepts, but the compiler would complain anyway if either of the types doesn't have the methods used below.
+
+    // 2. Let difference be ! DifferenceISODate(earlier.[[ISOYear]], earlier.[[ISOMonth]], earlier.[[ISODay]], later.[[ISOYear]], later.[[ISOMonth]], later.[[ISODay]], "day").
+    auto difference = difference_iso_date(global_object, earlier.iso_year(), earlier.iso_month(), earlier.iso_day(), later.iso_year(), later.iso_month(), later.iso_day(), "day"sv);
+
+    // 3. Return difference.[[Days]].
+    return difference.days;
+}
 
 }

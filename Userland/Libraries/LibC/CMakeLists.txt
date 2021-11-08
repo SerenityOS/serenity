@@ -139,7 +139,7 @@ add_custom_target(LibCStatic
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:ssp>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibSystemStatic>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibUBSanitizerStatic>
-        COMMAND ${CMAKE_AR} -qcs ${CMAKE_CURRENT_BINARY_DIR}/libc.a *.o
+        COMMAND ${CMAKE_AR} -rcs ${CMAKE_CURRENT_BINARY_DIR}/libc.a *.o
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS LibCStaticWithoutDeps ssp LibSystemStatic LibUBSanitizerStatic
         )

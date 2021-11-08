@@ -373,7 +373,7 @@ static RefPtr<Gfx::Bitmap> get_piece(const StringView& set, const StringView& im
     builder.append(set);
     builder.append('/');
     builder.append(image);
-    return Gfx::Bitmap::try_load_from_file(builder.build());
+    return Gfx::Bitmap::try_load_from_file(builder.build()).release_value_but_fixme_should_propagate_errors();
 }
 
 void ChessWidget::set_piece_set(const StringView& set)

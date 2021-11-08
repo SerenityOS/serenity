@@ -29,7 +29,7 @@ bool File::unref() const
     return true;
 }
 
-KResultOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
 {
     auto description = OpenFileDescription::try_create(*this);
     if (!description.is_error()) {
@@ -39,25 +39,25 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
     return description;
 }
 
-KResult File::close()
+ErrorOr<void> File::close()
 {
-    return KSuccess;
+    return {};
 }
 
-KResult File::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
+ErrorOr<void> File::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
 {
     return ENOTTY;
 }
 
-KResultOr<Memory::Region*> File::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
+ErrorOr<Memory::Region*> File::mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64, int, bool)
 {
     return ENODEV;
 }
 
-KResult File::attach(OpenFileDescription&)
+ErrorOr<void> File::attach(OpenFileDescription&)
 {
     m_attach_count++;
-    return KSuccess;
+    return {};
 }
 
 void File::detach(OpenFileDescription&)

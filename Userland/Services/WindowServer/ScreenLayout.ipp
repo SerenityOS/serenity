@@ -9,6 +9,7 @@
 #include <Services/WindowServer/ScreenLayout.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 // Must be included after LibIPC/Forward.h
 #include <LibIPC/Decoder.h>

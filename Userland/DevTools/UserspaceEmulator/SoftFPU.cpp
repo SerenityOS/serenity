@@ -38,15 +38,6 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
 
 namespace UserspaceEmulator {
 
-ALWAYS_INLINE void SoftFPU::warn_if_fpu_not_set_absolute(u8 index) const
-{
-    if (!fpu_is_set(index)) [[unlikely]] {
-        // FIXME: Are we supposed to set a flag here?
-        //        We might need to raise a stack underflow here
-        reportln("\033[31;1mWarning! Read of uninitialized value on the FPU Stack ({} abs)\033[0m\n", index);
-        m_emulator.dump_backtrace();
-    }
-}
 ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
 {
     if (m_reg_is_mmx[index]) [[unlikely]] {
@@ -62,10 +53,11 @@ ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
     }
 }
 
-ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index) const
+ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index)
 {
     VERIFY(index < 8);
-    warn_if_fpu_not_set_absolute(index);
+    if (!fpu_is_set(index))
+        fpu_set_stack_underflow();
     warn_if_mmx_absolute(index);
 
     u8 effective_index = (m_fpu_stack_top + index) % 8;
@@ -93,11 +85,10 @@ ALWAYS_INLINE MMX SoftFPU::mmx_get(u8 index) const
 ALWAYS_INLINE void SoftFPU::mmx_set(u8 index, MMX value)
 {
     m_storage[index].mmx = value;
-    // The high bytes are set to 0b11... to make the floatingpoint value NaN.
+    // The high bytes are set to 0b11... to make the floating-point value NaN.
     // This way we are technically able to find out if we are reading the wrong
     // type, but this is still difficult, so we use our own lookup for that
-    // We set the alignment bytes to all 1's, too, just in case
-    m_storage[index].__high = ~(decltype(m_storage[index].__high))0u;
+    m_storage[index].__high = 0xFFFFU;
     m_reg_is_mmx[index] = true;
 }
 
@@ -187,7 +178,7 @@ ALWAYS_INLINE T SoftFPU::fpu_round(long double value) const
         return static_cast<T>(floorl(value));
     case RoundingMode::UP:
         return static_cast<T>(ceill(value));
-    case RoundingMode::TRUNK:
+    case RoundingMode::TRUNC:
         return static_cast<T>(truncl(value));
     default:
         VERIFY_NOT_REACHED();
@@ -198,13 +189,12 @@ template<Arithmetic T>
 ALWAYS_INLINE T SoftFPU::fpu_round_checked(long double value)
 {
     T result = fpu_round<T>(value);
-    if (auto rnd = value - result) {
-        if (rnd > 0)
-            set_c1(1);
-        else
-            set_c1(0);
+    if (result != value)
         fpu_set_exception(FPU_Exception::Precision);
-    }
+    if (result > value)
+        set_c1(1);
+    else
+        set_c1(0);
     return result;
 }
 
@@ -439,19 +429,20 @@ void SoftFPU::FCMOVB(const X86::Instruction& insn)
 }
 void SoftFPU::FCMOVNB(const X86::Instruction& insn)
 {
-    VERIFY(!insn.modrm().is_register());
-    auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
-    // FIXME: Respect shadow values
-    fpu_push((long double)m32int);
+    VERIFY(insn.modrm().is_register());
+    if (!m_cpu.cf())
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVBE(const X86::Instruction& insn)
 {
-    if (m_cpu.cf() | m_cpu.zf())
+    VERIFY(insn.modrm().is_register());
+    if (m_cpu.cf() || m_cpu.zf())
         fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVNBE(const X86::Instruction& insn)
 {
-    if (!(m_cpu.cf() | m_cpu.zf()))
+    VERIFY(insn.modrm().is_register());
+    if (!(m_cpu.cf() || m_cpu.zf()))
         fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
@@ -464,7 +455,7 @@ void SoftFPU::FCMOVU(const X86::Instruction& insn)
 void SoftFPU::FCMOVNU(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
-    if (m_cpu.pf())
+    if (!m_cpu.pf())
         fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
 }
 
@@ -639,14 +630,14 @@ void SoftFPU::FIMUL_RM32(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
-    fpu_set(0, fpu_get(0) * (long double)m32int);
+    fpu_set(0, fpu_get(0) * m32int);
 }
 void SoftFPU::FIMUL_RM16(const X86::Instruction& insn)
 {
     VERIFY(!insn.modrm().is_register());
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
-    fpu_set(0, fpu_get(0) * (long double)m16int);
+    fpu_set(0, fpu_get(0) * m16int);
 }
 
 void SoftFPU::FDIV_RM32(const X86::Instruction& insn)
@@ -721,7 +712,7 @@ void SoftFPU::FIDIV_RM16(const X86::Instruction& insn)
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, fpu_get(0) / (long double)m16int);
+    fpu_set(0, fpu_get(0) / m16int);
 }
 void SoftFPU::FIDIV_RM32(const X86::Instruction& insn)
 {
@@ -729,7 +720,7 @@ void SoftFPU::FIDIV_RM32(const X86::Instruction& insn)
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, fpu_get(0) / (long double)m32int);
+    fpu_set(0, fpu_get(0) / m32int);
 }
 
 void SoftFPU::FIDIVR_RM16(const X86::Instruction& insn)
@@ -738,7 +729,7 @@ void SoftFPU::FIDIVR_RM16(const X86::Instruction& insn)
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, (long double)m16int / fpu_get(0));
+    fpu_set(0, m16int / fpu_get(0));
 }
 void SoftFPU::FIDIVR_RM32(const X86::Instruction& insn)
 {
@@ -746,7 +737,7 @@ void SoftFPU::FIDIVR_RM32(const X86::Instruction& insn)
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, (long double)m32int / fpu_get(0));
+    fpu_set(0, m32int / fpu_get(0));
 }
 
 void SoftFPU::FPREM(const X86::Instruction&)
@@ -792,20 +783,14 @@ void SoftFPU::FCHS(const X86::Instruction&)
 
 void SoftFPU::FRNDINT(const X86::Instruction&)
 {
-    auto res = fpu_round<long double>(fpu_get(0));
-    if (auto rnd = (res - fpu_get(0))) {
-        if (rnd > 0)
-            set_c1(1);
-        else
-            set_c1(0);
-    }
+    auto res = fpu_round_checked<long double>(fpu_get(0));
     fpu_set(0, res);
 }
 
 void SoftFPU::FSCALE(const X86::Instruction&)
 {
     // FIXME: set C1 upon stack overflow or if result was rounded
-    fpu_set(0, fpu_get(0) * powl(2, floorl(fpu_get(1))));
+    fpu_set(0, fpu_get(0) * powl(2, truncl(fpu_get(1))));
 }
 
 void SoftFPU::FSQRT(const X86::Instruction&)
@@ -895,15 +880,17 @@ void SoftFPU::FCOMI(const X86::Instruction& insn)
         m_cpu.set_zf(1);
         m_cpu.set_pf(1);
         m_cpu.set_cf(1);
+    } else {
+        m_cpu.set_zf(fpu_get(0) == fpu_get(i));
+        m_cpu.set_pf(false);
+        m_cpu.set_cf(fpu_get(0) < fpu_get(i));
     }
     if (!fpu_is_set(1))
         fpu_set_exception(FPU_Exception::Underflow);
 
-    m_cpu.set_zf(fpu_get(0) == fpu_get(i));
-    m_cpu.set_pf(false);
-    m_cpu.set_cf(fpu_get(0) < fpu_get(i));
-    // FIXME: is this supposed to be here?
-    // m_cpu.set_of(false);
+    m_cpu.set_of(false);
+    m_cpu.set_af(false);
+    m_cpu.set_sf(false);
 
     // FIXME: Taint should be based on ST(0) and ST(i)
     m_cpu.m_flags_tainted = false;
@@ -928,8 +915,10 @@ void SoftFPU::FUCOMI(const X86::Instruction& insn)
         m_cpu.set_zf(fpu_get(0) == fpu_get(i));
         m_cpu.set_pf(false);
         m_cpu.set_cf(fpu_get(0) < fpu_get(i));
-        m_cpu.set_of(false);
     }
+    m_cpu.set_of(false);
+    m_cpu.set_af(false);
+    m_cpu.set_sf(false);
 
     // FIXME: Taint should be based on ST(0) and ST(i)
     m_cpu.m_flags_tainted = false;

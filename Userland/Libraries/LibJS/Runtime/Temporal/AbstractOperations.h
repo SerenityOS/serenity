@@ -78,6 +78,11 @@ struct TemporalYearMonth {
     Optional<String> calendar = {};
 };
 
+struct TemporalZonedDateTime {
+    ISODateTime date_time;
+    TemporalTimeZone time_zone;
+};
+
 struct SecondsStringPrecision {
     Variant<StringView, u8> precision;
     String unit;
@@ -92,6 +97,7 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
+ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, Object const& normalized_options, StringView smallest_unit);
@@ -104,11 +110,13 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object& opti
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
+double sign(double);
 double constrain_to_range(double x, double minimum, double maximum);
 i64 round_number_to_increment(double, u64 increment, StringView rounding_mode);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);

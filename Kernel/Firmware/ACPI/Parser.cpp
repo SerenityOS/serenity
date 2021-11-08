@@ -39,19 +39,19 @@ UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(St
     return adopt_ref(*new (nothrow) ACPISysFSComponent(name, paddr, table_size));
 }
 
-KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = TRY(try_to_generate_buffer());
 
     if ((size_t)offset >= blob->size())
-        return KSuccess;
+        return 0;
 
     ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
     TRY(buffer.write(blob->data() + offset, nread));
     return nread;
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> ACPISysFSComponent::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> ACPISysFSComponent::try_to_generate_buffer() const
 {
     auto acpi_blob = Memory::map_typed<u8>((m_paddr), m_length);
     return KBuffer::try_create_with_bytes(Span<u8> { acpi_blob.ptr(), m_length });
@@ -64,7 +64,7 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAdd
 {
 }
 
-UNMAP_AFTER_INIT KResultOr<NonnullRefPtr<ACPISysFSDirectory>> ACPISysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<ACPISysFSDirectory>> ACPISysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
 {
     auto acpi_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
     return acpi_directory;

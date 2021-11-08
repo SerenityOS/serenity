@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error()) {
-        warnln("Could not map file: {}", file_or_error.error().string());
+        warnln("Could not map file: {}", file_or_error.error());
         return 1;
     }
 

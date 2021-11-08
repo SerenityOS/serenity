@@ -78,7 +78,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
     m_task_button_container->layout()->set_spacing(3);
 
-    m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
+    m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
 
     m_applet_area_container = main_widget.add<GUI::Frame>();
     m_applet_area_container->set_frame_thickness(1);
@@ -310,8 +310,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
                 if (icon->height() != taskbar_icon_size() || icon->width() != taskbar_icon_size()) {
                     auto sw = taskbar_icon_size() / (float)icon->width();
                     auto sh = taskbar_icon_size() / (float)icon->height();
-                    auto scaled_bitmap = icon->scaled(sw, sh);
-                    window->button()->set_icon(move(scaled_bitmap));
+                    auto scaled_bitmap_or_error = icon->scaled(sw, sh);
+                    if (scaled_bitmap_or_error.is_error())
+                        window->button()->set_icon(nullptr);
+                    else
+                        window->button()->set_icon(scaled_bitmap_or_error.release_value());
                 } else {
                     window->button()->set_icon(icon);
                 }

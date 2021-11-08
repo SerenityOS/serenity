@@ -25,15 +25,14 @@
 
 namespace PixelPaint {
 
-RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize const& size)
 {
-    if (size.is_empty())
-        return nullptr;
+    VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return nullptr;
+        return Error::from_string_literal("Image size too large"sv);
 
-    return adopt_ref(*new Image(size));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Image(size));
 }
 
 Image::Image(Gfx::IntSize const& size)
@@ -56,42 +55,34 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     }
 }
 
-RefPtr<Gfx::Bitmap> Image::try_decode_bitmap(ReadonlyBytes const& bitmap_data)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = ImageDecoderClient::Client::construct();
 
     // FIXME: Find a way to avoid the memory copying here.
-    auto decoded_image_or_error = client->decode_image(bitmap_data);
-    if (!decoded_image_or_error.has_value())
-        return nullptr;
+    auto maybe_decoded_image = client->decode_image(bitmap_data);
+    if (!maybe_decoded_image.has_value())
+        return Error::from_string_literal("Image decode failed"sv);
 
     // FIXME: Support multi-frame images?
-    auto decoded_image = decoded_image_or_error.release_value();
+    auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
-        return nullptr;
-    return move(decoded_image.frames[0].bitmap);
+        return Error::from_string_literal("Image decode failed (no frames)"sv);
+    return decoded_image.frames[0].bitmap.release_nonnull();
 }
 
-RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
-    auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
-    if (!image)
-        return nullptr;
-
-    auto layer = Layer::try_create_with_bitmap(*image, *bitmap, "Background");
-    if (!layer)
-        return nullptr;
-
-    image->add_layer(layer.release_nonnull());
+    auto image = TRY(try_create_with_size({ bitmap->width(), bitmap->height() }));
+    auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
+    image->add_layer(move(layer));
     return image;
 }
 
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(JsonObject const& json)
+ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject const& json)
 {
-    auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
-    if (!image)
-        return String { "Image memory allocation failed" };
+    auto image = TRY(try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() }));
 
     auto layers_value = json.get("layers");
     for (auto& layer_value : layers_value.as_array().values()) {
@@ -101,21 +92,16 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
         if (!bitmap_data.has_value())
-            return String { "Base64 decode failed"sv };
+            return Error::from_string_literal("Base64 decode failed"sv);
 
-        auto bitmap = try_decode_bitmap(bitmap_data.value());
-        if (!bitmap)
-            return String { "Layer bitmap decode failed"sv };
-
-        auto layer = Layer::try_create_with_bitmap(*image, bitmap.release_nonnull(), name);
-        if (!layer)
-            return String { "Layer allocation failed"sv };
+        auto bitmap = TRY(try_decode_bitmap(bitmap_data.value()));
+        auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
         auto width = layer_object.get("width").to_i32();
         auto height = layer_object.get("height").to_i32();
 
         if (width != layer->size().width() || height != layer->size().height())
-            return String { "Decoded layer bitmap has wrong size"sv };
+            return Error::from_string_literal("Decoded layer bitmap has wrong size"sv);
 
         image->add_layer(*layer);
 
@@ -125,7 +111,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_json(Jso
         layer->set_selected(layer_object.get("selected").as_bool());
     }
 
-    return image.release_nonnull();
+    return image;
 }
 
 void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
@@ -150,28 +136,23 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     }
 }
 
-Result<void, String> Image::write_to_file(const String& file_path) const
+ErrorOr<void> Image::write_to_file(const String& file_path) const
 {
     StringBuilder builder;
     JsonObjectSerializer json(builder);
     serialize_as_json(json);
     json.finish();
 
-    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
-    if (file_or_error.is_error())
-        return String { file_or_error.error().string() };
-
-    if (!file_or_error.value()->write(builder.string_view()))
-        return String { file_or_error.value()->error_string() };
+    auto file = TRY(Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)));
+    if (!file->write(builder.string_view()))
+        return Error::from_errno(file->error());
     return {};
 }
 
-RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap = Gfx::Bitmap::try_create(format, m_size);
-    if (!bitmap)
-        return nullptr;
-    GUI::Painter painter(*bitmap);
+    auto bitmap = TRY(Gfx::Bitmap::try_create(format, m_size));
+    GUI::Painter painter(bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
     return bitmap;
 }
@@ -183,49 +164,49 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     auto selection_rect = selection.bounding_rect();
 
     // FIXME: Add a way to only compose a certain part of the image
-    auto full_bitmap = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
-    if (!full_bitmap)
+    auto bitmap_or_error = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
+    if (bitmap_or_error.is_error())
         return {};
+    auto full_bitmap = bitmap_or_error.release_value();
 
-    return full_bitmap->cropped(selection_rect);
+    auto cropped_bitmap_or_error = full_bitmap->cropped(selection_rect);
+    if (cropped_bitmap_or_error.is_error())
+        return nullptr;
+    return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-Result<void, String> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
     auto file = Core::File::construct();
     file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
     if (file->has_error())
-        return String { file->error_string() };
+        return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = try_compose_bitmap(bitmap_format);
-    if (!bitmap)
-        return String { "Failed to allocate bitmap for encoding"sv };
+    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
 
     if (!file->write(encoded_data.data(), encoded_data.size()))
-        return String { "Failed to write encoded BMP data to file"sv };
+        return Error::from_errno(file->error());
 
     return {};
 }
 
-Result<void, String> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
+ErrorOr<void> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
     auto file = Core::File::construct();
     file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
     if (file->has_error())
-        return String { file->error_string() };
+        return Error::from_errno(file->error());
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = try_compose_bitmap(bitmap_format);
-    if (!bitmap)
-        return String { "Failed to allocate bitmap for encoding"sv };
+    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
     if (!file->write(encoded_data.data(), encoded_data.size()))
-        return String { "Failed to write encoded PNG data to file"sv };
+        return Error::from_errno(file->error());
 
     return {};
 }
@@ -243,29 +224,24 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
     did_modify_layer_stack();
 }
 
-RefPtr<Image> Image::take_snapshot() const
+ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
-    auto snapshot = try_create_with_size(m_size);
-    if (!snapshot)
-        return nullptr;
+    auto snapshot = TRY(try_create_with_size(m_size));
     for (const auto& layer : m_layers) {
-        auto layer_snapshot = Layer::try_create_snapshot(*snapshot, layer);
-        if (!layer_snapshot)
-            return nullptr;
-        snapshot->add_layer(layer_snapshot.release_nonnull());
+        auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
+        snapshot->add_layer(move(layer_snapshot));
     }
     return snapshot;
 }
 
-void Image::restore_snapshot(Image const& snapshot)
+ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 {
     m_layers.clear();
     select_layer(nullptr);
 
     bool layer_selected = false;
-    for (const auto& snapshot_layer : snapshot.m_layers) {
-        auto layer = Layer::try_create_snapshot(*this, snapshot_layer);
-        VERIFY(layer);
+    for (auto const& snapshot_layer : snapshot.m_layers) {
+        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
         if (layer->is_selected()) {
             select_layer(layer.ptr());
             layer_selected = true;
@@ -277,6 +253,7 @@ void Image::restore_snapshot(Image const& snapshot)
         select_layer(&layer(0));
 
     did_modify_layer_stack();
+    return {};
 }
 
 size_t Image::index_of(Layer const& layer) const
@@ -475,14 +452,15 @@ void Image::did_change_rect(Gfx::IntRect const& a_modified_rect)
 }
 
 ImageUndoCommand::ImageUndoCommand(Image& image)
-    : m_snapshot(image.take_snapshot())
+    : m_snapshot(image.take_snapshot().release_value_but_fixme_should_propagate_errors())
     , m_image(image)
 {
 }
 
 void ImageUndoCommand::undo()
 {
-    m_image.restore_snapshot(*m_snapshot);
+    // FIXME: Handle errors.
+    (void)m_image.restore_snapshot(*m_snapshot);
 }
 
 void ImageUndoCommand::redo()
@@ -506,8 +484,7 @@ void Image::set_path(String path)
 void Image::flip(Gfx::Orientation orientation)
 {
     for (auto& layer : m_layers) {
-        auto flipped = layer.bitmap().flipped(orientation);
-        VERIFY(flipped);
+        auto flipped = layer.bitmap().flipped(orientation).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*flipped);
         layer.did_modify_bitmap(rect());
     }
@@ -518,8 +495,7 @@ void Image::flip(Gfx::Orientation orientation)
 void Image::rotate(Gfx::RotationDirection direction)
 {
     for (auto& layer : m_layers) {
-        auto rotated = layer.bitmap().rotated(direction);
-        VERIFY(rotated);
+        auto rotated = layer.bitmap().rotated(direction).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*rotated);
         layer.did_modify_bitmap(rect());
     }
@@ -531,8 +507,7 @@ void Image::rotate(Gfx::RotationDirection direction)
 void Image::crop(Gfx::IntRect const& cropped_rect)
 {
     for (auto& layer : m_layers) {
-        auto cropped = layer.bitmap().cropped(cropped_rect);
-        VERIFY(cropped);
+        auto cropped = layer.bitmap().cropped(cropped_rect).release_value_but_fixme_should_propagate_errors();
         layer.set_bitmap(*cropped);
         layer.did_modify_bitmap(rect());
     }

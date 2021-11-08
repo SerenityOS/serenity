@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$sysconf(int name)
+ErrorOr<FlatPtr> Process::sys$sysconf(int name)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     switch (name) {

@@ -49,8 +49,8 @@ public:
         Yes,
     };
 
-    static KResultOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
-    static KResultOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static ErrorOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -90,7 +90,7 @@ public:
 
     PageFaultResponse handle_fault(PageFault const&);
 
-    KResultOr<NonnullOwnPtr<Region>> try_clone();
+    ErrorOr<NonnullOwnPtr<Region>> try_clone();
 
     [[nodiscard]] bool contains(VirtualAddress vaddr) const
     {
@@ -170,7 +170,7 @@ public:
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void set_page_directory(PageDirectory&);
-    KResult map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
+    ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualRange {
         No,
         Yes,

@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
+#include <AK/Try.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DDSLoader.h>
@@ -23,6 +24,7 @@
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
 
@@ -53,7 +55,7 @@ size_t Bitmap::minimum_pitch(size_t physical_width, BitmapFormat format)
     return physical_width * element_size;
 }
 
-static bool size_would_overflow(BitmapFormat format, const IntSize& size, int scale_factor)
+static bool size_would_overflow(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
@@ -65,29 +67,26 @@ static bool size_would_overflow(BitmapFormat format, const IntSize& size, int sc
     return Checked<size_t>::multiplication_would_overflow(pitch, size.height() * scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create(BitmapFormat format, IntSize const& size, int scale_factor)
 {
-    auto backing_store = Bitmap::try_allocate_backing_store(format, size, scale_factor);
-    if (!backing_store.has_value())
-        return nullptr;
-    return adopt_ref(*new Bitmap(format, size, scale_factor, backing_store.value()));
+    auto backing_store = TRY(Bitmap::allocate_backing_store(format, size, scale_factor));
+    return AK::adopt_nonnull_ref_or_enomem(new (nothrow) Bitmap(format, size, scale_factor, backing_store));
 }
 
-RefPtr<Bitmap> Bitmap::try_create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_shareable(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_shareable size overflow"sv);
 
-    const auto pitch = minimum_pitch(size.width() * scale_factor, format);
-    const auto data_size = size_in_bytes(pitch, size.height() * scale_factor);
+    auto const pitch = minimum_pitch(size.width() * scale_factor, format);
+    auto const data_size = size_in_bytes(pitch, size.height() * scale_factor);
 
-    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
-    if (!buffer.is_valid())
-        return nullptr;
-    return Bitmap::try_create_with_anonymous_buffer(format, buffer, size, scale_factor, {});
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE)));
+    auto bitmap = TRY(Bitmap::try_create_with_anonymous_buffer(format, buffer, size, scale_factor, {}));
+    return bitmap;
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const BackingStore& backing_store)
+Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, BackingStore const& backing_store)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(backing_store.data)
@@ -102,50 +101,22 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, const
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_wrapper(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_wrapper size overflow"sv);
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-RefPtr<Bitmap> Bitmap::try_load_from_file(String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
 {
-    if (scale_factor > 1 && path.starts_with("/res/")) {
-        LexicalPath lexical_path { path };
-        StringBuilder highdpi_icon_path;
-        highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append('/');
-        highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendff("-{}x.", scale_factor);
-        highdpi_icon_path.append(lexical_path.extension());
-
-        RefPtr<Bitmap> bmp;
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
-        bmp = load_##Name(highdpi_icon_path.to_string());
-        ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
-        if (bmp) {
-            VERIFY(bmp->width() % scale_factor == 0);
-            VERIFY(bmp->height() % scale_factor == 0);
-            bmp->m_size.set_width(bmp->width() / scale_factor);
-            bmp->m_size.set_height(bmp->height() / scale_factor);
-            bmp->m_scale = scale_factor;
-            return bmp;
-        }
-    }
-
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
-        return load_##Name(path);
-    ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
-
-    return nullptr;
+    int fd = open(path.characters(), O_RDONLY);
+    if (fd < 0)
+        return Error::from_errno(errno);
+    return try_load_from_fd_and_close(fd, path, scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
@@ -161,7 +132,7 @@ RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, in
     if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                                                   \
         auto file = MappedFile::map_from_fd_and_close(fd, highdpi_icon_path.to_string());                                          \
         if (!file.is_error())                                                                                                      \
-            bmp = load_##Name##_from_memory((const u8*)file.value()->data(), file.value()->size(), highdpi_icon_path.to_string()); \
+            bmp = load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), highdpi_icon_path.to_string()); \
     }
         ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
@@ -171,23 +142,25 @@ RefPtr<Bitmap> Bitmap::try_load_from_fd_and_close(int fd, String const& path, in
             bmp->m_size.set_width(bmp->width() / scale_factor);
             bmp->m_size.set_height(bmp->height() / scale_factor);
             bmp->m_scale = scale_factor;
-            return bmp;
+            return bmp.release_nonnull();
         }
     }
 
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                           \
-        auto file = MappedFile::map_from_fd_and_close(fd, path);                                           \
-        if (!file.is_error())                                                                              \
-            return load_##Name##_from_memory((const u8*)file.value()->data(), file.value()->size(), path); \
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                           \
+    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                                      \
+        auto file = MappedFile::map_from_fd_and_close(fd, path);                                                      \
+        if (!file.is_error()) {                                                                                       \
+            if (auto bitmap = load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), path)) \
+                return bitmap.release_nonnull();                                                                      \
+        }                                                                                                             \
     }
     ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
 
-    return nullptr;
+    return Error::from_string_literal("Gfx::Bitmap unable to load from fd"sv);
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
+Bitmap::Bitmap(BitmapFormat format, IntSize const& size, int scale_factor, size_t pitch, void* data)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(data)
@@ -201,7 +174,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_
     allocate_palette_from_format(format, {});
 }
 
-static bool check_size(const IntSize& size, int scale_factor, BitmapFormat format, unsigned actual_size)
+static bool check_size(IntSize const& size, int scale_factor, BitmapFormat format, unsigned actual_size)
 {
     // FIXME: Code duplication of size_in_bytes() and m_pitch
     unsigned expected_size_min = Bitmap::minimum_pitch(size.width() * scale_factor, format) * size.height() * scale_factor;
@@ -221,12 +194,12 @@ static bool check_size(const IntSize& size, int scale_factor, BitmapFormat forma
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, IntSize const& size, int scale_factor, Vector<RGBA32> const& palette)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_with_anonymous_buffer size overflow");
 
-    return adopt_ref(*new Bitmap(format, move(buffer), size, scale_factor, palette));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Bitmap(format, move(buffer), size, scale_factor, palette));
 }
 
 /// Read a bitmap as described by:
@@ -238,7 +211,7 @@ RefPtr<Bitmap> Bitmap::try_create_with_anonymous_buffer(BitmapFormat format, Cor
 /// - palette count
 /// - palette data (= palette count * BGRA8888)
 /// - image data (= actual size * u8)
-RefPtr<Bitmap> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 {
     InputMemoryStream stream { buffer };
     size_t actual_size;
@@ -256,34 +229,31 @@ RefPtr<Bitmap> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffe
     };
 
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
-        return nullptr;
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))
-        return {};
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     palette.ensure_capacity(palette_size);
     for (size_t i = 0; i < palette_size; ++i) {
         if (!read(palette[i]))
-            return {};
+            return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
     }
 
     if (stream.remaining() < actual_size)
-        return {};
+        return Error::from_string_literal("Gfx::Bitmap::try_create_from_serialized_byte_buffer: decode failed"sv);
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
-    auto bitmap = Bitmap::try_create(format, { width, height }, scale_factor);
-    if (!bitmap)
-        return {};
+    auto bitmap = TRY(Bitmap::try_create(format, { width, height }, scale_factor));
 
     bitmap->m_palette = new RGBA32[palette_size];
     memcpy(bitmap->m_palette, palette.data(), palette_size * sizeof(RGBA32));
 
     data.copy_to({ bitmap->scanline(0), bitmap->size_in_bytes() });
-
     return bitmap;
 }
 
@@ -317,7 +287,7 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     return buffer;
 }
 
-Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
+Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, IntSize const& size, int scale_factor, Vector<RGBA32> const& palette)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(buffer.data<void>())
@@ -332,12 +302,9 @@ Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize&
         allocate_palette_from_format(m_format, palette);
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::clone() const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::clone() const
 {
-    auto new_bitmap = Bitmap::try_create(format(), size(), scale());
-
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Bitmap::try_create(format(), size(), scale()));
 
     VERIFY(size_in_bytes() == new_bitmap->size_in_bytes());
     memcpy(new_bitmap->scanline(0), scanline(0), size_in_bytes());
@@ -345,11 +312,9 @@ RefPtr<Gfx::Bitmap> Bitmap::clone() const
     return new_bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale()));
 
     auto w = this->physical_width();
     auto h = this->physical_height();
@@ -368,11 +333,9 @@ RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) c
     return new_bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::flipped(Gfx::Orientation orientation) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { width(), height() }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(this->format(), { width(), height() }, scale()));
 
     auto w = this->physical_width();
     auto h = this->physical_height();
@@ -389,15 +352,13 @@ RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
     return new_bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::scaled(int sx, int sy) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
 {
     VERIFY(sx >= 0 && sy >= 0);
     if (sx == 1 && sy == 1)
-        return this;
+        return NonnullRefPtr { *this };
 
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { width() * sx, height() * sy }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { width() * sx, height() * sy }, scale()));
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -420,7 +381,7 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(int sx, int sy) const
 }
 
 // http://fourier.eng.hmc.edu/e161/lectures/resize/node3.html
-RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 {
     VERIFY(sx >= 0.0f && sy >= 0.0f);
     if (floorf(sx) == sx && floorf(sy) == sy)
@@ -429,9 +390,7 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     int scaled_width = (int)ceilf(sx * (float)width());
     int scaled_height = (int)ceilf(sy * (float)height());
 
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale());
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale()));
 
     auto old_width = physical_width();
     auto old_height = physical_height();
@@ -501,11 +460,9 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     return new_bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop) const
 {
-    auto new_bitmap = Gfx::Bitmap::try_create(format(), { crop.width(), crop.height() }, 1);
-    if (!new_bitmap)
-        return nullptr;
+    auto new_bitmap = TRY(Gfx::Bitmap::try_create(format(), { crop.width(), crop.height() }, 1));
 
     for (int y = 0; y < crop.height(); ++y) {
         for (int x = 0; x < crop.width(); ++x) {
@@ -521,16 +478,12 @@ RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
     return new_bitmap;
 }
 
-RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
     if (m_buffer.is_valid())
-        return *this;
-    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
-    if (!buffer.is_valid())
-        return nullptr;
-    auto bitmap = Bitmap::try_create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector());
-    if (!bitmap)
-        return nullptr;
+        return NonnullRefPtr { *this };
+    auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE)));
+    auto bitmap = TRY(Bitmap::try_create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector()));
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
     return bitmap;
 }
@@ -599,21 +552,21 @@ void Bitmap::set_volatile()
     return true;
 }
 
-ShareableBitmap Bitmap::to_shareable_bitmap() const
+Gfx::ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
-    auto bitmap = to_bitmap_backed_by_anonymous_buffer();
-    if (!bitmap)
+    auto bitmap_or_error = to_bitmap_backed_by_anonymous_buffer();
+    if (bitmap_or_error.is_error())
         return {};
-    return ShareableBitmap(*bitmap);
+    return Gfx::ShareableBitmap { bitmap_or_error.release_value_but_fixme_should_propagate_errors(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
 }
 
-Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
+ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
-        return {};
+        return Error::from_string_literal("Gfx::Bitmap backing store size overflow"sv);
 
-    const auto pitch = minimum_pitch(size.width() * scale_factor, format);
-    const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
+    auto const pitch = minimum_pitch(size.width() * scale_factor, format);
+    auto const data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
 
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
 #ifdef __serenity__
@@ -622,14 +575,12 @@ Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, I
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
-    if (data == MAP_FAILED) {
-        perror("mmap");
-        return {};
-    }
-    return { { data, pitch, data_size_in_bytes } };
+    if (data == MAP_FAILED)
+        return Error::from_errno(errno);
+    return BackingStore { data, pitch, data_size_in_bytes };
 }
 
-void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA32>& source_palette)
+void Bitmap::allocate_palette_from_format(BitmapFormat format, Vector<RGBA32> const& source_palette)
 {
     size_t size = palette_size(format);
     if (size == 0)

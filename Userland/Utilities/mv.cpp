@@ -9,6 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -74,7 +75,7 @@ int main(int argc, char** argv)
                     Core::File::AddDuplicateFileMarker::No);
 
                 if (result.is_error()) {
-                    warnln("mv: could not move '{}': {}", old_path, result.error().error_code);
+                    warnln("mv: could not move '{}': {}", old_path, static_cast<Error const&>(result.error()));
                     return 1;
                 }
                 rc = unlink(old_path);

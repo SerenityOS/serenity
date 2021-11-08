@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     auto notification = GUI::Notification::construct();
     notification->set_text(message);
     notification->set_title(title);
-    notification->set_icon(Gfx::Bitmap::try_load_from_file(icon_path));
+    notification->set_icon(Gfx::Bitmap::try_load_from_file(icon_path).release_value_but_fixme_should_propagate_errors());
     notification->show();
 
     return 0;

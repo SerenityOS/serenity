@@ -8,6 +8,7 @@
 #include <LibCore/File.h>
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {

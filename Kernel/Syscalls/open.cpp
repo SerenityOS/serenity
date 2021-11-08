@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -64,14 +64,16 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     return fd_allocation.fd;
 }
 
-KResultOr<FlatPtr> Process::sys$close(int fd)
+ErrorOr<FlatPtr> Process::sys$close(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto description = TRY(fds().open_file_description(fd));
     auto result = description->close();
     m_fds[fd] = {};
-    return result;
+    if (result.is_error())
+        return result.release_error();
+    return 0;
 }
 
 }

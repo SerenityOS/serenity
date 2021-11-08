@@ -7,42 +7,41 @@
 #include "Layer.h"
 #include "Image.h"
 #include "Selection.h"
+#include <AK/RefPtr.h>
+#include <AK/Try.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size, String name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size, String name)
 {
-    if (size.is_empty())
-        return nullptr;
+    VERIFY(!size.is_empty());
 
     if (size.width() > 16384 || size.height() > 16384)
-        return nullptr;
+        return Error::from_string_literal("Layer size too large"sv);
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size);
-    if (!bitmap)
-        return nullptr;
-
-    return adopt_ref(*new Layer(image, *bitmap, move(name)));
+    auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
 }
 
-RefPtr<Layer> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
 {
-    if (bitmap->size().is_empty())
-        return nullptr;
+    VERIFY(!bitmap->size().is_empty());
 
     if (bitmap->size().width() > 16384 || bitmap->size().height() > 16384)
-        return nullptr;
+        return Error::from_string_literal("Layer size too large"sv);
 
-    return adopt_ref(*new Layer(image, bitmap, move(name)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, bitmap, move(name)));
 }
 
-RefPtr<Layer> Layer::try_create_snapshot(Image& image, Layer const& layer)
+ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_snapshot(Image& image, Layer const& layer)
 {
-    auto snapshot = try_create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
+    auto bitmap = TRY(layer.bitmap().clone());
+    auto snapshot = TRY(try_create_with_bitmap(image, move(bitmap), layer.name()));
+
     /*
-        We set these properties directly because calling the setters might 
-        notify the image of an update on the newly created layer, but this 
+        We set these properties directly because calling the setters might
+        notify the image of an update on the newly created layer, but this
         layer has not yet been added to the image.
     */
     snapshot->m_opacity_percent = layer.opacity_percent();
@@ -97,7 +96,10 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
     }
     auto selection_rect = selection.bounding_rect();
 
-    auto result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    if (bitmap_or_error.is_error())
+        return nullptr;
+    auto result = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     VERIFY(result->has_alpha_channel());
 
     for (int y = selection_rect.top(); y <= selection_rect.bottom(); y++) {

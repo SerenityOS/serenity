@@ -36,7 +36,7 @@ VirtualRange VirtualRange::intersect(VirtualRange const& other) const
     return VirtualRange(new_base, (new_end - new_base).get());
 }
 
-KResultOr<VirtualRange> VirtualRange::expand_to_page_boundaries(FlatPtr address, size_t size)
+ErrorOr<VirtualRange> VirtualRange::expand_to_page_boundaries(FlatPtr address, size_t size)
 {
     if (page_round_up_would_wrap(size))
         return EINVAL;

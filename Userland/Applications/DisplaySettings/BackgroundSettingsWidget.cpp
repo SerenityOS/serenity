@@ -65,7 +65,7 @@ void BackgroundSettingsWidget::create_frame()
     };
 
     m_context_menu = GUI::Menu::construct();
-    m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"), [this](GUI::Action const&) {
+    m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png").release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         LexicalPath path { m_monitor_widget->wallpaper() };
         Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     });

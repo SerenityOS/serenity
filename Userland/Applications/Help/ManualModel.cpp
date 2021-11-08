@@ -9,6 +9,7 @@
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibGUI/FilteringProxyModel.h>
 
@@ -25,9 +26,9 @@ static ManualSectionNode s_sections[] = {
 
 ManualModel::ManualModel()
 {
-    m_section_open_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"));
-    m_section_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png"));
-    m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"));
+    m_section_open_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png").release_value_but_fixme_should_propagate_errors());
+    m_section_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png").release_value_but_fixme_should_propagate_errors());
+    m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png").release_value_but_fixme_should_propagate_errors());
 }
 
 Optional<GUI::ModelIndex> ManualModel::index_from_path(const StringView& path) const
@@ -59,7 +60,7 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
     return page->path();
 }
 
-Result<StringView, OSError> ManualModel::page_view(const String& path) const
+ErrorOr<StringView> ManualModel::page_view(String const& path) const
 {
     if (path.is_empty())
         return StringView {};
@@ -71,12 +72,10 @@ Result<StringView, OSError> ManualModel::page_view(const String& path) const
             return StringView { mapped_file.value()->bytes() };
     }
 
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return file_or_error.error();
+    auto file = TRY(MappedFile::map(path));
 
-    StringView view { file_or_error.value()->bytes() };
-    m_mapped_files.set(path, file_or_error.release_value());
+    StringView view { file->bytes() };
+    m_mapped_files.set(path, move(file));
     return view;
 }
 

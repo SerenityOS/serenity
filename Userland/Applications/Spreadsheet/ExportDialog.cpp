@@ -22,6 +22,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
+#include <string.h>
 #include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
@@ -231,7 +232,7 @@ Result<void, String> CSVExportDialogPage::move_into(const String& target)
             Core::File::AddDuplicateFileMarker::No);
 
         if (result.is_error())
-            return String { result.error().error_code.string() };
+            return String::formatted("{}", static_cast<Error const&>(result.error()));
 
         return {};
     }

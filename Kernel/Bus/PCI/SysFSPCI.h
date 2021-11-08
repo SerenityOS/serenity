@@ -37,11 +37,11 @@ class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
     static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
 
-    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
+    virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~PCIDeviceAttributeSysFSComponent() {};
 
 protected:
-    KResultOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
+    ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
     NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
     PCI::RegisterOffset m_offset;

@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
+ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(proc);

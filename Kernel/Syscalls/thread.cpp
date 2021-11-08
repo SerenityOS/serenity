@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
@@ -101,7 +101,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
+ErrorOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
@@ -116,7 +116,7 @@ KResultOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
+ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
@@ -133,11 +133,11 @@ KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_va
 
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
-        KResult try_join_result(KSuccess);
+        ErrorOr<void> try_join_result;
         auto result = current_thread->block<Thread::JoinBlocker>({}, *thread, try_join_result, joinee_exit_value);
         if (result == Thread::BlockResult::NotBlocked) {
             if (try_join_result.is_error())
-                return try_join_result.error();
+                return try_join_result.release_error();
             break;
         }
         if (result == Thread::BlockResult::InterruptedByDeath)
@@ -148,10 +148,10 @@ KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_va
     if (exit_value)
         TRY(copy_to_user(exit_value, &joinee_exit_value));
 
-    return KSuccess;
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
+ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
@@ -169,7 +169,7 @@ KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
+ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -188,7 +188,7 @@ KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
+ErrorOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
@@ -205,16 +205,17 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
     if (thread_name.is_null()) {
         char null_terminator = '\0';
         TRY(copy_to_user(buffer, &null_terminator, sizeof(null_terminator)));
-        return KSuccess;
+        return 0;
     }
 
     if (thread_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
-    return copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1);
+    TRY(copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$gettid()
+ErrorOr<FlatPtr> Process::sys$gettid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_PROMISE(stdio);

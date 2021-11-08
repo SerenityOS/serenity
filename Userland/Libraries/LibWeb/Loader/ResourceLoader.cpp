@@ -177,9 +177,9 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         auto file_result = Core::File::open(url.path(), Core::OpenMode::ReadOnly);
         if (file_result.is_error()) {
             auto& error = file_result.error();
-            log_failure(request, error.string());
+            log_failure(request, error);
             if (error_callback)
-                error_callback(error.string(), error.error());
+                error_callback(String::formatted("{}", error), error.code());
             return;
         }
 

@@ -37,9 +37,9 @@ public:
     virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
     // ^BlockDevice
-    virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const OpenFileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
@@ -51,7 +51,7 @@ public:
     virtual CommandSet command_set() const = 0;
 
     // ^File
-    virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
 
 protected:
     StorageDevice(int, int, size_t, u64, NonnullOwnPtr<KString>);

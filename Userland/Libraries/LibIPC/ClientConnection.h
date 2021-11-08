@@ -30,7 +30,10 @@ public:
         , m_client_id(client_id)
     {
         VERIFY(this->socket().is_connected());
-        this->socket().on_ready_to_read = [this] { this->drain_messages_from_peer(); };
+        this->socket().on_ready_to_read = [this] {
+            // FIXME: Do something about errors.
+            (void)this->drain_messages_from_peer();
+        };
     }
 
     virtual ~ClientConnection() override
@@ -46,6 +49,12 @@ public:
     void did_misbehave(const char* message)
     {
         dbgln("{} (id={}) misbehaved ({}), disconnecting.", *this, m_client_id, message);
+        this->shutdown();
+    }
+
+    void shutdown_with_error(Error const& error)
+    {
+        dbgln("{} (id={}) had error ({}), disconnecting.", *this, m_client_id, error);
         this->shutdown();
     }
 

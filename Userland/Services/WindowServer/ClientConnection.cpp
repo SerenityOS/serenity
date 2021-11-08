@@ -635,18 +635,21 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         window.swap_backing_stores();
     } else {
         // FIXME: Plumb scale factor here eventually.
-        Core::AnonymousBuffer buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
-        if (!buffer.is_valid()) {
+        auto buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
+        if (buffer_or_error.is_error()) {
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
         }
-        auto backing_store = Gfx::Bitmap::try_create_with_anonymous_buffer(
+        auto backing_store_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
-            move(buffer),
+            buffer_or_error.release_value(),
             size,
             1,
             {});
-        window.set_backing_store(move(backing_store), serial);
+        if (backing_store_or_error.is_error()) {
+            did_misbehave("");
+        }
+        window.set_backing_store(backing_store_or_error.release_value(), serial);
     }
 
     if (flush_immediately)
@@ -971,15 +974,20 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
             return { Gfx::ShareableBitmap() };
         }
         if (rect.has_value()) {
-            auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
-            return bitmap->to_shareable_bitmap();
+            auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
+            if (bitmap_or_error.is_error()) {
+                dbgln("get_screen_bitmap: Failed to crop screenshot: {}", bitmap_or_error.error());
+                return { Gfx::ShareableBitmap() };
+            }
+            return bitmap_or_error.release_value()->to_shareable_bitmap();
         }
         auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen);
         return bitmap.to_shareable_bitmap();
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
-    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1)) {
+    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
@@ -1019,11 +1027,16 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
     if (intersecting_with_screens == 1) {
         auto& screen = Screen::closest_to_rect(rect);
         auto crop_rect = rect.translated(-screen.rect().location()) * screen_scale_factor;
-        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
-        return bitmap->to_shareable_bitmap();
+        auto bitmap_or_error = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(crop_rect);
+        if (bitmap_or_error.is_error()) {
+            dbgln("get_screen_bitmap_around_cursor: Failed to crop screenshot: {}", bitmap_or_error.error());
+            return { {} };
+        }
+        return bitmap_or_error.release_value()->to_shareable_bitmap();
     }
 
-    if (auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1)) {
+    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
+        auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
         Gfx::Painter painter(*bitmap);
         auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();

@@ -3583,24 +3583,24 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     return { resolve_slices(shell, shell->expand_tilde(builder.to_string()), m_slices) };
 }
 
-Result<NonnullRefPtr<Rewiring>, String> CloseRedirection::apply() const
+ErrorOr<NonnullRefPtr<Rewiring>> CloseRedirection::apply() const
 {
-    return adopt_ref(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseNew));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseNew));
 }
 
 CloseRedirection::~CloseRedirection()
 {
 }
 
-Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
+ErrorOr<NonnullRefPtr<Rewiring>> PathRedirection::apply() const
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<NonnullRefPtr<Rewiring>, String> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, String const& path) -> ErrorOr<NonnullRefPtr<Rewiring>> {
         if (fd < 0) {
-            String error = strerror(errno);
+            auto error = Error::from_errno(errno);
             dbgln("open() failed for '{}' with {}", path, error);
             return error;
         }
-        return adopt_ref(*new Rewiring(fd, my_fd, Rewiring::Close::Old));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Rewiring(fd, my_fd, Rewiring::Close::Old));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:

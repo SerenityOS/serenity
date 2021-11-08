@@ -72,7 +72,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
 
     // Draw the background, if necessary.
     if (viewport_changed() || paint_area != m_background->height()) {
-        m_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(m_roll_width, paint_area));
+        m_background = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(m_roll_width, paint_area)).release_value_but_fixme_should_propagate_errors();
         Gfx::Painter background_painter(*m_background);
 
         background_painter.translate(frame_thickness(), frame_thickness());

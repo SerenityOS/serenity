@@ -16,7 +16,7 @@ bool g_profiling_all_threads;
 PerformanceEventBuffer* g_global_perf_events;
 u64 g_profiling_event_mask;
 
-KResultOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
+ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
@@ -66,7 +66,7 @@ KResultOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
+ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
@@ -96,7 +96,7 @@ KResultOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
+ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;

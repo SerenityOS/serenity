@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
+ErrorOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
@@ -21,10 +21,11 @@ KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t 
     auto& tty_name = description->tty()->tty_name();
     if (size < tty_name.length() + 1)
         return ERANGE;
-    return copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1);
+    TRY(copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1));
+    return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
+ErrorOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
@@ -35,7 +36,8 @@ KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t 
     auto& pts_name = master_pty->pts_name();
     if (size < pts_name.length() + 1)
         return ERANGE;
-    return copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1);
+    TRY(copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1));
+    return 0;
 }
 
 }

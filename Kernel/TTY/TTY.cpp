@@ -41,7 +41,7 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
-KResultOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current().pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
@@ -80,7 +80,7 @@ KResultOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffe
     return result;
 }
 
-KResultOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
@@ -88,7 +88,7 @@ KResultOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer
     }
 
     constexpr size_t num_chars = 256;
-    return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> KResultOr<size_t> {
+    return buffer.read_buffered<num_chars>(size, [&](ReadonlyBytes bytes) -> ErrorOr<size_t> {
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
         for (const auto& byte : bytes) {
@@ -378,9 +378,9 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-KResult TTY::set_termios(const termios& t)
+ErrorOr<void> TTY::set_termios(const termios& t)
 {
-    KResult rc = KSuccess;
+    ErrorOr<void> rc;
     m_termios = t;
 
     dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
@@ -472,7 +472,7 @@ KResult TTY::set_termios(const termios& t)
     return rc;
 }
 
-KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = Process::current();
@@ -513,12 +513,12 @@ KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
         if (process) {
             if (auto parent = Process::from_pid(process->ppid())) {
                 m_original_process_parent = *parent;
-                return KSuccess;
+                return {};
             }
         }
 
         m_original_process_parent = nullptr;
-        return KSuccess;
+        return {};
     }
     case TCGETS: {
         user_termios = static_ptr_cast<termios*>(arg);
@@ -543,7 +543,7 @@ KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
         } else if (operation != TCOFLUSH) {
             return EINVAL;
         }
-        return KSuccess;
+        return {};
     }
     case TIOCGWINSZ:
         user_winsize = static_ptr_cast<winsize*>(arg);
@@ -558,25 +558,25 @@ KResult TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
         winsize ws;
         TRY(copy_from_user(&ws, user_winsize));
         if (ws.ws_col == m_columns && ws.ws_row == m_rows)
-            return KSuccess;
+            return {};
         m_rows = ws.ws_row;
         m_columns = ws.ws_col;
         generate_signal(SIGWINCH);
-        return KSuccess;
+        return {};
     }
     case TIOCSCTTY:
         current_process.set_tty(this);
-        return KSuccess;
+        return {};
     case TIOCSTI:
         return EIO;
     case TIOCNOTTY:
         current_process.set_tty(nullptr);
-        return KSuccess;
+        return {};
     }
     return EINVAL;
 }
 
-KResultOr<NonnullOwnPtr<KString>> TTY::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> TTY::pseudo_path(const OpenFileDescription&) const
 {
     return tty_name().try_clone();
 }

@@ -24,7 +24,7 @@ WindowActions::WindowActions(GUI::Window& window)
     VERIFY(!s_the);
     s_the = this;
     m_create_new_tab_action = GUI::Action::create(
-        "&New Tab", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"), [this](auto&) {
+        "&New Tab", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             if (on_create_new_tab)
                 on_create_new_tab();
         },

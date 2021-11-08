@@ -26,8 +26,8 @@ public:
 class OpenFileDescription : public RefCounted<OpenFileDescription> {
     MAKE_SLAB_ALLOCATED(OpenFileDescription)
 public:
-    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
-    static KResultOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
     ~OpenFileDescription();
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
@@ -44,28 +44,28 @@ public:
         set_writable(options & O_WRONLY);
     }
 
-    KResult close();
+    ErrorOr<void> close();
 
-    KResultOr<off_t> seek(off_t, int whence);
-    KResultOr<size_t> read(UserOrKernelBuffer&, size_t);
-    KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
-    KResult stat(::stat&);
+    ErrorOr<off_t> seek(off_t, int whence);
+    ErrorOr<size_t> read(UserOrKernelBuffer&, size_t);
+    ErrorOr<size_t> write(const UserOrKernelBuffer& data, size_t);
+    ErrorOr<void> stat(::stat&);
 
     // NOTE: These ignore the current offset of this file description.
-    KResultOr<size_t> read(UserOrKernelBuffer&, u64 offset, size_t);
-    KResultOr<size_t> write(u64 offset, UserOrKernelBuffer const&, size_t);
+    ErrorOr<size_t> read(UserOrKernelBuffer&, u64 offset, size_t);
+    ErrorOr<size_t> write(u64 offset, UserOrKernelBuffer const&, size_t);
 
-    KResult chmod(mode_t);
+    ErrorOr<void> chmod(mode_t);
 
     bool can_read() const;
     bool can_write() const;
 
-    KResultOr<size_t> get_dir_entries(UserOrKernelBuffer& buffer, size_t);
+    ErrorOr<size_t> get_dir_entries(UserOrKernelBuffer& buffer, size_t);
 
-    KResultOr<NonnullOwnPtr<KBuffer>> read_entire_file();
+    ErrorOr<NonnullOwnPtr<KBuffer>> read_entire_file();
 
-    KResultOr<NonnullOwnPtr<KString>> original_absolute_path() const;
-    KResultOr<NonnullOwnPtr<KString>> pseudo_path() const;
+    ErrorOr<NonnullOwnPtr<KString>> original_absolute_path() const;
+    ErrorOr<NonnullOwnPtr<KString>> pseudo_path() const;
 
     bool is_direct() const { return m_direct; }
 
@@ -97,7 +97,7 @@ public:
     Custody* custody() { return m_custody.ptr(); }
     const Custody* custody() const { return m_custody.ptr(); }
 
-    KResultOr<Memory::Region*> mmap(Process&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
+    ErrorOr<Memory::Region*> mmap(Process&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
@@ -121,23 +121,23 @@ public:
     void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
     void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
 
-    KResult truncate(u64);
-    KResult sync();
+    ErrorOr<void> truncate(u64);
+    ErrorOr<void> sync();
 
     off_t offset() const { return m_current_offset; }
 
-    KResult chown(UserID, GroupID);
+    ErrorOr<void> chown(UserID, GroupID);
 
     FileBlockerSet& blocker_set();
 
-    KResult apply_flock(Process const&, Userspace<flock const*>);
-    KResult get_flock(Userspace<flock*>) const;
+    ErrorOr<void> apply_flock(Process const&, Userspace<flock const*>);
+    ErrorOr<void> get_flock(Userspace<flock*>) const;
 
 private:
     friend class VirtualFileSystem;
     explicit OpenFileDescription(File&);
 
-    KResult attach();
+    ErrorOr<void> attach();
 
     void evaluate_block_conditions()
     {

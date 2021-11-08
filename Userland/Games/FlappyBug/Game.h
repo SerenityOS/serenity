@@ -43,8 +43,8 @@ private:
         const float x { 50 };
         const float radius { 16 };
         const float starting_y { 200 };
-        const RefPtr<Gfx::Bitmap> falling_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/falling.png") };
-        const RefPtr<Gfx::Bitmap> flapping_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/flapping.png") };
+        NonnullRefPtr<Gfx::Bitmap> falling_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/falling.png").release_value_but_fixme_should_propagate_errors() };
+        NonnullRefPtr<Gfx::Bitmap> flapping_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/flapping.png").release_value_but_fixme_should_propagate_errors() };
         float y {};
         float velocity {};
 
@@ -106,10 +106,10 @@ private:
     };
 
     struct Cloud {
-        const Vector<RefPtr<Gfx::Bitmap>> cloud_bitmaps {
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png"),
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png"),
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png"),
+        Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
+            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png").release_value_but_fixme_should_propagate_errors(),
+            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png").release_value_but_fixme_should_propagate_errors(),
+            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png").release_value_but_fixme_should_propagate_errors(),
         };
         float x {};
         float y {};
@@ -147,7 +147,7 @@ private:
     float m_last_score {};
     float m_difficulty {};
     float m_restart_cooldown {};
-    const RefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/background.png") };
+    NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/background.png").release_value_but_fixme_should_propagate_errors() };
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 };

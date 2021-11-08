@@ -285,7 +285,7 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
         auto fraction = String::formatted("{}000000000", *fraction_part);
         // b. Let nanoseconds be the String value equal to the substring of fraction consisting of the code units with indices 0 (inclusive) through 9 (exclusive).
         // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-        nanoseconds = MUST(Value(js_string(vm, fraction_part->substring_view(0, 9))).to_integer_or_infinity(global_object));
+        nanoseconds = MUST(Value(js_string(vm, fraction.substring_view(0, 9))).to_integer_or_infinity(global_object));
     }
     // 11. Else,
     else {
@@ -336,7 +336,7 @@ String format_time_zone_offset_string(double offset_nanoseconds)
         // a. Let fraction be nanoseconds, formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
-        builder.appendff(":{:02}.{:9}", seconds, nanoseconds);
+        builder.appendff(":{:02}.{}", seconds, String::formatted("{:09}", nanoseconds).trim("0"sv, TrimMode::Right));
     }
     // 12. Else if seconds ≠ 0, then
     else if (seconds != 0) {
@@ -644,6 +644,27 @@ ThrowCompletionOr<MarkedValueList> get_possible_instants_for(GlobalObject& globa
 
     // 7. Return list.
     return { move(list) };
+}
+
+// 11.6.18 TimeZoneEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
+ThrowCompletionOr<bool> time_zone_equals(GlobalObject& global_object, Object& one, Object& two)
+{
+    // 1. If one and two are the same Object value, return true.
+    if (&one == &two)
+        return true;
+
+    // 2. Let timeZoneOne be ? ToString(one).
+    auto time_zone_one = TRY(Value(&one).to_string(global_object));
+
+    // 3. Let timeZoneTwo be ? ToString(two).
+    auto time_zone_two = TRY(Value(&two).to_string(global_object));
+
+    // 4. If timeZoneOne is timeZoneTwo, return true.
+    if (time_zone_one == time_zone_two)
+        return true;
+
+    // 5. Return false.
+    return false;
 }
 
 }
