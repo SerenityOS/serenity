@@ -573,6 +573,8 @@ struct __decay<T[N]> {
 template<typename T>
 using Decay = typename __decay<T>::type;
 
+template<typename T, typename U>
+inline constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
