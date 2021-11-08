@@ -704,10 +704,13 @@ bool IntegerImpl::can_cast(Value const& other_value)
 int IntegerImpl::compare(Value const& other) const
 {
     auto casted = other.to_int();
-    if (!casted.has_value()) {
+    if (!casted.has_value())
         return 1;
-    }
-    return value() - casted.value();
+
+    if (value() == casted.value())
+        return 0;
+
+    return value() < casted.value() ? -1 : 1;
 }
 
 u32 IntegerImpl::hash() const
