@@ -7,7 +7,7 @@ Make sure you have all the dependencies installed:
 ### Debian / Ubuntu
 
 ```console
-sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync genext2fs unzip texinfo
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-gui qemu-system-x86 qemu-utils ccache rsync unzip texinfo
 ```
 
 #### GCC 10
@@ -17,8 +17,6 @@ On Ubuntu gcc-10 is available in the repositories of 20.04 (Focal) and later - a
 ```console
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```
-
-On Debian your system must be on the _testing_ or _unstable_ branch as gcc 10 is not available on _stable_ or in the backports. If you want to switch from _stable_ to _testing_, see the instructions on the Debian website on [switching to testing](https://wiki.debian.org/DebianTesting). Alternatively, if you want to stay on _stable_, you can build SerenityOS in a Debian testing or Ubuntu [Docker](https://www.docker.com/) container.
 
 Now on Ubuntu or Debian you can install gcc-10 with apt like this:
 
