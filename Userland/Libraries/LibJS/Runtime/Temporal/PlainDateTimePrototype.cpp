@@ -58,6 +58,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.eraYear, era_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.withPlainTime, with_plain_time, 1, attr);
     define_native_function(vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
@@ -348,6 +349,58 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::era_year_getter)
 
     // 4. Return ? CalendarEraYear(calendar, plainDateTime).
     return TRY(calendar_era_year(global_object, calendar, *plain_date_time));
+}
+
+// 5.3.22 Temporal.PlainDateTime.prototype.with ( temporalDateTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
+{
+    auto temporal_date_time_like = vm.argument(0);
+
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = TRY(typed_this_object(global_object));
+
+    // 3. If Type(temporalDateTimeLike) is not Object, then
+    if (!temporal_date_time_like.is_object()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_date_time_like.to_string_without_side_effects());
+    }
+
+    // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateTimeLike).
+    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_date_time_like.as_object()));
+
+    // 5. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
+
+    // 7. Let partialDateTime be ? PreparePartialTemporalFields(temporalDateTimeLike, fieldNames).
+    auto* partial_date_time = TRY(prepare_partial_temporal_fields(global_object, temporal_date_time_like.as_object(), field_names));
+
+    // 8. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 9. Let fields be ? PrepareTemporalFields(dateTime, fieldNames, «»).
+    auto* fields = TRY(prepare_temporal_fields(global_object, *date_time, field_names, {}));
+
+    // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialDateTime).
+    fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_date_time));
+
+    // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+
+    // 12. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
+    auto result = TRY(interpret_temporal_date_time_fields(global_object, calendar, *fields, *options));
+
+    // 13. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    VERIFY(is_valid_iso_date(result.year, result.month, result.day));
+
+    // 14. Assert: ! IsValidTime(result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]) is true.
+    VERIFY(is_valid_time(result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond));
+
+    // 15. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
+    return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar));
 }
 
 // 5.3.23 Temporal.PlainDateTime.prototype.withPlainTime ( [ plainTimeLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaintime
