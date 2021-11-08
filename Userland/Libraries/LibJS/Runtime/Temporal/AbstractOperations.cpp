@@ -1234,7 +1234,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             }
             // ii. If property is in the Property column of Table 13, then
             // NOTE: The other properties in the table are automatically handled as their default value is undefined
-            if (property.is_one_of("hour", "minute", "second", "millisecond", "microsecond", "nanosecond")) {
+            if (property.is_one_of("hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
                 // 1. Set value to the corresponding Default value of the same row.
                 value = Value(0);
             }
@@ -1244,13 +1244,12 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
             // i. If property is in the Property column of Table 13 and there is a Conversion value in the same row, then
             // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
             // 2. Set value to ? Conversion(value).
-            if (property.is_one_of("year", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", "eraYear")) {
+            if (property.is_one_of("year"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv, "eraYear"sv))
                 value = Value(TRY(to_integer_throw_on_infinity(global_object, value, ErrorType::TemporalPropertyMustBeFinite)));
-            } else if (property.is_one_of("month", "day")) {
+            else if (property.is_one_of("month"sv, "day"sv))
                 value = Value(TRY(to_positive_integer(global_object, value)));
-            } else if (property.is_one_of("monthCode", "offset", "era")) {
+            else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
                 value = TRY(value.to_primitive_string(global_object));
-            }
         }
 
         // d. Perform ! CreateDataPropertyOrThrow(result, property, value).
