@@ -33,6 +33,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -79,6 +80,49 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
 
     // 4. Return 𝔽(? CalendarDay(calendar, monthDay)).
     return Value(TRY(calendar_day(global_object, calendar, *month_day)));
+}
+
+// 10.3.6 Temporal.PlainMonthDay.prototype.with ( temporalMonthDayLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.with
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::with)
+{
+    auto temporal_month_day_like = vm.argument(0);
+
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = TRY(typed_this_object(global_object));
+
+    // 3. If Type(temporalMonthDayLike) is not Object, then
+    if (!temporal_month_day_like.is_object()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, temporal_month_day_like.to_string_without_side_effects());
+    }
+
+    // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalMonthDayLike).
+    TRY(reject_object_with_calendar_or_time_zone(global_object, temporal_month_day_like.as_object()));
+
+    // 5. Let calendar be monthDay.[[Calendar]].
+    auto& calendar = month_day->calendar();
+
+    // 6. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv }));
+
+    // 7. Let partialMonthDay be ? PreparePartialTemporalFields(temporalMonthDayLike, fieldNames).
+    auto* partial_month_day = TRY(prepare_partial_temporal_fields(global_object, temporal_month_day_like.as_object(), field_names));
+
+    // 8. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 9. Let fields be ? PrepareTemporalFields(monthDay, fieldNames, «»).
+    auto* fields = TRY(prepare_temporal_fields(global_object, *month_day, field_names, {}));
+
+    // 10. Set fields to ? CalendarMergeFields(calendar, fields, partialMonthDay).
+    fields = TRY(calendar_merge_fields(global_object, calendar, *fields, *partial_month_day));
+
+    // 11. Set fields to ? PrepareTemporalFields(fields, fieldNames, «»).
+    fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
+
+    // 12. Return ? MonthDayFromFields(calendar, fields, options).
+    return TRY(month_day_from_fields(global_object, calendar, *fields, options));
 }
 
 // 10.3.7 Temporal.PlainMonthDay.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.equals
