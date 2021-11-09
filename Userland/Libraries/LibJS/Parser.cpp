@@ -502,6 +502,8 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
 NonnullRefPtr<Declaration> Parser::parse_declaration()
 {
     auto rule_start = push_start();
+    if (m_state.current_token.type() == TokenType::Async && next_token().type() == TokenType::Function)
+        return parse_function_node<FunctionDeclaration>();
     switch (m_state.current_token.type()) {
     case TokenType::Class:
         return parse_class_declaration();
@@ -572,7 +574,7 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
                 return result.release_nonnull();
         }
         if (match_expression()) {
-            if (match(TokenType::Function) || match(TokenType::Class))
+            if (match(TokenType::Function) || (match(TokenType::Async) && next_token().type() == TokenType::Function) || match(TokenType::Class))
                 syntax_error(String::formatted("{} declaration not allowed in single-statement context", m_state.current_token.name()));
             if (match(TokenType::Let) && next_token().type() == TokenType::BracketOpen)
                 syntax_error(String::formatted("let followed by [ is not allowed in single-statement context"));
@@ -748,7 +750,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         return {};
     }
 
-    if (m_state.current_token.value() == "await"sv && m_program_type == Program::Type::Module) {
+    if (m_state.current_token.value() == "await"sv && (m_program_type == Program::Type::Module || m_state.in_async_function_context)) {
         return {};
     }
 
@@ -792,6 +794,8 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         m_state.current_scope_pusher->add_declaration(function_declaration);
         if (function_declaration->kind() == FunctionKind::Generator)
             syntax_error("Generator functions cannot be defined in labelled statements");
+        if (function_declaration->kind() == FunctionKind::Async)
+            syntax_error("Async functions cannot be defined in labelled statements");
 
         labelled_statement = move(function_declaration);
     } else {
@@ -899,11 +903,17 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         bool is_static = false;
         bool is_constructor = false;
         bool is_generator = false;
+        bool is_async = false;
         auto method_kind = ClassMethod::Kind::Method;
 
         if (match(TokenType::Semicolon)) {
             consume();
             continue;
+        }
+
+        if (match(TokenType::Async)) {
+            consume();
+            is_async = true;
         }
 
         if (match(TokenType::Asterisk)) {
@@ -913,10 +923,14 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
         StringView name;
         if (match_property_key() || match(TokenType::PrivateIdentifier)) {
-            if (!is_generator && m_state.current_token.original_value() == "static"sv) {
+            if (!is_generator && !is_async && m_state.current_token.original_value() == "static"sv) {
                 if (match(TokenType::Identifier)) {
                     consume();
                     is_static = true;
+                    if (match(TokenType::Async)) {
+                        consume();
+                        is_async = true;
+                    }
                     if (match(TokenType::Asterisk)) {
                         consume();
                         is_generator = true;
@@ -995,12 +1009,17 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
                 if (is_static && name == "prototype"sv)
                     syntax_error("Classes may not have a static property named 'prototype'");
-            } else if ((match(TokenType::ParenOpen) || match(TokenType::Equals)) && (is_static || method_kind != ClassMethod::Kind::Method)) {
+            } else if ((match(TokenType::ParenOpen) || match(TokenType::Equals)) && (is_static || is_async || method_kind != ClassMethod::Kind::Method)) {
                 switch (method_kind) {
                 case ClassMethod::Kind::Method:
-                    VERIFY(is_static);
-                    name = "static";
-                    is_static = false;
+                    if (is_async) {
+                        name = "async";
+                        is_async = false;
+                    } else {
+                        VERIFY(is_static);
+                        name = "static";
+                        is_static = false;
+                    }
                     break;
                 case ClassMethod::Kind::Getter:
                     name = "get";
@@ -1022,6 +1041,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
                 TemporaryChange function_context_rollback(m_state.in_function_context, false);
                 TemporaryChange generator_function_context_rollback(m_state.in_generator_function_context, false);
+                TemporaryChange async_function_context_rollback(m_state.in_async_function_context, false);
                 TemporaryChange in_class_field_initializer_rollback(m_state.in_class_field_initializer, true);
 
                 ScopePusher static_init_scope = ScopePusher::static_init_block_scope(*this, *static_init_block);
@@ -1042,6 +1062,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     syntax_error("Classes may not have more than one constructor");
                 if (is_generator)
                     syntax_error("Class constructor may not be a generator");
+                if (is_async)
+                    syntax_error("Class constructor may not be async");
 
                 is_constructor = true;
             }
@@ -1057,6 +1079,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
             if (is_generator)
                 parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
+            if (is_async)
+                parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             if (is_constructor) {
                 constructor = move(function);
@@ -1065,7 +1089,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             } else {
                 syntax_error("No key for class method");
             }
-        } else if (is_generator) {
+        } else if (is_generator || is_async) {
             expected("ParenOpen");
             consume();
         } else if (property_key.is_null()) {
@@ -1156,6 +1180,8 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             auto& function = static_cast<FunctionExpression&>(*expression);
             if (function.kind() == FunctionKind::Generator && function.name() == "yield"sv)
                 syntax_error("function is not allowed to be called 'yield' in this context", function.source_range().start);
+            if (function.kind() == FunctionKind::Async && function.name() == "await"sv)
+                syntax_error("function is not allowed to be called 'await' in this context", function.source_range().start);
         }
         return { move(expression) };
     }
@@ -1170,7 +1196,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             syntax_error("'super' keyword unexpected here");
         return { create_ast_node<SuperExpression>({ m_state.current_token.filename(), rule_start.position(), position() }) };
     case TokenType::EscapedKeyword:
-        if (m_state.strict_mode || (m_state.current_token.value() != "let"sv && (m_state.in_generator_function_context || m_state.current_token.value() != "yield"sv)))
+        if (m_state.strict_mode || (m_state.current_token.value() != "let"sv && (m_state.in_generator_function_context || m_state.current_token.value() != "yield"sv) && (m_state.in_async_function_context || m_state.current_token.value() != "await"sv)))
             syntax_error("Keyword must not contain escaped characters");
         [[fallthrough]];
     case TokenType::Identifier: {
@@ -1201,6 +1227,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         return { create_ast_node<NullLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }) };
     case TokenType::CurlyOpen:
         return { parse_object_expression() };
+    case TokenType::Async:
+        if (next_token().type() != TokenType::Function)
+            goto read_as_identifier;
+        [[fallthrough]];
     case TokenType::Function:
         return { parse_function_node<FunctionExpression>() };
     case TokenType::BracketOpen:
@@ -1409,10 +1439,14 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             consume();
             property_type = ObjectProperty::Type::KeyValue;
             property_name = parse_property_key();
-            function_kind = FunctionKind ::Generator;
+            function_kind = FunctionKind::Generator;
         } else if (match_identifier()) {
             auto identifier = consume();
-            if (identifier.original_value() == "get"sv && match_property_key()) {
+            if (identifier.original_value() == "async" && match_property_key()) {
+                property_type = ObjectProperty::Type::KeyValue;
+                property_name = parse_property_key();
+                function_kind = FunctionKind::Async;
+            } else if (identifier.original_value() == "get"sv && match_property_key()) {
                 property_type = ObjectProperty::Type::Getter;
                 property_name = parse_property_key();
             } else if (identifier.original_value() == "set"sv && match_property_key()) {
@@ -1451,6 +1485,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
             if (function_kind == FunctionKind::Generator)
                 parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
+            if (function_kind == FunctionKind::Async)
+                parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
@@ -1892,6 +1928,7 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
     parser.m_state.in_function_context = m_state.in_function_context;
     parser.m_state.in_formal_parameter_context = m_state.in_formal_parameter_context;
     parser.m_state.in_generator_function_context = m_state.in_generator_function_context;
+    parser.m_state.in_async_function_context = m_state.in_async_function_context;
     parser.m_state.in_arrow_function_context = m_state.in_arrow_function_context;
     parser.m_state.in_break_context = m_state.in_break_context;
     parser.m_state.in_continue_context = m_state.in_continue_context;
@@ -2116,6 +2153,9 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
                     if (function_kind == FunctionKind::Generator && parameter_name == "yield"sv)
                         syntax_error("Parameter name 'yield' not allowed in this context");
 
+                    if (function_kind == FunctionKind::Async && parameter_name == "await"sv)
+                        syntax_error("Parameter name 'await' not allowed in this context");
+
                     for (auto& previous_name : parameter_names) {
                         if (previous_name == parameter_name) {
                             syntax_error(String::formatted("Duplicate parameter '{}' not allowed in strict mode", parameter_name));
@@ -2128,6 +2168,9 @@ NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclarati
                     binding->for_each_bound_name([&](auto& bound_name) {
                         if (function_kind == FunctionKind::Generator && bound_name == "yield"sv)
                             syntax_error("Parameter name 'yield' not allowed in this context");
+
+                        if (function_kind == FunctionKind::Async && bound_name == "await"sv)
+                            syntax_error("Parameter name 'await' not allowed in this context");
 
                         for (auto& previous_name : parameter_names) {
                             if (previous_name == bound_name) {
@@ -2173,16 +2216,27 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange might_need_arguments_object_rollback(m_state.function_might_need_arguments_object, false);
 
     constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
-    auto function_kind = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0 ? FunctionKind::Generator : FunctionKind::Regular;
+    FunctionKind function_kind;
+    if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0 && (parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
+        TODO();
+    else if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0)
+        function_kind = FunctionKind::Generator;
+    else if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
+        function_kind = FunctionKind::Async;
+    else
+        function_kind = FunctionKind::Regular;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
+        if (function_kind == FunctionKind::Regular && match(TokenType::Async) && !next_token().trivia_contains_line_terminator()) {
+            function_kind = FunctionKind::Async;
+            consume(TokenType::Async);
+            parse_options = parse_options | FunctionNodeParseOptions::IsAsyncFunction;
+        }
         consume(TokenType::Function);
-        if (function_kind == FunctionKind::Regular) {
-            function_kind = match(TokenType::Asterisk) ? FunctionKind::Generator : FunctionKind::Regular;
-            if (function_kind == FunctionKind::Generator) {
-                consume(TokenType::Asterisk);
-                parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
-            }
+        if (function_kind == FunctionKind::Regular && match(TokenType::Asterisk)) {
+            function_kind = FunctionKind::Generator;
+            consume(TokenType::Asterisk);
+            parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
         }
 
         if (FunctionNodeType::must_have_name() || match_identifier())
@@ -2193,6 +2247,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         check_identifier_name_for_assignment_validity(name);
     }
     TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator);
+    TemporaryChange async_change(m_state.in_async_function_context, function_kind == FunctionKind::Async);
 
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
@@ -2560,6 +2615,13 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 consume().value());
+        } else if (!m_state.in_async_function_context && match(TokenType::Async)) {
+            if (m_program_type == Program::Type::Module)
+                syntax_error("Identifier must not be a reserved word in modules ('async')");
+
+            target = create_ast_node<Identifier>(
+                { m_state.current_token.filename(), rule_start.position(), position() },
+                consume().value());
         }
 
         if (target.has<Empty>()) {
@@ -2913,7 +2975,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
     if (match(TokenType::ParenOpen)) {
         should_expect_parameter = true;
         consume();
-        if (match_identifier_name() && (!match(TokenType::Yield) || !m_state.in_generator_function_context))
+        if (match_identifier_name() && (!match(TokenType::Yield) || !m_state.in_generator_function_context) && (!match(TokenType::Async) || !m_state.in_async_function_context))
             parameter = consume().value();
         else
             pattern_parameter = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::No);
@@ -2978,6 +3040,8 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
         auto& function_declaration = static_cast<FunctionDeclaration const&>(*declaration);
         if (function_declaration.kind() == FunctionKind::Generator)
             syntax_error("Generator functions can only be declared in top-level or within a block");
+        if (function_declaration.kind() == FunctionKind::Async)
+            syntax_error("Async functions can only be declared in top-level or within a block");
         block->append(move(declaration));
         return block;
     };
@@ -3162,6 +3226,7 @@ bool Parser::match_expression() const
         || type == TokenType::BracketOpen
         || type == TokenType::ParenOpen
         || type == TokenType::Function
+        || type == TokenType::Async
         || type == TokenType::This
         || type == TokenType::Super
         || type == TokenType::RegexLiteral
@@ -3280,7 +3345,8 @@ bool Parser::match_declaration() const
     return type == TokenType::Function
         || type == TokenType::Class
         || type == TokenType::Const
-        || type == TokenType::Let;
+        || type == TokenType::Let
+        || (type == TokenType::Async && next_token().type() == TokenType::Function);
 }
 
 Token Parser::next_token() const
@@ -3327,13 +3393,14 @@ bool Parser::match_identifier() const
         if (m_state.current_token.value() == "yield"sv)
             return !m_state.strict_mode && !m_state.in_generator_function_context;
         if (m_state.current_token.value() == "await"sv)
-            return m_program_type != Program::Type::Module;
+            return m_program_type != Program::Type::Module && !m_state.in_async_function_context;
         return true;
     }
 
     return m_state.current_token.type() == TokenType::Identifier
+        || m_state.current_token.type() == TokenType::Async
         || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
-        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module)
+        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.in_async_function_context)
         || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
@@ -3414,6 +3481,15 @@ Token Parser::consume_identifier()
         return consume();
     }
 
+    if (match(TokenType::Await)) {
+        if (m_program_type == Program::Type::Module || m_state.in_async_function_context)
+            syntax_error("Identifier must not be a reserved word in modules ('await')");
+        return consume();
+    }
+
+    if (match(TokenType::Async))
+        return consume();
+
     expected("Identifier");
     return consume();
 }
@@ -3452,6 +3528,9 @@ Token Parser::consume_identifier_reference()
             syntax_error("'await' is not allowed as an identifier in module");
         return consume();
     }
+
+    if (match(TokenType::Async))
+        return consume();
 
     expected(Token::name(TokenType::Identifier));
     return consume();
@@ -3722,11 +3801,10 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             auto class_expression = parse_class_expression(false);
             local_name = class_expression->name();
             expression = move(class_expression);
-        } else if (match(TokenType::Function)) {
+        } else if (match(TokenType::Function) || (match(TokenType::Async) && next_token().type() == TokenType::Function)) {
             auto func_expr = parse_function_node<FunctionExpression>();
             local_name = func_expr->name();
             expression = move(func_expr);
-            // TODO: Allow async function
         } else if (match_expression()) {
             expression = parse_expression(2);
             consume_or_insert_semicolon();

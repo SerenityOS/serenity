@@ -15,11 +15,14 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -33,6 +36,9 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
         break;
     case FunctionKind::Generator:
         prototype = global_object.generator_function_prototype();
+        break;
+    case FunctionKind::Async:
+        prototype = global_object.async_function_prototype();
         break;
     }
     return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
@@ -95,6 +101,8 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
             set_prototype(global_object.generator_object_prototype());
+            break;
+        case FunctionKind::Async:
             break;
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -659,6 +667,84 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(global_object(), this_value));
 }
 
+// 27.7.5.1 AsyncFunctionStart ( promiseCapability, asyncFunctionBody ), https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
+void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& promise_capability)
+{
+    auto& vm = this->vm();
+
+    // 1. Let runningContext be the running execution context.
+    auto& running_context = vm.running_execution_context();
+
+    // 2. Let asyncContext be a copy of runningContext.
+    auto async_context = running_context.copy();
+
+    // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
+
+    // 4. Perform ! AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
+    async_block_start(promise_capability, async_context);
+}
+
+// 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
+void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promise_capability, ExecutionContext& async_context)
+{
+    auto& vm = this->vm();
+
+    // 1. Assert: promiseCapability is a PromiseCapability Record.
+
+    // 2. Let runningContext be the running execution context.
+    auto& running_context = vm.running_execution_context();
+
+    // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
+    auto* execution_steps = NativeFunction::create(global_object(), "", [async_body = m_ecmascript_code, &promise_capability](auto& vm, auto& global_object) -> ThrowCompletionOr<Value> {
+        // a. Let result be the result of evaluating asyncBody.
+        auto result = async_body->execute(vm.interpreter(), global_object);
+
+        // b. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+
+        // c. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+        vm.pop_execution_context();
+
+        // NOTE: Running the AST node should eventually return a completion.
+        // Until it does, we assume "return" and include the undefined fallback from the call site.
+        // d. If result.[[Type]] is normal, then
+        if (false) {
+            // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
+            MUST(call(global_object, promise_capability.resolve, js_undefined(), js_undefined()));
+        }
+        // e. Else if result.[[Type]] is return, then
+        else if (!vm.exception()) {
+            // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
+            MUST(call(global_object, promise_capability.resolve, js_undefined(), result.value_or(js_undefined())));
+        }
+        // f. Else,
+        else {
+            // i. Assert: result.[[Type]] is throw.
+
+            // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
+            auto reason = vm.exception()->value();
+            vm.clear_exception();
+            vm.stop_unwind();
+            MUST(call(global_object, promise_capability.reject, js_undefined(), reason));
+        }
+        // g. Return.
+        return js_undefined();
+    });
+
+    // 4. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
+    vm.push_execution_context(async_context, global_object());
+
+    // 5. Resume the suspended evaluation of asyncContext. Let result be the value returned by the resumed computation.
+    auto result = vm.call(*execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);
+
+    // 6. Assert: When we return here, asyncContext has already been removed from the execution context stack and runningContext is the currently running execution context.
+    VERIFY(&vm.running_execution_context() == &running_context);
+
+    // 7. Assert: result is a normal completion with a value of undefined. The possible sources of completion values are Await or, if the async function doesn't await anything, step 3.g above.
+    VERIFY(result.has_value() && result.value().is_undefined());
+
+    // 8. Return.
+}
+
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
 Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
@@ -666,6 +752,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (bytecode_interpreter) {
+        if (m_kind == FunctionKind::Async)
+            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Async function execution in Bytecode interpreter");
         // FIXME: pass something to evaluate default arguments with
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable.has_value()) {
@@ -690,8 +778,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         return normal_completion(TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame())));
     } else {
-        if (m_kind != FunctionKind::Regular)
-            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Non regular function execution in AST interpreter");
+        if (m_kind == FunctionKind::Generator)
+            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Generator function execution in AST interpreter");
         OwnPtr<Interpreter> local_interpreter;
         Interpreter* ast_interpreter = vm.interpreter_if_exists();
 
@@ -702,14 +790,36 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         VM::InterpreterExecutionScope scope(*ast_interpreter);
 
-        TRY(function_declaration_instantiation(ast_interpreter));
+        if (m_kind == FunctionKind::Regular) {
+            TRY(function_declaration_instantiation(ast_interpreter));
 
-        auto result = m_ecmascript_code->execute(*ast_interpreter, global_object());
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        // NOTE: Running the AST node should eventually return a completion.
-        // Until it does, we assume "return" and include the undefined fallback from the call site.
-        return { Completion::Type::Return, result.value_or(js_undefined()), {} };
+            auto result = m_ecmascript_code->execute(*ast_interpreter, global_object());
+            if (auto* exception = vm.exception())
+                return throw_completion(exception->value());
+            // NOTE: Running the AST node should eventually return a completion.
+            // Until it does, we assume "return" and include the undefined fallback from the call site.
+            return { Completion::Type::Return, result.value_or(js_undefined()), {} };
+        } else if (m_kind == FunctionKind::Async) {
+            // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+            auto promise_capability = MUST(new_promise_capability(global_object(), global_object().promise_constructor()));
+
+            // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
+            auto declaration_result = function_declaration_instantiation(ast_interpreter);
+
+            // 3. If declResult is not an abrupt completion, then
+            if (!declaration_result.is_throw_completion() || !declaration_result.throw_completion().is_abrupt()) {
+                // a. Perform ! AsyncFunctionStart(promiseCapability, FunctionBody).
+                async_function_start(promise_capability);
+            }
+            // 4. Else,
+            else {
+                // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
+                MUST(call(global_object(), promise_capability.reject, js_undefined(), declaration_result.throw_completion().value()));
+            }
+
+            // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+            return Completion { Completion::Type::Return, promise_capability.promise, {} };
+        }
     }
     VERIFY_NOT_REACHED();
 }
