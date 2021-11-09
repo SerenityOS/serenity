@@ -12,6 +12,7 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -75,10 +76,13 @@ int main(int argc, char** argv)
                 Archive::TarFileStream file_stream = tar_stream.file_contents();
 
                 const Archive::TarFileHeader& header = tar_stream.header();
+                String absolute_path = Core::File::absolute_path(header.filename());
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
                 case Archive::TarFileType::AlternateNormalFile: {
-                    int fd = open(String(header.filename()).characters(), O_CREAT | O_WRONLY, header.mode());
+                    Core::File::ensure_parent_directories(absolute_path);
+
+                    int fd = open(absolute_path.characters(), O_CREAT | O_WRONLY, header.mode());
                     if (fd < 0) {
                         perror("open");
                         return 1;
@@ -96,7 +100,9 @@ int main(int argc, char** argv)
                     break;
                 }
                 case Archive::TarFileType::Directory: {
-                    if (mkdir(String(header.filename()).characters(), header.mode())) {
+                    Core::File::ensure_parent_directories(absolute_path);
+
+                    if (mkdir(absolute_path.characters(), header.mode())) {
                         perror("mkdir");
                         return 1;
                     }
