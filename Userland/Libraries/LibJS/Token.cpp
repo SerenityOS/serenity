@@ -224,6 +224,7 @@ bool Token::is_identifier_name() const
     return m_type == TokenType::Identifier
         || m_type == TokenType::EscapedKeyword
         || m_type == TokenType::Await
+        || m_type == TokenType::Async
         || m_type == TokenType::BoolLiteral
         || m_type == TokenType::Break
         || m_type == TokenType::Case

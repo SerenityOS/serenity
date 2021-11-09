@@ -73,7 +73,7 @@ public:
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
     // Equivalent to absence of [[Construct]]
-    virtual bool has_constructor() const override { return !(m_is_arrow_function || m_kind == FunctionKind::Generator); }
+    virtual bool has_constructor() const override { return m_kind == FunctionKind::Regular && !m_is_arrow_function; }
 
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
@@ -86,6 +86,9 @@ private:
 
     void prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
+
+    void async_function_start(PromiseCapability const&);
+    void async_block_start(PromiseCapability const&, ExecutionContext&);
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 

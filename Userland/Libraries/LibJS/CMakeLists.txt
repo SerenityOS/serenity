@@ -38,6 +38,8 @@ set(SOURCES
     Runtime/ArrayIterator.cpp
     Runtime/ArrayIteratorPrototype.cpp
     Runtime/ArrayPrototype.cpp
+    Runtime/AsyncFunctionConstructor.cpp
+    Runtime/AsyncFunctionPrototype.cpp
     Runtime/AtomicsObject.cpp
     Runtime/BigInt.cpp
     Runtime/BigIntConstructor.cpp
