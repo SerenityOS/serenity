@@ -397,7 +397,7 @@ ThrowCompletionOr<TemporalDuration> difference_iso_date_time(GlobalObject& globa
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(date_largest_unit)));
 
     // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
-    auto* date_difference = TRY(calendar_date_until(global_object, calendar, *date1, *date2, *until_options));
+    auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
 
     // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result_ = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));

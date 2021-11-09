@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -512,6 +513,152 @@ ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject& glob
 
     // 5. Return smallestUnit.
     return smallest_unit;
+}
+
+// 13.21 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
+ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object, Object const& options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(options) is Object.
+
+    // 2. Let value be ? Get(options, "relativeTo").
+    auto value = TRY(options.get(vm.names.relativeTo));
+
+    // 3. If value is undefined, then
+    if (value.is_undefined()) {
+        // a. Return value.
+        return value;
+    }
+
+    // 4. Let offsetBehaviour be option.
+    auto offset_behavior = OffsetBehavior::Option;
+
+    // 5. Let matchBehaviour be match exactly.
+    auto match_behavior = MatchBehavior::Exactly;
+
+    ISODateTime result;
+    Value offset_string;
+    Value time_zone;
+    Object* calendar = nullptr;
+
+    // 6. If Type(value) is Object, then
+    if (value.is_object()) {
+        auto& value_object = value.as_object();
+
+        // a. If value has either an [[InitializedTemporalDateTime]] or [[InitializedTemporalZonedDateTime]] internal slot, then
+        if (is<PlainDateTime>(value_object) || is<ZonedDateTime>(value_object)) {
+            // i. Return value.
+            return value;
+        }
+
+        // b. If value has an [[InitializedTemporalDate]] internal slot, then
+        if (is<PlainDate>(value_object)) {
+            auto& plain_date_object = static_cast<PlainDate&>(value_object);
+
+            // i. Return ? CreateTemporalDateTime(value.[[ISOYear]], value.[[ISOMonth]], value.[[ISODay]], 0, 0, 0, 0, 0, 0, value.[[Calendar]]).
+            return TRY(create_temporal_date_time(global_object, plain_date_object.iso_year(), plain_date_object.iso_month(), plain_date_object.iso_day(), 0, 0, 0, 0, 0, 0, plain_date_object.calendar()));
+        }
+
+        // c. Let calendar be ? GetTemporalCalendarWithISODefault(value).
+        calendar = TRY(get_temporal_calendar_with_iso_default(global_object, value_object));
+
+        // d. Let fieldNames be ? CalendarFields(calendar, « "day", "hour", "microsecond", "millisecond", "minute", "month", "monthCode", "nanosecond", "second", "year" »).
+        auto field_names = TRY(calendar_fields(global_object, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
+
+        // e. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
+        auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, {}));
+
+        // f. Let dateOptions be ! OrdinaryObjectCreate(null).
+        auto* date_options = Object::create(global_object, nullptr);
+
+        // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
+        MUST(date_options->create_data_property_or_throw(vm.names.overflow, js_string(vm, "constrain"sv)));
+
+        // h. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
+        result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *date_options));
+
+        // i. Let offsetString be ? Get(value, "offset").
+        offset_string = TRY(value_object.get(vm.names.offset));
+
+        // j. Let timeZone be ? Get(value, "timeZone").
+        time_zone = TRY(value_object.get(vm.names.timeZone));
+
+        // k. If offsetString is undefined, then
+        if (offset_string.is_undefined()) {
+            // i. Set offsetBehaviour to wall.
+            offset_behavior = OffsetBehavior::Wall;
+        }
+    }
+    // 7. Else,
+    else {
+        // a. Let string be ? ToString(value).
+        auto string = TRY(value.to_string(global_object));
+
+        // b. Let result be ? ParseTemporalRelativeToString(string).
+        auto parsed_result = TRY(parse_temporal_relative_to_string(global_object, string));
+
+        // NOTE: The ISODateTime struct inside `parsed_result` will be moved into `result` at the end of this path to avoid mismatching names.
+        //       Thus, all remaining references to `result` in this path actually refer to `parsed_result`.
+
+        // c. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, parsed_result.date_time.calendar.has_value() ? js_string(vm, *parsed_result.date_time.calendar) : js_undefined()));
+
+        // d. Let offsetString be result.[[TimeZoneOffset]].
+        offset_string = parsed_result.time_zone.offset.has_value() ? js_string(vm, *parsed_result.time_zone.offset) : js_undefined();
+
+        // e. Let timeZone be result.[[TimeZoneIANAName]].
+        time_zone = parsed_result.time_zone.name.has_value() ? js_string(vm, *parsed_result.time_zone.name) : js_undefined();
+
+        // f. If result.[[TimeZoneZ]] is true, then
+        if (parsed_result.time_zone.z) {
+            // i. Set offsetBehaviour to exact.
+            offset_behavior = OffsetBehavior::Exact;
+        }
+        // g. Else if offsetString is undefined, then
+        else if (offset_string.is_undefined()) {
+            // i. Set offsetBehaviour to wall.
+            offset_behavior = OffsetBehavior::Wall;
+        }
+
+        // h. Set matchBehaviour to match minutes.
+        match_behavior = MatchBehavior::Minutes;
+
+        // See NOTE above about why this is done.
+        result = move(parsed_result.date_time);
+    }
+
+    // 8. If timeZone is not undefined, then
+    if (!time_zone.is_undefined()) {
+        // a. Set timeZone to ? ToTemporalTimeZone(timeZone).
+        time_zone = TRY(to_temporal_time_zone(global_object, time_zone));
+
+        double offset_ns;
+
+        // b. If offsetBehaviour is option, then
+        if (offset_behavior == OffsetBehavior::Option) {
+            // i. Set offsetString to ? ToString(offsetString).
+            // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
+            auto actual_offset_string = TRY(offset_string.to_string(global_object));
+
+            // ii. Let offsetNs be ? ParseTimeZoneOffsetString(offsetString).
+            offset_ns = TRY(parse_time_zone_offset_string(global_object, actual_offset_string));
+        }
+        // c. Else,
+        else {
+            // i. Let offsetNs be 0.
+            offset_ns = 0;
+        }
+
+        // d. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNs, timeZone, "compatible", "reject", matchBehaviour).
+        auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_ns, time_zone, "compatible"sv, "reject"sv, match_behavior));
+
+        // e. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+        return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone.as_object(), *calendar));
+    }
+
+    // 9. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
+    return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, *calendar));
 }
 
 // 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange
@@ -1112,6 +1259,39 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
 
     // 6. Return the Record { [[Year]]: year, [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
+}
+
+// 13.42 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, String const& iso_string)
+{
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalRelativeToString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ! ParseISODateTime(isoString).
+    auto result = MUST(parse_iso_date_time(global_object, iso_string));
+
+    bool z;
+    Optional<String> offset;
+    Optional<String> time_zone;
+
+    // TODO: 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
+    //          a. Let timeZoneResult be ! ParseTemporalTimeZoneString(isoString).
+    //          b. Let z be timeZoneResult.[[Z]].
+    //          c. Let offset be timeZoneResult.[[Offset]].
+    //          d. Let timeZone be timeZoneResult.[[Name]].
+
+    // TODO: 5. Else,
+    // a. Let z be false.
+    z = false;
+
+    // b. Let offset be undefined. (NOTE: It already is)
+    // c. Let timeZone be undefined. (NOTE: It already is)
+
+    // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffset]]: offset, [[TimeZoneIANAName]]: timeZone }.
+    return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset = move(offset), .name = move(time_zone) } };
 }
 
 // 13.43 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring

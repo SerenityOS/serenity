@@ -113,6 +113,7 @@ ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, O
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value);
 ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
+ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject&, Object const& options);
 ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);
 String larger_of_two_temporal_units(StringView, StringView);
 ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object& options, String largest_unit);
@@ -131,6 +132,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
