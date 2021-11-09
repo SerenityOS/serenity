@@ -360,6 +360,7 @@ namespace JS {
     P(reduceRight)                           \
     P(region)                                \
     P(reject)                                \
+    P(relativeTo)                            \
     P(repeat)                                \
     P(resolve)                               \
     P(resolvedOptions)                       \

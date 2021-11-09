@@ -262,6 +262,34 @@ Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration
     return MUST(create_temporal_duration(global_object, -duration.years(), -duration.months(), -duration.weeks(), -duration.days(), -duration.hours(), -duration.minutes(), -duration.seconds(), -duration.milliseconds(), -duration.microseconds(), -duration.nanoseconds()));
 }
 
+// 7.5.9 CalculateOffsetShift ( relativeTo, y, mon, w, d, h, min, s, ms, mus, ns ), https://tc39.es/proposal-temporal/#sec-temporal-calculateoffsetshift
+ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Value relative_to_value, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+{
+    // 1. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, return 0.
+    if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object()))
+        return 0.0;
+
+    auto& relative_to = static_cast<ZonedDateTime&>(relative_to_value.as_object());
+
+    // 2. Let instant be ! CreateTemporalInstant(relativeTo.[[Nanoseconds]]).
+    auto* instant = MUST(create_temporal_instant(global_object, relative_to.nanoseconds()));
+
+    // 3. Let offsetBefore be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instant).
+    auto offset_before = TRY(get_offset_nanoseconds_for(global_object, &relative_to.time_zone(), *instant));
+
+    // 4. Let after be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], y, mon, w, d, h, min, s, ms, mus, ns).
+    auto* after = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
+
+    // 5. Let instantAfter be ! CreateTemporalInstant(after).
+    auto* instant_after = MUST(create_temporal_instant(global_object, *after));
+
+    // 6. Let offsetAfter be ? GetOffsetNanosecondsFor(relativeTo.[[TimeZone]], instantAfter).
+    auto offset_after = TRY(get_offset_nanoseconds_for(global_object, &relative_to.time_zone(), *instant_after));
+
+    // 7. Return offsetAfter − offsetBefore.
+    return offset_after - offset_before;
+}
+
 // 7.5.10 TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, offsetShift ), https://tc39.es/proposal-temporal/#sec-temporal-totaldurationnanoseconds
 BigInt* total_duration_nanoseconds(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift)
 {
@@ -441,6 +469,192 @@ ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object
     return BalancedDuration { .days = days, .hours = hours * sign, .minutes = minutes * sign, .seconds = seconds * sign, .milliseconds = milliseconds * sign, .microseconds = microseconds * sign, .nanoseconds = result_nanoseconds * sign };
 }
 
+// 7.5.12 UnbalanceDurationRelative ( years, months, weeks, days, largestUnit, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-unbalancedurationrelative
+ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& global_object, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If largestUnit is "year", or years, months, weeks, and days are all 0, then
+    if (largest_unit == "year"sv || (years == 0 && months == 0 && weeks == 0 && days == 0)) {
+        // a. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days }.
+        return UnbalancedDuration { .years = years, .months = months, .weeks = weeks, .days = days };
+    }
+
+    // 2. Let sign be ! DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    auto sign = duration_sign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
+
+    // 3. Assert: sign ≠ 0.
+    VERIFY(sign != 0);
+
+    // 4. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+    auto* one_year = MUST(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+
+    // 5. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
+    auto* one_month = MUST(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
+
+    // 6. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
+    auto* one_week = MUST(create_temporal_duration(global_object, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
+
+    Object* calendar;
+
+    // 7. If relativeTo is not undefined, then
+    if (!relative_to.is_undefined()) {
+        // a. Set relativeTo to ? ToTemporalDateTime(relativeTo).
+        PlainDateTime* relative_to_plain_date_time = TRY(to_temporal_date_time(global_object, relative_to));
+        relative_to = relative_to_plain_date_time;
+
+        // b. Let calendar be relativeTo.[[Calendar]].
+        calendar = &relative_to_plain_date_time->calendar();
+    }
+    // 8. Else,
+    else {
+        // a. Let calendar be undefined.
+        calendar = nullptr;
+    }
+
+    // 9. If largestUnit is "month", then
+    if (largest_unit == "month"sv) {
+        // a. If calendar is undefined, then
+        if (!calendar) {
+            // i. Throw a RangeError exception.
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "months");
+        }
+
+        // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
+        auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
+
+        // c. Let dateUntil be ? GetMethod(calendar, "dateUntil").
+        auto* date_until = TRY(Value(calendar).get_method(global_object, vm.names.dateUntil));
+
+        // d. Repeat, while years ≠ 0,
+        while (years != 0) {
+            // i. Let addOptions be ! OrdinaryObjectCreate(null).
+            auto* add_options = Object::create(global_object, nullptr);
+
+            // ii. Let newRelativeTo be ? CalendarDateAdd(calendar, relativeTo, oneYear, addOptions, dateAdd).
+            auto* new_relative_to = TRY(calendar_date_add(global_object, *calendar, relative_to, *one_year, add_options, date_add));
+
+            // iii. Let untilOptions be ! OrdinaryObjectCreate(null).
+            auto* until_options = Object::create(global_object, nullptr);
+
+            // iv. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
+            MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "month"sv)));
+
+            // v. Let untilResult be ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
+            auto* until_result = TRY(calendar_date_until(global_object, *calendar, relative_to, new_relative_to, *until_options, date_until));
+
+            // vi. Let oneYearMonths be untilResult.[[Months]].
+            auto one_year_months = until_result->months();
+
+            // vii. Set relativeTo to newRelativeTo.
+            relative_to = new_relative_to;
+
+            // viii. Set years to years − sign.
+            years -= sign;
+
+            // ix. Set months to months + oneYearMonths.
+            months += one_year_months;
+        }
+    }
+    // 10. Else if largestUnit is "week", then
+    else if (largest_unit == "week"sv) {
+        // a. If calendar is undefined, then
+        if (!calendar) {
+            // i. Throw a RangeError exception.
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "weeks");
+        }
+
+        // b. Repeat, while years ≠ 0,
+        while (years != 0) {
+            // i. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
+            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_year));
+
+            // ii. Set relativeTo to moveResult.[[RelativeTo]].
+            relative_to = move_result.relative_to.cell();
+
+            // iii. Set days to days + moveResult.[[Days]].
+            days += move_result.days;
+
+            // iv. Set years to years − sign.
+            years -= sign;
+        }
+
+        // c. Repeat, while months ≠ 0,
+        while (months != 0) {
+            // i. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_month));
+
+            // ii. Set relativeTo to moveResult.[[RelativeTo]].
+            relative_to = move_result.relative_to.cell();
+
+            // iii. Set days to days + moveResult.[[Days]].
+            days += move_result.days;
+
+            // iv. Set months to months − sign.
+            months -= sign;
+        }
+    }
+    // 11. Else,
+    else {
+        // a. If any of years, months, and weeks are not zero, then
+        if (years != 0 || months != 0 || weeks != 0) {
+            // i. If calendar is undefined, then
+            if (!calendar) {
+                // i. Throw a RangeError exception.
+                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingStartingPoint, "calendar units");
+            }
+
+            // ii. Repeat, while years ≠ 0,
+            while (years != 0) {
+                // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_year));
+
+                // 2. Set relativeTo to moveResult.[[RelativeTo]].
+                relative_to = move_result.relative_to.cell();
+
+                // 3. Set days to days + moveResult.[[Days]].
+                days += move_result.days;
+
+                // 4. Set years to years − sign.
+                years -= sign;
+            }
+
+            // iii. Repeat, while months ≠ 0,
+            while (months != 0) {
+                // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_month));
+
+                // 2. Set relativeTo to moveResult.[[RelativeTo]].
+                relative_to = move_result.relative_to.cell();
+
+                // 3. Set days to days +moveResult.[[Days]].
+                days += move_result.days;
+
+                // 4. Set months to months − sign.
+                months -= sign;
+            }
+
+            // iv. Repeat, while weeks ≠ 0,
+            while (weeks != 0) {
+                // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_week));
+
+                // 2. Set relativeTo to moveResult.[[RelativeTo]].
+                relative_to = move_result.relative_to.cell();
+
+                // 3. Set days to days + moveResult.[[Days]].
+                days += move_result.days;
+
+                // 4. Set weeks to weeks − sign.
+                weeks -= sign;
+            }
+        }
+    }
+
+    // 12. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days }.
+    return UnbalancedDuration { .years = years, .months = months, .weeks = weeks, .days = days };
+}
+
 // 7.5.16 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
 ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& global_object, Object& calendar, PlainDateTime& relative_to, Duration& duration)
 {
@@ -615,7 +829,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "year"sv)));
 
         // p. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, daysLater, untilOptions).
-        auto* time_passed = TRY(calendar_date_until(global_object, *calendar, *relative_to_date, *days_later, *until_options));
+        auto* time_passed = TRY(calendar_date_until(global_object, *calendar, relative_to_date, days_later, *until_options));
 
         // q. Let yearsPassed be timePassed.[[Years]].
         auto years_passed = time_passed->years();
