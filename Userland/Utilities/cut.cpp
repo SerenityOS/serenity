@@ -120,44 +120,11 @@ static bool expand_list(String& list, Vector<Range>& ranges)
     return true;
 }
 
-static void cut_file(const String& file, const Vector<Range>& ranges, void (*process_line)(char*, size_t, const Vector<Range>&))
-{
-    FILE* fp = stdin;
-    if (!file.is_null()) {
-        fp = fopen(file.characters(), "r");
-        if (!fp) {
-            warnln("cut: Could not open file '{}'", file);
-            return;
-        }
-    }
-
-    char* line = nullptr;
-    ssize_t line_length = 0;
-    size_t line_capacity = 0;
-    while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
-        if (line_length < 0) {
-            warnln("cut: Failed to read line from file '{}'", file);
-            return;
-        }
-        line[line_length - 1] = '\0';
-        line_length--;
-
-        process_line(line, line_length, ranges);
-    }
-
-    if (line)
-        free(line);
-
-    if (!file.is_null())
-        fclose(fp);
-}
-
 static void process_line_bytes(char* line, size_t length, const Vector<Range>& ranges)
 {
     for (auto& i : ranges) {
         if (i.m_from >= length)
             continue;
-
 
         auto to = min(i.m_to, length);
         auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
@@ -166,35 +133,81 @@ static void process_line_bytes(char* line, size_t length, const Vector<Range>& r
     outln();
 }
 
+static void process_line_fields(char* line, size_t length, const Vector<Range>& ranges, char delimiter)
+{
+    auto string_split = String(line, length).split(delimiter);
+    Vector<String> output_fields;
+
+    for (auto& range : ranges) {
+        for (size_t i = range.m_from - 1; i < min(range.m_to, string_split.size()); i++) {
+            output_fields.append(string_split[i]);
+        }
+    }
+
+    outln("{}", String::join(delimiter, output_fields));
+}
+
 int main(int argc, char** argv)
 {
     String byte_list = "";
+    String fields_list = "";
+    String delimiter = "\t";
 
     Vector<String> files;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(files, "file(s) to cut", "file", Core::ArgsParser::Required::No);
     args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
+    args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list");
+    args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter");
     args_parser.parse(argc, argv);
 
-    if (byte_list == "") {
-        warnln("cut: you must specify a list of bytes");
+    bool selected_bytes = (byte_list != "");
+    bool selected_fields = (fields_list != "");
+
+    int selected_options_count = (selected_bytes ? 1 : 0) + (selected_fields ? 1 : 0);
+
+    if (selected_options_count == 0) {
+        warnln("cut: you must specify a list of bytes, or fields");
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
 
-    Vector<Range> byte_vector;
-    auto expansion_successful = expand_list(byte_list, byte_vector);
+    if (selected_options_count > 1) {
+        warnln("cut: you must specify only one of bytes, or fields");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
+    if (delimiter.length() != 1) {
+        warnln("cut: the delimiter must be a single character");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
+    String ranges_list;
+    Vector<Range> ranges_vector;
+
+    if (selected_bytes) {
+        ranges_list = byte_list;
+    } else if (selected_fields) {
+        ranges_list = fields_list;
+    } else {
+        // This should never happen, since we already checked the options count above.
+        VERIFY_NOT_REACHED();
+    }
+
+    auto expansion_successful = expand_list(ranges_list, ranges_vector);
 
     if (!expansion_successful) {
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
 
-    quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
+    quick_sort(ranges_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
 
     Vector<Range> disjoint_ranges;
-    for (auto& range : byte_vector) {
+    for (auto& range : ranges_vector) {
         if (disjoint_ranges.is_empty()) {
             disjoint_ranges.append(range);
             continue;
@@ -214,8 +227,42 @@ int main(int argc, char** argv)
         files.append(String());
 
     /* Process each file */
-    for (auto& file : files)
-        cut_file(file, disjoint_ranges, process_line_bytes);
+    for (auto& file : files) {
+        FILE* fp = stdin;
+        if (!file.is_null()) {
+            fp = fopen(file.characters(), "r");
+            if (!fp) {
+                warnln("cut: Could not open file '{}'", file);
+                continue;
+            }
+        }
+
+        char* line = nullptr;
+        ssize_t line_length = 0;
+        size_t line_capacity = 0;
+        while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
+            if (line_length < 0) {
+                warnln("cut: Failed to read line from file '{}'", file);
+                break;
+            }
+            line[line_length - 1] = '\0';
+            line_length--;
+
+            if (selected_bytes) {
+                process_line_bytes(line, line_length, disjoint_ranges);
+            } else if (selected_fields) {
+                process_line_fields(line, line_length, disjoint_ranges, delimiter[0]);
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+        }
+
+        if (line)
+            free(line);
+
+        if (!file.is_null())
+            fclose(fp);
+    }
 
     return 0;
 }
