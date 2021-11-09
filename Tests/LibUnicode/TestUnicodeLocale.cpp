@@ -456,4 +456,10 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("ZH-XIANG"sv, "hsn"sv);
     test("ja-latn-hepburn-heploc"sv, "ja-Latn-alalc97"sv);
     test("JA-LATN-HEPBURN-HEPLOC"sv, "ja-Latn-alalc97"sv);
+
+    // Default content.
+    test("en-us"sv, "en-US"sv);
+    test("EN-US"sv, "en-US"sv);
+    test("zh-Hans-CN"sv, "zh-Hans-CN"sv);
+    test("ZH-HANS-CN"sv, "zh-Hans-CN"sv);
 }
