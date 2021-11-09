@@ -165,6 +165,8 @@ public:
     using ThrowCompletionOr<Empty>::ThrowCompletionOr;
 };
 
+ThrowCompletionOr<Value> await(GlobalObject&, Value);
+
 // 6.2.3.2 NormalCompletion ( value ), https://tc39.es/ecma262/#sec-normalcompletion
 inline Completion normal_completion(Optional<Value> value)
 {
