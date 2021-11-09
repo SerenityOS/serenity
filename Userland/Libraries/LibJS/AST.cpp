@@ -28,6 +28,8 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Shape.h>
@@ -391,6 +393,21 @@ Value YieldExpression::execute(Interpreter&, GlobalObject&) const
 {
     // This should be transformed to a return.
     VERIFY_NOT_REACHED();
+}
+
+// 15.8.5 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation
+Value AwaitExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+
+    // 1. Let exprRef be the result of evaluating UnaryExpression.
+    // 2. Let value be ? GetValue(exprRef).
+    auto value = m_argument->execute(interpreter, global_object);
+    if (interpreter.exception())
+        return {};
+
+    // 3. Return ? Await(value).
+    return TRY_OR_DISCARD(await(global_object, value));
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1971,6 +1988,12 @@ void YieldExpression::dump(int indent) const
     ASTNode::dump(indent);
     if (argument())
         argument()->dump(indent + 1);
+}
+
+void AwaitExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    m_argument->dump(indent + 1);
 }
 
 void ReturnStatement::dump(int indent) const
