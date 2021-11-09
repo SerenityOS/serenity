@@ -565,6 +565,21 @@ private:
     bool m_is_yield_from { false };
 };
 
+class AwaitExpression final : public Expression {
+public:
+    explicit AwaitExpression(SourceRange source_range, NonnullRefPtr<Expression> argument)
+        : Expression(source_range)
+        , m_argument(move(argument))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    NonnullRefPtr<Expression> m_argument;
+};
+
 class ReturnStatement final : public Statement {
 public:
     explicit ReturnStatement(SourceRange source_range, RefPtr<Expression> argument)

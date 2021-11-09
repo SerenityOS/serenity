@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -420,6 +421,7 @@ Associativity Parser::operator_associativity(TokenType type) const
     case TokenType::Typeof:
     case TokenType::Void:
     case TokenType::Delete:
+    case TokenType::Await:
     case TokenType::Ampersand:
     case TokenType::Caret:
     case TokenType::Pipe:
@@ -1042,7 +1044,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 TemporaryChange function_context_rollback(m_state.in_function_context, false);
                 TemporaryChange generator_function_context_rollback(m_state.in_generator_function_context, false);
                 TemporaryChange async_function_context_rollback(m_state.in_async_function_context, false);
-                TemporaryChange in_class_field_initializer_rollback(m_state.in_class_field_initializer, true);
+                TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, true);
+                TemporaryChange class_static_init_block_rollback(m_state.in_class_static_init_block, true);
 
                 ScopePusher static_init_scope = ScopePusher::static_init_block_scope(*this, *static_init_block);
                 parse_statement_list(static_init_block);
@@ -1253,6 +1256,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         if (!m_state.in_generator_function_context)
             goto read_as_identifier;
         return { parse_yield_expression(), false };
+    case TokenType::Await:
+        if (!m_state.in_async_function_context)
+            goto read_as_identifier;
+        return { parse_await_expression() };
     case TokenType::PrivateIdentifier:
         VERIFY(next_token().type() == TokenType::In);
         if (!is_private_identifier_valid())
@@ -1934,6 +1941,7 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
     parser.m_state.in_continue_context = m_state.in_continue_context;
     parser.m_state.string_legacy_octal_escape_sequence_in_scope = m_state.string_legacy_octal_escape_sequence_in_scope;
     parser.m_state.in_class_field_initializer = m_state.in_class_field_initializer;
+    parser.m_state.in_class_static_init_block = m_state.in_class_static_init_block;
 
     auto result = parser.parse_binding_pattern(AllowDuplicates::Yes, AllowMemberExpressions::Yes);
     if (parser.has_errors())
@@ -2083,6 +2091,22 @@ NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
     }
 
     return create_ast_node<YieldExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument), yield_from);
+}
+
+NonnullRefPtr<AwaitExpression> Parser::parse_await_expression()
+{
+    auto rule_start = push_start();
+
+    if (m_state.in_formal_parameter_context)
+        syntax_error("'Await' expression is not allowed in formal parameters of an async function");
+
+    consume(TokenType::Await);
+
+    auto precedence = g_operator_precedence.get(TokenType::Await);
+    auto associativity = operator_associativity(TokenType::Await);
+    auto argument = parse_expression(precedence, associativity);
+
+    return create_ast_node<AwaitExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument));
 }
 
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
@@ -3393,14 +3417,14 @@ bool Parser::match_identifier() const
         if (m_state.current_token.value() == "yield"sv)
             return !m_state.strict_mode && !m_state.in_generator_function_context;
         if (m_state.current_token.value() == "await"sv)
-            return m_program_type != Program::Type::Module && !m_state.in_async_function_context;
+            return m_program_type != Program::Type::Module && !m_state.in_async_function_context && !m_state.in_class_static_init_block;
         return true;
     }
 
     return m_state.current_token.type() == TokenType::Identifier
         || m_state.current_token.type() == TokenType::Async
         || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
-        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.in_async_function_context)
+        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.in_async_function_context && !m_state.in_class_static_init_block)
         || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
@@ -3482,7 +3506,7 @@ Token Parser::consume_identifier()
     }
 
     if (match(TokenType::Await)) {
-        if (m_program_type == Program::Type::Module || m_state.in_async_function_context)
+        if (m_program_type == Program::Type::Module || m_state.in_async_function_context || m_state.in_class_static_init_block)
             syntax_error("Identifier must not be a reserved word in modules ('await')");
         return consume();
     }
