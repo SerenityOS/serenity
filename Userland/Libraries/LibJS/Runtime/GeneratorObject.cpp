@@ -13,11 +13,11 @@
 
 namespace JS {
 
-GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
+ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-    auto generating_function_prototype = TRY_OR_DISCARD(generating_function->get(global_object.vm().names.prototype));
-    auto* generating_function_prototype_object = TRY_OR_DISCARD(generating_function_prototype.to_object(global_object));
+    auto generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
+    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(global_object));
     auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_prototype_object);
     object->m_generating_function = generating_function;
     object->m_environment = generating_scope;
@@ -47,29 +47,26 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_previous_value);
 }
 
-Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> value_to_throw)
+ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> value_to_throw)
 {
     auto bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
 
-    auto generated_value = [](Value value) -> Value {
+    auto generated_value = [](Value value) -> ThrowCompletionOr<Value> {
         if (value.is_object())
-            return TRY_OR_DISCARD(value.as_object().get("result"));
+            return TRY(value.as_object().get("result"));
         return value.is_empty() ? js_undefined() : value;
     };
 
-    auto generated_continuation = [&](Value value) -> Bytecode::BasicBlock const* {
+    auto generated_continuation = [&](Value value) -> ThrowCompletionOr<Bytecode::BasicBlock const*> {
         if (value.is_object()) {
-            auto number_value = TRY_OR_DISCARD(value.as_object().get("continuation"));
-            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY_OR_DISCARD(number_value.to_double(global_object))));
+            auto number_value = TRY(value.as_object().get("continuation"));
+            return reinterpret_cast<Bytecode::BasicBlock const*>(static_cast<u64>(TRY(number_value.to_double(global_object))));
         }
         return nullptr;
     };
 
-    Value previous_generated_value { generated_value(m_previous_value) };
-
-    if (vm.exception())
-        return {};
+    auto previous_generated_value = TRY(generated_value(m_previous_value));
 
     auto result = Object::create(global_object, global_object.object_prototype());
     result->define_direct_property("value", previous_generated_value, JS::default_attributes);
@@ -80,9 +77,7 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     }
 
     // Extract the continuation
-    auto next_block = generated_continuation(m_previous_value);
-    if (vm.exception())
-        return {};
+    auto next_block = TRY(generated_continuation(m_previous_value));
 
     if (!next_block) {
         // The generator has terminated, now we can simply return done=true.
@@ -112,13 +107,10 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
 
     bytecode_interpreter->leave_frame();
 
-    m_done = generated_continuation(m_previous_value) == nullptr;
+    m_done = TRY(generated_continuation(m_previous_value)) == nullptr;
 
-    result->define_direct_property("value", generated_value(m_previous_value), JS::default_attributes);
+    result->define_direct_property("value", TRY(generated_value(m_previous_value)), JS::default_attributes);
     result->define_direct_property("done", Value(m_done), JS::default_attributes);
-
-    if (vm.exception())
-        return {};
 
     return result;
 }
