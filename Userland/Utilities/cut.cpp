@@ -8,6 +8,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,12 +32,6 @@ struct Index {
     }
 };
 
-static void print_usage_and_exit(int ret)
-{
-    warnln("Usage: cut -b list [File]");
-    exit(ret);
-}
-
 static void add_if_not_exists(Vector<Index>& indices, Index data)
 {
     bool append_to_vector = true;
@@ -55,29 +50,29 @@ static void add_if_not_exists(Vector<Index>& indices, Index data)
     }
 }
 
-static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
+static bool expand_list(Vector<String>& tokens, Vector<Index>& indices)
 {
     for (auto& token : tokens) {
         if (token.length() == 0) {
             warnln("cut: byte/character positions are numbered from 1");
-            print_usage_and_exit(1);
+            return false;
         }
 
         if (token == "-") {
             warnln("cut: invalid range with no endpoint: {}", token);
-            print_usage_and_exit(1);
+            return false;
         }
 
         if (token[0] == '-') {
             auto index = token.substring(1, token.length() - 1).to_int();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
-                print_usage_and_exit(1);
+                return false;
             }
 
             if (index.value() == 0) {
                 warnln("cut: byte/character positions are numbered from 1");
-                print_usage_and_exit(1);
+                return false;
             }
 
             Index tmp = { 1, index.value(), Index::Type::RangedIndex };
@@ -86,12 +81,12 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
             auto index = token.substring(0, token.length() - 1).to_int();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
-                print_usage_and_exit(1);
+                return false;
             }
 
             if (index.value() == 0) {
                 warnln("cut: byte/character positions are numbered from 1");
-                print_usage_and_exit(1);
+                return false;
             }
             Index tmp = { index.value(), -1, Index::Type::SliceIndex };
             add_if_not_exists(indices, tmp);
@@ -101,21 +96,21 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
                 auto index1 = range[0].to_int();
                 if (!index1.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
-                    print_usage_and_exit(1);
+                    return false;
                 }
 
                 auto index2 = range[1].to_int();
                 if (!index2.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[1]);
-                    print_usage_and_exit(1);
+                    return false;
                 }
 
                 if (index1.value() > index2.value()) {
                     warnln("cut: invalid decreasing range");
-                    print_usage_and_exit(1);
+                    return false;
                 } else if (index1.value() == 0 || index2.value() == 0) {
                     warnln("cut: byte/character positions are numbered from 1");
-                    print_usage_and_exit(1);
+                    return false;
                 }
 
                 Index tmp = { index1.value(), index2.value(), Index::Type::RangedIndex };
@@ -124,22 +119,24 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
                 auto index = range[0].to_int();
                 if (!index.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
-                    print_usage_and_exit(1);
+                    return false;
                 }
 
                 if (index.value() == 0) {
                     warnln("cut: byte/character positions are numbered from 1");
-                    print_usage_and_exit(1);
+                    return false;
                 }
 
                 Index tmp = { index.value(), index.value(), Index::Type::SingleIndex };
                 add_if_not_exists(indices, tmp);
             } else {
                 warnln("cut: invalid byte or character range");
-                print_usage_and_exit(1);
+                return false;
             }
         }
     }
+
+    return true;
 }
 
 static void cut_file(const String& file, const Vector<Index>& byte_vector)
@@ -186,35 +183,28 @@ int main(int argc, char** argv)
     String byte_list = "";
     Vector<String> tokens;
     Vector<String> files;
-    if (argc == 1) {
-        print_usage_and_exit(1);
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(files, "file(s) to cut", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
+    args_parser.parse(argc, argv);
+
+    if (byte_list == "") {
+        warnln("cut: you must specify a list of bytes");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
     }
 
-    for (int i = 1; i < argc;) {
-        if (!strcmp(argv[i], "-b")) {
-            /* The next argument should be a list of bytes. */
-            byte_list = (i + 1 < argc) ? argv[i + 1] : "";
-
-            if (byte_list == "") {
-                print_usage_and_exit(1);
-            }
-            tokens = byte_list.split(',');
-            i += 2;
-        } else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
-            print_usage_and_exit(1);
-        } else if (argv[i][0] != '-') {
-            files.append(argv[i++]);
-        } else {
-            warnln("cut: invalid argument {}", argv[i]);
-            print_usage_and_exit(1);
-        }
-    }
-
-    if (byte_list == "")
-        print_usage_and_exit(1);
+    tokens = byte_list.split(',');
 
     Vector<Index> byte_vector;
-    expand_list(tokens, byte_vector);
+    auto expansion_successful = expand_list(tokens, byte_vector);
+
+    if (!expansion_successful) {
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
     quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
 
     if (files.is_empty())
