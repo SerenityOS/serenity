@@ -13,44 +13,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Index {
-    enum class Type {
-        SingleIndex,
-        SliceIndex,
-        RangedIndex
-    };
-    ssize_t m_from { -1 };
-    ssize_t m_to { -1 };
-    Type m_type { Type::SingleIndex };
+struct Range {
+    size_t m_from { 1 };
+    size_t m_to { SIZE_MAX };
 
-    bool intersects(const Index& other)
+    [[nodiscard]] bool intersects(const Range& other) const
     {
-        if (m_type != Type::RangedIndex)
-            return m_from == other.m_from;
-
         return !(other.m_from > m_to || other.m_to < m_from);
+    }
+
+    void merge(const Range& other)
+    {
+        // Can't merge two ranges that are disjoint.
+        VERIFY(intersects(other));
+
+        m_from = min(m_from, other.m_from);
+        m_to = max(m_to, other.m_to);
     }
 };
 
-static void add_if_not_exists(Vector<Index>& indices, Index data)
-{
-    bool append_to_vector = true;
-    for (auto& index : indices) {
-        if (index.intersects(data)) {
-            if (index.m_type == Index::Type::RangedIndex) {
-                index.m_from = min(index.m_from, data.m_from);
-                index.m_to = max(index.m_to, data.m_to);
-            }
-            append_to_vector = false;
-        }
-    }
-
-    if (append_to_vector) {
-        indices.append(data);
-    }
-}
-
-static bool expand_list(String& list, Vector<Index>& indices)
+static bool expand_list(String& list, Vector<Range>& ranges)
 {
     Vector<String> tokens = list.split(',');
 
@@ -66,7 +48,7 @@ static bool expand_list(String& list, Vector<Index>& indices)
         }
 
         if (token[0] == '-') {
-            auto index = token.substring(1, token.length() - 1).to_int();
+            auto index = token.substring(1, token.length() - 1).to_uint();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
                 return false;
@@ -77,10 +59,9 @@ static bool expand_list(String& list, Vector<Index>& indices)
                 return false;
             }
 
-            Index tmp = { 1, index.value(), Index::Type::RangedIndex };
-            add_if_not_exists(indices, tmp);
+            ranges.append({ 1, index.value() });
         } else if (token[token.length() - 1] == '-') {
-            auto index = token.substring(0, token.length() - 1).to_int();
+            auto index = token.substring(0, token.length() - 1).to_uint();
             if (!index.has_value()) {
                 warnln("cut: invalid byte/character position '{}'", token);
                 return false;
@@ -90,18 +71,18 @@ static bool expand_list(String& list, Vector<Index>& indices)
                 warnln("cut: byte/character positions are numbered from 1");
                 return false;
             }
-            Index tmp = { index.value(), -1, Index::Type::SliceIndex };
-            add_if_not_exists(indices, tmp);
+
+            ranges.append({ index.value(), SIZE_MAX });
         } else {
             auto range = token.split('-');
             if (range.size() == 2) {
-                auto index1 = range[0].to_int();
+                auto index1 = range[0].to_uint();
                 if (!index1.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
                     return false;
                 }
 
-                auto index2 = range[1].to_int();
+                auto index2 = range[1].to_uint();
                 if (!index2.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[1]);
                     return false;
@@ -115,10 +96,9 @@ static bool expand_list(String& list, Vector<Index>& indices)
                     return false;
                 }
 
-                Index tmp = { index1.value(), index2.value(), Index::Type::RangedIndex };
-                add_if_not_exists(indices, tmp);
+                ranges.append({ index1.value(), index2.value() });
             } else if (range.size() == 1) {
-                auto index = range[0].to_int();
+                auto index = range[0].to_uint();
                 if (!index.has_value()) {
                     warnln("cut: invalid byte/character position '{}'", range[0]);
                     return false;
@@ -129,8 +109,7 @@ static bool expand_list(String& list, Vector<Index>& indices)
                     return false;
                 }
 
-                Index tmp = { index.value(), index.value(), Index::Type::SingleIndex };
-                add_if_not_exists(indices, tmp);
+                ranges.append({ index.value(), index.value() });
             } else {
                 warnln("cut: invalid byte or character range");
                 return false;
@@ -141,7 +120,7 @@ static bool expand_list(String& list, Vector<Index>& indices)
     return true;
 }
 
-static void cut_file(const String& file, const Vector<Index>& byte_vector)
+static void cut_file(const String& file, const Vector<Range>& byte_vector)
 {
     FILE* fp = stdin;
     if (!file.is_null()) {
@@ -156,19 +135,21 @@ static void cut_file(const String& file, const Vector<Index>& byte_vector)
     ssize_t line_length = 0;
     size_t line_capacity = 0;
     while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
+        if (line_length < 0) {
+            warnln("cut: Failed to read line from file '{}'", file);
+            return;
+        }
         line[line_length - 1] = '\0';
         line_length--;
+
         for (auto& i : byte_vector) {
-            if (i.m_type == Index::Type::SliceIndex && i.m_from < line_length)
-                out("{}", line + i.m_from - 1);
-            else if (i.m_type == Index::Type::SingleIndex && i.m_from <= line_length)
-                out("{:c}", line[i.m_from - 1]);
-            else if (i.m_type == Index::Type::RangedIndex && i.m_from <= line_length) {
-                auto to = i.m_to > line_length ? line_length : i.m_to;
-                auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
-                out("{}", sub_string);
-            } else
-                break;
+            if (i.m_from >= (size_t) line_length)
+                continue;
+
+
+            auto to = min(i.m_to, line_length);
+            auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
+            out("{}", sub_string);
         }
         outln();
     }
@@ -197,7 +178,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<Index> byte_vector;
+    Vector<Range> byte_vector;
     auto expansion_successful = expand_list(byte_list, byte_vector);
 
     if (!expansion_successful) {
@@ -207,12 +188,29 @@ int main(int argc, char** argv)
 
     quick_sort(byte_vector, [](auto& a, auto& b) { return a.m_from < b.m_from; });
 
+    Vector<Range> disjoint_ranges;
+    for (auto& range : byte_vector) {
+        if (disjoint_ranges.is_empty()) {
+            disjoint_ranges.append(range);
+            continue;
+        }
+
+        Range& last_range = disjoint_ranges.last();
+
+        if (!last_range.intersects(range)) {
+            disjoint_ranges.append(range);
+            continue;
+        }
+
+        last_range.merge(range);
+    }
+
     if (files.is_empty())
         files.append(String());
 
     /* Process each file */
     for (auto& file : files)
-        cut_file(file, byte_vector);
+        cut_file(file, disjoint_ranges);
 
     return 0;
 }
