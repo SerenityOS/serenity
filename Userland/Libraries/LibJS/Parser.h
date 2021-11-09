@@ -106,6 +106,7 @@ public:
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
     NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);
     NonnullRefPtr<YieldExpression> parse_yield_expression();
+    NonnullRefPtr<AwaitExpression> parse_await_expression();
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
     NonnullRefPtr<Identifier> parse_identifier();
@@ -258,6 +259,7 @@ private:
         bool in_continue_context { false };
         bool string_legacy_octal_escape_sequence_in_scope { false };
         bool in_class_field_initializer { false };
+        bool in_class_static_init_block { false };
         bool function_might_need_arguments_object { false };
 
         ParserState(Lexer, Program::Type);
