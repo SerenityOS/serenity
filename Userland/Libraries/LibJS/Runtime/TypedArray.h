@@ -130,7 +130,7 @@ inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Valu
 // 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
 // NOTE: In error cases, the function will return as if it succeeded.
 template<typename T>
-inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value property_index, Value value)
+inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, Value property_index, Value value)
 {
     VERIFY(!value.is_empty());
     auto& global_object = typed_array.global_object();
@@ -140,24 +140,16 @@ inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value prope
     Value num_value;
 
     // 2. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
-    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
-        auto num_value_or_error = value.to_bigint(global_object);
-        if (num_value_or_error.is_error())
-            return;
-        num_value = num_value_or_error.release_value();
-    }
+    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt)
+        num_value = TRY(value.to_bigint(global_object));
     // 3. Otherwise, let numValue be ? ToNumber(value).
-    else {
-        auto num_value_or_error = value.to_number(global_object);
-        if (num_value_or_error.is_error())
-            return;
-        num_value = num_value_or_error.release_value();
-    }
+    else
+        num_value = TRY(value.to_number(global_object));
 
     // 4. If ! IsValidIntegerIndex(O, index) is true, then
     // NOTE: Inverted for flattened logic.
     if (!is_valid_integer_index(typed_array, property_index))
-        return;
+        return {};
 
     // a. Let offset be O.[[ByteOffset]].
     auto offset = typed_array.byte_offset();
@@ -172,7 +164,7 @@ inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value prope
     //        Just return as if it succeeded for now.
     if (indexed_position.has_overflow()) {
         dbgln("integer_indexed_element_set(): indexed_position overflowed, returning as if succeeded.");
-        return;
+        return {};
     }
 
     // e. Let elementType be the Element Type value in Table 64 for arrayTypeName.
@@ -180,6 +172,7 @@ inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value prope
     typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
 
     // 5. Return NormalCompletion(undefined).
+    return {};
 }
 
 template<typename T>
@@ -295,11 +288,8 @@ public:
                     return false;
 
                 // vi. If Desc has a [[Value]] field, perform ? IntegerIndexedElementSet(O, numericIndex, Desc.[[Value]]).
-                if (property_descriptor.value.has_value()) {
-                    integer_indexed_element_set<T>(*this, numeric_index, *property_descriptor.value);
-                    if (auto* exception = vm().exception())
-                        return throw_completion(exception->value());
-                }
+                if (property_descriptor.value.has_value())
+                    TRY(integer_indexed_element_set<T>(*this, numeric_index, *property_descriptor.value));
 
                 // vii. Return true.
                 return true;
@@ -357,9 +347,7 @@ public:
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
-                integer_indexed_element_set<T>(*this, numeric_index, value);
-                if (auto* exception = vm().exception())
-                    return throw_completion(exception->value());
+                TRY(integer_indexed_element_set<T>(*this, numeric_index, value));
 
                 // ii. Return true.
                 return true;
