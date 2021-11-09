@@ -22,6 +22,30 @@ struct ExecutionContext {
     {
     }
 
+    [[nodiscard]] ExecutionContext copy() const
+    {
+        ExecutionContext copy { arguments.copy() };
+
+        copy.function = function;
+        copy.realm = realm;
+        copy.lexical_environment = lexical_environment;
+        copy.variable_environment = variable_environment;
+        copy.private_environment = private_environment;
+        copy.current_node = current_node;
+        copy.function_name = function_name;
+        copy.this_value = this_value;
+        copy.is_strict_mode = is_strict_mode;
+
+        return copy;
+    }
+
+private:
+    explicit ExecutionContext(MarkedValueList existing_arguments)
+        : arguments(move(existing_arguments))
+    {
+    }
+
+public:
     FunctionObject* function { nullptr };                // [[Function]]
     Realm* realm { nullptr };                            // [[Realm]]
     Environment* lexical_environment { nullptr };        // [[LexicalEnvironment]]

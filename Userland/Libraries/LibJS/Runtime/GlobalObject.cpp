@@ -20,6 +20,8 @@
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/AsyncFunctionConstructor.h>
+#include <LibJS/Runtime/AsyncFunctionPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntPrototype.h>

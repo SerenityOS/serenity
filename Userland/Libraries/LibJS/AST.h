@@ -36,6 +36,7 @@ class VariableDeclaration;
 enum class FunctionKind {
     Generator,
     Regular,
+    Async,
 };
 
 template<class T, class... Args>

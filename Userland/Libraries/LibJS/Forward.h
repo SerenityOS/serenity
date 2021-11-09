@@ -17,6 +17,7 @@
     __JS_ENUMERATE(AggregateError, aggregate_error, AggregateErrorPrototype, AggregateErrorConstructor, void)                         \
     __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)                                                              \
     __JS_ENUMERATE(ArrayBuffer, array_buffer, ArrayBufferPrototype, ArrayBufferConstructor, void)                                     \
+    __JS_ENUMERATE(AsyncFunction, async_function, AsyncFunctionPrototype, AsyncFunctionConstructor, void)                             \
     __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)                                                    \
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                                                \
     __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                                                 \

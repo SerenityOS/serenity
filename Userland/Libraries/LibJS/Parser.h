@@ -31,6 +31,7 @@ struct FunctionNodeParseOptions {
         IsSetterFunction = 1 << 4,
         IsArrowFunction = 1 << 5,
         IsGeneratorFunction = 1 << 6,
+        IsAsyncFunction = 1 << 7,
     };
 };
 
@@ -251,6 +252,7 @@ private:
         bool in_function_context { false };
         bool in_formal_parameter_context { false };
         bool in_generator_function_context { false };
+        bool in_async_function_context { false };
         bool in_arrow_function_context { false };
         bool in_break_context { false };
         bool in_continue_context { false };
