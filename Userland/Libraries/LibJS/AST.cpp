@@ -1921,7 +1921,7 @@ void BindingPattern::dump(int indent) const
 void FunctionNode::dump(int indent, String const& class_name) const
 {
     print_indent(indent);
-    outln("{}{} '{}'", class_name, m_kind == FunctionKind::Generator ? "*" : "", name());
+    outln("{}{}{} '{}'", class_name, m_kind == FunctionKind::Async ? " async" : "", m_kind == FunctionKind::Generator ? "*" : "", name());
     if (m_contains_direct_call_to_eval) {
         print_indent(indent + 1);
         outln("\033[31;1m(direct eval)\033[0m");

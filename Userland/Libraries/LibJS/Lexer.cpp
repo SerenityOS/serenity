@@ -30,6 +30,7 @@ Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t 
     , m_parsed_identifiers(adopt_ref(*new ParsedIdentifiers))
 {
     if (s_keywords.is_empty()) {
+        s_keywords.set("async", TokenType::Async);
         s_keywords.set("await", TokenType::Await);
         s_keywords.set("break", TokenType::Break);
         s_keywords.set("case", TokenType::Case);
