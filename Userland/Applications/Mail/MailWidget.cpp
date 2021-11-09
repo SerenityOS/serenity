@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021, Undefine <cqundefine@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,7 +104,9 @@ bool MailWidget::connect_and_login()
     auto server = Config::read_string("Mail", "Connection", "Server", {});
 
     if (server.is_empty()) {
-        GUI::MessageBox::show_error(window(), "Mail has no servers configured. Refer to the Mail(1) man page for more information.");
+        int result = GUI::MessageBox::show(window(), "Mail has no servers configured. Do you want configure them now?", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::YesNo);
+        if (result == GUI::MessageBox::ExecResult::ExecYes)
+            Desktop::Launcher::open(URL::create_with_file_protocol("/bin/MailSettings"), "/bin/MailSettings");
         return false;
     }
 
