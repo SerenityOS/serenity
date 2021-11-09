@@ -50,8 +50,10 @@ static void add_if_not_exists(Vector<Index>& indices, Index data)
     }
 }
 
-static bool expand_list(Vector<String>& tokens, Vector<Index>& indices)
+static bool expand_list(String& list, Vector<Index>& indices)
 {
+    Vector<String> tokens = list.split(',');
+
     for (auto& token : tokens) {
         if (token.length() == 0) {
             warnln("cut: byte/character positions are numbered from 1");
@@ -181,7 +183,7 @@ static void cut_file(const String& file, const Vector<Index>& byte_vector)
 int main(int argc, char** argv)
 {
     String byte_list = "";
-    Vector<String> tokens;
+
     Vector<String> files;
 
     Core::ArgsParser args_parser;
@@ -195,10 +197,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    tokens = byte_list.split(',');
-
     Vector<Index> byte_vector;
-    auto expansion_successful = expand_list(tokens, byte_vector);
+    auto expansion_successful = expand_list(byte_list, byte_vector);
 
     if (!expansion_successful) {
         args_parser.print_usage(stderr, argv[0]);
