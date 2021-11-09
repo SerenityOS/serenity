@@ -453,7 +453,6 @@ ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& globa
     // 4. Let later be ? CalendarDateAdd(calendar, relativeTo, duration, options).
     auto* later = TRY(calendar_date_add(global_object, calendar, &relative_to, duration, options));
 
-    // FIXME: This cannot return an abrupt completion (spec issue, see https://github.com/tc39/proposal-temporal/pull/1909)
     // 5. Let days be ? DaysUntil(relativeTo, later).
     auto days = days_until(global_object, relative_to, *later);
 
@@ -591,7 +590,6 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // g. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, secondAddOptions, dateAdd).
         auto* years_months_weeks_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_months_weeks, second_add_options, date_add));
 
-        // FIXME: This cannot return an abrupt completion (spec issue, see https://github.com/tc39/proposal-temporal/pull/1909)
         // h. Let monthsWeeksInDays be ? DaysUntil(yearsLater, yearsMonthsWeeksLater).
         auto months_weeks_in_days = days_until(global_object, *years_later, *years_months_weeks_later);
 
@@ -637,7 +635,6 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // v. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, fourthAddOptions, dateAdd).
         relative_to_date = TRY(calendar_date_add(global_object, *calendar, relative_to_date, *years_duration, fourth_add_options, date_add));
 
-        // FIXME: This cannot return an abrupt completion (spec issue, see https://github.com/tc39/proposal-temporal/pull/1909)
         // w. Let daysPassed be ? DaysUntil(oldRelativeTo, relativeTo).
         auto days_passed = days_until(global_object, *old_relative_to_date, *relative_to_date);
 
@@ -702,7 +699,6 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // g. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, secondAddOptions, dateAdd).
         auto* years_months_weeks_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_months_weeks, seconds_add_options, date_add));
 
-        // FIXME: This cannot return an abrupt completion (spec issue, see https://github.com/tc39/proposal-temporal/pull/1909)
         // h. Let weeksInDays be ? DaysUntil(yearsMonthsLater, yearsMonthsWeeksLater).
         auto weeks_in_days = days_until(global_object, *years_months_later, *years_months_weeks_later);
 
