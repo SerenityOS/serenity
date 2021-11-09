@@ -696,8 +696,6 @@ ThrowCompletionOr<bool> Object::internal_define_own_property(PropertyKey const& 
 // 10.1.7 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p
 ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& property_name) const
 {
-    auto& vm = this->vm();
-
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
 
@@ -714,10 +712,7 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& propert
     // 5. If parent is not null, then
     if (parent) {
         // a. Return ? parent.[[HasProperty]](P).
-        auto result = parent->internal_has_property(property_name);
-        if (auto* exception = vm.exception())
-            return throw_completion(exception->value());
-        return result;
+        return parent->internal_has_property(property_name);
     }
 
     // 6. Return false.
