@@ -906,6 +906,9 @@ int Shell::builtin_time(int argc, const char** argv)
         for (auto& job : run_commands(commands)) {
             block_on_job(job);
             exit_code = job.exit_code();
+            if (job.signaled()) {
+                return exit_code;
+            }
         }
         iteration_times.add(timer.elapsed());
     }
