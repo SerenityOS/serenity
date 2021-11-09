@@ -120,7 +120,7 @@ static bool expand_list(String& list, Vector<Range>& ranges)
     return true;
 }
 
-static void cut_file(const String& file, const Vector<Range>& byte_vector)
+static void cut_file(const String& file, const Vector<Range>& ranges, void (*process_line)(char*, size_t, const Vector<Range>&))
 {
     FILE* fp = stdin;
     if (!file.is_null()) {
@@ -142,16 +142,7 @@ static void cut_file(const String& file, const Vector<Range>& byte_vector)
         line[line_length - 1] = '\0';
         line_length--;
 
-        for (auto& i : byte_vector) {
-            if (i.m_from >= (size_t) line_length)
-                continue;
-
-
-            auto to = min(i.m_to, line_length);
-            auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
-            out("{}", sub_string);
-        }
-        outln();
+        process_line(line, line_length, ranges);
     }
 
     if (line)
@@ -159,6 +150,20 @@ static void cut_file(const String& file, const Vector<Range>& byte_vector)
 
     if (!file.is_null())
         fclose(fp);
+}
+
+static void process_line_bytes(char* line, size_t length, const Vector<Range>& ranges)
+{
+    for (auto& i : ranges) {
+        if (i.m_from >= length)
+            continue;
+
+
+        auto to = min(i.m_to, length);
+        auto sub_string = String(line).substring(i.m_from - 1, to - i.m_from + 1);
+        out("{}", sub_string);
+    }
+    outln();
 }
 
 int main(int argc, char** argv)
@@ -210,7 +215,7 @@ int main(int argc, char** argv)
 
     /* Process each file */
     for (auto& file : files)
-        cut_file(file, disjoint_ranges);
+        cut_file(file, disjoint_ranges, process_line_bytes);
 
     return 0;
 }
