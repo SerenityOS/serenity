@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/StringUtils.h>
+#include <AK/Vector.h>
 
 TEST_CASE(matches_null)
 {

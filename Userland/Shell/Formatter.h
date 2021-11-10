@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <ctype.h>
 
 namespace Shell {

@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 TEST_CASE(construct_empty)
 {
@@ -157,7 +158,7 @@ TEST_CASE(split_view)
     EXPECT_EQ(test_string_view.split_view("xx", true), Vector<StringView>({ "a", "bc", "d", "" }));
 
     test_string_view = "ax_b_cxd";
-    auto predicate = [](char ch) { return ch == 'x' || ch == '_'; };
+    Function<bool(char)> predicate = [](char ch) { return ch == 'x' || ch == '_'; };
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector<StringView>({ "a", "b", "c", "d" }));
     EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector<StringView>({ "a", "", "b", "c", "d" }));
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector<StringView>({ "a", "b", "c", "d" }));

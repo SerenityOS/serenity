@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>

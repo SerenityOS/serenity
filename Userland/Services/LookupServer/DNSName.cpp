@@ -7,6 +7,7 @@
 
 #include "DNSName.h"
 #include <AK/Random.h>
+#include <AK/Vector.h>
 #include <ctype.h>
 
 namespace LookupServer {

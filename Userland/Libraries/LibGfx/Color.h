@@ -242,29 +242,8 @@ public:
         return Color(min(255, (int)((float)red() * amount)), min(255, (int)((float)green() * amount)), min(255, (int)((float)blue() * amount)), alpha());
     }
 
-    Vector<Color> shades(u32 steps, float max = 1.f) const
-    {
-        float shade = 1.f;
-        float step = max / steps;
-        Vector<Color> shades;
-        for (u32 i = 0; i < steps; i++) {
-            shade -= step;
-            shades.append(this->darkened(shade));
-        }
-        return shades;
-    }
-
-    Vector<Color> tints(u32 steps, float max = 1.f) const
-    {
-        float shade = 1.f;
-        float step = max / steps;
-        Vector<Color> tints;
-        for (u32 i = 0; i < steps; i++) {
-            shade += step;
-            tints.append(this->lightened(shade));
-        }
-        return tints;
-    }
+    Vector<Color> shades(u32 steps, float max = 1.f) const;
+    Vector<Color> tints(u32 steps, float max = 1.f) const;
 
     constexpr Color inverted() const
     {

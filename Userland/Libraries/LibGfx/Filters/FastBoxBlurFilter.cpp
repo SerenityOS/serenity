@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Vector.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 
 namespace Gfx {

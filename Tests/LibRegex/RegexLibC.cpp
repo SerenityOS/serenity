@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibC/regex.h>
 #include <stdio.h>
 

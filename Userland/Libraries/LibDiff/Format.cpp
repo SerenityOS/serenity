@@ -7,6 +7,7 @@
 #include "Format.h"
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 
 namespace Diff {
 String generate_only_additions(const String& text)

@@ -9,11 +9,11 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringHash.h>
 #include <AK/StringUtils.h>
-#include <AK/Vector.h>
 
 namespace AK {
 
@@ -96,7 +96,7 @@ public:
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
     // FIXME: Implement find_last(StringView const&) for API symmetry.
 
-    [[nodiscard]] Vector<size_t> find_all(StringView const& needle) const { return StringUtils::find_all(*this, needle); }
+    [[nodiscard]] Vector<size_t> find_all(StringView needle) const;
 
     using SearchDirection = StringUtils::SearchDirection;
     [[nodiscard]] Optional<size_t> find_any_of(StringView const& needles, SearchDirection direction = SearchDirection::Forward) { return StringUtils::find_any_of(*this, needles, direction); }
@@ -116,28 +116,7 @@ public:
     [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
     [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
 
-    template<typename UnaryPredicate>
-    [[nodiscard]] Vector<StringView> split_view_if(UnaryPredicate&& predicate, bool keep_empty = false) const
-    {
-        if (is_empty())
-            return {};
-
-        Vector<StringView> v;
-        size_t substart = 0;
-        for (size_t i = 0; i < length(); ++i) {
-            char ch = characters_without_null_termination()[i];
-            if (predicate(ch)) {
-                size_t sublen = i - substart;
-                if (sublen != 0 || keep_empty)
-                    v.append(substring_view(substart, sublen));
-                substart = i + 1;
-            }
-        }
-        size_t taillen = length() - substart;
-        if (taillen != 0 || keep_empty)
-            v.append(substring_view(substart, taillen));
-        return v;
-    }
+    [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
 
     // Create a Vector of StringViews split by line endings. As of CommonMark
     // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage

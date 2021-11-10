@@ -9,6 +9,7 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 TEST_CASE(basic_optional)
 {

@@ -8,6 +8,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <AK/TypeList.h>
+#include <AK/Vector.h>
 
 template<typename F, typename... Args>
 F for_each_argument(F f, Args&&... args)
