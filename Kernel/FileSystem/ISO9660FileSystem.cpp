@@ -447,9 +447,10 @@ InodeMetadata ISO9660Inode::metadata() const
     return m_metadata;
 }
 
-ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> visitor) const
+ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> visitor) const
 {
     Array<u8, max_file_identifier_length> file_identifier_buffer;
+    ErrorOr<void> result;
 
     return fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
@@ -458,9 +459,9 @@ ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::Dire
         InodeIdentifier id { fsid(), get_inode_index(*record, filename) };
         auto entry = FileSystem::DirectoryEntryView(filename, id, static_cast<u8>(record->file_flags));
 
-        if (!visitor(entry)) {
+        result = visitor(entry);
+        if (result.is_error())
             return RecursionDecision::Break;
-        }
 
         return RecursionDecision::Continue;
     });

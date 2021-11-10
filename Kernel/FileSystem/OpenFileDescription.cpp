@@ -238,18 +238,17 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         return true;
     };
 
-    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) {
+    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &error, &stream, this](auto& entry) -> ErrorOr<void> {
         size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
         if (serialized_size > stream.remaining()) {
-            if (!flush_stream_to_output_buffer()) {
-                return false;
-            }
+            if (!flush_stream_to_output_buffer())
+                return error;
         }
         stream << (u64)entry.inode.index().value();
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
         stream << (u32)entry.name.length();
         stream << entry.name.bytes();
-        return true;
+        return {};
     });
     flush_stream_to_output_buffer();
 

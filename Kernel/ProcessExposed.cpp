@@ -232,18 +232,18 @@ ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(St
     return ENOENT;
 }
 
-ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
     auto parent_directory = m_parent_directory.strong_ref();
     if (parent_directory.is_null())
         return Error::from_errno(EINVAL);
-    callback({ ".", { fsid, component_index() }, DT_DIR });
-    callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR });
+    TRY(callback({ ".", { fsid, component_index() }, DT_DIR }));
+    TRY(callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR }));
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
-        callback({ component.name(), identifier, 0 });
+        TRY(callback({ component.name(), identifier, 0 }));
     }
     return {};
 }

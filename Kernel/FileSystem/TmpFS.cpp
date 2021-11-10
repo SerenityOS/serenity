@@ -107,18 +107,18 @@ InodeMetadata TmpFSInode::metadata() const
     return m_metadata;
 }
 
-ErrorOr<void> TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
     if (!is_directory())
         return ENOTDIR;
 
-    callback({ ".", identifier(), 0 });
-    callback({ "..", m_parent, 0 });
+    TRY(callback({ ".", identifier(), 0 }));
+    TRY(callback({ "..", m_parent, 0 }));
 
     for (auto& child : m_children) {
-        callback({ child.name->view(), child.inode->identifier(), 0 });
+        TRY(callback({ child.name->view(), child.inode->identifier(), 0 }));
     }
     return {};
 }

@@ -936,24 +936,26 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     return directory;
 }
 
-ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, 0 }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, 0 }, 0 }));
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
-        callback({ component.name(), identifier, 0 });
+        TRY(callback({ component.name(), identifier, 0 }));
     }
-    processes().for_each([&](Process& process) {
-        VERIFY(!(process.pid() < 0));
-        u64 process_id = (u64)process.pid().value();
-        InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
-        callback({ String::formatted("{:d}", process.pid().value()), identifier, 0 });
-        return IterationDecision::Continue;
+
+    return processes().with([&](auto& list) -> ErrorOr<void> {
+        for (auto& process : list) {
+            VERIFY(!(process.pid() < 0));
+            u64 process_id = (u64)process.pid().value();
+            InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
+            TRY(callback({ String::formatted("{:d}", process.pid().value()), identifier, 0 }));
+        }
+        return {};
     });
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(StringView name)

@@ -44,21 +44,23 @@ SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory con
     : SysFSDirectory("block"sv, devices_directory)
 {
 }
-ErrorOr<void> SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+
+ErrorOr<void> SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
 
-    SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
+    return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> ErrorOr<void> {
         for (auto& exposed_device : list) {
             if (!exposed_device.is_block_device())
                 continue;
-            callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
+            TRY(callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 }));
         }
+        return {};
     });
-    return {};
 }
+
 RefPtr<SysFSComponent> SysFSBlockDevicesDirectory::lookup(StringView name)
 {
     return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> RefPtr<SysFSComponent> {
@@ -80,21 +82,22 @@ SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirec
     : SysFSDirectory("char"sv, devices_directory)
 {
 }
-ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
 
-    SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {
+    return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> ErrorOr<void> {
         for (auto& exposed_device : list) {
             if (exposed_device.is_block_device())
                 continue;
-            callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 });
+            TRY(callback({ exposed_device.name(), { fsid, exposed_device.component_index() }, 0 }));
         }
+        return {};
     });
-    return {};
 }
+
 RefPtr<SysFSComponent> SysFSCharacterDevicesDirectory::lookup(StringView name)
 {
     return SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> RefPtr<SysFSComponent> {

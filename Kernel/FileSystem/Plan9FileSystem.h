@@ -158,7 +158,7 @@ public:
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
-    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override;

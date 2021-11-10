@@ -828,7 +828,7 @@ ErrorOr<void> Plan9FSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     // TODO: Should we synthesize "." and ".." here?
 
@@ -873,8 +873,13 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::Dire
                 u8 type;
                 StringView name;
                 decoder >> qid >> offset >> type >> name;
-                callback({ name, { fsid(), fs().allocate_fid() }, 0 });
+                result = callback({ name, { fsid(), fs().allocate_fid() }, 0 });
+                if (result.is_error())
+                    break;
             }
+
+            if (result.is_error())
+                break;
         }
 
         Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };

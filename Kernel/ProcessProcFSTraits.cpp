@@ -45,23 +45,23 @@ ErrorOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const ProcF
     return TRY(ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid()));
 }
 
-ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     auto process = m_process.strong_ref();
     if (!process)
         return ESRCH;
 
-    callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_pid_directory(process->pid()) }, DT_DIR });
-    callback({ "..", { fsid, ProcFSComponentRegistry::the().root_directory().component_index() }, DT_DIR });
-    callback({ "fd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions) }, DT_DIR });
-    callback({ "stacks", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks) }, DT_DIR });
-    callback({ "unveil", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Unveil) }, DT_REG });
-    callback({ "pledge", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Pledge) }, DT_REG });
-    callback({ "fds", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::OpenFileDescriptions) }, DT_DIR });
-    callback({ "exe", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink) }, DT_LNK });
-    callback({ "cwd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink) }, DT_LNK });
-    callback({ "perf_events", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents) }, DT_REG });
-    callback({ "vm", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats) }, DT_REG });
+    TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_pid_directory(process->pid()) }, DT_DIR }));
+    TRY(callback({ "..", { fsid, ProcFSComponentRegistry::the().root_directory().component_index() }, DT_DIR }));
+    TRY(callback({ "fd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::OpenFileDescriptions) }, DT_DIR }));
+    TRY(callback({ "stacks", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(process->pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks) }, DT_DIR }));
+    TRY(callback({ "unveil", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Unveil) }, DT_REG }));
+    TRY(callback({ "pledge", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::Pledge) }, DT_REG }));
+    TRY(callback({ "fds", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::OpenFileDescriptions) }, DT_DIR }));
+    TRY(callback({ "exe", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink) }, DT_LNK }));
+    TRY(callback({ "cwd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink) }, DT_LNK }));
+    TRY(callback({ "perf_events", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents) }, DT_REG }));
+    TRY(callback({ "vm", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(process->pid(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats) }, DT_REG }));
     return {};
 }
 
