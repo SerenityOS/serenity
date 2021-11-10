@@ -107,7 +107,7 @@ class AKString:
         self.val = val
 
     def to_string(self):
-        if int(self.val["m_impl"]["m_bits"]["m_value"]) == 0:
+        if int(self.val["m_impl"]["m_ptr"]) == 0:
             return '""'
         else:
             impl = AKRefPtr(self.val["m_impl"]).get_pointee().dereference()
@@ -184,7 +184,7 @@ class AKRefPtr:
     def get_pointee(self):
         inner_type = self.val.type.template_argument(0)
         inner_type_ptr = inner_type.pointer()
-        return self.val["m_bits"]["m_value"].cast(inner_type_ptr)
+        return self.val["m_ptr"].cast(inner_type_ptr)
 
     def children(self):
         return [('*', self.get_pointee())]
