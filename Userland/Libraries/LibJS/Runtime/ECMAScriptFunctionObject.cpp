@@ -777,7 +777,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         if (m_kind != FunctionKind::Generator)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
-        return normal_completion(TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame())));
+        auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame()));
+        return { Completion::Type::Return, generator_object, {} };
     } else {
         if (m_kind == FunctionKind::Generator)
             return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Generator function execution in AST interpreter");
