@@ -50,7 +50,7 @@ ThrowCompletionOr<Object*> GeneratorFunctionConstructor::construct(FunctionObjec
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
     VERIFY(bytecode_interpreter);
 
-    auto executable = Bytecode::Generator::generate(function->body(), true);
+    auto executable = Bytecode::Generator::generate(function->body(), FunctionKind::Generator);
     auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
     passes.perform(executable);
     if constexpr (JS_BYTECODE_DEBUG) {
