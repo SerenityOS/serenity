@@ -17,12 +17,13 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/FunctionKind.h>
 
 namespace JS::Bytecode {
 
 class Generator {
 public:
-    static Executable generate(ASTNode const&, bool is_in_generator_function = false);
+    static Executable generate(ASTNode const&, FunctionKind = FunctionKind::Regular);
 
     Register allocate_register();
 
@@ -111,9 +112,9 @@ public:
         return m_identifier_table->insert(move(string));
     }
 
-    bool is_in_generator_function() const { return m_is_in_generator_function; }
-    void enter_generator_context() { m_is_in_generator_function = true; }
-    void leave_generator_context() { m_is_in_generator_function = false; }
+    bool is_in_generator_or_async_function() const { return m_enclosing_function_kind == FunctionKind::Async || m_enclosing_function_kind == FunctionKind::Generator; }
+    bool is_in_generator_function() const { return m_enclosing_function_kind == FunctionKind::Generator; }
+    bool is_in_async_function() const { return m_enclosing_function_kind == FunctionKind::Async; }
 
 private:
     Generator();
@@ -129,7 +130,7 @@ private:
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };
-    bool m_is_in_generator_function { false };
+    FunctionKind m_enclosing_function_kind { FunctionKind::Regular };
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
 };

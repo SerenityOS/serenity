@@ -23,19 +23,19 @@ Generator::~Generator()
 {
 }
 
-Executable Generator::generate(ASTNode const& node, bool is_in_generator_function)
+Executable Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
-    if (is_in_generator_function) {
-        generator.enter_generator_context();
+    generator.m_enclosing_function_kind = enclosing_function_kind;
+    if (generator.is_in_generator_or_async_function()) {
         // Immediately yield with no value.
         auto& start_block = generator.make_block();
         generator.emit<Bytecode::Op::Yield>(Label { start_block });
         generator.switch_to_basic_block(start_block);
     }
     node.generate_bytecode(generator);
-    if (is_in_generator_function) {
+    if (generator.is_in_generator_or_async_function()) {
         // Terminate all unterminated blocks with yield return
         for (auto& block : generator.m_root_basic_blocks) {
             if (block.is_terminated())

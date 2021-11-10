@@ -13,6 +13,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/AsyncFunctionDriverWrapper.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ExecutionContext.h>
@@ -100,10 +101,9 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
+        case FunctionKind::Async:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
             prototype = global_object.generator_object_prototype();
-            break;
-        case FunctionKind::Async:
             break;
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -753,12 +753,10 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (bytecode_interpreter) {
-        if (m_kind == FunctionKind::Async)
-            return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Async function execution in Bytecode interpreter");
         // FIXME: pass something to evaluate default arguments with
         TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable.has_value()) {
-            m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind == FunctionKind::Generator);
+            m_bytecode_executable = Bytecode::Generator::generate(m_ecmascript_code, m_kind);
             m_bytecode_executable->name = m_name;
             auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
             passes.perform(*m_bytecode_executable);
@@ -778,10 +776,17 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         // NOTE: Running the bytecode should eventually return a completion.
         // Until it does, we assume "return" and include the undefined fallback from the call site.
-        if (m_kind != FunctionKind::Generator)
+        if (m_kind == FunctionKind::Regular)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
-        auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, move(*result_and_frame.frame)));
+        auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+
+        // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
+        //       See AwaitExpression::generate_bytecode() for the transformation.
+        if (m_kind == FunctionKind::Async)
+            return { Completion::Type::Return, TRY(AsyncFunctionDriverWrapper::create(global_object(), generator_object)), {} };
+
+        VERIFY(m_kind == FunctionKind::Generator);
         return { Completion::Type::Return, generator_object, {} };
     } else {
         if (m_kind == FunctionKind::Generator)
