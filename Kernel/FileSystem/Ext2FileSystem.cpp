@@ -1169,7 +1169,7 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, const StringView& name, mode_
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name == entry.name)
             return EEXIST;
-        entries.append({ entry.name, entry.inode.index(), entry.file_type });
+        TRY(entries.try_append({ entry.name, entry.inode.index(), entry.file_type }));
         return {};
     }));
 
@@ -1203,7 +1203,7 @@ ErrorOr<void> Ext2FSInode::remove_child(const StringView& name)
     Vector<Ext2FSDirectoryEntry> entries;
     TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name != entry.name)
-            entries.append({ entry.name, entry.inode.index(), entry.file_type });
+            TRY(entries.try_append({ entry.name, entry.inode.index(), entry.file_type }));
         return {};
     }));
 
