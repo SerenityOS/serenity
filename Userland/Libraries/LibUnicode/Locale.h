@@ -79,6 +79,7 @@ struct LocaleID {
 };
 
 enum class StandardNumberFormatType : u8 {
+    Decimal,
     Percent,
 };
 

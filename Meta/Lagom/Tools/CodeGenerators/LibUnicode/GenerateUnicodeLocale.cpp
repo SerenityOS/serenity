@@ -54,6 +54,7 @@ struct NumberFormat : public Unicode::NumberFormat {
 struct NumberSystem {
     StringIndexType system { 0 };
     HashMap<String, StringIndexType> symbols {};
+    NumberFormat decimal_format {};
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
     Vector<NumberFormat> currency_short_formats {};
@@ -576,6 +577,9 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto system = key.substring(decimal_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
+            auto format_object = value.as_object().get("standard"sv);
+            number_system.decimal_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
 
@@ -916,6 +920,7 @@ struct NumberFormat {
 struct NumberSystem {
     @string_index_type@ system { 0 };
     Array<@string_index_type@, @numeric_symbols_size@> symbols {};
+    NumberFormat decimal_format {};
     Span<NumberFormat const> decimal_long_formats {};
     Span<NumberFormat const> decimal_short_formats {};
     Span<NumberFormat const> currency_short_formats {};
@@ -1046,7 +1051,9 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
                 generator.append(" @index@,");
             }
 
-            generator.append(" }, @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span(), ");
+            generator.append(" }, ");
+            append_number_format(number_system.value.decimal_format);
+            generator.append(" @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span(), ");
             append_number_format(number_system.value.percent_format);
             generator.append(" },");
         }
@@ -1420,6 +1427,8 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         switch (type) {
+        case StandardNumberFormatType::Decimal:
+            return number_system->decimal_format.to_unicode_number_format();
         case StandardNumberFormatType::Percent:
             return number_system->percent_format.to_unicode_number_format();
         }
