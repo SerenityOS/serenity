@@ -550,6 +550,13 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
     auto patterns = pattern.split(';');
     VERIFY((patterns.size() == 1) || (patterns.size() == 2));
 
+    if (format.magnitude != 0) {
+        auto number_of_zeroes_in_pattern = patterns[0].count("0"sv);
+
+        VERIFY(format.magnitude >= number_of_zeroes_in_pattern);
+        format.compact_scale = format.magnitude - number_of_zeroes_in_pattern;
+    }
+
     auto zero_format = replace_patterns(move(patterns[0]));
     format.positive_format_index = ensure_unique_string(locale_data, String::formatted("{{plusSign}}{}", zero_format));
 
@@ -964,6 +971,7 @@ struct NumberFormat {
         Unicode::NumberFormat number_format {};
 
         number_format.magnitude = magnitude;
+        number_format.compact_scale = compact_scale;
         number_format.plurality = static_cast<Unicode::NumberFormat::Plurality>(plurality);
         number_format.zero_format = s_string_list[zero_format];
         number_format.positive_format = s_string_list[positive_format];
@@ -973,6 +981,7 @@ struct NumberFormat {
     }
 
     u8 magnitude { 0 };
+    u8 compact_scale { 0 };
     u8 plurality { 0 };
     @string_index_type@ zero_format { 0 };
     @string_index_type@ positive_format { 0 };
@@ -1051,11 +1060,12 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {
 
     auto append_number_format = [&](auto const& number_format) {
         generator.set("magnitude"sv, String::number(number_format.magnitude));
+        generator.set("compact_scale"sv, String::number(number_format.compact_scale));
         generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
         generator.set("zero_format"sv, String::number(number_format.zero_format_index));
         generator.set("positive_format"sv, String::number(number_format.positive_format_index));
         generator.set("negative_format"sv, String::number(number_format.negative_format_index));
-        generator.append("{ @magnitude@, @plurality@, @zero_format@, @positive_format@, @negative_format@ },");
+        generator.append("{ @magnitude@, @compact_scale@, @plurality@, @zero_format@, @positive_format@, @negative_format@ },");
     };
 
     auto append_number_formats = [&](String name, auto const& number_formats) {
