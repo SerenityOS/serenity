@@ -248,6 +248,30 @@ ThrowCompletionOr<String> to_show_calendar_option(GlobalObject& global_object, O
     return option.as_string().string();
 }
 
+// 13.12 ToShowTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowtimezonenameoption
+ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject& global_object, Object const& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Return ? GetOption(normalizedOptions, "timeZoneName", « String », « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.timeZoneName, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
+// 13.13 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
+ThrowCompletionOr<String> to_show_offset_option(GlobalObject& global_object, Object const& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Return ? GetOption(normalizedOptions, "offset", « String », « "auto", "never" », "auto").
+    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, { OptionType::String }, { "auto"sv, "never"sv }, js_string(vm, "auto"sv)));
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
 // 13.14 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_object, Object const& normalized_options, Optional<double> dividend, bool inclusive)
 {
