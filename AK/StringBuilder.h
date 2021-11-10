@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    bool will_append(size_t);
+    ErrorOr<void> will_append(size_t);
     u8* data() { return m_buffer.data(); }
     u8 const* data() const { return m_buffer.data(); }
 

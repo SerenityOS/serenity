@@ -56,8 +56,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
     if (m_context.tls_buffer.size() + packet.size() > 16 * KiB)
         schedule_or_perform_flush(true);
 
-    auto ok = m_context.tls_buffer.try_append(packet.data(), packet.size());
-    if (!ok) {
+    if (m_context.tls_buffer.try_append(packet.data(), packet.size()).is_error()) {
         // Toooooo bad, drop the record on the ground.
         return;
     }
@@ -498,7 +497,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         } else {
             dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
 
-            if (!m_context.application_buffer.try_append(plain.data(), plain.size())) {
+            if (m_context.application_buffer.try_append(plain.data(), plain.size()).is_error()) {
                 payload_res = (i8)Error::DecryptionFailed;
                 auto packet = build_alert(true, (u8)AlertDescription::DecryptionFailed);
                 write_packet(packet);

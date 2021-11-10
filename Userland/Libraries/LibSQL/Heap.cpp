@@ -75,7 +75,7 @@ bool Heap::write_block(u32 block, ByteBuffer& buffer)
     VERIFY(buffer.size() <= BLOCKSIZE);
     auto sz = buffer.size();
     if (sz < BLOCKSIZE) {
-        if (!buffer.try_resize(BLOCKSIZE))
+        if (buffer.try_resize(BLOCKSIZE).is_error())
             return false;
         memset(buffer.offset_pointer((int)sz), 0, BLOCKSIZE - sz);
     }

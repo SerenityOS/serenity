@@ -460,7 +460,7 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
                 break;
             }
             auto alias = split_line[i].to_byte_buffer();
-            if (!alias.try_append("\0", sizeof(char)))
+            if (alias.try_append("\0", sizeof(char)).is_error())
                 return false;
             __getserv_alias_list_buffer.append(move(alias));
         }
@@ -630,7 +630,7 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
             if (split_line[i].starts_with('#'))
                 break;
             auto alias = split_line[i].to_byte_buffer();
-            if (!alias.try_append("\0", sizeof(char)))
+            if (alias.try_append("\0", sizeof(char)).is_error())
                 return false;
             __getproto_alias_list_buffer.append(move(alias));
         }

@@ -39,7 +39,7 @@ ByteBuffer decode_pem(ReadonlyBytes data)
                 dbgln("Failed to decode PEM, likely bad Base64");
                 return {};
             }
-            if (!decoded.try_append(b64decoded.value().data(), b64decoded.value().size())) {
+            if (decoded.try_append(b64decoded.value().data(), b64decoded.value().size()).is_error()) {
                 dbgln("Failed to decode PEM, likely OOM condition");
                 return {};
             }

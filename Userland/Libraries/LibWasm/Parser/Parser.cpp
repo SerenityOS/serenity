@@ -739,7 +739,7 @@ ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
         return name.error();
 
     ByteBuffer data_buffer;
-    if (!data_buffer.try_resize(64))
+    if (data_buffer.try_resize(64).is_error())
         return ParseError::OutOfMemory;
 
     while (!stream.has_any_error() && !stream.unreliable_eof()) {
@@ -747,7 +747,7 @@ ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
         auto size = stream.read({ buf, 16 });
         if (size == 0)
             break;
-        if (!data_buffer.try_append(buf, size))
+        if (data_buffer.try_append(buf, size).is_error())
             return with_eof_check(stream, ParseError::HugeAllocationRequested);
     }
 
