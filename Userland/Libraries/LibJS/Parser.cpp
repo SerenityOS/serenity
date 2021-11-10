@@ -1449,7 +1449,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             function_kind = FunctionKind::Generator;
         } else if (match_identifier()) {
             auto identifier = consume();
-            if (identifier.original_value() == "async" && match_property_key()) {
+            if (identifier.original_value() == "async" && match_property_key() && !m_state.current_token.trivia_contains_line_terminator()) {
                 property_type = ObjectProperty::Type::KeyValue;
                 property_name = parse_property_key();
                 function_kind = FunctionKind::Async;

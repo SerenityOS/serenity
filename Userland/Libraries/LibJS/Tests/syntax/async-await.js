@@ -16,7 +16,7 @@ describe("parsing object literal async functions", () => {
     test("simple", () => {
         expect(`x = { async foo() { } }`).toEval();
         expect(`x = { async
-                foo() { } }`).toEval();
+                foo() { } }`).not.toEval();
     });
     test("await expression", () => {
         expect(`x = { foo() { await bar(); } }`).not.toEval();
