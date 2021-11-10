@@ -14,7 +14,7 @@
 #include <LibGUI/Model.h>
 
 struct Match {
-    int offset;
+    u64 offset;
     String value;
 };
 

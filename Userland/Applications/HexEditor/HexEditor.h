@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "HexDocument.h"
 #include "SearchResultsModel.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
@@ -32,14 +33,15 @@ public:
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
 
-    size_t buffer_size() const { return m_buffer.size(); }
-    void set_buffer(const ByteBuffer&);
+    size_t buffer_size() const { return m_document->size(); }
+    bool open_new_file(size_t size);
+    void open_file(NonnullRefPtr<Core::File> file);
     void fill_selection(u8 fill_byte);
-    bool write_to_file(const String& path);
-    bool write_to_file(int fd);
+    bool save_as(int fd);
+    bool save();
 
     void select_all();
-    bool has_selection() const { return !((m_selection_end < m_selection_start) || m_buffer.is_empty()); }
+    bool has_selection() const { return !((m_selection_end < m_selection_start) || m_document->size()); }
     size_t selection_size();
     size_t selection_start_offset() const { return m_selection_start; }
     bool copy_selected_text_to_clipboard();
@@ -72,16 +74,15 @@ private:
     size_t m_line_spacing { 4 };
     size_t m_content_length { 0 };
     size_t m_bytes_per_row { 16 };
-    ByteBuffer m_buffer;
     bool m_in_drag_select { false };
     size_t m_selection_start { 0 };
     size_t m_selection_end { 0 };
-    HashMap<size_t, u8> m_tracked_changes;
     size_t m_position { 0 };
     bool m_cursor_at_low_nibble { false };
     EditMode m_edit_mode { Hex };
     NonnullRefPtr<Core::Timer> m_blink_timer;
     bool m_cursor_blink_active { false };
+    NonnullOwnPtr<HexDocument> m_document;
 
     static constexpr int m_address_bar_width = 90;
     static constexpr int m_padding = 5;

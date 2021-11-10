@@ -75,12 +75,10 @@ HexEditorWidget::HexEditorWidget()
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 m_document_dirty = false;
-                auto buffer_result = ByteBuffer::create_zeroed(file_size.value());
-                if (!buffer_result.has_value()) {
+                if (!m_editor->open_new_file(file_size.value())) {
                     GUI::MessageBox::show(window(), "Entered file size is too large.", "Error", GUI::MessageBox::Type::Error);
                     return;
                 }
-                m_editor->set_buffer(buffer_result.release_value());
                 set_path({});
                 update_title();
             } else {
@@ -90,7 +88,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window()->window_id());
+        auto response = FileSystemAccessClient::Client::the().open_file(window()->window_id(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
 
         if (response.error != 0) {
             if (response.error != -1)
@@ -113,25 +111,18 @@ HexEditorWidget::HexEditorWidget()
         if (m_path.is_empty())
             return m_save_as_action->activate();
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window()->window_id(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
-
-        if (response.error != 0) {
-            if (response.error != -1)
-                GUI::MessageBox::show_error(window(), String::formatted("Unable to save file: {}", strerror(response.error)));
-            return;
-        }
-
-        if (!m_editor->write_to_file(*response.fd)) {
+        if (!m_editor->save()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
         } else {
             m_document_dirty = false;
+            m_editor->update();
             update_title();
         }
         return;
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().save_file(window()->window_id(), m_name, m_extension);
+        auto response = FileSystemAccessClient::Client::the().save_file(window()->window_id(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
 
         if (response.error != 0) {
             if (response.error != -1)
@@ -139,7 +130,7 @@ HexEditorWidget::HexEditorWidget()
             return;
         }
 
-        if (!m_editor->write_to_file(*response.fd)) {
+        if (!m_editor->save_as(*response.fd)) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
@@ -357,7 +348,7 @@ void HexEditorWidget::open_file(int fd, String const& path)
     VERIFY(path.starts_with("/"sv));
     auto file = Core::File::construct();
 
-    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
+    if (!file->open(fd, Core::OpenMode::ReadWrite, Core::File::ShouldCloseFileDescriptor::Yes) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }
@@ -373,7 +364,7 @@ void HexEditorWidget::open_file(int fd, String const& path)
     }
 
     m_document_dirty = false;
-    m_editor->set_buffer(file->read_all()); // FIXME: On really huge files, this is never going to work. Should really create a framework to fetch data from the file on-demand.
+    m_editor->open_file(file);
     set_path(path);
 }
 

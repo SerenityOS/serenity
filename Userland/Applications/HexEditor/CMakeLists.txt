@@ -11,6 +11,7 @@ compile_gml(FindDialog.gml FindDialogGML.h find_dialog_gml)
 set(SOURCES
     HexEditor.cpp
     HexEditorWidget.cpp
+    HexDocument.cpp
     FindDialog.cpp
     GoToOffsetDialog.cpp
     main.cpp
