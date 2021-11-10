@@ -31,7 +31,7 @@ struct LocaleResult {
 
 struct PatternPartition {
     StringView type;
-    StringView value;
+    String value;
 };
 
 Optional<Unicode::LocaleID> is_structurally_valid_language_tag(StringView locale);

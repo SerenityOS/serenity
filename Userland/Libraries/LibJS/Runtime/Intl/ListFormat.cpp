@@ -83,14 +83,14 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
     Vector<PatternPartition> result {};
 
     // 3. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
-    for (auto const& pattern_part : pattern_parts) {
+    for (auto& pattern_part : pattern_parts) {
         // a. Let part be patternPart.[[Type]].
         auto part = pattern_part.type;
 
         // b. If part is "literal", then
         if (part == "literal"sv) {
             // i. Append Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } to result.
-            result.append({ part, pattern_part.value });
+            result.append({ part, move(pattern_part.value) });
         }
         // c. Else,
         else {
@@ -219,9 +219,9 @@ String format_list(ListFormat const& list_format, Vector<String> const& list)
     StringBuilder result;
 
     // 3. For each Record { [[Type]], [[Value]] } part in parts, do
-    for (auto const& part : parts) {
+    for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(part.value);
+        result.append(move(part.value));
     }
 
     // 4. Return result.
@@ -243,7 +243,7 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
     size_t n = 0;
 
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
-    for (auto const& part : parts) {
+    for (auto& part : parts) {
         // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
@@ -251,7 +251,7 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
         MUST(object->create_data_property_or_throw(vm.names.type, js_string(vm, part.type)));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
-        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, part.value)));
+        MUST(object->create_data_property_or_throw(vm.names.value, js_string(vm, move(part.value))));
 
         // d. Perform ! CreateDataPropertyOrThrow(result, ! ToString(n), O).
         MUST(result->create_data_property_or_throw(n, object));
