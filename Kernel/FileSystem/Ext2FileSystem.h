@@ -66,10 +66,10 @@ private:
     ErrorOr<void> grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, Span<BlockBasedFileSystem::BlockIndex>, Vector<BlockBasedFileSystem::BlockIndex>&, unsigned&);
     ErrorOr<void> shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, size_t, unsigned&);
     ErrorOr<void> flush_block_list();
-    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list() const;
-    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_with_meta_blocks() const;
-    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_impl(bool include_block_list_blocks) const;
-    Vector<BlockBasedFileSystem::BlockIndex> compute_block_list_impl_internal(const ext2_inode& e2inode, bool include_block_list_blocks) const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list() const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_with_meta_blocks() const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl(bool include_block_list_blocks) const;
+    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl_internal(ext2_inode const&, bool include_block_list_blocks) const;
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
