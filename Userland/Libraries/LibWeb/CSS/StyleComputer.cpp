@@ -635,18 +635,10 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Transition declarations [css-transitions-1]
 }
 
-static NonnullRefPtr<StyleValue> get_initial_value(CSS::PropertyID property_id)
-{
-    auto value = property_initial_value(property_id);
-    if (!value)
-        return InitialStyleValue::the();
-    return value.release_nonnull();
-};
-
 static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element)
 {
     if (!element || !element->parent_element() || !element->parent_element()->specified_css_values())
-        return get_initial_value(property_id);
+        return property_initial_value(property_id);
     auto& map = element->parent_element()->specified_css_values()->properties();
     auto it = map.find(property_id);
     VERIFY(it != map.end());
@@ -662,12 +654,12 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
         if (is_inherited_property(property_id))
             style.m_property_values.set(property_id, get_inherit_value(property_id, element));
         else
-            style.m_property_values.set(property_id, get_initial_value(property_id));
+            style.m_property_values.set(property_id, property_initial_value(property_id));
         return;
     }
 
     if (it->value->is_initial()) {
-        it->value = get_initial_value(property_id);
+        it->value = property_initial_value(property_id);
         return;
     }
 
