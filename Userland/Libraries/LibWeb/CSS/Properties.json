@@ -1,7 +1,7 @@
 {
   "align-items": {
     "inherited": false,
-    "initial": "normal",
+    "initial": "stretch",
     "valid-identifiers": [
       "center",
       "baseline",
@@ -314,7 +314,7 @@
   },
   "border-spacing": {
     "inherited": true,
-    "initial": "0px 0px",
+    "initial": "0",
     "quirks": [
       "unitless-length"
     ]
@@ -1195,7 +1195,7 @@
   },
   "text-decoration-thickness": {
     "inherited": false,
-    "initial": "none",
+    "initial": "auto",
     "valid-types": [
       "length",
       "percentage"
