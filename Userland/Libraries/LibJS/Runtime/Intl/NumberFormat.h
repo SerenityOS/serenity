@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Intl {
@@ -150,7 +151,12 @@ public:
     StringView sign_display_string() const;
     void set_sign_display(StringView sign_display);
 
+    NativeFunction* bound_format() const { return m_bound_format; }
+    void set_bound_format(NativeFunction* bound_format) { m_bound_format = bound_format; }
+
 private:
+    virtual void visit_edges(Visitor&) override;
+
     String m_locale;                                        // [[Locale]]
     String m_data_locale;                                   // [[DataLocale]]
     String m_numbering_system;                              // [[NumberingSystem]]
@@ -170,11 +176,31 @@ private:
     Notation m_notation { Notation::Invalid };              // [[Notation]]
     Optional<CompactDisplay> m_compact_display {};          // [[CompactDisplay]]
     SignDisplay m_sign_display { SignDisplay::Invalid };    // [[SignDisplay]]
+    NativeFunction* m_bound_format { nullptr };             // [[BoundFormat]]
+};
+
+struct FormatResult {
+    String formatted_string;       // [[FormattedString]]
+    double rounded_number { 0.0 }; // [[RoundedNumber]]
+};
+
+struct RawFormatResult : public FormatResult {
+    int digits { 0 }; // [[IntegerDigitsCount]]
 };
 
 ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation);
 ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value);
 int currency_digits(StringView currency);
+FormatResult format_numeric_to_string(NumberFormat& number_format, double number);
+Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, double number);
+Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, double number, String formatted_string, int exponent);
+String format_numeric(NumberFormat& number_format, double number);
+RawFormatResult to_raw_precision(double number, int min_precision, int max_precision);
+RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction);
 ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
+Optional<StringView> get_number_format_pattern(NumberFormat& number_format, double number);
+StringView get_notation_sub_pattern(NumberFormat& number_format, int exponent);
+int compute_exponent(NumberFormat& number_format, double number);
+int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude);
 
 }
