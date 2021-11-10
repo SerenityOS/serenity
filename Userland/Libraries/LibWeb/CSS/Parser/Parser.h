@@ -57,6 +57,8 @@ public:
     explicit TokenStream(Vector<T> const&);
     ~TokenStream();
 
+    TokenStream(TokenStream<T> const&) = delete;
+
     bool has_next_token();
     T const& next_token();
     T const& peek_token(int offset = 0);
