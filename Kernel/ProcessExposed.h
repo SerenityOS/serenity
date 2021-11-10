@@ -67,7 +67,7 @@ class ProcFSExposedComponent : public RefCounted<ProcFSExposedComponent> {
 public:
     StringView name() const { return m_name->view(); }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return EROFS; }
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
@@ -105,7 +105,7 @@ class ProcFSExposedDirectory
     friend class ProcFSComponentRegistry;
 
 public:
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     void add_component(const ProcFSExposedComponent&);
 
@@ -147,7 +147,7 @@ public:
     virtual ~ProcFSRootDirectory();
 
 private:
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     ProcFSRootDirectory();
 };
 

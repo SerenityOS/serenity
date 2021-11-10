@@ -19,7 +19,7 @@ class SysFSRootDirectory final : public SysFSDirectory {
 
 public:
     static NonnullRefPtr<SysFSRootDirectory> create();
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
 
 private:
     SysFSRootDirectory();
@@ -53,7 +53,7 @@ private:
 class SysFSBlockDevicesDirectory final : public SysFSDirectory {
 public:
     static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDevicesDirectory const&);
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
 private:
@@ -63,7 +63,7 @@ private:
 class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
 public:
     static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDevicesDirectory const&);
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
 private:
@@ -135,7 +135,7 @@ public:
 protected:
     SysFSInode(SysFS const&, SysFSComponent const&);
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual InodeMetadata metadata() const override;
@@ -168,7 +168,7 @@ protected:
     SysFSDirectoryInode(SysFS const&, SysFSComponent const&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
-    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 };
 

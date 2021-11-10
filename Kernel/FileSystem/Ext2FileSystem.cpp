@@ -1058,7 +1058,7 @@ Ext2FS::FeaturesReadOnly Ext2FS::get_features_readonly() const
     return Ext2FS::FeaturesReadOnly::None;
 }
 
-ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(is_directory());
 
@@ -1079,8 +1079,7 @@ ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::Direc
         while (entry < entries_end) {
             if (entry->inode != 0) {
                 dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::traverse_as_directory(): inode {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
-                if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
-                    return {};
+                TRY(callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }));
             }
             entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
         }
@@ -1167,20 +1166,12 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, const StringView& name, mode_
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::add_child(): Adding inode {} with name '{}' and mode {:o} to directory {}", identifier(), child.index(), name, mode, index());
 
     Vector<Ext2FSDirectoryEntry> entries;
-    bool name_already_exists = false;
-    TRY(traverse_as_directory([&](auto& entry) {
-        if (name == entry.name) {
-            name_already_exists = true;
-            return false;
-        }
+    TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
+        if (name == entry.name)
+            return EEXIST;
         entries.append({ entry.name, entry.inode.index(), entry.file_type });
-        return true;
+        return {};
     }));
-
-    if (name_already_exists) {
-        dbgln("Ext2FSInode[{}]::add_child(): Name '{}' already exists", identifier(), name);
-        return EEXIST;
-    }
 
     TRY(child.increment_link_count());
 
@@ -1210,10 +1201,10 @@ ErrorOr<void> Ext2FSInode::remove_child(const StringView& name)
     InodeIdentifier child_id { fsid(), child_inode_index };
 
     Vector<Ext2FSDirectoryEntry> entries;
-    TRY(traverse_as_directory([&](auto& entry) {
+    TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         if (name != entry.name)
             entries.append({ entry.name, entry.inode.index(), entry.file_type });
-        return true;
+        return {};
     }));
 
     TRY(write_directory(entries));
@@ -1540,9 +1531,9 @@ ErrorOr<void> Ext2FSInode::populate_lookup_cache() const
         return {};
     HashMap<String, InodeIndex> children;
 
-    TRY(traverse_as_directory([&children](auto& entry) {
+    TRY(traverse_as_directory([&children](auto& entry) -> ErrorOr<void> {
         children.set(entry.name, entry.inode.index());
-        return true;
+        return {};
     }));
 
     VERIFY(m_lookup_cache.is_empty());

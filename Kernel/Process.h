@@ -566,10 +566,10 @@ public:
     ErrorOr<void> procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
     mode_t binary_link_required_mode() const;
     ErrorOr<size_t> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
-    ErrorOr<void> traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
+    ErrorOr<void> traverse_stacks_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_stacks_directory(const ProcFS&, StringView name) const;
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
-    ErrorOr<void> traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
+    ErrorOr<void> traverse_file_descriptions_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
 
 private:
@@ -723,7 +723,7 @@ public:
 
         virtual InodeIndex component_index() const override;
         virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override;
-        virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+        virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
         virtual mode_t required_mode() const override { return 0555; }
 
         virtual UserID owner_user() const override;
