@@ -48,7 +48,9 @@ struct NumberFormat : public Unicode::NumberFormat {
         VERIFY_NOT_REACHED();
     }
 
-    StringIndexType format_index { 0 };
+    StringIndexType zero_format_index { 0 };
+    StringIndexType positive_format_index { 0 };
+    StringIndexType negative_format_index { 0 };
 };
 
 struct NumberSystem {
@@ -513,6 +515,54 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
         locale_data.keywords.append(key);
 }
 
+static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format)
+{
+    // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
+    // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
+    auto replace_patterns = [](String pattern) {
+        static HashMap<StringView, StringView> replacements = {
+            { "%"sv, "{percentSign}"sv },
+            { "+"sv, "{plusSign}"sv },
+            { "-"sv, "{minusSign}"sv },
+            { "¤"sv, "{currencyCode}"sv }, // U+00A4 Currency Sign
+        };
+
+        if (auto start_number_index = pattern.find('#'); start_number_index.has_value()) {
+            auto end_number_index = *start_number_index + 1;
+
+            for (; end_number_index < pattern.length(); ++end_number_index) {
+                auto ch = pattern[end_number_index];
+                if ((ch != '#') && (ch != '0') && (ch != ',') && (ch != '.'))
+                    break;
+            }
+
+            pattern = String::formatted("{}{{number}}{}",
+                *start_number_index > 0 ? pattern.substring_view(0, *start_number_index) : ""sv,
+                pattern.substring_view(end_number_index));
+        }
+
+        for (auto const& replacement : replacements)
+            pattern = pattern.replace(replacement.key, replacement.value, true);
+
+        return pattern;
+    };
+
+    auto patterns = pattern.split(';');
+    VERIFY((patterns.size() == 1) || (patterns.size() == 2));
+
+    auto zero_format = replace_patterns(move(patterns[0]));
+    format.positive_format_index = ensure_unique_string(locale_data, String::formatted("{{plusSign}}{}", zero_format));
+
+    if (patterns.size() == 2) {
+        auto negative_format = replace_patterns(move(patterns[1]));
+        format.negative_format_index = ensure_unique_string(locale_data, move(negative_format));
+    } else {
+        format.negative_format_index = ensure_unique_string(locale_data, String::formatted("{{minusSign}}{}", zero_format));
+    }
+
+    format.zero_format_index = ensure_unique_string(locale_data, move(zero_format));
+}
+
 static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
@@ -550,7 +600,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             NumberFormat format {};
             format.magnitude = static_cast<u8>(log10(type));
             format.plurality = NumberFormat::plurality_from_string(split_key[2]);
-            format.format_index = ensure_unique_string(locale_data, value.as_string());
+            parse_number_pattern(value.as_string(), locale_data, format);
 
             result.append(move(format));
         });
@@ -580,7 +630,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            number_system.decimal_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.decimal_format);
 
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
@@ -592,10 +642,10 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            number_system.currency_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.currency_format);
 
             format_object = value.as_object().get("accounting"sv);
-            number_system.accounting_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.accounting_format);
 
             if (value.as_object().has("short"sv)) {
                 auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
@@ -606,7 +656,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            number_system.percent_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.percent_format);
         }
     });
 }
@@ -915,14 +965,18 @@ struct NumberFormat {
 
         number_format.magnitude = magnitude;
         number_format.plurality = static_cast<Unicode::NumberFormat::Plurality>(plurality);
-        number_format.format = s_string_list[format];
+        number_format.zero_format = s_string_list[zero_format];
+        number_format.positive_format = s_string_list[positive_format];
+        number_format.negative_format = s_string_list[negative_format];
 
         return number_format;
     }
 
     u8 magnitude { 0 };
     u8 plurality { 0 };
-    @string_index_type@ format { 0 };
+    @string_index_type@ zero_format { 0 };
+    @string_index_type@ positive_format { 0 };
+    @string_index_type@ negative_format { 0 };
 };
 
 struct NumberSystem {
@@ -998,8 +1052,10 @@ static constexpr Array<@string_index_type@, @size@> @name@ { {
     auto append_number_format = [&](auto const& number_format) {
         generator.set("magnitude"sv, String::number(number_format.magnitude));
         generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
-        generator.set("format"sv, String::number(number_format.format_index));
-        generator.append("{ @magnitude@, @plurality@, @format@ },");
+        generator.set("zero_format"sv, String::number(number_format.zero_format_index));
+        generator.set("positive_format"sv, String::number(number_format.positive_format_index));
+        generator.set("negative_format"sv, String::number(number_format.negative_format_index));
+        generator.append("{ @magnitude@, @plurality@, @zero_format@, @positive_format@, @negative_format@ },");
     };
 
     auto append_number_formats = [&](String name, auto const& number_formats) {
