@@ -92,6 +92,7 @@ set(SOURCES
     Runtime/Intl/LocalePrototype.cpp
     Runtime/Intl/NumberFormat.cpp
     Runtime/Intl/NumberFormatConstructor.cpp
+    Runtime/Intl/NumberFormatFunction.cpp
     Runtime/Intl/NumberFormatPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
