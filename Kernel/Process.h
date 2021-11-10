@@ -641,8 +641,7 @@ public:
         ErrorOr<void> try_clone(const Kernel::Process::OpenFileDescriptions& other)
         {
             SpinlockLocker lock_other(other.m_fds_lock);
-            if (!try_resize(other.m_fds_metadatas.size()))
-                return ENOMEM;
+            TRY(try_resize(other.m_fds_metadatas.size()));
 
             for (size_t i = 0; i < other.m_fds_metadatas.size(); ++i) {
                 m_fds_metadatas[i] = other.m_fds_metadatas[i];
@@ -662,7 +661,7 @@ public:
         ErrorOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
         size_t open_count() const;
 
-        bool try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
+        ErrorOr<void> try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
 
         size_t max_open() const
         {

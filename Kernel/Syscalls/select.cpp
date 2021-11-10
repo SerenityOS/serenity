@@ -72,10 +72,8 @@ ErrorOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*>
             continue;
 
         auto description = TRY(fds().open_file_description(fd));
-        if (!fds_info.try_append({ move(description), block_flags }))
-            return ENOMEM;
-        if (!selected_fds.try_append(fd))
-            return ENOMEM;
+        TRY(fds_info.try_append({ move(description), block_flags }));
+        TRY(selected_fds.try_append(fd));
     }
 
     if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
@@ -146,8 +144,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
         nfds_checked *= params.nfds;
         if (nfds_checked.has_overflow())
             return EFAULT;
-        if (!fds_copy.try_resize(params.nfds))
-            return ENOMEM;
+        TRY(fds_copy.try_resize(params.nfds));
         TRY(copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()));
     }
 
@@ -162,8 +159,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
             block_flags |= BlockFlags::Write;
         if (pfd.events & POLLPRI)
             block_flags |= BlockFlags::ReadPriority;
-        if (!fds_info.try_append({ move(description), block_flags }))
-            return ENOMEM;
+        TRY(fds_info.try_append({ move(description), block_flags }));
     }
 
     auto current_thread = Thread::current();

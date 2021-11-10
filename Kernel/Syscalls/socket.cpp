@@ -168,8 +168,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
-    if (!iovs.try_resize(msg.msg_iovlen))
-        return ENOMEM;
+    TRY(iovs.try_resize(msg.msg_iovlen));
     TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
     if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
         return EINVAL;
@@ -201,8 +200,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
-    if (!iovs.try_resize(msg.msg_iovlen))
-        return ENOMEM;
+    TRY(iovs.try_resize(msg.msg_iovlen));
     TRY(copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen));
 
     Userspace<sockaddr*> user_addr((FlatPtr)msg.msg_name);
