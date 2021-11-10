@@ -21,8 +21,8 @@ public:
 
     void notify_about_new_console_message(i32 message_index);
     void handle_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);
-    void print_source_line(const StringView&);
-    void print_html(const StringView&);
+    void print_source_line(StringView);
+    void print_html(StringView);
     void reset();
 
     Function<void(const String&)> on_js_input;

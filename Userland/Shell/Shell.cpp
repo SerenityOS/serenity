@@ -168,7 +168,7 @@ String Shell::expand_tilde(const String& expression)
     return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
 }
 
-bool Shell::is_glob(const StringView& s)
+bool Shell::is_glob(StringView s)
 {
     for (size_t i = 0; i < s.length(); i++) {
         char c = s.characters_without_null_termination()[i];
@@ -178,7 +178,7 @@ bool Shell::is_glob(const StringView& s)
     return false;
 }
 
-Vector<StringView> Shell::split_path(const StringView& path)
+Vector<StringView> Shell::split_path(StringView path)
 {
     Vector<StringView> parts;
 
@@ -200,7 +200,7 @@ Vector<StringView> Shell::split_path(const StringView& path)
     return parts;
 }
 
-Vector<String> Shell::expand_globs(const StringView& path, StringView base)
+Vector<String> Shell::expand_globs(StringView path, StringView base)
 {
     auto explicitly_set_base = false;
     if (path.starts_with('/')) {
@@ -238,7 +238,7 @@ Vector<String> Shell::expand_globs(const StringView& path, StringView base)
     return results;
 }
 
-Vector<String> Shell::expand_globs(Vector<StringView> path_segments, const StringView& base)
+Vector<String> Shell::expand_globs(Vector<StringView> path_segments, StringView base)
 {
     if (path_segments.is_empty()) {
         String base_str = base;
@@ -472,7 +472,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     return true;
 }
 
-String Shell::format(const StringView& source, ssize_t& cursor) const
+String Shell::format(StringView source, ssize_t& cursor) const
 {
     Formatter formatter(source, cursor);
     auto result = formatter.format();
@@ -513,7 +513,7 @@ String Shell::resolve_alias(const String& name) const
     return m_aliases.get(name).value_or({});
 }
 
-bool Shell::is_runnable(const StringView& name)
+bool Shell::is_runnable(StringView name)
 {
     auto parts = name.split_view('/');
     auto path = name.to_string();
@@ -527,7 +527,7 @@ bool Shell::is_runnable(const StringView& name)
         [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
 
-int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_position_override)
+int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_override)
 {
     // The default-constructed mode of the shell
     // should not be used for execution!
@@ -1277,7 +1277,7 @@ String Shell::unescape_token(const String& token)
     return builder.build();
 }
 
-String Shell::find_in_path(const StringView& program_name)
+String Shell::find_in_path(StringView program_name)
 {
     String path = getenv("PATH");
     if (!path.is_empty()) {
@@ -1593,7 +1593,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
                 negate = true;
                 option_pattern = option_pattern.substring_view(3, option_pattern.length() - 3);
             }
-            auto maybe_negate = [&](const StringView& view) {
+            auto maybe_negate = [&](StringView view) {
                 static StringBuilder builder;
                 builder.clear();
                 builder.append("--");

@@ -29,9 +29,9 @@ public:
     virtual void invalidate() override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;
     virtual bool is_searchable() const override;
-    virtual Vector<ModelIndex> matches(StringView const&, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
+    virtual Vector<ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) override;
 
-    void set_filter_term(StringView const& term);
+    void set_filter_term(StringView term);
 
     ModelIndex map(ModelIndex const&) const;
 

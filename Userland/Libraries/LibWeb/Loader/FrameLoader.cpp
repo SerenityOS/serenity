@@ -210,7 +210,7 @@ bool FrameLoader::load(const AK::URL& url, Type type)
     return load(request, type);
 }
 
-void FrameLoader::load_html(const StringView& html, const AK::URL& url)
+void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
     auto document = DOM::Document::create(url);
     HTML::HTMLParser parser(document, html, "utf-8");

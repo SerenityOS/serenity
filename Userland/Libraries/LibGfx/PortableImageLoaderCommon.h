@@ -273,7 +273,7 @@ static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, Strin
 }
 
 template<typename TContext>
-static RefPtr<Gfx::Bitmap> load(const StringView& path)
+static RefPtr<Gfx::Bitmap> load(StringView path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

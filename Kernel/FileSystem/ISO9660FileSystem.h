@@ -354,8 +354,8 @@ public:
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override;
-    virtual ErrorOr<void> remove_child(const StringView& name) override;
+    virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
+    virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
@@ -370,10 +370,10 @@ private:
     // without any problems, so let's allow it anyway.
     static constexpr size_t max_file_identifier_length = 256 - sizeof(ISO::DirectoryRecordHeader);
 
-    ISO9660Inode(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView const& name);
-    static ErrorOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView const& name);
+    ISO9660Inode(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
+    static ErrorOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
 
-    static InodeIndex get_inode_index(ISO::DirectoryRecordHeader const& record, StringView const& name);
+    static InodeIndex get_inode_index(ISO::DirectoryRecordHeader const& record, StringView name);
     static StringView get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer);
 
     void create_metadata();

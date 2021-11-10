@@ -27,7 +27,7 @@ public:
     AK::URL url() const { return m_url; }
     void load(const AK::URL&);
 
-    void load_html(const StringView&, const AK::URL&);
+    void load_html(StringView, const AK::URL&);
     void load_empty_document();
 
     void debug_request(const String& request, const String& argument = {});

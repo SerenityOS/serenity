@@ -10,7 +10,7 @@
 
 namespace GUI {
 
-IniLexer::IniLexer(StringView const& input)
+IniLexer::IniLexer(StringView input)
     : m_input(input)
 {
 }

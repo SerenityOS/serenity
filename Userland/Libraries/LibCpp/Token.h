@@ -96,7 +96,7 @@ struct Token {
 #undef __TOKEN
     };
 
-    Token(Type type, const Position& start, const Position& end, const StringView& text)
+    Token(Type type, const Position& start, const Position& end, StringView text)
         : m_type(type)
         , m_start(start)
         , m_end(end)
@@ -125,7 +125,7 @@ struct Token {
     void set_start(const Position& other) { m_start = other; }
     void set_end(const Position& other) { m_end = other; }
     Type type() const { return m_type; }
-    const StringView& text() const { return m_text; }
+    StringView text() const { return m_text; }
 
 private:
     Type m_type { Type::Unknown };

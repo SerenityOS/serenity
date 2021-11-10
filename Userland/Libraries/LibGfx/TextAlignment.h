@@ -50,7 +50,7 @@ inline bool is_vertically_centered_text_alignment(TextAlignment alignment)
     }
 }
 
-inline Optional<TextAlignment> text_alignment_from_string(const StringView& string)
+inline Optional<TextAlignment> text_alignment_from_string(StringView string)
 {
 #define __ENUMERATE(x) \
     if (string == #x)  \

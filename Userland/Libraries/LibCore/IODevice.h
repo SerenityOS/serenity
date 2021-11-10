@@ -75,7 +75,7 @@ public:
     String read_line(size_t max_size = 16384);
 
     bool write(const u8*, int size);
-    bool write(const StringView&);
+    bool write(StringView);
 
     bool truncate(off_t);
 

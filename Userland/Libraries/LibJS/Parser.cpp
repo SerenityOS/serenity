@@ -609,7 +609,7 @@ static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements"
 
 static bool is_strict_reserved_word(StringView str)
 {
-    return any_of(strict_reserved_words, [&str](StringView const& word) {
+    return any_of(strict_reserved_words, [&str](StringView word) {
         return word == str;
     });
 }
@@ -3575,7 +3575,7 @@ Token Parser::consume(TokenType expected_type)
 
 Token Parser::consume_and_validate_numeric_literal()
 {
-    auto is_unprefixed_octal_number = [](const StringView& value) {
+    auto is_unprefixed_octal_number = [](StringView value) {
         return value.length() > 1 && value[0] == '0' && is_ascii_digit(value[1]);
     };
     auto literal_start = position();

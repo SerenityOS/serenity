@@ -33,7 +33,7 @@ static u8 parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-FlatPtr address_for_kernel_symbol(const StringView& name)
+FlatPtr address_for_kernel_symbol(StringView name)
 {
     for (size_t i = 0; i < s_symbol_count; ++i) {
         const auto& symbol = s_symbols[i];

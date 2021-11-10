@@ -119,7 +119,7 @@ public:
         And,
         Or,
     };
-    static BooleanOperator op_from(const StringView& sv)
+    static BooleanOperator op_from(StringView sv)
     {
         if (sv == "&")
             return BooleanOperator::And;
@@ -204,7 +204,7 @@ public:
         Greater,
     };
 
-    static ComparisonOperation op_from(const StringView& sv)
+    static ComparisonOperation op_from(StringView sv)
     {
         if (sv == "<")
             return ComparisonOperation::Less;
@@ -274,7 +274,7 @@ public:
         Quotient,
         Remainder,
     };
-    static ArithmeticOperation op_from(const StringView& sv)
+    static ArithmeticOperation op_from(StringView sv)
     {
         if (sv == "+")
             return ArithmeticOperation::Sum;

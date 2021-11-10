@@ -23,7 +23,7 @@ public:
     {
     }
     FlyString(const String&);
-    FlyString(const StringView&);
+    FlyString(StringView);
     FlyString(const char* string)
         : FlyString(static_cast<String>(string))
     {
@@ -58,8 +58,8 @@ public:
     bool operator==(const String&) const;
     bool operator!=(const String& string) const { return !(*this == string); }
 
-    bool operator==(const StringView&) const;
-    bool operator!=(const StringView& string) const { return !(*this == string); }
+    bool operator==(StringView) const;
+    bool operator!=(StringView string) const { return !(*this == string); }
 
     bool operator==(const char*) const;
     bool operator!=(const char* string) const { return !(*this == string); }
@@ -78,9 +78,9 @@ public:
     template<typename T = unsigned>
     Optional<T> to_uint(TrimWhitespace = TrimWhitespace::Yes) const;
 
-    bool equals_ignoring_case(const StringView&) const;
-    bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    bool equals_ignoring_case(StringView) const;
+    bool starts_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    bool ends_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);
 

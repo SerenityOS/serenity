@@ -14,18 +14,18 @@
 
 namespace Desktop {
 
-NonnullRefPtr<AppFile> AppFile::get_for_app(const StringView& app_name)
+NonnullRefPtr<AppFile> AppFile::get_for_app(StringView app_name)
 {
     auto path = String::formatted("{}/{}.af", APP_FILES_DIRECTORY, app_name);
     return open(path);
 }
 
-NonnullRefPtr<AppFile> AppFile::open(const StringView& path)
+NonnullRefPtr<AppFile> AppFile::open(StringView path)
 {
     return adopt_ref(*new AppFile(path));
 }
 
-void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, const StringView& directory)
+void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, StringView directory)
 {
     Core::DirIterator di(directory, Core::DirIterator::SkipDots);
     if (di.has_error())
@@ -42,7 +42,7 @@ void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, const St
     }
 }
 
-AppFile::AppFile(const StringView& path)
+AppFile::AppFile(StringView path)
     : m_config(Core::ConfigFile::open(path))
     , m_valid(validate())
 {

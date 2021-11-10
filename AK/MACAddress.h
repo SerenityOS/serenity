@@ -58,7 +58,7 @@ public:
         return String::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 
-    static Optional<MACAddress> from_string(const StringView& string)
+    static Optional<MACAddress> from_string(StringView string)
     {
         if (string.is_null())
             return {};

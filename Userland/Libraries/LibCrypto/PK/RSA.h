@@ -141,7 +141,7 @@ public:
         import_private_key(privateKeyPEM);
     }
 
-    RSA(const StringView& privKeyPEM)
+    RSA(StringView privKeyPEM)
     {
         import_private_key(privKeyPEM.bytes());
         m_public_key.set(m_private_key.modulus(), m_private_key.public_exponent());

@@ -141,7 +141,7 @@ ComboBox::~ComboBox()
 {
 }
 
-void ComboBox::set_editor_placeholder(const StringView& placeholder)
+void ComboBox::set_editor_placeholder(StringView placeholder)
 {
     m_editor->set_placeholder(placeholder);
 }

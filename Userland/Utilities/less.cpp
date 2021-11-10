@@ -93,7 +93,7 @@ static Vector<String> wrap_line(Utf8View const& string, size_t width)
 
 class Pager {
 public:
-    Pager(StringView const& filename, FILE* file, FILE* tty, StringView const& prompt)
+    Pager(StringView filename, FILE* file, FILE* tty, StringView prompt)
         : m_file(file)
         , m_tty(tty)
         , m_filename(filename)
@@ -264,7 +264,7 @@ public:
     }
 
 private:
-    size_t render_status_line(StringView const& prompt, size_t off = 0, char end = '\0', bool ignored = false)
+    size_t render_status_line(StringView prompt, size_t off = 0, char end = '\0', bool ignored = false)
     {
         for (; prompt[off] != end && off < prompt.length(); ++off) {
             if (ignored)

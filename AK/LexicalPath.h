@@ -19,22 +19,22 @@ public:
     bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }
     String const& string() const { return m_string; }
 
-    StringView const& dirname() const { return m_dirname; }
-    StringView const& basename() const { return m_basename; }
-    StringView const& title() const { return m_title; }
-    StringView const& extension() const { return m_extension; }
+    StringView dirname() const { return m_dirname; }
+    StringView basename() const { return m_basename; }
+    StringView title() const { return m_title; }
+    StringView extension() const { return m_extension; }
 
     Vector<StringView> const& parts_view() const { return m_parts; }
     [[nodiscard]] Vector<String> parts() const;
 
-    bool has_extension(StringView const&) const;
+    bool has_extension(StringView) const;
 
-    [[nodiscard]] LexicalPath append(StringView const&) const;
+    [[nodiscard]] LexicalPath append(StringView) const;
     [[nodiscard]] LexicalPath parent() const;
 
     [[nodiscard]] static String canonicalized_path(String);
     [[nodiscard]] static String absolute_path(String dir_path, String target);
-    [[nodiscard]] static String relative_path(StringView const& absolute_path, StringView const& prefix);
+    [[nodiscard]] static String relative_path(StringView absolute_path, StringView prefix);
 
     template<typename... S>
     [[nodiscard]] static LexicalPath join(StringView first, S&&... rest)

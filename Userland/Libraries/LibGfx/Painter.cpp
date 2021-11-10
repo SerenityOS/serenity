@@ -1548,7 +1548,7 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     }
 }
 
-void Painter::draw_text(IntRect const& rect, StringView const& text, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, StringView text, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     draw_text(rect, text, font(), alignment, color, elision, wrapping);
 }
@@ -1558,7 +1558,7 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& text, TextAlignmen
     draw_text(rect, text, font(), alignment, color, elision, wrapping);
 }
 
-void Painter::draw_text(IntRect const& rect, StringView const& raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
     Utf8View text { raw_text };
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
@@ -1587,7 +1587,7 @@ void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntR
     });
 }
 
-void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, StringView const& raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
+void Painter::draw_text(Function<void(IntRect const&, u32)> draw_one_glyph, IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, TextElision elision, TextWrapping wrapping)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -2143,7 +2143,7 @@ void Painter::blit_tiled(IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Int
     }
 }
 
-String parse_ampersand_string(StringView const& raw_text, Optional<size_t>* underline_offset)
+String parse_ampersand_string(StringView raw_text, Optional<size_t>* underline_offset)
 {
     if (raw_text.is_empty())
         return String::empty();
@@ -2165,7 +2165,7 @@ String parse_ampersand_string(StringView const& raw_text, Optional<size_t>* unde
     return builder.to_string();
 }
 
-void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView const& text, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
+void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
 {
     Optional<size_t> underline_offset;
     auto name_to_draw = parse_ampersand_string(text, &underline_offset);

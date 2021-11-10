@@ -10,6 +10,6 @@
 
 namespace IMAP {
 
-ByteBuffer decode_quoted_printable(StringView const&);
+ByteBuffer decode_quoted_printable(StringView);
 
 }

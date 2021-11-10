@@ -12,7 +12,7 @@
 
 namespace AK {
 
-inline String demangle(const StringView& name)
+inline String demangle(StringView name)
 {
     int status = 0;
     auto* demangled_name = abi::__cxa_demangle(name.to_string().characters(), nullptr, nullptr, &status);

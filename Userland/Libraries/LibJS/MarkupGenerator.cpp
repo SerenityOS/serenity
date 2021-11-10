@@ -17,7 +17,7 @@
 
 namespace JS {
 
-String MarkupGenerator::html_from_source(const StringView& source)
+String MarkupGenerator::html_from_source(StringView source)
 {
     StringBuilder builder;
     auto lexer = Lexer(source);

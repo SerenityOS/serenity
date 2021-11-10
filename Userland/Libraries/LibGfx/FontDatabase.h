@@ -44,7 +44,7 @@ public:
 
     RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
     RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);
-    RefPtr<Gfx::Font> get_by_name(const StringView&);
+    RefPtr<Gfx::Font> get_by_name(StringView);
     void for_each_font(Function<void(const Gfx::Font&)>);
     void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
 

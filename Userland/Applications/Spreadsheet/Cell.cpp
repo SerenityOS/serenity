@@ -46,7 +46,7 @@ void Cell::set_type(const CellType* type)
     m_type = type;
 }
 
-void Cell::set_type(const StringView& name)
+void Cell::set_type(StringView name)
 {
     auto* cell_type = CellType::get_by_name(name);
     if (cell_type) {

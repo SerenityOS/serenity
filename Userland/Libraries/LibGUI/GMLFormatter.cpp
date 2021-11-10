@@ -86,7 +86,7 @@ static String format_gml_object(const JsonObject& node, size_t indentation = 0, 
     return builder.to_string();
 }
 
-String format_gml(const StringView& string)
+String format_gml(StringView string)
 {
     // FIXME: Preserve comments somehow, they're not contained
     // in the JSON object returned by parse_gml()

@@ -10,7 +10,7 @@
 
 namespace GUI {
 
-GMLLexer::GMLLexer(StringView const& input)
+GMLLexer::GMLLexer(StringView input)
     : m_input(input)
 {
 }

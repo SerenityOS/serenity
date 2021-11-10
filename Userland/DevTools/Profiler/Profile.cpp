@@ -215,7 +215,7 @@ void Profile::rebuild_tree()
 Optional<MappedObject> g_kernel_debuginfo_object;
 OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
-ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(const StringView& path)
+ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path)
 {
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 

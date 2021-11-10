@@ -19,7 +19,7 @@ public:
     virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, bool top, bool in_active_window) override;
     virtual void paint_frame(Painter&, IntRect const&, Palette const&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) override;
     virtual void paint_window_frame(Painter&, IntRect const&, Palette const&) override;
-    virtual void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView const& text, Orientation = Orientation::Horizontal) override;
+    virtual void paint_progressbar(Painter&, IntRect const&, Palette const&, int min, int max, int value, StringView text, Orientation = Orientation::Horizontal) override;
     virtual void paint_radio_button(Painter&, IntRect const&, Palette const&, bool is_checked, bool is_being_pressed) override;
     virtual void paint_check_box(Painter&, IntRect const&, Palette const&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
     virtual void paint_transparency_grid(Painter&, IntRect const&, Palette const&) override;

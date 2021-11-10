@@ -66,10 +66,10 @@ public:
 
     void launch(URL const&, LauncherHandler const&) const;
 
-    Function<void(StringView const& path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
+    Function<void(StringView path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(GUI::ModelIndex const&, GUI::ContextMenuEvent const&)> on_context_menu_request;
-    Function<void(StringView const&)> on_status_message;
+    Function<void(StringView)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_accepted_drop;
 
@@ -156,7 +156,7 @@ private:
 
     void handle_activation(GUI::ModelIndex const&);
 
-    void set_status_message(StringView const&);
+    void set_status_message(StringView);
     void update_statusbar();
 
     Mode m_mode { Mode::Normal };

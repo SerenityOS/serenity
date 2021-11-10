@@ -123,7 +123,7 @@ void Track::reset()
         m_roll_iterators[note] = m_roll_notes[note].begin();
 }
 
-String Track::set_recorded_sample(const StringView& path)
+String Track::set_recorded_sample(StringView path)
 {
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error())

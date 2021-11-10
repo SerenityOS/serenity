@@ -24,7 +24,7 @@
 
 namespace Spreadsheet {
 
-Sheet::Sheet(const StringView& name, Workbook& workbook)
+Sheet::Sheet(StringView name, Workbook& workbook)
     : Sheet(workbook)
 {
     m_name = name;
@@ -156,7 +156,7 @@ void Sheet::update(Cell& cell)
     }
 }
 
-Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
+Sheet::ValueAndException Sheet::evaluate(StringView source, Cell* on_behalf_of)
 {
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
     ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
@@ -181,7 +181,7 @@ Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_beha
     return { value, {} };
 }
 
-Cell* Sheet::at(const StringView& name)
+Cell* Sheet::at(StringView name)
 {
     auto pos = parse_cell_name(name);
     if (pos.has_value())
@@ -200,7 +200,7 @@ Cell* Sheet::at(const Position& position)
     return it->value;
 }
 
-Optional<Position> Sheet::parse_cell_name(const StringView& name) const
+Optional<Position> Sheet::parse_cell_name(StringView name) const
 {
     GenericLexer lexer(name);
     auto col = lexer.consume_while(isalpha);
@@ -216,7 +216,7 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name) const
     return Position { it.index(), row.to_uint().value() };
 }
 
-Optional<size_t> Sheet::column_index(const StringView& column_name) const
+Optional<size_t> Sheet::column_index(StringView column_name) const
 {
     auto maybe_index = convert_from_string(column_name);
     if (!maybe_index.has_value())
@@ -233,7 +233,7 @@ Optional<size_t> Sheet::column_index(const StringView& column_name) const
     return index;
 }
 
-Optional<String> Sheet::column_arithmetic(const StringView& column_name, int offset)
+Optional<String> Sheet::column_arithmetic(StringView column_name, int offset)
 {
     auto maybe_index = column_index(column_name);
     if (!maybe_index.has_value())

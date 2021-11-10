@@ -28,14 +28,14 @@ String Document::render_to_html() const
     return html_builder.build();
 }
 
-NonnullRefPtr<Document> Document::parse(const StringView& lines, const URL& url)
+NonnullRefPtr<Document> Document::parse(StringView lines, const URL& url)
 {
     auto document = adopt_ref(*new Document(url));
     document->read_lines(lines);
     return document;
 }
 
-void Document::read_lines(const StringView& source)
+void Document::read_lines(StringView source)
 {
     auto close_list_if_needed = [&] {
         if (m_inside_unordered_list) {

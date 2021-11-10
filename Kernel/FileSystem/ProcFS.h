@@ -58,8 +58,8 @@ protected:
     virtual void did_seek(OpenFileDescription&, off_t) = 0;
     virtual ErrorOr<void> flush_metadata() override final;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override final;
-    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override final;
-    virtual ErrorOr<void> remove_child(const StringView& name) override final;
+    virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override final;
+    virtual ErrorOr<void> remove_child(StringView name) override final;
     virtual ErrorOr<void> chmod(mode_t) override final;
     virtual ErrorOr<void> chown(UserID, GroupID) override final;
 };

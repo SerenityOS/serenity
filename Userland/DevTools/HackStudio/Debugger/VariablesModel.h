@@ -18,7 +18,7 @@ class VariablesModel final : public GUI::Model {
 public:
     static RefPtr<VariablesModel> create(const PtraceRegisters& regs);
 
-    void set_variable_value(const GUI::ModelIndex&, const StringView&, GUI::Window*);
+    void set_variable_value(const GUI::ModelIndex&, StringView, GUI::Window*);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }

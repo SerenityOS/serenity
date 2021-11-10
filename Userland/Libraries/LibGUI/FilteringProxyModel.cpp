@@ -79,7 +79,7 @@ void FilteringProxyModel::filter()
     add_matching(parent_index);
 }
 
-void FilteringProxyModel::set_filter_term(StringView const& term)
+void FilteringProxyModel::set_filter_term(StringView term)
 {
     if (m_filter_term == term)
         return;
@@ -104,7 +104,7 @@ bool FilteringProxyModel::is_searchable() const
     return m_model.is_searchable();
 }
 
-Vector<ModelIndex> FilteringProxyModel::matches(StringView const& searching, unsigned flags, ModelIndex const& index)
+Vector<ModelIndex> FilteringProxyModel::matches(StringView searching, unsigned flags, ModelIndex const& index)
 {
     auto found_indices = m_model.matches(searching, flags, index);
     for (size_t i = 0; i < found_indices.size(); i++)

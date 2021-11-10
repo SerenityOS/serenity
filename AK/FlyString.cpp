@@ -55,7 +55,7 @@ FlyString::FlyString(const String& string)
     }
 }
 
-FlyString::FlyString(StringView const& string)
+FlyString::FlyString(StringView string)
 {
     if (string.is_null())
         return;
@@ -95,17 +95,17 @@ template Optional<u16> FlyString::to_uint(TrimWhitespace) const;
 template Optional<u32> FlyString::to_uint(TrimWhitespace) const;
 template Optional<u64> FlyString::to_uint(TrimWhitespace) const;
 
-bool FlyString::equals_ignoring_case(const StringView& other) const
+bool FlyString::equals_ignoring_case(StringView other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-bool FlyString::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool FlyString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(view(), str, case_sensitivity);
 }
 
-bool FlyString::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool FlyString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(view(), str, case_sensitivity);
 }
@@ -132,7 +132,7 @@ bool FlyString::operator==(const String& other) const
     return !__builtin_memcmp(characters(), other.characters(), length());
 }
 
-bool FlyString::operator==(const StringView& string) const
+bool FlyString::operator==(StringView string) const
 {
     return *this == String(string);
 }

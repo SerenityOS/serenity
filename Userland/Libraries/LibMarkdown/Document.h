@@ -34,7 +34,7 @@ public:
      */
     RecursionDecision walk(Visitor&) const;
 
-    static OwnPtr<Document> parse(const StringView&);
+    static OwnPtr<Document> parse(StringView);
 
 private:
     OwnPtr<ContainerBlock> m_container;

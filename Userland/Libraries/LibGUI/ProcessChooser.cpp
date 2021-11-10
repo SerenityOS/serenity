@@ -14,7 +14,7 @@
 
 namespace GUI {
 
-ProcessChooser::ProcessChooser(const StringView& window_title, const StringView& button_label, const Gfx::Bitmap* window_icon, GUI::Window* parent_window)
+ProcessChooser::ProcessChooser(StringView window_title, StringView button_label, const Gfx::Bitmap* window_icon, GUI::Window* parent_window)
     : Dialog(parent_window)
     , m_window_title(window_title)
     , m_button_label(button_label)

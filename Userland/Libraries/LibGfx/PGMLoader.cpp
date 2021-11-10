@@ -99,7 +99,7 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_pgm(const StringView& path)
+RefPtr<Gfx::Bitmap> load_pgm(StringView path)
 {
     return load<PGMLoadingContext>(path);
 }

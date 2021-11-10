@@ -23,7 +23,7 @@ public:
 
     CSSRuleList const& css_rules() const { return m_rules; }
     CSSRuleList& css_rules() { return m_rules; }
-    size_t insert_rule(StringView const& rule, size_t index = 0);
+    size_t insert_rule(StringView rule, size_t index = 0);
     void delete_rule(size_t index);
 
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;

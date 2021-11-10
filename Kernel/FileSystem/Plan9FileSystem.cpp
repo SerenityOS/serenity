@@ -112,7 +112,7 @@ public:
 
     class Decoder {
     public:
-        explicit Decoder(const StringView& data)
+        explicit Decoder(StringView data)
             : m_data(data)
         {
         }
@@ -144,8 +144,8 @@ public:
     Message& operator<<(u16);
     Message& operator<<(u32);
     Message& operator<<(u64);
-    Message& operator<<(const StringView&);
-    void append_data(const StringView&);
+    Message& operator<<(StringView);
+    void append_data(StringView);
 
     template<typename T>
     Message& operator>>(T& t)
@@ -228,7 +228,7 @@ ErrorOr<void> Plan9FS::initialize()
     return {};
 }
 
-Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(const StringView& s) const
+Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(StringView s) const
 {
     if (s == "9P2000.L")
         return ProtocolVersion::v9P2000L;
@@ -262,7 +262,7 @@ Plan9FS::Message& Plan9FS::Message::operator<<(u64 number)
     return append_number(number);
 }
 
-Plan9FS::Message& Plan9FS::Message::operator<<(const StringView& string)
+Plan9FS::Message& Plan9FS::Message::operator<<(StringView string)
 {
     *this << static_cast<u16>(string.length());
     // FIXME: Handle append failure.
@@ -270,7 +270,7 @@ Plan9FS::Message& Plan9FS::Message::operator<<(const StringView& string)
     return *this;
 }
 
-void Plan9FS::Message::append_data(const StringView& data)
+void Plan9FS::Message::append_data(StringView data)
 {
     *this << static_cast<u32>(data.length());
     // FIXME: Handle append failure.
@@ -908,13 +908,13 @@ ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev
     return ENOTIMPL;
 }
 
-ErrorOr<void> Plan9FSInode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<void> Plan9FSInode::add_child(Inode&, StringView, mode_t)
 {
     // TODO
     return ENOTIMPL;
 }
 
-ErrorOr<void> Plan9FSInode::remove_child(const StringView&)
+ErrorOr<void> Plan9FSInode::remove_child(StringView)
 {
     // TODO
     return ENOTIMPL;

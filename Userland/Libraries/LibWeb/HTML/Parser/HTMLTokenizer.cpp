@@ -2639,7 +2639,7 @@ _StartOfFunction:
     }
 }
 
-bool HTMLTokenizer::consume_next_if_match(StringView const& string, CaseSensitivity case_sensitivity)
+bool HTMLTokenizer::consume_next_if_match(StringView string, CaseSensitivity case_sensitivity)
 {
     for (size_t i = 0; i < string.length(); ++i) {
         auto code_point = peek_code_point(i);
@@ -2678,7 +2678,7 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
     m_current_token.set_start_position({}, nth_last_position(offset));
 }
 
-HTMLTokenizer::HTMLTokenizer(StringView const& input, String const& encoding)
+HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);

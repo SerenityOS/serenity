@@ -36,7 +36,7 @@ constexpr u32 ctrl(char c) { return c & 0x3f; }
 
 namespace Line {
 
-Configuration Configuration::from_config(const StringView& libname)
+Configuration Configuration::from_config(StringView libname)
 {
     Configuration configuration;
     auto config_file = Core::ConfigFile::open_for_lib(libname);
@@ -359,7 +359,7 @@ void Editor::insert(const String& string)
         insert(ch);
 }
 
-void Editor::insert(const StringView& string_view)
+void Editor::insert(StringView string_view)
 {
     for (auto ch : Utf8View { string_view })
         insert(ch);
@@ -1190,7 +1190,7 @@ void Editor::cleanup_suggestions()
     m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 }
 
-bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
+bool Editor::search(StringView phrase, bool allow_empty, bool from_beginning)
 {
     int last_matching_offset = -1;
     bool found = false;
@@ -1690,7 +1690,7 @@ void VT::clear_to_end_of_line(OutputStream& stream)
     stream.write("\033[K"sv.bytes());
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(const StringView& string)
+StringMetrics Editor::actual_rendered_string_metrics(StringView string)
 {
     StringMetrics metrics;
     StringMetrics::LineMetrics current_line;

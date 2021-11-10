@@ -1139,7 +1139,7 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
     size_t offset = 0;
     auto start_token = m_parser_state.current_token;
     while (match(TokenType::Char)) {
-        auto& c = m_parser_state.current_token.value();
+        auto const c = m_parser_state.current_token.value();
 
         if (max_count > 0 && count >= max_count)
             break;

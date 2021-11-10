@@ -1020,7 +1020,7 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
         refresh_tree_view();
     };
 
-    directory_view.on_status_message = [&](StringView const& message) {
+    directory_view.on_status_message = [&](StringView message) {
         statusbar.set_text(message);
     };
 

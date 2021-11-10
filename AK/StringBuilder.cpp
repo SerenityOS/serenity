@@ -38,7 +38,7 @@ StringBuilder::StringBuilder(size_t initial_capacity)
     m_buffer.ensure_capacity(initial_capacity);
 }
 
-void StringBuilder::append(StringView const& str)
+void StringBuilder::append(StringView str)
 {
     if (str.is_empty())
         return;
@@ -129,7 +129,7 @@ void StringBuilder::append_as_lowercase(char ch)
         append(ch);
 }
 
-void StringBuilder::append_escaped_for_json(StringView const& string)
+void StringBuilder::append_escaped_for_json(StringView string)
 {
     for (auto ch : string) {
         switch (ch) {

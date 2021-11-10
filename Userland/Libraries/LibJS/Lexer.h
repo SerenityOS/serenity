@@ -20,8 +20,8 @@ public:
 
     Token next();
 
-    const StringView& source() const { return m_source; };
-    const StringView& filename() const { return m_filename; };
+    StringView source() const { return m_source; };
+    StringView filename() const { return m_filename; };
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 

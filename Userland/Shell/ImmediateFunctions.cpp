@@ -396,7 +396,7 @@ RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateEx
     return nullptr;
 }
 
-bool Shell::has_immediate_function(const StringView& str)
+bool Shell::has_immediate_function(StringView str)
 {
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
     if (str == #name)                              \

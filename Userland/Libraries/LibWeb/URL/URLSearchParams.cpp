@@ -25,7 +25,7 @@ String url_encode(const Vector<QueryParam>& pairs, AK::URL::PercentEncodeSet per
     return builder.to_string();
 }
 
-Vector<QueryParam> url_decode(StringView const& input)
+Vector<QueryParam> url_decode(StringView input)
 {
     // 1. Let sequences be the result of splitting input on 0x26 (&).
     auto sequences = input.split_view('&');

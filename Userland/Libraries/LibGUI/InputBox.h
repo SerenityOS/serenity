@@ -21,10 +21,10 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override;
 
-    static int show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder = {}, InputType input_type = InputType::Text);
+    static int show(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder = {}, InputType input_type = InputType::Text);
 
 private:
-    explicit InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder, InputType input_type);
+    explicit InputBox(Window* parent_window, String& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type);
 
     String text_value() const { return m_text_value; }
 

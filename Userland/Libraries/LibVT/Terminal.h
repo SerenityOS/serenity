@@ -48,7 +48,7 @@ public:
     virtual ~TerminalClient() { }
 
     virtual void beep() = 0;
-    virtual void set_window_title(const StringView&) = 0;
+    virtual void set_window_title(StringView) = 0;
     virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed(int delta) = 0;
@@ -172,7 +172,7 @@ public:
     size_t history_size() const { return m_use_alternate_screen_buffer ? 0 : m_history.size(); }
 #endif
 
-    void inject_string(const StringView&);
+    void inject_string(StringView);
     void handle_key_press(KeyCode, u32, u8 flags);
 
 #ifndef KERNEL
@@ -230,7 +230,7 @@ protected:
     void unimplemented_csi_sequence(Parameters, Intermediates, u8 last_byte);
     void unimplemented_osc_sequence(OscParameters, u8 last_byte);
 
-    void emit_string(const StringView&);
+    void emit_string(StringView);
 
     void alter_ansi_mode(bool should_set, Parameters);
     void alter_private_mode(bool should_set, Parameters);

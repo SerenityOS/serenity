@@ -295,7 +295,7 @@ void InProcessWebView::reload()
     load(url());
 }
 
-void InProcessWebView::load_html(const StringView& html, const AK::URL& url)
+void InProcessWebView::load_html(StringView html, const AK::URL& url)
 {
     page().top_level_browsing_context().loader().load_html(html, url);
 }

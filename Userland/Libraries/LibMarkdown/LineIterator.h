@@ -91,7 +91,7 @@ public:
 
 private:
     void reset_ignore_prefix();
-    Optional<StringView> match_context(StringView const& line) const;
+    Optional<StringView> match_context(StringView line) const;
 
     Vector<StringView>::ConstIterator m_iterator;
     Vector<Context> m_context_stack;

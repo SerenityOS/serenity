@@ -251,7 +251,7 @@ RecursionDecision Text::walk(Visitor& visitor) const
     return m_node->walk(visitor);
 }
 
-Text Text::parse(StringView const& str)
+Text Text::parse(StringView str)
 {
     Text text;
     auto const tokens = tokenize(str);
@@ -260,7 +260,7 @@ Text Text::parse(StringView const& str)
     return text;
 }
 
-static bool flanking(StringView const& str, size_t start, size_t end, int dir)
+static bool flanking(StringView str, size_t start, size_t end, int dir)
 {
     ssize_t next = ((dir > 0) ? end : start) + dir;
     if (next < 0 || next >= (ssize_t)str.length())
@@ -279,7 +279,7 @@ static bool flanking(StringView const& str, size_t start, size_t end, int dir)
     return isspace(str[prev]) || ispunct(str[prev]);
 }
 
-Vector<Text::Token> Text::tokenize(StringView const& str)
+Vector<Text::Token> Text::tokenize(StringView str)
 {
     Vector<Token> tokens;
     StringBuilder current_token;
@@ -306,14 +306,14 @@ Vector<Text::Token> Text::tokenize(StringView const& str)
     bool in_space = false;
 
     for (size_t offset = 0; offset < str.length(); ++offset) {
-        auto has = [&](StringView const& seq) {
+        auto has = [&](StringView seq) {
             if (offset + seq.length() > str.length())
                 return false;
 
             return str.substring_view(offset, seq.length()) == seq;
         };
 
-        auto expect = [&](StringView const& seq) {
+        auto expect = [&](StringView seq) {
             VERIFY(has(seq));
             flush_token();
             current_token.append(seq);

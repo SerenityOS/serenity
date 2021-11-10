@@ -19,8 +19,8 @@ class SpreadsheetWidget final : public GUI::Widget {
 public:
     ~SpreadsheetWidget();
 
-    void save(const StringView& filename);
-    void load(const StringView& filename);
+    void save(StringView filename);
+    void load(StringView filename);
     bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);

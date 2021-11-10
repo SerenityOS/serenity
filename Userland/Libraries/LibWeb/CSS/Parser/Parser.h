@@ -80,7 +80,7 @@ private:
 
 class Parser {
 public:
-    Parser(ParsingContext const&, StringView const& input, String const& encoding = "utf-8");
+    Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser();
 
     // The normal parser entry point, for parsing stylesheets.
@@ -260,7 +260,7 @@ private:
     Optional<Supports::InParens> parse_supports_in_parens(TokenStream<StyleComponentValueRule>&);
     Optional<Supports::Feature> parse_supports_feature(TokenStream<StyleComponentValueRule>&);
 
-    static bool has_ignored_vendor_prefix(StringView const&);
+    static bool has_ignored_vendor_prefix(StringView);
 
     ParsingContext m_context;
 
@@ -273,15 +273,15 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView const&);
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView const&);
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView const&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView const&);
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView const&);
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView);
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView);
 
-RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView const&);
+RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView);
 
 }

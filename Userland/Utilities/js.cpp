@@ -1308,7 +1308,7 @@ int main(int argc, char** argv)
 
             Vector<Line::CompletionSuggestion> results;
 
-            Function<void(JS::Shape const&, StringView const&)> list_all_properties = [&results, &list_all_properties](JS::Shape const& shape, auto& property_pattern) {
+            Function<void(JS::Shape const&, StringView)> list_all_properties = [&results, &list_all_properties](JS::Shape const& shape, auto property_pattern) {
                 for (auto const& descriptor : shape.property_table()) {
                     if (!descriptor.key.is_string())
                         continue;

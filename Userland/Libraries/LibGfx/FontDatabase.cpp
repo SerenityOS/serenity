@@ -136,7 +136,7 @@ void FontDatabase::for_each_fixed_width_font(Function<void(const Gfx::Font&)> ca
         callback(*font);
 }
 
-RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
+RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
 {
     auto it = m_private->full_name_to_font_map.find(name);
     if (it == m_private->full_name_to_font_map.end()) {

@@ -75,7 +75,7 @@ public:
     virtual void set_data(ModelIndex const&, Variant const&) { }
     virtual int tree_column() const { return 0; }
     virtual bool accepts_drag(ModelIndex const&, Vector<String> const& mime_types) const;
-    virtual Vector<ModelIndex> matches(StringView const&, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) { return {}; }
+    virtual Vector<ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) { return {}; }
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
     virtual void sort([[maybe_unused]] int column, SortOrder) { }
@@ -104,7 +104,7 @@ protected:
     void for_each_client(Function<void(ModelClient&)>);
     void did_update(unsigned flags = UpdateFlag::InvalidateAllIndices);
 
-    static bool string_matches(StringView const& str, StringView const& needle, unsigned flags)
+    static bool string_matches(StringView str, StringView needle, unsigned flags)
     {
         auto case_sensitivity = (flags & CaseInsensitive) ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
         if (flags & MatchFull)

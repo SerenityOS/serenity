@@ -29,7 +29,7 @@ public:
     void update(const Bytes& buffer) { update(buffer.data(), buffer.size()); };
     void update(const ReadonlyBytes& buffer) { update(buffer.data(), buffer.size()); };
     void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); };
-    void update(const StringView& string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
+    void update(StringView string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType peek() = 0;
     virtual DigestType digest() = 0;

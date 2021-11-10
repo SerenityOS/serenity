@@ -49,10 +49,10 @@ public:
     }
 
     TagType process(ReadonlyBytes span) { return process(span.data(), span.size()); }
-    TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
+    TagType process(StringView string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
 
     void update(ReadonlyBytes span) { return update(span.data(), span.size()); }
-    void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
+    void update(StringView string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
 
     TagType digest()
     {
@@ -110,7 +110,7 @@ private:
     }
 
     void derive_key(ReadonlyBytes key) { derive_key(key.data(), key.size()); }
-    void derive_key(const StringView& key) { derive_key(key.bytes()); }
+    void derive_key(StringView key) { derive_key(key.bytes()); }
 
     HashType m_inner_hasher, m_outer_hasher;
     u8 m_key_data[2048];

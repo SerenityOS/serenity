@@ -53,7 +53,7 @@ struct GMLToken {
 
 class GMLLexer {
 public:
-    GMLLexer(StringView const&);
+    GMLLexer(StringView);
 
     Vector<GMLToken> lex();
 

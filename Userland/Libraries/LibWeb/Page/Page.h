@@ -45,7 +45,7 @@ public:
     void load(const AK::URL&);
     void load(LoadRequest&);
 
-    void load_html(const StringView&, const AK::URL&);
+    void load_html(StringView, const AK::URL&);
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);

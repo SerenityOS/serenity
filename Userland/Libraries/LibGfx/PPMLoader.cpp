@@ -101,7 +101,7 @@ static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_ppm(const StringView& path)
+RefPtr<Gfx::Bitmap> load_ppm(StringView path)
 {
     return load<PPMLoadingContext>(path);
 }

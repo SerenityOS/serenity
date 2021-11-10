@@ -29,7 +29,7 @@ public:
     bool load(const AK::URL&, Type);
     bool load(LoadRequest&, Type);
 
-    void load_html(const StringView&, const AK::URL&);
+    void load_html(StringView, const AK::URL&);
 
     BrowsingContext& browsing_context() { return m_browsing_context; }
     const BrowsingContext& browsing_context() const { return m_browsing_context; }

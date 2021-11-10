@@ -17,7 +17,7 @@ struct EntityMatch {
     StringView entity;
 };
 
-Optional<EntityMatch> code_points_from_entity(const StringView&);
+Optional<EntityMatch> code_points_from_entity(StringView);
 
 }
 }

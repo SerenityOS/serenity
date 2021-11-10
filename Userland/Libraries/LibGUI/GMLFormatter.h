@@ -10,6 +10,6 @@
 
 namespace GUI {
 
-String format_gml(const StringView&);
+String format_gml(StringView);
 
 }

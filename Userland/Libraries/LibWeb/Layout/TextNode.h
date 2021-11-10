@@ -37,7 +37,7 @@ public:
 
     class ChunkIterator {
     public:
-        ChunkIterator(StringView const& text, LayoutMode, bool wrap_lines, bool respect_linebreaks);
+        ChunkIterator(StringView text, LayoutMode, bool wrap_lines, bool respect_linebreaks);
         Optional<Chunk> next();
 
     private:

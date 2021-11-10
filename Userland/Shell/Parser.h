@@ -110,8 +110,8 @@ private:
     char peek();
     char consume();
     bool expect(char);
-    bool expect(const StringView&);
-    bool next_is(const StringView&);
+    bool expect(StringView);
+    bool next_is(StringView);
 
     void restore_to(size_t offset, AST::Position::Line line)
     {

@@ -16,13 +16,13 @@ namespace WindowServer {
 class MultiScaleBitmaps : public RefCounted<MultiScaleBitmaps> {
 public:
     static RefPtr<MultiScaleBitmaps> create_empty();
-    static RefPtr<MultiScaleBitmaps> create(StringView const& filename, StringView const& default_filename = {});
+    static RefPtr<MultiScaleBitmaps> create(StringView filename, StringView default_filename = {});
 
     Gfx::Bitmap const& default_bitmap() const { return bitmap(1); }
     Gfx::Bitmap const& bitmap(int scale_factor) const;
     Gfx::Bitmap const* find_bitmap(int scale_factor) const;
     Gfx::BitmapFormat format() const { return m_format; }
-    bool load(StringView const& filename, StringView const& default_filename = {});
+    bool load(StringView filename, StringView default_filename = {});
     void add_bitmap(int scale_factor, NonnullRefPtr<Gfx::Bitmap>&&);
 
 private:

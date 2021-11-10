@@ -125,7 +125,7 @@ void WindowFrame::reload_config()
 {
     String icons_path = WindowManager::the().palette().title_button_icons_path();
 
-    auto reload_icon = [&](RefPtr<MultiScaleBitmaps>& icon, StringView const& path, StringView const& default_path) {
+    auto reload_icon = [&](RefPtr<MultiScaleBitmaps>& icon, StringView path, StringView default_path) {
         StringBuilder full_path;
         full_path.append(icons_path);
         full_path.append(path);

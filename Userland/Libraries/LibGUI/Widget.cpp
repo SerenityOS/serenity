@@ -1055,7 +1055,7 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
     }
 }
 
-bool Widget::load_from_gml(const StringView& gml_string)
+bool Widget::load_from_gml(StringView gml_string)
 {
     return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
@@ -1063,7 +1063,7 @@ bool Widget::load_from_gml(const StringView& gml_string)
     });
 }
 
-bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
     auto value = parse_gml(gml_string);
     if (!value.is_object())

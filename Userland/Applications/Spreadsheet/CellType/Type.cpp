@@ -20,7 +20,7 @@ static Spreadsheet::DateCell s_date_cell;
 
 namespace Spreadsheet {
 
-const CellType* CellType::get_by_name(const StringView& name)
+const CellType* CellType::get_by_name(StringView name)
 {
     return s_cell_types.get(name).value_or(nullptr);
 }
@@ -33,7 +33,7 @@ Vector<StringView> CellType::names()
     return names;
 }
 
-CellType::CellType(const StringView& name)
+CellType::CellType(StringView name)
     : m_name(name)
 {
     VERIFY(!s_cell_types.contains(name));

@@ -24,7 +24,7 @@ constexpr u8 decode_hex_digit(char digit)
     return 255;
 }
 
-Optional<ByteBuffer> decode_hex(const StringView&);
+Optional<ByteBuffer> decode_hex(StringView);
 
 String encode_hex(ReadonlyBytes);
 

@@ -14,7 +14,7 @@ REGISTER_WIDGET(GUI, ImageWidget)
 
 namespace GUI {
 
-ImageWidget::ImageWidget(const StringView&)
+ImageWidget::ImageWidget(StringView)
     : m_timer(Core::Timer::construct())
 
 {
@@ -71,7 +71,7 @@ void ImageWidget::animate()
     }
 }
 
-void ImageWidget::load_from_file(const StringView& path)
+void ImageWidget::load_from_file(StringView path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

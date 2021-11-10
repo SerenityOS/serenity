@@ -25,7 +25,7 @@ struct CellTypeMetadata {
 
 class CellType {
 public:
-    static const CellType* get_by_name(const StringView&);
+    static const CellType* get_by_name(StringView);
     static Vector<StringView> names();
 
     virtual String display(Cell&, const CellTypeMetadata&) const = 0;
@@ -35,7 +35,7 @@ public:
     const String& name() const { return m_name; }
 
 protected:
-    CellType(const StringView& name);
+    CellType(StringView name);
 
 private:
     String m_name;

@@ -100,7 +100,7 @@ String Regex<Parser>::error_string(Optional<String> message) const
 }
 
 template<typename Parser>
-RegexResult Matcher<Parser>::match(RegexStringView const& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+RegexResult Matcher<Parser>::match(RegexStringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
     AllOptions options = m_regex_options | regex_options.value_or({}).value();
 

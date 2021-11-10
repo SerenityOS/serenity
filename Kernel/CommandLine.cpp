@@ -86,12 +86,12 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
     add_arguments(args);
 }
 
-Optional<StringView> CommandLine::lookup(const StringView& key) const
+Optional<StringView> CommandLine::lookup(StringView key) const
 {
     return m_params.get(key);
 }
 
-bool CommandLine::contains(const StringView& key) const
+bool CommandLine::contains(StringView key) const
 {
     return m_params.contains(key);
 }

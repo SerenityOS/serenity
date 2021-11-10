@@ -288,7 +288,7 @@ bool SortingProxyModel::is_searchable() const
     return source().is_searchable();
 }
 
-Vector<ModelIndex> SortingProxyModel::matches(StringView const& searching, unsigned flags, ModelIndex const& proxy_index)
+Vector<ModelIndex> SortingProxyModel::matches(StringView searching, unsigned flags, ModelIndex const& proxy_index)
 {
     auto found_indices = source().matches(searching, flags, map_to_source(proxy_index));
     for (size_t i = 0; i < found_indices.size(); i++)

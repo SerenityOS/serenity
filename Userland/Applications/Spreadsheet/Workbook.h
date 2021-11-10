@@ -17,8 +17,8 @@ class Workbook {
 public:
     Workbook(NonnullRefPtrVector<Sheet>&& sheets);
 
-    Result<bool, String> save(const StringView& filename);
-    Result<bool, String> load(const StringView& filename);
+    Result<bool, String> save(StringView filename);
+    Result<bool, String> load(StringView filename);
 
     const String& current_filename() const { return m_current_filename; }
     bool set_filename(const String& filename);
@@ -30,7 +30,7 @@ public:
     const NonnullRefPtrVector<Sheet>& sheets() const { return m_sheets; }
     NonnullRefPtrVector<Sheet> sheets() { return m_sheets; }
 
-    Sheet& add_sheet(const StringView& name)
+    Sheet& add_sheet(StringView name)
     {
         auto sheet = Sheet::construct(name, *this);
         m_sheets.append(sheet);

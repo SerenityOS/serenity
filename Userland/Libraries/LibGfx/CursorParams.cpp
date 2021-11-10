@@ -11,7 +11,7 @@
 
 namespace Gfx {
 
-CursorParams CursorParams::parse_from_filename(StringView const& cursor_path, Gfx::IntPoint const& default_hotspot)
+CursorParams CursorParams::parse_from_filename(StringView cursor_path, Gfx::IntPoint const& default_hotspot)
 {
     LexicalPath path(cursor_path);
     auto file_title = path.title();

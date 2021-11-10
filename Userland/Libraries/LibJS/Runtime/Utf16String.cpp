@@ -32,7 +32,7 @@ NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(Vector<u16, 1> string)
     return adopt_ref(*new Utf16StringImpl(move(string)));
 }
 
-NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(StringView const& string)
+NonnullRefPtr<Utf16StringImpl> Utf16StringImpl::create(StringView string)
 {
     return create(AK::utf8_to_utf16(string));
 }
@@ -67,7 +67,7 @@ Utf16String::Utf16String(Vector<u16, 1> string)
 {
 }
 
-Utf16String::Utf16String(StringView const& string)
+Utf16String::Utf16String(StringView string)
     : m_string(Detail::Utf16StringImpl::create(move(string)))
 {
 }

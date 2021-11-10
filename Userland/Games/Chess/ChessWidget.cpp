@@ -366,7 +366,7 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
 
 static String set_path = String("/res/icons/chess/sets/");
 
-static RefPtr<Gfx::Bitmap> get_piece(const StringView& set, const StringView& image)
+static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 {
     StringBuilder builder;
     builder.append(set_path);
@@ -376,7 +376,7 @@ static RefPtr<Gfx::Bitmap> get_piece(const StringView& set, const StringView& im
     return Gfx::Bitmap::try_load_from_file(builder.build()).release_value_but_fixme_should_propagate_errors();
 }
 
-void ChessWidget::set_piece_set(const StringView& set)
+void ChessWidget::set_piece_set(StringView set)
 {
     m_piece_set = set;
     m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"));
@@ -427,7 +427,7 @@ void ChessWidget::reset()
     update();
 }
 
-void ChessWidget::set_board_theme(const StringView& name)
+void ChessWidget::set_board_theme(StringView name)
 {
     // FIXME: Add some kind of themes.json
     // The following Colors have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
@@ -520,7 +520,7 @@ String ChessWidget::get_fen() const
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
-bool ChessWidget::import_pgn(const StringView& import_path)
+bool ChessWidget::import_pgn(StringView import_path)
 {
     auto file_or_error = Core::File::open(import_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
@@ -625,7 +625,7 @@ bool ChessWidget::import_pgn(const StringView& import_path)
     return true;
 }
 
-bool ChessWidget::export_pgn(const StringView& export_path) const
+bool ChessWidget::export_pgn(StringView export_path) const
 {
     auto file_or_error = Core::File::open(export_path, Core::OpenMode::WriteOnly);
     if (file_or_error.is_error()) {

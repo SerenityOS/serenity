@@ -27,7 +27,7 @@ struct Handler {
     HashTable<String> file_types {};
     HashTable<String> protocols {};
 
-    static String name_from_executable(const StringView&);
+    static String name_from_executable(StringView);
     void from_executable(Type, const String&);
     String to_details_str() const;
 };

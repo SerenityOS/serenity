@@ -235,7 +235,7 @@ public:
         empend(capture_groups_count);
     }
 
-    void insert_bytecode_group_capture_right(size_t capture_groups_count, StringView const& name)
+    void insert_bytecode_group_capture_right(size_t capture_groups_count, StringView name)
     {
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveRightNamedCaptureGroup));
         empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
@@ -507,7 +507,7 @@ public:
     OpCode& get_opcode(MatchState& state) const;
 
 private:
-    void insert_string(StringView const& view)
+    void insert_string(StringView view)
     {
         empend((ByteCodeValueType)view.length());
         for (size_t i = 0; i < view.length(); ++i)
@@ -752,7 +752,7 @@ public:
 
 private:
     ALWAYS_INLINE static void compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);
-    ALWAYS_INLINE static bool compare_string(MatchInput const& input, MatchState& state, RegexStringView const& str, bool& had_zero_length_match);
+    ALWAYS_INLINE static bool compare_string(MatchInput const& input, MatchState& state, RegexStringView str, bool& had_zero_length_match);
     ALWAYS_INLINE static void compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched);

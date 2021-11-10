@@ -82,7 +82,7 @@ void RemoteProcess::set_inspected_object(FlatPtr address)
     m_client->async_set_inspected_object(m_pid, address);
 }
 
-void RemoteProcess::set_property(FlatPtr object, const StringView& name, const JsonValue& value)
+void RemoteProcess::set_property(FlatPtr object, StringView name, const JsonValue& value)
 {
     m_client->async_set_object_property(m_pid, object, name, value.to_string());
 }

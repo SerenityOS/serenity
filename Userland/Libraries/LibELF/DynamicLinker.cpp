@@ -58,7 +58,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags);
 static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_name);
 static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info);
 
-Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& name)
+Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
     Optional<DynamicObject::SymbolLookupResult> weak_result;
 

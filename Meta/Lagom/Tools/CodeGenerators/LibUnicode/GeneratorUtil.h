@@ -59,7 +59,7 @@ void generate_value_from_string(SourceGenerator& generator, StringView method_na
     generator.set("size", String::number(hashes.size()));
 
     generator.append(R"~~~(
-Optional<@return_type@> @method_name@(StringView const& key)
+Optional<@return_type@> @method_name@(StringView key)
 {
     constexpr Array<HashValuePair<@value_type@>, @size@> hash_pairs { {
         )~~~");

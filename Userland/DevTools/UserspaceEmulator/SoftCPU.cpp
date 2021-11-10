@@ -196,7 +196,7 @@ void SoftCPU::write_memory256(X86::LogicalAddress address, ValueWithShadow<u256>
     m_emulator.mmu().write256(address, value);
 }
 
-void SoftCPU::push_string(const StringView& string)
+void SoftCPU::push_string(StringView string)
 {
     size_t space_to_allocate = round_up_to_power_of_two(string.length() + 1, 16);
     set_esp({ esp().value() - space_to_allocate, esp().shadow() });

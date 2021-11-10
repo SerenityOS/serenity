@@ -21,7 +21,7 @@ public:
 
     static NonnullRefPtr<Utf16StringImpl> create();
     static NonnullRefPtr<Utf16StringImpl> create(Vector<u16, 1>);
-    static NonnullRefPtr<Utf16StringImpl> create(StringView const&);
+    static NonnullRefPtr<Utf16StringImpl> create(StringView);
     static NonnullRefPtr<Utf16StringImpl> create(Utf16View const&);
 
     Vector<u16, 1> const& string() const;
@@ -40,7 +40,7 @@ class Utf16String {
 public:
     Utf16String();
     explicit Utf16String(Vector<u16, 1>);
-    explicit Utf16String(StringView const&);
+    explicit Utf16String(StringView);
     explicit Utf16String(Utf16View const&);
 
     Vector<u16, 1> const& string() const;

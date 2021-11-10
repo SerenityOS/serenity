@@ -32,7 +32,7 @@ String char_for_piece(Chess::Type type)
     }
 }
 
-Chess::Type piece_for_char_promotion(const StringView& str)
+Chess::Type piece_for_char_promotion(StringView str)
 {
     String string = String(str).to_lowercase();
     if (string == "")
@@ -56,7 +56,7 @@ Color opposing_color(Color color)
     return (color == Color::White) ? Color::Black : Color::White;
 }
 
-Square::Square(const StringView& name)
+Square::Square(StringView name)
 {
     VERIFY(name.length() == 2);
     char filec = name[0];
@@ -85,7 +85,7 @@ String Square::to_algebraic() const
     return builder.build();
 }
 
-Move::Move(const StringView& long_algebraic)
+Move::Move(StringView long_algebraic)
     : from(long_algebraic.substring_view(0, 2))
     , to(long_algebraic.substring_view(2, 2))
     , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""))
@@ -101,7 +101,7 @@ String Move::to_long_algebraic() const
     return builder.build();
 }
 
-Move Move::from_algebraic(const StringView& algebraic, const Color turn, const Board& board)
+Move Move::from_algebraic(StringView algebraic, const Color turn, const Board& board)
 {
     String move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });

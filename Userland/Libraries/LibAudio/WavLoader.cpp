@@ -17,7 +17,7 @@ namespace Audio {
 
 static constexpr size_t maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
 
-WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
+WavLoaderPlugin::WavLoaderPlugin(StringView path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::OpenMode::ReadOnly)) {

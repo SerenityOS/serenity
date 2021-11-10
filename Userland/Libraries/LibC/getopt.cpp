@@ -41,7 +41,7 @@ namespace {
 
 class OptionParser {
 public:
-    OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index = nullptr);
+    OptionParser(int argc, char* const* argv, StringView short_options, const option* long_options, int* out_long_option_index = nullptr);
     int getopt();
 
 private:
@@ -65,7 +65,7 @@ private:
     size_t m_consumed_args { 0 };
 };
 
-OptionParser::OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index)
+OptionParser::OptionParser(int argc, char* const* argv, StringView short_options, const option* long_options, int* out_long_option_index)
     : m_argc(argc)
     , m_argv(argv)
     , m_short_options(short_options)

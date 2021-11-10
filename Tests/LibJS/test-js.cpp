@@ -84,7 +84,7 @@ TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter)
     auto start_time = Test::get_time_in_ms();
 
     LexicalPath path(test_file);
-    auto& dirname = path.dirname();
+    auto dirname = path.dirname();
     enum {
         Early,
         Fail,

@@ -317,7 +317,7 @@ int main(int argc, char** argv)
     terminal.on_command_exit = [&] {
         app->quit(0);
     };
-    terminal.on_title_change = [&](auto& title) {
+    terminal.on_title_change = [&](auto title) {
         window->set_title(title);
     };
     terminal.on_terminal_size_change = [&](auto& size) {

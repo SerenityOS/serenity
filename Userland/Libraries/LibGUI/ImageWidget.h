@@ -26,7 +26,7 @@ public:
     bool auto_resize() const { return m_auto_resize; }
 
     void animate();
-    void load_from_file(const StringView&);
+    void load_from_file(StringView);
 
     int opacity_percent() const { return m_opacity_percent; }
     void set_opacity_percent(int percent);
@@ -34,7 +34,7 @@ public:
     Function<void()> on_click;
 
 protected:
-    explicit ImageWidget(const StringView& text = {});
+    explicit ImageWidget(StringView text = {});
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;

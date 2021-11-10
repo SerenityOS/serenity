@@ -80,7 +80,7 @@ void OutOfProcessWebView::load(const AK::URL& url)
     client().async_load_url(url);
 }
 
-void OutOfProcessWebView::load_html(const StringView& html, const AK::URL& url)
+void OutOfProcessWebView::load_html(StringView html, const AK::URL& url)
 {
     m_url = url;
     client().async_load_html(html, url);

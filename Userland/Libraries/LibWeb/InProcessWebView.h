@@ -24,7 +24,7 @@ class InProcessWebView final
 public:
     virtual ~InProcessWebView() override;
 
-    void load_html(const StringView&, const AK::URL&);
+    void load_html(StringView, const AK::URL&);
     void load_empty_document();
 
     DOM::Document* document();

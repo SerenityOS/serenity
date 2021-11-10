@@ -90,7 +90,7 @@ struct Configuration {
         enable_bracketed_paste = flags & Flags::BracketedPaste;
     }
 
-    static Configuration from_config(const StringView& libname = "line");
+    static Configuration from_config(StringView libname = "line");
 
     RefreshBehavior refresh_behavior { RefreshBehavior::Lazy };
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
@@ -159,14 +159,14 @@ public:
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
     void register_key_input_callback(Key key, Function<bool(Editor&)> callback) { register_key_input_callback(Vector<Key> { key }, move(callback)); }
 
-    static StringMetrics actual_rendered_string_metrics(const StringView&);
+    static StringMetrics actual_rendered_string_metrics(StringView);
     static StringMetrics actual_rendered_string_metrics(const Utf32View&);
 
     Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
-    static Function<bool(Editor&)> find_internal_function(const StringView& name);
+    static Function<bool(Editor&)> find_internal_function(StringView name);
     enum class CaseChangeOp {
         Lowercase,
         Uppercase,
@@ -207,7 +207,7 @@ public:
 
     void clear_line();
     void insert(const String&);
-    void insert(const StringView&);
+    void insert(StringView);
     void insert(const Utf32View&);
     void insert(const u32);
     void stylize(const Span&, const Style&);
@@ -282,7 +282,7 @@ private:
 
     Style find_applicable_style(size_t offset) const;
 
-    bool search(const StringView&, bool allow_empty = false, bool from_beginning = true);
+    bool search(StringView, bool allow_empty = false, bool from_beginning = true);
     inline void end_search()
     {
         m_is_searching = false;

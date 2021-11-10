@@ -32,7 +32,7 @@ static Vector<u16, 1> to_utf16_impl(UtfViewType const& view) requires(IsSame<Utf
     return utf16_data;
 }
 
-Vector<u16, 1> utf8_to_utf16(StringView const& utf8_view)
+Vector<u16, 1> utf8_to_utf16(StringView utf8_view)
 {
     return to_utf16_impl(Utf8View { utf8_view });
 }

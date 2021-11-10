@@ -16,7 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static int parse_options(const StringView& options)
+static int parse_options(StringView options)
 {
     int flags = 0;
     Vector<StringView> parts = options.split_view(',');

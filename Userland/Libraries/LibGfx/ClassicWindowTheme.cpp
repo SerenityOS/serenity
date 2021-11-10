@@ -52,7 +52,7 @@ Gfx::IntRect ClassicWindowTheme::titlebar_text_rect(WindowType window_type, cons
     };
 }
 
-void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& window_title, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count, [[maybe_unused]] bool window_modified) const
+void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, StringView window_title, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count, [[maybe_unused]] bool window_modified) const
 {
     auto frame_rect = frame_rect_for_window(WindowType::Normal, window_rect, palette, menu_row_count);
     frame_rect.set_location({ 0, 0 });
@@ -94,7 +94,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
 }
 
-void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
+void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, StringView title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
 {
     auto frame_rect = frame_rect_for_window(WindowType::ToolWindow, window_rect, palette, 0);
     frame_rect.set_location({ 0, 0 });

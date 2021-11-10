@@ -130,7 +130,7 @@ public:
             return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
         }
 
-        String source_location_hint(const StringView& source, const char spacer = ' ', const char indicator = '^') const
+        String source_location_hint(StringView source, const char spacer = ' ', const char indicator = '^') const
         {
             if (!position.has_value())
                 return {};

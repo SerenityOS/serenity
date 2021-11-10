@@ -20,7 +20,7 @@
 
 namespace Audio {
 
-FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
+FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::OpenMode::ReadOnly)) {

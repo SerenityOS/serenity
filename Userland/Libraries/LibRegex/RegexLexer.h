@@ -52,7 +52,7 @@ public:
     }
 
     TokenType type() const { return m_type; }
-    StringView const& value() const { return m_value; }
+    StringView value() const { return m_value; }
     size_t position() const { return m_position; }
 
     char const* name() const;

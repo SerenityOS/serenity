@@ -136,7 +136,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     };
 }
 
-String HelpWindow::render(const StringView& key)
+String HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get(key).as_object();

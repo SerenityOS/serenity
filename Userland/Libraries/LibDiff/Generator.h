@@ -10,6 +10,6 @@
 
 namespace Diff {
 
-Vector<Hunk> from_text(StringView const& old_text, StringView const& new_text);
+Vector<Hunk> from_text(StringView old_text, StringView new_text);
 
 }

@@ -89,7 +89,7 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
     return String::formatted("type: {} @ {:p}, ", variable.type_name, variable_address);
 }
 
-static Optional<u32> string_to_variable_value(const StringView& string_value, const Debug::DebugInfo::VariableInfo& variable)
+static Optional<u32> string_to_variable_value(StringView string_value, const Debug::DebugInfo::VariableInfo& variable)
 {
     if (variable.is_enum_type()) {
         auto prefix_string = String::formatted("{}::", variable.type_name);
@@ -124,7 +124,7 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
     return {};
 }
 
-void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const StringView& string_value, GUI::Window* parent_window)
+void VariablesModel::set_variable_value(const GUI::ModelIndex& index, StringView string_value, GUI::Window* parent_window)
 {
     auto variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
 

@@ -1324,13 +1324,13 @@ void Terminal::execute_dcs_sequence()
 {
 }
 
-void Terminal::inject_string(const StringView& str)
+void Terminal::inject_string(StringView str)
 {
     for (size_t i = 0; i < str.length(); ++i)
         on_input(str[i]);
 }
 
-void Terminal::emit_string(const StringView& string)
+void Terminal::emit_string(StringView string)
 {
     m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
 }

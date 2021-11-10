@@ -30,11 +30,11 @@ public:
 
     virtual ~MessageBox() override;
 
-    static int show(Window* parent_window, const StringView& text, const StringView& title, Type type = Type::None, InputType input_type = InputType::OK);
-    static int show_error(Window* parent_window, const StringView& text);
+    static int show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
+    static int show_error(Window* parent_window, StringView text);
 
 private:
-    explicit MessageBox(Window* parent_window, const StringView& text, const StringView& title, Type type = Type::None, InputType input_type = InputType::OK);
+    explicit MessageBox(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
 
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;

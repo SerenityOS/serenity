@@ -39,11 +39,11 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-RefPtr<DOM::Document> parse_html_document(const StringView&, const AK::URL&, const String& encoding);
+RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, const String& encoding);
 
 class HTMLParser {
 public:
-    HTMLParser(DOM::Document&, const StringView& input, const String& encoding);
+    HTMLParser(DOM::Document&, StringView input, const String& encoding);
     ~HTMLParser();
 
     static NonnullOwnPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
@@ -52,7 +52,7 @@ public:
 
     DOM::Document& document();
 
-    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, const StringView&);
+    static NonnullRefPtrVector<DOM::Node> parse_html_fragment(DOM::Element& context_element, StringView);
     static String serialize_html_fragment(DOM::Node const& node);
 
     enum class InsertionMode {

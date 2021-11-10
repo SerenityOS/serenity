@@ -1145,7 +1145,7 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     return false;
 }
 
-bool Shell::has_builtin(const StringView& name) const
+bool Shell::has_builtin(StringView name) const
 {
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     if (name == #builtin) {                \

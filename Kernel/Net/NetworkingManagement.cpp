@@ -63,7 +63,7 @@ RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(const IPv4Address
         return m_loopback_adapter;
     return {};
 }
-RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& name) const
+RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) const
 {
     MutexLocker locker(m_lock);
     RefPtr<NetworkAdapter> found_adapter;

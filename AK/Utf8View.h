@@ -74,7 +74,7 @@ public:
 
     explicit Utf8View(String&&) = delete;
 
-    const StringView& as_string() const { return m_string; }
+    StringView as_string() const { return m_string; }
 
     Utf8CodePointIterator begin() const { return { begin_ptr(), m_string.length() }; }
     Utf8CodePointIterator end() const { return { end_ptr(), 0 }; }

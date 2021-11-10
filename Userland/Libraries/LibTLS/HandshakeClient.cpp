@@ -140,7 +140,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
     return true;
 }
 
-static bool wildcard_matches(const StringView& host, const StringView& subject)
+static bool wildcard_matches(StringView host, StringView subject)
 {
     if (host.matches(subject))
         return true;
@@ -151,7 +151,7 @@ static bool wildcard_matches(const StringView& host, const StringView& subject)
     return false;
 }
 
-Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringView& host) const
+Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(StringView host) const
 {
     if (m_context.certificates.is_empty() || !m_context.verify_chain())
         return {};

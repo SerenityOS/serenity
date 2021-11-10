@@ -145,7 +145,7 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
-Vector<GUI::ModelIndex> ProfileModel::matches(StringView const& searching, unsigned flags, GUI::ModelIndex const& parent)
+Vector<GUI::ModelIndex> ProfileModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const& parent)
 {
     RemoveReference<decltype(m_profile.roots())>* nodes { nullptr };
 

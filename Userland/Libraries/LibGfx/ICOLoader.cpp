@@ -91,7 +91,7 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-RefPtr<Gfx::Bitmap> load_ico(const StringView& path)
+RefPtr<Gfx::Bitmap> load_ico(StringView path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

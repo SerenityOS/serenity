@@ -39,7 +39,7 @@ private:
     void set_document_data(const String& file, OwnPtr<DocumentData>&& data);
 
     OwnPtr<DocumentData> create_document_data_for(const String& file);
-    String document_path_from_include_path(const StringView& include_path) const;
+    String document_path_from_include_path(StringView include_path) const;
     void update_declared_symbols(const DocumentData&);
 
     static size_t resolve(const ShellComprehensionEngine::DocumentData& document, const GUI::TextPosition& position);

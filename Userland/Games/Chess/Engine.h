@@ -15,7 +15,7 @@ class Engine : public Chess::UCI::Endpoint {
 public:
     virtual ~Engine() override;
 
-    Engine(const StringView& command);
+    Engine(StringView command);
 
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;

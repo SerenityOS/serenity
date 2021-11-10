@@ -32,7 +32,7 @@ public:
 
 private:
     static RefPtr<HelpWindow> s_the;
-    String render(const StringView& key);
+    String render(StringView key);
     HelpWindow(GUI::Window* parent = nullptr);
 
     JsonObject m_docs;

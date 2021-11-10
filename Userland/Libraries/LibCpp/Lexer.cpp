@@ -13,7 +13,7 @@
 
 namespace Cpp {
 
-Lexer::Lexer(StringView const& input, size_t start_line)
+Lexer::Lexer(StringView input, size_t start_line)
     : m_input(input)
     , m_previous_position { start_line, 0 }
     , m_position { start_line, 0 }
@@ -188,7 +188,7 @@ constexpr char const* s_known_types[] = {
     "wchar_t"
 };
 
-static bool is_keyword(StringView const& string)
+static bool is_keyword(StringView string)
 {
     static HashTable<String> keywords(array_size(s_known_keywords));
     if (keywords.is_empty()) {
@@ -197,7 +197,7 @@ static bool is_keyword(StringView const& string)
     return keywords.contains(string);
 }
 
-static bool is_known_type(StringView const& string)
+static bool is_known_type(StringView string)
 {
     static HashTable<String> types(array_size(s_known_types));
     if (types.is_empty()) {

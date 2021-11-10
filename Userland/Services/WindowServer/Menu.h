@@ -164,6 +164,6 @@ private:
     HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indices;
 };
 
-u32 find_ampersand_shortcut_character(const StringView&);
+u32 find_ampersand_shortcut_character(StringView);
 
 }

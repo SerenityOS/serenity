@@ -115,7 +115,7 @@ Encoder& Encoder::operator<<(char const* value)
     return *this << StringView(value);
 }
 
-Encoder& Encoder::operator<<(StringView const& value)
+Encoder& Encoder::operator<<(StringView value)
 {
     m_buffer.data.append((u8 const*)value.characters_without_null_termination(), value.length());
     return *this;

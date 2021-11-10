@@ -20,7 +20,7 @@ namespace Cpp {
 class Preprocessor {
 
 public:
-    explicit Preprocessor(const String& filename, const StringView& program);
+    explicit Preprocessor(const String& filename, StringView program);
     Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
@@ -49,10 +49,10 @@ public:
     Function<Definitions(StringView)> definitions_in_header_callback { nullptr };
 
 private:
-    void handle_preprocessor_statement(StringView const&);
-    void handle_include_statement(StringView const&);
-    void handle_preprocessor_keyword(StringView const& keyword, GenericLexer& line_lexer);
-    String remove_escaped_newlines(StringView const& value);
+    void handle_preprocessor_statement(StringView);
+    void handle_include_statement(StringView);
+    void handle_preprocessor_keyword(StringView keyword, GenericLexer& line_lexer);
+    String remove_escaped_newlines(StringView value);
 
     size_t do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const&);
     Optional<Definition> create_definition(StringView line);

@@ -66,7 +66,7 @@ public:
             octet(SubnetClass::A));
     }
 
-    static Optional<IPv4Address> from_string(const StringView& string)
+    static Optional<IPv4Address> from_string(StringView string)
     {
         if (string.is_null())
             return {};

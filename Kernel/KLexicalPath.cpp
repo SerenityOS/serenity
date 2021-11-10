@@ -11,12 +11,12 @@ namespace Kernel::KLexicalPath {
 
 static StringView const s_single_dot = "."sv;
 
-bool is_absolute(StringView const& path)
+bool is_absolute(StringView path)
 {
     return !path.is_empty() && path[0] == '/';
 }
 
-bool is_canonical(StringView const& path)
+bool is_canonical(StringView path)
 {
     // FIXME: This can probably be done more efficiently.
     if (path.is_empty())
@@ -32,7 +32,7 @@ bool is_canonical(StringView const& path)
     return true;
 }
 
-StringView basename(StringView const& a_path)
+StringView basename(StringView a_path)
 {
     if (a_path == "/"sv)
         return a_path;
@@ -49,7 +49,7 @@ StringView basename(StringView const& a_path)
     return basename;
 }
 
-StringView dirname(StringView const& path)
+StringView dirname(StringView path)
 {
     VERIFY(is_canonical(path));
     auto slash_index = path.find_last('/');
@@ -57,13 +57,13 @@ StringView dirname(StringView const& path)
     return path.substring_view(0, *slash_index);
 }
 
-Vector<StringView> parts(StringView const& path)
+Vector<StringView> parts(StringView path)
 {
     VERIFY(is_canonical(path));
     return path.split_view('/');
 }
 
-ErrorOr<NonnullOwnPtr<KString>> try_join(StringView const& first, StringView const& second)
+ErrorOr<NonnullOwnPtr<KString>> try_join(StringView first, StringView second)
 {
     VERIFY(is_canonical(first));
     VERIFY(is_canonical(second));

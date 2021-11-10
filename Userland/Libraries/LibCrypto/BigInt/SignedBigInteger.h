@@ -44,7 +44,7 @@ public:
         return { UnsignedBigInteger::create_invalid(), false };
     }
 
-    static SignedBigInteger import_data(const StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
+    static SignedBigInteger import_data(StringView data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static SignedBigInteger import_data(const u8* ptr, size_t length);
 
     static SignedBigInteger create_from(i64 value)

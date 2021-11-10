@@ -78,7 +78,7 @@ public:
     void push16(ValueWithShadow<u16>);
     ValueWithShadow<u16> pop16();
 
-    void push_string(const StringView&);
+    void push_string(StringView);
     void push_buffer(const u8* data, size_t);
 
     u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }

@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(const String& filename, const StringView& program)
+Preprocessor::Preprocessor(const String& filename, StringView program)
     : m_filename(filename)
     , m_program(program)
 {
@@ -86,7 +86,7 @@ static void consume_whitespace(GenericLexer& lexer)
     }
 }
 
-void Preprocessor::handle_preprocessor_statement(StringView const& line)
+void Preprocessor::handle_preprocessor_statement(StringView line)
 {
     GenericLexer lexer(line);
 
@@ -100,7 +100,7 @@ void Preprocessor::handle_preprocessor_statement(StringView const& line)
     handle_preprocessor_keyword(keyword, lexer);
 }
 
-void Preprocessor::handle_include_statement(StringView const& include_path)
+void Preprocessor::handle_include_statement(StringView include_path)
 {
     m_included_paths.append(include_path);
     if (definitions_in_header_callback) {
@@ -109,7 +109,7 @@ void Preprocessor::handle_include_statement(StringView const& include_path)
     }
 }
 
-void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer)
+void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer& line_lexer)
 {
     if (keyword == "include") {
         // Should have called 'handle_include_statement'.
@@ -345,7 +345,7 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
     return definition;
 }
 
-String Preprocessor::remove_escaped_newlines(StringView const& value)
+String Preprocessor::remove_escaped_newlines(StringView value)
 {
     AK::StringBuilder processed_value;
     GenericLexer lexer { value };

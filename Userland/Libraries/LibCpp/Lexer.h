@@ -14,7 +14,7 @@ namespace Cpp {
 
 class Lexer {
 public:
-    explicit Lexer(StringView const&, size_t start_line = 0);
+    explicit Lexer(StringView, size_t start_line = 0);
 
     Vector<Token> lex();
     template<typename Callback>
