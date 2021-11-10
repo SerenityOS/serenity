@@ -274,6 +274,83 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject& 
     return object;
 }
 
+// 6.5.4 TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar, showTimeZone, showOffset [ , increment, unit, roundingMode ] ), https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring
+ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& global_object, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
+{
+    // 1. Assert: Type(zonedDateTime) is Object and zonedDateTime has an [[InitializedTemporalZonedDateTime]] internal slot.
+
+    // 2. If increment is not present, set it to 1.
+    if (!increment.has_value())
+        increment = 1;
+
+    // 3. If unit is not present, set it to "nanosecond".
+    if (!unit.has_value())
+        unit = "nanosecond"sv;
+
+    // 4. If roundingMode is not present, set it to "trunc".
+    if (!rounding_mode.has_value())
+        rounding_mode = "trunc"sv;
+
+    // 5. Let ns be ! RoundTemporalInstant(zonedDateTime.[[Nanoseconds]], increment, unit, roundingMode).
+    auto* ns = round_temporal_instant(global_object, zoned_date_time.nanoseconds(), *increment, *unit, *rounding_mode);
+
+    // 6. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time.time_zone();
+
+    // 7. Let instant be ! CreateTemporalInstant(ns).
+    auto* instant = MUST(create_temporal_instant(global_object, *ns));
+
+    // 8. Let isoCalendar be ! GetISO8601Calendar().
+    auto* iso_calendar = get_iso8601_calendar(global_object);
+
+    // 9. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, isoCalendar).
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, *iso_calendar));
+
+    // 10. Let dateTimeString be ? TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
+    auto date_time_string = TRY(temporal_date_time_to_string(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
+
+    String offset_string;
+
+    // 11. If showOffset is "never", then
+    if (show_offset == "never"sv) {
+        // a. Let offsetString be the empty String.
+        offset_string = String::empty();
+    }
+    // Else,
+    else {
+        // a. Let offsetNs be ? GetOffsetNanosecondsFor(timeZone, instant).
+        auto offset_ns = TRY(get_offset_nanoseconds_for(global_object, &time_zone, *instant));
+
+        // b. Let offsetString be ! FormatISOTimeZoneOffsetString(offsetNs).
+        offset_string = format_iso_time_zone_offset_string(offset_ns);
+    }
+
+    String time_zone_string;
+
+    // 13. If showTimeZone is "never", then
+    if (show_time_zone == "never"sv) {
+        // a. Let timeZoneString be the empty String.
+        time_zone_string = String::empty();
+    }
+    // 14. Else,
+    else {
+        // a. Let timeZoneID be ? ToString(timeZone).
+        auto time_zone_id = TRY(Value(&time_zone).to_string(global_object));
+
+        // b. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
+        time_zone_string = String::formatted("[{}]", time_zone_id);
+    }
+
+    // 15. Let calendarID be ? ToString(zonedDateTime.[[Calendar]]).
+    auto calendar_id = TRY(Value(&zoned_date_time.calendar()).to_string(global_object));
+
+    // 16. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
+    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
+
+    // 17. Return the string-concatenation of dateTimeString, offsetString, timeZoneString, and calendarString.
+    return String::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string);
+}
+
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {

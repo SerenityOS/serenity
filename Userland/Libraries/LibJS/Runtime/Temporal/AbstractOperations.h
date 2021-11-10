@@ -99,6 +99,8 @@ ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
+ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject&, Object const& normalized_options);
+ThrowCompletionOr<String> to_show_offset_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);

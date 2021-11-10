@@ -436,6 +436,7 @@ namespace JS {
     P(test)                                  \
     P(then)                                  \
     P(timeZone)                              \
+    P(timeZoneName)                          \
     P(toDateString)                          \
     P(toFixed)                               \
     P(toGMTString)                           \
