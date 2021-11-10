@@ -153,6 +153,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_register_windows.is_empty())
         m_register_windows.last()[0] = return_value;
 
+    // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
+    // in which case this is a no-op.
+    vm().run_queued_promise_jobs();
+
     if (vm().execution_context_stack().size() == 1)
         vm().pop_execution_context();
 
