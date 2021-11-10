@@ -8,6 +8,7 @@
 
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
+#include <AK/Vector.h>
 
 TEST_CASE(should_determine_if_predicate_applies_to_any_element_in_container)
 {

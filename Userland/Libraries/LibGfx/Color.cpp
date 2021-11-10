@@ -311,6 +311,30 @@ Optional<Color> Color::from_string(StringView const& string)
     return Color(r.value(), g.value(), b.value(), a.value());
 }
 
+Vector<Color> Color::shades(u32 steps, float max) const
+{
+    float shade = 1.f;
+    float step = max / steps;
+    Vector<Color> shades;
+    for (u32 i = 0; i < steps; i++) {
+        shade -= step;
+        shades.append(this->darkened(shade));
+    }
+    return shades;
+}
+
+Vector<Color> Color::tints(u32 steps, float max) const
+{
+    float shade = 1.f;
+    float step = max / steps;
+    Vector<Color> tints;
+    for (u32 i = 0; i < steps; i++) {
+        shade += step;
+        tints.append(this->lightened(shade));
+    }
+    return tints;
+}
+
 }
 
 bool IPC::encode(IPC::Encoder& encoder, Color const& color)

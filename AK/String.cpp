@@ -479,4 +479,9 @@ String String::vformatted(StringView fmtstr, TypeErasedFormatParams& params)
     return builder.to_string();
 }
 
+Vector<size_t> String::find_all(StringView needle) const
+{
+    return StringUtils::find_all(*this, needle);
+}
+
 }

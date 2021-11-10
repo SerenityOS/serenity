@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Vector.h>
 #include <LibJS/Heap/Cell.h>
 
 namespace JS {

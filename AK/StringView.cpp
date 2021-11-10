@@ -8,9 +8,11 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Find.h>
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
@@ -250,6 +252,33 @@ String StringView::to_string() const { return String { *this }; }
 String StringView::replace(const StringView& needle, const StringView& replacement, bool all_occurrences) const
 {
     return StringUtils::replace(*this, needle, replacement, all_occurrences);
+}
+
+Vector<size_t> StringView::find_all(StringView needle) const
+{
+    return StringUtils::find_all(*this, needle);
+}
+
+Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predicate, bool keep_empty) const
+{
+    if (is_empty())
+        return {};
+
+    Vector<StringView> v;
+    size_t substart = 0;
+    for (size_t i = 0; i < length(); ++i) {
+        char ch = characters_without_null_termination()[i];
+        if (predicate(ch)) {
+            size_t sublen = i - substart;
+            if (sublen != 0 || keep_empty)
+                v.append(substring_view(substart, sublen));
+            substart = i + 1;
+        }
+    }
+    size_t taillen = length() - substart;
+    if (taillen != 0 || keep_empty)
+        v.append(substring_view(substart, taillen));
+    return v;
 }
 
 }
