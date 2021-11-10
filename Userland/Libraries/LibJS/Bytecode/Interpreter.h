@@ -32,7 +32,17 @@ public:
     Realm& realm() { return m_realm; }
     VM& vm() { return m_vm; }
 
-    Value run(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point = nullptr);
+    Value run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    {
+        auto value_and_frame = run_and_return_frame(executable, entry_point);
+        return value_and_frame.value;
+    }
+
+    struct ValueAndFrame {
+        Value value;
+        OwnPtr<RegisterWindow> frame;
+    };
+    ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
@@ -40,14 +50,15 @@ public:
 
     void enter_frame(RegisterWindow const& frame)
     {
-        ++m_manually_entered_frames;
+        m_manually_entered_frames.append(true);
         m_register_windows.append(make<RegisterWindow>(frame));
     }
-    void leave_frame()
+    NonnullOwnPtr<RegisterWindow> pop_frame()
     {
-        VERIFY(m_manually_entered_frames);
-        --m_manually_entered_frames;
-        m_register_windows.take_last();
+        VERIFY(!m_manually_entered_frames.is_empty());
+        VERIFY(m_manually_entered_frames.last());
+        m_manually_entered_frames.take_last();
+        return m_register_windows.take_last();
     }
 
     void jump(Label const& label)
@@ -77,9 +88,9 @@ private:
     GlobalObject& m_global_object;
     Realm& m_realm;
     NonnullOwnPtrVector<RegisterWindow> m_register_windows;
+    Vector<bool> m_manually_entered_frames;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
-    size_t m_manually_entered_frames { 0 };
     Executable const* m_current_executable { nullptr };
     Vector<UnwindInfo> m_unwind_contexts;
     Handle<Exception> m_saved_exception;
