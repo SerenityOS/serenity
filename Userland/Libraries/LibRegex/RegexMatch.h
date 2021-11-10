@@ -57,7 +57,7 @@ public:
 
     explicit RegexStringView(String&&) = delete;
 
-    StringView const& string_view() const
+    StringView string_view() const
     {
         return m_view.get<StringView>();
     }
@@ -280,7 +280,7 @@ public:
     size_t code_unit_offset_of(size_t code_point_index) const
     {
         return m_view.visit(
-            [&](StringView const& view) -> u32 {
+            [&](StringView view) -> u32 {
                 Utf8View utf8_view { view };
                 return utf8_view.byte_offset_of(code_point_index);
             },
@@ -316,7 +316,7 @@ public:
             [&](StringView view) { return view == string; });
     }
 
-    bool operator==(StringView const& string) const
+    bool operator==(StringView string) const
     {
         return m_view.visit(
             [&](Utf32View) { return to_string() == string; },
@@ -325,7 +325,7 @@ public:
             [&](StringView view) { return view == string; });
     }
 
-    bool operator!=(StringView const& other) const
+    bool operator!=(StringView other) const
     {
         return !(*this == other);
     }
@@ -374,12 +374,12 @@ public:
         return !(*this == other);
     }
 
-    bool equals(RegexStringView const& other) const
+    bool equals(RegexStringView other) const
     {
         return other.m_view.visit([&](auto const& view) { return operator==(view); });
     }
 
-    bool equals_ignoring_case(RegexStringView const& other) const
+    bool equals_ignoring_case(RegexStringView other) const
     {
         // FIXME: Implement equals_ignoring_case() for unicode.
         return m_view.visit(
@@ -396,7 +396,7 @@ public:
             [](auto&) -> bool { TODO(); });
     }
 
-    bool starts_with(StringView const& str) const
+    bool starts_with(StringView str) const
     {
         return m_view.visit(
             [&](Utf32View) -> bool {
@@ -536,7 +536,7 @@ using regex::RegexStringView;
 
 template<>
 struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
-    void format(FormatBuilder& builder, regex::RegexStringView const& value)
+    void format(FormatBuilder& builder, regex::RegexStringView value)
     {
         auto string = value.to_string();
         return Formatter<StringView>::format(builder, string);

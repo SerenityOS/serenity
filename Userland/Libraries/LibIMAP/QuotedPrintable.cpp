@@ -17,7 +17,7 @@ static constexpr bool is_illegal_character(char c)
 }
 
 // RFC 2045 Section 6.7 "Quoted-Printable Content-Transfer-Encoding", https://datatracker.ietf.org/doc/html/rfc2045#section-6.7
-ByteBuffer decode_quoted_printable(StringView const& input)
+ByteBuffer decode_quoted_printable(StringView input)
 {
     GenericLexer lexer(input);
     StringBuilder output;

@@ -24,11 +24,11 @@ public:
     KBufferBuilder& operator=(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
-    ErrorOr<void> append(const StringView&);
+    ErrorOr<void> append(StringView);
     ErrorOr<void> append(char);
     ErrorOr<void> append(const char*, int);
 
-    ErrorOr<void> append_escaped_for_json(const StringView&);
+    ErrorOr<void> append_escaped_for_json(StringView);
     ErrorOr<void> append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>

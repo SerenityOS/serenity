@@ -97,7 +97,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<RGBA32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_byte_buffer(ByteBuffer&&);
 
-    static bool is_path_a_supported_image_format(StringView const& path)
+    static bool is_path_a_supported_image_format(StringView path)
     {
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
     if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \

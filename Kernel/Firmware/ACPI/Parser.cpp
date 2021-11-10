@@ -75,7 +75,7 @@ UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& 
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;
-    ACPI::Parser::the()->enumerate_static_tables([&](const StringView& signature, PhysicalAddress p_table, size_t length) {
+    ACPI::Parser::the()->enumerate_static_tables([&](StringView signature, PhysicalAddress p_table, size_t length) {
         if (signature == "SSDT") {
             components.append(ACPISysFSComponent::create(String::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count), p_table, length));
             ssdt_count++;
@@ -96,7 +96,7 @@ UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& 
     }
 }
 
-void Parser::enumerate_static_tables(Function<void(const StringView&, PhysicalAddress, size_t)> callback)
+void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, size_t)> callback)
 {
     for (auto& p_table : m_sdt_pointers) {
         auto table = Memory::map_typed<Structures::SDTHeader>(p_table);
@@ -104,9 +104,9 @@ void Parser::enumerate_static_tables(Function<void(const StringView&, PhysicalAd
     }
 }
 
-static bool match_table_signature(PhysicalAddress table_header, const StringView& signature);
-static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt, const StringView& signature);
-static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt, const StringView& signature);
+static bool match_table_signature(PhysicalAddress table_header, StringView signature);
+static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt, StringView signature);
+static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt, StringView signature);
 static bool validate_table(const Structures::SDTHeader&, size_t length);
 
 UNMAP_AFTER_INIT void Parser::locate_static_data()
@@ -116,7 +116,7 @@ UNMAP_AFTER_INIT void Parser::locate_static_data()
     process_fadt_data();
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(const StringView& signature)
+UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signature)
 {
     dbgln_if(ACPI_DEBUG, "ACPI: Calling Find Table method!");
     for (auto p_sdt : m_sdt_pointers) {
@@ -383,7 +383,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
     return map_bios().find_chunk_starting_with(signature, 16);
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
+UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_table(PhysicalAddress rsdp_address, StringView signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
@@ -401,7 +401,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_table(PhysicalAdd
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt_address, StringView signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
@@ -415,7 +415,7 @@ UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalA
     return {};
 }
 
-static bool match_table_signature(PhysicalAddress table_header, const StringView& signature)
+static bool match_table_signature(PhysicalAddress table_header, StringView signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
@@ -424,7 +424,7 @@ static bool match_table_signature(PhysicalAddress table_header, const StringView
     return !strncmp(table->h.sig, signature.characters_without_null_termination(), 4);
 }
 
-UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt_address, StringView signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);

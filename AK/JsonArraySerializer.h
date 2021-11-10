@@ -39,7 +39,7 @@ public:
     }
 #endif
 
-    void add(const StringView& value)
+    void add(StringView value)
     {
         begin_item();
         (void)m_builder.append('"');

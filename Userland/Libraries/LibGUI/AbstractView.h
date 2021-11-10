@@ -154,7 +154,7 @@ protected:
     virtual void did_change_cursor_index([[maybe_unused]] ModelIndex const& old_index, [[maybe_unused]] ModelIndex const& new_index) { }
     virtual void editing_widget_did_change([[maybe_unused]] ModelIndex const& index) { }
 
-    void draw_item_text(Gfx::Painter&, ModelIndex const&, bool, Gfx::IntRect const&, StringView const&, Gfx::Font const&, Gfx::TextAlignment, Gfx::TextElision, size_t search_highlighting_offset = 0);
+    void draw_item_text(Gfx::Painter&, ModelIndex const&, bool, Gfx::IntRect const&, StringView, Gfx::Font const&, Gfx::TextAlignment, Gfx::TextElision, size_t search_highlighting_offset = 0);
 
     void set_suppress_update_on_selection_change(bool value) { m_suppress_update_on_selection_change = value; }
 

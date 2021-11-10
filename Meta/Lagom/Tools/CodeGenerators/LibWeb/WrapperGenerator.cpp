@@ -235,7 +235,7 @@ static NonnullOwnPtr<Interface> parse_interface(StringView filename, StringView 
         }
     };
 
-    auto assert_string = [&](StringView const& expected) {
+    auto assert_string = [&](StringView expected) {
         if (!lexer.consume_specific(expected))
             report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
     };
@@ -1267,7 +1267,7 @@ enum class WrappingReference {
     Yes,
 };
 
-static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, StringView const& result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
+static void generate_wrap_statement(SourceGenerator& generator, String const& value, IDL::Type const& type, StringView result_expression, WrappingReference wrapping_reference = WrappingReference::No, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("value", value);

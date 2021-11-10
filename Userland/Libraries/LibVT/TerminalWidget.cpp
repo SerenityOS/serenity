@@ -458,7 +458,7 @@ void TerminalWidget::set_window_progress(int value, int max)
     window()->set_progress((int)roundf(progress));
 }
 
-void TerminalWidget::set_window_title(const StringView& title)
+void TerminalWidget::set_window_title(StringView title)
 {
     if (!Utf8View(title).validate()) {
         dbgln("TerminalWidget: Attempted to set window title to invalid UTF-8 string");
@@ -649,7 +649,7 @@ static u32 to_lowercase_code_point(u32 code_point)
     return code_point;
 }
 
-VT::Range TerminalWidget::find_next(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_next(StringView needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};
@@ -681,7 +681,7 @@ VT::Range TerminalWidget::find_next(const StringView& needle, const VT::Position
     return {};
 }
 
-VT::Range TerminalWidget::find_previous(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+VT::Range TerminalWidget::find_previous(StringView needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
 {
     if (needle.is_empty())
         return {};
@@ -1159,7 +1159,7 @@ void TerminalWidget::update_paste_action()
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
 }
 
-void TerminalWidget::set_color_scheme(const StringView& name)
+void TerminalWidget::set_color_scheme(StringView name)
 {
     if (name.contains('/')) {
         dbgln("Shenanigans! Color scheme names can't contain slashes.");

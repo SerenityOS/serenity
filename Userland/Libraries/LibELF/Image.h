@@ -217,7 +217,7 @@ public:
     template<VoidFunction<ProgramHeader> F>
     void for_each_program_header(F) const;
 
-    Optional<Section> lookup_section(StringView const& name) const;
+    Optional<Section> lookup_section(StringView name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
@@ -233,7 +233,7 @@ public:
 
     bool has_symbols() const { return symbol_count(); }
 #ifndef KERNEL
-    Optional<Symbol> find_demangled_function(const StringView& name) const;
+    Optional<Symbol> find_demangled_function(StringView name) const;
     String symbolicate(FlatPtr address, u32* offset = nullptr) const;
 #endif
     Optional<Image::Symbol> find_symbol(FlatPtr address, u32* offset = nullptr) const;

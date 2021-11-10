@@ -85,7 +85,7 @@ OwnPtr<List> List::parse(LineIterator& lines)
 
         size_t offset = 0;
 
-        const StringView& line = *lines;
+        StringView line = *lines;
 
         bool appears_unordered = false;
 

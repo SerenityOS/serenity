@@ -138,7 +138,7 @@ void EvaluateExpressionDialog::handle_evaluation(const String& expression)
     set_output(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
 }
 
-void EvaluateExpressionDialog::set_output(const StringView& html)
+void EvaluateExpressionDialog::set_output(StringView html)
 {
     auto paragraph = m_output_container->document().create_element("p");
     paragraph->set_inner_html(html);

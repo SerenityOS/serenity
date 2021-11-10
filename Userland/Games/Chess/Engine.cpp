@@ -17,7 +17,7 @@ Engine::~Engine()
         kill(m_pid, SIGINT);
 }
 
-Engine::Engine(const StringView& command)
+Engine::Engine(StringView command)
 {
     int wpipefds[2];
     int rpipefds[2];

@@ -39,7 +39,7 @@ OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)
     if (lines.is_end())
         return {};
 
-    const StringView& line = *lines;
+    StringView line = *lines;
 
     if (line.length() < 3)
         return {};

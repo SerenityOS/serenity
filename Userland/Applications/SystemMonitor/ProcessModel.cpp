@@ -310,7 +310,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     return {};
 }
 
-Vector<GUI::ModelIndex> ProcessModel::matches(StringView const& searching, unsigned flags, GUI::ModelIndex const&)
+Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const&)
 {
     Vector<GUI::ModelIndex> found_indices;
 

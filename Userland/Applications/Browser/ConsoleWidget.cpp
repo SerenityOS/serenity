@@ -123,7 +123,7 @@ void ConsoleWidget::handle_console_messages(i32 start_index, const Vector<String
         request_console_messages();
 }
 
-void ConsoleWidget::print_source_line(const StringView& source)
+void ConsoleWidget::print_source_line(StringView source)
 {
     StringBuilder html;
     html.append("<span class=\"repl-indicator\">");
@@ -135,7 +135,7 @@ void ConsoleWidget::print_source_line(const StringView& source)
     print_html(html.string_view());
 }
 
-void ConsoleWidget::print_html(StringView const& line)
+void ConsoleWidget::print_html(StringView line)
 {
     StringBuilder builder;
     builder.append(R"~~~(

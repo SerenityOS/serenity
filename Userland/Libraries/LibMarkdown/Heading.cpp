@@ -50,7 +50,7 @@ OwnPtr<Heading> Heading::parse(LineIterator& lines)
     if (lines.is_end())
         return {};
 
-    const StringView& line = *lines;
+    StringView line = *lines;
     size_t level;
 
     for (level = 0; level < line.length(); level++) {

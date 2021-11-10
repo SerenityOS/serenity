@@ -44,7 +44,7 @@ public:
 
 private:
     MainWidget();
-    void set_path(StringView const&);
+    void set_path(StringView);
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();

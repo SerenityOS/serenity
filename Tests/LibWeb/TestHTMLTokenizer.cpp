@@ -63,7 +63,7 @@ using Token = Web::HTML::HTMLToken;
     VERIFY(last_token);                         \
     EXPECT_EQ(last_token->attribute_count(), (size_t)(count));
 
-static Vector<Token> run_tokenizer(StringView const& input)
+static Vector<Token> run_tokenizer(StringView input)
 {
     Vector<Token> tokens;
     Tokenizer tokenizer { input, "UTF-8"sv };

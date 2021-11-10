@@ -25,7 +25,7 @@ namespace LaunchServer {
 static Launcher* s_the;
 static bool spawn(String executable, const Vector<String>& arguments);
 
-String Handler::name_from_executable(const StringView& executable)
+String Handler::name_from_executable(StringView executable)
 {
     auto separator = executable.find_last('/');
     if (separator.has_value()) {

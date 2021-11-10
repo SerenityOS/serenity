@@ -63,7 +63,7 @@ bool Parser::expect(char ch)
     return expect(StringView { &ch, 1 });
 }
 
-bool Parser::expect(const StringView& expected)
+bool Parser::expect(StringView expected)
 {
     auto offset_at_start = m_offset;
     auto line_at_start = line();
@@ -2130,7 +2130,7 @@ StringView Parser::consume_while(Function<bool(char)> condition)
     return m_input.substring_view(start_offset, m_offset - start_offset);
 }
 
-bool Parser::next_is(const StringView& next)
+bool Parser::next_is(StringView next)
 {
     auto start = current_position();
     auto res = expect(next);

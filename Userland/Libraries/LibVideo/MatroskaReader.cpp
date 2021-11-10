@@ -41,7 +41,7 @@ constexpr u32 BIT_DEPTH_ID = 0x6264;
 constexpr u32 SIMPLE_BLOCK_ID = 0xA3;
 constexpr u32 TIMESTAMP_ID = 0xE7;
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView const& path)
+OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView path)
 {
     auto mapped_file_result = MappedFile::map(path);
     if (mapped_file_result.is_error())
@@ -83,7 +83,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse()
     return matroska_document;
 }
 
-bool MatroskaReader::parse_master_element([[maybe_unused]] StringView const& element_name, Function<bool(u64)> element_consumer)
+bool MatroskaReader::parse_master_element([[maybe_unused]] StringView element_name, Function<bool(u64)> element_consumer)
 {
     auto element_data_size = m_streamer.read_variable_size_integer();
     CHECK_HAS_VALUE(element_data_size);

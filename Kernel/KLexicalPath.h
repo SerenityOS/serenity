@@ -11,12 +11,12 @@
 
 namespace Kernel::KLexicalPath {
 
-bool is_absolute(StringView const&);
-bool is_canonical(StringView const&);
-StringView basename(StringView const&);
-StringView dirname(StringView const&);
-Vector<StringView> parts(StringView const&);
+bool is_absolute(StringView);
+bool is_canonical(StringView);
+StringView basename(StringView);
+StringView dirname(StringView);
+Vector<StringView> parts(StringView);
 
-ErrorOr<NonnullOwnPtr<KString>> try_join(StringView const&, StringView const&);
+ErrorOr<NonnullOwnPtr<KString>> try_join(StringView, StringView);
 
 }

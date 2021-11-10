@@ -46,7 +46,7 @@ public:
     virtual ErrorOr<void> prepare_to_unmount() { return {}; }
 
     struct DirectoryEntryView {
-        DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);
+        DirectoryEntryView(StringView name, InodeIdentifier, u8 file_type);
 
         StringView name;
         InodeIdentifier inode;

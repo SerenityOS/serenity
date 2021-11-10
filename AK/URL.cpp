@@ -16,7 +16,7 @@
 namespace AK {
 
 // FIXME: It could make sense to force users of URL to use URLParser::parse() explicitly instead of using a constructor.
-URL::URL(StringView const& string)
+URL::URL(StringView string)
     : URL(URLParser::parse(string))
 {
     if constexpr (URL_PARSER_DEBUG) {
@@ -135,12 +135,12 @@ bool URL::compute_validity() const
     return true;
 }
 
-bool URL::scheme_requires_port(StringView const& scheme)
+bool URL::scheme_requires_port(StringView scheme)
 {
     return (default_port_for_scheme(scheme) != 0);
 }
 
-u16 URL::default_port_for_scheme(StringView const& scheme)
+u16 URL::default_port_for_scheme(StringView scheme)
 {
     if (scheme == "http")
         return 80;
@@ -189,7 +189,7 @@ URL URL::create_with_url_or_path(String const& url_or_path)
 }
 
 // https://url.spec.whatwg.org/#special-scheme
-bool URL::is_special_scheme(StringView const& scheme)
+bool URL::is_special_scheme(StringView scheme)
 {
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
@@ -403,7 +403,7 @@ void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_p
         builder.append_code_point(code_point);
 }
 
-String URL::percent_encode(StringView const& input, URL::PercentEncodeSet set)
+String URL::percent_encode(StringView input, URL::PercentEncodeSet set)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
@@ -412,7 +412,7 @@ String URL::percent_encode(StringView const& input, URL::PercentEncodeSet set)
     return builder.to_string();
 }
 
-String URL::percent_decode(StringView const& input)
+String URL::percent_decode(StringView input)
 {
     if (!input.contains('%'))
         return input;

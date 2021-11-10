@@ -13,7 +13,7 @@ namespace AK {
 
 class GenericLexer {
 public:
-    constexpr explicit GenericLexer(const StringView& input)
+    constexpr explicit GenericLexer(StringView input)
         : m_input(input)
     {
     }
@@ -93,7 +93,7 @@ public:
         return consume_specific(StringView { next });
     }
 
-    constexpr char consume_escaped_character(char escape_char = '\\', const StringView& escape_map = "n\nr\rt\tb\bf\f")
+    constexpr char consume_escaped_character(char escape_char = '\\', StringView escape_map = "n\nr\rt\tb\bf\f")
     {
         if (!consume_specific(escape_char))
             return consume();
@@ -215,7 +215,7 @@ private:
     Result<u32, UnicodeEscapeError> decode_single_or_paired_surrogate(bool combine_surrogate_pairs);
 };
 
-constexpr auto is_any_of(const StringView& values)
+constexpr auto is_any_of(StringView values)
 {
     return [values](auto c) { return values.contains(c); };
 }

@@ -14,14 +14,14 @@ namespace Web::CSS {
 
 void escape_a_character(StringBuilder&, u32 character);
 void escape_a_character_as_code_point(StringBuilder&, u32 character);
-void serialize_an_identifier(StringBuilder&, StringView const& ident);
-void serialize_a_string(StringBuilder&, StringView const& string);
-void serialize_a_url(StringBuilder&, StringView const& url);
+void serialize_an_identifier(StringBuilder&, StringView ident);
+void serialize_a_string(StringBuilder&, StringView string);
+void serialize_a_url(StringBuilder&, StringView url);
 
 String escape_a_character(u32 character);
 String escape_a_character_as_code_point(u32 character);
-String serialize_an_identifier(StringView const& ident);
-String serialize_a_string(StringView const& string);
-String serialize_a_url(StringView const& url);
+String serialize_an_identifier(StringView ident);
+String serialize_a_string(StringView string);
+String serialize_a_url(StringView url);
 
 }

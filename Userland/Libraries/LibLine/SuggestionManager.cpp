@@ -9,7 +9,7 @@
 
 namespace Line {
 
-CompletionSuggestion::CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style)
+CompletionSuggestion::CompletionSuggestion(StringView completion, StringView trailing_trivia, Style style)
     : style(style)
     , text_string(completion)
     , is_valid(true)

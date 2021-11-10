@@ -13,7 +13,7 @@ namespace Gfx {
 
 class CursorParams {
 public:
-    static CursorParams parse_from_filename(StringView const&, Gfx::IntPoint const&);
+    static CursorParams parse_from_filename(StringView, Gfx::IntPoint const&);
 
     CursorParams() = default;
 

@@ -12,7 +12,7 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_pgm(const StringView& path);
+RefPtr<Gfx::Bitmap> load_pgm(StringView path);
 RefPtr<Gfx::Bitmap> load_pgm_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct PGMLoadingContext;

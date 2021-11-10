@@ -684,7 +684,7 @@ void AbstractView::set_searchable(bool searchable)
         stop_highlighted_search_timer();
 }
 
-void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index, bool is_selected, Gfx::IntRect const& text_rect, StringView const& item_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
+void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index, bool is_selected, Gfx::IntRect const& text_rect, StringView item_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
 {
     if (m_edit_index == index)
         return;

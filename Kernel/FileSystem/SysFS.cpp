@@ -163,12 +163,12 @@ ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t
     return EROFS;
 }
 
-ErrorOr<void> SysFSInode::add_child(Inode&, StringView const&, mode_t)
+ErrorOr<void> SysFSInode::add_child(Inode&, StringView, mode_t)
 {
     return EROFS;
 }
 
-ErrorOr<void> SysFSInode::remove_child(StringView const&)
+ErrorOr<void> SysFSInode::remove_child(StringView)
 {
     return EROFS;
 }

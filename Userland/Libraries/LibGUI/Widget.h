@@ -280,8 +280,8 @@ public:
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> override_cursor() const { return m_override_cursor; }
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
-    bool load_from_gml(const StringView&);
-    bool load_from_gml(const StringView&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
+    bool load_from_gml(StringView);
+    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
 
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }

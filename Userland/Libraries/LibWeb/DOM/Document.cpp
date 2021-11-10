@@ -705,7 +705,7 @@ JS::Interpreter& Document::interpreter()
     return *m_interpreter;
 }
 
-JS::Value Document::run_javascript(const StringView& source, const StringView& filename)
+JS::Value Document::run_javascript(StringView source, StringView filename)
 {
     auto parser = JS::Parser(JS::Lexer(source, filename));
     auto program = parser.parse_program();

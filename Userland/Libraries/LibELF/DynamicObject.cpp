@@ -249,7 +249,7 @@ const ElfW(Phdr) * DynamicObject::program_headers() const
     return (const ElfW(Phdr)*)(m_base_address.as_ptr() + header->e_phoff);
 }
 
-auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
+auto DynamicObject::HashSection::lookup_sysv_symbol(StringView name, u32 hash_value) const -> Optional<Symbol>
 {
     u32* hash_table_begin = (u32*)address().as_ptr();
     size_t num_buckets = hash_table_begin[0];
@@ -273,7 +273,7 @@ auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 
     return {};
 }
 
-auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
+auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_value) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     using BloomWord = FlatPtr;
@@ -437,7 +437,7 @@ const char* DynamicObject::name_for_dtag(ElfW(Sword) d_tag)
     }
 }
 
-auto DynamicObject::lookup_symbol(const StringView& name) const -> Optional<SymbolLookupResult>
+auto DynamicObject::lookup_symbol(StringView name) const -> Optional<SymbolLookupResult>
 {
     return lookup_symbol(HashSymbol { name });
 }
@@ -500,7 +500,7 @@ u32 DynamicObject::HashSymbol::sysv_hash() const
     return m_sysv_hash.value();
 }
 
-void* DynamicObject::symbol_for_name(const StringView& name)
+void* DynamicObject::symbol_for_name(StringView name)
 {
     auto result = hash_section().lookup_symbol(name);
     if (!result.has_value())

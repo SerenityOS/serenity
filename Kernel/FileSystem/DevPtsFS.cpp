@@ -149,7 +149,7 @@ ErrorOr<void> DevPtsFSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<void> DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<void> DevPtsFSInode::add_child(Inode&, StringView, mode_t)
 {
     return EROFS;
 }
@@ -159,7 +159,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, de
     return EROFS;
 }
 
-ErrorOr<void> DevPtsFSInode::remove_child(const StringView&)
+ErrorOr<void> DevPtsFSInode::remove_child(StringView)
 {
     return EROFS;
 }

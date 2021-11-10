@@ -126,7 +126,7 @@ struct UnicodeData {
     NormalizationProps normalization_props;
 };
 
-static Vector<u32> parse_code_point_list(StringView const& list)
+static Vector<u32> parse_code_point_list(StringView list)
 {
     Vector<u32> code_points;
 
@@ -137,7 +137,7 @@ static Vector<u32> parse_code_point_list(StringView const& list)
     return code_points;
 }
 
-static CodePointRange parse_code_point_range(StringView const& list)
+static CodePointRange parse_code_point_range(StringView list)
 {
     CodePointRange code_point_range {};
 
@@ -532,14 +532,14 @@ u32 simple_lowercase_mapping(u32 code_point);
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
 
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
-Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
+Optional<GeneralCategory> general_category_from_string(StringView general_category);
 
 bool code_point_has_property(u32 code_point, Property property);
-Optional<Property> property_from_string(StringView const& property);
+Optional<Property> property_from_string(StringView property);
 
 bool code_point_has_script(u32 code_point, Script script);
 bool code_point_has_script_extension(u32 code_point, Script script);
-Optional<Script> script_from_string(StringView const& script);
+Optional<Script> script_from_string(StringView script);
 
 }
 

@@ -294,7 +294,7 @@ void IODevice::set_fd(int fd)
     did_update_fd(fd);
 }
 
-bool IODevice::write(const StringView& v)
+bool IODevice::write(StringView v)
 {
     return write((const u8*)v.characters_without_null_termination(), v.length());
 }

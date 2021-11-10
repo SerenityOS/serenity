@@ -328,7 +328,7 @@ class Parser;
 
 namespace StaticParsing {
 Optional<PhysicalAddress> find_rsdp();
-Optional<PhysicalAddress> find_table(PhysicalAddress rsdp, const StringView& signature);
+Optional<PhysicalAddress> find_table(PhysicalAddress rsdp, StringView signature);
 }
 
 }

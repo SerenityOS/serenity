@@ -26,7 +26,7 @@ enum class Type : u8 {
 };
 
 String char_for_piece(Type type);
-Chess::Type piece_for_char_promotion(const StringView& str);
+Chess::Type piece_for_char_promotion(StringView str);
 
 enum class Color : u8 {
     White,
@@ -57,7 +57,7 @@ constexpr Piece EmptyPiece = { Color::None, Type::None };
 struct Square {
     i8 rank; // zero indexed;
     i8 file;
-    Square(const StringView& name);
+    Square(StringView name);
     Square(const int& rank, const int& file)
         : rank(rank)
         , file(file)
@@ -93,7 +93,7 @@ struct Move {
     bool is_capture : 1 = false;
     bool is_ambiguous : 1 = false;
     Square ambiguous { 50, 50 };
-    Move(const StringView& long_algebraic);
+    Move(StringView long_algebraic);
     Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
         : from(from)
         , to(to)
@@ -102,7 +102,7 @@ struct Move {
     }
     bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
-    static Move from_algebraic(const StringView& algebraic, const Color turn, const Board& board);
+    static Move from_algebraic(StringView algebraic, const Color turn, const Board& board);
     String to_long_algebraic() const;
     String to_algebraic() const;
 };

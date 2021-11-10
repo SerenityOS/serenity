@@ -55,10 +55,10 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static URL parse(StringView const& input, URL const* base_url = nullptr, Optional<URL> url = {}, Optional<State> state_override = {});
+    static URL parse(StringView input, URL const* base_url = nullptr, Optional<URL> url = {}, Optional<State> state_override = {});
 
 private:
-    static Optional<URL> parse_data_url(StringView const& raw_input);
+    static Optional<URL> parse_data_url(StringView raw_input);
 };
 
 #undef ENUMERATE_STATES

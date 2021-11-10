@@ -27,7 +27,7 @@ public:
     {
     }
 
-    JsonPathElement(const StringView& key)
+    JsonPathElement(StringView key)
         : m_kind(Kind::Key)
         , m_key(key)
     {

@@ -628,7 +628,7 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
     return {};
 }
 
-Optional<Parser::DeclarationType> Parser::match_class_member(const StringView& class_name)
+Optional<Parser::DeclarationType> Parser::match_class_member(StringView class_name)
 {
     if (match_function_declaration())
         return DeclarationType::Function;
@@ -1557,7 +1557,7 @@ NonnullRefPtr<BracedInitList> Parser::parse_braced_init_list(ASTNode& parent)
 }
 NonnullRefPtrVector<Declaration> Parser::parse_class_members(StructOrClassDeclaration& parent)
 {
-    auto& class_name = parent.name();
+    auto class_name = parent.name();
 
     NonnullRefPtrVector<Declaration> members;
     while (!eof() && peek().type() != Token::Type::RightCurly) {
@@ -1588,7 +1588,7 @@ void Parser::consume_access_specifier()
     consume(Token::Type::Colon);
 }
 
-bool Parser::match_constructor(const StringView& class_name)
+bool Parser::match_constructor(StringView class_name)
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
@@ -1606,7 +1606,7 @@ bool Parser::match_constructor(const StringView& class_name)
     return (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value());
 }
 
-bool Parser::match_destructor(const StringView& class_name)
+bool Parser::match_destructor(StringView class_name)
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };

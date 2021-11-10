@@ -615,7 +615,7 @@ Icon FileSystemModel::icon_for(Node const& node) const
 
 static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
-static RefPtr<Gfx::Bitmap> render_thumbnail(StringView const& path)
+static RefPtr<Gfx::Bitmap> render_thumbnail(StringView path)
 {
     auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path);
     if (bitmap_or_error.is_error())
@@ -760,7 +760,7 @@ void FileSystemModel::set_data(ModelIndex const& index, Variant const& data)
         on_rename_successful(node.full_path(), new_full_path);
 }
 
-Vector<ModelIndex> FileSystemModel::matches(StringView const& searching, unsigned flags, ModelIndex const& index)
+Vector<ModelIndex> FileSystemModel::matches(StringView searching, unsigned flags, ModelIndex const& index)
 {
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();

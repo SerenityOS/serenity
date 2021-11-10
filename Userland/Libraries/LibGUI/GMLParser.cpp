@@ -121,7 +121,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
     return object;
 }
 
-JsonValue parse_gml(const StringView& string)
+JsonValue parse_gml(StringView string)
 {
     auto lexer = GMLLexer(string);
 

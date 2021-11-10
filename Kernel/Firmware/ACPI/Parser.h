@@ -51,7 +51,7 @@ public:
     virtual StringView purpose() const override { return "ACPI Parser"sv; }
     virtual bool handle_irq(const RegisterState&) override;
 
-    Optional<PhysicalAddress> find_table(const StringView& signature);
+    Optional<PhysicalAddress> find_table(StringView signature);
 
     void try_acpi_reboot();
     bool can_reboot();
@@ -64,7 +64,7 @@ public:
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
     bool is_xsdt_supported() const { return m_xsdt_supported; }
 
-    void enumerate_static_tables(Function<void(const StringView&, PhysicalAddress, size_t)>);
+    void enumerate_static_tables(Function<void(StringView, PhysicalAddress, size_t)>);
 
     virtual bool have_8042() const
     {

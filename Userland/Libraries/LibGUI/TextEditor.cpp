@@ -101,7 +101,7 @@ void TextEditor::create_actions()
     m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
 }
 
-void TextEditor::set_text(StringView const& text, AllowCallback allow_callback)
+void TextEditor::set_text(StringView text, AllowCallback allow_callback)
 {
     m_selection.clear();
 
@@ -1378,7 +1378,7 @@ void TextEditor::delete_text_range(TextRange range)
     update();
 }
 
-void TextEditor::insert_at_cursor_or_replace_selection(StringView const& text)
+void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
 {
     ReflowDeferrer defer(*this);
     VERIFY(is_editable());

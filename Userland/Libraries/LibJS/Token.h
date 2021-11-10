@@ -201,16 +201,16 @@ public:
     static const char* name(TokenType);
 
     const String& message() const { return m_message; }
-    const StringView& trivia() const { return m_trivia; }
-    const StringView& original_value() const { return m_original_value; }
+    StringView trivia() const { return m_trivia; }
+    StringView original_value() const { return m_original_value; }
     StringView value() const
     {
         return m_value.visit(
-            [](StringView const& view) { return view; },
+            [](StringView view) { return view; },
             [](FlyString const& identifier) { return identifier.view(); },
             [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
     }
-    const StringView& filename() const { return m_filename; }
+    StringView filename() const { return m_filename; }
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }
     size_t offset() const { return m_offset; }

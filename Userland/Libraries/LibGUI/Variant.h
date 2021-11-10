@@ -24,7 +24,7 @@ public:
     Variant(u32);
     Variant(u64);
     Variant(const char*);
-    Variant(const StringView&);
+    Variant(StringView);
     Variant(const String&);
     Variant(const FlyString&);
     Variant(const Gfx::Bitmap&);

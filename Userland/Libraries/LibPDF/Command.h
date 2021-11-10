@@ -96,7 +96,7 @@ enum class CommandType {
 
 class Command {
 public:
-    static CommandType command_type_from_symbol(StringView const& symbol_string)
+    static CommandType command_type_from_symbol(StringView symbol_string)
     {
 #define V(name, snake_name, symbol) \
     if (symbol_string == #symbol)   \

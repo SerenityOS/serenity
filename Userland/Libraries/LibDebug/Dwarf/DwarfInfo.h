@@ -53,7 +53,7 @@ private:
     void populate_compilation_units();
     void build_cached_dies() const;
 
-    ReadonlyBytes section_data(StringView const& section_name) const;
+    ReadonlyBytes section_data(StringView section_name) const;
 
     ELF::Image const& m_elf;
     ReadonlyBytes m_debug_info_data;

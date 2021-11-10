@@ -1159,7 +1159,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t 
     return fs().create_inode(*this, name, mode, dev, uid, gid);
 }
 
-ErrorOr<void> Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
+ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
@@ -1189,7 +1189,7 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, const StringView& name, mode_
     return {};
 }
 
-ErrorOr<void> Ext2FSInode::remove_child(const StringView& name)
+ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);

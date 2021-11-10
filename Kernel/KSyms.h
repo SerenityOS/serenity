@@ -20,7 +20,7 @@ enum class PrintToScreen {
     Yes,
 };
 
-FlatPtr address_for_kernel_symbol(const StringView& name);
+FlatPtr address_for_kernel_symbol(StringView name);
 const KernelSymbol* symbolicate_kernel_address(FlatPtr);
 void load_kernel_symbol_table();
 

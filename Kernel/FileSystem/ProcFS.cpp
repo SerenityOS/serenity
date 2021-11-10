@@ -75,7 +75,7 @@ ErrorOr<void> ProcFSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<void> ProcFSInode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<void> ProcFSInode::add_child(Inode&, StringView, mode_t)
 {
     return EROFS;
 }
@@ -85,7 +85,7 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_
     return EROFS;
 }
 
-ErrorOr<void> ProcFSInode::remove_child(const StringView&)
+ErrorOr<void> ProcFSInode::remove_child(StringView)
 {
     return EROFS;
 }

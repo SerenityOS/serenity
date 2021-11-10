@@ -163,7 +163,7 @@ Variant::Variant(const FlyString& value)
 {
 }
 
-Variant::Variant(const StringView& value)
+Variant::Variant(StringView value)
     : Variant(value.to_string())
 {
 }

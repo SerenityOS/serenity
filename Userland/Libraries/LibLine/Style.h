@@ -90,7 +90,7 @@ public:
     struct Hyperlink {
         bool operator==(const Hyperlink&) const = default;
 
-        explicit Hyperlink(const StringView& link)
+        explicit Hyperlink(StringView link)
             : m_link(link)
         {
             m_has_link = true;

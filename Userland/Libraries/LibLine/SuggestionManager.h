@@ -36,12 +36,12 @@ public:
     {
     }
 
-    CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia)
+    CompletionSuggestion(StringView completion, StringView trailing_trivia)
         : CompletionSuggestion(completion, trailing_trivia, {})
     {
     }
 
-    CompletionSuggestion(const StringView& completion, const StringView& trailing_trivia, Style style);
+    CompletionSuggestion(StringView completion, StringView trailing_trivia, Style style);
 
     bool operator==(const CompletionSuggestion& suggestion) const
     {

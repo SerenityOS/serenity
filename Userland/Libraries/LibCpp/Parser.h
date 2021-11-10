@@ -56,7 +56,7 @@ private:
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
-    Optional<Parser::DeclarationType> match_class_member(const StringView& class_name);
+    Optional<Parser::DeclarationType> match_class_member(StringView class_name);
 
     bool match_function_declaration();
     bool match_comment();
@@ -82,8 +82,8 @@ private:
     bool match_type();
     bool match_named_type();
     bool match_access_specifier();
-    bool match_constructor(const StringView& class_name);
-    bool match_destructor(const StringView& class_name);
+    bool match_constructor(StringView class_name);
+    bool match_destructor(StringView class_name);
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();

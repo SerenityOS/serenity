@@ -73,13 +73,13 @@ public:
         String text;
         bool collapsible;
 
-        TextNode(StringView const& text)
+        TextNode(StringView text)
             : text(text)
             , collapsible(true)
         {
         }
 
-        TextNode(StringView const& text, bool collapsible)
+        TextNode(StringView text, bool collapsible)
             : text(text)
             , collapsible(collapsible)
         {
@@ -126,7 +126,7 @@ public:
     String render_for_terminal() const;
     RecursionDecision walk(Visitor&) const;
 
-    static Text parse(StringView const&);
+    static Text parse(StringView);
 
 private:
     struct Token {
@@ -157,10 +157,10 @@ private:
         {
             return data[0] == ' ';
         }
-        bool operator==(StringView const& str) const { return str == data; }
+        bool operator==(StringView str) const { return str == data; }
     };
 
-    static Vector<Token> tokenize(StringView const&);
+    static Vector<Token> tokenize(StringView);
 
     static bool can_open(Token const& opening);
     static bool can_close_for(Token const& opening, Token const& closing);

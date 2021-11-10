@@ -43,7 +43,7 @@ public:
 
     String() = default;
 
-    String(const StringView& view)
+    String(StringView view)
     {
         m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
     }
@@ -96,7 +96,7 @@ public:
     String(const FlyString&);
 
     [[nodiscard]] static String repeated(char, size_t count);
-    [[nodiscard]] static String repeated(const StringView&, size_t count);
+    [[nodiscard]] static String repeated(StringView, size_t count);
 
     [[nodiscard]] static String bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
     [[nodiscard]] static String roman_number_from(size_t value);
@@ -109,8 +109,8 @@ public:
         return builder.build();
     }
 
-    [[nodiscard]] bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     template<typename T = int>
     [[nodiscard]] Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
@@ -125,7 +125,7 @@ public:
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
 #ifndef KERNEL
-    [[nodiscard]] String trim(const StringView& characters, TrimMode mode = TrimMode::Both) const
+    [[nodiscard]] String trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
         return StringUtils::trim(view(), characters, mode);
     }
@@ -136,9 +136,9 @@ public:
     }
 #endif
 
-    [[nodiscard]] bool equals_ignoring_case(const StringView&) const;
+    [[nodiscard]] bool equals_ignoring_case(StringView) const;
 
-    [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool contains(char, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
@@ -146,12 +146,12 @@ public:
     [[nodiscard]] Vector<StringView> split_view(char separator, bool keep_empty = false) const;
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
-    [[nodiscard]] Optional<size_t> find(StringView const& needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
+    [[nodiscard]] Optional<size_t> find(StringView needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
-    // FIXME: Implement find_last(StringView const&) for API symmetry.
+    // FIXME: Implement find_last(StringView) for API symmetry.
     Vector<size_t> find_all(StringView needle) const;
     using SearchDirection = StringUtils::SearchDirection;
-    [[nodiscard]] Optional<size_t> find_any_of(StringView const& needles, SearchDirection direction) const { return StringUtils::find_any_of(*this, needles, direction); }
+    [[nodiscard]] Optional<size_t> find_any_of(StringView needles, SearchDirection direction) const { return StringUtils::find_any_of(*this, needles, direction); }
 
     [[nodiscard]] String substring(size_t start, size_t length) const;
     [[nodiscard]] String substring(size_t start) const;
@@ -185,16 +185,16 @@ public:
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
-    [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool starts_with(char) const;
     [[nodiscard]] bool ends_with(char) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
 
-    bool operator==(const StringView&) const;
-    bool operator!=(const StringView& other) const { return !(*this == other); }
+    bool operator==(StringView) const;
+    bool operator!=(StringView other) const { return !(*this == other); }
 
     bool operator==(const FlyString&) const;
     bool operator!=(const FlyString& other) const { return !(*this == other); }
@@ -285,8 +285,8 @@ public:
         return { characters(), length() };
     }
 
-    [[nodiscard]] String replace(const StringView& needle, const StringView& replacement, bool all_occurrences = false) const { return StringUtils::replace(*this, needle, replacement, all_occurrences); }
-    [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
+    [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const { return StringUtils::replace(*this, needle, replacement, all_occurrences); }
+    [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
     [[nodiscard]] String reverse() const;
 
     template<typename... Ts>
@@ -314,7 +314,7 @@ bool operator>=(const char*, const String&);
 bool operator>(const char*, const String&);
 bool operator<=(const char*, const String&);
 
-String escape_html_entities(const StringView& html);
+String escape_html_entities(StringView html);
 
 InputStream& operator>>(InputStream& stream, String& string);
 

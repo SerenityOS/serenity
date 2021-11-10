@@ -20,10 +20,10 @@ public:
     Function<void()> on_submit;
 
     String username() const { return m_username->text(); }
-    void set_username(StringView const& username) { m_username->set_text(username); }
+    void set_username(StringView username) { m_username->set_text(username); }
 
     String password() const { return m_password->text(); }
-    void set_password(StringView const& password) { m_password->set_text(password); }
+    void set_password(StringView password) { m_password->set_text(password); }
 
 private:
     LoginWindow(GUI::Window* parent = nullptr);

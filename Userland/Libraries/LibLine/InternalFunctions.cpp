@@ -22,7 +22,7 @@ constexpr u32 ctrl(char c) { return c & 0x3f; }
 
 namespace Line {
 
-Function<bool(Editor&)> Editor::find_internal_function(const StringView& name)
+Function<bool(Editor&)> Editor::find_internal_function(StringView name)
 {
 #define __ENUMERATE(internal_name) \
     if (name == #internal_name)    \

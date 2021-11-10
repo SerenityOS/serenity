@@ -138,7 +138,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, StringView title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)

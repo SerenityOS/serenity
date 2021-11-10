@@ -660,32 +660,32 @@ namespace Unicode {
     generator.append(R"~~~(
 namespace Detail {
 
-Optional<Locale> locale_from_string(StringView const& locale);
+Optional<Locale> locale_from_string(StringView locale);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
-Optional<Language> language_from_string(StringView const& language);
-Optional<StringView> resolve_language_alias(StringView const& language);
+Optional<Language> language_from_string(StringView language);
+Optional<StringView> resolve_language_alias(StringView language);
 
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
-Optional<Territory> territory_from_string(StringView const& territory);
-Optional<StringView> resolve_territory_alias(StringView const& territory);
+Optional<Territory> territory_from_string(StringView territory);
+Optional<StringView> resolve_territory_alias(StringView territory);
 
 Optional<StringView> get_locale_script_tag_mapping(StringView locale, StringView script_tag);
-Optional<ScriptTag> script_tag_from_string(StringView const& script_tag);
-Optional<StringView> resolve_script_tag_alias(StringView const& script_tag);
+Optional<ScriptTag> script_tag_from_string(StringView script_tag);
+Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
-Optional<Currency> currency_from_string(StringView const& currency);
+Optional<Currency> currency_from_string(StringView currency);
 
 Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
-Optional<Key> key_from_string(StringView const& key);
+Optional<Key> key_from_string(StringView key);
 
 Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, StringView list_pattern_type, StringView list_pattern_style);
-Optional<ListPatternType> list_pattern_type_from_string(StringView const& list_pattern_type);
-Optional<ListPatternStyle> list_pattern_style_from_string(StringView const& list_pattern_style);
+Optional<ListPatternType> list_pattern_type_from_string(StringView list_pattern_type);
+Optional<ListPatternStyle> list_pattern_style_from_string(StringView list_pattern_style);
 
-Optional<StringView> resolve_variant_alias(StringView const& variant);
-Optional<StringView> resolve_subdivision_alias(StringView const& subdivision);
+Optional<StringView> resolve_variant_alias(StringView variant);
+Optional<StringView> resolve_subdivision_alias(StringView subdivision);
 
 void resolve_complex_language_aliases(Unicode::LanguageID& language_id);
 

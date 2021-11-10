@@ -9,7 +9,7 @@
 
 namespace Chess::UCI {
 
-UCICommand UCICommand::from_string(const StringView& command)
+UCICommand UCICommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "uci");
@@ -22,7 +22,7 @@ String UCICommand::to_string() const
     return "uci\n";
 }
 
-DebugCommand DebugCommand::from_string(const StringView& command)
+DebugCommand DebugCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "debug");
@@ -44,7 +44,7 @@ String DebugCommand::to_string() const
     }
 }
 
-IsReadyCommand IsReadyCommand::from_string(const StringView& command)
+IsReadyCommand IsReadyCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "isready");
@@ -57,7 +57,7 @@ String IsReadyCommand::to_string() const
     return "isready\n";
 }
 
-SetOptionCommand SetOptionCommand::from_string(const StringView& command)
+SetOptionCommand SetOptionCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "setoption");
@@ -108,7 +108,7 @@ String SetOptionCommand::to_string() const
     return builder.build();
 }
 
-PositionCommand PositionCommand::from_string(const StringView& command)
+PositionCommand PositionCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens.size() >= 3);
@@ -144,7 +144,7 @@ String PositionCommand::to_string() const
     return builder.build();
 }
 
-GoCommand GoCommand::from_string(const StringView& command)
+GoCommand GoCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "go");
@@ -230,7 +230,7 @@ String GoCommand::to_string() const
     return builder.build();
 }
 
-StopCommand StopCommand::from_string(const StringView& command)
+StopCommand StopCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "stop");
@@ -243,7 +243,7 @@ String StopCommand::to_string() const
     return "stop\n";
 }
 
-IdCommand IdCommand::from_string(const StringView& command)
+IdCommand IdCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "id");
@@ -277,7 +277,7 @@ String IdCommand::to_string() const
     return builder.build();
 }
 
-UCIOkCommand UCIOkCommand::from_string(const StringView& command)
+UCIOkCommand UCIOkCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "uciok");
@@ -290,7 +290,7 @@ String UCIOkCommand::to_string() const
     return "uciok\n";
 }
 
-ReadyOkCommand ReadyOkCommand::from_string(const StringView& command)
+ReadyOkCommand ReadyOkCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "readyok");
@@ -303,7 +303,7 @@ String ReadyOkCommand::to_string() const
     return "readyok\n";
 }
 
-BestMoveCommand BestMoveCommand::from_string(const StringView& command)
+BestMoveCommand BestMoveCommand::from_string(StringView command)
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "bestmove");
@@ -320,7 +320,7 @@ String BestMoveCommand::to_string() const
     return builder.build();
 }
 
-InfoCommand InfoCommand::from_string([[maybe_unused]] const StringView& command)
+InfoCommand InfoCommand::from_string([[maybe_unused]] StringView command)
 {
     // FIXME: Implement this.
     VERIFY_NOT_REACHED();

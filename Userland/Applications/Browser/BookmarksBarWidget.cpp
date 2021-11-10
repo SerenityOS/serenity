@@ -28,7 +28,7 @@ class BookmarkEditor final : public GUI::Dialog {
 
 public:
     static Vector<JsonValue>
-    edit_bookmark(Window* parent_window, const StringView& title, const StringView& url)
+    edit_bookmark(Window* parent_window, StringView title, StringView url)
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
         editor->set_title("Edit Bookmark");
@@ -41,7 +41,7 @@ public:
     }
 
 private:
-    BookmarkEditor(Window* parent_window, const StringView& title, const StringView& url)
+    BookmarkEditor(Window* parent_window, StringView title, StringView url)
         : Dialog(parent_window)
     {
         auto& widget = set_main_widget<GUI::Widget>();

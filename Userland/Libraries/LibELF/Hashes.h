@@ -11,7 +11,7 @@
 
 namespace ELF {
 
-constexpr u32 compute_sysv_hash(const StringView& name)
+constexpr u32 compute_sysv_hash(StringView name)
 {
     // SYSV ELF hash algorithm
     // Note that the GNU HASH algorithm has less collisions
@@ -30,7 +30,7 @@ constexpr u32 compute_sysv_hash(const StringView& name)
     return hash;
 }
 
-constexpr u32 compute_gnu_hash(const StringView& name)
+constexpr u32 compute_gnu_hash(StringView name)
 {
     // GNU ELF hash algorithm
     u32 hash = 5381;

@@ -118,7 +118,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-RefPtr<DOM::Document> parse_html_document(const StringView& data, const AK::URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
     HTMLParser parser(document, data, encoding);
@@ -126,7 +126,7 @@ RefPtr<DOM::Document> parse_html_document(const StringView& data, const AK::URL&
     return document;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, const StringView& input, const String& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
@@ -3107,7 +3107,7 @@ DOM::Document& HTMLParser::document()
     return *m_document;
 }
 
-NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
+NonnullRefPtrVector<DOM::Node> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
     auto temp_document = DOM::Document::create();
     HTMLParser parser(*temp_document, markup, "utf-8");
@@ -3193,7 +3193,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
         Yes,
     };
 
-    auto escape_string = [](StringView const& string, AttributeMode attribute_mode) -> String {
+    auto escape_string = [](StringView string, AttributeMode attribute_mode) -> String {
         // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
         StringBuilder builder;
         for (auto& ch : string) {

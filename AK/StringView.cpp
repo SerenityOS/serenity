@@ -56,7 +56,7 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
     return v;
 }
 
-Vector<StringView> StringView::split_view(const StringView& separator, bool keep_empty) const
+Vector<StringView> StringView::split_view(StringView separator, bool keep_empty) const
 {
     VERIFY(!separator.is_empty());
 
@@ -129,7 +129,7 @@ bool StringView::starts_with(char ch) const
     return ch == characters_without_null_termination()[0];
 }
 
-bool StringView::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool StringView::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
 }
@@ -141,17 +141,17 @@ bool StringView::ends_with(char ch) const
     return ch == characters_without_null_termination()[length() - 1];
 }
 
-bool StringView::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool StringView::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
-bool StringView::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+bool StringView::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
 }
 
-bool StringView::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
+bool StringView::matches(StringView mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
@@ -165,12 +165,12 @@ bool StringView::contains(char needle) const
     return false;
 }
 
-bool StringView::contains(const StringView& needle, CaseSensitivity case_sensitivity) const
+bool StringView::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
-bool StringView::equals_ignoring_case(const StringView& other) const
+bool StringView::equals_ignoring_case(StringView other) const
 {
     return StringUtils::equals_ignoring_case(*this, other);
 }
@@ -190,7 +190,7 @@ String StringView::to_titlecase_string() const
     return StringUtils::to_titlecase(*this);
 }
 
-StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
+StringView StringView::substring_view_starting_from_substring(StringView substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination();
     VERIFY(remaining_characters >= m_characters);
@@ -199,7 +199,7 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
     return { remaining_characters, remaining_length };
 }
 
-StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
+StringView StringView::substring_view_starting_after_substring(StringView substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
     VERIFY(remaining_characters >= m_characters);
@@ -249,7 +249,7 @@ bool StringView::operator==(const String& string) const
 
 String StringView::to_string() const { return String { *this }; }
 
-String StringView::replace(const StringView& needle, const StringView& replacement, bool all_occurrences) const
+String StringView::replace(StringView needle, StringView replacement, bool all_occurrences) const
 {
     return StringUtils::replace(*this, needle, replacement, all_occurrences);
 }
