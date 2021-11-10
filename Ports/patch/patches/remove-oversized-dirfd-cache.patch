@@ -1,0 +1,14 @@
+diff -ur a/src/safe.c b/src/safe.c
+--- a/src/safe.c	2018-02-03 13:41:49.000000000 +0100
++++ b/src/safe.c	2021-11-10 02:05:04.152449983 +0100
+@@ -98,9 +98,7 @@
+ {
+   struct rlimit nofile;
+ 
+-  max_cached_fds = 8;
+-  if (getrlimit (RLIMIT_NOFILE, &nofile) == 0)
+-    max_cached_fds = MAX (nofile.rlim_cur / 4, max_cached_fds);
++  max_cached_fds = 64;
+ 
+   cached_dirfds = hash_initialize (max_cached_fds,
+ 				   NULL,

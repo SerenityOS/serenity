@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=patch
-version=6.6
-files="https://github.com/ibara/libpuffy/releases/download/libpuffy-1.0/patch-${version}.tar.gz patch-${version}.tar.gz b82ba726d9bdb683534839673f0c845d4f97c8d08490fa53dbef502665fee637"
+version=2.7.6
+useconfigure=true
+files="https://ftp.gnu.org/gnu/patch/patch-${version}.tar.gz patch-${version}.tar.gz 8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e"
 auth_type=sha256
-depends=("libpuffy")
