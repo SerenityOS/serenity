@@ -182,19 +182,24 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
     //       works for now! :^)
 
     auto output_initial_value_code = [&](auto& name, auto& object) {
-        if (object.has("initial")) {
-            auto& initial_value = object.get("initial");
-            VERIFY(initial_value.is_string());
-            auto initial_value_string = initial_value.as_string();
-
-            auto member_generator = generator.fork();
-            member_generator.set("name:titlecase", title_casify(name));
-            member_generator.set("initial_value_string", initial_value_string);
-            member_generator.append(R"~~~(
-        if (auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@))
-            initial_values.set(PropertyID::@name:titlecase@, parsed_value.release_nonnull());
-)~~~");
+        if (!object.has("initial")) {
+            dbgln("No initial value specified for property '{}'", name);
+            VERIFY_NOT_REACHED();
         }
+        auto& initial_value = object.get("initial");
+        VERIFY(initial_value.is_string());
+        auto initial_value_string = initial_value.as_string();
+
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify(name));
+        member_generator.set("initial_value_string", initial_value_string);
+        member_generator.append(R"~~~(
+        {
+            auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@);
+            VERIFY(!parsed_value.is_null());
+            initial_values.set(PropertyID::@name:titlecase@, parsed_value.release_nonnull());
+        }
+)~~~");
     };
 
     properties.for_each_member([&](auto& name, auto& value) {
