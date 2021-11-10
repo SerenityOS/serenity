@@ -31,7 +31,7 @@ class ServerConnection
     friend class ServerConnectionWrapper;
 
 public:
-    ServerConnection(const StringView& socket, const String& project_path)
+    ServerConnection(StringView socket, const String& project_path)
         : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, socket)
     {
         m_project_path = project_path;

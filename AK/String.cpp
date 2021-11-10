@@ -31,7 +31,7 @@ bool String::operator==(const String& other) const
     return *m_impl == *other.m_impl;
 }
 
-bool String::operator==(const StringView& other) const
+bool String::operator==(StringView other) const
 {
     if (!m_impl)
         return !other.m_characters;
@@ -202,7 +202,7 @@ template Optional<u16> String::to_uint(TrimWhitespace) const;
 template Optional<u32> String::to_uint(TrimWhitespace) const;
 template Optional<u64> String::to_uint(TrimWhitespace) const;
 
-bool String::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool String::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);
 }
@@ -214,7 +214,7 @@ bool String::starts_with(char ch) const
     return characters()[0] == ch;
 }
 
-bool String::ends_with(const StringView& str, CaseSensitivity case_sensitivity) const
+bool String::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
@@ -236,7 +236,7 @@ String String::repeated(char ch, size_t count)
     return *impl;
 }
 
-String String::repeated(const StringView& string, size_t count)
+String String::repeated(StringView string, size_t count)
 {
     if (!count || string.is_empty())
         return empty();
@@ -327,17 +327,17 @@ String String::roman_number_from(size_t value)
     return builder.to_string();
 }
 
-bool String::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+bool String::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
 }
 
-bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
+bool String::matches(StringView mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool String::contains(const StringView& needle, CaseSensitivity case_sensitivity) const
+bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
@@ -347,7 +347,7 @@ bool String::contains(char needle, CaseSensitivity case_sensitivity) const
     return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
 }
 
-bool String::equals_ignoring_case(const StringView& other) const
+bool String::equals_ignoring_case(StringView other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
 }
@@ -361,7 +361,7 @@ String String::reverse() const
     return reversed_string.to_string();
 }
 
-String escape_html_entities(const StringView& html)
+String escape_html_entities(StringView html)
 {
     StringBuilder builder;
     for (size_t i = 0; i < html.length(); ++i) {

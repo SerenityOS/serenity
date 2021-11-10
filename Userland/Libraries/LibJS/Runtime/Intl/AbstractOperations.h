@@ -39,7 +39,7 @@ String canonicalize_unicode_locale_id(Unicode::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
 bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject&, Value locales);
-Optional<String> best_available_locale(StringView const& locale);
+Optional<String> best_available_locale(StringView locale);
 String insert_unicode_extension_and_canonicalize(Unicode::LocaleID locale_id, Unicode::LocaleExtension extension);
 LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, Vector<StringView> const& relevant_extension_keys);
 Vector<String> lookup_supported_locales(Vector<String> const& requested_locales);

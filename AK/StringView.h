@@ -74,17 +74,17 @@ public:
         return string_hash(characters_without_null_termination(), length());
     }
 
-    [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool starts_with(char) const;
     [[nodiscard]] bool ends_with(char) const;
-    [[nodiscard]] bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(StringView mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     [[nodiscard]] bool contains(char) const;
-    [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool equals_ignoring_case(const StringView& other) const;
+    [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool equals_ignoring_case(StringView other) const;
 
-    [[nodiscard]] StringView trim(const StringView& characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
+    [[nodiscard]] StringView trim(StringView characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
     [[nodiscard]] String to_lowercase_string() const;
@@ -92,14 +92,14 @@ public:
     [[nodiscard]] String to_titlecase_string() const;
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
-    [[nodiscard]] Optional<size_t> find(StringView const& needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
+    [[nodiscard]] Optional<size_t> find(StringView needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
-    // FIXME: Implement find_last(StringView const&) for API symmetry.
+    // FIXME: Implement find_last(StringView) for API symmetry.
 
     [[nodiscard]] Vector<size_t> find_all(StringView needle) const;
 
     using SearchDirection = StringUtils::SearchDirection;
-    [[nodiscard]] Optional<size_t> find_any_of(StringView const& needles, SearchDirection direction = SearchDirection::Forward) { return StringUtils::find_any_of(*this, needles, direction); }
+    [[nodiscard]] Optional<size_t> find_any_of(StringView needles, SearchDirection direction = SearchDirection::Forward) { return StringUtils::find_any_of(*this, needles, direction); }
 
     [[nodiscard]] constexpr StringView substring_view(size_t start, size_t length) const
     {
@@ -114,7 +114,7 @@ public:
     }
 
     [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
-    [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(StringView, bool keep_empty = false) const;
 
     [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
 
@@ -145,8 +145,8 @@ public:
     //     StringView substr { "oo" };
     //
     // would not work.
-    [[nodiscard]] StringView substring_view_starting_from_substring(const StringView& substring) const;
-    [[nodiscard]] StringView substring_view_starting_after_substring(const StringView& substring) const;
+    [[nodiscard]] StringView substring_view_starting_from_substring(StringView substring) const;
+    [[nodiscard]] StringView substring_view_starting_after_substring(StringView substring) const;
 
     constexpr bool operator==(const char* cstring) const
     {
@@ -172,7 +172,7 @@ public:
 
     bool operator==(const String&) const;
 
-    constexpr bool operator==(const StringView& other) const
+    constexpr bool operator==(StringView other) const
     {
         if (is_null())
             return other.is_null();
@@ -183,12 +183,12 @@ public:
         return !__builtin_memcmp(m_characters, other.m_characters, m_length);
     }
 
-    constexpr bool operator!=(const StringView& other) const
+    constexpr bool operator!=(StringView other) const
     {
         return !(*this == other);
     }
 
-    bool operator<(const StringView& other) const
+    bool operator<(StringView other) const
     {
         if (int c = __builtin_memcmp(m_characters, other.m_characters, min(m_length, other.m_length)))
             return c < 0;
@@ -199,8 +199,8 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
-    [[nodiscard]] String replace(const StringView& needle, const StringView& replacement, bool all_occurrences = false) const;
-    [[nodiscard]] size_t count(StringView const& needle) const { return StringUtils::count(*this, needle); }
+    [[nodiscard]] String replace(StringView needle, StringView replacement, bool all_occurrences = false) const;
+    [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(*this, needle); }
 
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
@@ -216,7 +216,7 @@ private:
 
 template<>
 struct Traits<StringView> : public GenericTraits<StringView> {
-    static unsigned hash(const StringView& s) { return s.hash(); }
+    static unsigned hash(StringView s) { return s.hash(); }
 };
 
 }

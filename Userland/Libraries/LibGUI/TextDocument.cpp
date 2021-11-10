@@ -39,7 +39,7 @@ TextDocument::~TextDocument()
 {
 }
 
-bool TextDocument::set_text(const StringView& text, AllowCallback allow_callback)
+bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
 {
     m_client_notifications_enabled = false;
     m_undo_stack.clear();
@@ -161,7 +161,7 @@ TextDocumentLine::TextDocumentLine(TextDocument& document)
     clear(document);
 }
 
-TextDocumentLine::TextDocumentLine(TextDocument& document, const StringView& text)
+TextDocumentLine::TextDocumentLine(TextDocument& document, StringView text)
 {
     set_text(document, text);
 }
@@ -178,7 +178,7 @@ void TextDocumentLine::set_text(TextDocument& document, const Vector<u32> text)
     document.update_views({});
 }
 
-bool TextDocumentLine::set_text(TextDocument& document, const StringView& text)
+bool TextDocumentLine::set_text(TextDocument& document, StringView text)
 {
     if (text.is_empty()) {
         clear(document);
@@ -403,7 +403,7 @@ TextPosition TextDocument::previous_position_before(const TextPosition& position
     return { position.line(), position.column() - 1 };
 }
 
-void TextDocument::update_regex_matches(const StringView& needle)
+void TextDocument::update_regex_matches(StringView needle)
 {
     if (m_regex_needs_update || needle != m_regex_needle) {
         Regex<PosixExtended> re(needle);
@@ -421,7 +421,7 @@ void TextDocument::update_regex_matches(const StringView& needle)
     }
 }
 
-TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
+TextRange TextDocument::find_next(StringView needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -501,7 +501,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     return {};
 }
 
-TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
+TextRange TextDocument::find_previous(StringView needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -585,7 +585,7 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     return {};
 }
 
-Vector<TextRange> TextDocument::find_all(const StringView& needle, bool regmatch)
+Vector<TextRange> TextDocument::find_all(StringView needle, bool regmatch)
 {
     Vector<TextRange> ranges;
 
@@ -889,7 +889,7 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)
+TextPosition TextDocument::insert_at(const TextPosition& position, StringView text, const Client* client)
 {
     TextPosition cursor = position;
     Utf8View utf8_view(text);

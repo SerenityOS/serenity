@@ -477,7 +477,7 @@ bool Font::is_fixed_width() const
     return glyph_metrics(glyph_id_for_code_point('.'), 1, 1).advance_width == glyph_metrics(glyph_id_for_code_point('X'), 1, 1).advance_width;
 }
 
-int ScaledFont::width(StringView const& view) const { return unicode_view_width(Utf8View(view)); }
+int ScaledFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
 int ScaledFont::width(Utf8View const& view) const { return unicode_view_width(view); }
 int ScaledFont::width(Utf32View const& view) const { return unicode_view_width(view); }
 

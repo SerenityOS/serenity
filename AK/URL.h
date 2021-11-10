@@ -37,7 +37,7 @@ public:
     };
 
     URL() = default;
-    URL(StringView const&);
+    URL(StringView);
     URL(char const* string)
         : URL(StringView(string))
     {
@@ -100,12 +100,12 @@ public:
     static URL create_with_file_protocol(String const& path, String const& fragment = {}) { return create_with_file_scheme(path, fragment); }
     static URL create_with_data(String mime_type, String payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); };
 
-    static bool scheme_requires_port(StringView const&);
-    static u16 default_port_for_scheme(StringView const&);
-    static bool is_special_scheme(StringView const&);
+    static bool scheme_requires_port(StringView);
+    static u16 default_port_for_scheme(StringView);
+    static bool is_special_scheme(StringView);
 
-    static String percent_encode(StringView const& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
-    static String percent_decode(StringView const& input);
+    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static String percent_decode(StringView input);
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 

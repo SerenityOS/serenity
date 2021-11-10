@@ -43,7 +43,7 @@ public:
     Icon(const Icon&);
     ~Icon() { }
 
-    static Icon default_icon(const StringView&);
+    static Icon default_icon(StringView);
 
     Icon& operator=(const Icon& other)
     {

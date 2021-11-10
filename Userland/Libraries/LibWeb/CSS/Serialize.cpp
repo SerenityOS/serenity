@@ -24,7 +24,7 @@ void escape_a_character_as_code_point(StringBuilder& builder, u32 character)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-an-identifier
-void serialize_an_identifier(StringBuilder& builder, StringView const& ident)
+void serialize_an_identifier(StringBuilder& builder, StringView ident)
 {
     Utf8View characters { ident };
     auto first_character = characters.is_empty() ? 0 : *characters.begin();
@@ -76,7 +76,7 @@ void serialize_an_identifier(StringBuilder& builder, StringView const& ident)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-string
-void serialize_a_string(StringBuilder& builder, StringView const& string)
+void serialize_a_string(StringBuilder& builder, StringView string)
 {
     Utf8View characters { string };
 
@@ -108,7 +108,7 @@ void serialize_a_string(StringBuilder& builder, StringView const& string)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-url
-void serialize_a_url(StringBuilder& builder, StringView const& url)
+void serialize_a_url(StringBuilder& builder, StringView url)
 {
     // To serialize a URL means to create a string represented by "url(",
     // followed by the serialization of the URL as a string, followed by ")".
@@ -131,21 +131,21 @@ String escape_a_character_as_code_point(u32 character)
     return builder.to_string();
 }
 
-String serialize_an_identifier(StringView const& ident)
+String serialize_an_identifier(StringView ident)
 {
     StringBuilder builder;
     serialize_an_identifier(builder, ident);
     return builder.to_string();
 }
 
-String serialize_a_string(StringView const& string)
+String serialize_a_string(StringView string)
 {
     StringBuilder builder;
     serialize_a_string(builder, string);
     return builder.to_string();
 }
 
-String serialize_a_url(StringView const& url)
+String serialize_a_url(StringView url)
 {
     StringBuilder builder;
     serialize_a_url(builder, url);

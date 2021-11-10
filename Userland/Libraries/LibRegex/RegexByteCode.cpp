@@ -105,7 +105,7 @@ static char const* character_class_name(CharClass ch_class)
     }
 }
 
-static void advance_string_position(MatchState& state, RegexStringView const& view, Optional<u32> code_point = {})
+static void advance_string_position(MatchState& state, RegexStringView view, Optional<u32> code_point = {})
 {
     ++state.string_position;
 
@@ -119,13 +119,13 @@ static void advance_string_position(MatchState& state, RegexStringView const& vi
     }
 }
 
-static void advance_string_position(MatchState& state, RegexStringView const&, RegexStringView const& advance_by)
+static void advance_string_position(MatchState& state, RegexStringView, RegexStringView advance_by)
 {
     state.string_position += advance_by.length();
     state.string_position_in_code_units += advance_by.length_in_code_units();
 }
 
-static void reverse_string_position(MatchState& state, RegexStringView const& view, size_t amount)
+static void reverse_string_position(MatchState& state, RegexStringView view, size_t amount)
 {
     VERIFY(state.string_position >= amount);
     state.string_position -= amount;
@@ -603,7 +603,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
     }
 }
 
-ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, MatchState& state, RegexStringView const& str, bool& had_zero_length_match)
+ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, MatchState& state, RegexStringView str, bool& had_zero_length_match)
 {
     if (state.string_position + str.length() > input.view.length()) {
         if (str.is_empty()) {

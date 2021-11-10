@@ -328,7 +328,7 @@ void VirtualConsole::beep()
     dbgln("Beep!1");
 }
 
-void VirtualConsole::set_window_title(const StringView&)
+void VirtualConsole::set_window_title(StringView)
 {
     // Do nothing.
 }

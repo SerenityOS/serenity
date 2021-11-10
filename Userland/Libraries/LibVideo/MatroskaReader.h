@@ -22,7 +22,7 @@ public:
     {
     }
 
-    static OwnPtr<MatroskaDocument> parse_matroska_from_file(StringView const& path);
+    static OwnPtr<MatroskaDocument> parse_matroska_from_file(StringView path);
     static OwnPtr<MatroskaDocument> parse_matroska_from_data(u8 const*, size_t);
 
     OwnPtr<MatroskaDocument> parse();
@@ -146,7 +146,7 @@ private:
         Vector<size_t> m_octets_read { 0 };
     };
 
-    bool parse_master_element(StringView const& element_name, Function<bool(u64 element_id)> element_consumer);
+    bool parse_master_element(StringView element_name, Function<bool(u64 element_id)> element_consumer);
     Optional<EBMLHeader> parse_ebml_header();
 
     bool parse_segment_elements(MatroskaDocument&);

@@ -28,7 +28,7 @@ String Color::to_string_without_alpha() const
     return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
-static Optional<Color> parse_rgb_color(StringView const& string)
+static Optional<Color> parse_rgb_color(StringView string)
 {
     VERIFY(string.starts_with("rgb(", CaseSensitivity::CaseInsensitive));
     VERIFY(string.ends_with(")"));
@@ -49,7 +49,7 @@ static Optional<Color> parse_rgb_color(StringView const& string)
     return Color(r, g, b);
 }
 
-static Optional<Color> parse_rgba_color(StringView const& string)
+static Optional<Color> parse_rgba_color(StringView string)
 {
     VERIFY(string.starts_with("rgba(", CaseSensitivity::CaseInsensitive));
     VERIFY(string.ends_with(")"));
@@ -73,7 +73,7 @@ static Optional<Color> parse_rgba_color(StringView const& string)
     return Color(r, g, b, a);
 }
 
-Optional<Color> Color::from_string(StringView const& string)
+Optional<Color> Color::from_string(StringView string)
 {
     if (string.is_empty())
         return {};

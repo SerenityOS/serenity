@@ -44,7 +44,7 @@ TabWidget::~TabWidget()
 {
 }
 
-void TabWidget::add_widget(const StringView& title, Widget& widget)
+void TabWidget::add_widget(StringView title, Widget& widget)
 {
     m_tabs.append({ title, nullptr, &widget });
     add_child(widget);
@@ -537,7 +537,7 @@ Optional<size_t> TabWidget::active_tab_index() const
     return {};
 }
 
-void TabWidget::set_tab_title(Widget& tab, const StringView& title)
+void TabWidget::set_tab_title(Widget& tab, StringView title)
 {
     for (auto& t : m_tabs) {
         if (t.widget == &tab) {

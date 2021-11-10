@@ -38,7 +38,7 @@ void StylePainter::paint_window_frame(Painter& painter, const IntRect& rect, con
     current().paint_window_frame(painter, rect, palette);
 }
 
-void StylePainter::paint_progressbar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text, Orientation orientation)
+void StylePainter::paint_progressbar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, StringView text, Orientation orientation)
 {
     current().paint_progressbar(painter, rect, palette, min, max, value, text, orientation);
 }

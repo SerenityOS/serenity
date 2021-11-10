@@ -512,12 +512,12 @@ ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<void> ISO9660Inode::add_child(Inode&, StringView, mode_t)
 {
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::remove_child(const StringView&)
+ErrorOr<void> ISO9660Inode::remove_child(StringView)
 {
     return EROFS;
 }
@@ -556,7 +556,7 @@ void ISO9660Inode::one_ref_left()
 {
 }
 
-ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView const& name)
+ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
     : Inode(fs, get_inode_index(record, name))
     , m_record(record)
 {
@@ -568,7 +568,7 @@ ISO9660Inode::~ISO9660Inode()
 {
 }
 
-ErrorOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView const& name)
+ErrorOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
 {
     return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
 }
@@ -651,7 +651,7 @@ StringView ISO9660Inode::get_normalized_filename(ISO::DirectoryRecordHeader cons
     return { buffer.data(), filename.length() };
 }
 
-InodeIndex ISO9660Inode::get_inode_index(ISO::DirectoryRecordHeader const& record, StringView const& name)
+InodeIndex ISO9660Inode::get_inode_index(ISO::DirectoryRecordHeader const& record, StringView name)
 {
     if (name.is_null()) {
         // NOTE: This is the index of the root inode.

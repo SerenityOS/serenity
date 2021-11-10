@@ -113,7 +113,7 @@ public:
     virtual u8 baseline() const = 0;
     virtual u8 mean_line() const = 0;
 
-    virtual int width(const StringView&) const = 0;
+    virtual int width(StringView) const = 0;
     virtual int width(const Utf8View&) const = 0;
     virtual int width(const Utf32View&) const = 0;
 

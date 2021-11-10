@@ -31,7 +31,7 @@ ManualModel::ManualModel()
     m_page_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png").release_value_but_fixme_should_propagate_errors());
 }
 
-Optional<GUI::ModelIndex> ManualModel::index_from_path(const StringView& path) const
+Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
 {
     for (int section = 0; section < row_count(); ++section) {
         auto parent_index = index(section, 0);

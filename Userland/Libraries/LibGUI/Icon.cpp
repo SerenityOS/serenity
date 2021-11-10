@@ -72,7 +72,7 @@ void IconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
     m_bitmaps.set(size, move(bitmap));
 }
 
-Icon Icon::default_icon(const StringView& name)
+Icon Icon::default_icon(StringView name)
 {
     RefPtr<Gfx::Bitmap> bitmap16;
     RefPtr<Gfx::Bitmap> bitmap32;

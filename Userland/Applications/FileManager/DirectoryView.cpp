@@ -405,7 +405,7 @@ bool DirectoryView::open(String const& path)
     return true;
 }
 
-void DirectoryView::set_status_message(StringView const& message)
+void DirectoryView::set_status_message(StringView message)
 {
     if (on_status_message)
         on_status_message(message);

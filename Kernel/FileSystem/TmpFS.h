@@ -59,8 +59,8 @@ public:
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual ErrorOr<void> add_child(Inode&, const StringView& name, mode_t) override;
-    virtual ErrorOr<void> remove_child(const StringView& name) override;
+    virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
+    virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;

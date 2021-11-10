@@ -177,7 +177,7 @@ public:
     JS::Realm& realm();
     JS::Interpreter& interpreter();
 
-    JS::Value run_javascript(const StringView& source, const StringView& filename = "(unknown)");
+    JS::Value run_javascript(StringView source, StringView filename = "(unknown)");
 
     NonnullRefPtr<Element> create_element(const String& tag_name);
     NonnullRefPtr<Element> create_element_ns(const String& namespace_, const String& qualifed_name);

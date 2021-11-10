@@ -191,7 +191,7 @@ static inline bool is_E(u32 code_point)
 
 namespace Web::CSS {
 
-Tokenizer::Tokenizer(const StringView& input, const String& encoding)
+Tokenizer::Tokenizer(StringView input, const String& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);

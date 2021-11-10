@@ -67,7 +67,7 @@ Vector<String> LexicalPath::parts() const
     return vector;
 }
 
-bool LexicalPath::has_extension(StringView const& extension) const
+bool LexicalPath::has_extension(StringView extension) const
 {
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
@@ -129,7 +129,7 @@ String LexicalPath::absolute_path(String dir_path, String target)
     return LexicalPath::canonicalized_path(join(dir_path, target).string());
 }
 
-String LexicalPath::relative_path(StringView const& a_path, StringView const& a_prefix)
+String LexicalPath::relative_path(StringView a_path, StringView a_prefix)
 {
     if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
         // FIXME: This should probably VERIFY or return an Optional<String>.
@@ -159,7 +159,7 @@ String LexicalPath::relative_path(StringView const& a_path, StringView const& a_
     return path;
 }
 
-LexicalPath LexicalPath::append(StringView const& value) const
+LexicalPath LexicalPath::append(StringView value) const
 {
     return LexicalPath::join(m_string, value);
 }

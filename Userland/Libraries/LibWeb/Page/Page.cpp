@@ -41,7 +41,7 @@ void Page::load(LoadRequest& request)
     top_level_browsing_context().loader().load(request, FrameLoader::Type::Navigation);
 }
 
-void Page::load_html(const StringView& html, const AK::URL& url)
+void Page::load_html(StringView html, const AK::URL& url)
 {
     top_level_browsing_context().loader().load_html(html, url);
 }

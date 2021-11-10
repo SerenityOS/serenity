@@ -16,7 +16,7 @@ void LineIterator::reset_ignore_prefix()
     }
 }
 
-Optional<StringView> LineIterator::match_context(StringView const& line) const
+Optional<StringView> LineIterator::match_context(StringView line) const
 {
     bool is_ws = line.is_whitespace();
     size_t offset = 0;

@@ -252,7 +252,7 @@ Optional<Image::RelocationSection> Image::Section::relocations() const
     return static_cast<RelocationSection>(relocation_section.value());
 }
 
-Optional<Image::Section> Image::lookup_section(const StringView& name) const
+Optional<Image::Section> Image::lookup_section(StringView name) const
 {
     VERIFY(m_valid);
     for (unsigned i = 0; i < section_count(); ++i) {
@@ -354,7 +354,7 @@ StringView Image::Symbol::raw_data() const
 }
 
 #ifndef KERNEL
-Optional<Image::Symbol> Image::find_demangled_function(const StringView& name) const
+Optional<Image::Symbol> Image::find_demangled_function(StringView name) const
 {
     Optional<Image::Symbol> found;
     for_each_symbol([&](const Image::Symbol& symbol) {

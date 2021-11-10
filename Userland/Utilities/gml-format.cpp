@@ -9,9 +9,9 @@
 #include <LibGUI/GMLFormatter.h>
 #include <unistd.h>
 
-bool format_file(const StringView&, bool);
+bool format_file(StringView, bool);
 
-bool format_file(const StringView& path, bool inplace)
+bool format_file(StringView path, bool inplace)
 {
     auto read_from_stdin = path == "-";
     RefPtr<Core::File> file;

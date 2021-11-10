@@ -18,10 +18,10 @@
 class Parser {
 public:
     Function<void(const Command&)> on_command;
-    Function<void(const StringView&)> on_data;
+    Function<void(StringView)> on_data;
     Function<void()> on_error;
 
-    void write(const StringView&);
+    void write(StringView);
 
 protected:
     enum State {

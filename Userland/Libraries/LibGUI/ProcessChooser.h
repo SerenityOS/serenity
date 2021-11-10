@@ -21,7 +21,7 @@ public:
     pid_t pid() const { return m_pid; }
 
 private:
-    ProcessChooser(const StringView& window_title = "Process Chooser", const StringView& button_label = "Select", const Gfx::Bitmap* window_icon = nullptr, GUI::Window* parent_window = nullptr);
+    ProcessChooser(StringView window_title = "Process Chooser", StringView button_label = "Select", const Gfx::Bitmap* window_icon = nullptr, GUI::Window* parent_window = nullptr);
 
     void set_pid_from_index_and_close(const ModelIndex&);
 

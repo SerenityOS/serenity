@@ -324,7 +324,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), &window));
 }
 
-void HexEditorWidget::set_path(StringView const& path)
+void HexEditorWidget::set_path(StringView path)
 {
     if (path.is_empty()) {
         m_path = {};

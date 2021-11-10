@@ -77,7 +77,7 @@ static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_
     return components;
 }
 
-static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<WhiptailOption> const& options, StringView const& title, StringView const& description)
+static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<WhiptailOption> const& options, StringView title, StringView description)
 {
     struct winsize w;
     if (ioctl(0, TIOCGWINSZ, &w) < 0) {
@@ -198,7 +198,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
     return data.split('\n', false);
 }
 
-static bool run_system_command(String const& command, StringView const& command_name)
+static bool run_system_command(String const& command, StringView command_name)
 {
     if (command.starts_with("cmake"))
         warnln("\e[34mRunning CMake...\e[0m");

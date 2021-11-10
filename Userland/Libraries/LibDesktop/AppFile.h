@@ -15,9 +15,9 @@ namespace Desktop {
 class AppFile : public RefCounted<AppFile> {
 public:
     static constexpr const char* APP_FILES_DIRECTORY = "/res/apps";
-    static NonnullRefPtr<AppFile> get_for_app(const StringView& app_name);
-    static NonnullRefPtr<AppFile> open(const StringView& path);
-    static void for_each(Function<void(NonnullRefPtr<AppFile>)>, const StringView& directory = APP_FILES_DIRECTORY);
+    static NonnullRefPtr<AppFile> get_for_app(StringView app_name);
+    static NonnullRefPtr<AppFile> open(StringView path);
+    static void for_each(Function<void(NonnullRefPtr<AppFile>)>, StringView directory = APP_FILES_DIRECTORY);
     ~AppFile();
 
     bool is_valid() const { return m_valid; }
@@ -35,7 +35,7 @@ public:
     bool spawn() const;
 
 private:
-    explicit AppFile(const StringView& path);
+    explicit AppFile(StringView path);
 
     bool validate() const;
 

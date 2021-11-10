@@ -27,7 +27,7 @@ public:
     void save_to(JsonObject&);
 
 private:
-    Service(const Core::ConfigFile&, const StringView& name);
+    Service(const Core::ConfigFile&, StringView name);
 
     void spawn(int socket_fd = -1);
 

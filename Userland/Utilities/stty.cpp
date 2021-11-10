@@ -260,7 +260,7 @@ Result<void, int> apply_stty_readable_modes(StringView mode_string, termios& t)
         warnln("Save string has an incorrect number of parameters");
         return 1;
     }
-    auto parse_hex = [&](const StringView& v) {
+    auto parse_hex = [&](StringView v) {
         tcflag_t ret = 0;
         for (auto c : v) {
             c = tolower(c);

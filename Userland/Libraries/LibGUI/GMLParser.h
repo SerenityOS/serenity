@@ -10,6 +10,6 @@
 
 namespace GUI {
 
-JsonValue parse_gml(const StringView&);
+JsonValue parse_gml(StringView);
 
 }

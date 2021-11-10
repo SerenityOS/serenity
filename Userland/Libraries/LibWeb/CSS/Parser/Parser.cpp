@@ -147,7 +147,7 @@ void TokenStream<T>::dump_all_tokens()
     }
 }
 
-Parser::Parser(ParsingContext const& context, StringView const& input, String const& encoding)
+Parser::Parser(ParsingContext const& context, StringView input, String const& encoding)
     : m_context(context)
     , m_tokenizer(input, encoding)
     , m_tokens(m_tokenizer.parse())
@@ -3685,7 +3685,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_dashndash = [](StyleComponentValueRule const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n-"sv);
     };
-    auto is_delim = [](StyleComponentValueRule const& value, StringView const& delim) -> bool {
+    auto is_delim = [](StyleComponentValueRule const& value, StringView delim) -> bool {
         return value.is(Token::Type::Delim) && value.token().delim().equals_ignoring_case(delim);
     };
     auto is_n_dimension = [](StyleComponentValueRule const& value) -> bool {
@@ -4208,7 +4208,7 @@ OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(ParsingContext cons
     return make<CalculatedStyleValue::CalcSum>(parsed_calc_product.release_nonnull(), move(additional));
 }
 
-bool Parser::has_ignored_vendor_prefix(StringView const& string)
+bool Parser::has_ignored_vendor_prefix(StringView string)
 {
     if (!string.starts_with('-'))
         return false;
@@ -4223,7 +4223,7 @@ bool Parser::has_ignored_vendor_prefix(StringView const& string)
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringView const& css)
+RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringView css)
 {
     if (css.is_empty())
         return CSS::CSSStyleSheet::create({});
@@ -4231,7 +4231,7 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringV
     return parser.parse_as_stylesheet();
 }
 
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView const& css)
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView css)
 {
     if (css.is_empty())
         return CSS::PropertyOwningCSSStyleDeclaration::create({}, {});
@@ -4239,7 +4239,7 @@ RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::Parsin
     return parser.parse_as_list_of_declarations();
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView const& string, CSS::PropertyID property_id)
+RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
         return {};
@@ -4253,25 +4253,25 @@ RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const& context, StringVi
     return parser.parse_as_rule();
 }
 
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView const& selector_text)
+Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView selector_text)
 {
     CSS::Parser parser(context, selector_text);
     return parser.parse_as_selector();
 }
 
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const& context, StringView const& string)
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const& context, StringView string)
 {
     CSS::Parser parser(context, string);
     return parser.parse_as_media_query();
 }
 
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const& context, StringView const& string)
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const& context, StringView string)
 {
     CSS::Parser parser(context, string);
     return parser.parse_as_media_query_list();
 }
 
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, StringView const& string)
+RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, StringView string)
 {
     if (string.is_empty())
         return {};
@@ -4279,7 +4279,7 @@ RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, Str
     return parser.parse_as_supports();
 }
 
-RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView const& string)
+RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView string)
 {
     auto integer = string.to_int();
     if (integer.has_value())

@@ -125,8 +125,8 @@ public:
     virtual bool is_function() const { return false; }
     virtual bool is_namespace() const { return false; }
     virtual bool is_member() const { return false; }
-    const StringView& name() const { return m_name; }
-    void set_name(const StringView& name) { m_name = move(name); }
+    StringView name() const { return m_name; }
+    void set_name(StringView name) { m_name = move(name); }
 
 protected:
     Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -417,7 +417,7 @@ public:
 
     virtual bool is_identifier() const override { return true; }
 
-    StringView const& name() const { return m_name; }
+    StringView name() const { return m_name; }
     void set_name(StringView&& name) { m_name = move(name); }
 
 private:

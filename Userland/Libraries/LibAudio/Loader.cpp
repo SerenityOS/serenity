@@ -9,7 +9,7 @@
 
 namespace Audio {
 
-Loader::Loader(const StringView& path)
+Loader::Loader(StringView path)
 {
     m_plugin = make<WavLoaderPlugin>(path);
     if (m_plugin->sniff())

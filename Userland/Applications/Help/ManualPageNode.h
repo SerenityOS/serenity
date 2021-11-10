@@ -14,7 +14,7 @@ class ManualPageNode : public ManualNode {
 public:
     virtual ~ManualPageNode() override { }
 
-    ManualPageNode(const ManualSectionNode& section, const StringView& page)
+    ManualPageNode(const ManualSectionNode& section, StringView page)
         : m_section(section)
         , m_page(page)
     {

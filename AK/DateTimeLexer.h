@@ -14,7 +14,7 @@ namespace AK {
 
 class DateTimeLexer : public GenericLexer {
 public:
-    constexpr explicit DateTimeLexer(const StringView& input)
+    constexpr explicit DateTimeLexer(StringView input)
         : GenericLexer(input)
     {
     }

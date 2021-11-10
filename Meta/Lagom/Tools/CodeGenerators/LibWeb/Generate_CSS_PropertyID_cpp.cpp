@@ -96,7 +96,7 @@ PropertyID property_id_from_camel_case_string(StringView string)
     return PropertyID::Invalid;
 }
 
-PropertyID property_id_from_string(const StringView& string)
+PropertyID property_id_from_string(StringView string)
 {
 )~~~");
 

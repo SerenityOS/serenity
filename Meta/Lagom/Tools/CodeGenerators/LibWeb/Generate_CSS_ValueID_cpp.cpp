@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
 namespace Web::CSS {
 
-ValueID value_id_from_string(const StringView& string)
+ValueID value_id_from_string(StringView string)
 {
 )~~~");
 

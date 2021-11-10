@@ -52,7 +52,7 @@ struct IniToken {
 
 class IniLexer {
 public:
-    IniLexer(StringView const&);
+    IniLexer(StringView);
 
     Vector<IniToken> lex();
 

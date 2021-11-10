@@ -10,7 +10,7 @@
 
 static bool s_set_variable = false;
 
-static String get_variable(StringView const& name)
+static String get_variable(StringView name)
 {
     auto path = String::formatted("/proc/sys/{}", name);
     auto file = Core::File::construct(path);
@@ -26,7 +26,7 @@ static String get_variable(StringView const& name)
     return { (char const*)buffer.data(), buffer.size(), Chomp };
 }
 
-static bool read_variable(StringView const& name)
+static bool read_variable(StringView name)
 {
     auto value = get_variable(name);
     if (value.is_null())
@@ -35,7 +35,7 @@ static bool read_variable(StringView const& name)
     return true;
 }
 
-static bool write_variable(StringView const& name, StringView const& value)
+static bool write_variable(StringView name, StringView value)
 {
     auto old_value = get_variable(name);
     if (old_value.is_null())

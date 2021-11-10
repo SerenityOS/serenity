@@ -69,7 +69,7 @@ ALWAYS_INLINE i32 decode_unsigned_exp_golomb(u8 order, InputBitStream& bit_input
 
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
-    FlacLoaderPlugin(const StringView& path);
+    FlacLoaderPlugin(StringView path);
     FlacLoaderPlugin(const ByteBuffer& buffer);
     ~FlacLoaderPlugin()
     {

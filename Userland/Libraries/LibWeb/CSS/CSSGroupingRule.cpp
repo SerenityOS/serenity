@@ -18,7 +18,7 @@ CSSGroupingRule::~CSSGroupingRule()
 {
 }
 
-size_t CSSGroupingRule::insert_rule(StringView const&, size_t)
+size_t CSSGroupingRule::insert_rule(StringView, size_t)
 {
     // https://www.w3.org/TR/cssom-1/#insert-a-css-rule
     TODO();

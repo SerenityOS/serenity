@@ -40,7 +40,7 @@ public:
     int model_column() const;
     void set_model_column(int);
 
-    void set_editor_placeholder(const StringView& placeholder);
+    void set_editor_placeholder(StringView placeholder);
     const String& editor_placeholder() const;
 
     Function<void(const String&, const ModelIndex&)> on_change;

@@ -99,7 +99,7 @@ public:
 
     class Section {
     public:
-        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const StringView& name)
+        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, StringView name)
             : m_dynamic(dynamic)
             , m_section_offset(section_offset)
             , m_section_size_bytes(section_size_bytes)
@@ -212,7 +212,7 @@ public:
 
     class HashSymbol {
     public:
-        HashSymbol(const StringView& name)
+        HashSymbol(StringView name)
             : m_name(name)
         {
         }
@@ -243,8 +243,8 @@ public:
         }
 
     private:
-        Optional<Symbol> lookup_sysv_symbol(const StringView& name, u32 hash_value) const;
-        Optional<Symbol> lookup_gnu_symbol(const StringView& name, u32 hash) const;
+        Optional<Symbol> lookup_sysv_symbol(StringView name, u32 hash_value) const;
+        Optional<Symbol> lookup_gnu_symbol(StringView name, u32 hash) const;
 
         HashType m_hash_type {};
     };
@@ -320,7 +320,7 @@ public:
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
 
-    Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
+    Optional<SymbolLookupResult> lookup_symbol(StringView name) const;
     Optional<SymbolLookupResult> lookup_symbol(const HashSymbol& symbol) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
@@ -328,7 +328,7 @@ public:
 
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
-    void* symbol_for_name(const StringView& name);
+    void* symbol_for_name(StringView name);
 
 private:
     explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);

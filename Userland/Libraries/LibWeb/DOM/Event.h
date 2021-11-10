@@ -61,7 +61,7 @@ public:
     double time_stamp() const;
 
     const FlyString& type() const { return m_type; }
-    void set_type(const StringView& type) { m_type = type; }
+    void set_type(StringView type) { m_type = type; }
 
     RefPtr<EventTarget> target() const { return m_target; }
     void set_target(EventTarget* target) { m_target = target; }

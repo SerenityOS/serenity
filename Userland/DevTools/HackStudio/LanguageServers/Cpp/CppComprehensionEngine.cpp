@@ -355,12 +355,12 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
     return symbols;
 }
 
-String CppComprehensionEngine::document_path_from_include_path(const StringView& include_path) const
+String CppComprehensionEngine::document_path_from_include_path(StringView include_path) const
 {
     static Regex<PosixExtended> library_include("<(.+)>");
     static Regex<PosixExtended> user_defined_include("\"(.+)\"");
 
-    auto document_path_for_library_include = [&](const StringView& include_path) -> String {
+    auto document_path_for_library_include = [&](StringView include_path) -> String {
         RegexResult result;
         if (!library_include.search(include_path, result))
             return {};
@@ -369,7 +369,7 @@ String CppComprehensionEngine::document_path_from_include_path(const StringView&
         return String::formatted("/usr/include/{}", path);
     };
 
-    auto document_path_for_user_defined_include = [&](const StringView& include_path) -> String {
+    auto document_path_for_user_defined_include = [&](StringView include_path) -> String {
         RegexResult result;
         if (!user_defined_include.search(include_path, result))
             return {};

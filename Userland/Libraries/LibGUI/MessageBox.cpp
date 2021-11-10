@@ -13,7 +13,7 @@
 
 namespace GUI {
 
-int MessageBox::show(Window* parent_window, const StringView& text, const StringView& title, Type type, InputType input_type)
+int MessageBox::show(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
 {
     auto box = MessageBox::construct(parent_window, text, title, type, input_type);
     if (parent_window)
@@ -21,12 +21,12 @@ int MessageBox::show(Window* parent_window, const StringView& text, const String
     return box->exec();
 }
 
-int MessageBox::show_error(Window* parent_window, const StringView& text)
+int MessageBox::show_error(Window* parent_window, StringView text)
 {
     return show(parent_window, text, "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
 }
 
-MessageBox::MessageBox(Window* parent_window, const StringView& text, const StringView& title, Type type, InputType input_type)
+MessageBox::MessageBox(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
     : Dialog(parent_window)
     , m_text(text)
     , m_type(type)

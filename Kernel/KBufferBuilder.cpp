@@ -66,7 +66,7 @@ ErrorOr<void> KBufferBuilder::append_bytes(ReadonlyBytes bytes)
     return {};
 }
 
-ErrorOr<void> KBufferBuilder::append(const StringView& str)
+ErrorOr<void> KBufferBuilder::append(StringView str)
 {
     if (str.is_empty())
         return {};
@@ -97,7 +97,7 @@ ErrorOr<void> KBufferBuilder::append(char ch)
     return {};
 }
 
-ErrorOr<void> KBufferBuilder::append_escaped_for_json(const StringView& string)
+ErrorOr<void> KBufferBuilder::append_escaped_for_json(StringView string)
 {
     for (auto ch : string) {
         switch (ch) {

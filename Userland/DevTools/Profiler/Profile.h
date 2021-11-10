@@ -141,7 +141,7 @@ struct ProcessFilter {
 
 class Profile {
 public:
-    static ErrorOr<NonnullOwnPtr<Profile>> load_from_perfcore_file(const StringView& path);
+    static ErrorOr<NonnullOwnPtr<Profile>> load_from_perfcore_file(StringView path);
 
     GUI::Model& model();
     GUI::Model& samples_model();

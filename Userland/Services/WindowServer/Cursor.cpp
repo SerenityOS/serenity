@@ -33,7 +33,7 @@ NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, int sc
     return adopt_ref(*new Cursor(move(bitmap), scale_factor, Gfx::CursorParams(hotspot)));
 }
 
-RefPtr<Cursor> Cursor::create(const StringView& filename, const StringView& default_filename)
+RefPtr<Cursor> Cursor::create(StringView filename, StringView default_filename)
 {
     auto cursor = adopt_ref(*new Cursor());
     if (cursor->load(filename, default_filename))
@@ -41,11 +41,11 @@ RefPtr<Cursor> Cursor::create(const StringView& filename, const StringView& defa
     return {};
 }
 
-bool Cursor::load(const StringView& filename, const StringView& default_filename)
+bool Cursor::load(StringView filename, StringView default_filename)
 {
     bool did_load_any = false;
 
-    auto load_bitmap = [&](const StringView& path, int scale_factor) {
+    auto load_bitmap = [&](StringView path, int scale_factor) {
         auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path, scale_factor);
         if (bitmap_or_error.is_error())
             return;

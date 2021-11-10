@@ -236,7 +236,7 @@ struct Context {
     bool verify() const;
     bool verify_chain() const;
 
-    static void print_file(const StringView& fname);
+    static void print_file(StringView fname);
 
     Options options;
 
@@ -318,7 +318,7 @@ public:
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }
     virtual bool connect(const String&, int) override;
 
-    void set_sni(const StringView& sni)
+    void set_sni(StringView sni)
     {
         if (m_context.is_server || m_context.critical_error || m_context.connection_status != ConnectionStatus::Disconnected) {
             dbgln("invalid state for set_sni");
@@ -341,9 +341,9 @@ public:
 
     ByteBuffer finish_build();
 
-    const StringView& alpn() const { return m_context.negotiated_alpn; }
-    void add_alpn(const StringView& alpn);
-    bool has_alpn(const StringView& alpn) const;
+    StringView alpn() const { return m_context.negotiated_alpn; }
+    void add_alpn(StringView alpn);
+    bool has_alpn(StringView alpn) const;
 
     bool supports_cipher(CipherSuite suite) const
     {
@@ -508,7 +508,7 @@ private:
 
     bool compute_master_secret_from_pre_master_secret(size_t length);
 
-    Optional<size_t> verify_chain_and_get_matching_certificate(const StringView& host) const;
+    Optional<size_t> verify_chain_and_get_matching_certificate(StringView host) const;
 
     void try_disambiguate_error() const;
 

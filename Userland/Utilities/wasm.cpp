@@ -241,7 +241,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     }
 }
 
-static Optional<Wasm::Module> parse(StringView const& filename)
+static Optional<Wasm::Module> parse(StringView filename)
 {
     auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (result.is_error()) {

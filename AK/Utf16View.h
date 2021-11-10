@@ -16,7 +16,7 @@
 
 namespace AK {
 
-Vector<u16, 1> utf8_to_utf16(StringView const&);
+Vector<u16, 1> utf8_to_utf16(StringView);
 Vector<u16, 1> utf8_to_utf16(Utf8View const&);
 Vector<u16, 1> utf32_to_utf16(Utf32View const&);
 void code_point_to_utf16(Vector<u16, 1>&, u32);

@@ -66,7 +66,7 @@ enum class ValueID {
     generator.append(R"~~~(
 };
 
-ValueID value_id_from_string(const StringView&);
+ValueID value_id_from_string(StringView);
 const char* string_from_value_id(ValueID);
 
 }

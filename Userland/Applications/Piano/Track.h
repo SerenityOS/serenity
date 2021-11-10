@@ -36,7 +36,7 @@ public:
 
     void fill_sample(Sample& sample);
     void reset();
-    String set_recorded_sample(const StringView& path);
+    String set_recorded_sample(StringView path);
     void set_note(int note, Switch);
     void set_roll_note(int note, u32 on_sample, u32 off_sample);
     void set_wave(int wave);

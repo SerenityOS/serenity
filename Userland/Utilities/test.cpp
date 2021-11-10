@@ -316,7 +316,7 @@ private:
 
 static OwnPtr<Condition> parse_complex_expression(char* argv[]);
 
-static bool should_treat_expression_as_single_string(const StringView& arg_after)
+static bool should_treat_expression_as_single_string(StringView arg_after)
 {
     return arg_after.is_null() || arg_after == "-a" || arg_after == "-o";
 }

@@ -68,7 +68,7 @@ Result Client::request_file(i32 parent_window_id, String const& path, Core::Open
     return m_promise->await();
 }
 
-Result Client::open_file(i32 parent_window_id, String const& window_title, StringView const& path)
+Result Client::open_file(i32 parent_window_id, String const& window_title, StringView path)
 {
     m_promise = Core::Promise<Result>::construct();
     auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();

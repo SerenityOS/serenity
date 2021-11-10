@@ -57,7 +57,7 @@ struct Cell : public Weakable<Cell> {
     Kind kind() const { return m_kind; }
     const Vector<WeakPtr<Cell>>& referencing_cells() const { return m_referencing_cells; }
 
-    void set_type(const StringView& name);
+    void set_type(StringView name);
     void set_type(const CellType*);
     void set_type_metadata(CellTypeMetadata&&);
 

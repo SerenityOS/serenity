@@ -24,7 +24,7 @@
 
 namespace WindowServer {
 
-u32 find_ampersand_shortcut_character(const StringView& string)
+u32 find_ampersand_shortcut_character(StringView string)
 {
     Utf8View utf8_view { string };
     for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {

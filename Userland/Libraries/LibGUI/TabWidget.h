@@ -36,11 +36,11 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
-    void add_widget(const StringView&, Widget&);
+    void add_widget(StringView, Widget&);
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    T& add_tab(const StringView& title, Args&&... args)
+    T& add_tab(StringView title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
         add_widget(title, *t);
@@ -50,7 +50,7 @@ public:
     void remove_tab(Widget& tab) { remove_widget(tab); }
     void remove_all_tabs_except(Widget& tab);
 
-    void set_tab_title(Widget& tab, const StringView& title);
+    void set_tab_title(Widget& tab, StringView title);
     void set_tab_icon(Widget& tab, const Gfx::Bitmap*);
 
     void activate_next_tab();

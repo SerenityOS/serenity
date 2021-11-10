@@ -30,7 +30,7 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Validation error! {}", location);
 }
 
-static Optional<String> parse_opaque_host(StringView const& input)
+static Optional<String> parse_opaque_host(StringView input)
 {
     auto forbidden_host_code_points_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto code_point : forbidden_host_code_points_excluding_percent) {
@@ -44,7 +44,7 @@ static Optional<String> parse_opaque_host(StringView const& input)
     return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
 }
 
-static Optional<String> parse_ipv4_address(StringView const& input)
+static Optional<String> parse_ipv4_address(StringView input)
 {
     // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
     return input;
@@ -52,7 +52,7 @@ static Optional<String> parse_ipv4_address(StringView const& input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<String> parse_host(StringView const& input, bool is_not_special = false)
+static Optional<String> parse_host(StringView input, bool is_not_special = false)
 {
     if (input.starts_with('[')) {
         if (!input.ends_with(']')) {
@@ -84,7 +84,7 @@ static Optional<String> parse_host(StringView const& input, bool is_not_special 
     return ipv4_host;
 }
 
-constexpr bool starts_with_windows_drive_letter(StringView const& input)
+constexpr bool starts_with_windows_drive_letter(StringView input)
 {
     if (input.length() < 2)
         return false;
@@ -95,29 +95,29 @@ constexpr bool starts_with_windows_drive_letter(StringView const& input)
     return "/\\?#"sv.contains(input[2]);
 }
 
-constexpr bool is_windows_drive_letter(StringView const& input)
+constexpr bool is_windows_drive_letter(StringView input)
 {
     return input.length() == 2 && is_ascii_alpha(input[0]) && (input[1] == ':' || input[1] == '|');
 }
 
-constexpr bool is_normalized_windows_drive_letter(StringView const& input)
+constexpr bool is_normalized_windows_drive_letter(StringView input)
 {
     return input.length() == 2 && is_ascii_alpha(input[0]) && input[1] == ':';
 }
 
-constexpr bool is_single_dot_path_segment(StringView const& input)
+constexpr bool is_single_dot_path_segment(StringView input)
 {
     return input == "."sv || input.equals_ignoring_case("%2e"sv);
 }
 
-constexpr bool is_double_dot_path_segment(StringView const& input)
+constexpr bool is_double_dot_path_segment(StringView input)
 {
     return input == ".."sv || input.equals_ignoring_case(".%2e"sv) || input.equals_ignoring_case("%2e."sv) || input.equals_ignoring_case("%2e%2e"sv);
 }
 
 // https://fetch.spec.whatwg.org/#data-urls
 // FIXME: This only loosely follows the spec, as we use the same class for "regular" and data URLs, unlike the spec.
-Optional<URL> URLParser::parse_data_url(StringView const& raw_input)
+Optional<URL> URLParser::parse_data_url(StringView raw_input)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
     VERIFY(raw_input.starts_with("data:"));
@@ -161,7 +161,7 @@ Optional<URL> URLParser::parse_data_url(StringView const& raw_input)
 // NOTE: Since the URL class's member variables contain percent decoded data, we have to deviate from the URL parser specification when setting
 //       some of those values. Because the specification leaves all values percent encoded in their URL data structure, we have to percent decode
 //       everything before setting the member variables.
-URL URLParser::parse(StringView const& raw_input, URL const* base_url, Optional<URL> url, Optional<State> state_override)
+URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> url, Optional<State> state_override)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())

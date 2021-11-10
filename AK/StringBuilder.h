@@ -21,7 +21,7 @@ public:
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
     ~StringBuilder() = default;
 
-    void append(StringView const&);
+    void append(StringView);
     void append(Utf16View const&);
     void append(Utf32View const&);
     void append(char);
@@ -30,7 +30,7 @@ public:
     void appendvf(char const*, va_list);
 
     void append_as_lowercase(char);
-    void append_escaped_for_json(StringView const&);
+    void append_escaped_for_json(StringView);
 
     template<typename... Parameters>
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)

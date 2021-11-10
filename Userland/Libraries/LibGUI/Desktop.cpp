@@ -45,17 +45,17 @@ void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vect
         callback(*this);
 }
 
-void Desktop::set_background_color(const StringView& background_color)
+void Desktop::set_background_color(StringView background_color)
 {
     WindowServerConnection::the().async_set_background_color(background_color);
 }
 
-void Desktop::set_wallpaper_mode(const StringView& mode)
+void Desktop::set_wallpaper_mode(StringView mode)
 {
     WindowServerConnection::the().async_set_wallpaper_mode(mode);
 }
 
-bool Desktop::set_wallpaper(const StringView& path, bool save_config)
+bool Desktop::set_wallpaper(StringView path, bool save_config)
 {
     WindowServerConnection::the().async_set_wallpaper(path);
     auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();

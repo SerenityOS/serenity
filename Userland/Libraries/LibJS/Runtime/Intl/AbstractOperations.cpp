@@ -266,7 +266,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
-Optional<String> best_available_locale(StringView const& locale)
+Optional<String> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
     StringView candidate = locale;

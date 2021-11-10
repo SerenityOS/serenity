@@ -280,7 +280,7 @@ void Service::did_exit(int exit_code)
     activate();
 }
 
-Service::Service(const Core::ConfigFile& config, const StringView& name)
+Service::Service(const Core::ConfigFile& config, StringView name)
     : Core::Object(nullptr)
 {
     VERIFY(config.has_group(name));

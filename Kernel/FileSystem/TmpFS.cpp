@@ -269,7 +269,7 @@ ErrorOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t m
     return child;
 }
 
-ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
+ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView name, mode_t)
 {
     VERIFY(is_directory());
     VERIFY(child.fsid() == fsid());
@@ -289,7 +289,7 @@ ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView const& name, mode_t
     return {};
 }
 
-ErrorOr<void> TmpFSInode::remove_child(StringView const& name)
+ErrorOr<void> TmpFSInode::remove_child(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());

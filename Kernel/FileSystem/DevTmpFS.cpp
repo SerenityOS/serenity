@@ -85,7 +85,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSInode::create_child(StringView, mode_t, de
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> DevTmpFSInode::add_child(Inode&, const StringView&, mode_t)
+ErrorOr<void> DevTmpFSInode::add_child(Inode&, StringView, mode_t)
 {
     VERIFY_NOT_REACHED();
 }
@@ -134,7 +134,7 @@ InodeMetadata DevTmpFSInode::metadata() const
     return metadata;
 }
 
-ErrorOr<void> DevTmpFSInode::remove_child(const StringView&)
+ErrorOr<void> DevTmpFSInode::remove_child(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -233,7 +233,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::lookup(StringView name)
     return Error::from_errno(ENOENT);
 }
 
-ErrorOr<void> DevTmpFSDirectoryInode::remove_child(const StringView& name)
+ErrorOr<void> DevTmpFSDirectoryInode::remove_child(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     for (auto& node : m_nodes) {

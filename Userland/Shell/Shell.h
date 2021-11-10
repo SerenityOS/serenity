@@ -85,27 +85,27 @@ public:
         Optional<AST::Position> position;
     };
 
-    int run_command(const StringView&, Optional<SourcePosition> = {});
-    bool is_runnable(const StringView&);
+    int run_command(StringView, Optional<SourcePosition> = {});
+    bool is_runnable(StringView);
     RefPtr<Job> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
-    bool has_builtin(const StringView&) const;
+    bool has_builtin(StringView) const;
     RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
-    static bool has_immediate_function(const StringView&);
+    static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
 
     static String expand_tilde(const String&);
-    static Vector<String> expand_globs(const StringView& path, StringView base);
-    static Vector<String> expand_globs(Vector<StringView> path_segments, const StringView& base);
+    static Vector<String> expand_globs(StringView path, StringView base);
+    static Vector<String> expand_globs(Vector<StringView> path_segments, StringView base);
     Vector<AST::Command> expand_aliases(Vector<AST::Command>);
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
 
-    static String find_in_path(const StringView& program_name);
+    static String find_in_path(StringView program_name);
 
     static bool has_history_event(StringView);
 
@@ -119,7 +119,7 @@ public:
     bool has_function(const String&);
     bool invoke_function(const AST::Command&, int& retval);
 
-    String format(const StringView&, ssize_t& cursor) const;
+    String format(StringView, ssize_t& cursor) const;
 
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
@@ -165,8 +165,8 @@ public:
     };
     static SpecialCharacterEscapeMode special_character_escape_mode(u32 c);
 
-    static bool is_glob(const StringView&);
-    static Vector<StringView> split_path(const StringView&);
+    static bool is_glob(StringView);
+    static Vector<StringView> split_path(StringView);
 
     enum class ExecutableOnly {
         Yes,

@@ -102,7 +102,7 @@ enum class PropertyID {
 };
 
 PropertyID property_id_from_camel_case_string(StringView);
-PropertyID property_id_from_string(const StringView&);
+PropertyID property_id_from_string(StringView);
 const char* string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 NonnullRefPtr<StyleValue> property_initial_value(PropertyID);

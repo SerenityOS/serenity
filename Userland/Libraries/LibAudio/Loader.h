@@ -51,7 +51,7 @@ public:
 
 class Loader : public RefCounted<Loader> {
 public:
-    static NonnullRefPtr<Loader> create(const StringView& path) { return adopt_ref(*new Loader(path)); }
+    static NonnullRefPtr<Loader> create(StringView path) { return adopt_ref(*new Loader(path)); }
     static NonnullRefPtr<Loader> create(const ByteBuffer& buffer) { return adopt_ref(*new Loader(buffer)); }
 
     bool has_error() const { return m_plugin ? m_plugin->has_error() : true; }
@@ -78,7 +78,7 @@ public:
     RefPtr<Core::File> file() const { return m_plugin ? m_plugin->file() : nullptr; }
 
 private:
-    Loader(const StringView& path);
+    Loader(StringView path);
     Loader(const ByteBuffer& buffer);
 
     mutable OwnPtr<LoaderPlugin> m_plugin;

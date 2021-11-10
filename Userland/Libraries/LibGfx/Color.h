@@ -269,7 +269,7 @@ public:
 
     String to_string() const;
     String to_string_without_alpha() const;
-    static Optional<Color> from_string(StringView const&);
+    static Optional<Color> from_string(StringView);
 
     constexpr HSV to_hsv() const
     {
