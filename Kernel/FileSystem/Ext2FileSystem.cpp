@@ -518,26 +518,26 @@ ErrorOr<void> Ext2FSInode::flush_block_list()
     VERIFY_NOT_REACHED();
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list() const
+ErrorOr<Vector<Ext2FS::BlockIndex>> Ext2FSInode::compute_block_list() const
 {
     return compute_block_list_impl(false);
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_with_meta_blocks() const
+ErrorOr<Vector<Ext2FS::BlockIndex>> Ext2FSInode::compute_block_list_with_meta_blocks() const
 {
     return compute_block_list_impl(true);
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl(bool include_block_list_blocks) const
+ErrorOr<Vector<Ext2FS::BlockIndex>> Ext2FSInode::compute_block_list_impl(bool include_block_list_blocks) const
 {
     // FIXME: This is really awkwardly factored.. foo_impl_internal :|
-    auto block_list = compute_block_list_impl_internal(m_raw_inode, include_block_list_blocks);
+    auto block_list = TRY(compute_block_list_impl_internal(m_raw_inode, include_block_list_blocks));
     while (!block_list.is_empty() && block_list.last() == 0)
         block_list.take_last();
     return block_list;
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const ext2_inode& e2inode, bool include_block_list_blocks) const
+ErrorOr<Vector<Ext2FS::BlockIndex>> Ext2FSInode::compute_block_list_impl_internal(ext2_inode const& e2inode, bool include_block_list_blocks) const
 {
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
 
@@ -562,24 +562,25 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
 
     Vector<Ext2FS::BlockIndex> list;
 
-    auto add_block = [&](auto bi) {
+    auto add_block = [&](auto bi) -> ErrorOr<void> {
         if (blocks_remaining) {
-            list.append(bi);
+            TRY(list.try_append(bi));
             --blocks_remaining;
         }
+        return {};
     };
 
     if (include_block_list_blocks) {
         // This seems like an excessive over-estimate but w/e.
-        list.ensure_capacity(blocks_remaining * 2);
+        TRY(list.try_ensure_capacity(blocks_remaining * 2));
     } else {
-        list.ensure_capacity(blocks_remaining);
+        TRY(list.try_ensure_capacity(blocks_remaining));
     }
 
     unsigned direct_count = min(block_count, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < direct_count; ++i) {
         auto block_index = e2inode.i_block[i];
-        add_block(block_index);
+        TRY(add_block(block_index));
     }
 
     if (!blocks_remaining)
@@ -587,48 +588,48 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
 
     // Don't need to make copy of add_block, since this capture will only
     // be called before compute_block_list_impl_internal finishes.
-    auto process_block_array = [&](auto array_block_index, auto&& callback) {
+    auto process_block_array = [&](auto array_block_index, auto&& callback) -> ErrorOr<void> {
         if (include_block_list_blocks)
-            add_block(array_block_index);
+            TRY(add_block(array_block_index));
         auto count = min(blocks_remaining, entries_per_block);
         if (!count)
-            return;
+            return {};
         size_t read_size = count * sizeof(u32);
-        // FIXME: Handle possible OOM situation.
-        auto array_storage = ByteBuffer::create_uninitialized(read_size).release_value();
+        auto maybe_array_storage = ByteBuffer::create_uninitialized(read_size);
+        if (!maybe_array_storage.has_value())
+            return ENOMEM;
+        auto array_storage = maybe_array_storage.release_value();
         auto* array = (u32*)array_storage.data();
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
-        if (auto result = fs().read_block(array_block_index, &buffer, read_size, 0); result.is_error()) {
-            // FIXME: Stop here and propagate this error.
-            dbgln("Ext2FSInode[{}]::compute_block_list_impl_internal(): Error: {}", identifier(), result.error());
-        }
+        TRY(fs().read_block(array_block_index, &buffer, read_size, 0));
         for (unsigned i = 0; i < count; ++i)
-            callback(Ext2FS::BlockIndex(array[i]));
+            TRY(callback(Ext2FS::BlockIndex(array[i])));
+        return {};
     };
 
-    process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&](auto block_index) {
-        add_block(block_index);
-    });
+    TRY(process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&](auto block_index) -> ErrorOr<void> {
+        return add_block(block_index);
+    }));
 
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&](auto block_index) {
-        process_block_array(block_index, [&](auto block_index2) {
-            add_block(block_index2);
+    TRY(process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&](auto block_index) -> ErrorOr<void> {
+        return process_block_array(block_index, [&](auto block_index2) -> ErrorOr<void> {
+            return add_block(block_index2);
         });
-    });
+    }));
 
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&](auto block_index) {
-        process_block_array(block_index, [&](auto block_index2) {
-            process_block_array(block_index2, [&](auto block_index3) {
-                add_block(block_index3);
+    TRY(process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&](auto block_index) -> ErrorOr<void> {
+        return process_block_array(block_index, [&](auto block_index2) -> ErrorOr<void> {
+            return process_block_array(block_index2, [&](auto block_index3) -> ErrorOr<void> {
+                return add_block(block_index3);
             });
         });
-    });
+    }));
 
     return list;
 }
@@ -640,10 +641,13 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
     dbgln_if(EXT2_DEBUG, "Ext2FS[{}]::free_inode(): Inode {} has no more links, time to delete!", fsid(), inode.index());
 
     // Mark all blocks used by this inode as free.
-    for (auto block_index : inode.compute_block_list_with_meta_blocks()) {
-        VERIFY(block_index <= super_block().s_blocks_count);
-        if (block_index.value())
-            TRY(set_block_allocation_state(block_index, false));
+    {
+        auto blocks = TRY(inode.compute_block_list_with_meta_blocks());
+        for (auto block_index : blocks) {
+            VERIFY(block_index <= super_block().s_blocks_count);
+            if (block_index.value())
+                TRY(set_block_allocation_state(block_index, false));
+        }
     }
 
     // If the inode being freed is a directory, update block group directory counter.
@@ -844,7 +848,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernel
     }
 
     if (m_block_list.is_empty())
-        m_block_list = compute_block_list();
+        m_block_list = TRY(compute_block_list());
 
     if (m_block_list.is_empty()) {
         dmesgln("Ext2FSInode[{}]::read_bytes(): Empty block list", identifier());
@@ -913,7 +917,7 @@ ErrorOr<void> Ext2FSInode::resize(u64 new_size)
     }
 
     if (m_block_list.is_empty())
-        m_block_list = this->compute_block_list();
+        m_block_list = TRY(compute_block_list());
 
     if (blocks_needed_after > blocks_needed_before) {
         auto blocks = TRY(fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before));
@@ -992,7 +996,7 @@ ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserO
     TRY(resize(new_size));
 
     if (m_block_list.is_empty())
-        m_block_list = compute_block_list();
+        m_block_list = TRY(compute_block_list());
 
     if (m_block_list.is_empty()) {
         dbgln("Ext2FSInode[{}]::write_bytes(): Empty block list", identifier());
@@ -1669,7 +1673,7 @@ ErrorOr<int> Ext2FSInode::get_block_address(int index)
     MutexLocker locker(m_inode_lock);
 
     if (m_block_list.is_empty())
-        m_block_list = compute_block_list();
+        m_block_list = TRY(compute_block_list());
 
     if (index < 0 || (size_t)index >= m_block_list.size())
         return 0;
