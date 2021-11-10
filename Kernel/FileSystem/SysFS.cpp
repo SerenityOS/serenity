@@ -46,15 +46,15 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
     return adopt_ref(*new (nothrow) SysFSRootDirectory);
 }
 
-ErrorOr<void> SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, 0 }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, 0 }, 0 }));
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
-        callback({ component.name(), identifier, 0 });
+        TRY(callback({ component.name(), identifier, 0 }));
     }
     return {};
 }
@@ -125,7 +125,7 @@ ErrorOr<size_t> SysFSInode::read_bytes(off_t offset, size_t count, UserOrKernelB
     return m_associated_component->read_bytes(offset, count, buffer, fd);
 }
 
-ErrorOr<void> SysFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> SysFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -219,7 +219,7 @@ InodeMetadata SysFSDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(fs().m_lock);
     return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));

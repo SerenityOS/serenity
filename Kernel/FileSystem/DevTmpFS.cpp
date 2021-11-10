@@ -60,7 +60,7 @@ ErrorOr<size_t> DevTmpFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, Op
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> DevTmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> DevTmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -210,14 +210,14 @@ DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode()
 {
 }
 
-ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock);
-    callback({ ".", identifier(), 0 });
-    callback({ "..", identifier(), 0 });
+    TRY(callback({ ".", identifier(), 0 }));
+    TRY(callback({ "..", identifier(), 0 }));
     for (auto& node : m_nodes) {
         InodeIdentifier identifier = { fsid(), node.index() };
-        callback({ node.name(), identifier, 0 });
+        TRY(callback({ node.name(), identifier, 0 }));
     }
     return {};
 }

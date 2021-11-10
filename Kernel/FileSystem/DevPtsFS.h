@@ -49,7 +49,7 @@ private:
     // ^Inode
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
-    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;

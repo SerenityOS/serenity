@@ -46,7 +46,7 @@ public:
     void plug(USB::Device&);
     void unplug(USB::Device&);
 
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
 private:

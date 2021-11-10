@@ -31,16 +31,16 @@ mode_t SysFSComponent::permissions() const
     return S_IRUSR | S_IRGRP | S_IROTH;
 }
 
-ErrorOr<void> SysFSDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     VERIFY(m_parent_directory);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
-        callback({ component.name(), identifier, 0 });
+        TRY(callback({ component.name(), identifier, 0 }));
     }
     return {};
 }

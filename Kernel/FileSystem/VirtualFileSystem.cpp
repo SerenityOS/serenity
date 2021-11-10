@@ -162,9 +162,9 @@ bool VirtualFileSystem::is_vfs_root(InodeIdentifier inode) const
     return inode == root_inode_id();
 }
 
-ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<bool(FileSystem::DirectoryEntryView const&)> callback)
+ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback)
 {
-    return dir_inode.traverse_as_directory([&](auto& entry) {
+    return dir_inode.traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolved_inode = mount->guest().identifier();
@@ -179,8 +179,8 @@ ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Func
             VERIFY(mount->host());
             resolved_inode = mount->host()->identifier();
         }
-        callback({ entry.name, resolved_inode, entry.file_type });
-        return true;
+        TRY(callback({ entry.name, resolved_inode, entry.file_type }));
+        return {};
     });
 }
 
@@ -467,9 +467,9 @@ ErrorOr<void> VirtualFileSystem::rename(StringView old_path, StringView new_path
 
         if (old_inode.index() != new_inode.index() && old_inode.is_directory() && new_inode.is_directory()) {
             size_t child_count = 0;
-            TRY(new_inode.traverse_as_directory([&child_count](auto&) {
+            TRY(new_inode.traverse_as_directory([&child_count](auto&) -> ErrorOr<void> {
                 ++child_count;
-                return child_count <= 2;
+                return {};
             }));
             if (child_count > 2)
                 return ENOTEMPTY;
@@ -710,9 +710,9 @@ ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
     }
 
     size_t child_count = 0;
-    TRY(inode.traverse_as_directory([&child_count](auto&) {
+    TRY(inode.traverse_as_directory([&child_count](auto&) -> ErrorOr<void> {
         ++child_count;
-        return true;
+        return {};
     }));
 
     if (child_count != 2)

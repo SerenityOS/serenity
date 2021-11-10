@@ -53,7 +53,7 @@ public:
     virtual void detach(OpenFileDescription&) { }
     virtual void did_seek(OpenFileDescription&, off_t) { }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const = 0;
-    virtual ErrorOr<void> traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
+    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) = 0;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;

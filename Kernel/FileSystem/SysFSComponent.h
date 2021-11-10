@@ -27,7 +27,7 @@ class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual StringView name() const { return m_name->view(); }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual mode_t permissions() const;
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
@@ -51,7 +51,7 @@ private:
 
 class SysFSDirectory : public SysFSComponent {
 public:
-    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual ErrorOr<void> traverse_as_directory(unsigned, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;

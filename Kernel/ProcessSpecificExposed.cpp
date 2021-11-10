@@ -41,17 +41,19 @@ ErrorOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuil
     return 0;
 }
 
-ErrorOr<void> Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_stacks_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 });
-    callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 }));
+    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
 
-    for_each_thread([&](const Thread& thread) {
-        int tid = thread.tid().value();
-        InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
-        callback({ String::number(tid), identifier, 0 });
+    return thread_list().with([&](auto& list) -> ErrorOr<void> {
+        for (auto const& thread : list) {
+            int tid = thread.tid().value();
+            InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
+            TRY(callback({ String::number(tid), identifier, 0 }));
+        }
+        return {};
     });
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
@@ -87,10 +89,10 @@ ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBu
     return data->length();
 }
 
-ErrorOr<void> Process::traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_file_descriptions_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 });
-    callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
     size_t count = 0;
     fds().enumerate([&](auto& file_description_metadata) {
         if (!file_description_metadata.is_valid()) {
@@ -99,7 +101,8 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(unsigned fsid, Funct
         }
         StringBuilder builder;
         builder.appendff("{}", count);
-        callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
+        // FIXME: Propagate errors from callback.
+        (void)callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
         count++;
     });
     return {};

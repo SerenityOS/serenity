@@ -91,17 +91,17 @@ ErrorOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count
     return nread;
 }
 
-ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     SpinlockLocker lock(m_lock);
     // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
     VERIFY(m_parent_directory);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
+    TRY(callback({ ".", { fsid, component_index() }, 0 }));
+    TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
 
     for (auto& device_node : m_device_nodes) {
         InodeIdentifier identifier = { fsid, device_node.component_index() };
-        callback({ device_node.name(), identifier, 0 });
+        TRY(callback({ device_node.name(), identifier, 0 }));
     }
     return {};
 }

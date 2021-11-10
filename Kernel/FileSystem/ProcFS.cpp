@@ -137,7 +137,7 @@ StringView ProcFSGlobalInode::name() const
     return m_associated_component->name();
 }
 
-ErrorOr<void> ProcFSGlobalInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> ProcFSGlobalInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -200,7 +200,7 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
     metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }
-ErrorOr<void> ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(procfs().m_lock);
     return m_associated_component->traverse_as_directory(procfs().fsid(), move(callback));
@@ -285,7 +285,7 @@ ErrorOr<size_t> ProcFSProcessDirectoryInode::read_bytes(off_t, size_t, UserOrKer
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> ProcFSProcessDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSProcessDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(procfs().m_lock);
     auto process = Process::from_pid(associated_pid());
@@ -365,7 +365,7 @@ InodeMetadata ProcFSProcessSubDirectoryInode::metadata() const
     return metadata;
 }
 
-ErrorOr<void> ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(procfs().m_lock);
     auto process = Process::from_pid(associated_pid());
@@ -474,7 +474,7 @@ InodeMetadata ProcFSProcessPropertyInode::metadata() const
     metadata.mtime = traits->modified_time();
     return metadata;
 }
-ErrorOr<void> ProcFSProcessPropertyInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
+ErrorOr<void> ProcFSProcessPropertyInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }

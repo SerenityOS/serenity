@@ -105,23 +105,22 @@ InodeMetadata DevPtsFSInode::metadata() const
     return m_metadata;
 }
 
-ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     if (identifier().index() > 1)
         return ENOTDIR;
 
-    callback({ ".", identifier(), 0 });
-    callback({ "..", identifier(), 0 });
+    TRY(callback({ ".", identifier(), 0 }));
+    TRY(callback({ "..", identifier(), 0 }));
 
-    SlavePTY::all_instances().with([&](auto& list) {
+    return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<void> {
         for (SlavePTY& slave_pty : list) {
             StringBuilder builder;
             builder.appendff("{}", slave_pty.index());
-            callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 });
+            TRY(callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 }));
         }
+        return {};
     });
-
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
