@@ -13,7 +13,7 @@ namespace JS {
 
 ThrowCompletionOr<Object*> promise_resolve(GlobalObject&, Object& constructor, Value);
 
-class Promise final : public Object {
+class Promise : public Object {
     JS_OBJECT(Promise, Object);
 
 public:
@@ -45,9 +45,10 @@ public:
     Value reject(Value reason);
     Value perform_then(Value on_fulfilled, Value on_rejected, Optional<PromiseCapability> result_capability);
 
-private:
+protected:
     virtual void visit_edges(Visitor&) override;
 
+private:
     bool is_settled() const { return m_state == State::Fulfilled || m_state == State::Rejected; }
 
     void trigger_reactions() const;
