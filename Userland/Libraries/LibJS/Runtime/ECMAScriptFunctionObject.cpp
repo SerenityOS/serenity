@@ -769,15 +769,19 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             if (JS::Bytecode::g_dump_bytecode)
                 m_bytecode_executable->dump();
         }
-        auto result = bytecode_interpreter->run(*m_bytecode_executable);
+        auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
         if (auto* exception = vm.exception())
             return throw_completion(exception->value());
+
+        VERIFY(result_and_frame.frame != nullptr);
+        auto result = result_and_frame.value;
+
         // NOTE: Running the bytecode should eventually return a completion.
         // Until it does, we assume "return" and include the undefined fallback from the call site.
         if (m_kind != FunctionKind::Generator)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
-        auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame()));
+        auto generator_object = TRY(GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, move(*result_and_frame.frame)));
         return { Completion::Type::Return, generator_object, {} };
     } else {
         if (m_kind == FunctionKind::Generator)
