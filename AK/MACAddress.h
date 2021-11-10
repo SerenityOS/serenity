@@ -11,6 +11,7 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 class [[gnu::packed]] MACAddress {
     static constexpr size_t s_mac_address_length = 6u;

@@ -8,6 +8,7 @@
 
 #include <AK/DisjointChunks.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 TEST_CASE(basic)
 {

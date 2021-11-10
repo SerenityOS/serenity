@@ -5,6 +5,7 @@
  */
 
 #include "ParsedCookie.h"
+#include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibIPC/Decoder.h>
@@ -280,12 +281,12 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
         return to_uint(token, year);
     };
 
-    auto is_delimeter = [](char ch) {
+    Function<bool(char)> is_delimiter = [](char ch) {
         return ch == 0x09 || (ch >= 0x20 && ch <= 0x2f) || (ch >= 0x3b && ch <= 0x40) || (ch >= 0x5b && ch <= 0x60) || (ch >= 0x7b && ch <= 0x7e);
     };
 
     // 1. Using the grammar below, divide the cookie-date into date-tokens.
-    Vector<StringView> date_tokens = date_string.split_view_if(is_delimeter);
+    Vector<StringView> date_tokens = date_string.split_view_if(is_delimiter);
 
     // 2. Process each date-token sequentially in the order the date-tokens appear in the cookie-date.
     bool found_time = false;
