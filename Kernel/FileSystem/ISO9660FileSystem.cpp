@@ -55,10 +55,7 @@ public:
         if (has_flag(m_current_header->file_flags, ISO::FileFlags::Directory)) {
             dbgln_if(ISO9660_VERY_DEBUG, "next(): Recursing");
             {
-                bool result = m_directory_stack.try_append(move(m_current_directory));
-                if (!result) {
-                    return ENOMEM;
-                }
+                TRY(m_directory_stack.try_append(move(m_current_directory)));
             }
 
             dbgln_if(ISO9660_VERY_DEBUG, "next(): Pushed into directory stack");

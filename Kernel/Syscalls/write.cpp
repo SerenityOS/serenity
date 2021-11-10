@@ -24,8 +24,7 @@ ErrorOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov,
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
-    if (!vecs.try_resize(iov_count))
-        return ENOMEM;
+    TRY(vecs.try_resize(iov_count));
     TRY(copy_n_from_user(vecs.data(), iov, iov_count));
     for (auto& vec : vecs) {
         total_length += vec.iov_len;

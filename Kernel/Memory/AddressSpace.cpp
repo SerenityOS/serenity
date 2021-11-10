@@ -110,8 +110,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
         // Otherwise, split the regions and collect them for future mapping.
         auto split_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
-        if (new_regions.try_extend(split_regions))
-            return ENOMEM;
+        TRY(new_regions.try_extend(split_regions));
     }
 
     // Give back any unwanted VM to the range allocator.

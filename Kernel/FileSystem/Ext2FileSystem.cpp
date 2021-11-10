@@ -917,8 +917,7 @@ ErrorOr<void> Ext2FSInode::resize(u64 new_size)
 
     if (blocks_needed_after > blocks_needed_before) {
         auto blocks = TRY(fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before));
-        if (!m_block_list.try_extend(move(blocks)))
-            return ENOMEM;
+        TRY(m_block_list.try_extend(move(blocks)));
     } else if (blocks_needed_after < blocks_needed_before) {
         if constexpr (EXT2_VERY_DEBUG) {
             dbgln("Ext2FSInode[{}]::resize(): Shrinking inode, old block list is {} entries:", identifier(), m_block_list.size());
@@ -1264,8 +1263,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         return Vector<BlockIndex> {};
 
     Vector<BlockIndex> blocks;
-    if (!blocks.try_ensure_capacity(count))
-        return ENOMEM;
+    TRY(blocks.try_ensure_capacity(count));
 
     MutexLocker locker(m_lock);
     auto group_index = preferred_group_index;
@@ -1454,8 +1452,7 @@ ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
     TRY(read_block(bitmap_block_index, &buffer, block_size()));
     auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));
-    if (!m_cached_bitmaps.try_append(move(new_bitmap)))
-        return ENOMEM;
+    TRY(m_cached_bitmaps.try_append(move(new_bitmap)));
     return m_cached_bitmaps.last().ptr();
 }
 
