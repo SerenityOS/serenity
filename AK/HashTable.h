@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
 #include <AK/StdLibExtras.h>
@@ -16,7 +17,6 @@
 namespace AK {
 
 enum class HashSetResult {
-    Failed = 0,
     InsertedNewEntry,
     ReplacedExistingEntry,
     KeptExistingEntry
@@ -186,19 +186,16 @@ public:
     [[nodiscard]] size_t capacity() const { return m_capacity; }
 
     template<typename U, size_t N>
-    bool try_set_from(U (&from_array)[N])
+    ErrorOr<void> try_set_from(U (&from_array)[N])
     {
-        for (size_t i = 0; i < N; ++i) {
-            if (try_set(from_array[i]) == HashSetResult::Failed)
-                return false;
-        }
-        return true;
+        for (size_t i = 0; i < N; ++i)
+            TRY(try_set(from_array[i]));
+        return {};
     }
     template<typename U, size_t N>
     void set_from(U (&from_array)[N])
     {
-        bool result = try_set_from(from_array);
-        VERIFY(result);
+        MUST(try_set_from(from_array));
     }
 
     void ensure_capacity(size_t capacity)
@@ -260,11 +257,9 @@ public:
     }
 
     template<typename U = T>
-    HashSetResult try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
+    ErrorOr<HashSetResult> try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
-        auto* bucket = try_lookup_for_writing(value);
-        if (!bucket)
-            return HashSetResult::Failed;
+        auto* bucket = TRY(try_lookup_for_writing(value));
         if (bucket->used) {
             if (existing_entry_behavior == HashSetExistingEntryBehavior::Keep)
                 return HashSetResult::KeptExistingEntry;
@@ -295,9 +290,7 @@ public:
     template<typename U = T>
     HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behaviour = HashSetExistingEntryBehavior::Replace)
     {
-        auto result = try_set(forward<U>(value), existing_entry_behaviour);
-        VERIFY(result != HashSetResult::Failed);
-        return result;
+        return MUST(try_set(forward<U>(value), existing_entry_behaviour));
     }
 
     template<typename TUnaryPredicate>
@@ -388,7 +381,7 @@ private:
         }
     }
 
-    bool try_rehash(size_t new_capacity)
+    ErrorOr<void> try_rehash(size_t new_capacity)
     {
         new_capacity = max(new_capacity, static_cast<size_t>(4));
         new_capacity = kmalloc_good_size(new_capacity * sizeof(BucketType)) / sizeof(BucketType);
@@ -399,7 +392,7 @@ private:
 
         auto new_buckets = kmalloc(size_in_bytes(new_capacity));
         if (!new_buckets)
-            return false;
+            return Error::from_errno(ENOMEM);
 
         m_buckets = (BucketType*)new_buckets;
         __builtin_memset(m_buckets, 0, size_in_bytes(new_capacity));
@@ -413,7 +406,7 @@ private:
             m_buckets[m_capacity].end = true;
 
         if (!old_buckets)
-            return true;
+            return {};
 
         for (auto it = move(old_iter); it != end(); ++it) {
             insert_during_rehash(move(*it));
@@ -421,12 +414,11 @@ private:
         }
 
         kfree_sized(old_buckets, size_in_bytes(old_capacity));
-        return true;
+        return {};
     }
     void rehash(size_t new_capacity)
     {
-        bool result = try_rehash(new_capacity);
-        VERIFY(result);
+        MUST(try_rehash(new_capacity));
     }
 
     template<typename TUnaryPredicate>
@@ -448,15 +440,13 @@ private:
         }
     }
 
-    [[nodiscard]] BucketType* try_lookup_for_writing(T const& value)
+    ErrorOr<BucketType*> try_lookup_for_writing(T const& value)
     {
         // FIXME: Maybe overrun the "allowed" load factor to avoid OOM
         //        If we are allowed to do that, separate that logic from
         //        the normal lookup_for_writing
-        if (should_grow()) {
-            if (!try_rehash(capacity() * 2))
-                return nullptr;
-        }
+        if (should_grow())
+            TRY(try_rehash(capacity() * 2));
         auto hash = TraitsForT::hash(value);
         BucketType* first_empty_bucket = nullptr;
         for (;;) {
@@ -478,9 +468,7 @@ private:
     }
     [[nodiscard]] BucketType& lookup_for_writing(T const& value)
     {
-        auto* item = try_lookup_for_writing(value);
-        VERIFY(item);
-        return *item;
+        return *MUST(try_lookup_for_writing(value));
     }
 
     [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }

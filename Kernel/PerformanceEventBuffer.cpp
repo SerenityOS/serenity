@@ -315,10 +315,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
 ErrorOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)
 {
     FlatPtr string_id = m_strings.size();
-
-    if (m_strings.try_set(move(string)) == AK::HashSetResult::Failed)
-        return ENOBUFS;
-
+    TRY(m_strings.try_set(move(string)));
     return string_id;
 }
 
