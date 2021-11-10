@@ -10,7 +10,20 @@
       "stretch"
     ]
   },
-  "background": {},
+  "background": {
+    "inherited": false,
+    "initial": "transparent",
+    "longhands": [
+      "background-attachment",
+      "background-clip",
+      "background-color",
+      "background-image",
+      "background-origin",
+      "background-position",
+      "background-repeat",
+      "background-size"
+    ]
+  },
   "background-attachment": {
     "inherited": false,
     "initial": "scroll",
