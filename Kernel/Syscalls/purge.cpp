@@ -27,8 +27,8 @@ ErrorOr<FlatPtr> Process::sys$purge(int mode)
                 if (vmobject.is_anonymous()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.
-                    if (!vmobjects.try_append(static_cast<Memory::AnonymousVMObject&>(vmobject)) && vmobjects.is_empty()) {
-                        result = ENOMEM;
+                    if (auto append_result = vmobjects.try_append(static_cast<Memory::AnonymousVMObject&>(vmobject)); append_result.is_error() && vmobjects.is_empty()) {
+                        result = append_result.release_error();
                         return IterationDecision::Break;
                     }
                 }
@@ -50,8 +50,8 @@ ErrorOr<FlatPtr> Process::sys$purge(int mode)
                 if (vmobject.is_inode()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.
-                    if (!vmobjects.try_append(static_cast<Memory::InodeVMObject&>(vmobject)) && vmobjects.is_empty()) {
-                        result = ENOMEM;
+                    if (auto append_result = vmobjects.try_append(static_cast<Memory::InodeVMObject&>(vmobject)); append_result.is_error() && vmobjects.is_empty()) {
+                        result = append_result.release_error();
                         return IterationDecision::Break;
                     }
                 }

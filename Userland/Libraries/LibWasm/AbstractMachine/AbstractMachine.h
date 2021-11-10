@@ -311,7 +311,7 @@ public:
                 return false;
         }
         auto previous_size = m_elements.size();
-        if (!m_elements.try_resize(new_size))
+        if (m_elements.try_resize(new_size).is_error())
             return false;
         for (size_t i = previous_size; i < m_elements.size(); ++i)
             m_elements[i] = fill_value;

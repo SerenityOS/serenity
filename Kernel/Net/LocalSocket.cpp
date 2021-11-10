@@ -487,8 +487,7 @@ ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description,
     // FIXME: Figure out how we should limit this properly.
     if (queue.size() > 128)
         return set_so_error(EBUSY);
-    if (!queue.try_append(move(passing_description)))
-        return set_so_error(ENOMEM);
+    SOCKET_TRY(queue.try_append(move(passing_description)));
     return {};
 }
 

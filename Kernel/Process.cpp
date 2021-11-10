@@ -144,18 +144,15 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(RefPtr<Thread>&
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
         auto last_part = TRY(KString::try_create(parts.last()));
-        if (!arguments.try_append(move(last_part)))
-            return ENOMEM;
+        TRY(arguments.try_append(move(last_part)));
     }
 
     auto path_string = TRY(KString::try_create(path));
     auto name = TRY(KString::try_create(parts.last()));
     auto process = TRY(Process::try_create(first_thread, move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
-    if (!process->m_fds.try_resize(process->m_fds.max_open())) {
-        first_thread = nullptr;
-        return ENOMEM;
-    }
+    TRY(process->m_fds.try_resize(process->m_fds.max_open()));
+
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
     auto description = TRY(device_to_use_as_tty.open(O_RDWR));
     auto setup_description = [&process, &description](int fd) {

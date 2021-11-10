@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/Forward.h>
 #include <AK/Iterator.h>
@@ -204,49 +205,41 @@ public:
     template<typename U = T>
     void insert(size_t index, U&& value) requires(CanBePlacedInsideVector<U>)
     {
-        auto did_allocate = try_insert<U>(index, forward<U>(value));
-        VERIFY(did_allocate);
+        MUST(try_insert<U>(index, forward<U>(value)));
     }
 
     template<typename TUnaryPredicate, typename U = T>
     void insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
-        auto did_allocate = try_insert_before_matching(forward<U>(value), predicate, first_index, inserted_index);
-        VERIFY(did_allocate);
+        MUST(try_insert_before_matching(forward<U>(value), predicate, first_index, inserted_index));
     }
 
     void extend(Vector&& other)
     {
-        auto did_allocate = try_extend(move(other));
-        VERIFY(did_allocate);
+        MUST(try_extend(move(other)));
     }
 
     void extend(Vector const& other)
     {
-        auto did_allocate = try_extend(other);
-        VERIFY(did_allocate);
+        MUST(try_extend(other));
     }
 
     ALWAYS_INLINE void append(T&& value)
     {
-        bool did_allocate;
         if constexpr (contains_reference)
-            did_allocate = try_append(value);
+            MUST(try_append(value));
         else
-            did_allocate = try_append(move(value));
-        VERIFY(did_allocate);
+            MUST(try_append(move(value)));
     }
 
     ALWAYS_INLINE void append(T const& value) requires(!contains_reference)
     {
-        auto did_allocate = try_append(T(value));
-        VERIFY(did_allocate);
+        MUST(try_append(T(value)));
     }
 
     void append(StorageType const* values, size_t count)
     {
-        auto did_allocate = try_append(values, count);
-        VERIFY(did_allocate);
+        MUST(try_append(values, count));
     }
 
     template<typename U = T>
@@ -263,27 +256,23 @@ public:
     template<class... Args>
     void empend(Args&&... args) requires(!contains_reference)
     {
-        auto did_allocate = try_empend(forward<Args>(args)...);
-        VERIFY(did_allocate);
+        MUST(try_empend(forward<Args>(args)...));
     }
 
     template<typename U = T>
     void prepend(U&& value) requires(CanBePlacedInsideVector<U>)
     {
-        auto did_allocate = try_insert(0, forward<U>(value));
-        VERIFY(did_allocate);
+        MUST(try_insert(0, forward<U>(value)));
     }
 
     void prepend(Vector&& other)
     {
-        auto did_allocate = try_prepend(move(other));
-        VERIFY(did_allocate);
+        MUST(try_prepend(move(other)));
     }
 
     void prepend(StorageType const* values, size_t count)
     {
-        auto did_allocate = try_prepend(values, count);
-        VERIFY(did_allocate);
+        MUST(try_prepend(values, count));
     }
 
     // FIXME: What about assigning from a vector with lower inline capacity?
@@ -451,14 +440,13 @@ public:
     }
 
     template<typename U = T>
-    [[nodiscard]] bool try_insert(size_t index, U&& value) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_insert(size_t index, U&& value) requires(CanBePlacedInsideVector<U>)
     {
         if (index > size())
-            return false;
+            return Error::from_errno(EINVAL);
         if (index == size())
             return try_append(forward<U>(value));
-        if (!try_grow_capacity(size() + 1))
-            return false;
+        TRY(try_grow_capacity(size() + 1));
         ++m_size;
         if constexpr (Traits<StorageType>::is_trivial()) {
             TypedTransfer<StorageType>::move(slot(index + 1), slot(index), m_size - index - 1);
@@ -472,109 +460,101 @@ public:
             new (slot(index)) StorageType(&value);
         else
             new (slot(index)) StorageType(forward<U>(value));
-        return true;
+        return {};
     }
 
     template<typename TUnaryPredicate, typename U = T>
-    [[nodiscard]] bool try_insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
         for (size_t i = first_index; i < size(); ++i) {
             if (predicate(at(i))) {
-                if (!try_insert(i, forward<U>(value)))
-                    return false;
+                TRY(try_insert(i, forward<U>(value)));
                 if (inserted_index)
                     *inserted_index = i;
-                return true;
+                return {};
             }
         }
-        if (!try_append(forward<U>(value)))
-            return false;
+        TRY(try_append(forward<U>(value)));
         if (inserted_index)
             *inserted_index = size() - 1;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_extend(Vector&& other)
+    ErrorOr<void> try_extend(Vector&& other)
     {
         if (is_empty()) {
             *this = move(other);
-            return true;
+            return {};
         }
         auto other_size = other.size();
         Vector tmp = move(other);
-        if (!try_grow_capacity(size() + other_size))
-            return false;
+        TRY(try_grow_capacity(size() + other_size));
         TypedTransfer<StorageType>::move(data() + m_size, tmp.data(), other_size);
         m_size += other_size;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_extend(Vector const& other)
+    ErrorOr<void> try_extend(Vector const& other)
     {
-        if (!try_grow_capacity(size() + other.size()))
-            return false;
+        TRY(try_grow_capacity(size() + other.size()));
         TypedTransfer<StorageType>::copy(data() + m_size, other.data(), other.size());
         m_size += other.m_size;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool try_append(T&& value)
+    ErrorOr<void> try_append(T&& value)
     {
-        if (!try_grow_capacity(size() + 1))
-            return false;
+        TRY(try_grow_capacity(size() + 1));
         if constexpr (contains_reference)
             new (slot(m_size)) StorageType(&value);
         else
             new (slot(m_size)) StorageType(move(value));
         ++m_size;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool try_append(T const& value) requires(!contains_reference)
+    ErrorOr<void> try_append(T const& value) requires(!contains_reference)
     {
         return try_append(T(value));
     }
 
-    [[nodiscard]] bool try_append(StorageType const* values, size_t count)
+    ErrorOr<void> try_append(StorageType const* values, size_t count)
     {
         if (!count)
-            return true;
-        if (!try_grow_capacity(size() + count))
-            return false;
+            return {};
+        TRY(try_grow_capacity(size() + count));
         TypedTransfer<StorageType>::copy(slot(m_size), values, count);
         m_size += count;
-        return true;
+        return {};
     }
 
     template<class... Args>
-    [[nodiscard]] bool try_empend(Args&&... args) requires(!contains_reference)
+    ErrorOr<void> try_empend(Args&&... args) requires(!contains_reference)
     {
-        if (!try_grow_capacity(m_size + 1))
-            return false;
+        TRY(try_grow_capacity(m_size + 1));
         new (slot(m_size)) StorageType { forward<Args>(args)... };
         ++m_size;
-        return true;
+        return {};
     }
 
     template<typename U = T>
-    [[nodiscard]] bool try_prepend(U&& value) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_prepend(U&& value) requires(CanBePlacedInsideVector<U>)
     {
         return try_insert(0, forward<U>(value));
     }
 
-    [[nodiscard]] bool try_prepend(Vector&& other)
+    ErrorOr<void> try_prepend(Vector&& other)
     {
         if (other.is_empty())
-            return true;
+            return {};
 
         if (is_empty()) {
             *this = move(other);
-            return true;
+            return {};
         }
 
         auto other_size = other.size();
-        if (!try_grow_capacity(size() + other_size))
-            return false;
+        TRY(try_grow_capacity(size() + other_size));
 
         for (size_t i = size() + other_size - 1; i >= other.size(); --i) {
             new (slot(i)) StorageType(move(at(i - other_size)));
@@ -584,36 +564,35 @@ public:
         Vector tmp = move(other);
         TypedTransfer<StorageType>::move(slot(0), tmp.data(), tmp.size());
         m_size += other_size;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_prepend(StorageType const* values, size_t count)
+    ErrorOr<void> try_prepend(StorageType const* values, size_t count)
     {
         if (!count)
-            return true;
-        if (!try_grow_capacity(size() + count))
-            return false;
+            return {};
+        TRY(try_grow_capacity(size() + count));
         TypedTransfer<StorageType>::move(slot(count), slot(0), m_size);
         TypedTransfer<StorageType>::copy(slot(0), values, count);
         m_size += count;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_grow_capacity(size_t needed_capacity)
+    ErrorOr<void> try_grow_capacity(size_t needed_capacity)
     {
         if (m_capacity >= needed_capacity)
-            return true;
+            return {};
         return try_ensure_capacity(padded_capacity(needed_capacity));
     }
 
-    [[nodiscard]] bool try_ensure_capacity(size_t needed_capacity)
+    ErrorOr<void> try_ensure_capacity(size_t needed_capacity)
     {
         if (m_capacity >= needed_capacity)
-            return true;
+            return {};
         size_t new_capacity = kmalloc_good_size(needed_capacity * sizeof(StorageType)) / sizeof(StorageType);
         auto* new_buffer = static_cast<StorageType*>(kmalloc_array(new_capacity, sizeof(StorageType)));
         if (new_buffer == nullptr)
-            return false;
+            return Error::from_errno(ENOMEM);
 
         if constexpr (Traits<StorageType>::is_trivial()) {
             TypedTransfer<StorageType>::copy(new_buffer, data(), m_size);
@@ -627,40 +606,37 @@ public:
             kfree_sized(m_outline_buffer, m_capacity * sizeof(StorageType));
         m_outline_buffer = new_buffer;
         m_capacity = new_capacity;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_resize(size_t new_size, bool keep_capacity = false) requires(!contains_reference)
+    ErrorOr<void> try_resize(size_t new_size, bool keep_capacity = false) requires(!contains_reference)
     {
         if (new_size <= size()) {
             shrink(new_size, keep_capacity);
-            return true;
+            return {};
         }
 
-        if (!try_ensure_capacity(new_size))
-            return false;
+        TRY(try_ensure_capacity(new_size));
 
         for (size_t i = size(); i < new_size; ++i)
             new (slot(i)) StorageType {};
         m_size = new_size;
-        return true;
+        return {};
     }
 
-    [[nodiscard]] bool try_resize_and_keep_capacity(size_t new_size) requires(!contains_reference)
+    ErrorOr<void> try_resize_and_keep_capacity(size_t new_size) requires(!contains_reference)
     {
         return try_resize(new_size, true);
     }
 
     void grow_capacity(size_t needed_capacity)
     {
-        auto did_allocate = try_grow_capacity(needed_capacity);
-        VERIFY(did_allocate);
+        MUST(try_grow_capacity(needed_capacity));
     }
 
     void ensure_capacity(size_t needed_capacity)
     {
-        auto did_allocate = try_ensure_capacity(needed_capacity);
-        VERIFY(did_allocate);
+        MUST(try_ensure_capacity(needed_capacity));
     }
 
     void shrink(size_t new_size, bool keep_capacity = false)
@@ -684,14 +660,12 @@ public:
 
     void resize(size_t new_size, bool keep_capacity = false) requires(!contains_reference)
     {
-        auto did_allocate = try_resize(new_size, keep_capacity);
-        VERIFY(did_allocate);
+        MUST(try_resize(new_size, keep_capacity));
     }
 
     void resize_and_keep_capacity(size_t new_size) requires(!contains_reference)
     {
-        auto did_allocate = try_resize_and_keep_capacity(new_size);
-        VERIFY(did_allocate);
+        MUST(try_resize_and_keep_capacity(new_size));
     }
 
     using ConstIterator = SimpleIterator<Vector const, T const>;

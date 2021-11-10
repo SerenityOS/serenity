@@ -100,15 +100,13 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     Vector<FlatPtr> argv_entries;
     for (auto& argument : arguments) {
         push_string_on_new_stack(argument.view());
-        if (!argv_entries.try_append(new_sp))
-            return ENOMEM;
+        TRY(argv_entries.try_append(new_sp));
     }
 
     Vector<FlatPtr> env_entries;
     for (auto& variable : environment) {
         push_string_on_new_stack(variable.view());
-        if (!env_entries.try_append(new_sp))
-            return ENOMEM;
+        TRY(env_entries.try_append(new_sp));
     }
 
     for (auto& value : auxiliary_values) {
@@ -810,8 +808,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
         auto shebang_words = shebang_result.release_value();
         auto shebang_path = TRY(shebang_words.first().try_clone());
         arguments.ptr_at(0) = move(path);
-        if (!arguments.try_prepend(move(shebang_words)))
-            return ENOMEM;
+        TRY(arguments.try_prepend(move(shebang_words)));
         return exec(move(shebang_path), move(arguments), move(environment), ++recursion_depth);
     }
 
@@ -881,13 +878,11 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
         if (size.has_overflow())
             return EOVERFLOW;
         Vector<Syscall::StringArgument, 32> strings;
-        if (!strings.try_resize(list.length))
-            return ENOMEM;
+        TRY(strings.try_resize(list.length));
         TRY(copy_from_user(strings.data(), list.strings, size.value()));
         for (size_t i = 0; i < list.length; ++i) {
             auto string = TRY(try_copy_kstring_from_user(strings[i]));
-            if (!output.try_append(move(string)))
-                return ENOMEM;
+            TRY(output.try_append(move(string)));
         }
         return {};
     };

@@ -169,8 +169,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> us
     }
 
     Vector<gid_t> new_extra_gids;
-    if (!new_extra_gids.try_resize(count))
-        return ENOMEM;
+    TRY(new_extra_gids.try_resize(count));
     TRY(copy_n_from_user(new_extra_gids.data(), user_gids, count));
 
     HashTable<gid_t> unique_extra_gids;
@@ -180,8 +179,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> us
     }
 
     ProtectedDataMutationScope scope { *this };
-    if (!m_protected_values.extra_gids.try_resize(unique_extra_gids.size()))
-        return ENOMEM;
+    TRY(m_protected_values.extra_gids.try_resize(unique_extra_gids.size()));
     size_t i = 0;
     for (auto& extra_gid : unique_extra_gids) {
         if (extra_gid == gid())
