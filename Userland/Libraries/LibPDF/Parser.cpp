@@ -273,8 +273,8 @@ bool Parser::initialize_hint_tables()
         if (!buffer_result.has_value())
             return false;
         possible_merged_stream_buffer = buffer_result.release_value();
-        auto ok = possible_merged_stream_buffer.try_append(primary_hint_stream->bytes());
-        ok = ok && possible_merged_stream_buffer.try_append(overflow_hint_stream->bytes());
+        auto ok = !possible_merged_stream_buffer.try_append(primary_hint_stream->bytes()).is_error();
+        ok = ok && !possible_merged_stream_buffer.try_append(overflow_hint_stream->bytes()).is_error();
         if (!ok)
             return false;
         hint_stream_bytes = possible_merged_stream_buffer.bytes();

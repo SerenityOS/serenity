@@ -349,7 +349,7 @@ public:
                 return false;
         }
         auto previous_size = m_size;
-        if (!m_data.try_resize(new_size))
+        if (m_data.try_resize(new_size).is_error())
             return false;
         m_size = new_size;
         // The spec requires that we zero out everything on grow

@@ -67,7 +67,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
         auto value = g_debug_session->peek(reinterpret_cast<u32*>(first_instruction) + i);
         if (!value.has_value())
             break;
-        if (!code.try_append(&value, sizeof(u32)))
+        if (code.try_append(&value, sizeof(u32)).is_error())
             break;
     }
 

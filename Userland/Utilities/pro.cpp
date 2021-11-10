@@ -122,7 +122,8 @@ private:
     {
         if (!m_condition()) {
         write_to_buffer:;
-            if (!m_buffer.try_append(bytes.data(), bytes.size()))
+            // FIXME: Propagate errors.
+            if (m_buffer.try_append(bytes.data(), bytes.size()).is_error())
                 return 0;
             return bytes.size();
         }

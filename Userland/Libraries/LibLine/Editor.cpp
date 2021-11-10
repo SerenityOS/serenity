@@ -370,7 +370,7 @@ void Editor::insert(const u32 cp)
     StringBuilder builder;
     builder.append(Utf32View(&cp, 1));
     auto str = builder.build();
-    if (!m_pending_chars.try_append(str.characters(), str.length()))
+    if (m_pending_chars.try_append(str.characters(), str.length()).is_error())
         return;
 
     readjust_anchored_styles(m_cursor, ModificationKind::Insertion);
