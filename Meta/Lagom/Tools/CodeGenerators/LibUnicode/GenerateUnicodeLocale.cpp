@@ -57,6 +57,7 @@ struct NumberSystem {
     NumberFormat decimal_format {};
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
+    NumberFormat currency_format {};
     Vector<NumberFormat> currency_short_formats {};
     NumberFormat percent_format {};
 };
@@ -586,10 +587,13 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto const& short_format = value.as_object().get("short"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_short_formats = parse_number_format(short_format.as_object());
         } else if (key.starts_with(currency_formats_prefix)) {
-            if (value.as_object().has("short"sv)) {
-                auto system = key.substring(currency_formats_prefix.length());
-                auto& number_system = ensure_number_system(system);
+            auto system = key.substring(currency_formats_prefix.length());
+            auto& number_system = ensure_number_system(system);
 
+            auto format_object = value.as_object().get("standard"sv);
+            number_system.currency_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+
+            if (value.as_object().has("short"sv)) {
                 auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
                 number_system.currency_short_formats = parse_number_format(short_format.as_object());
             }
@@ -923,6 +927,7 @@ struct NumberSystem {
     NumberFormat decimal_format {};
     Span<NumberFormat const> decimal_long_formats {};
     Span<NumberFormat const> decimal_short_formats {};
+    NumberFormat currency_format {};
     Span<NumberFormat const> currency_short_formats {};
     NumberFormat percent_format {};
 };
@@ -1053,7 +1058,9 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
 
             generator.append(" }, ");
             append_number_format(number_system.value.decimal_format);
-            generator.append(" @decimal_long_formats@.span(), @decimal_short_formats@.span(), @currency_short_formats@.span(), ");
+            generator.append(" @decimal_long_formats@.span(), @decimal_short_formats@.span(), ");
+            append_number_format(number_system.value.currency_format);
+            generator.append(" @currency_short_formats@.span(), ");
             append_number_format(number_system.value.percent_format);
             generator.append(" },");
         }
@@ -1429,6 +1436,8 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
         switch (type) {
         case StandardNumberFormatType::Decimal:
             return number_system->decimal_format.to_unicode_number_format();
+        case StandardNumberFormatType::Currency:
+            return number_system->currency_format.to_unicode_number_format();
         case StandardNumberFormatType::Percent:
             return number_system->percent_format.to_unicode_number_format();
         }
