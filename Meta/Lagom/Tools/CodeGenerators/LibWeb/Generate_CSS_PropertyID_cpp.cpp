@@ -169,7 +169,7 @@ bool is_inherited_property(PropertyID property_id)
     }
 }
 
-RefPtr<StyleValue> property_initial_value(PropertyID property_id)
+NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
 {
     static HashMap<PropertyID, NonnullRefPtr<StyleValue>> initial_values;
     if (initial_values.is_empty()) {
@@ -219,10 +219,7 @@ RefPtr<StyleValue> property_initial_value(PropertyID property_id)
     generator.append(R"~~~(
     }
 
-    auto it = initial_values.find(property_id);
-    if (it == initial_values.end())
-        return nullptr;
-    return it->value;
+    return *initial_values.find(property_id)->value;
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)

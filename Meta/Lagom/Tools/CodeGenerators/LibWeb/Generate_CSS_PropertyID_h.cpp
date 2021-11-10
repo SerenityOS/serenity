@@ -45,6 +45,7 @@ int main(int argc, char** argv)
     generator.append(R"~~~(
 #pragma once
 
+#include <AK/NonnullRefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <LibWeb/Forward.h>
@@ -104,7 +105,7 @@ PropertyID property_id_from_camel_case_string(StringView);
 PropertyID property_id_from_string(const StringView&);
 const char* string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
-RefPtr<StyleValue> property_initial_value(PropertyID);
+NonnullRefPtr<StyleValue> property_initial_value(PropertyID);
 
 bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
