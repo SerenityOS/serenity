@@ -47,8 +47,8 @@ enum class OffsetBehavior {
 };
 
 enum class MatchBehavior {
-    MatchExactly,
-    MatchMinutes,
+    Exactly,
+    Minutes,
 };
 
 ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, OffsetBehavior offset_behavior, double offset_nanoseconds, Value time_zone, StringView disambiguation, StringView offset_option, MatchBehavior match_behavior);
