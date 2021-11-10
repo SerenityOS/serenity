@@ -93,14 +93,15 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
     MUST(define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true }));
 
     if (!m_is_arrow_function) {
-        auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
+        Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Regular:
+            prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-            set_prototype(global_object.generator_object_prototype());
+            prototype = global_object.generator_object_prototype();
             break;
         case FunctionKind::Async:
             break;
