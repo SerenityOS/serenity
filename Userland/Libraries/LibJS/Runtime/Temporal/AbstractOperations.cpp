@@ -1091,6 +1091,29 @@ ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&
     return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalDurationString");
 }
 
+// 13.41 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
+ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject& global_object, String const& iso_string)
+{
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalMonthDayString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ? ParseISODateTime(isoString).
+    auto result = TRY(parse_iso_date_time(global_object, iso_string));
+
+    // 4. Let year be result.[[Year]].
+    Optional<i32> year = result.year;
+
+    // 5. If no part of isoString is produced by the DateYear production, then
+    // a. Set year to undefined.
+    // TODO (this is the case when TemporalMonthDayString is a DateSpecMonthDay)
+
+    // 6. Return the Record { [[Year]]: year, [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
+}
+
 // 13.43 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
