@@ -70,6 +70,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withTimeZone, with_time_zone, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.startOfDay, start_of_day, 0, attr);
     define_native_function(vm.names.toInstant, to_instant, 0, attr);
@@ -830,6 +831,35 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::equals)
 
     // 6. Return ? CalendarEquals(zonedDateTime.[[Calendar]], other.[[Calendar]]).
     return Value(TRY(calendar_equals(global_object, zoned_date_time->calendar(), other->calendar())));
+}
+
+// 6.3.41 Temporal.ZonedDateTime.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.tostring
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+
+    // 4. Let precision be ? ToSecondsStringPrecision(options).
+    auto precision = TRY(to_seconds_string_precision(global_object, *options));
+
+    // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"));
+
+    // 6. Let showCalendar be ? ToShowCalendarOption(options).
+    auto show_calendar = TRY(to_show_calendar_option(global_object, *options));
+
+    // 7. Let showTimeZone be ? ToShowTimeZoneNameOption(options).
+    auto show_time_zone = TRY(to_show_time_zone_name_option(global_object, *options));
+
+    // 8. Let showOffset be ? ToShowOffsetOption(options).
+    auto show_offset = TRY(to_show_offset_option(global_object, *options));
+
+    // 9. Return ? TemporalZonedDateTimeToString(zonedDateTime, precision.[[Precision]], showCalendar, showTimeZone, showOffset, precision.[[Increment]], precision.[[Unit]], roundingMode).
+    return js_string(vm, TRY(temporal_zoned_date_time_to_string(global_object, *zoned_date_time, precision.precision, show_calendar, show_time_zone, show_offset, precision.increment, precision.unit, rounding_mode)));
 }
 
 // 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
