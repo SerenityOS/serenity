@@ -81,3 +81,8 @@ enough to linux to use the pre-canned InstrProfiling implementation.
 Curiously, enabling profiling for the SerenityOS target changes the ELF
 OS ABI for userspace binaries to 3, or GNU/Linux.
 
+## `0010-Add-SerenityOS-to-config.guess.patch`
+
+Add SerenityOS to config.guess
+
+
