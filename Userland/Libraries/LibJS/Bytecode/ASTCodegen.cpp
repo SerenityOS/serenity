@@ -1189,8 +1189,15 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.switch_to_basic_block(target_block);
     m_block->generate_bytecode(generator);
-    if (m_finalizer && !generator.is_current_block_terminated())
-        generator.emit<Bytecode::Op::Jump>(finalizer_target);
+    if (!generator.is_current_block_terminated()) {
+        if (m_finalizer) {
+            generator.emit<Bytecode::Op::Jump>(finalizer_target);
+        } else {
+            auto& block = generator.make_block();
+            generator.emit<Bytecode::Op::FinishUnwind>(Bytecode::Label { block });
+            next_block = &block;
+        }
+    }
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
 }

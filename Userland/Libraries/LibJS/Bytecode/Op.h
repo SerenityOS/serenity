@@ -610,6 +610,22 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class FinishUnwind final : public Instruction {
+public:
+    FinishUnwind(Label next)
+        : Instruction(Type::FinishUnwind)
+        , m_next_target(move(next))
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&);
+
+private:
+    Label m_next_target;
+};
+
 class ContinuePendingUnwind final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
