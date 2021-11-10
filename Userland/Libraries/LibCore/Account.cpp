@@ -8,13 +8,11 @@
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
-#ifndef AK_OS_MACOS
-#    include <crypt.h>
-#endif
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #ifndef AK_OS_BSD_GENERIC
+#    include <crypt.h>
 #    include <shadow.h>
 #endif
 #include <stdio.h>
