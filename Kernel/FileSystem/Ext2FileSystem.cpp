@@ -810,7 +810,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
     auto inode_allocation_state = TRY(get_inode_allocation_state(inode.index()));
 
     if (!inode_allocation_state) {
-        m_inode_cache.set(inode.index(), nullptr);
+        TRY(m_inode_cache.try_set(inode.index(), nullptr));
         return ENOENT;
     }
 
@@ -824,7 +824,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
     TRY(read_block(block_index, &buffer, sizeof(ext2_inode), offset));
 
-    m_inode_cache.set(inode.index(), new_inode);
+    TRY(m_inode_cache.try_set(inode.index(), new_inode));
     return new_inode;
 }
 
@@ -1184,7 +1184,7 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, const StringView& name, mode_
     TRY(write_directory(entries));
     TRY(populate_lookup_cache());
 
-    m_lookup_cache.set(name, child.index());
+    TRY(m_lookup_cache.try_set(name, child.index()));
     did_add_child(child.identifier(), name);
     return {};
 }
@@ -1536,7 +1536,7 @@ ErrorOr<void> Ext2FSInode::populate_lookup_cache() const
     HashMap<String, InodeIndex> children;
 
     TRY(traverse_as_directory([&children](auto& entry) -> ErrorOr<void> {
-        children.set(entry.name, entry.inode.index());
+        TRY(children.try_set(entry.name, entry.inode.index()));
         return {};
     }));
 
