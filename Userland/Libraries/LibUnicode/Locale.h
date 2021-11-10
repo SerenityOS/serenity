@@ -104,7 +104,9 @@ struct NumberFormat {
 
     u8 magnitude { 0 };
     Plurality plurality { Plurality::Other };
-    StringView format {};
+    StringView zero_format {};
+    StringView positive_format {};
+    StringView negative_format {};
 };
 
 struct ListPatterns {
