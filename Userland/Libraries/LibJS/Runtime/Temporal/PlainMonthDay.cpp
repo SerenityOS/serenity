@@ -118,10 +118,32 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
         return month_day_from_fields(global_object, *calendar, *fields, options);
     }
 
-    // FIXME: The spec has an issue in this part which makes it unimplementable, namely:
-    //        - ParseTemporalMonthDayString doesn't return a [[Calendar]] field, which is required in step 7.
-    //        This is a known issue, see https://github.com/tc39/proposal-temporal/issues/1502
-    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ToTemporalMonthDay");
+    // 4. Perform ? ToTemporalOverflow(options).
+    TRY(to_temporal_overflow(global_object, *options));
+
+    // 5. Let string be ? ToString(item).
+    auto string = TRY(item.to_string(global_object));
+
+    // 6. Let result be ? ParseTemporalMonthDayString(string).
+    auto result = TRY(parse_temporal_month_day_string(global_object, string));
+
+    // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+    auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, move(*result.calendar)) : js_undefined()));
+
+    // 8. If result.[[Year]] is undefined, then
+    if (!result.year.has_value()) {
+        // a. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
+        return TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
+    }
+
+    // 9. Set result to ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
+    auto* plain_month_day = TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
+
+    // 10. Let canonicalMonthDayOptions be ! OrdinaryObjectCreate(null).
+    auto* canonical_month_day_options = Object::create(global_object, nullptr);
+
+    // 11. Return ? MonthDayFromFields(calendar, result, canonicalMonthDayOptions).
+    return TRY(month_day_from_fields(global_object, *calendar, *plain_month_day, canonical_month_day_options));
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday

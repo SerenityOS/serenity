@@ -78,6 +78,13 @@ struct TemporalYearMonth {
     Optional<String> calendar = {};
 };
 
+struct TemporalMonthDay {
+    Optional<i32> year;
+    u8 month;
+    u8 day;
+    Optional<String> calendar = {};
+};
+
 struct TemporalZonedDateTime {
     ISODateTime date_time;
     TemporalTimeZone time_zone;
@@ -123,6 +130,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String c
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject&, String const& iso_string);
