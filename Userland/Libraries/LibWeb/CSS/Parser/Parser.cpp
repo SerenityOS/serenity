@@ -3438,6 +3438,12 @@ RefPtr<StyleValue> Parser::parse_transform_value(ParsingContext const& context, 
     NonnullRefPtrVector<StyleValue> transformations;
 
     for (auto& part : component_values) {
+        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none")) {
+            if (!transformations.is_empty())
+                return nullptr;
+            return IdentifierStyleValue::create(ValueID::None);
+        }
+
         if (!part.is_function())
             return nullptr;
         auto maybe_function = parse_transform_function_name(part.function().name());
