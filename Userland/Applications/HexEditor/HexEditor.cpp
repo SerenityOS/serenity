@@ -68,6 +68,9 @@ bool HexEditor::open_new_file(size_t size)
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
+    m_selection_start = 0;
+    m_selection_end = 0;
+    scroll_position_into_view(m_position);
     update();
     update_status();
 
@@ -80,6 +83,9 @@ void HexEditor::open_file(NonnullRefPtr<Core::File> file)
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
+    m_selection_start = 0;
+    m_selection_end = 0;
+    scroll_position_into_view(m_position);
     update();
     update_status();
 }
