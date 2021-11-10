@@ -446,6 +446,18 @@ void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBl
         m_finalizer_target = Label { to };
 }
 
+void FinishUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.leave_unwind_context();
+    interpreter.jump(m_next_target);
+}
+
+void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (&m_next_target.block() == &from)
+        m_next_target = Label { to };
+}
+
 void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
@@ -749,6 +761,11 @@ String EnterUnwindContext::to_string_impl(Bytecode::Executable const&) const
     auto handler_string = m_handler_target.has_value() ? String::formatted("{}", *m_handler_target) : "<empty>";
     auto finalizer_string = m_finalizer_target.has_value() ? String::formatted("{}", *m_finalizer_target) : "<empty>";
     return String::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
+}
+
+String FinishUnwind::to_string_impl(const Bytecode::Executable&) const
+{
+    return String::formatted("FinishUnwind next:{}", m_next_target);
 }
 
 String LeaveUnwindContext::to_string_impl(Bytecode::Executable const&) const
