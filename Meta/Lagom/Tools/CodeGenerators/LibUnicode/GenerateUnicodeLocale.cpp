@@ -454,6 +454,15 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
             keyword_values.append(move(keyword_value));
     });
 
+    locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (!key.starts_with("defaultNumberingSystem-alt-"sv))
+            return;
+
+        auto keyword_value = value.as_string();
+        if (!keyword_values.contains_slow(keyword_value))
+            keyword_values.append(move(keyword_value));
+    });
+
     StringBuilder builder;
     builder.join(',', keyword_values);
 
