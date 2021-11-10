@@ -30,7 +30,6 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
     Value result;
     // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
     auto fulfilled_closure = [&async_context, &success, &result](VM& vm, GlobalObject& global_object) -> ThrowCompletionOr<Value> {
-        VERIFY(!vm.argument(0).is_undefined());
         // a. Let prevContext be the running execution context.
         // b. Suspend prevContext.
         // FIXME: We don't have this concept yet.
