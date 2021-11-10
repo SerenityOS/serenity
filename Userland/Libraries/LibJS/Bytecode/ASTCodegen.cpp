@@ -911,7 +911,7 @@ void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_argument)
         m_argument->generate_bytecode(generator);
 
-    if (generator.is_in_generator_function())
+    if (generator.is_in_generator_or_async_function())
         generator.emit<Bytecode::Op::Yield>(nullptr);
     else
         generator.emit<Bytecode::Op::Return>();
@@ -1267,6 +1267,18 @@ void ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 void ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::ResolveThisBinding>();
+}
+
+void AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    VERIFY(generator.is_in_async_function());
+
+    // Transform `await expr` to `yield expr`
+    m_argument->generate_bytecode(generator);
+
+    auto& continuation_block = generator.make_block();
+    generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+    generator.switch_to_basic_block(continuation_block);
 }
 
 }
