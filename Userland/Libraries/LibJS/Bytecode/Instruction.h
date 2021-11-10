@@ -24,6 +24,7 @@
     O(Div)                           \
     O(EnterUnwindContext)            \
     O(Exp)                           \
+    O(FinishUnwind)                  \
     O(GetById)                       \
     O(GetByValue)                    \
     O(GetIterator)                   \
