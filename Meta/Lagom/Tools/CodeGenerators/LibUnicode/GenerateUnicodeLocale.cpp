@@ -58,6 +58,7 @@ struct NumberSystem {
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
     NumberFormat currency_format {};
+    NumberFormat accounting_format {};
     Vector<NumberFormat> currency_short_formats {};
     NumberFormat percent_format {};
 };
@@ -593,6 +594,9 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto format_object = value.as_object().get("standard"sv);
             number_system.currency_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
 
+            format_object = value.as_object().get("accounting"sv);
+            number_system.accounting_format.format_index = ensure_unique_string(locale_data, format_object.as_string());
+
             if (value.as_object().has("short"sv)) {
                 auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
                 number_system.currency_short_formats = parse_number_format(short_format.as_object());
@@ -928,6 +932,7 @@ struct NumberSystem {
     Span<NumberFormat const> decimal_long_formats {};
     Span<NumberFormat const> decimal_short_formats {};
     NumberFormat currency_format {};
+    NumberFormat accounting_format {};
     Span<NumberFormat const> currency_short_formats {};
     NumberFormat percent_format {};
 };
@@ -1060,6 +1065,8 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             append_number_format(number_system.value.decimal_format);
             generator.append(" @decimal_long_formats@.span(), @decimal_short_formats@.span(), ");
             append_number_format(number_system.value.currency_format);
+            generator.append(" ");
+            append_number_format(number_system.value.accounting_format);
             generator.append(" @currency_short_formats@.span(), ");
             append_number_format(number_system.value.percent_format);
             generator.append(" },");
@@ -1438,6 +1445,8 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
             return number_system->decimal_format.to_unicode_number_format();
         case StandardNumberFormatType::Currency:
             return number_system->currency_format.to_unicode_number_format();
+        case StandardNumberFormatType::Accounting:
+            return number_system->accounting_format.to_unicode_number_format();
         case StandardNumberFormatType::Percent:
             return number_system->percent_format.to_unicode_number_format();
         }
