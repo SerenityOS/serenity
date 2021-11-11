@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 #include <LibPDF/Value.h>
 
 #define ENUMERATE_COMMANDS(V)                                                            \
