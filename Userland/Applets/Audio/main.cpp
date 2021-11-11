@@ -215,12 +215,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    TRY(Core::System::unveil("/tmp/portal/config", "rw"));
+    Config::pledge_domains("AudioApplet");
     TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-
-    Config::pledge_domains("AudioApplet");
 
     auto window = TRY(GUI::Window::try_create());
     window->set_has_alpha_channel(true);
