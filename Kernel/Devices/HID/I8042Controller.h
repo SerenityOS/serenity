@@ -135,7 +135,6 @@ public:
 
 private:
     I8042Controller();
-    void do_drain();
     bool do_reset_device(HIDDevice::Type);
     u8 do_send_command(HIDDevice::Type type, u8 data);
     u8 do_send_command(HIDDevice::Type device, u8 command, u8 data);
@@ -143,6 +142,7 @@ private:
     u8 do_read_from_device(HIDDevice::Type device);
     void do_wait_then_write(u8 port, u8 data);
     u8 do_wait_then_read(u8 port);
+    void drain_output_buffer();
 
     Spinlock m_lock;
     bool m_first_port_available { false };
