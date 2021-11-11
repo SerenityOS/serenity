@@ -6,8 +6,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
@@ -90,14 +88,6 @@ struct ICOLoadingContext {
     Vector<ICOImageDescriptor> images;
     size_t largest_index;
 };
-
-RefPtr<Gfx::Bitmap> load_ico(StringView path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_ico_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
-}
 
 RefPtr<Gfx::Bitmap> load_ico_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {
