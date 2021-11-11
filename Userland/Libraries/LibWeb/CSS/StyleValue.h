@@ -408,6 +408,8 @@ public:
     }
     virtual ~BackgroundStyleValue() override { }
 
+    size_t layer_count() const { return m_layer_count; }
+
     NonnullRefPtr<StyleValue> attachment() const { return m_attachment; }
     NonnullRefPtr<StyleValue> clip() const { return m_clip; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
@@ -417,10 +419,7 @@ public:
     NonnullRefPtr<StyleValue> repeat() const { return m_repeat; }
     NonnullRefPtr<StyleValue> size() const { return m_size; }
 
-    virtual String to_string() const override
-    {
-        return String::formatted("{} {} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_size->to_string(), m_repeat->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
-    }
+    virtual String to_string() const override;
 
 private:
     BackgroundStyleValue(
@@ -431,18 +430,8 @@ private:
         NonnullRefPtr<StyleValue> repeat,
         NonnullRefPtr<StyleValue> attachment,
         NonnullRefPtr<StyleValue> origin,
-        NonnullRefPtr<StyleValue> clip)
-        : StyleValue(Type::Background)
-        , m_color(color)
-        , m_image(image)
-        , m_position(position)
-        , m_size(size)
-        , m_repeat(repeat)
-        , m_attachment(attachment)
-        , m_origin(origin)
-        , m_clip(clip)
-    {
-    }
+        NonnullRefPtr<StyleValue> clip);
+
     NonnullRefPtr<StyleValue> m_color;
     NonnullRefPtr<StyleValue> m_image;
     NonnullRefPtr<StyleValue> m_position;
@@ -451,6 +440,8 @@ private:
     NonnullRefPtr<StyleValue> m_attachment;
     NonnullRefPtr<StyleValue> m_origin;
     NonnullRefPtr<StyleValue> m_clip;
+
+    size_t m_layer_count;
 };
 
 class PositionStyleValue final : public StyleValue {
@@ -1321,7 +1312,14 @@ class StyleValueList final : public StyleValue {
 public:
     static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values) { return adopt_ref(*new StyleValueList(move(values))); }
 
+    size_t size() const { return m_values.size(); }
     NonnullRefPtrVector<StyleValue> const& values() const { return m_values; }
+    NonnullRefPtr<StyleValue> value_at(size_t i, bool allow_loop) const
+    {
+        if (allow_loop)
+            return m_values[i % size()];
+        return m_values[i];
+    }
 
     virtual String to_string() const
     {
