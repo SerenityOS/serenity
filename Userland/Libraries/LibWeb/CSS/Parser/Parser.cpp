@@ -2383,7 +2383,16 @@ RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<StyleC
 
 RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule> const& component_values)
 {
+    NonnullRefPtrVector<StyleValue> background_images;
+    NonnullRefPtrVector<StyleValue> background_positions;
+    NonnullRefPtrVector<StyleValue> background_sizes;
+    NonnullRefPtrVector<StyleValue> background_repeats;
+    NonnullRefPtrVector<StyleValue> background_attachments;
+    NonnullRefPtrVector<StyleValue> background_clips;
+    NonnullRefPtrVector<StyleValue> background_origins;
     RefPtr<StyleValue> background_color;
+
+    // Per-layer values
     RefPtr<StyleValue> background_image;
     RefPtr<StyleValue> background_position;
     RefPtr<StyleValue> background_size;
@@ -2392,14 +2401,54 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
     RefPtr<StyleValue> background_clip;
     RefPtr<StyleValue> background_origin;
 
+    bool has_multiple_layers = false;
+
+    auto background_layer_is_valid = [&](bool allow_background_color) -> bool {
+        if (allow_background_color) {
+            if (background_color)
+                return true;
+        } else {
+            if (background_color)
+                return false;
+        }
+        return background_image || background_position || background_size || background_repeat || background_attachment || background_clip || background_origin;
+    };
+
+    auto complete_background_layer = [&]() {
+        background_images.append(background_image ? background_image.release_nonnull() : property_initial_value(PropertyID::BackgroundImage));
+        background_positions.append(background_position ? background_position.release_nonnull() : property_initial_value(PropertyID::BackgroundPosition));
+        background_sizes.append(background_size ? background_size.release_nonnull() : property_initial_value(PropertyID::BackgroundSize));
+        background_repeats.append(background_repeat ? background_repeat.release_nonnull() : property_initial_value(PropertyID::BackgroundRepeat));
+        background_attachments.append(background_attachment ? background_attachment.release_nonnull() : property_initial_value(PropertyID::BackgroundAttachment));
+
+        if (!background_origin && !background_clip) {
+            background_origin = property_initial_value(PropertyID::BackgroundOrigin);
+            background_clip = property_initial_value(PropertyID::BackgroundClip);
+        } else if (!background_clip) {
+            background_clip = background_origin;
+        }
+        background_origins.append(background_origin.release_nonnull());
+        background_clips.append(background_clip.release_nonnull());
+
+        background_image = nullptr;
+        background_position = nullptr;
+        background_size = nullptr;
+        background_repeat = nullptr;
+        background_attachment = nullptr;
+        background_clip = nullptr;
+        background_origin = nullptr;
+    };
+
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto& part = tokens.next_token();
 
-        // FIXME: Handle multiple backgrounds, by returning a List of BackgroundStyleValues.
         if (part.is(Token::Type::Comma)) {
-            dbgln("CSS Parser does not yet support multiple comma-separated values for background.");
-            break;
+            has_multiple_layers = true;
+            if (!background_layer_is_valid(false))
+                return nullptr;
+            complete_background_layer();
+            continue;
         }
 
         auto value = parse_css_value(part);
@@ -2476,6 +2525,27 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
         }
 
         return nullptr;
+    }
+
+    if (!background_layer_is_valid(true))
+        return nullptr;
+
+    // We only need to create StyleValueLists if there are multiple layers.
+    // Otherwise, we can pass the single StyleValues directly.
+    if (has_multiple_layers) {
+        complete_background_layer();
+
+        if (!background_color)
+            background_color = property_initial_value(PropertyID::BackgroundColor);
+        return BackgroundStyleValue::create(
+            background_color.release_nonnull(),
+            StyleValueList::create(move(background_images)),
+            StyleValueList::create(move(background_positions)),
+            StyleValueList::create(move(background_sizes)),
+            StyleValueList::create(move(background_repeats)),
+            StyleValueList::create(move(background_attachments)),
+            StyleValueList::create(move(background_origins)),
+            StyleValueList::create(move(background_clips)));
     }
 
     if (!background_color)
