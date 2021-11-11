@@ -233,7 +233,6 @@ struct DDSHeaderDXT10 {
     u32 misc_flag2 {};
 };
 
-RefPtr<Gfx::Bitmap> load_dds(String const& path);
 RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct DDSLoadingContext;

@@ -6,8 +6,6 @@
 
 #include <AK/Array.h>
 #include <AK/Debug.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/Math.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
@@ -81,14 +79,6 @@ struct GIFLoadingContext {
     size_t current_frame { 0 };
     RefPtr<Gfx::Bitmap> prev_frame_buffer;
 };
-
-RefPtr<Gfx::Bitmap> load_gif(String const& path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_gif_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
-}
 
 RefPtr<Gfx::Bitmap> load_gif_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {

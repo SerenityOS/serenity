@@ -8,9 +8,6 @@
 #include "PortableImageLoaderCommon.h"
 #include "Streamer.h"
 #include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
-#include <AK/StringBuilder.h>
 #include <string.h>
 
 namespace Gfx {
@@ -95,11 +92,6 @@ static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
 
     context.state = PBMLoadingContext::State::Bitmap;
     return true;
-}
-
-RefPtr<Gfx::Bitmap> load_pbm(StringView path)
-{
-    return load<PBMLoadingContext>(path);
 }
 
 RefPtr<Gfx::Bitmap> load_pbm_from_memory(u8 const* data, size_t length, String const& mmap_name)

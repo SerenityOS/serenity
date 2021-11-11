@@ -6,8 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
+#include <AK/Vector.h>
 #include <LibGfx/BMPLoader.h>
 
 namespace Gfx {
@@ -165,14 +164,6 @@ struct BMPLoadingContext {
 };
 
 static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
-
-RefPtr<Gfx::Bitmap> load_bmp(String const& path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_bmp_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
-}
 
 RefPtr<Gfx::Bitmap> load_bmp_from_memory(u8 const* data, size_t length, String const& mmap_name)
 {

@@ -10,8 +10,6 @@
 #include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -270,15 +268,6 @@ static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, Strin
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::image_type, mmap_name));
     return bitmap;
-}
-
-template<typename TContext>
-static RefPtr<Gfx::Bitmap> load(StringView path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_from_memory<TContext>((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
 }
 
 }

@@ -12,7 +12,6 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_ppm(StringView path);
 RefPtr<Gfx::Bitmap> load_ppm_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct PPMLoadingContext;

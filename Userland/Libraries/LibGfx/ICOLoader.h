@@ -12,7 +12,6 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_ico(StringView path);
 RefPtr<Gfx::Bitmap> load_ico_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct ICOLoadingContext;
