@@ -13,16 +13,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Try.h>
-#include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/DDSLoader.h>
-#include <LibGfx/GIFLoader.h>
-#include <LibGfx/ICOLoader.h>
-#include <LibGfx/JPGLoader.h>
-#include <LibGfx/PBMLoader.h>
-#include <LibGfx/PGMLoader.h>
-#include <LibGfx/PNGLoader.h>
-#include <LibGfx/PPMLoader.h>
+#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -128,35 +120,23 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String
         highdpi_icon_path.appendff("-{}x.", scale_factor);
         highdpi_icon_path.append(lexical_path.extension());
 
-        RefPtr<Bitmap> bmp;
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                                        \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                                                   \
-        auto file = MappedFile::map_from_fd_and_close(fd, highdpi_icon_path.to_string());                                          \
-        if (!file.is_error())                                                                                                      \
-            bmp = load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), highdpi_icon_path.to_string()); \
-    }
-        ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
-        if (bmp) {
-            VERIFY(bmp->width() % scale_factor == 0);
-            VERIFY(bmp->height() % scale_factor == 0);
-            bmp->m_size.set_width(bmp->width() / scale_factor);
-            bmp->m_size.set_height(bmp->height() / scale_factor);
-            bmp->m_scale = scale_factor;
-            return bmp.release_nonnull();
+        auto file = TRY(MappedFile::map_from_fd_and_close(fd, highdpi_icon_path.to_string()));
+        if (auto decoder = ImageDecoder::try_create(file->bytes())) {
+            auto bitmap = decoder->frame(0).image;
+            VERIFY(bitmap->width() % scale_factor == 0);
+            VERIFY(bitmap->height() % scale_factor == 0);
+            bitmap->m_size.set_width(bitmap->width() / scale_factor);
+            bitmap->m_size.set_height(bitmap->height() / scale_factor);
+            bitmap->m_scale = scale_factor;
+            return bitmap.release_nonnull();
         }
     }
 
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                                                                           \
-    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) {                                                      \
-        auto file = MappedFile::map_from_fd_and_close(fd, path);                                                      \
-        if (!file.is_error()) {                                                                                       \
-            if (auto bitmap = load_##Name##_from_memory((u8 const*)file.value()->data(), file.value()->size(), path)) \
-                return bitmap.release_nonnull();                                                                      \
-        }                                                                                                             \
+    auto file = TRY(MappedFile::map_from_fd_and_close(fd, path));
+    if (auto decoder = ImageDecoder::try_create(file->bytes())) {
+        if (auto bitmap = decoder->frame(0).image)
+            return bitmap.release_nonnull();
     }
-    ENUMERATE_IMAGE_FORMATS
-#undef __ENUMERATE_IMAGE_FORMAT
 
     return Error::from_string_literal("Gfx::Bitmap unable to load from fd"sv);
 }
