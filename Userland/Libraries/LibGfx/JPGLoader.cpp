@@ -8,7 +8,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
@@ -1233,14 +1232,6 @@ static RefPtr<Gfx::Bitmap> load_jpg_impl(const u8* data, size_t data_size)
         return nullptr;
 
     return context.bitmap;
-}
-
-RefPtr<Gfx::Bitmap> load_jpg(String const& path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_jpg_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), path);
 }
 
 RefPtr<Gfx::Bitmap> load_jpg_from_memory(u8 const* data, size_t length, String const& mmap_name)

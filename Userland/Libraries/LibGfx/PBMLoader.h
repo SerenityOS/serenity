@@ -7,12 +7,10 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_pbm(StringView path);
 RefPtr<Gfx::Bitmap> load_pbm_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct PBMLoadingContext;

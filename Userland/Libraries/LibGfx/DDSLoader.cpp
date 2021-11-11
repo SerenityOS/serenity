@@ -6,8 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
@@ -948,14 +946,6 @@ static RefPtr<Gfx::Bitmap> load_dds_impl(const u8* data, size_t length)
         return nullptr;
 
     return context.bitmap;
-}
-
-RefPtr<Gfx::Bitmap> load_dds(String const& path)
-{
-    auto file_or_error = MappedFile::map(path);
-    if (file_or_error.is_error())
-        return nullptr;
-    return load_dds_from_memory((u8 const*)file_or_error.value()->data(), file_or_error.value()->size(), LexicalPath::canonicalized_path(path));
 }
 
 RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const* data, size_t length, String const& mmap_name)

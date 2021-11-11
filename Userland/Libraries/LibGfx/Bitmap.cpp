@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <AK/LexicalPath.h>
+#include <AK/MappedFile.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
