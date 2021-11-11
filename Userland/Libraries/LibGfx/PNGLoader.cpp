@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
 #include <fcntl.h>
