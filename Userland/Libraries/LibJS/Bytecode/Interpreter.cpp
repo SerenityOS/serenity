@@ -146,6 +146,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         m_manually_entered_frames.take_last();
     }
 
+    Value exception_value;
+    if (vm().exception()) {
+        exception_value = vm().exception()->value();
+        vm().clear_exception();
+    }
+
     auto return_value = m_return_value.value_or(js_undefined());
     m_return_value = {};
 
@@ -161,6 +167,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         vm().pop_execution_context();
 
     vm().finish_execution_generation();
+
+    if (!exception_value.is_empty())
+        return { throw_completion(exception_value), move(frame) };
 
     return { return_value, move(frame) };
 }
