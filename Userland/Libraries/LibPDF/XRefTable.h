@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace PDF {
 

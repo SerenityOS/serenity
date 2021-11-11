@@ -11,6 +11,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace PDF {
 
