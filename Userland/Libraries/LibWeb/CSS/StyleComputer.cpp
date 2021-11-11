@@ -293,7 +293,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
-        auto set_single_background = [&](CSS::BackgroundStyleValue const& background) {
+        if (value.is_background()) {
+            auto& background = value.as_background();
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document);
@@ -302,21 +303,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document);
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document);
-        };
-
-        if (value.is_background()) {
-            auto& background = value.as_background();
-            set_single_background(background);
-            return;
-        }
-        if (value.is_value_list()) {
-            auto& background_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_list.is_empty()) {
-                auto& background = background_list.first();
-                if (background.is_background())
-                    set_single_background(background.as_background());
-            }
             return;
         }
 
@@ -328,110 +314,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundAttachment) {
-        if (value.is_value_list()) {
-            auto& background_attachment_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_attachment_list.is_empty()) {
-                auto& background_attachment = background_attachment_list.first();
-                style.set_property(CSS::PropertyID::BackgroundAttachment, background_attachment);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundAttachment, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundClip) {
-        if (value.is_value_list()) {
-            auto& background_clip_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_clip_list.is_empty()) {
-                auto& background_clip = background_clip_list.first();
-                style.set_property(CSS::PropertyID::BackgroundClip, background_clip);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundClip, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundImage) {
-        if (value.is_value_list()) {
-            auto& background_image_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_image_list.is_empty()) {
-                auto& background_image = background_image_list.first();
-                style.set_property(CSS::PropertyID::BackgroundImage, background_image);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundImage, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundOrigin) {
-        if (value.is_value_list()) {
-            auto& background_origin_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_origin_list.is_empty()) {
-                auto& background_origin = background_origin_list.first();
-                style.set_property(CSS::PropertyID::BackgroundOrigin, background_origin);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundOrigin, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundPosition) {
-        if (value.is_value_list()) {
-            auto& background_position_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_position_list.is_empty()) {
-                auto& background_position = background_position_list.first();
-                style.set_property(CSS::PropertyID::BackgroundPosition, background_position);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundPosition, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundRepeat) {
-        if (value.is_value_list()) {
-            auto& background_repeat_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_repeat_list.is_empty()) {
-                auto& background_repeat = background_repeat_list.first();
-                style.set_property(CSS::PropertyID::BackgroundRepeat, background_repeat);
-            }
-            return;
-        }
-        style.set_property(CSS::PropertyID::BackgroundRepeat, value);
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::BackgroundSize) {
-        if (value.is_value_list()) {
-            auto& background_size_list = value.as_value_list().values();
-            // FIXME: Handle multiple backgrounds.
-            if (!background_size_list.is_empty()) {
-                auto& background_size = background_size_list.first();
-                style.set_property(CSS::PropertyID::BackgroundSize, background_size);
-            }
-            return;
-        }
-
-        style.set_property(CSS::PropertyID::BackgroundSize, value);
         return;
     }
 
