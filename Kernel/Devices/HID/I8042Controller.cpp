@@ -36,12 +36,11 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
     u8 configuration;
     {
         SpinlockLocker lock(m_lock);
-        // Disable devices
+
+        drain_output_buffer();
+
         do_wait_then_write(I8042Port::Command, I8042Command::DisableFirstPS2Port);
         do_wait_then_write(I8042Port::Command, I8042Command::DisableSecondPS2Port); // ignored if it doesn't exist
-
-        // Drain buffers
-        do_drain();
 
         do_wait_then_write(I8042Port::Command, I8042Command::ReadConfiguration);
         configuration = do_wait_then_read(I8042Port::Buffer);
@@ -74,6 +73,8 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
         } else {
             dbgln("I8042: Keyboard port not available");
         }
+
+        drain_output_buffer();
 
         if (m_is_dual_channel) {
             do_wait_then_write(I8042Port::Command, I8042Command::TestSecondPS2Port);
@@ -152,7 +153,7 @@ bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
     return false;
 }
 
-void I8042Controller::do_drain()
+void I8042Controller::drain_output_buffer()
 {
     for (;;) {
         u8 status = IO::in8(I8042Port::Status);
