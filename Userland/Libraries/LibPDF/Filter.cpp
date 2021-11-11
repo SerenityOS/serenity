@@ -11,7 +11,7 @@
 
 namespace PDF {
 
-Optional<ByteBuffer> Filter::decode(ReadonlyBytes const& bytes, FlyString const& encoding_type)
+Optional<ByteBuffer> Filter::decode(ReadonlyBytes bytes, FlyString const& encoding_type)
 {
     if (encoding_type == CommonNames::ASCIIHexDecode)
         return decode_ascii_hex(bytes);
@@ -37,7 +37,7 @@ Optional<ByteBuffer> Filter::decode(ReadonlyBytes const& bytes, FlyString const&
     return {};
 }
 
-Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes const& bytes)
+Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 {
     if (bytes.size() % 2 == 0)
         return decode_hex(bytes);
@@ -68,7 +68,7 @@ Optional<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes const& bytes)
     return { move(output) };
 };
 
-Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes const& bytes)
+Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 {
     Vector<u8> buff;
     buff.ensure_capacity(bytes.size());
@@ -123,13 +123,13 @@ Optional<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes const& bytes)
     return ByteBuffer::copy(buff.span());
 };
 
-Optional<ByteBuffer> Filter::decode_lzw(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
 {
     dbgln("LZW decoding is not supported");
     VERIFY_NOT_REACHED();
 };
 
-Optional<ByteBuffer> Filter::decode_flate(ReadonlyBytes const& bytes)
+Optional<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes)
 {
     // FIXME: The spec says Flate decoding is "based on" zlib, does that mean they
     // aren't exactly the same?
@@ -139,37 +139,37 @@ Optional<ByteBuffer> Filter::decode_flate(ReadonlyBytes const& bytes)
     return buff.value();
 };
 
-Optional<ByteBuffer> Filter::decode_run_length(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_run_length(ReadonlyBytes)
 {
     // FIXME: Support RunLength decoding
     TODO();
 };
 
-Optional<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
 {
     // FIXME: Support CCITT decoding
     TODO();
 };
 
-Optional<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 {
     // FIXME: Support JBIG2 decoding
     TODO();
 };
 
-Optional<ByteBuffer> Filter::decode_dct(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_dct(ReadonlyBytes)
 {
     // FIXME: Support dct decoding
     TODO();
 };
 
-Optional<ByteBuffer> Filter::decode_jpx(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
 {
     // FIXME: Support JPX decoding
     TODO();
 };
 
-Optional<ByteBuffer> Filter::decode_crypt(ReadonlyBytes const&)
+Optional<ByteBuffer> Filter::decode_crypt(ReadonlyBytes)
 {
     // FIXME: Support Crypt decoding
     TODO();

@@ -8,7 +8,7 @@
 
 namespace Archive {
 
-bool Zip::find_end_of_central_directory_offset(const ReadonlyBytes& buffer, size_t& offset)
+bool Zip::find_end_of_central_directory_offset(ReadonlyBytes buffer, size_t& offset)
 {
     for (size_t backwards_offset = 0; backwards_offset <= UINT16_MAX; backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
     {
@@ -24,7 +24,7 @@ bool Zip::find_end_of_central_directory_offset(const ReadonlyBytes& buffer, size
     return false;
 }
 
-Optional<Zip> Zip::try_create(const ReadonlyBytes& buffer)
+Optional<Zip> Zip::try_create(ReadonlyBytes buffer)
 {
     size_t end_of_central_directory_offset;
     if (!find_end_of_central_directory_offset(buffer, end_of_central_directory_offset))

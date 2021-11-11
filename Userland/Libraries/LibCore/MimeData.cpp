@@ -137,7 +137,7 @@ String guess_mime_type_based_on_filename(StringView path)
 ENUMERATE_HEADER_CONTENTS
 #undef __ENUMERATE_MIME_TYPE_HEADER
 
-Optional<String> guess_mime_type_based_on_sniffed_bytes(const ReadonlyBytes& bytes)
+Optional<String> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes bytes)
 {
 #define __ENUMERATE_MIME_TYPE_HEADER(var_name, mime_type, pattern_offset, pattern_size, ...)                       \
     if (static_cast<ssize_t>(bytes.size()) >= pattern_offset && bytes.slice(pattern_offset).starts_with(var_name)) \

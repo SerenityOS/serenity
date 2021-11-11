@@ -111,7 +111,7 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     return bitmap;
 }
 
-void Clipboard::set_data(ReadonlyBytes const& data, String const& type, HashMap<String, String> const& metadata)
+void Clipboard::set_data(ReadonlyBytes data, String const& type, HashMap<String, String> const& metadata)
 {
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
     if (buffer_or_error.is_error()) {

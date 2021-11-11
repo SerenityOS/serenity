@@ -23,18 +23,18 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-Vector<Command> Parser::parse_graphics_commands(ReadonlyBytes const& bytes)
+Vector<Command> Parser::parse_graphics_commands(ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new Parser(bytes));
     return parser->parse_graphics_commands();
 }
 
-Parser::Parser(Badge<Document>, ReadonlyBytes const& bytes)
+Parser::Parser(Badge<Document>, ReadonlyBytes bytes)
     : m_reader(bytes)
 {
 }
 
-Parser::Parser(ReadonlyBytes const& bytes)
+Parser::Parser(ReadonlyBytes bytes)
     : m_reader(bytes)
 {
 }
@@ -408,7 +408,7 @@ RefPtr<DictObject> Parser::parse_file_trailer()
     return dict;
 }
 
-Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(ReadonlyBytes const& hint_stream_bytes)
+Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes)
 {
     if (hint_stream_bytes.size() < sizeof(PageOffsetHintTable))
         return {};
@@ -456,7 +456,7 @@ Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(Reado
     return hint_table;
 }
 
-Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes const& hint_stream_bytes)
+Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes hint_stream_bytes)
 {
     InputMemoryStream input_stream(hint_stream_bytes);
     input_stream.seek(sizeof(PageOffsetHintTable));

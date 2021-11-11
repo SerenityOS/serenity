@@ -59,7 +59,7 @@ Reader::Reader(ReadonlyBytes coredump_bytes)
     VERIFY(m_notes_segment_index != -1);
 }
 
-Optional<ByteBuffer> Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
+Optional<ByteBuffer> Reader::decompress_coredump(ReadonlyBytes raw_coredump)
 {
     auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
     if (!decompressed_coredump.has_value())

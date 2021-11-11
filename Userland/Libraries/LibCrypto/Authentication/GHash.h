@@ -34,7 +34,7 @@ public:
     {
     }
 
-    explicit GHash(const ReadonlyBytes& key)
+    explicit GHash(ReadonlyBytes key)
     {
         VERIFY(key.size() >= 16);
         for (size_t i = 0; i < 16; i += 4) {

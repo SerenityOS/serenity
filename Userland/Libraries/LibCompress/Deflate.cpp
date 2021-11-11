@@ -1052,7 +1052,7 @@ void DeflateCompressor::final_flush()
     flush();
 }
 
-Optional<ByteBuffer> DeflateCompressor::compress_all(const ReadonlyBytes& bytes, CompressionLevel compression_level)
+Optional<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, CompressionLevel compression_level)
 {
     DuplexMemoryStream output_stream;
     DeflateCompressor deflate_stream { output_stream, compression_level };
