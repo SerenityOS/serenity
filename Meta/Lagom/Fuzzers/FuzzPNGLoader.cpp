@@ -10,6 +10,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    Gfx::load_png_from_memory(data, size);
+    Gfx::PNGImageDecoderPlugin decoder(data, size);
+    (void)decoder.bitmap();
     return 0;
 }
