@@ -772,7 +772,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             return throw_completion(exception->value());
 
         VERIFY(result_and_frame.frame != nullptr);
-        auto result = result_and_frame.value;
+        auto result = TRY(result_and_frame.value);
 
         // NOTE: Running the bytecode should eventually return a completion.
         // Until it does, we assume "return" and include the undefined fallback from the call site.

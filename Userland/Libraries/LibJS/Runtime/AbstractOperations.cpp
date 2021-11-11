@@ -542,7 +542,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
         executable.name = "eval"sv;
         if (JS::Bytecode::g_dump_bytecode)
             executable.dump();
-        eval_result = bytecode_interpreter->run(executable);
+        eval_result = TRY(bytecode_interpreter->run(executable));
     } else {
         auto& ast_interpreter = vm.interpreter();
         // FIXME: We need to use evaluate_statements() here because Program::execute() calls global_declaration_instantiation() when it shouldn't

@@ -32,14 +32,14 @@ public:
     Realm& realm() { return m_realm; }
     VM& vm() { return m_vm; }
 
-    Value run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
         auto value_and_frame = run_and_return_frame(executable, entry_point);
         return value_and_frame.value;
     }
 
     struct ValueAndFrame {
-        Value value;
+        ThrowCompletionOr<Value> value;
         OwnPtr<RegisterWindow> frame;
     };
     ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point);

@@ -102,16 +102,15 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
         bytecode_interpreter->accumulator() = next_argument.value_or(js_undefined());
     }
 
-    // Temporarily switch to the captured execution context
-    vm.push_execution_context(m_execution_context, global_object);
-
-    m_previous_value = bytecode_interpreter->run(*m_generating_function->bytecode_executable(), next_block);
+    auto next_result = bytecode_interpreter->run(*m_generating_function->bytecode_executable(), next_block);
 
     m_frame = move(*bytecode_interpreter->pop_frame());
 
     vm.pop_execution_context();
 
     m_done = TRY(generated_continuation(m_previous_value)) == nullptr;
+
+    m_previous_value = TRY(next_result);
 
     result->define_direct_property("value", TRY(generated_value(m_previous_value)), JS::default_attributes);
     result->define_direct_property("done", Value(m_done), JS::default_attributes);
