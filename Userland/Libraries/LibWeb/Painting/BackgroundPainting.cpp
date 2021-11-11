@@ -27,7 +27,7 @@ void paint_background(PaintContext& context, Gfx::IntRect const& background_rect
             // The background rect is already sized to align with 'repeat'.
             break;
         case CSS::Repeat::NoRepeat:
-            image_rect.set_width(background_data.image->width());
+            image_rect.set_width(min(image_rect.width(), background_data.image->width()));
             break;
         }
 
@@ -39,7 +39,7 @@ void paint_background(PaintContext& context, Gfx::IntRect const& background_rect
             // The background rect is already sized to align with 'repeat'.
             break;
         case CSS::Repeat::NoRepeat:
-            image_rect.set_height(background_data.image->height());
+            image_rect.set_height(min(image_rect.height(), background_data.image->height()));
             break;
         }
 
