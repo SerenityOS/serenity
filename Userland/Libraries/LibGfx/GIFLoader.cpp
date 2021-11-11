@@ -80,15 +80,6 @@ struct GIFLoadingContext {
     RefPtr<Gfx::Bitmap> prev_frame_buffer;
 };
 
-RefPtr<Gfx::Bitmap> load_gif_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    GIFImageDecoderPlugin gif_decoder(data, length);
-    auto bitmap = gif_decoder.bitmap();
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded GIF: {}", bitmap->size(), mmap_name));
-    return bitmap;
-}
-
 enum class GIFFormat {
     GIF87a,
     GIF89a,
