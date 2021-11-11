@@ -119,7 +119,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    TRY(to_temporal_overflow(global_object, *options));
+    (void)TRY(to_temporal_overflow(global_object, *options));
 
     // 5. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));
