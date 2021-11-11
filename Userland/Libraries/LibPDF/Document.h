@@ -72,7 +72,7 @@ struct OutlineDict final : public RefCounted<OutlineDict> {
 
 class Document final : public RefCounted<Document> {
 public:
-    static RefPtr<Document> create(ReadonlyBytes const& bytes);
+    static RefPtr<Document> create(ReadonlyBytes bytes);
 
     ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
 

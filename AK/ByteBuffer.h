@@ -182,14 +182,14 @@ public:
         return try_ensure_capacity_slowpath(new_capacity);
     }
 
-    void append(ReadonlyBytes const& bytes)
+    void append(ReadonlyBytes bytes)
     {
         MUST(try_append(bytes));
     }
 
     void append(void const* data, size_t data_size) { append({ data, data_size }); }
 
-    ErrorOr<void> try_append(ReadonlyBytes const& bytes)
+    ErrorOr<void> try_append(ReadonlyBytes bytes)
     {
         return try_append(bytes.data(), bytes.size());
     }

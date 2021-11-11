@@ -151,7 +151,7 @@ public:
     bool write_or_error(ReadonlyBytes) override;
     void final_flush();
 
-    static Optional<ByteBuffer> compress_all(const ReadonlyBytes& bytes, CompressionLevel = CompressionLevel::GOOD);
+    static Optional<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }

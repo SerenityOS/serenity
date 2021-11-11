@@ -54,7 +54,7 @@ const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
     return nullptr;
 }
 
-UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& buffer)
+UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
