@@ -108,6 +108,8 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
+    Config::pledge_domains("SystemMonitor");
+
     if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");
         return 1;
@@ -159,14 +161,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/config", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     unveil(nullptr, nullptr);
-
-    Config::pledge_domains("SystemMonitor");
 
     const char* args_tab = "processes";
     Core::ArgsParser parser;
