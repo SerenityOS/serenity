@@ -26,7 +26,7 @@ public:
 
     virtual void update(const u8*, size_t) = 0;
 
-    void update(const Bytes& buffer) { update(buffer.data(), buffer.size()); };
+    void update(Bytes buffer) { update(buffer.data(), buffer.size()); };
     void update(ReadonlyBytes buffer) { update(buffer.data(), buffer.size()); };
     void update(const ByteBuffer& buffer) { update(buffer.data(), buffer.size()); };
     void update(StringView string) { update((const u8*)string.characters_without_null_termination(), string.length()); };
