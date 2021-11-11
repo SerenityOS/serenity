@@ -34,7 +34,7 @@ String OutlineItem::to_string(int indent) const
     return builder.to_string();
 }
 
-RefPtr<Document> Document::create(ReadonlyBytes const& bytes)
+RefPtr<Document> Document::create(ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new Parser({}, bytes));
     auto document = adopt_ref(*new Document(parser));

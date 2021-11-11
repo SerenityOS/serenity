@@ -55,7 +55,7 @@ private:
     explicit Reader(ByteBuffer);
     explicit Reader(NonnullRefPtr<MappedFile>);
 
-    static Optional<ByteBuffer> decompress_coredump(const ReadonlyBytes&);
+    static Optional<ByteBuffer> decompress_coredump(ReadonlyBytes);
 
     class NotesEntryIterator {
     public:

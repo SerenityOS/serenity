@@ -41,7 +41,7 @@ Optional<Zlib> Zlib::try_create(ReadonlyBytes data)
     return zlib;
 }
 
-Zlib::Zlib(const ReadonlyBytes& data)
+Zlib::Zlib(ReadonlyBytes data)
     : m_input_data(data)
 {
 }

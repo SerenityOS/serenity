@@ -53,7 +53,7 @@ private:
 class TarOutputStream {
 public:
     TarOutputStream(OutputStream&);
-    void add_file(const String& path, mode_t, const ReadonlyBytes&);
+    void add_file(const String& path, mode_t, ReadonlyBytes);
     void add_directory(const String& path, mode_t);
     void finish();
 

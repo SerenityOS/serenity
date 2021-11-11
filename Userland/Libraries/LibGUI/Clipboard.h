@@ -42,7 +42,7 @@ public:
     String mime_type() const { return data_and_type().mime_type; }
     RefPtr<Gfx::Bitmap> bitmap() const;
 
-    void set_data(ReadonlyBytes const& data, String const& mime_type = "text/plain", HashMap<String, String> const& metadata = {});
+    void set_data(ReadonlyBytes data, String const& mime_type = "text/plain", HashMap<String, String> const& metadata = {});
     void set_plain_text(String const& text) { set_data(text.bytes()); }
     void set_bitmap(Gfx::Bitmap const&);
     void clear();

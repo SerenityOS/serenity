@@ -157,7 +157,7 @@ private:
 
 class PlainTextStreamObject final : public StreamObject {
 public:
-    PlainTextStreamObject(NonnullRefPtr<DictObject> const& dict, ReadonlyBytes const& bytes)
+    PlainTextStreamObject(NonnullRefPtr<DictObject> const& dict, ReadonlyBytes bytes)
         : StreamObject(dict)
         , m_bytes(bytes)
     {

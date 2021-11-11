@@ -18,7 +18,7 @@ enum class IndexToLocFormat {
 
 class Head {
 public:
-    static Optional<Head> from_slice(ReadonlyBytes const&);
+    static Optional<Head> from_slice(ReadonlyBytes);
     u16 units_per_em() const;
     i16 xmin() const;
     i16 ymin() const;
@@ -43,7 +43,7 @@ private:
         Table = 54,
     };
 
-    Head(ReadonlyBytes const& slice)
+    Head(ReadonlyBytes slice)
         : m_slice(slice)
     {
     }
@@ -53,7 +53,7 @@ private:
 
 class Hhea {
 public:
-    static Optional<Hhea> from_slice(ReadonlyBytes const&);
+    static Optional<Hhea> from_slice(ReadonlyBytes);
     i16 ascender() const;
     i16 descender() const;
     i16 line_gap() const;
@@ -72,7 +72,7 @@ private:
         Table = 36,
     };
 
-    Hhea(ReadonlyBytes const& slice)
+    Hhea(ReadonlyBytes slice)
         : m_slice(slice)
     {
     }
@@ -82,7 +82,7 @@ private:
 
 class Maxp {
 public:
-    static Optional<Maxp> from_slice(ReadonlyBytes const&);
+    static Optional<Maxp> from_slice(ReadonlyBytes);
     u16 num_glyphs() const;
 
 private:
@@ -93,7 +93,7 @@ private:
         TableV0p5 = 6,
     };
 
-    Maxp(ReadonlyBytes const& slice)
+    Maxp(ReadonlyBytes slice)
         : m_slice(slice)
     {
     }
@@ -108,7 +108,7 @@ struct GlyphHorizontalMetrics {
 
 class Hmtx {
 public:
-    static Optional<Hmtx> from_slice(ReadonlyBytes const&, u32 num_glyphs, u32 number_of_h_metrics);
+    static Optional<Hmtx> from_slice(ReadonlyBytes, u32 num_glyphs, u32 number_of_h_metrics);
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
@@ -117,7 +117,7 @@ private:
         LeftSideBearing = 2
     };
 
-    Hmtx(ReadonlyBytes const& slice, u32 num_glyphs, u32 number_of_h_metrics)
+    Hmtx(ReadonlyBytes slice, u32 num_glyphs, u32 number_of_h_metrics)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_number_of_h_metrics(number_of_h_metrics)
@@ -143,7 +143,7 @@ public:
     i16 typographic_descender() const;
     i16 typographic_line_gap() const;
 
-    explicit OS2(ReadonlyBytes const& slice)
+    explicit OS2(ReadonlyBytes slice)
         : m_slice(slice)
     {
     }
@@ -165,7 +165,7 @@ public:
     enum class WindowsLanguage {
         EnglishUnitedStates = 0x0409,
     };
-    static Optional<Name> from_slice(ReadonlyBytes const&);
+    static Optional<Name> from_slice(ReadonlyBytes);
 
     String family_name() const { return string_for_id(NameId::FamilyName); }
     String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
@@ -189,7 +189,7 @@ private:
         TypographicSubfamilyName = 17,
     };
 
-    Name(ReadonlyBytes const& slice)
+    Name(ReadonlyBytes slice)
         : m_slice(slice)
     {
     }

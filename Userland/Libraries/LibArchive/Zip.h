@@ -207,11 +207,11 @@ struct ZipMember {
 
 class Zip {
 public:
-    static Optional<Zip> try_create(const ReadonlyBytes& buffer);
+    static Optional<Zip> try_create(ReadonlyBytes buffer);
     bool for_each_member(Function<IterationDecision(const ZipMember&)>);
 
 private:
-    static bool find_end_of_central_directory_offset(const ReadonlyBytes&, size_t& offset);
+    static bool find_end_of_central_directory_offset(ReadonlyBytes, size_t& offset);
 
     u16 member_count { 0 };
     size_t members_start_offset { 0 };

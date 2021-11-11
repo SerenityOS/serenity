@@ -261,7 +261,7 @@ bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
     return true;
 }
 
-Optional<ByteBuffer> GzipCompressor::compress_all(const ReadonlyBytes& bytes)
+Optional<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 {
     DuplexMemoryStream output_stream;
     GzipCompressor gzip_stream { output_stream };

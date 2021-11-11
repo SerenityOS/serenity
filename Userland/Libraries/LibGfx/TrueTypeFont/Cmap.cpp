@@ -143,7 +143,7 @@ u32 Cmap::glyph_id_for_code_point(u32 code_point) const
     return subtable.glyph_id_for_code_point(code_point);
 }
 
-Optional<Cmap> Cmap::from_slice(ReadonlyBytes const& slice)
+Optional<Cmap> Cmap::from_slice(ReadonlyBytes slice)
 {
     if (slice.size() < (size_t)Sizes::TableHeader) {
         return {};

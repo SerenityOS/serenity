@@ -1248,7 +1248,7 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
 
 // Used for sending data that was not directly typed by the user.
 // This basically wraps the code that handles sending the escape sequence in bracketed paste mode.
-void TerminalWidget::send_non_user_input(const ReadonlyBytes& bytes)
+void TerminalWidget::send_non_user_input(ReadonlyBytes bytes)
 {
     constexpr StringView leading_control_sequence = "\e[200~";
     constexpr StringView trailing_control_sequence = "\e[201~";

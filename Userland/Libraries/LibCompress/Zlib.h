@@ -22,7 +22,7 @@ public:
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    Zlib(const ReadonlyBytes& data);
+    Zlib(ReadonlyBytes data);
 
     u8 m_compression_method;
     u8 m_compression_info;

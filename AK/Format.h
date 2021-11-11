@@ -351,7 +351,7 @@ requires(HasFormatter<T>) struct Formatter<Vector<T>> : StandardFormatter {
 
 template<>
 struct Formatter<ReadonlyBytes> : Formatter<StringView> {
-    void format(FormatBuilder& builder, ReadonlyBytes const& value)
+    void format(FormatBuilder& builder, ReadonlyBytes value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
