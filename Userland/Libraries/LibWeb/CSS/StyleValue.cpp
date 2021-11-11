@@ -181,6 +181,66 @@ StyleValueList const& StyleValue::as_value_list() const
     return static_cast<StyleValueList const&>(*this);
 }
 
+BackgroundStyleValue::BackgroundStyleValue(
+    NonnullRefPtr<StyleValue> color,
+    NonnullRefPtr<StyleValue> image,
+    NonnullRefPtr<StyleValue> position,
+    NonnullRefPtr<StyleValue> size,
+    NonnullRefPtr<StyleValue> repeat,
+    NonnullRefPtr<StyleValue> attachment,
+    NonnullRefPtr<StyleValue> origin,
+    NonnullRefPtr<StyleValue> clip)
+    : StyleValue(Type::Background)
+    , m_color(color)
+    , m_image(image)
+    , m_position(position)
+    , m_size(size)
+    , m_repeat(repeat)
+    , m_attachment(attachment)
+    , m_origin(origin)
+    , m_clip(clip)
+{
+    auto layer_count = [](auto style_value) -> size_t {
+        if (style_value->is_value_list())
+            return style_value->as_value_list().size();
+        else
+            return 1;
+    };
+
+    m_layer_count = max(layer_count(m_image), layer_count(m_position));
+    m_layer_count = max(m_layer_count, layer_count(m_size));
+    m_layer_count = max(m_layer_count, layer_count(m_repeat));
+    m_layer_count = max(m_layer_count, layer_count(m_attachment));
+    m_layer_count = max(m_layer_count, layer_count(m_origin));
+    m_layer_count = max(m_layer_count, layer_count(m_clip));
+
+    VERIFY(!m_color->is_value_list());
+}
+
+String BackgroundStyleValue::to_string() const
+{
+    if (m_layer_count == 1) {
+        return String::formatted("{} {} {} {} {} {} {} {}", m_color->to_string(), m_image->to_string(), m_position->to_string(), m_size->to_string(), m_repeat->to_string(), m_attachment->to_string(), m_origin->to_string(), m_clip->to_string());
+    }
+
+    auto get_layer_value_string = [](NonnullRefPtr<StyleValue> const& style_value, size_t index) {
+        if (style_value->is_value_list())
+            return style_value->as_value_list().value_at(index, true)->to_string();
+        return style_value->to_string();
+    };
+
+    StringBuilder builder;
+    for (size_t i = 0; i < m_layer_count; i++) {
+        if (i)
+            builder.append(", ");
+        if (i == m_layer_count - 1)
+            builder.appendff("{} ", m_color->to_string());
+        builder.appendff("{} {} {} {} {} {} {}", get_layer_value_string(m_image, i), get_layer_value_string(m_position, i), get_layer_value_string(m_size, i), get_layer_value_string(m_repeat, i), get_layer_value_string(m_attachment, i), get_layer_value_string(m_origin, i), get_layer_value_string(m_clip, i));
+    }
+
+    return builder.to_string();
+}
+
 String IdentifierStyleValue::to_string() const
 {
     return CSS::string_from_value_id(m_id);
