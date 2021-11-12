@@ -78,6 +78,13 @@ struct LocaleID {
     Vector<String> private_use_extensions {};
 };
 
+enum class Style : u8 {
+    Long,
+    Short,
+    Narrow,
+    Numeric,
+};
+
 enum class StandardNumberFormatType : u8 {
     Decimal,
     Currency,
@@ -170,7 +177,7 @@ Optional<Locale> locale_from_string(StringView locale);
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
 Optional<StringView> get_locale_script_mapping(StringView locale, StringView script);
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style);
 Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
