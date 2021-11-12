@@ -822,7 +822,18 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     if (attribute.href_id != m_hovered_href_id) {
         if (m_active_href_id.is_null() || m_active_href_id == attribute.href_id) {
             m_hovered_href_id = attribute.href_id;
-            m_hovered_href = attribute.href;
+            auto handlers = Desktop::Launcher::get_handlers_for_url(attribute.href);
+            if (!handlers.is_empty()) {
+                auto path = URL(attribute.href).path();
+                auto name = LexicalPath::basename(path);
+                if (path == handlers[0]) {
+                    m_hovered_href = String::formatted("Execute {}", name);
+                } else {
+                    m_hovered_href = String::formatted("Open {} with {}", name, LexicalPath::basename(handlers[0]));
+                }
+            } else {
+                m_hovered_href = attribute.href;
+            }
         } else {
             m_hovered_href_id = {};
             m_hovered_href = {};
