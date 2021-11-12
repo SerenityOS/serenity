@@ -95,6 +95,7 @@ enum class StandardNumberFormatType : u8 {
 enum class CompactNumberFormatType : u8 {
     DecimalLong,
     DecimalShort,
+    CurrencyUnit,
     CurrencyShort,
 };
 
