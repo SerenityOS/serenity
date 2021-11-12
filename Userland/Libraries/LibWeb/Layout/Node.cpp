@@ -255,11 +255,74 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         for (size_t layer_index = 0; layer_index < layer_count; layer_index++) {
             CSS::BackgroundLayerData layer;
 
-            // TODO: Other properties
-
             if (auto image_value = value_for_layer(images, layer_index); image_value && image_value->is_image()) {
                 layer.image = image_value->as_image();
                 layer.image->load_bitmap(document());
+            }
+
+            if (auto attachment_value = value_for_layer(attachments, layer_index); attachment_value && attachment_value->has_identifier()) {
+                switch (attachment_value->to_identifier()) {
+                case CSS::ValueID::Fixed:
+                    layer.attachment = CSS::BackgroundAttachment::Fixed;
+                    break;
+                case CSS::ValueID::Local:
+                    layer.attachment = CSS::BackgroundAttachment::Local;
+                    break;
+                case CSS::ValueID::Scroll:
+                    layer.attachment = CSS::BackgroundAttachment::Scroll;
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            auto as_box = [](auto value_id) {
+                switch (value_id) {
+                case CSS::ValueID::BorderBox:
+                    return CSS::BackgroundBox::BorderBox;
+                case CSS::ValueID::ContentBox:
+                    return CSS::BackgroundBox::ContentBox;
+                case CSS::ValueID::PaddingBox:
+                    return CSS::BackgroundBox::PaddingBox;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            };
+
+            if (auto origin_value = value_for_layer(origins, layer_index); origin_value && origin_value->has_identifier()) {
+                layer.origin = as_box(origin_value->to_identifier());
+            }
+
+            if (auto clip_value = value_for_layer(clips, layer_index); clip_value && clip_value->has_identifier()) {
+                layer.clip = as_box(clip_value->to_identifier());
+            }
+
+            if (auto position_value = value_for_layer(positions, layer_index); position_value && position_value->is_position()) {
+                auto& position = position_value->as_position();
+                layer.position_edge_x = position.edge_x();
+                layer.position_edge_y = position.edge_y();
+                layer.position_offset_x = position.offset_x();
+                layer.position_offset_y = position.offset_y();
+            }
+
+            if (auto size_value = value_for_layer(sizes, layer_index); size_value) {
+                if (size_value->is_background_size()) {
+                    auto& size = size_value->as_background_size();
+                    layer.size_type = CSS::BackgroundSize::LengthPercentage;
+                    layer.size_x = size.size_x();
+                    layer.size_y = size.size_y();
+                } else if (size_value->has_identifier()) {
+                    switch (size_value->to_identifier()) {
+                    case CSS::ValueID::Contain:
+                        layer.size_type = CSS::BackgroundSize::Contain;
+                        break;
+                    case CSS::ValueID::Cover:
+                        layer.size_type = CSS::BackgroundSize::Cover;
+                        break;
+                    default:
+                        break;
+                    }
+                }
             }
 
             if (auto repeat_value = value_for_layer(repeats, layer_index); repeat_value && repeat_value->is_background_repeat()) {
