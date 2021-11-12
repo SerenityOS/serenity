@@ -51,6 +51,9 @@ int main(int argc, char** argv)
     bool quiet_mode = false;
     bool suppress_errors = false;
     bool colored_output = isatty(STDOUT_FILENO);
+    bool count_lines = false;
+
+    size_t matched_line_count = 0;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
@@ -113,6 +116,7 @@ int main(int argc, char** argv)
             return true;
         },
     });
+    args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -121,6 +125,7 @@ int main(int argc, char** argv)
         pattern = files.take_first();
 
     auto user_has_specified_files = !files.is_empty();
+    auto user_specified_multiple_files = files.size() >= 2;
 
     PosixOptions options {};
     if (case_insensitive)
@@ -140,6 +145,11 @@ int main(int argc, char** argv)
             if (result.success ^ invert_match) {
                 if (quiet_mode)
                     return true;
+
+                if (count_lines) {
+                    matched_line_count++;
+                    return true;
+                }
 
                 if (is_binary && binary_mode == BinaryFileMode::Binary) {
                     outln(colored_output ? "binary file \x1B[34m{}\x1B[0m matches" : "binary file {} matches", filename);
@@ -164,7 +174,8 @@ int main(int argc, char** argv)
             return false;
         };
 
-        auto handle_file = [&matches, binary_mode, suppress_errors](StringView filename, bool print_filename) -> bool {
+        auto handle_file = [&matches, binary_mode, suppress_errors, count_lines, quiet_mode,
+                               user_specified_multiple_files, &matched_line_count](StringView filename, bool print_filename) -> bool {
             auto file = Core::File::construct(filename);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 if (!suppress_errors)
@@ -177,8 +188,17 @@ int main(int argc, char** argv)
                 auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 
                 if (matches(line, filename, line_number, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
-                    return true;
+                    break;
             }
+
+            if (count_lines && !quiet_mode) {
+                if (user_specified_multiple_files)
+                    outln("{}:{}", filename, matched_line_count);
+                else
+                    outln("{}", matched_line_count);
+                matched_line_count = 0;
+            }
+
             return true;
         };
 
@@ -217,8 +237,11 @@ int main(int argc, char** argv)
                 auto matched = matches(line_view, "stdin", line_number, false, is_binary);
                 did_match_something = did_match_something || matched;
                 if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
-                    return 0;
+                    break;
             }
+
+            if (count_lines && !quiet_mode)
+                outln("{}", matched_line_count);
         } else {
             if (recursive) {
                 if (user_has_specified_files) {
