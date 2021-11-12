@@ -89,15 +89,6 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-RefPtr<Gfx::Bitmap> load_ico_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    ICOImageDecoderPlugin decoder(data, length);
-    auto bitmap = decoder.bitmap();
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded ICO: {}", bitmap->size(), mmap_name));
-    return bitmap;
-}
-
 static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
 {
     ICONDIR header;

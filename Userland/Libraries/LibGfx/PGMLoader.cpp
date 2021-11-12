@@ -97,11 +97,6 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_pgm_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    return load_from_memory<PGMLoadingContext>(data, length, mmap_name);
-}
-
 PGMImageDecoderPlugin::PGMImageDecoderPlugin(const u8* data, size_t size)
 {
     m_context = make<PGMLoadingContext>();
