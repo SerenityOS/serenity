@@ -205,7 +205,6 @@ public:
     const Gfx::Font& font() const { return *m_font; }
     float line_height() const { return m_line_height; }
     float font_size() const { return m_font_size; }
-    const CSS::ImageStyleValue* background_image() const { return m_background_image; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
 
@@ -223,7 +222,6 @@ private:
     RefPtr<Gfx::Font> m_font;
     float m_line_height { 0 };
     float m_font_size { 0 };
-    RefPtr<CSS::ImageStyleValue> m_background_image;
     RefPtr<CSS::ImageStyleValue> m_list_style_image;
 
     bool m_has_definite_height { false };
