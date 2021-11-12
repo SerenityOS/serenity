@@ -54,6 +54,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(with_time_zone);
     JS_DECLARE_NATIVE_FUNCTION(with_calendar);
     JS_DECLARE_NATIVE_FUNCTION(add);
+    JS_DECLARE_NATIVE_FUNCTION(subtract);
     JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
