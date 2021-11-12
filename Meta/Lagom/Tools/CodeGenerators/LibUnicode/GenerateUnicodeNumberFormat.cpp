@@ -90,7 +90,7 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
             { "¤"sv, "{currencyCode}"sv }, // U+00A4 Currency Sign
         };
 
-        if (auto start_number_index = pattern.find('#'); start_number_index.has_value()) {
+        if (auto start_number_index = pattern.find_any_of("#0"sv, String::SearchDirection::Forward); start_number_index.has_value()) {
             auto end_number_index = *start_number_index + 1;
 
             for (; end_number_index < pattern.length(); ++end_number_index) {
