@@ -1,8 +1,8 @@
 interface HTMLCanvasElement : HTMLElement {
 
     CanvasRenderingContext2D? getContext(DOMString contextId);
-    readonly attribute unsigned long width;
-    readonly attribute unsigned long height;
+    attribute unsigned long width;
+    attribute unsigned long height;
 
     USVString toDataURL(optional DOMString type = "image/png", optional double quality);
 
