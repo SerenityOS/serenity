@@ -94,11 +94,6 @@ static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-RefPtr<Gfx::Bitmap> load_pbm_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    return load_from_memory<PBMLoadingContext>(data, length, mmap_name);
-}
-
 PBMImageDecoderPlugin::PBMImageDecoderPlugin(const u8* data, size_t size)
 {
     m_context = make<PBMLoadingContext>();

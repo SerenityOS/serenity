@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGfx/DDSLoader.h>
@@ -934,26 +935,6 @@ void DDSLoadingContext::dump_debug()
     builder.append("\n");
 
     dbgln("{}", builder.to_string());
-}
-
-static RefPtr<Gfx::Bitmap> load_dds_impl(const u8* data, size_t length)
-{
-    DDSLoadingContext context;
-    context.data = data;
-    context.data_size = length;
-
-    if (!decode_dds(context))
-        return nullptr;
-
-    return context.bitmap;
-}
-
-RefPtr<Gfx::Bitmap> load_dds_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    auto bitmap = load_dds_impl(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded DDS: {}", bitmap->size(), mmap_name));
-    return bitmap;
 }
 
 DDSImageDecoderPlugin::DDSImageDecoderPlugin(const u8* data, size_t size)
