@@ -93,7 +93,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
         }
 
         // c. If matchBehaviour is match minutes, then
-        if (match_behavior == MatchBehavior::Minutes) {
+        if (match_behavior == MatchBehavior::MatchMinutes) {
             // i. Let roundedCandidateNanoseconds be ! RoundNumberToIncrement(candidateNanoseconds, 60 × 10^9, "halfExpand").
             auto rounded_candidate_nanoseconds = round_number_to_increment(candidate_nanoseconds, 60000000000, "halfExpand"sv);
 
@@ -129,7 +129,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
     auto offset_behavior = OffsetBehavior::Option;
 
     // 3. Let matchBehaviour be match exactly.
-    auto match_behavior = MatchBehavior::Exactly;
+    auto match_behavior = MatchBehavior::MatchExactly;
 
     Object* calendar = nullptr;
     Object* time_zone = nullptr;
@@ -222,7 +222,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         calendar = TRY(to_temporal_calendar_with_iso_default(global_object, js_string(vm, parsed_result.date_time.calendar.value())));
 
         // j. Set matchBehaviour to match minutes.
-        match_behavior = MatchBehavior::Minutes;
+        match_behavior = MatchBehavior::MatchMinutes;
 
         // See NOTE above about why this is done.
         result = move(parsed_result.date_time);

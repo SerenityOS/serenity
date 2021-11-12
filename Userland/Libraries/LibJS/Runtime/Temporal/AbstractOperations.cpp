@@ -535,7 +535,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
     auto offset_behavior = OffsetBehavior::Option;
 
     // 5. Let matchBehaviour be match exactly.
-    auto match_behavior = MatchBehavior::Exactly;
+    auto match_behavior = MatchBehavior::MatchExactly;
 
     ISODateTime result;
     Value offset_string;
@@ -622,7 +622,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         }
 
         // h. Set matchBehaviour to match minutes.
-        match_behavior = MatchBehavior::Minutes;
+        match_behavior = MatchBehavior::MatchMinutes;
 
         // See NOTE above about why this is done.
         result = move(parsed_result.date_time);
