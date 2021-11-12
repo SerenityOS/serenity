@@ -13,13 +13,6 @@
 
 namespace Web::Painting {
 
-struct BackgroundData {
-    Color color;
-    Gfx::Bitmap const* image;
-    CSS::Repeat repeat_x;
-    CSS::Repeat repeat_y;
-};
-
-void paint_background(PaintContext&, Gfx::IntRect const&, BackgroundData const&, BorderRadiusData const&);
+void paint_background(PaintContext&, Gfx::IntRect const&, Color background_color, Vector<CSS::BackgroundLayerData> const*, BorderRadiusData const&);
 
 }
