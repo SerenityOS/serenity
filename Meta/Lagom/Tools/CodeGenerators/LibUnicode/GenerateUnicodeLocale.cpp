@@ -40,7 +40,10 @@ struct Locale {
     HashMap<String, StringIndexType> languages;
     HashMap<String, StringIndexType> territories;
     HashMap<String, StringIndexType> scripts;
-    HashMap<String, StringIndexType> currencies;
+    HashMap<String, StringIndexType> long_currencies;
+    HashMap<String, StringIndexType> short_currencies;
+    HashMap<String, StringIndexType> narrow_currencies;
+    HashMap<String, StringIndexType> numeric_currencies;
     HashMap<String, StringIndexType> keywords;
     Vector<ListPatterns> list_patterns;
 };
@@ -335,10 +338,15 @@ static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& loca
     auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
 
     currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto const& display_name = value.as_object().get("displayName"sv);
+        auto const& long_name = value.as_object().get("displayName"sv);
+        auto const& short_name = value.as_object().get("symbol"sv);
+        auto const& narrow_name = value.as_object().get("symbol-alt-narrow"sv);
+        auto const& numeric_name = value.as_object().get("displayName-count-other"sv);
 
-        auto index = locale_data.unique_strings.ensure(display_name.as_string());
-        locale.currencies.set(key, index);
+        locale.long_currencies.set(key, locale_data.unique_strings.ensure(long_name.as_string()));
+        locale.short_currencies.set(key, locale_data.unique_strings.ensure(short_name.as_string()));
+        locale.narrow_currencies.set(key, narrow_name.is_null() ? 0 : locale_data.unique_strings.ensure(narrow_name.as_string()));
+        locale.numeric_currencies.set(key, locale_data.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string()));
 
         if (!locale_data.currencies.contains_slow(key))
             locale_data.currencies.append(key);
@@ -565,7 +573,10 @@ Optional<StringView> get_locale_script_tag_mapping(StringView locale, StringView
 Optional<ScriptTag> script_tag_from_string(StringView script_tag);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 
-Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_long_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_short_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_narrow_currency_mapping(StringView locale, StringView currency);
+Optional<StringView> get_locale_numeric_currency_mapping(StringView locale, StringView currency);
 Optional<Currency> currency_from_string(StringView currency);
 
 Optional<StringView> get_locale_key_mapping(StringView locale, StringView key);
@@ -700,7 +711,10 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_languages"sv, "s_languages_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.languages, value.languages); });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.territories, value.territories); });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.scripts, value.scripts); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_currencies"sv, "s_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.currencies); });
+    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_long_currencies"sv, "s_long_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.long_currencies); });
+    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_short_currencies"sv, "s_short_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.short_currencies); });
+    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_narrow_currencies"sv, "s_narrow_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.narrow_currencies); });
+    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_numeric_currencies"sv, "s_numeric_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.numeric_currencies); });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
     generate_mapping(generator, locale_data.locales, "Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
@@ -884,9 +898,9 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
 
 )~~~");
 
-    auto append_mapping_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
-        generator.set("enum_title", enum_title);
+    auto append_mapping_search = [&](StringView enum_snake, StringView from_string_name, StringView collection_name) {
         generator.set("enum_snake", enum_snake);
+        generator.set("from_string_name", from_string_name);
         generator.set("collection_name", collection_name);
         generator.append(R"~~~(
 Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringView @enum_snake@)
@@ -895,7 +909,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     if (!locale_value.has_value())
         return {};
 
-    auto @enum_snake@_value = @enum_snake@_from_string(@enum_snake@);
+    auto @enum_snake@_value = @from_string_name@_from_string(@enum_snake@);
     if (!@enum_snake@_value.has_value())
         return {};
 
@@ -935,22 +949,25 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
 
-    append_mapping_search("Language"sv, "language"sv, "s_languages"sv);
+    append_mapping_search("language"sv, "language"sv, "s_languages"sv);
     append_from_string("Language"sv, "language"sv, locale_data.languages);
     append_alias_search("language"sv, locale_data.language_aliases);
 
-    append_mapping_search("Territory"sv, "territory"sv, "s_territories"sv);
+    append_mapping_search("territory"sv, "territory"sv, "s_territories"sv);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
     append_alias_search("territory"sv, locale_data.territory_aliases);
 
-    append_mapping_search("ScriptTag"sv, "script_tag"sv, "s_scripts"sv);
+    append_mapping_search("script_tag"sv, "script_tag"sv, "s_scripts"sv);
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
     append_alias_search("script_tag"sv, locale_data.script_aliases);
 
-    append_mapping_search("Currency"sv, "currency"sv, "s_currencies"sv);
+    append_mapping_search("long_currency"sv, "currency"sv, "s_long_currencies"sv);
+    append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv);
+    append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv);
+    append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv);
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
 
-    append_mapping_search("Key"sv, "key"sv, "s_keywords"sv);
+    append_mapping_search("key"sv, "key"sv, "s_keywords"sv);
     append_from_string("Key"sv, "key"sv, locale_data.keywords);
 
     append_alias_search("variant"sv, locale_data.variant_aliases);
