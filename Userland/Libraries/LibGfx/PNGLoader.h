@@ -6,12 +6,9 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
-
-RefPtr<Gfx::Bitmap> load_png_from_memory(u8 const*, size_t, String const& mmap_name = "<memory>");
 
 struct PNGLoadingContext;
 

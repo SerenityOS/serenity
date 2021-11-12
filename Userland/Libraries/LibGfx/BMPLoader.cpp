@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/BMPLoader.h>
 
@@ -162,16 +163,6 @@ struct BMPLoadingContext {
         VERIFY_NOT_REACHED();
     }
 };
-
-static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
-
-RefPtr<Gfx::Bitmap> load_bmp_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    auto bitmap = load_bmp_impl(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: {}", bitmap->size(), mmap_name));
-    return bitmap;
-}
 
 class InputStreamer {
 public:
@@ -1306,21 +1297,6 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
     context.state = BMPLoadingContext::State::PixelDataDecoded;
 
     return true;
-}
-
-static RefPtr<Bitmap> load_bmp_impl(const u8* data, size_t data_size)
-{
-    BMPLoadingContext context;
-    context.file_bytes = data;
-    context.file_size = data_size;
-
-    // Forces a decode of the header, dib, and color table as well
-    if (!decode_bmp_pixel_data(context)) {
-        context.state = BMPLoadingContext::State::Error;
-        return nullptr;
-    }
-
-    return context.bitmap;
 }
 
 BMPImageDecoderPlugin::BMPImageDecoderPlugin(const u8* data, size_t data_size)

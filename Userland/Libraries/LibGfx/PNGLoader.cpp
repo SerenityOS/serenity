@@ -165,16 +165,7 @@ private:
     size_t m_size_remaining { 0 };
 };
 
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, size_t);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
-
-RefPtr<Gfx::Bitmap> load_png_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    auto bitmap = load_png_impl(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PNG: {}", bitmap->size(), mmap_name));
-    return bitmap;
-}
 
 ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
 {
@@ -773,21 +764,6 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
 
     context.state = PNGLoadingContext::State::BitmapDecoded;
     return true;
-}
-
-static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
-{
-    PNGLoadingContext context;
-    context.data = data;
-    context.data_size = data_size;
-
-    if (!decode_png_chunks(context))
-        return nullptr;
-
-    if (!decode_png_bitmap(context))
-        return nullptr;
-
-    return context.bitmap;
 }
 
 static bool is_valid_compression_method(u8 compression_method)

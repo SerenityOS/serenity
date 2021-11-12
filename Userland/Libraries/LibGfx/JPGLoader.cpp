@@ -4,15 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGfx/JPGLoader.h>
 
 #define JPG_INVALID 0X0000
@@ -1220,26 +1216,6 @@ static bool decode_jpg(JPGLoadingContext& context)
     if (!compose_bitmap(context, macroblocks))
         return false;
     return true;
-}
-
-static RefPtr<Gfx::Bitmap> load_jpg_impl(const u8* data, size_t data_size)
-{
-    JPGLoadingContext context;
-    context.data = data;
-    context.data_size = data_size;
-
-    if (!decode_jpg(context))
-        return nullptr;
-
-    return context.bitmap;
-}
-
-RefPtr<Gfx::Bitmap> load_jpg_from_memory(u8 const* data, size_t length, String const& mmap_name)
-{
-    auto bitmap = load_jpg_impl(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded jpg: {}", bitmap->size(), mmap_name));
-    return bitmap;
 }
 
 JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
