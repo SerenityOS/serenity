@@ -300,10 +300,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (border_top_right_radius.has_value())
         computed_values.set_border_top_right_radius(border_top_right_radius.value()->to_length());
 
-    auto background_repeat = specified_style.background_repeat();
-    if (background_repeat.has_value())
-        computed_values.set_background_repeat(background_repeat.value());
-
     computed_values.set_display(specified_style.display());
 
     auto flex_direction = specified_style.flex_direction();
