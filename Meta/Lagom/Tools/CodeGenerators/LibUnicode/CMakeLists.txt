@@ -9,3 +9,9 @@ set(SOURCES
 )
 
 lagom_tool(GenerateUnicodeLocale)
+
+set(SOURCES
+    GenerateUnicodeNumberFormat.cpp
+)
+
+lagom_tool(GenerateUnicodeNumberFormat)
