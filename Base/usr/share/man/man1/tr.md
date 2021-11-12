@@ -5,7 +5,7 @@ tr
 ## Synopsis
 
 ```sh
-$ tr [--complement] [--delete] <from> [to]
+$ tr [--complement] [--delete] [--squeeze-repeats] <from> [to]
 ```
 
 ## Options:
@@ -14,6 +14,7 @@ $ tr [--complement] [--delete] <from> [to]
 * `--version`: Print version
 * `-c`, `--complement`: Take the complement of the first set
 * `-d`, `--delete`: Delete characters instead of replacing
+* `-s`, `--squeeze-repeats`: Omit repeated characters listed in the 'to' set from the output
 
 ## Arguments:
 
