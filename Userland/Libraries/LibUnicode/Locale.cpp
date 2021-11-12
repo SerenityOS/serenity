@@ -12,6 +12,7 @@
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeLocale.h>
+#    include <LibUnicode/UnicodeNumberFormat.h>
 #endif
 
 namespace Unicode {
