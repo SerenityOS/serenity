@@ -366,48 +366,6 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     return &body_layout_node->background_layers();
 }
 
-RefPtr<Gfx::Bitmap> Document::background_image() const
-{
-    auto* body_element = body();
-    if (!body_element)
-        return {};
-
-    auto* body_layout_node = body_element->layout_node();
-    if (!body_layout_node)
-        return {};
-
-    auto background_image = body_layout_node->background_image();
-    if (!background_image)
-        return {};
-    return background_image->bitmap();
-}
-
-CSS::Repeat Document::background_repeat_x() const
-{
-    auto* body_element = body();
-    if (!body_element)
-        return CSS::Repeat::Repeat;
-
-    auto* body_layout_node = body_element->layout_node();
-    if (!body_layout_node)
-        return CSS::Repeat::Repeat;
-
-    return body_layout_node->computed_values().background_repeat().repeat_x;
-}
-
-CSS::Repeat Document::background_repeat_y() const
-{
-    auto* body_element = body();
-    if (!body_element)
-        return CSS::Repeat::Repeat;
-
-    auto* body_layout_node = body_element->layout_node();
-    if (!body_layout_node)
-        return CSS::Repeat::Repeat;
-
-    return body_layout_node->computed_values().background_repeat().repeat_y;
-}
-
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
 AK::URL Document::parse_url(String const& url) const
 {
