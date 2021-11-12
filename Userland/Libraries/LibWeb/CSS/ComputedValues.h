@@ -39,9 +39,19 @@ public:
 };
 
 struct BackgroundLayerData {
-    RefPtr<CSS::ImageStyleValue> image;
-    CSS::Repeat repeat_x;
-    CSS::Repeat repeat_y;
+    RefPtr<CSS::ImageStyleValue> image { nullptr };
+    CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
+    CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
+    CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };
+    CSS::PositionEdge position_edge_x { CSS::PositionEdge::Left };
+    CSS::Length position_offset_x { CSS::Length::make_px(0) };
+    CSS::PositionEdge position_edge_y { CSS::PositionEdge::Top };
+    CSS::Length position_offset_y { CSS::Length::make_px(0) };
+    CSS::BackgroundSize size_type { CSS::BackgroundSize::LengthPercentage };
+    CSS::Length size_x { CSS::Length::make_auto() };
+    CSS::Length size_y { CSS::Length::make_auto() };
+    CSS::Repeat repeat_x { CSS::Repeat::Repeat };
+    CSS::Repeat repeat_y { CSS::Repeat::Repeat };
 };
 
 struct BorderData {

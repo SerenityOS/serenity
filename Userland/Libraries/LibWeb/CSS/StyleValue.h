@@ -39,6 +39,24 @@ enum class AlignItems {
     Stretch,
 };
 
+enum class BackgroundAttachment {
+    Fixed,
+    Local,
+    Scroll,
+};
+
+enum class BackgroundBox {
+    BorderBox,
+    ContentBox,
+    PaddingBox,
+};
+
+enum class BackgroundSize {
+    Contain,
+    Cover,
+    LengthPercentage,
+};
+
 enum class BoxSizing {
     BorderBox,
     ContentBox,
