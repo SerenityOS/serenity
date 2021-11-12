@@ -206,6 +206,7 @@ public:
     float line_height() const { return m_line_height; }
     float font_size() const { return m_font_size; }
     const CSS::ImageStyleValue* background_image() const { return m_background_image; }
+    Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;

@@ -353,6 +353,19 @@ Color Document::background_color(const Palette& palette) const
     return color;
 }
 
+Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
+{
+    auto* body_element = body();
+    if (!body_element)
+        return {};
+
+    auto* body_layout_node = body_element->layout_node();
+    if (!body_layout_node)
+        return {};
+
+    return &body_layout_node->background_layers();
+}
+
 RefPtr<Gfx::Bitmap> Document::background_image() const
 {
     auto* body_element = body();
