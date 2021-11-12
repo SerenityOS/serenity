@@ -72,6 +72,7 @@ void Box::paint_background(PaintContext& context)
 
     Gfx::IntRect background_rect;
     Color background_color = computed_values().background_color();
+    auto* background_layers = &computed_values().background_layers();
     const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
     CSS::BackgroundRepeatData background_repeat = computed_values().background_repeat();
 
@@ -82,6 +83,7 @@ void Box::paint_background(PaintContext& context)
         // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
         // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
         if (document().html_element()->should_use_body_background_properties()) {
+            background_layers = document().background_layers();
             background_color = document().background_color(context.palette());
             background_image = document().background_image();
             background_repeat = { document().background_repeat_x(), document().background_repeat_y() };

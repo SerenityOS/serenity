@@ -215,6 +215,66 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
             m_font_size = default_font_size;
     }
 
+    {
+        auto attachments = specified_style.property(CSS::PropertyID::BackgroundAttachment);
+        auto clips = specified_style.property(CSS::PropertyID::BackgroundClip);
+        auto images = specified_style.property(CSS::PropertyID::BackgroundImage);
+        auto origins = specified_style.property(CSS::PropertyID::BackgroundOrigin);
+        auto positions = specified_style.property(CSS::PropertyID::BackgroundPosition);
+        auto repeats = specified_style.property(CSS::PropertyID::BackgroundRepeat);
+        auto sizes = specified_style.property(CSS::PropertyID::BackgroundSize);
+
+        auto count_layers = [](auto maybe_style_value) -> size_t {
+            if (maybe_style_value.has_value() && maybe_style_value.value()->is_value_list())
+                return maybe_style_value.value()->as_value_list().size();
+            else
+                return 1;
+        };
+
+        auto value_for_layer = [](auto maybe_style_value, size_t layer_index) -> RefPtr<CSS::StyleValue> {
+            if (!maybe_style_value.has_value())
+                return nullptr;
+            auto& style_value = maybe_style_value.value();
+            if (style_value->is_value_list())
+                return style_value->as_value_list().value_at(layer_index, true);
+            return style_value;
+        };
+
+        size_t layer_count = 1;
+        layer_count = max(layer_count, count_layers(attachments));
+        layer_count = max(layer_count, count_layers(clips));
+        layer_count = max(layer_count, count_layers(images));
+        layer_count = max(layer_count, count_layers(origins));
+        layer_count = max(layer_count, count_layers(positions));
+        layer_count = max(layer_count, count_layers(repeats));
+        layer_count = max(layer_count, count_layers(sizes));
+
+        Vector<CSS::BackgroundLayerData> layers;
+        layers.ensure_capacity(layer_count);
+
+        for (size_t layer_index = 0; layer_index < layer_count; layer_index++) {
+            CSS::BackgroundLayerData layer;
+
+            // TODO: Other properties
+
+            if (auto image_value = value_for_layer(images, layer_index); image_value && image_value->is_image()) {
+                layer.image = image_value->as_image();
+                layer.image->load_bitmap(document());
+            }
+
+            if (auto repeat_value = value_for_layer(repeats, layer_index); repeat_value && repeat_value->is_background_repeat()) {
+                layer.repeat_x = repeat_value->as_background_repeat().repeat_x();
+                layer.repeat_y = repeat_value->as_background_repeat().repeat_y();
+            }
+
+            layers.append(move(layer));
+        }
+
+        computed_values.set_background_layers(move(layers));
+    }
+    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
+
+    // FIXME: Remove this
     auto bgimage = specified_style.property(CSS::PropertyID::BackgroundImage);
     if (bgimage.has_value() && bgimage.value()->is_image()) {
         m_background_image = bgimage.value()->as_image();
@@ -323,7 +383,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     }
 
     computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
-    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
