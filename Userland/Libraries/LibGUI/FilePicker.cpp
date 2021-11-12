@@ -269,14 +269,35 @@ void FilePicker::on_file_return()
         path = LexicalPath::join(m_model->root_path(), path).string();
     }
 
-    bool file_exists = Core::File::exists(path);
+    bool path_exists = Core::File::exists(path);
 
-    if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
+    if (!path_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
         MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found", MessageBox::Type::Error, MessageBox::InputType::OK);
         return;
     }
 
-    if (file_exists && m_mode == Mode::Save) {
+    bool is_device = Core::File::is_device(path);
+    bool is_directory = Core::File::is_directory(path);
+    bool is_file = !is_device && !is_directory;
+
+    if (m_mode == Mode::Open) {
+        if (!is_file) {
+            MessageBox::show(this, String::formatted("Can't open {}: {}", is_directory ? "directories" : "devices", path), "Expecting file", MessageBox::Type::Error, MessageBox::InputType::OK);
+            return;
+        }
+    } else if (m_mode == Mode::OpenFolder) {
+        if (is_file) {
+            MessageBox::show(this, String::formatted("Can't open files: {}", path), "Expecting directory", MessageBox::Type::Error, MessageBox::InputType::OK);
+            return;
+        }
+    }
+
+    if (path_exists && m_mode == Mode::Save) {
+        if (!is_file) {
+            MessageBox::show(this, String::formatted("Can't open {}: {}", is_directory ? "directories" : "devices", path), "Expecting file", MessageBox::Type::Error, MessageBox::InputType::OK);
+            return;
+        }
+
         auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
