@@ -68,7 +68,7 @@ Result Client::request_file(i32 parent_window_id, String const& path, Core::Open
     return m_promise->await();
 }
 
-Result Client::open_file(i32 parent_window_id, String const& window_title, StringView path)
+Result Client::open_file(i32 parent_window_id, String const& window_title, StringView path, Core::OpenMode requested_access)
 {
     m_promise = Core::Promise<Result>::construct();
     auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
@@ -80,12 +80,12 @@ Result Client::open_file(i32 parent_window_id, String const& window_title, Strin
         GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_open_file(parent_window_server_client_id, parent_window_id, window_title, path, Core::OpenMode::ReadOnly);
+    async_prompt_open_file(parent_window_server_client_id, parent_window_id, window_title, path, requested_access);
 
     return m_promise->await();
 }
 
-Result Client::save_file(i32 parent_window_id, String const& name, String const ext)
+Result Client::save_file(i32 parent_window_id, String const& name, String const ext, Core::OpenMode requested_access)
 {
     m_promise = Core::Promise<Result>::construct();
     auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
@@ -97,7 +97,7 @@ Result Client::save_file(i32 parent_window_id, String const& name, String const 
         GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_save_file(parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    async_prompt_save_file(parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), requested_access);
 
     return m_promise->await();
 }
