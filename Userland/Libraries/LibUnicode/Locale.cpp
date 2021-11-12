@@ -786,13 +786,21 @@ Optional<StringView> get_locale_script_mapping([[maybe_unused]] StringView local
 #endif
 }
 
-Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView currency)
+Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView currency, [[maybe_unused]] Style style)
 {
 #if ENABLE_UNICODE_DATA
-    return Detail::get_locale_currency_mapping(locale, currency);
-#else
-    return {};
+    switch (style) {
+    case Style::Long:
+        return Detail::get_locale_long_currency_mapping(locale, currency);
+    case Style::Short:
+        return Detail::get_locale_short_currency_mapping(locale, currency);
+    case Style::Narrow:
+        return Detail::get_locale_narrow_currency_mapping(locale, currency);
+    case Style::Numeric:
+        return Detail::get_locale_numeric_currency_mapping(locale, currency);
+    }
 #endif
+    return {};
 }
 
 Vector<StringView> get_locale_key_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView keyword)

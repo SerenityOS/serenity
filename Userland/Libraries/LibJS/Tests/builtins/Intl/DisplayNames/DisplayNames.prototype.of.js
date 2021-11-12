@@ -74,15 +74,45 @@ describe("correct behavior", () => {
         expect(zhHant.of("Aaaa")).toBe("Aaaa");
     });
 
-    test("option type currency", () => {
-        const en = new Intl.DisplayNames("en", { type: "currency" });
+    test("option type currency, style long", () => {
+        const en = new Intl.DisplayNames("en", { type: "currency", style: "long" });
         expect(en.of("USD")).toBe("US Dollar");
 
-        const es419 = new Intl.DisplayNames("es-419", { type: "currency" });
+        const es419 = new Intl.DisplayNames("es-419", { type: "currency", style: "long" });
         expect(es419.of("USD")).toBe("dólar estadounidense");
 
-        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "currency" });
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "currency", style: "long" });
         expect(zhHant.of("USD")).toBe("美元");
+
+        expect(en.of("AAA")).toBe("AAA");
+        expect(es419.of("AAA")).toBe("AAA");
+        expect(zhHant.of("AAA")).toBe("AAA");
+    });
+
+    test("option type currency, style short", () => {
+        const en = new Intl.DisplayNames("en", { type: "currency", style: "short" });
+        expect(en.of("USD")).toBe("$");
+
+        const es419 = new Intl.DisplayNames("es-419", { type: "currency", style: "short" });
+        expect(es419.of("USD")).toBe("USD");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "currency", style: "short" });
+        expect(zhHant.of("USD")).toBe("US$");
+
+        expect(en.of("AAA")).toBe("AAA");
+        expect(es419.of("AAA")).toBe("AAA");
+        expect(zhHant.of("AAA")).toBe("AAA");
+    });
+
+    test("option type currency, style narrow", () => {
+        const en = new Intl.DisplayNames("en", { type: "currency", style: "narrow" });
+        expect(en.of("USD")).toBe("$");
+
+        const es419 = new Intl.DisplayNames("es-419", { type: "currency", style: "narrow" });
+        expect(es419.of("USD")).toBe("$");
+
+        const zhHant = new Intl.DisplayNames(["zh-Hant"], { type: "currency", style: "narrow" });
+        expect(zhHant.of("USD")).toBe("$");
 
         expect(en.of("AAA")).toBe("AAA");
         expect(es419.of("AAA")).toBe("AAA");
