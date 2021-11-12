@@ -70,6 +70,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withTimeZone, with_time_zone, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.add, add, 1, attr);
+    define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -835,6 +836,32 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::add)
 
     // 7. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], options).
     auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time->nanoseconds(), &time_zone, calendar, duration.years, duration.months, duration.weeks, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds, options));
+
+    // 8. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
+}
+
+// 6.3.36 Temporal.ZonedDateTime.prototype.subtract ( temporalDurationLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.subtract
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::subtract)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « »).
+    auto duration = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 5. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 6. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 7. Let epochNanoseconds be ? AddZonedDateTime(zonedDateTime.[[Nanoseconds]], timeZone, calendar, −duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]], options).
+    auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time->nanoseconds(), &time_zone, calendar, -duration.years, -duration.months, -duration.weeks, -duration.days, -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds, options));
 
     // 8. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
     return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
