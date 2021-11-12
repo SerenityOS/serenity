@@ -28,6 +28,9 @@ public:
     unsigned width() const;
     unsigned height() const;
 
+    void set_width(unsigned);
+    void set_height(unsigned);
+
     String to_data_url(const String& type, Optional<double> quality) const;
 
 private:
