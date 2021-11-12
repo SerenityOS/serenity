@@ -30,6 +30,7 @@
 #include <LibGUI/LazyWidget.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
@@ -254,10 +255,20 @@ int main(int argc, char** argv)
         return pid_index.data().to_i32();
     };
 
+    auto selected_name = [&](ProcessModel::Column column) -> String {
+        if (process_table_view.selection().is_empty())
+            return {};
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
+        return pid_index.data().to_string();
+    };
+
     auto kill_action = GUI::Action::create(
         "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
-            if (pid != -1)
+            if (pid == -1)
+                return;
+            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to kill \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            if (rc == GUI::Dialog::ExecYes)
                 kill(pid, SIGKILL);
         },
         &process_table_view);
@@ -265,7 +276,10 @@ int main(int argc, char** argv)
     auto stop_action = GUI::Action::create(
         "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
-            if (pid != -1)
+            if (pid == -1)
+                return;
+            auto rc = GUI::MessageBox::show(window, String::formatted("Do you really want to stop \"{}\" (PID {})?", selected_name(ProcessModel::Column::Name), pid), "System Monitor", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            if (rc == GUI::Dialog::ExecYes)
                 kill(pid, SIGSTOP);
         },
         &process_table_view);
