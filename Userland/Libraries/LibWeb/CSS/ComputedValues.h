@@ -25,7 +25,6 @@ public:
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
-    static CSS::Repeat background_repeat() { return CSS::Repeat::Repeat; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
@@ -126,7 +125,6 @@ public:
     Color color() const { return m_inherited.color; }
     Color background_color() const { return m_noninherited.background_color; }
     Vector<BackgroundLayerData> const& background_layers() const { return m_noninherited.background_layers; }
-    BackgroundRepeatData background_repeat() const { return m_noninherited.background_repeat; }
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
@@ -184,7 +182,6 @@ protected:
         Length border_top_right_radius;
         Color background_color { InitialValues::background_color() };
         Vector<BackgroundLayerData> background_layers;
-        BackgroundRepeatData background_repeat { InitialValues::background_repeat(), InitialValues::background_repeat() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
         CSS::FlexWrap flex_wrap { InitialValues::flex_wrap() };
         CSS::FlexBasisData flex_basis {};
@@ -210,7 +207,6 @@ public:
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
-    void set_background_repeat(BackgroundRepeatData repeat) { m_noninherited.background_repeat = repeat; }
     void set_background_layers(Vector<BackgroundLayerData>&& layers) { m_noninherited.background_layers = move(layers); }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }

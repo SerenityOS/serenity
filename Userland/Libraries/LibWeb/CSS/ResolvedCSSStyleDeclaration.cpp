@@ -645,10 +645,6 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return ColorStyleValue::create(layout_node.computed_values().color());
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
-    case CSS::PropertyID::BackgroundRepeat:
-        return BackgroundRepeatStyleValue::create(
-            layout_node.computed_values().background_repeat().repeat_x,
-            layout_node.computed_values().background_repeat().repeat_y);
     case CSS::PropertyID::Background: {
         auto maybe_background_color = property(CSS::PropertyID::BackgroundColor);
         auto maybe_background_image = property(CSS::PropertyID::BackgroundImage);
