@@ -188,7 +188,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         if (!section.has_value()) {
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
-            bitmap = Gfx::load_png_from_memory(reinterpret_cast<u8 const*>(section->raw_data()), section->size());
+            bitmap = Gfx::PNGImageDecoderPlugin(reinterpret_cast<u8 const*>(section->raw_data()), section->size()).bitmap();
         }
 
         if (!bitmap) {
