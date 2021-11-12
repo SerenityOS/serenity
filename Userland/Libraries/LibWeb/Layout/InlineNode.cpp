@@ -58,7 +58,7 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
             // FIXME: This recalculates our (InlineNode's) absolute_rect() for every single fragment!
             auto rect = fragment.absolute_rect();
             auto border_radius_data = Painting::normalized_border_radius_data(*this, rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            Painting::paint_background(context, enclosing_int_rect(rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
+            Painting::paint_background(context, *this, enclosing_int_rect(rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); computed_box_shadow.has_value()) {
                 auto box_shadow_data = Painting::BoxShadowData {
