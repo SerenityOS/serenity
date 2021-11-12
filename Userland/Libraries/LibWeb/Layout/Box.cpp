@@ -93,7 +93,7 @@ void Box::paint_background(PaintContext& context)
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = enclosing_int_rect(bordered_rect());
 
-    Painting::paint_background(context, background_rect, background_color, background_layers, normalized_border_radius_data());
+    Painting::paint_background(context, *this, background_rect, background_color, background_layers, normalized_border_radius_data());
 }
 
 void Box::paint_box_shadow(PaintContext& context)
