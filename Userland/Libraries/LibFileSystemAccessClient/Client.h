@@ -29,8 +29,8 @@ class Client final
 public:
     Result request_file_read_only_approved(i32 parent_window_id, String const& path);
     Result request_file(i32 parent_window_id, String const& path, Core::OpenMode mode);
-    Result open_file(i32 parent_window_id, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory());
-    Result save_file(i32 parent_window_id, String const& name, String const ext);
+    Result open_file(i32 parent_window_id, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::OpenMode requested_access = Core::OpenMode::ReadOnly);
+    Result save_file(i32 parent_window_id, String const& name, String const ext, Core::OpenMode requested_access = Core::OpenMode::WriteOnly | Core::OpenMode::Truncate);
 
     static Client& the();
 
