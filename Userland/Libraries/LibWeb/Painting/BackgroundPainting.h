@@ -8,11 +8,12 @@
 
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
-void paint_background(PaintContext&, Gfx::IntRect const&, Color background_color, Vector<CSS::BackgroundLayerData> const*, BorderRadiusData const&);
+void paint_background(PaintContext&, Layout::NodeWithStyleAndBoxModelMetrics const&, Gfx::IntRect const&, Color background_color, Vector<CSS::BackgroundLayerData> const*, BorderRadiusData const&);
 
 }
