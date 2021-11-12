@@ -69,6 +69,20 @@ sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qe
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
+### SerenityOS
+
+The following ports need to be installed:
+
+```console
+bash cmake curl e2fsprogs gawk genext2fs git ninja patch python3 qemu rsync
+```
+
+Additionally, for building using LLVM, install the `llvm` port.
+For building using GCC, install the `gcc`, `gmp` and `mpc` ports.
+
+Due to not-yet-finished POSIX shell support in `Shell`, a symlink from `/bin/sh` to `/usr/local/bin/bash` is required.
+This is best achieved by adding `ln -sf /usr/local/bin/bash mnt/bin/sh` to your [customization script](AdvancedBuildInstructions.md#customizing-the-disk-image).
+
 ### Other systems
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
