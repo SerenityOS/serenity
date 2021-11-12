@@ -63,6 +63,7 @@ struct NumberSystem {
 
     NumberFormat currency_format {};
     NumberFormat accounting_format {};
+    Vector<NumberFormat> currency_unit_formats {};
     Vector<NumberFormat> currency_short_formats {};
 
     NumberFormat percent_format {};
@@ -78,11 +79,17 @@ struct UnicodeLocaleData {
     Vector<String> numeric_symbols;
 };
 
-static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format)
+static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format, bool is_unit_pattern = false)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
-    auto replace_patterns = [](String pattern) {
+    auto replace_patterns = [&](String pattern) {
+        if (is_unit_pattern) {
+            // Skip parsing unit patterns, which are of the form "{0} {1}", and do not contain any
+            // of the replacement patterns below.
+            return pattern;
+        }
+
         static HashMap<StringView, StringView> replacements = {
             { "%"sv, "{percentSign}"sv },
             { "+"sv, "{plusSign}"sv },
@@ -162,15 +169,22 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
 
         format_object.for_each_member([&](auto const& key, JsonValue const& value) {
             auto split_key = key.split_view('-');
-            VERIFY(split_key.size() == 3);
-
-            auto type = split_key[0].template to_uint<u64>().value();
-            VERIFY(type % 10 == 0);
+            if (split_key.size() != 3)
+                return;
 
             NumberFormat format {};
-            format.magnitude = static_cast<u8>(log10(type));
+            bool is_unit_pattern = false;
+
+            if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
+                VERIFY(*type % 10 == 0);
+                format.magnitude = static_cast<u8>(log10(*type));
+            } else {
+                VERIFY(split_key[0] == "unitPattern"sv);
+                is_unit_pattern = true;
+            }
+
             format.plurality = NumberFormat::plurality_from_string(split_key[2]);
-            parse_number_pattern(value.as_string(), locale_data, format);
+            parse_number_pattern(value.as_string(), locale_data, format, is_unit_pattern);
 
             result.append(move(format));
         });
@@ -216,6 +230,8 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
 
             format_object = value.as_object().get("accounting"sv);
             parse_number_pattern(format_object.as_string(), locale_data, number_system.accounting_format);
+
+            number_system.currency_unit_formats = parse_number_format(value.as_object());
 
             if (value.as_object().has("short"sv)) {
                 auto const& short_format = value.as_object().get("short"sv).as_object().get("standard"sv);
@@ -361,6 +377,7 @@ struct NumberSystem {
 
     NumberFormat currency_format {};
     NumberFormat accounting_format {};
+    Span<NumberFormat const> currency_unit_formats {};
     Span<NumberFormat const> currency_short_formats {};
 
     NumberFormat percent_format {};
@@ -413,6 +430,7 @@ static constexpr Array<NumberFormat, @size@> @name@ { {
         for (auto const& number_system : number_systems) {
             append_number_formats(format_name(number_system.key, "dl"sv), number_system.value.decimal_long_formats);
             append_number_formats(format_name(number_system.key, "ds"sv), number_system.value.decimal_short_formats);
+            append_number_formats(format_name(number_system.key, "cu"sv), number_system.value.currency_unit_formats);
             append_number_formats(format_name(number_system.key, "cs"sv), number_system.value.currency_short_formats);
         }
 
@@ -426,6 +444,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             generator.set("system"sv, String::number(number_system.value.system));
             generator.set("decimal_long_formats"sv, format_name(number_system.key, "dl"sv));
             generator.set("decimal_short_formats"sv, format_name(number_system.key, "ds"sv));
+            generator.set("currency_unit_formats"sv, format_name(number_system.key, "cu"sv));
             generator.set("currency_short_formats"sv, format_name(number_system.key, "cs"sv));
             generator.append(R"~~~(
     { @system@, {)~~~");
@@ -442,7 +461,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             append_number_format(number_system.value.currency_format);
             generator.append(" ");
             append_number_format(number_system.value.accounting_format);
-            generator.append(" @currency_short_formats@.span(), ");
+            generator.append(" @currency_unit_formats@.span(), @currency_short_formats@.span(), ");
             append_number_format(number_system.value.percent_format);
             generator.append(" },");
         }
@@ -529,6 +548,9 @@ Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView local
             break;
         case CompactNumberFormatType::DecimalShort:
             number_formats = number_system->decimal_short_formats;
+            break;
+        case CompactNumberFormatType::CurrencyUnit:
+            number_formats = number_system->currency_unit_formats;
             break;
         case CompactNumberFormatType::CurrencyShort:
             number_formats = number_system->currency_short_formats;
