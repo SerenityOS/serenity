@@ -274,13 +274,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     }
     computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
-    // FIXME: Remove this
-    auto bgimage = specified_style.property(CSS::PropertyID::BackgroundImage);
-    if (bgimage.has_value() && bgimage.value()->is_image()) {
-        m_background_image = bgimage.value()->as_image();
-        m_background_image->load_bitmap(document());
-    }
-
     computed_values.set_box_sizing(specified_style.box_sizing());
 
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
@@ -485,7 +478,6 @@ NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     wrapper->m_font = m_font;
     wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;
-    wrapper->m_background_image = m_background_image;
     return wrapper;
 }
 
