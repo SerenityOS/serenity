@@ -5,7 +5,7 @@ grep
 ## Synopsis
 
 ```sh
-$ grep [--recursive] [--extended-regexp] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [file...]
+$ grep [--recursive] [--extended-regexp] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
 ```
 
 ## Options:

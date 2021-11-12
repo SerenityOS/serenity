@@ -5,7 +5,7 @@ tr
 ## Synopsis
 
 ```sh
-$ tr [--complement] [--delete] <from> [to]
+$ tr [--complement] [--delete] [--squeeze-repeats] <from> [to]
 ```
 
 ## Options:
