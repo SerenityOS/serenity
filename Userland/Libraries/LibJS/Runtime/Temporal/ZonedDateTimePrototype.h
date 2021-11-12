@@ -49,6 +49,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(offset_getter);
     JS_DECLARE_NATIVE_FUNCTION(era_getter);
     JS_DECLARE_NATIVE_FUNCTION(era_year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(with);
     JS_DECLARE_NATIVE_FUNCTION(with_plain_time);
     JS_DECLARE_NATIVE_FUNCTION(with_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(with_time_zone);
