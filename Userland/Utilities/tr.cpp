@@ -92,12 +92,14 @@ int main(int argc, char** argv)
 {
     bool complement_flag = false;
     bool delete_flag = false;
+    bool squeeze_repeats = false;
     const char* from_chars = nullptr;
     const char* to_chars = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
     args_parser.add_option(delete_flag, "Delete characters instead of replacing", "delete", 'd');
+    args_parser.add_option(squeeze_repeats, "Omit repeated characters listed in the 'to' set from the output", "squeeze-repeats", 's');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -127,6 +129,7 @@ int main(int argc, char** argv)
         }
     } else {
         auto to_str = build_set(to_chars);
+        Optional<char> last_char;
 
         for (;;) {
             char ch = fgetc(stdin);
@@ -134,9 +137,13 @@ int main(int argc, char** argv)
                 break;
             auto match = from_str.find_last(ch);
             if (match.has_value())
-                putchar(to_str[min(match.value(), to_str.length() - 1)]);
-            else
-                putchar(ch);
+                ch = to_str[min(match.value(), to_str.length() - 1)];
+
+            if (squeeze_repeats && last_char.has_value() && last_char.value() == ch)
+                continue;
+
+            last_char = ch;
+            putchar(ch);
         }
     }
 
