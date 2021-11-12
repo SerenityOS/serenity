@@ -298,6 +298,8 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 
     m_open_menu_stack.append(menu);
 
+    menu.set_visible(true);
+
     if (!menu.is_empty()) {
         menu.redraw_if_theme_changed();
         auto* window = menu.menu_window();
