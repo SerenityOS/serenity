@@ -53,7 +53,7 @@ public:
 
 private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
-    bool initialize(SpinlockLocker<Spinlock>&);
+    bool initialize();
 
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
@@ -81,7 +81,7 @@ private:
 
     bool spin_until_ready() const;
 
-    bool identify_device(SpinlockLocker<Spinlock>&);
+    bool identify_device();
 
     ALWAYS_INLINE void start_command_list_processing() const;
     ALWAYS_INLINE void mark_command_header_ready_to_process(u8 command_header_index) const;
