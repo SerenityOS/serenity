@@ -50,9 +50,10 @@ LLVM_VERSION="${LLVM_VERSION:-13.0.0}"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/
-    mkdir -p mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
-    $CP "$TOOLCHAIN_DIR"/lib/clang/"$LLVM_VERSION"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
     $CP "$TOOLCHAIN_DIR"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib
+    mkdir -p mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
+    $CP -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
+    $CP -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
 elif [ "$SERENITY_ARCH" != "aarch64" ]; then
     $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
 fi
