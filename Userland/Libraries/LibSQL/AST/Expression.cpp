@@ -169,6 +169,10 @@ Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
 
 Value ColumnNameExpression::evaluate(ExecutionContext& context) const
 {
+    if (!context.current_row) {
+        context.result->set_error(SQLErrorCode::SyntaxError, column_name());
+        return Value::null();
+    }
     auto& descriptor = *context.current_row->descriptor();
     VERIFY(context.current_row->size() == descriptor.size());
     Optional<size_t> index_in_row;

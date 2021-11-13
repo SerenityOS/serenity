@@ -137,6 +137,28 @@ TEST_CASE(insert_wrong_number_of_values)
     EXPECT(result->inserted() == 0);
 }
 
+TEST_CASE(insert_identifier_as_value)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ( identifier, 42 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::SyntaxError);
+    EXPECT(result->inserted() == 0);
+}
+
+TEST_CASE(insert_quoted_identifier_as_value)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ( \"QuotedIdentifier\", 42 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::SyntaxError);
+    EXPECT(result->inserted() == 0);
+}
+
 TEST_CASE(insert_without_column_names)
 {
     ScopeGuard guard([]() { unlink(db_name); });
