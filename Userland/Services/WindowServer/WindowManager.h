@@ -274,7 +274,7 @@ public:
     size_t window_stack_rows() const { return m_window_stacks.size(); }
     size_t window_stack_columns() const { return m_window_stacks[0].size(); }
 
-    bool apply_virtual_desktop_settings(unsigned rows, unsigned columns, bool save);
+    bool apply_workspace_settings(unsigned rows, unsigned columns, bool save);
 
     WindowStack& current_window_stack()
     {

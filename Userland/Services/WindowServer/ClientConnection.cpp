@@ -297,15 +297,15 @@ Messages::WindowServer::SaveScreenLayoutResponse ClientConnection::save_screen_l
     return { success, move(error_msg) };
 }
 
-Messages::WindowServer::ApplyVirtualDesktopSettingsResponse ClientConnection::apply_virtual_desktop_settings(u32 rows, u32 columns, bool save)
+Messages::WindowServer::ApplyWorkspaceSettingsResponse ClientConnection::apply_workspace_settings(u32 rows, u32 columns, bool save)
 {
     if (rows == 0 || columns == 0 || rows > WindowManager::max_window_stack_rows || columns > WindowManager::max_window_stack_columns)
         return { false };
 
-    return { WindowManager::the().apply_virtual_desktop_settings(rows, columns, save) };
+    return { WindowManager::the().apply_workspace_settings(rows, columns, save) };
 }
 
-Messages::WindowServer::GetVirtualDesktopSettingsResponse ClientConnection::get_virtual_desktop_settings()
+Messages::WindowServer::GetWorkspaceSettingsResponse ClientConnection::get_workspace_settings()
 {
     auto& wm = WindowManager::the();
     return { (unsigned)wm.window_stack_rows(), (unsigned)wm.window_stack_columns(), WindowManager::max_window_stack_rows, WindowManager::max_window_stack_columns };

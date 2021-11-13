@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     window->set_title("DesktopPicker");
     window->resize(28, 16);
     window->show();
-    window->make_window_manager(WindowServer::WMEventMask::VirtualDesktopChanges);
+    window->make_window_manager(WindowServer::WMEventMask::WorkspaceChanges);
 
     return app->exec();
 }

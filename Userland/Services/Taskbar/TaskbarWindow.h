@@ -37,8 +37,8 @@ private:
 
     void update_applet_area();
 
-    bool is_window_on_current_virtual_desktop(::Window&) const;
-    void virtual_desktop_change_event(unsigned, unsigned);
+    bool is_window_on_current_workspace(::Window&) const;
+    void workspace_change_event(unsigned, unsigned);
 
     void set_start_button_font(Gfx::Font const&);
 
@@ -53,6 +53,6 @@ private:
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
 
-    unsigned m_current_virtual_desktop_row { 0 };
-    unsigned m_current_virtual_desktop_column { 0 };
+    unsigned m_current_workspace_row { 0 };
+    unsigned m_current_workspace_column { 0 };
 };

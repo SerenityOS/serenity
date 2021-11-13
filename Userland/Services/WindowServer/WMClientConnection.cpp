@@ -158,7 +158,7 @@ void WMClientConnection::set_manager_window(i32 window_id)
     WindowManager::the().greet_window_manager(*this);
 }
 
-void WMClientConnection::set_virtual_desktop(u32 row, u32 col)
+void WMClientConnection::set_workspace(u32 row, u32 col)
 {
     WindowManager::the().switch_to_window_stack(row, col);
 }

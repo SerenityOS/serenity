@@ -63,7 +63,7 @@ int main(int argc, char** argv)
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
         | WindowServer::WMEventMask::WindowIconChanges
-        | WindowServer::WMEventMask::VirtualDesktopChanges);
+        | WindowServer::WMEventMask::WorkspaceChanges);
 
     return app->exec();
 }
