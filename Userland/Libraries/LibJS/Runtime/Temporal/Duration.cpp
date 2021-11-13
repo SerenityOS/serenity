@@ -1048,7 +1048,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         hours = (double)round_number_to_increment(fractional_hours, increment, rounding_mode);
 
         // c. Set remainder to fractionalHours - hours.
-        remainder = fractional_hours - days;
+        remainder = fractional_hours - hours;
 
         // d. Set minutes, seconds, milliseconds, microseconds, and nanoseconds to 0.
         minutes = 0;
