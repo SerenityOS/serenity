@@ -94,7 +94,7 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
             { "%"sv, "{percentSign}"sv },
             { "+"sv, "{plusSign}"sv },
             { "-"sv, "{minusSign}"sv },
-            { "¤"sv, "{currencyCode}"sv }, // U+00A4 Currency Sign
+            { "¤"sv, "{currency}"sv }, // U+00A4 Currency Sign
         };
 
         if (auto start_number_index = pattern.find_any_of("#0"sv, String::SearchDirection::Forward); start_number_index.has_value()) {

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Array.h>
-#include <AK/Utf8View.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
@@ -596,7 +595,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
     Vector<PatternPartition> result;
 
     // 7. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = partition_pattern(*pattern);
+    auto pattern_parts = pattern->visit([](auto const& p) { return partition_pattern(p); });
 
     // 8. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
@@ -662,32 +661,11 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         }
 
         // i. Else if p is equal to "currencyCode" and numberFormat.[[Style]] is "currency", then
-        else if ((part == "currencyCode"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
-            // i. Let currency be numberFormat.[[Currency]].
-            // ii. Let cd be currency.
-            // iii. Append a new Record { [[Type]]: "currency", [[Value]]: cd } as the last element of result.
-            result.append({ part, number_format.currency() });
-        }
-
         // j. Else if p is equal to "currencyPrefix" and numberFormat.[[Style]] is "currency", then
-        else if ((part == "currencyPrefix"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
-            // i. Let currency be numberFormat.[[Currency]].
-            // ii. Let currencyDisplay be numberFormat.[[CurrencyDisplay]].
-            // iii. Let cd be an ILD String value representing currency before x in currencyDisplay form, which may depend on x in languages having different plural forms.
-            // iv. Append a new Record { [[Type]]: "currency", [[Value]]: cd } as the last element of result.
-
-            // FIXME: LibUnicode will need to parse currencies.json and the "currencySpacing/beforeCurrency" object from numbers.json.
-        }
-
         // k. Else if p is equal to "currencySuffix" and numberFormat.[[Style]] is "currency", then
-        else if ((part == "currencySuffix"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
-            // i. Let currency be numberFormat.[[Currency]].
-            // ii. Let currencyDisplay be numberFormat.[[CurrencyDisplay]].
-            // iii. Let cd be an ILD String value representing currency after x in currencyDisplay form, which may depend on x in languages having different plural forms. If the implementation does not have such a representation of currency, use currency itself.
-            // iv. Append a new Record { [[Type]]: "currency", [[Value]]: cd } as the last element of result.
-
-            // FIXME: LibUnicode will need to parse currencies.json and the "currencySpacing/afterCurrency" object from numbers.json.
-        }
+        //
+        // Note: Our implementation formats currency codes during GetNumberFormatPattern so that we
+        //       do not have to do currency display / plurality lookups more than once.
 
         // l. Else,
         else {
@@ -1198,7 +1176,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
 }
 
 // 15.1.14 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
-Optional<StringView> get_number_format_pattern(NumberFormat& number_format, double number)
+Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
@@ -1239,11 +1217,20 @@ Optional<StringView> get_number_format_pattern(NumberFormat& number_format, doub
         // f. Let patterns be patterns.[[<currency>]].
         // g. Let patterns be patterns.[[<currencyDisplay>]].
         // h. Let patterns be patterns.[[<currencySign>]].
+
+        // Handling of other [[CurrencyDisplay]] options will occur after [[SignDisplay]].
+        if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
+            auto maybe_patterns = Unicode::select_currency_unit_pattern(number_format.data_locale(), number_format.numbering_system(), number);
+            if (maybe_patterns.has_value()) {
+                patterns = maybe_patterns.release_value();
+                break;
+            }
+        }
+
         switch (number_format.currency_sign()) {
         case NumberFormat::CurrencySign::Standard:
             patterns = Unicode::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), Unicode::StandardNumberFormatType::Currency);
             break;
-
         case NumberFormat::CurrencySign::Accounting:
             patterns = Unicode::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), Unicode::StandardNumberFormatType::Accounting);
             break;
@@ -1330,6 +1317,39 @@ Optional<StringView> get_number_format_pattern(NumberFormat& number_format, doub
 
     default:
         VERIFY_NOT_REACHED();
+    }
+
+    // Handling of steps 9b/9g: Depending on the currency display and the format pattern found above,
+    // we might need to mutate the format pattern to inject a space between the currency display and
+    // the currency number.
+    if (number_format.style() == NumberFormat::Style::Currency) {
+        if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
+            auto maybe_currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Numeric);
+            auto currency_display = maybe_currency_display.value_or(number_format.currency());
+
+            return pattern.replace("{0}"sv, "{number}"sv).replace("{1}"sv, currency_display);
+        }
+
+        Optional<StringView> currency_display;
+
+        switch (number_format.currency_display()) {
+        case NumberFormat::CurrencyDisplay::Code:
+            currency_display = number_format.currency();
+            break;
+        case NumberFormat::CurrencyDisplay::Symbol:
+            currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Short);
+            break;
+        case NumberFormat::CurrencyDisplay::NarrowSymbol:
+            currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Narrow);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        if (!currency_display.has_value())
+            currency_display = number_format.currency();
+
+        return Unicode::create_currency_format_pattern(*currency_display, pattern);
     }
 
     // 16. Return pattern.

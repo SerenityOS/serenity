@@ -8,6 +8,8 @@
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA
@@ -961,6 +963,79 @@ String resolve_most_likely_territory([[maybe_unused]] LanguageID const& language
 #endif
 
     return aliases[0].to_string();
+}
+
+Optional<NumberFormat> select_currency_unit_pattern(StringView locale, StringView system, double number)
+{
+    // FIXME: This is a rather naive and locale-unaware implementation Unicode's TR-35 pluralization
+    //        rules: https://www.unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
+    //        Once those rules are implemented for LibJS, we better use them instead.
+    auto formats = get_compact_number_system_formats(locale, system, CompactNumberFormatType::CurrencyUnit);
+
+    auto find_plurality = [&](auto plurality) -> Optional<NumberFormat> {
+        if (auto it = formats.find_if([&](auto& patterns) { return patterns.plurality == plurality; }); it != formats.end())
+            return *it;
+        return {};
+    };
+
+    if (number == 0) {
+        if (auto patterns = find_plurality(NumberFormat::Plurality::Zero); patterns.has_value())
+            return patterns;
+    } else if (number == 1) {
+        if (auto patterns = find_plurality(NumberFormat::Plurality::One); patterns.has_value())
+            return patterns;
+    } else if (number == 2) {
+        if (auto patterns = find_plurality(NumberFormat::Plurality::Two); patterns.has_value())
+            return patterns;
+    } else {
+        if (auto patterns = find_plurality(NumberFormat::Plurality::Many); patterns.has_value())
+            return patterns;
+    }
+
+    return find_plurality(NumberFormat::Plurality::Other);
+}
+
+// https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
+String create_currency_format_pattern(StringView currency_display, StringView base_pattern)
+{
+    constexpr auto number_key = "{number}"sv;
+    constexpr auto currency_key = "{currency}"sv;
+    constexpr auto spacing = "\u00A0"sv; // No-Break Space (NBSP)
+
+    auto number_index = base_pattern.find(number_key);
+    VERIFY(number_index.has_value());
+
+    auto currency_index = base_pattern.find(currency_key);
+    VERIFY(currency_index.has_value());
+
+    static auto symbol_category = general_category_from_string("Symbol"sv);
+    VERIFY(symbol_category.has_value()); // This shouldn't be reached if Unicode generation is disabled.
+
+    Utf8View utf8_currency_display { currency_display };
+    Optional<String> currency_display_with_spacing;
+
+    if (*number_index < *currency_index) {
+        if (!base_pattern.substring_view(0, *currency_index).ends_with(spacing)) {
+            u32 first_currency_code_point = *utf8_currency_display.begin();
+
+            if (!code_point_has_general_category(first_currency_code_point, *symbol_category))
+                currency_display_with_spacing = String::formatted("{}{}", spacing, currency_display);
+        }
+    } else {
+        if (!base_pattern.substring_view(0, *number_index).ends_with(spacing)) {
+            u32 last_currency_code_point = 0;
+            for (auto it = utf8_currency_display.begin(); it != utf8_currency_display.end(); ++it)
+                last_currency_code_point = *it;
+
+            if (!code_point_has_general_category(last_currency_code_point, *symbol_category))
+                currency_display_with_spacing = String::formatted("{}{}", currency_display, spacing);
+        }
+    }
+
+    if (currency_display_with_spacing.has_value())
+        return base_pattern.replace(currency_key, *currency_display_with_spacing);
+
+    return base_pattern.replace(currency_key, currency_display);
 }
 
 String LanguageID::to_string() const
