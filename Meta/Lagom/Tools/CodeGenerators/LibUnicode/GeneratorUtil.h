@@ -8,6 +8,10 @@
 
 #include <AK/Format.h>
 #include <AK/HashMap.h>
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
+#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
@@ -145,6 +149,40 @@ inline Core::DirIterator path_to_dir_iterator(String path)
     }
 
     return iterator;
+}
+
+template<typename LocaleDataType>
+void parse_default_content_locales(String core_path, LocaleDataType& locale_data)
+{
+    LexicalPath default_content_path(move(core_path));
+    default_content_path = default_content_path.append("defaultContent.json"sv);
+    VERIFY(Core::File::exists(default_content_path.string()));
+
+    auto default_content_file_or_error = Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!default_content_file_or_error.is_error());
+
+    auto default_content = JsonParser(default_content_file_or_error.value()->read_all()).parse();
+    VERIFY(default_content.has_value());
+
+    auto const& default_content_array = default_content->as_object().get("defaultContent"sv);
+
+    default_content_array.as_array().for_each([&](JsonValue const& value) {
+        auto locale = value.as_string();
+        StringView default_locale = locale;
+
+        while (true) {
+            if (locale_data.locales.contains(default_locale))
+                break;
+
+            auto pos = default_locale.find_last('-');
+            if (!pos.has_value())
+                return;
+
+            default_locale = default_locale.substring_view(0, *pos);
+        }
+
+        locale_data.locales.set(locale, locale_data.locales.get(default_locale).value());
+    });
 }
 
 inline void ensure_from_string_types_are_generated(SourceGenerator& generator)
