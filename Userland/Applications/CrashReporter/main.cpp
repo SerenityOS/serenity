@@ -188,6 +188,7 @@ int main(int argc, char** argv)
     String executable_path;
     Vector<String> arguments;
     Vector<String> environment;
+    Vector<String> memory_regions;
     int pid { 0 };
     u8 termination_signal { 0 };
 
@@ -203,6 +204,11 @@ int main(int argc, char** argv)
             thread_backtraces.append(build_backtrace(*coredump, thread_info, thread_index));
             thread_cpu_registers.append(build_cpu_registers(thread_info, thread_index));
             ++thread_index;
+            return IterationDecision::Continue;
+        });
+
+        coredump->for_each_memory_region_info([&](auto& memory_region_info) {
+            memory_regions.append(String::formatted("{:p} - {:p}: {}", memory_region_info.region_start, memory_region_info.region_end, (const char*)memory_region_info.region_name));
             return IterationDecision::Continue;
         });
 
@@ -343,6 +349,15 @@ int main(int argc, char** argv)
     environment_text_editor.set_text(String::join("\n", environment));
     environment_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
     environment_text_editor.set_should_hide_unnecessary_scrollbars(true);
+
+    auto& memory_regions_tab = tab_widget.add_tab<GUI::Widget>("Memory Regions");
+    memory_regions_tab.set_layout<GUI::VerticalBoxLayout>();
+    memory_regions_tab.layout()->set_margins(4);
+
+    auto& memory_regions_text_editor = memory_regions_tab.add<GUI::TextEditor>();
+    memory_regions_text_editor.set_text(String::join("\n", memory_regions));
+    memory_regions_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+    memory_regions_text_editor.set_should_hide_unnecessary_scrollbars(true);
 
     auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
