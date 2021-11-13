@@ -704,6 +704,9 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
 
     // 2. Let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, and increment each be the mathematical values of themselves.
 
+    // FIXME: assuming "smallestUnit" as the option name here leads to confusing error messages in some cases:
+    //        > new Temporal.Duration().total({ unit: "month" })
+    //        Uncaught exception: [RangeError] month is not a valid value for option smallestUnit
     // 3. If unit is "year", "month", or "week", and relativeTo is undefined, then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv) && !relative_to_object) {
         // a. Throw a RangeError exception.

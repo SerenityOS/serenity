@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationPrototype.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <math.h>
 
 namespace JS::Temporal {
@@ -45,6 +46,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.negated, negated, 0, attr);
     define_native_function(vm.names.abs, abs, 0, attr);
+    define_native_function(vm.names.total, total, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -284,6 +286,110 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
     return TRY(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
+}
+
+// 7.3.21 Temporal.Duration.prototype.total ( options ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = TRY(typed_this_object(global_object));
+
+    // 3. If options is undefined, throw a TypeError exception.
+    if (vm.argument(0).is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+
+    // 5. Let relativeTo be ? ToRelativeTemporalObject(options).
+    auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
+
+    // 6. Let unit be ? ToTemporalDurationTotalUnit(options).
+    auto unit = TRY(to_temporal_duration_total_unit(global_object, *options));
+
+    // 7. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], unit, relativeTo).
+    auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), unit, relative_to));
+
+    // 8. Let intermediate be undefined.
+    ZonedDateTime* intermediate = nullptr;
+
+    // 9. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
+    if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
+        // a. Set intermediate to ? MoveRelativeZonedDateTime(relativeTo, unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], 0).
+        intermediate = TRY(move_relative_zoned_date_time(global_object, static_cast<ZonedDateTime&>(relative_to.as_object()), unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
+    }
+
+    // 10. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
+    auto balance_result = TRY(balance_duration(global_object, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds())), unit, intermediate));
+
+    // 11. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
+    auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+
+    double whole;
+
+    // 12. If unit is "year", then
+    if (unit == "year"sv) {
+        // a. Let whole be roundResult.[[Years]].
+        whole = round_result.years;
+    }
+
+    // 13. If unit is "month", then
+    if (unit == "month"sv) {
+        // a. Let whole be roundResult.[[Months]].
+        whole = round_result.months;
+    }
+
+    // 14. If unit is "week", then
+    if (unit == "week"sv) {
+        // a. Let whole be roundResult.[[Weeks]].
+        whole = round_result.weeks;
+    }
+
+    // 15. If unit is "day", then
+    if (unit == "day"sv) {
+        // a. Let whole be roundResult.[[Days]].
+        whole = round_result.days;
+    }
+
+    // 16. If unit is "hour", then
+    if (unit == "hour"sv) {
+        // a. Let whole be roundResult.[[Hours]].
+        whole = round_result.hours;
+    }
+
+    // 17. If unit is "minute", then
+    if (unit == "minute"sv) {
+        // a. Let whole be roundResult.[[Minutes]].
+        whole = round_result.minutes;
+    }
+
+    // 18. If unit is "second", then
+    if (unit == "second"sv) {
+        // a. Let whole be roundResult.[[Seconds]].
+        whole = round_result.seconds;
+    }
+
+    // 19. If unit is "millisecond", then
+    if (unit == "millisecond"sv) {
+        // a. Let whole be roundResult.[[Milliseconds]].
+        whole = round_result.milliseconds;
+    }
+
+    // 20. If unit is "microsecond", then
+    if (unit == "microsecond"sv) {
+        // a. Let whole be roundResult.[[Microseconds]].
+        whole = round_result.microseconds;
+    }
+
+    // 21. If unit is "nanosecond", then
+    if (unit == "nanosecond"sv) {
+        // a. Let whole be roundResult.[[Nanoseconds]].
+        whole = round_result.nanoseconds;
+    }
+
+    // 22. Return whole + roundResult.[[Remainder]].
+    return whole + round_result.remainder;
 }
 
 // 7.3.22 Temporal.Duration.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring

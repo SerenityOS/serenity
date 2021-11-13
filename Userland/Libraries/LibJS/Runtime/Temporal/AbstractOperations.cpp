@@ -515,6 +515,32 @@ ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject& glob
     return smallest_unit;
 }
 
+// 13.19 ToTemporalDurationTotalUnit ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationtotalunit
+ThrowCompletionOr<String> to_temporal_duration_total_unit(GlobalObject& global_object, Object const& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let unit be ? GetOption(normalizedOptions, "unit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », undefined).
+    auto unit_value = TRY(get_option(global_object, normalized_options, vm.names.unit, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_undefined()));
+
+    // 2. If unit is undefined, then
+    if (unit_value.is_undefined()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IsUndefined, "unit option value"sv);
+    }
+
+    auto unit = unit_value.as_string().string();
+
+    // 3. If unit is in the Plural column of Table 12, then
+    if (auto singular_unit = plural_to_singular_units.get(unit); singular_unit.has_value()) {
+        // a. Set unit to the corresponding Singular value of the same row.
+        unit = *singular_unit;
+    }
+
+    // 4. Return unit.
+    return unit;
+}
+
 // 13.21 ToRelativeTemporalObject ( options ), https://tc39.es/proposal-temporal/#sec-temporal-torelativetemporalobject
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object, Object const& options)
 {
