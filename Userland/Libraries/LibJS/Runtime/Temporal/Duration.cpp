@@ -381,7 +381,7 @@ ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object
     result_nanoseconds = fabs(result_nanoseconds);
 
     // 10. If largestUnit is "year", "month", "week", "day", or "hour", then
-    if (largest_unit.is_one_of("year"sv, "month"sv, "day"sv, "hour"sv)) {
+    if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv, "hour"sv)) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
         // b. Set nanoseconds to nanoseconds modulo 1000.
