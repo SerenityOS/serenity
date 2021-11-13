@@ -107,7 +107,6 @@ private:
     Mutex m_lock { "AHCIPort" };
 
     mutable bool m_wait_for_completion { false };
-    bool m_wait_connect_for_completion { false };
 
     NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
     NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;

@@ -89,7 +89,6 @@ void AHCIPort::handle_interrupt()
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC)) {
         clear_sata_error_register();
-        m_wait_connect_for_completion = true;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
         // We need to defer the reset, because we can receive interrupts when
