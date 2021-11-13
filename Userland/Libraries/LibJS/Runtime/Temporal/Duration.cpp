@@ -399,7 +399,7 @@ ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject& global_object
         // h. Set seconds to seconds modulo 60.
         seconds = seconds_division_result.remainder.to_double();
         // i. Set hours to floor(minutes / 60).
-        auto minutes_division_result = milliseconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
+        auto minutes_division_result = seconds_division_result.quotient.divided_by(Crypto::UnsignedBigInteger(60));
         hours = minutes_division_result.quotient.to_double();
         // j. Set minutes to minutes modulo 60.
         minutes = minutes_division_result.remainder.to_double();
