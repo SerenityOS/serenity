@@ -596,7 +596,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
         {
             auto& cpu_group_box = self.add<GUI::GroupBox>("CPUs");
             cpu_group_box.set_layout<GUI::VerticalBoxLayout>();
-            cpu_group_box.layout()->set_margins({ 16, 6, 6 });
+            cpu_group_box.layout()->set_margins(6);
 
             Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
             processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
@@ -627,7 +627,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
         {
             auto& pci_group_box = self.add<GUI::GroupBox>("PCI devices");
             pci_group_box.set_layout<GUI::VerticalBoxLayout>();
-            pci_group_box.layout()->set_margins({ 16, 6, 6 });
+            pci_group_box.layout()->set_margins(6);
 
             auto& pci_table_view = pci_group_box.add<GUI::TableView>();
 
@@ -693,7 +693,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
 
     auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
     cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
-    cpu_graph_group_box.layout()->set_margins({ 16, 6, 6 });
+    cpu_graph_group_box.layout()->set_margins(6);
     cpu_graph_group_box.set_fixed_height(120);
     Vector<GraphWidget&> cpu_graphs;
     for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
@@ -725,7 +725,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
 
     auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
     memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
-    memory_graph_group_box.layout()->set_margins({ 16, 6, 6 });
+    memory_graph_group_box.layout()->set_margins(6);
     memory_graph_group_box.set_fixed_height(120);
     auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
     memory_graph.set_stack_values(true);
