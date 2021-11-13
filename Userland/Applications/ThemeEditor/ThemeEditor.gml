@@ -9,7 +9,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [4, 4, 4, 4]
         }
         shrink_to_fit: true
         title: "Colors"
@@ -27,7 +27,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [4, 4, 4, 4]
         }
         shrink_to_fit: true
         title: "Flags"
@@ -49,7 +49,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [4, 4, 4, 4]
         }
         shrink_to_fit: true
         title: "Metrics"
@@ -67,7 +67,7 @@
 
     @GUI::GroupBox {
         layout: @GUI::HorizontalBoxLayout {
-            margins: [16, 8, 8, 8]
+            margins: [4, 4, 4, 4]
         }
         shrink_to_fit: true
         title: "Paths"
