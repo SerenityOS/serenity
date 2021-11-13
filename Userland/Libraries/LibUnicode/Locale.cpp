@@ -13,6 +13,7 @@
 #include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA
+#    include <LibUnicode/UnicodeData.h>
 #    include <LibUnicode/UnicodeLocale.h>
 #    include <LibUnicode/UnicodeNumberFormat.h>
 #endif
@@ -998,6 +999,7 @@ Optional<NumberFormat> select_currency_unit_pattern(StringView locale, StringVie
 // https://www.unicode.org/reports/tr35/tr35-numbers.html#Currencies
 String create_currency_format_pattern(StringView currency_display, StringView base_pattern)
 {
+#if ENABLE_UNICODE_DATA
     constexpr auto number_key = "{number}"sv;
     constexpr auto currency_key = "{currency}"sv;
     constexpr auto spacing = "\u00A0"sv; // No-Break Space (NBSP)
@@ -1008,9 +1010,6 @@ String create_currency_format_pattern(StringView currency_display, StringView ba
     auto currency_index = base_pattern.find(currency_key);
     VERIFY(currency_index.has_value());
 
-    static auto symbol_category = general_category_from_string("Symbol"sv);
-    VERIFY(symbol_category.has_value()); // This shouldn't be reached if Unicode generation is disabled.
-
     Utf8View utf8_currency_display { currency_display };
     Optional<String> currency_display_with_spacing;
 
@@ -1018,7 +1017,7 @@ String create_currency_format_pattern(StringView currency_display, StringView ba
         if (!base_pattern.substring_view(0, *currency_index).ends_with(spacing)) {
             u32 first_currency_code_point = *utf8_currency_display.begin();
 
-            if (!code_point_has_general_category(first_currency_code_point, *symbol_category))
+            if (!code_point_has_general_category(first_currency_code_point, GeneralCategory::Symbol))
                 currency_display_with_spacing = String::formatted("{}{}", spacing, currency_display);
         }
     } else {
@@ -1027,13 +1026,14 @@ String create_currency_format_pattern(StringView currency_display, StringView ba
             for (auto it = utf8_currency_display.begin(); it != utf8_currency_display.end(); ++it)
                 last_currency_code_point = *it;
 
-            if (!code_point_has_general_category(last_currency_code_point, *symbol_category))
+            if (!code_point_has_general_category(last_currency_code_point, GeneralCategory::Symbol))
                 currency_display_with_spacing = String::formatted("{}{}", currency_display, spacing);
         }
     }
 
     if (currency_display_with_spacing.has_value())
         return base_pattern.replace(currency_key, *currency_display_with_spacing);
+#endif
 
     return base_pattern.replace(currency_key, currency_display);
 }
