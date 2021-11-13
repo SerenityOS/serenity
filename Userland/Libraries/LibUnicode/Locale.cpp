@@ -1013,18 +1013,30 @@ String create_currency_format_pattern(StringView currency_display, StringView ba
     Utf8View utf8_currency_display { currency_display };
     Optional<String> currency_display_with_spacing;
 
+    auto last_code_point = [](StringView string) {
+        Utf8View utf8_string { string };
+        u32 code_point = 0;
+
+        for (auto it = utf8_string.begin(); it != utf8_string.end(); ++it)
+            code_point = *it;
+
+        return code_point;
+    };
+
     if (*number_index < *currency_index) {
-        if (!base_pattern.substring_view(0, *currency_index).ends_with(spacing)) {
+        u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *currency_index));
+
+        if (!code_point_has_general_category(last_pattern_code_point, GeneralCategory::Separator)) {
             u32 first_currency_code_point = *utf8_currency_display.begin();
 
             if (!code_point_has_general_category(first_currency_code_point, GeneralCategory::Symbol))
                 currency_display_with_spacing = String::formatted("{}{}", spacing, currency_display);
         }
     } else {
-        if (!base_pattern.substring_view(0, *number_index).ends_with(spacing)) {
-            u32 last_currency_code_point = 0;
-            for (auto it = utf8_currency_display.begin(); it != utf8_currency_display.end(); ++it)
-                last_currency_code_point = *it;
+        u32 last_pattern_code_point = last_code_point(base_pattern.substring_view(0, *number_index));
+
+        if (!code_point_has_general_category(last_pattern_code_point, GeneralCategory::Separator)) {
+            u32 last_currency_code_point = last_code_point(currency_display);
 
             if (!code_point_has_general_category(last_currency_code_point, GeneralCategory::Symbol))
                 currency_display_with_spacing = String::formatted("{}{}", currency_display, spacing);
