@@ -7,7 +7,7 @@ describe("correct behavior", () => {
         const instant1 = new Temporal.Instant(1625614920000000000n);
         const instant2 = new Temporal.Instant(0n);
         expect(instant1.since(instant2).seconds).toBe(1625614920);
-        expect(instant1.since(instant2, { largestUnit: "hour" }).hours).toBe(27093582);
+        expect(instant1.since(instant2, { largestUnit: "hour" }).hours).toBe(451559);
     });
 });
 
