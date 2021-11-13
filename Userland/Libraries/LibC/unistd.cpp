@@ -296,7 +296,7 @@ ssize_t read(int fd, void* buf, size_t count)
 
 ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 {
-    int rc = syscall(SC_pread, fd, buf, count, offset);
+    int rc = syscall(SC_pread, fd, buf, count, &offset);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
