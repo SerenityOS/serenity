@@ -196,6 +196,6 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
 String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias);
 
 Optional<NumberFormat> select_currency_unit_pattern(StringView locale, StringView system, double number);
-String create_currency_format_pattern(StringView currency_display, StringView base_pattern);
+Optional<String> augment_currency_format_pattern(StringView currency_display, StringView base_pattern);
 
 }
