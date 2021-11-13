@@ -79,23 +79,22 @@ struct UnicodeLocaleData {
     Vector<String> numeric_symbols;
 };
 
-static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format, bool is_unit_pattern = false)
+static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
     auto replace_patterns = [&](String pattern) {
-        if (is_unit_pattern) {
-            // Skip parsing unit patterns, which are of the form "{0} {1}", and do not contain any
-            // of the replacement patterns below.
-            return pattern;
-        }
-
         static HashMap<StringView, StringView> replacements = {
+            { "{0}"sv, "{number}"sv },
+            { "{1}"sv, "{currency}"sv },
             { "%"sv, "{percentSign}"sv },
             { "+"sv, "{plusSign}"sv },
             { "-"sv, "{minusSign}"sv },
             { "¤"sv, "{currency}"sv }, // U+00A4 Currency Sign
         };
+
+        for (auto const& replacement : replacements)
+            pattern = pattern.replace(replacement.key, replacement.value, true);
 
         if (auto start_number_index = pattern.find_any_of("#0"sv, String::SearchDirection::Forward); start_number_index.has_value()) {
             auto end_number_index = *start_number_index + 1;
@@ -110,9 +109,6 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
                 *start_number_index > 0 ? pattern.substring_view(0, *start_number_index) : ""sv,
                 pattern.substring_view(end_number_index));
         }
-
-        for (auto const& replacement : replacements)
-            pattern = pattern.replace(replacement.key, replacement.value, true);
 
         return pattern;
     };
@@ -173,18 +169,16 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
                 return;
 
             NumberFormat format {};
-            bool is_unit_pattern = false;
 
             if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
                 VERIFY(*type % 10 == 0);
                 format.magnitude = static_cast<u8>(log10(*type));
             } else {
                 VERIFY(split_key[0] == "unitPattern"sv);
-                is_unit_pattern = true;
             }
 
             format.plurality = NumberFormat::plurality_from_string(split_key[2]);
-            parse_number_pattern(value.as_string(), locale_data, format, is_unit_pattern);
+            parse_number_pattern(value.as_string(), locale_data, format);
 
             result.append(move(format));
         });
