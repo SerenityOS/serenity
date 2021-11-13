@@ -199,6 +199,7 @@ FormatResult format_numeric_to_string(NumberFormat& number_format, double number
 Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, double number);
 Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, double number, String formatted_string, int exponent);
 String format_numeric(NumberFormat& number_format, double number);
+Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, double number);
 RawFormatResult to_raw_precision(double number, int min_precision, int max_precision);
 RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction);
 ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
