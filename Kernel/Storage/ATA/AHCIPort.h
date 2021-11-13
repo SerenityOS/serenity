@@ -64,7 +64,7 @@ private:
     const char* try_disambiguate_sata_status();
     void try_disambiguate_sata_error();
 
-    bool initiate_sata_reset(SpinlockLocker<Spinlock>&);
+    bool initiate_sata_reset();
     void rebase();
     void recover_from_fatal_error();
     bool shutdown();

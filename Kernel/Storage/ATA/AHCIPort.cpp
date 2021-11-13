@@ -250,7 +250,7 @@ bool AHCIPort::reset()
     full_memory_barrier();
     clear_sata_error_register();
     full_memory_barrier();
-    if (!initiate_sata_reset(lock)) {
+    if (!initiate_sata_reset()) {
         return false;
     }
     return initialize();
@@ -780,7 +780,7 @@ void AHCIPort::stop_fis_receiving() const
     m_port_registers.cmd = m_port_registers.cmd & 0xFFFFFFEF;
 }
 
-bool AHCIPort::initiate_sata_reset(SpinlockLocker<Spinlock>& main_lock)
+bool AHCIPort::initiate_sata_reset()
 {
     VERIFY(m_lock.is_locked());
     VERIFY(m_hard_lock.is_locked());
@@ -802,24 +802,16 @@ bool AHCIPort::initiate_sata_reset(SpinlockLocker<Spinlock>& main_lock)
     set_interface_state(AHCI::DeviceDetectionInitialization::PerformInterfaceInitializationSequence);
     // The AHCI specification says to wait now a 1 millisecond
     IO::delay(1000);
-    // FIXME: Find a better way to opt-out temporarily from Scoped locking!
-    {
-        main_lock.unlock();
-        VERIFY_INTERRUPTS_ENABLED();
-        full_memory_barrier();
-        set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
-        full_memory_barrier();
-        if (m_wait_connect_for_completion) {
-            retry = 0;
-            while (retry < 100000) {
-                if (is_phy_enabled())
-                    break;
+    full_memory_barrier();
+    set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
+    full_memory_barrier();
+    retry = 0;
+    while (retry < 1000) {
+        if (is_phy_enabled())
+            break;
 
-                IO::delay(10);
-                retry++;
-            }
-        }
-        main_lock.lock();
+        IO::delay(10);
+        retry++;
     }
 
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
