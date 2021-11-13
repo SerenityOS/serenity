@@ -36,8 +36,8 @@ public:
     const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }
     size_t main_screen_index() const { return m_main_screen_index; }
 
-    unsigned virtual_desktop_rows() const { return m_virtual_desktop_rows; }
-    unsigned virtual_desktop_columns() const { return m_virtual_desktop_columns; }
+    unsigned workspace_rows() const { return m_workspace_rows; }
+    unsigned workspace_columns() const { return m_workspace_columns; }
 
     int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
 
@@ -53,8 +53,8 @@ private:
     Vector<Gfx::IntRect, default_screen_rect_count> m_rects;
     size_t m_main_screen_index { 0 };
     Gfx::IntRect m_bounding_rect;
-    unsigned m_virtual_desktop_rows { 1 };
-    unsigned m_virtual_desktop_columns { 1 };
+    unsigned m_workspace_rows { 1 };
+    unsigned m_workspace_columns { 1 };
     Vector<Function<void(Desktop&)>> m_receive_rects_callbacks;
 };
 

@@ -25,8 +25,8 @@ private:
     void create_frame();
     void load_current_settings();
 
-    RefPtr<GUI::SpinBox> m_virtual_desktop_rows_spinbox;
-    RefPtr<GUI::SpinBox> m_virtual_desktop_columns_spinbox;
+    RefPtr<GUI::SpinBox> m_workspace_rows_spinbox;
+    RefPtr<GUI::SpinBox> m_workspace_columns_spinbox;
 };
 
 }
