@@ -5,7 +5,7 @@ config
 ## Synopsis
 
 ```sh
-$ config <domain> <group> <key> [value]
+$ config [--remove] <domain> <group> <key> [value]
 ```
 
 ## Description
@@ -16,6 +16,7 @@ Show or modify values in the configuration files through ConfigServer.
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `-r`, `--remove`: Remove key
 
 ## Arguments:
 
