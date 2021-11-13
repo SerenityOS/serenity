@@ -97,6 +97,7 @@ public:
     CurrencyDisplay currency_display() const { return *m_currency_display; }
     StringView currency_display_string() const;
     void set_currency_display(StringView currency_display);
+    StringView resolve_currency_display();
 
     bool has_currency_sign() const { return m_currency_sign.has_value(); }
     CurrencySign currency_sign() const { return *m_currency_sign; }
@@ -177,6 +178,9 @@ private:
     Optional<CompactDisplay> m_compact_display {};          // [[CompactDisplay]]
     SignDisplay m_sign_display { SignDisplay::Invalid };    // [[SignDisplay]]
     NativeFunction* m_bound_format { nullptr };             // [[BoundFormat]]
+
+    // Non-standard. Stores the resolved currency display string based on [[Locale]], [[Currency]], and [[CurrencyDisplay]].
+    Optional<StringView> m_resolved_currency_display;
 };
 
 struct FormatResult {
