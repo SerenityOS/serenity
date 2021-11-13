@@ -605,7 +605,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // b. If p is "literal", then
         if (part == "literal"sv) {
             // i. Append a new Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } as the last element of result.
-            result.append({ part, move(pattern_part.value) });
+            result.append({ "literal"sv, move(pattern_part.value) });
         }
 
         // c. Else if p is equal to "number", then
@@ -621,7 +621,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
             // i. Let plusSignSymbol be the ILND String representing the plus sign.
             auto plus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "plusSign"sv).value_or("+"sv);
             // ii. Append a new Record { [[Type]]: "plusSign", [[Value]]: plusSignSymbol } as the last element of result.
-            result.append({ part, plus_sign_symbol });
+            result.append({ "plusSign"sv, plus_sign_symbol });
         }
 
         // e. Else if p is equal to "minusSign", then
@@ -629,7 +629,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
             // i. Let minusSignSymbol be the ILND String representing the minus sign.
             auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "minusSign"sv).value_or("-"sv);
             // ii. Append a new Record { [[Type]]: "minusSign", [[Value]]: minusSignSymbol } as the last element of result.
-            result.append({ part, minus_sign_symbol });
+            result.append({ "minusSign"sv, minus_sign_symbol });
         }
 
         // f. Else if p is equal to "percentSign" and numberFormat.[[Style]] is "percent", then
@@ -637,7 +637,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
             // i. Let percentSignSymbol be the ILND String representing the percent sign.
             auto percent_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "percentSign"sv).value_or("%"sv);
             // ii. Append a new Record { [[Type]]: "percentSign", [[Value]]: percentSignSymbol } as the last element of result.
-            result.append({ part, percent_sign_symbol });
+            result.append({ "percentSign"sv, percent_sign_symbol });
         }
 
         // g. Else if p is equal to "unitPrefix" and numberFormat.[[Style]] is "unit", then
@@ -804,7 +804,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             // ii. If p is "literal", then
             if (part == "literal"sv) {
                 // 1. Append a new Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } as the last element of result.
-                result.append({ part, move(pattern_part.value) });
+                result.append({ "literal"sv, move(pattern_part.value) });
             }
             // iii. Else if p is equal to "number", then
             else if (part == "number"sv) {
