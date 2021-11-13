@@ -401,39 +401,6 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
         locale_data.keywords.append(key);
 }
 
-static void parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
-{
-    LexicalPath default_content_path(move(core_path));
-    default_content_path = default_content_path.append("defaultContent.json"sv);
-    VERIFY(Core::File::exists(default_content_path.string()));
-
-    auto default_content_file_or_error = Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly);
-    VERIFY(!default_content_file_or_error.is_error());
-
-    auto default_content = JsonParser(default_content_file_or_error.value()->read_all()).parse();
-    VERIFY(default_content.has_value());
-
-    auto const& default_content_array = default_content->as_object().get("defaultContent"sv);
-
-    default_content_array.as_array().for_each([&](JsonValue const& value) {
-        auto locale = value.as_string();
-        StringView default_locale = locale;
-
-        while (true) {
-            if (locale_data.locales.contains(default_locale))
-                break;
-
-            auto pos = default_locale.find_last('-');
-            if (!pos.has_value())
-                return;
-
-            default_locale = default_locale.substring_view(0, *pos);
-        }
-
-        locale_data.locales.set(locale, locale_data.locales.get(default_locale).value());
-    });
-}
-
 static void parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = path_to_dir_iterator(locale_names_path);
