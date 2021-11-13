@@ -48,13 +48,13 @@ public:
     void set_modal(bool modal) { m_modal = modal; }
     bool is_modal() const { return m_modal; }
 
-    void set_virtual_desktop(unsigned row, unsigned column)
+    void set_workspace(unsigned row, unsigned column)
     {
-        m_virtual_desktop_row = row;
-        m_virtual_desktop_column = column;
+        m_workspace_row = row;
+        m_workspace_column = column;
     }
-    unsigned virtual_desktop_row() const { return m_virtual_desktop_row; }
-    unsigned virtual_desktop_column() const { return m_virtual_desktop_column; }
+    unsigned workspace_row() const { return m_workspace_row; }
+    unsigned workspace_column() const { return m_workspace_column; }
 
     void set_progress(Optional<int> progress)
     {
@@ -76,8 +76,8 @@ private:
     Gfx::IntRect m_rect;
     RefPtr<GUI::Button> m_button;
     RefPtr<Gfx::Bitmap> m_icon;
-    unsigned m_virtual_desktop_row { 0 };
-    unsigned m_virtual_desktop_column { 0 };
+    unsigned m_workspace_row { 0 };
+    unsigned m_workspace_column { 0 };
     bool m_active { false };
     bool m_minimized { false };
     bool m_modal { false };

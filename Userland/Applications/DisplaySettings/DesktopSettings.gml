@@ -26,7 +26,7 @@
             }
 
             @GUI::SpinBox {
-                name: "virtual_desktop_rows_spinbox"
+                name: "workspace_rows_spinbox"
                 min: 1
                 max: 16
                 orientation: "Horizontal"
@@ -38,7 +38,7 @@
             }
 
             @GUI::SpinBox {
-                name: "virtual_desktop_columns_spinbox"
+                name: "workspace_columns_spinbox"
                 min: 1
                 max: 16
                 orientation: "Horizontal"

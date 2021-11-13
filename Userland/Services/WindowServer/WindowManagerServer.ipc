@@ -12,5 +12,5 @@ endpoint WindowManagerServer
     popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint screen_position) =|
     set_window_taskbar_rect(i32 client_id, i32 window_id, Gfx::IntRect rect) =|
     set_applet_area_position(Gfx::IntPoint position) =|
-    set_virtual_desktop(u32 row, u32 column) =|
+    set_workspace(u32 row, u32 column) =|
 }

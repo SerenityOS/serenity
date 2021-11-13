@@ -100,8 +100,8 @@ endpoint WindowServer
     save_screen_layout() => (bool success, String error_msg)
     show_screen_numbers(bool show) =|
 
-    apply_virtual_desktop_settings(u32 rows, u32 columns, bool save) => (bool success)
-    get_virtual_desktop_settings() => (u32 rows, u32 columns, u32 max_rows, u32 max_columns)
+    apply_workspace_settings(u32 rows, u32 columns, bool save) => (bool success)
+    get_workspace_settings() => (u32 rows, u32 columns, u32 max_rows, u32 max_columns)
 
     set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap icon) =|
 

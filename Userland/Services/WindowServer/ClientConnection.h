@@ -129,8 +129,8 @@ private:
     virtual Messages::WindowServer::SetScreenLayoutResponse set_screen_layout(ScreenLayout const&, bool) override;
     virtual Messages::WindowServer::GetScreenLayoutResponse get_screen_layout() override;
     virtual Messages::WindowServer::SaveScreenLayoutResponse save_screen_layout() override;
-    virtual Messages::WindowServer::ApplyVirtualDesktopSettingsResponse apply_virtual_desktop_settings(u32, u32, bool) override;
-    virtual Messages::WindowServer::GetVirtualDesktopSettingsResponse get_virtual_desktop_settings() override;
+    virtual Messages::WindowServer::ApplyWorkspaceSettingsResponse apply_workspace_settings(u32, u32, bool) override;
+    virtual Messages::WindowServer::GetWorkspaceSettingsResponse get_workspace_settings() override;
     virtual void show_screen_numbers(bool) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;

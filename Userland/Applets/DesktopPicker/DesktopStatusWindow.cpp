@@ -23,8 +23,8 @@ public:
     {
         auto& desktop = GUI::Desktop::the();
 
-        auto vcols = desktop.virtual_desktop_columns();
-        auto vrows = desktop.virtual_desktop_rows();
+        auto vcols = desktop.workspace_columns();
+        auto vrows = desktop.workspace_rows();
 
         auto desktop_width = (width() - gap() * (vcols - 1)) / vcols;
         auto desktop_height = (height() - gap() * (vrows - 1)) / vrows;
@@ -48,8 +48,8 @@ public:
         auto active_color = palette().active_window_border1();
         auto inactive_color = palette().inactive_window_border1();
 
-        for (unsigned row = 0; row < desktop.virtual_desktop_rows(); ++row) {
-            for (unsigned col = 0; col < desktop.virtual_desktop_columns(); ++col) {
+        for (unsigned row = 0; row < desktop.workspace_rows(); ++row) {
+            for (unsigned col = 0; col < desktop.workspace_columns(); ++col) {
                 painter.fill_rect(rect_for_desktop(row, col),
                     (row == current_row() && col == current_col()) ? active_color : inactive_color);
             }
@@ -64,7 +64,7 @@ public:
 
         // Handle case where divider is clicked.
         if (rect_for_desktop(row, col).contains(event.position()))
-            GUI::WindowManagerServerConnection::the().async_set_virtual_desktop(row, col);
+            GUI::WindowManagerServerConnection::the().async_set_workspace(row, col);
     }
 
     virtual void mousewheel_event(GUI::MouseEvent& event) override
@@ -74,8 +74,8 @@ public:
         auto col = current_col();
         auto row = current_row();
 
-        auto vcols = desktop.virtual_desktop_columns();
-        auto vrows = desktop.virtual_desktop_rows();
+        auto vcols = desktop.workspace_columns();
+        auto vrows = desktop.workspace_rows();
         auto direction = event.wheel_delta() < 0 ? 1 : -1;
 
         if (event.modifiers() & Mod_Shift)
@@ -83,7 +83,7 @@ public:
         else
             row = abs((int)row + direction) % vrows;
 
-        GUI::WindowManagerServerConnection::the().async_set_virtual_desktop(row, col);
+        GUI::WindowManagerServerConnection::the().async_set_workspace(row, col);
     }
 
     unsigned current_row() const { return m_current_row; }
@@ -120,8 +120,8 @@ DesktopStatusWindow::~DesktopStatusWindow()
 
 void DesktopStatusWindow::wm_event(GUI::WMEvent& event)
 {
-    if (event.type() == GUI::Event::WM_VirtualDesktopChanged) {
-        auto& changed_event = static_cast<GUI::WMVirtualDesktopChangedEvent&>(event);
+    if (event.type() == GUI::Event::WM_WorkspaceChanged) {
+        auto& changed_event = static_cast<GUI::WMWorkspaceChangedEvent&>(event);
         m_widget->set_current_row(changed_event.current_row());
         m_widget->set_current_col(changed_event.current_column());
         update();

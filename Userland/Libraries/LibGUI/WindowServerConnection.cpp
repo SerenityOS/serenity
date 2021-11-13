@@ -47,7 +47,7 @@ WindowServerConnection::WindowServerConnection()
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
     auto message = wait_for_specific_message<Messages::WindowClient::FastGreet>();
     set_system_theme_from_anonymous_buffer(message->theme_buffer());
-    Desktop::the().did_receive_screen_rects({}, message->screen_rects(), message->main_screen_index(), message->virtual_desktop_rows(), message->virtual_desktop_columns());
+    Desktop::the().did_receive_screen_rects({}, message->screen_rects(), message->main_screen_index(), message->workspace_rows(), message->workspace_columns());
     Gfx::FontDatabase::set_default_font_query(message->default_font_query());
     Gfx::FontDatabase::set_fixed_width_font_query(message->fixed_width_font_query());
     m_client_id = message->client_id();
@@ -314,9 +314,9 @@ void WindowServerConnection::menu_item_left(i32 menu_id, u32 identifier)
     Core::EventLoop::current().post_event(*app, make<ActionEvent>(GUI::Event::ActionLeave, *action));
 }
 
-void WindowServerConnection::screen_rects_changed(Vector<Gfx::IntRect> const& rects, u32 main_screen_index, u32 virtual_desktop_rows, u32 virtual_desktop_columns)
+void WindowServerConnection::screen_rects_changed(Vector<Gfx::IntRect> const& rects, u32 main_screen_index, u32 workspace_rows, u32 workspace_columns)
 {
-    Desktop::the().did_receive_screen_rects({}, rects, main_screen_index, virtual_desktop_rows, virtual_desktop_columns);
+    Desktop::the().did_receive_screen_rects({}, rects, main_screen_index, workspace_rows, workspace_columns);
     Window::for_each_window({}, [&](auto& window) {
         Core::EventLoop::current().post_event(window, make<ScreenRectsChangeEvent>(rects, main_screen_index));
     });

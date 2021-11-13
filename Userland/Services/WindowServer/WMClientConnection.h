@@ -30,7 +30,7 @@ public:
     virtual void set_applet_area_position(Gfx::IntPoint const&) override;
     virtual void set_event_mask(u32) override;
     virtual void set_manager_window(i32) override;
-    virtual void set_virtual_desktop(u32, u32) override;
+    virtual void set_workspace(u32, u32) override;
 
     unsigned event_mask() const { return m_event_mask; }
     int window_id() const { return m_window_id; }
