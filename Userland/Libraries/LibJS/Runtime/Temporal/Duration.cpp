@@ -760,7 +760,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto result = TRY(nanoseconds_to_days(global_object, *nanoseconds_bigint, intermediate));
 
         // e. Set days to days + result.[[Days]] + result.[[Nanoseconds]] / result.[[DayLength]].
-        days += result.days + result.nanoseconds.cell()->big_integer().divided_by(Crypto::UnsignedBigInteger::create_from((u64)result.day_length)).quotient.to_double();
+        auto nanoseconds_division_result = result.nanoseconds.cell()->big_integer().divided_by(Crypto::UnsignedBigInteger::create_from((u64)result.day_length));
+        days += result.days + nanoseconds_division_result.quotient.to_double() + nanoseconds_division_result.remainder.to_double() / result.day_length;
 
         // f. Set hours, minutes, seconds, milliseconds, microseconds, and nanoseconds to 0.
         hours = 0;
