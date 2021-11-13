@@ -5,6 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
@@ -30,6 +31,7 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.format, format, nullptr, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -54,6 +56,27 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 
     // 5. Return nf.[[BoundFormat]].
     return number_format->bound_format();
+}
+
+// 15.4.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
+JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
+{
+    auto value = vm.argument(0);
+
+    // 1. Let nf be the this value.
+    // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
+    auto* number_format = TRY(typed_this_object(global_object));
+
+    // 3. Let x be ? ToNumeric(value).
+    value = TRY(value.to_numeric(global_object));
+
+    // FIXME: Support BigInt number formatting.
+    if (value.is_bigint())
+        return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "BigInt number formatting");
+
+    // 4. Return ? FormatNumericToParts(nf, x).
+    // Note: Our implementation of FormatNumericToParts does not throw.
+    return format_numeric_to_parts(global_object, *number_format, value.as_double());
 }
 
 // 15.4.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
