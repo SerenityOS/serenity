@@ -294,7 +294,7 @@ public:
     ErrorOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     ErrorOr<FlatPtr> sys$close(int fd);
     ErrorOr<FlatPtr> sys$read(int fd, Userspace<u8*>, size_t);
-    ErrorOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, off_t);
+    ErrorOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, Userspace<off_t*>);
     ErrorOr<FlatPtr> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
     ErrorOr<FlatPtr> sys$write(int fd, Userspace<const u8*>, size_t);
     ErrorOr<FlatPtr> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
