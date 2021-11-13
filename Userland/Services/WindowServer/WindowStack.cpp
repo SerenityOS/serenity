@@ -25,7 +25,7 @@ void WindowStack::add(Window& window)
     m_windows.append(window);
     window.set_window_stack({}, this);
 
-    move_pinned_windows_to_front();
+    move_always_on_top_windows_to_front();
 }
 
 void WindowStack::add_to_back(Window& window)
@@ -56,30 +56,30 @@ void WindowStack::move_to_front(Window& window)
     m_windows.remove(window);
     m_windows.append(window);
 
-    move_pinned_windows_to_front();
+    move_always_on_top_windows_to_front();
 
-    if (window.is_pinned()) {
+    if (window.is_always_on_top()) {
         m_windows.remove(window);
         m_windows.append(window);
         window.invalidate();
     }
 }
 
-void WindowStack::move_pinned_windows_to_front()
+void WindowStack::move_always_on_top_windows_to_front()
 {
-    Window::List pinned_list;
+    Window::List always_on_top_list;
     for (auto iterator = m_windows.begin(); iterator != m_windows.end(); ++iterator) {
         auto& window = *iterator;
-        if (window.is_pinned()) {
+        if (window.is_always_on_top()) {
             m_windows.remove(window);
-            pinned_list.append(window);
+            always_on_top_list.append(window);
             iterator = m_windows.begin();
         }
     }
 
-    while (!pinned_list.is_empty()) {
-        auto& window = *pinned_list.begin();
-        pinned_list.remove(window);
+    while (!always_on_top_list.is_empty()) {
+        auto& window = *always_on_top_list.begin();
+        always_on_top_list.remove(window);
         m_windows.append(window);
         window.invalidate();
     }
@@ -89,7 +89,7 @@ void WindowStack::move_all_windows(WindowStack& new_window_stack, Vector<Window*
 {
     VERIFY(this != &new_window_stack);
 
-    move_pinned_windows_to_front();
+    move_always_on_top_windows_to_front();
 
     if (move_to == MoveAllWindowsTo::Front) {
         while (auto* window = m_windows.take_first()) {

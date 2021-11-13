@@ -288,9 +288,6 @@ void Window::update_window_menu_items()
     m_window_menu_close_item->set_enabled(m_closeable);
 
     m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
-
-    if (m_window_menu_pin_item)
-        m_window_menu_pin_item->set_text(m_pinned ? "Un-&Pin Window" : "&Pin Window");
 }
 
 void Window::set_minimized(bool minimized)
@@ -490,15 +487,15 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
 }
-void Window::set_pinned(bool pinned)
+void Window::set_always_on_top(bool always_on_top)
 {
-    if (m_pinned == pinned)
+    if (m_always_on_top == always_on_top)
         return;
 
-    m_pinned = pinned;
+    m_always_on_top = always_on_top;
     update_window_menu_items();
 
-    window_stack().move_pinned_windows_to_front();
+    window_stack().move_always_on_top_windows_to_front();
     Compositor::the().invalidate_occlusions();
 }
 void Window::set_vertically_maximized()
@@ -809,10 +806,10 @@ void Window::ensure_window_menu()
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
         if (!m_modal) {
-            auto pin_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::TogglePinned, "&Pin Window");
-            m_window_menu_pin_item = pin_item.ptr();
-            m_window_menu_pin_item->set_icon(&pin_icon());
-            m_window_menu_pin_item->set_checkable(true);
+            auto pin_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleAlwaysOnTop, "Always on &Top");
+            m_window_menu_always_on_top_item = pin_item.ptr();
+            m_window_menu_always_on_top_item->set_icon(&pin_icon());
+            m_window_menu_always_on_top_item->set_checkable(true);
             m_window_menu->add_item(move(pin_item));
             m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
         }
@@ -859,11 +856,11 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         invalidate_last_rendered_screen_rects();
         break;
     }
-    case WindowMenuAction::TogglePinned: {
+    case WindowMenuAction::ToggleAlwaysOnTop: {
         auto& item = *m_window_menu->item_by_identifier((unsigned)action);
         auto new_is_checked = !item.is_checked();
         item.set_checked(new_is_checked);
-        WindowManager::the().set_pinned(*this, new_is_checked);
+        WindowManager::the().set_always_on_top(*this, new_is_checked);
         break;
     }
     }
