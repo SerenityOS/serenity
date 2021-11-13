@@ -72,6 +72,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.subtract, subtract, 1, attr);
+    define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -938,6 +939,88 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::subtract)
     auto* epoch_nanoseconds = TRY(add_zoned_date_time(global_object, zoned_date_time->nanoseconds(), &time_zone, calendar, -duration.years, -duration.months, -duration.weeks, -duration.days, -duration.hours, -duration.minutes, -duration.seconds, -duration.milliseconds, -duration.microseconds, -duration.nanoseconds, options));
 
     // 8. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
+}
+
+// 6.3.39 Temporal.ZonedDateTime.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.round
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = TRY(typed_this_object(global_object));
+
+    // 3. If options is undefined, then
+    if (vm.argument(0).is_undefined()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+    }
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+
+    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week" », undefined).
+    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv }, {}));
+
+    // 6. If smallestUnit is undefined, throw a RangeError exception.
+    if (!smallest_unit_value.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
+
+    // NOTE: At this point smallest_unit_value can only be a string
+    auto& smallest_unit = *smallest_unit_value;
+
+    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "halfExpand"sv));
+
+    // 8. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(options, smallestUnit).
+    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(global_object, *options, smallest_unit));
+
+    // 9. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 10. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = MUST(create_temporal_instant(global_object, zoned_date_time->nanoseconds()));
+
+    // 11. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 12. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar));
+
+    // 13. Let isoCalendar be ! GetISO8601Calendar().
+    auto* iso_calendar = get_iso8601_calendar(global_object);
+
+    // 14. Let dtStart be ? CreateTemporalDateTime(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], 0, 0, 0, 0, 0, 0, isoCalendar).
+    auto* dt_start = TRY(create_temporal_date_time(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), 0, 0, 0, 0, 0, 0, *iso_calendar));
+
+    // 15. Let instantStart be ? BuiltinTimeZoneGetInstantFor(timeZone, dtStart, "compatible").
+    auto* instant_start = TRY(builtin_time_zone_get_instant_for(global_object, &time_zone, *dt_start, "compatible"sv));
+
+    // 16. Let startNs be instantStart.[[Nanoseconds]].
+    auto& start_ns = instant_start->nanoseconds();
+
+    // 17. Let endNs be ? AddZonedDateTime(startNs, timeZone, zonedDateTime.[[Calendar]], 0, 0, 0, 1, 0, 0, 0, 0, 0, 0).
+    // TODO: Shouldn't `zonedDateTime.[[Calendar]]` be `calendar` for consistency?
+    auto* end_ns = TRY(add_zoned_date_time(global_object, start_ns, &time_zone, zoned_date_time->calendar(), 0, 0, 0, 1, 0, 0, 0, 0, 0, 0));
+
+    // 18. Let dayLengthNs be ℝ(endNs − startNs).
+    auto day_length_ns = end_ns->big_integer().minus(start_ns.big_integer()).to_double();
+
+    // 19. If dayLengthNs is 0, then
+    if (day_length_ns == 0) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalZonedDateTimeRoundZeroLengthDay);
+    }
+
+    // 20. Let roundResult be ! RoundISODateTime(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode, dayLengthNs).
+    auto round_result = round_iso_date_time(temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), rounding_increment, smallest_unit, rounding_mode, day_length_ns);
+
+    // 21. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
+    auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, &time_zone, *instant));
+
+    // 22. Let epochNanoseconds be ? InterpretISODateTimeOffset(roundResult.[[Year]], roundResult.[[Month]], roundResult.[[Day]], roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], option, offsetNanoseconds, timeZone, "compatible", "prefer", match exactly).
+    auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, round_result.year, round_result.month, round_result.day, round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, OffsetBehavior::Option, offset_nanoseconds, &time_zone, "compatible"sv, "prefer"sv, MatchBehavior::MatchExactly));
+
+    // 23. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
     return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone, calendar));
 }
 
