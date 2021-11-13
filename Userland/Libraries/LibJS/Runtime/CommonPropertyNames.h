@@ -456,6 +456,7 @@ namespace JS {
     P(toPlainTime)                           \
     P(toPlainYearMonth)                      \
     P(toString)                              \
+    P(total)                                 \
     P(toTemporalInstant)                     \
     P(toTimeString)                          \
     P(toUpperCase)                           \
