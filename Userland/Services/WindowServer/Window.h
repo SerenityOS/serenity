@@ -56,7 +56,7 @@ enum class WindowMenuAction {
     ToggleMenubarVisibility,
     Close,
     Move,
-    TogglePinned,
+    ToggleAlwaysOnTop,
 };
 
 enum class WindowMenuDefaultAction {
@@ -107,8 +107,8 @@ public:
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
 
-    bool is_pinned() const { return m_pinned; }
-    void set_pinned(bool);
+    bool is_always_on_top() const { return m_always_on_top; }
+    void set_always_on_top(bool);
 
     void set_vertically_maximized();
 
@@ -429,7 +429,7 @@ private:
     bool m_invalidated_frame { true };
     bool m_hit_testing_enabled { true };
     bool m_modified { false };
-    bool m_pinned { false };
+    bool m_always_on_top { false };
     bool m_moving_to_another_stack { false };
     bool m_invalidate_last_render_rects { false };
     Vector<i32> m_stealable_by_client_ids;
@@ -459,7 +459,7 @@ private:
     MenuItem* m_window_menu_maximize_item { nullptr };
     MenuItem* m_window_menu_move_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
-    MenuItem* m_window_menu_pin_item { nullptr };
+    MenuItem* m_window_menu_always_on_top_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
