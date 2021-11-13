@@ -92,19 +92,34 @@ int main(int argc, char** argv)
 {
     bool complement_flag = false;
     bool delete_flag = false;
-    bool squeeze_repeats = false;
+    bool squeeze_flag = false;
     const char* from_chars = nullptr;
     const char* to_chars = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
     args_parser.add_option(delete_flag, "Delete characters instead of replacing", "delete", 'd');
-    args_parser.add_option(squeeze_repeats, "Omit repeated characters listed in the 'to' set from the output", "squeeze-repeats", 's');
+    args_parser.add_option(squeeze_flag, "Omit repeated characters listed in the last given set from the output", "squeeze-repeats", 's');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    if (!to_chars && !delete_flag) {
+    bool transform_flag = to_chars && !delete_flag;
+
+    if (!transform_flag && !delete_flag && !squeeze_flag) {
+        warnln("tr: Missing operand");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
+    if (delete_flag && squeeze_flag && !to_chars) {
+        warnln("tr: Combined delete and squeeze operations need two sets of characters");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
+    if (delete_flag && !squeeze_flag && to_chars) {
+        warnln("tr: Only one set of characters may be given when deleting without squeezing");
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
@@ -119,32 +134,31 @@ int main(int argc, char** argv)
         from_str = complement_set.to_string();
     }
 
-    if (delete_flag) {
-        for (;;) {
-            char ch = fgetc(stdin);
-            if (feof(stdin))
-                break;
-            if (!from_str.contains(ch))
-                putchar(ch);
-        }
-    } else {
-        auto to_str = build_set(to_chars);
-        Optional<char> last_char;
+    auto to_str = build_set(to_chars);
+    String squeeze_string = build_set(to_chars ? to_chars : from_chars);
+    Optional<char> last_char;
 
-        for (;;) {
-            char ch = fgetc(stdin);
-            if (feof(stdin))
-                break;
+    for (;;) {
+        char ch = fgetc(stdin);
+        if (feof(stdin))
+            break;
+
+        if (delete_flag) {
+            if (from_str.contains(ch))
+                continue;
+        }
+
+        if (transform_flag) {
             auto match = from_str.find_last(ch);
             if (match.has_value())
                 ch = to_str[min(match.value(), to_str.length() - 1)];
-
-            if (squeeze_repeats && last_char.has_value() && last_char.value() == ch)
-                continue;
-
-            last_char = ch;
-            putchar(ch);
         }
+
+        if (squeeze_flag && last_char.has_value() && last_char.value() == ch && squeeze_string.contains(ch))
+            continue;
+
+        last_char = ch;
+        putchar(ch);
     }
 
     return 0;
