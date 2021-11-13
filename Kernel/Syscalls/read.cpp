@@ -90,7 +90,7 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     return TRY(description->read(user_buffer.value(), size));
 }
 
-ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, off_t offset)
+ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t*> userspace_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
@@ -98,6 +98,8 @@ ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, 
         return 0;
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
+    off_t offset;
+    TRY(copy_from_user(&offset, userspace_offset));
     if (offset < 0)
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$pread({}, {}, {}, {})", fd, buffer.ptr(), size, offset);
