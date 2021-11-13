@@ -929,3 +929,36 @@ TEST_CASE(optimizer_char_class_lut)
     for (size_t i = 0; i < 1'000'000; ++i)
         EXPECT_EQ(re.match("1635488940000"sv).success, false);
 }
+
+TEST_CASE(posix_basic_dollar_is_end_anchor)
+{
+    // Ensure that a dollar sign at the end only matches the end of the line.
+    {
+        Regex<PosixBasic> re("abc$");
+        EXPECT_EQ(re.match("123abcdef", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc", PosixFlags::Global).success, true);
+        EXPECT_EQ(re.match("123abc$def", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc$", PosixFlags::Global).success, false);
+    }
+}
+
+TEST_CASE(posix_basic_dollar_is_literal)
+{
+    // Ensure that a dollar sign in the middle is treated as a literal.
+    {
+        Regex<PosixBasic> re("abc$d");
+        EXPECT_EQ(re.match("123abcdef", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc$def", PosixFlags::Global).success, true);
+        EXPECT_EQ(re.match("123abc$", PosixFlags::Global).success, false);
+    }
+
+    // Ensure that a dollar sign is always treated as a literal if escaped, even if at the end of the pattern.
+    {
+        Regex<PosixBasic> re("abc\\$");
+        EXPECT_EQ(re.match("123abcdef", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc", PosixFlags::Global).success, false);
+        EXPECT_EQ(re.match("123abc$def", PosixFlags::Global).success, true);
+        EXPECT_EQ(re.match("123abc$", PosixFlags::Global).success, true);
+    }
+}
