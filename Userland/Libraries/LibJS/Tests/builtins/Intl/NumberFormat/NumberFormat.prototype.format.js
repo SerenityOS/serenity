@@ -14,6 +14,16 @@ describe("errors", () => {
             Intl.NumberFormat().format(Symbol.hasInstance);
         }).toThrowWithMessage(TypeError, "Cannot convert symbol to number");
     });
+
+    // FIXME: Remove this and add BigInt tests when BigInt number formatting is supported.
+    test("bigint", () => {
+        expect(() => {
+            Intl.NumberFormat().format(1n);
+        }).toThrowWithMessage(
+            InternalError,
+            "BigInt number formatting is not implemented in LibJS"
+        );
+    });
 });
 
 describe("special values", () => {
