@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
     bool recursive { false };
     bool use_ere { false };
-    const char* pattern = nullptr;
+    Vector<const char*> patterns;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
     bool line_numbers = false;
@@ -58,7 +58,17 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E');
-    args_parser.add_option(pattern, "Pattern", "regexp", 'e', "Pattern");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Pattern",
+        .long_name = "regexp",
+        .short_name = 'e',
+        .value_name = "Pattern",
+        .accept_value = [&](auto* str) {
+            patterns.append(str);
+            return true;
+        },
+    });
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(line_numbers, "Output line-numbers", "line-numbers", 'n');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
@@ -121,8 +131,8 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
-    if (pattern == nullptr && files.size())
-        pattern = files.take_first();
+    if (patterns.size() == 0 && files.size())
+        patterns.append(files.take_first());
 
     auto user_has_specified_files = !files.is_empty();
     auto user_specified_multiple_files = files.size() >= 2;
@@ -131,9 +141,11 @@ int main(int argc, char** argv)
     if (case_insensitive)
         options |= PosixFlags::Insensitive;
 
-    auto grep_logic = [&](auto&& re) {
-        if (re.parser_result.error != regex::Error::NoError) {
-            return 1;
+    auto grep_logic = [&](auto&& regular_expressions) {
+        for (auto& re : regular_expressions) {
+            if (re.parser_result.error != regex::Error::NoError) {
+                return 1;
+            }
         }
 
         auto matches = [&](StringView str, StringView filename, size_t line_number, bool print_filename, bool is_binary) {
@@ -141,8 +153,11 @@ int main(int argc, char** argv)
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return false;
 
-            auto result = re.match(str, PosixFlags::Global);
-            if (result.success ^ invert_match) {
+            for (auto& re : regular_expressions) {
+                auto result = re.match(str, PosixFlags::Global);
+                if (!(result.success ^ invert_match))
+                    continue;
+
                 if (quiet_mode)
                     return true;
 
@@ -264,8 +279,17 @@ int main(int argc, char** argv)
         return did_match_something ? 0 : 1;
     };
 
-    if (use_ere)
-        return grep_logic(Regex<PosixExtended>(pattern, options));
+    if (use_ere) {
+        Vector<Regex<PosixExtended>> regular_expressions;
+        for (auto pattern : patterns) {
+            regular_expressions.append(Regex<PosixExtended>(pattern, options));
+        }
+        return grep_logic(regular_expressions);
+    }
 
-    return grep_logic(Regex<PosixBasic>(pattern, options));
+    Vector<Regex<PosixBasic>> regular_expressions;
+    for (auto pattern : patterns) {
+        regular_expressions.append(Regex<PosixBasic>(pattern, options));
+    }
+    return grep_logic(regular_expressions);
 }
