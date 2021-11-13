@@ -179,3 +179,15 @@ index df09b7b8..21566f5f 100644
  
    uint64_t bound_lifetime_depth;
  };
+diff -ur a/ld/emulparams/elf_x86_64.sh b/ld/emulparams/elf_x86_64.sh
+--- a/ld/emulparams/elf_x86_64.sh	2021-07-08 13:37:20.000000000 +0200
++++ b/ld/emulparams/elf_x86_64.sh	2021-11-13 17:52:50.396490742 +0100
+@@ -12,7 +12,7 @@
+ ELFSIZE=64
+ OUTPUT_FORMAT="elf64-x86-64"
+ NO_REL_RELOCS=yes
+-TEXT_START_ADDR=0x400000
++TEXT_START_ADDR=0x08200000
+ MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
+ COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+ ARCH="i386:x86-64"
