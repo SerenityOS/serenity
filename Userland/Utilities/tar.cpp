@@ -102,7 +102,7 @@ int main(int argc, char** argv)
                 case Archive::TarFileType::Directory: {
                     Core::File::ensure_parent_directories(absolute_path);
 
-                    if (mkdir(absolute_path.characters(), header.mode())) {
+                    if (mkdir(absolute_path.characters(), header.mode()) && errno != EEXIST) {
                         perror("mkdir");
                         return 1;
                     }
