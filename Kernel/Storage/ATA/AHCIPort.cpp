@@ -405,14 +405,11 @@ void AHCIPort::rebase()
     stop_command_list_processing();
     stop_fis_receiving();
     full_memory_barrier();
-    size_t retry = 0;
+
     // Try to wait 1 second for HBA to clear Command List Running and FIS Receive Running
-    while (retry < 1000) {
-        if (!(m_port_registers.cmd & (1 << 15)) && !(m_port_registers.cmd & (1 << 14)))
-            break;
-        IO::delay(1000);
-        retry++;
-    }
+    wait_until_condition_met_or_timeout(1000, 1000, [this]() -> bool {
+        return !(m_port_registers.cmd & (1 << 15)) && !(m_port_registers.cmd & (1 << 14));
+    });
     full_memory_barrier();
     m_port_registers.clbu = 0;
     m_port_registers.clb = m_command_list_page->paddr().get();
@@ -690,6 +687,17 @@ bool AHCIPort::identify_device()
     return success;
 }
 
+void AHCIPort::wait_until_condition_met_or_timeout(size_t delay_in_microseconds, size_t retries, Function<bool(void)> condition_being_met) const
+{
+    size_t retry = 0;
+    while (retry < retries) {
+        if (condition_being_met())
+            break;
+        IO::delay(delay_in_microseconds);
+        retry++;
+    }
+}
+
 bool AHCIPort::shutdown()
 {
     MutexLocker locker(m_lock);
@@ -786,15 +794,13 @@ bool AHCIPort::initiate_sata_reset()
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initiate SATA reset", representative_port_index());
     stop_command_list_processing();
     full_memory_barrier();
-    size_t retry = 0;
+
+    // Note: The AHCI specification says to wait now a 500 milliseconds
     // Try to wait 1 second for HBA to clear Command List Running
-    while (retry < 5000) {
-        if (!(m_port_registers.cmd & (1 << 15)))
-            break;
-        // The AHCI specification says to wait now a 500 milliseconds
-        IO::delay(100);
-        retry++;
-    }
+    wait_until_condition_met_or_timeout(100, 5000, [this]() -> bool {
+        return !(m_port_registers.cmd & (1 << 15));
+    });
+
     full_memory_barrier();
     spin_up();
     full_memory_barrier();
@@ -804,14 +810,10 @@ bool AHCIPort::initiate_sata_reset()
     full_memory_barrier();
     set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
     full_memory_barrier();
-    retry = 0;
-    while (retry < 1000) {
-        if (is_phy_enabled())
-            break;
 
-        IO::delay(10);
-        retry++;
-    }
+    wait_until_condition_met_or_timeout(10, 1000, [this]() -> bool {
+        return is_phy_enabled();
+    });
 
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
 
