@@ -82,6 +82,15 @@ set(KERNEL_SOURCES
     Graphics/VGACompatibleAdapter.cpp
     Graphics/GenericFramebufferDevice.cpp
     SanCov.cpp
+    Storage/ATA/AHCIController.cpp
+    Storage/ATA/AHCIPort.cpp
+    Storage/ATA/AHCIPortHandler.cpp
+    Storage/ATA/ATADevice.cpp
+    Storage/ATA/ATADiskDevice.cpp
+    Storage/ATA/ATAPIDiscDevice.cpp
+    Storage/ATA/BMIDEChannel.cpp
+    Storage/ATA/IDEController.cpp
+    Storage/ATA/IDEChannel.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
@@ -89,15 +98,6 @@ set(KERNEL_SOURCES
     Storage/Partition/MBRPartitionTable.cpp
     Storage/Partition/PartitionTable.cpp
     Storage/StorageDevice.cpp
-    Storage/AHCIController.cpp
-    Storage/AHCIPort.cpp
-    Storage/AHCIPortHandler.cpp
-    Storage/ATADevice.cpp
-    Storage/ATADiskDevice.cpp
-    Storage/ATAPIDiscDevice.cpp
-    Storage/BMIDEChannel.cpp
-    Storage/IDEController.cpp
-    Storage/IDEChannel.cpp
     Storage/RamdiskController.cpp
     Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp
