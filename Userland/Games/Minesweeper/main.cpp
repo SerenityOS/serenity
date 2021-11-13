@@ -8,6 +8,7 @@
 #include "Field.h"
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -120,22 +121,43 @@ int main(int argc, char** argv)
     }));
 
     auto& difficulty_menu = window->add_menu("&Difficulty");
-    difficulty_menu.add_action(GUI::Action::create("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
+    GUI::ActionGroup difficulty_actions;
+    difficulty_actions.set_exclusive(true);
+
+    auto action = GUI::Action::create_checkable("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
         field.set_field_size(9, 9, 10);
-    }));
-    difficulty_menu.add_action(GUI::Action::create("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
+    });
+    action->set_checked(field.rows() == 9 && field.columns() == 9 && field.mine_count() == 10);
+    difficulty_menu.add_action(action);
+    difficulty_actions.add_action(action);
+
+    action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
         field.set_field_size(16, 16, 40);
-    }));
-    difficulty_menu.add_action(GUI::Action::create("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
+    });
+    action->set_checked(field.rows() == 16 && field.columns() == 16 && field.mine_count() == 40);
+    difficulty_menu.add_action(action);
+    difficulty_actions.add_action(action);
+
+    action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
         field.set_field_size(16, 30, 99);
-    }));
-    difficulty_menu.add_action(GUI::Action::create("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
+    });
+    action->set_checked(field.rows() == 16 && field.columns() == 30 && field.mine_count() == 99);
+    difficulty_menu.add_action(action);
+    difficulty_actions.add_action(action);
+
+    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
         field.set_field_size(32, 60, 350);
-    }));
+    });
+    action->set_checked(field.rows() == 32 && field.columns() == 60 && field.mine_count() == 350);
+    difficulty_menu.add_action(action);
+    difficulty_actions.add_action(action);
+
     difficulty_menu.add_separator();
-    difficulty_menu.add_action(GUI::Action::create("&Custom game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Custom game...", { Mod_Ctrl, Key_C }, [&](auto&) {
         CustomGameDialog::show(window, field);
-    }));
+    });
+    difficulty_menu.add_action(action);
+    difficulty_actions.add_action(action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window));
