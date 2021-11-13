@@ -1960,7 +1960,7 @@ void WindowManager::did_popup_a_menu(Badge<Menu>)
     if (!active_input_tracking_window)
         return;
     active_input_tracking_window->set_automatic_cursor_tracking_enabled(false);
-    active_input_tracking_window = nullptr;
+    current_window_stack().set_active_input_tracking_window(nullptr);
 }
 
 void WindowManager::minimize_windows(Window& window, bool minimized)
