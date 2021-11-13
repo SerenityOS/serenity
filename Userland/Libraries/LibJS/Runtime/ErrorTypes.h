@@ -230,6 +230,7 @@
     M(TemporalObjectMustNotHave, "Object must not have a defined {} property")                                                          \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
+    M(TemporalZonedDateTimeRoundZeroLengthDay, "Cannot round a ZonedDateTime in a calendar that has zero-length days")                  \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
