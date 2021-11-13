@@ -68,6 +68,8 @@ StringView NumberFormat::style_string() const
 
 void NumberFormat::set_currency_display(StringView currency_display)
 {
+    m_resolved_currency_display.clear();
+
     if (currency_display == "code"sv)
         m_currency_display = CurrencyDisplay::Code;
     else if (currency_display == "symbol"sv)
@@ -78,6 +80,34 @@ void NumberFormat::set_currency_display(StringView currency_display)
         m_currency_display = CurrencyDisplay::Name;
     else
         VERIFY_NOT_REACHED();
+}
+
+StringView NumberFormat::resolve_currency_display()
+{
+    if (m_resolved_currency_display.has_value())
+        return *m_resolved_currency_display;
+
+    switch (currency_display()) {
+    case NumberFormat::CurrencyDisplay::Code:
+        m_resolved_currency_display = currency();
+        break;
+    case NumberFormat::CurrencyDisplay::Symbol:
+        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Short);
+        break;
+    case NumberFormat::CurrencyDisplay::NarrowSymbol:
+        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Narrow);
+        break;
+    case NumberFormat::CurrencyDisplay::Name:
+        m_resolved_currency_display = Unicode::get_locale_currency_mapping(data_locale(), currency(), Unicode::Style::Numeric);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!m_resolved_currency_display.has_value())
+        m_resolved_currency_display = currency();
+
+    return *m_resolved_currency_display;
 }
 
 StringView NumberFormat::currency_display_string() const
@@ -664,8 +694,12 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // j. Else if p is equal to "currencyPrefix" and numberFormat.[[Style]] is "currency", then
         // k. Else if p is equal to "currencySuffix" and numberFormat.[[Style]] is "currency", then
         //
-        // Note: Our implementation formats currency codes during GetNumberFormatPattern so that we
-        //       do not have to do currency display / plurality lookups more than once.
+        // Note: Our implementation manipulates the format string to inject/remove spacing around the
+        //       currency code during GetNumberFormatPattern so that we do not have to do currency
+        //       display / plurality lookups more than once.
+        else if ((part == "currency"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
+            result.append({ "currency"sv, number_format.resolve_currency_display() });
+        }
 
         // l. Else,
         else {
@@ -1323,33 +1357,9 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     // we might need to mutate the format pattern to inject a space between the currency display and
     // the currency number.
     if (number_format.style() == NumberFormat::Style::Currency) {
-        if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
-            auto maybe_currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Numeric);
-            auto currency_display = maybe_currency_display.value_or(number_format.currency());
-
-            return pattern.replace("{0}"sv, "{number}"sv).replace("{1}"sv, currency_display);
-        }
-
-        Optional<StringView> currency_display;
-
-        switch (number_format.currency_display()) {
-        case NumberFormat::CurrencyDisplay::Code:
-            currency_display = number_format.currency();
-            break;
-        case NumberFormat::CurrencyDisplay::Symbol:
-            currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Short);
-            break;
-        case NumberFormat::CurrencyDisplay::NarrowSymbol:
-            currency_display = Unicode::get_locale_currency_mapping(number_format.data_locale(), number_format.currency(), Unicode::Style::Narrow);
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-
-        if (!currency_display.has_value())
-            currency_display = number_format.currency();
-
-        return Unicode::create_currency_format_pattern(*currency_display, pattern);
+        auto modified_pattern = Unicode::augment_currency_format_pattern(number_format.resolve_currency_display(), pattern);
+        if (modified_pattern.has_value())
+            return modified_pattern.release_value();
     }
 
     // 16. Return pattern.
