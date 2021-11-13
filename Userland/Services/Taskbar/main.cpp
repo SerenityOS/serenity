@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
@@ -37,8 +38,9 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
-
     auto app = GUI::Application::construct(argc, argv);
+    Config::pledge_domains("Taskbar");
+    Config::monitor_domain("Taskbar");
     app->event_loop().register_signal(SIGCHLD, [](int) {
         // Wait all available children
         while (waitpid(-1, nullptr, WNOHANG) > 0)
