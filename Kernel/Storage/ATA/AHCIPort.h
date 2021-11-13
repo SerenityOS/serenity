@@ -20,9 +20,9 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/AHCI.h>
-#include <Kernel/Storage/AHCIPortHandler.h>
-#include <Kernel/Storage/ATADevice.h>
+#include <Kernel/Storage/ATA/AHCI.h>
+#include <Kernel/Storage/ATA/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/ATADevice.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {

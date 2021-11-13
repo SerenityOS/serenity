@@ -8,7 +8,7 @@
 
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Storage/ATADevice.h>
+#include <Kernel/Storage/ATA/ATADevice.h>
 
 namespace Kernel {
 

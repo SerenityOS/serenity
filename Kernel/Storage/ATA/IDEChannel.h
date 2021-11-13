@@ -25,7 +25,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
-#include <Kernel/Storage/ATADevice.h>
+#include <Kernel/Storage/ATA/ATADevice.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/WaitQueue.h>
 

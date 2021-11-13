@@ -10,9 +10,9 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATADiskDevice.h>
-#include <Kernel/Storage/BMIDEChannel.h>
-#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/ATA/ATADiskDevice.h>
+#include <Kernel/Storage/ATA/BMIDEChannel.h>
+#include <Kernel/Storage/ATA/IDEController.h>
 
 namespace Kernel {
 

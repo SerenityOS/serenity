@@ -11,10 +11,10 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATA.h>
-#include <Kernel/Storage/ATADiskDevice.h>
-#include <Kernel/Storage/IDEChannel.h>
-#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/ATA/ATA.h>
+#include <Kernel/Storage/ATA/ATADiskDevice.h>
+#include <Kernel/Storage/ATA/IDEChannel.h>
+#include <Kernel/Storage/ATA/IDEController.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {

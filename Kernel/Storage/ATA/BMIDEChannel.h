@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <Kernel/Storage/IDEChannel.h>
+#include <Kernel/Storage/ATA/IDEChannel.h>
 
 namespace Kernel {
 

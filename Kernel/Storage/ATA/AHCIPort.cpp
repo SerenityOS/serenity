@@ -12,9 +12,9 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Storage/AHCIPort.h>
-#include <Kernel/Storage/ATA.h>
-#include <Kernel/Storage/ATADiskDevice.h>
+#include <Kernel/Storage/ATA/AHCIPort.h>
+#include <Kernel/Storage/ATA/ATA.h>
+#include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/WorkQueue.h>
 

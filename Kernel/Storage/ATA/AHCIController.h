@@ -10,8 +10,8 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/AHCI.h>
-#include <Kernel/Storage/ATAController.h>
+#include <Kernel/Storage/ATA/AHCI.h>
+#include <Kernel/Storage/ATA/ATAController.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {

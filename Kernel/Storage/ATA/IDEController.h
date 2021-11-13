@@ -9,8 +9,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Storage/ATAController.h>
-#include <Kernel/Storage/IDEChannel.h>
+#include <Kernel/Storage/ATA/ATAController.h>
+#include <Kernel/Storage/ATA/IDEChannel.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {

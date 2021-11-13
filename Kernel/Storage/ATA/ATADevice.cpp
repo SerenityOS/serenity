@@ -6,9 +6,9 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATADevice.h>
-#include <Kernel/Storage/IDEChannel.h>
-#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/ATA/ATADevice.h>
+#include <Kernel/Storage/ATA/IDEChannel.h>
+#include <Kernel/Storage/ATA/IDEController.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {

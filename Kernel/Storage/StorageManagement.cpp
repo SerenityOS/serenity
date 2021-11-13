@@ -13,8 +13,8 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Storage/AHCIController.h>
-#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/ATA/AHCIController.h>
+#include <Kernel/Storage/ATA/IDEController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>

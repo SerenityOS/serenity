@@ -10,8 +10,8 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Storage/AHCIController.h>
-#include <Kernel/Storage/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/AHCIController.h>
+#include <Kernel/Storage/ATA/AHCIPortHandler.h>
 
 namespace Kernel {
 
