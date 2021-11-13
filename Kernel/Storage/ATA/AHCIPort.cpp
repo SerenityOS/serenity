@@ -253,7 +253,7 @@ bool AHCIPort::reset()
     if (!initiate_sata_reset(lock)) {
         return false;
     }
-    return initialize(lock);
+    return initialize();
 }
 
 bool AHCIPort::initialize_without_reset()
@@ -261,10 +261,10 @@ bool AHCIPort::initialize_without_reset()
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
-    return initialize(lock);
+    return initialize();
 }
 
-bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
+bool AHCIPort::initialize()
 {
     VERIFY(m_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = {:#08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
@@ -293,7 +293,7 @@ bool AHCIPort::initialize(SpinlockLocker<Spinlock>& main_lock)
     size_t logical_sector_size = 512;
     size_t physical_sector_size = 512;
     u64 max_addressable_sector = 0;
-    if (identify_device(main_lock)) {
+    if (identify_device()) {
         auto identify_block = Memory::map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index));
         // Check if word 106 is valid before using it!
         if ((identify_block->physical_sector_size_to_logical_sector_size >> 14) == 1) {
@@ -617,7 +617,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     return true;
 }
 
-bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)
+bool AHCIPort::identify_device()
 {
     VERIFY(m_lock.is_locked());
     VERIFY(is_operable());
@@ -652,29 +652,43 @@ bool AHCIPort::identify_device(SpinlockLocker<Spinlock>& main_lock)
     if (!spin_until_ready())
         return false;
 
-    // FIXME: Find a better way to send IDENTIFY DEVICE and getting an interrupt!
-    {
-        main_lock.unlock();
-        VERIFY_INTERRUPTS_ENABLED();
-        full_memory_barrier();
-        m_wait_for_completion = true;
-        dbgln_if(AHCI_DEBUG, "AHCI Port {}: Marking command header at index {} as ready to identify device", representative_port_index(), unused_command_header.value());
-        m_port_registers.ci = 1 << unused_command_header.value();
-        full_memory_barrier();
+    // Just in case we have a pending interrupt.
+    m_interrupt_enable.clear();
+    m_interrupt_status.clear();
 
-        while (1) {
-            if (m_port_registers.serr != 0) {
-                dbgln("AHCI Port {}: Identify failed, SError {:#08x}", representative_port_index(), (u32)m_port_registers.serr);
-                try_disambiguate_sata_error();
-                return false;
-            }
-            if (!m_wait_for_completion)
-                break;
+    full_memory_barrier();
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Marking command header at index {} as ready to identify device", representative_port_index(), unused_command_header.value());
+    m_port_registers.ci = 1 << unused_command_header.value();
+    full_memory_barrier();
+
+    size_t time_elapsed = 0;
+    bool success = false;
+    while (1) {
+        // Note: We allow it to spin for 256 milliseconds, which should be enough for a device to respond.
+        if (time_elapsed >= 256) {
+            break;
         }
-        main_lock.lock();
+        if (m_port_registers.serr != 0) {
+            dbgln("AHCI Port {}: Identify failed, SError {:#08x}", representative_port_index(), (u32)m_port_registers.serr);
+            try_disambiguate_sata_error();
+            break;
+        }
+        if (!(m_port_registers.ci & (1 << unused_command_header.value()))) {
+            success = true;
+            break;
+        }
+        IO::delay(1000); // delay with 1 milliseconds
+        time_elapsed++;
     }
 
-    return true;
+    // Note: We probably ended up triggering an interrupt but we don't really want to handle it,
+    // so just get rid of it.
+    // FIXME: Do that in a better way so we don't need to actually remember this every time
+    // we need to do this.
+    m_interrupt_status.clear();
+    m_interrupt_enable.set_all();
+
+    return success;
 }
 
 bool AHCIPort::shutdown()
