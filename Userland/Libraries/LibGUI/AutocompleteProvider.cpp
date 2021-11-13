@@ -100,6 +100,13 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     m_suggestion_view = main_widget.add<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
     m_suggestion_view->set_visible(false);
+    m_suggestion_view->on_activation = [&](GUI::ModelIndex const& index) {
+        if (!m_suggestion_view->model()->is_within_range(index))
+            return;
+        m_suggestion_view->selection().set(index);
+        m_suggestion_view->scroll_into_view(index, Orientation::Vertical);
+        apply_suggestion();
+    };
 
     m_no_suggestions_view = main_widget.add<GUI::Label>("No suggestions");
 }
