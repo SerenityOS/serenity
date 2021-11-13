@@ -15,14 +15,21 @@ int main(int argc, char** argv)
     String group;
     String key;
     String value_to_write;
+    bool remove_key = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show or modify values in the configuration files through ConfigServer.");
+    args_parser.add_option(remove_key, "Remove key", "remove", 'r');
     args_parser.add_positional_argument(domain, "Config domain", "domain");
     args_parser.add_positional_argument(group, "Group name", "group");
     args_parser.add_positional_argument(key, "Key name", "key");
     args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (remove_key) {
+        Config::remove_key(domain, group, key);
+        return 0;
+    }
 
     if (!value_to_write.is_empty()) {
         Config::write_string(domain, group, key, value_to_write);
