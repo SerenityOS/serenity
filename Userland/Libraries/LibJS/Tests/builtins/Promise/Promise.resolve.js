@@ -31,3 +31,11 @@ describe("normal behavior", () => {
         expect(fulfillmentValue).toBe("Some value");
     });
 });
+
+describe("errors", () => {
+    test("this value must be an object", () => {
+        expect(() => {
+            Promise.resolve.call("foo");
+        }).toThrowWithMessage(TypeError, "foo is not an object");
+    });
+});
