@@ -169,9 +169,19 @@ Gfx::IntRect WindowSwitcher::item_rect(int index) const
 void WindowSwitcher::draw()
 {
     auto palette = WindowManager::the().palette();
+
+    Gfx::IntRect rect = { {}, m_rect.size() };
     Gfx::Painter painter(*m_switcher_window->backing_store());
-    painter.fill_rect({ {}, m_rect.size() }, palette.window());
-    painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());
+    painter.clear_rect(rect, Color::Transparent);
+
+    // FIXME: Perhaps the WindowSwitcher could render as an overlay instead.
+    //        That would require adding support for event handling to overlays.
+    if (auto* shadow_bitmap = WindowManager::the().overlay_rect_shadow()) {
+        // FIXME: Support other scale factors.
+        int scale_factor = 1;
+        Gfx::StylePainter::paint_simple_rect_shadow(painter, rect, shadow_bitmap->bitmap(scale_factor), true, true);
+    }
+
     for (size_t index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         auto item_rect = this->item_rect(index);
@@ -180,21 +190,20 @@ void WindowSwitcher::draw()
         if (static_cast<int>(index) == m_selected_index) {
             painter.fill_rect(item_rect, palette.selection());
             text_color = palette.selection_text();
-            rect_text_color = palette.threed_shadow1();
+            rect_text_color = palette.selection_text().with_alpha(0xcc);
         } else {
             if (static_cast<int>(index) == m_hovered_index)
-                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::Coolbar, false, true);
-            text_color = palette.window_text();
-            rect_text_color = palette.threed_shadow2();
+                Gfx::StylePainter::paint_frame(painter, item_rect, palette, Gfx::FrameShape::Panel, Gfx::FrameShadow::Raised, 2);
+            text_color = Color::White;
+            rect_text_color = Color(Color::White).with_alpha(0xcc);
         }
         item_rect.shrink(item_padding(), 0);
         Gfx::IntRect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
-        if (window.backing_store()) {
-            painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect());
-            Gfx::StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
-        }
+        if (window.backing_store())
+            painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
         Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0).translated(1, 1), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color.inverted());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
         auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.window_stack().row() + 1, window.window_stack().column() + 1) : window.rect().to_string();
         painter.draw_text(item_rect, window_details, Gfx::TextAlignment::CenterRight, rect_text_color);
@@ -254,8 +263,10 @@ void WindowSwitcher::refresh()
     m_rect.set_width(thumbnail_width() + longest_title_width + space_for_window_details + padding() * 2 + item_padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(Screen::main().rect());
-    if (!m_switcher_window)
+    if (!m_switcher_window) {
         m_switcher_window = Window::construct(*this, WindowType::WindowSwitcher);
+        m_switcher_window->set_has_alpha_channel(true);
+    }
     m_switcher_window->set_rect(m_rect);
     redraw();
 }
