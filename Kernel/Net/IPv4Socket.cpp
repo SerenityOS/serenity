@@ -763,7 +763,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
     case FIONREAD: {
         int readable = m_receive_buffer->immediately_readable();
-        return copy_to_user(Userspace<int*>(arg), &readable);
+        return copy_to_user(static_ptr_cast<int*>(arg), &readable);
     }
     }
 
