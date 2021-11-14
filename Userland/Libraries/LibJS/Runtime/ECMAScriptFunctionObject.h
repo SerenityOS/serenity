@@ -84,7 +84,7 @@ private:
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
-    void prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
+    ThrowCompletionOr<void> prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
 
     void async_function_start(PromiseCapability const&);
