@@ -859,9 +859,11 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
     else {
         // a. Let notationSubPattern be GetNotationSubPattern(numberFormat, exponent).
         auto notation_sub_pattern = get_notation_sub_pattern(number_format, exponent);
+        if (!notation_sub_pattern.has_value())
+            return {};
 
         // b. Let patternParts be PartitionPattern(notationSubPattern).
-        auto pattern_parts = partition_pattern(notation_sub_pattern);
+        auto pattern_parts = partition_pattern(*notation_sub_pattern);
 
         // c. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
         for (auto& pattern_part : pattern_parts) {
@@ -960,20 +962,34 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
                 // 1. Let scientificSeparator be the ILND String representing the exponent separator.
+                auto scientific_separator = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "exponential"sv).value_or("E"sv);
                 // 2. Append a new Record { [[Type]]: "exponentSeparator", [[Value]]: scientificSeparator } as the last element of result.
-
-                // FIXME: Implement this when GetNotationSubPattern is fully implemented.
+                result.append({ "exponentSeparator"sv, scientific_separator });
             }
             // vii. Else if p is equal to "scientificExponent", then
             else if (part == "scientificExponent"sv) {
                 // 1. If exponent < 0, then
-                //     a. Let minusSignSymbol be the ILND String representing the minus sign.
-                //     b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
-                //     c. Let exponent be -exponent.
-                // 2. Let exponentResult be ToRawFixed(exponent, 1, 0, 0).
-                // 3. Append a new Record { [[Type]]: "exponentInteger", [[Value]]: exponentResult.[[FormattedString]] } as the last element of result.
+                if (exponent < 0) {
+                    // a. Let minusSignSymbol be the ILND String representing the minus sign.
+                    auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "minusSign"sv).value_or("-"sv);
 
-                // FIXME: Implement this when GetNotationSubPattern is fully implemented.
+                    // b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
+                    result.append({ "exponentMinusSign"sv, minus_sign_symbol });
+
+                    // c. Let exponent be -exponent.
+                    exponent *= -1;
+                }
+
+                // 2. Let exponentResult be ToRawFixed(exponent, 1, 0, 0).
+                // Note: See the implementation of ToRawFixed for why we do not pass the 1.
+                auto exponent_result = to_raw_fixed(exponent, 0, 0);
+
+                // FIXME: The spec does not say to do this, but all of major engines perform this replacement.
+                //        Without this, formatting with non-Latin numbering systems will produce non-localized results.
+                exponent_result.formatted_string = replace_digits_for_number_format(number_format, move(exponent_result.formatted_string));
+
+                // 3. Append a new Record { [[Type]]: "exponentInteger", [[Value]]: exponentResult.[[FormattedString]] } as the last element of result.
+                result.append({ "exponentInteger"sv, move(exponent_result.formatted_string) });
             }
             // viii. Else,
             else {
@@ -1454,23 +1470,36 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
 }
 
 // 15.1.15 GetNotationSubPattern ( numberFormat, exponent ), https://tc39.es/ecma402/#sec-getnotationsubpattern
-StringView get_notation_sub_pattern([[maybe_unused]] NumberFormat& number_format, [[maybe_unused]] int exponent)
+Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent)
 {
-    // FIXME: Implement this.
-
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
     // 3. Let dataLocaleData be localeData.[[<dataLocale>]].
     // 4. Let notationSubPatterns be dataLocaleData.[[notationSubPatterns]].
     // 5. Assert: notationSubPatterns is a Record (see 15.3.3).
+
     // 6. Let notation be numberFormat.[[Notation]].
+    auto notation = number_format.notation();
+
     // 7. If notation is "scientific" or notation is "engineering", then
-    //     a. Return notationSubPatterns.[[scientific]].
+    if ((notation == NumberFormat::Notation::Scientific) || (notation == NumberFormat::Notation::Engineering)) {
+        // a. Return notationSubPatterns.[[scientific]].
+        auto notation_sub_patterns = Unicode::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), Unicode::StandardNumberFormatType::Scientific);
+        if (!notation_sub_patterns.has_value())
+            return {};
+
+        return notation_sub_patterns->zero_format;
+    }
     // 8. Else if exponent is not 0, then
-    //     a. Assert: notation is "compact".
-    //     b. Let compactDisplay be numberFormat.[[CompactDisplay]].
-    //     c. Let compactPatterns be notationSubPatterns.[[compact]].[[<compactDisplay>]].
-    //     d. Return compactPatterns.[[<exponent>]].
+    else if (exponent != 0) {
+        // FIXME: Implement this.
+
+        // a. Assert: notation is "compact".
+        // b. Let compactDisplay be numberFormat.[[CompactDisplay]].
+        // c. Let compactPatterns be notationSubPatterns.[[compact]].[[<compactDisplay>]].
+        // d. Return compactPatterns.[[<exponent>]].
+    }
+
     // 9. Else,
     //     a. Return "{number}".
     return "{number}"sv;
