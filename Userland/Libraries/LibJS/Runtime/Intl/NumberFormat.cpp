@@ -5,6 +5,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
@@ -807,11 +808,42 @@ static String replace_digits_for_number_format(NumberFormat& number_format, Stri
     return builder.build();
 }
 
+static Vector<StringView> separate_integer_into_groups(Unicode::NumberGroupings const& grouping_sizes, StringView integer)
+{
+    Utf8View utf8_integer { integer };
+    Vector<StringView> groups;
+
+    auto add_group = [&](size_t index, size_t length) {
+        groups.prepend(utf8_integer.unicode_substring_view(index, length).as_string());
+    };
+
+    if (utf8_integer.length() > grouping_sizes.primary_grouping_size) {
+        size_t index = utf8_integer.length() - grouping_sizes.primary_grouping_size;
+        add_group(index, grouping_sizes.primary_grouping_size);
+
+        while (index > grouping_sizes.secondary_grouping_size) {
+            index -= grouping_sizes.secondary_grouping_size;
+            add_group(index, grouping_sizes.secondary_grouping_size);
+        }
+
+        if (index > 0)
+            add_group(0, index);
+    } else {
+        groups.append(integer);
+    }
+
+    return groups;
+}
+
 // 15.1.7 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/ecma402/#sec-partitionnotationsubpattern
 Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, double number, String formatted_string, int exponent)
 {
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
+
+    auto grouping_sizes = Unicode::get_number_system_groupings(number_format.data_locale(), number_format.numbering_system());
+    if (!grouping_sizes.has_value())
+        return {};
 
     // 2. If x is NaN, then
     if (Value(number).is_nan()) {
@@ -870,19 +902,36 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 }
 
                 // 6. If the numberFormat.[[UseGrouping]] is true, then
-                //     a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
-                //     b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer.
-                //     c. Assert: The number of elements in groups List is greater than 0.
-                //     d. Repeat, while groups List is not empty,
-                //         i. Remove the first element from groups and let integerGroup be the value of that element.
-                //         ii. Append a new Record { [[Type]]: "integer", [[Value]]: integerGroup } as the last element of result.
-                //         iii. If groups List is not empty, then
-                //             i. Append a new Record { [[Type]]: "group", [[Value]]: groupSepSymbol } as the last element of result.
-                // 7. Else,
-                //     a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
+                if (number_format.use_grouping()) {
+                    // a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
+                    auto group_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "group"sv).value_or(","sv);
 
-                // FIXME: Implement grouping.
-                result.append({ "integer"sv, integer });
+                    // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer.
+                    auto groups = separate_integer_into_groups(*grouping_sizes, integer);
+
+                    // c. Assert: The number of elements in groups List is greater than 0.
+                    VERIFY(!groups.is_empty());
+
+                    // d. Repeat, while groups List is not empty,
+                    while (!groups.is_empty()) {
+                        // i. Remove the first element from groups and let integerGroup be the value of that element.
+                        auto integer_group = groups.take_first();
+
+                        // ii. Append a new Record { [[Type]]: "integer", [[Value]]: integerGroup } as the last element of result.
+                        result.append({ "integer"sv, integer_group });
+
+                        // iii. If groups List is not empty, then
+                        if (!groups.is_empty()) {
+                            // i. Append a new Record { [[Type]]: "group", [[Value]]: groupSepSymbol } as the last element of result.
+                            result.append({ "group"sv, group_sep_symbol });
+                        }
+                    }
+                }
+                // 7. Else,
+                else {
+                    // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
+                    result.append({ "integer"sv, integer });
+                }
 
                 // 8. If fraction is not undefined, then
                 if (fraction.has_value()) {
