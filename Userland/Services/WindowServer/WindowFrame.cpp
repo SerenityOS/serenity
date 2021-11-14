@@ -163,7 +163,7 @@ void WindowFrame::reload_config()
     load_shadow(WindowManager::the().palette().tooltip_shadow_path(), s_last_tooltip_shadow_path, s_tooltip_shadow);
 }
 
-MultiScaleBitmaps* WindowFrame::shadow_bitmap() const
+MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
 {
     if (m_window.is_frameless() && !m_window.has_forced_shadow())
         return nullptr;
