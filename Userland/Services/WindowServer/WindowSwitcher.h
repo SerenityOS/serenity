@@ -61,6 +61,7 @@ private:
     void select_window_at_index(int index);
     Gfx::IntRect item_rect(int index) const;
     Window* selected_window();
+    void clear_hovered_index();
 
     virtual void event(Core::Event&) override;
 
