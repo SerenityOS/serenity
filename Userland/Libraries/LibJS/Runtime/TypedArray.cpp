@@ -366,10 +366,9 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 }
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                             \
-    ClassName* ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)                                  \
+    ThrowCompletionOr<ClassName*> ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)               \
     {                                                                                                                                  \
-        auto* prototype = TRY_OR_DISCARD(get_prototype_from_constructor(                                                               \
-            global_object, new_target, &GlobalObject::snake_name##_prototype));                                                        \
+        auto* prototype = TRY(get_prototype_from_constructor(global_object, new_target, &GlobalObject::snake_name##_prototype));       \
         return global_object.heap().allocate<ClassName>(global_object, length, *prototype);                                            \
     }                                                                                                                                  \
                                                                                                                                        \
@@ -441,13 +440,11 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         if (vm.argument_count() == 0)                                                                                                  \
-            return ClassName::create(global_object(), 0, new_target);                                                                  \
+            return TRY(ClassName::create(global_object(), 0, new_target));                                                             \
                                                                                                                                        \
         auto first_argument = vm.argument(0);                                                                                          \
         if (first_argument.is_object()) {                                                                                              \
-            auto* typed_array = ClassName::create(global_object(), 0, new_target);                                                     \
-            if (auto* exception = vm.exception())                                                                                      \
-                return throw_completion(exception->value());                                                                           \
+            auto* typed_array = TRY(ClassName::create(global_object(), 0, new_target));                                                \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
                 TRY(initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array));                          \
@@ -485,7 +482,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         /* FIXME: What is the best/correct behavior here? */                                                                           \
         if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type)))                                                   \
             return vm.throw_completion<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                          \
-        return ClassName::create(global_object(), array_length, new_target);                                                           \
+        return TRY(ClassName::create(global_object(), array_length, new_target));                                                      \
     }
 
 #undef __JS_ENUMERATE
