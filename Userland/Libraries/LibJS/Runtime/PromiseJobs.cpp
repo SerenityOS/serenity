@@ -138,16 +138,15 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
 
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {
-        auto error = then_call_result.throw_completion().value();
         vm.clear_exception();
         vm.stop_unwind();
 
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-        // FIXME: Actually do this... not sure why we don't? :yakfused:
+        dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, then_call_result.throw_completion().value());
+        auto status = JS::call(global_object, &reject_function, js_undefined(), then_call_result.throw_completion().value());
 
         // ii. Return Completion(status).
-        dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: An exception was thrown, returning error {}", this, error);
-        return error;
+        return status;
     }
 
     // d. Return Completion(thenCallResult).
