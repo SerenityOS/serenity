@@ -10,7 +10,7 @@
 
 namespace JS::Intl {
 
-// 15.1.4 Number Format Functions
+// 15.1.4 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
 NumberFormatFunction* NumberFormatFunction::create(GlobalObject& global_object, NumberFormat& number_format)
 {
     return global_object.heap().allocate<NumberFormatFunction>(global_object, number_format, *global_object.function_prototype());
@@ -24,8 +24,11 @@ NumberFormatFunction::NumberFormatFunction(NumberFormat& number_format, Object& 
 
 void NumberFormatFunction::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
+
     Base::initialize(global_object);
-    define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 }
 
 ThrowCompletionOr<Value> NumberFormatFunction::call()
