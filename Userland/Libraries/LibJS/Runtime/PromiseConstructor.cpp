@@ -519,12 +519,14 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
     auto value = vm.argument(0);
 
     // 1. Let C be the this value.
+    auto constructor = vm.this_value(global_object);
+
     // 2. If Type(C) is not Object, throw a TypeError exception.
-    // FIXME: Don't coerce to object!
-    auto* constructor = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!constructor.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, constructor.to_string_without_side_effects());
 
     // 3. Return ? PromiseResolve(C, x).
-    return TRY(promise_resolve(global_object, *constructor, value));
+    return TRY(promise_resolve(global_object, constructor.as_object(), value));
 }
 
 // 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
