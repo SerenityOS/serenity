@@ -42,6 +42,7 @@ void WindowSwitcher::set_visible(bool visible)
         m_switcher_window->set_visible(visible);
     if (!m_visible)
         return;
+    m_hovered_index = -1;
     refresh();
 }
 
