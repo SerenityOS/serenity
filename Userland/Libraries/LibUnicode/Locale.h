@@ -95,6 +95,7 @@ enum class StandardNumberFormatType : u8 {
     Currency,
     Accounting,
     Percent,
+    Scientific,
 };
 
 enum class CompactNumberFormatType : u8 {

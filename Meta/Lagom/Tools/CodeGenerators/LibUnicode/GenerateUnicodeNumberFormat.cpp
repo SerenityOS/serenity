@@ -70,6 +70,7 @@ struct NumberSystem {
     Vector<NumberFormat> currency_short_formats {};
 
     NumberFormat percent_format {};
+    NumberFormat scientific_format {};
 };
 
 struct Locale {
@@ -94,6 +95,7 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
             { "+"sv, "{plusSign}"sv },
             { "-"sv, "{minusSign}"sv },
             { "¤"sv, "{currency}"sv }, // U+00A4 Currency Sign
+            { "E"sv, "{scientificSeparator}"sv },
         };
 
         for (auto const& replacement : replacements)
@@ -129,6 +131,11 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
             pattern = String::formatted("{}{{number}}{}",
                 *start_number_index > 0 ? pattern.substring_view(0, *start_number_index) : ""sv,
                 pattern.substring_view(end_number_index));
+
+            // This is specifically handled here rather than in the replacements HashMap above so
+            // that we do not errantly replace zeroes in number patterns.
+            if (pattern.contains(*replacements.get("E"sv)))
+                pattern = pattern.replace("0"sv, "{scientificExponent}"sv);
         }
 
         return pattern;
@@ -212,6 +219,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
         constexpr auto decimal_formats_prefix = "decimalFormats-numberSystem-"sv;
         constexpr auto currency_formats_prefix = "currencyFormats-numberSystem-"sv;
         constexpr auto percent_formats_prefix = "percentFormats-numberSystem-"sv;
+        constexpr auto scientific_formats_prefix = "scientificFormats-numberSystem-"sv;
 
         if (key.starts_with(symbols_prefix)) {
             auto system = key.substring(symbols_prefix.length());
@@ -258,6 +266,12 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
 
             auto format_object = value.as_object().get("standard"sv);
             parse_number_pattern(format_object.as_string(), locale_data, number_system.percent_format);
+        } else if (key.starts_with(scientific_formats_prefix)) {
+            auto system = key.substring(scientific_formats_prefix.length());
+            auto& number_system = ensure_number_system(system);
+
+            auto format_object = value.as_object().get("standard"sv);
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.scientific_format);
         }
     });
 }
@@ -402,6 +416,7 @@ struct NumberSystem {
     Span<NumberFormat const> currency_short_formats {};
 
     NumberFormat percent_format {};
+    NumberFormat scientific_format {};
 };
 )~~~");
 
@@ -486,6 +501,8 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             append_number_format(number_system.value.accounting_format);
             generator.append(" @currency_unit_formats@.span(), @currency_short_formats@.span(), ");
             append_number_format(number_system.value.percent_format);
+            generator.append(" ");
+            append_number_format(number_system.value.scientific_format);
             generator.append(" },");
         }
 
@@ -559,6 +576,8 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
             return number_system->accounting_format.to_unicode_number_format();
         case StandardNumberFormatType::Percent:
             return number_system->percent_format.to_unicode_number_format();
+        case StandardNumberFormatType::Scientific:
+            return number_system->scientific_format.to_unicode_number_format();
         }
     }
 
