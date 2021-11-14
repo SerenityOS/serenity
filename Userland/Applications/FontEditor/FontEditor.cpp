@@ -34,6 +34,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
+#include <LibGfx/Emoji.h>
 #include <LibGfx/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
@@ -741,6 +742,8 @@ void FontEditorWidget::update_statusbar()
 
     if (m_edited_font->contains_raw_glyph(glyph))
         builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
+    else if (Gfx::Emoji::emoji_for_code_point(glyph))
+        builder.appendff(" [emoji]");
     m_statusbar->set_text(builder.to_string());
 }
 
