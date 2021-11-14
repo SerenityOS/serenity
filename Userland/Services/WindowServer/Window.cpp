@@ -147,7 +147,8 @@ void Window::set_rect(const Gfx::IntRect& rect)
     if (rect.is_empty()) {
         m_backing_store = nullptr;
     } else if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, m_rect.size()).release_value_but_fixme_should_propagate_errors();
+        auto format = has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
+        m_backing_store = Gfx::Bitmap::try_create(format, m_rect.size()).release_value_but_fixme_should_propagate_errors();
     }
 
     invalidate(true, old_rect.size() != rect.size());
