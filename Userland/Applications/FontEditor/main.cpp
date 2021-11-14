@@ -6,6 +6,7 @@
 
 #include "FontEditor.h"
 #include <AK/URL.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -27,6 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
+    Config::pledge_domains("FontEditor");
+    Config::monitor_domain("FontEditor");
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
     char const* path = nullptr;
