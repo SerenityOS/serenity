@@ -467,6 +467,12 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 if (*(p + 1))
                     goto one_more;
             }
+            if (*p == 'L') {
+                // TODO: Implement this properly.
+                // For now just swallow, so the contents are actually rendered.
+                if (*(p + 1))
+                    goto one_more;
+            }
             if (*p == 'z') {
                 state.size_qualifier = true;
                 if (*(p + 1))
