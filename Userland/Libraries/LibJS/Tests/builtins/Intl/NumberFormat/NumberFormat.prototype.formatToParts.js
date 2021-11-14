@@ -244,6 +244,74 @@ describe("style=decimal", () => {
             { type: "integer", value: "\u0661\u0662\u0663\u0664\u0665\u0666\u0667" },
         ]);
     });
+
+    test("notation=scientific", () => {
+        const en = new Intl.NumberFormat("en", { notation: "scientific" });
+        expect(en.formatToParts(12.3)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "23" },
+            { type: "exponentSeparator", value: "E" },
+            { type: "exponentInteger", value: "1" },
+        ]);
+        expect(en.formatToParts(0.12)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "exponentSeparator", value: "E" },
+            { type: "exponentMinusSign", value: "-" },
+            { type: "exponentInteger", value: "1" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", { notation: "scientific" });
+        expect(ar.formatToParts(12.3)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662\u0663" },
+            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentInteger", value: "\u0661" },
+        ]);
+        expect(ar.formatToParts(0.12)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentMinusSign", value: "\u061c-" },
+            { type: "exponentInteger", value: "\u0661" },
+        ]);
+    });
+
+    test("notation=engineering", () => {
+        const en = new Intl.NumberFormat("en", { notation: "engineering" });
+        expect(en.formatToParts(1234)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "234" },
+            { type: "exponentSeparator", value: "E" },
+            { type: "exponentInteger", value: "3" },
+        ]);
+        expect(en.formatToParts(0.12)).toEqual([
+            { type: "integer", value: "120" },
+            { type: "exponentSeparator", value: "E" },
+            { type: "exponentMinusSign", value: "-" },
+            { type: "exponentInteger", value: "3" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", { notation: "engineering" });
+        expect(ar.formatToParts(1234)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662\u0663\u0664" },
+            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentInteger", value: "\u0663" },
+        ]);
+        expect(ar.formatToParts(0.12)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0660" },
+            { type: "exponentSeparator", value: "\u0627\u0633" },
+            { type: "exponentMinusSign", value: "\u061c-" },
+            { type: "exponentInteger", value: "\u0663" },
+        ]);
+    });
 });
 
 describe("style=percent", () => {
