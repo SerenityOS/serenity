@@ -272,45 +272,46 @@ bool is_valid_time(double hour, double minute, double second, double millisecond
 }
 
 // 4.5.6 BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balancetime
-DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 microsecond, i64 nanosecond)
+DaysAndTime balance_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
+    VERIFY(hour == trunc(hour) && minute == trunc(minute) && second == trunc(second) && millisecond == trunc(millisecond) && microsecond == trunc(microsecond) && nanosecond == trunc(nanosecond));
 
     // 2. Set microsecond to microsecond + floor(nanosecond / 1000).
-    microsecond += nanosecond / 1000;
+    microsecond += floor(nanosecond / 1000);
 
     // 3. Set nanosecond to nanosecond modulo 1000.
-    nanosecond = modulo(nanosecond, (i64)1000);
+    nanosecond = modulo(nanosecond, 1000.0);
 
     // 4. Set millisecond to millisecond + floor(microsecond / 1000).
-    millisecond += microsecond / 1000;
+    millisecond += floor(microsecond / 1000);
 
     // 5. Set microsecond to microsecond modulo 1000.
-    microsecond = modulo(microsecond, (i64)1000);
+    microsecond = modulo(microsecond, 1000.0);
 
     // 6. Set second to second + floor(millisecond / 1000).
-    second += millisecond / 1000;
+    second += floor(millisecond / 1000);
 
     // 7. Set millisecond to millisecond modulo 1000.
-    millisecond = modulo(millisecond, (i64)1000);
+    millisecond = modulo(millisecond, 1000.0);
 
     // 8. Set minute to minute + floor(second / 60).
-    minute += second / 60;
+    minute += floor(second / 60);
 
     // 9. Set second to second modulo 60.
-    second = modulo(second, (i64)60);
+    second = modulo(second, 60.0);
 
     // 10. Set hour to hour + floor(minute / 60).
-    hour += minute / 60;
+    hour += floor(minute / 60);
 
     // 11. Set minute to minute modulo 60.
-    minute = modulo(minute, (i64)60);
+    minute = modulo(minute, 60.0);
 
     // 12. Let days be floor(hour / 24).
-    u8 days = hour / 24;
+    auto days = floor(hour / 24);
 
     // 13. Set hour to hour modulo 24.
-    hour = modulo(hour, (i64)24);
+    hour = modulo(hour, 24.0);
 
     // 14. Return the Record { [[Days]]: days, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return DaysAndTime {
@@ -501,25 +502,23 @@ DaysAndTime add_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microse
     // 1. Assert: hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integers.
     VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
 
-    // FIXME: balance_time() should probably take double arguments. In fact, pretty much every balance_foo() needed to take doubles at some point.
-
     // 2. Let hour be hour + hours.
-    i64 hour_ = hour + hours;
+    auto hour_ = hour + hours;
 
     // 3. Let minute be minute + minutes.
-    i64 minute_ = minute + minutes;
+    auto minute_ = minute + minutes;
 
     // 4. Let second be second + seconds.
-    i64 second_ = second + seconds;
+    auto second_ = second + seconds;
 
     // 5. Let millisecond be millisecond + milliseconds.
-    i64 millisecond_ = millisecond + milliseconds;
+    auto millisecond_ = millisecond + milliseconds;
 
     // 6. Let microsecond be microsecond + microseconds.
-    i64 microsecond_ = microsecond + microseconds;
+    auto microsecond_ = microsecond + microseconds;
 
     // 7. Let nanosecond be nanosecond + nanoseconds.
-    i64 nanosecond_ = nanosecond + nanoseconds;
+    auto nanosecond_ = nanosecond + nanoseconds;
 
     // 8. Return ! BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond).
     return balance_time(hour_, minute_, second_, millisecond_, microsecond_, nanosecond_);
