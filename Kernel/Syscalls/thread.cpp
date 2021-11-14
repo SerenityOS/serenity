@@ -5,8 +5,6 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -43,13 +41,10 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<con
 
     auto thread = TRY(Thread::try_create(*this));
 
-    // FIXME: Don't make a temporary String here
-    auto new_thread_name = TRY(KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value())));
-
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
-    // length + 4 to give space for our extra junk at the end
-    StringBuilder builder(m_name->length() + 4);
+    // FIXME: Don't make a temporary String here
+    auto new_thread_name = TRY(KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value())));
     thread->set_name(move(new_thread_name));
 
     if (!is_thread_joinable)
