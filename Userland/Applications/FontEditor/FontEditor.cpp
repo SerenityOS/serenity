@@ -11,6 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/UnicodeUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
+#include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -296,23 +297,22 @@ FontEditorWidget::FontEditorWidget()
     toolbar.add_action(*m_next_glyph_action);
     toolbar.add_action(*m_go_to_glyph_action);
 
-    m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [&](auto&) {
-        m_glyph_editor_widget->set_scale(5);
-        did_resize_glyph_editor();
+    i32 scale = Config::read_i32("FontEditor", "GlyphEditor", "Scale", 10);
+
+    m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
+        set_scale_and_save(5);
     });
-    m_scale_five_action->set_checked(false);
+    m_scale_five_action->set_checked(scale == 5);
     m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font");
-    m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [&](auto&) {
-        m_glyph_editor_widget->set_scale(10);
-        did_resize_glyph_editor();
+    m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [this](auto&) {
+        set_scale_and_save(10);
     });
-    m_scale_ten_action->set_checked(true);
+    m_scale_ten_action->set_checked(scale == 10);
     m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font");
-    m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [&](auto&) {
-        m_glyph_editor_widget->set_scale(15);
-        did_resize_glyph_editor();
+    m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [this](auto&) {
+        set_scale_and_save(15);
     });
-    m_scale_fifteen_action->set_checked(false);
+    m_scale_fifteen_action->set_checked(scale == 15);
     m_scale_fifteen_action->set_status_tip("Scale the editor in proportion to the current font");
 
     m_glyph_editor_scale_actions.add_action(*m_scale_five_action);
@@ -483,6 +483,8 @@ FontEditorWidget::FontEditorWidget()
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
         m_statusbar->set_override_text({});
     };
+
+    set_scale(scale);
 }
 
 FontEditorWidget::~FontEditorWidget()
@@ -775,4 +777,28 @@ void FontEditorWidget::did_resize_glyph_editor()
     constexpr int glyph_toolbars_width = 100;
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
+}
+
+void FontEditorWidget::config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
+{
+    if (domain == "FontEditor"sv && group == "GlyphEditor"sv && key == "Scale"sv) {
+        set_scale(value);
+    }
+}
+
+void FontEditorWidget::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    config_i32_did_change(domain, group, key, value.to_int().value_or(10));
+}
+
+void FontEditorWidget::set_scale(i32 scale)
+{
+    m_glyph_editor_widget->set_scale(scale);
+}
+
+void FontEditorWidget::set_scale_and_save(i32 scale)
+{
+    set_scale(scale);
+    Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
+    did_resize_glyph_editor();
 }
