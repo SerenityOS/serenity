@@ -10,6 +10,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
+#ifdef KERNEL
+#    include <Kernel/VirtualAddress.h>
+#endif
+
 namespace AK {
 
 template<typename T>
@@ -19,8 +23,6 @@ template<PointerTypeName T>
 class Userspace {
 public:
     Userspace() = default;
-
-    operator FlatPtr() const { return (FlatPtr)m_ptr; }
 
     // Disable default implementations that would use surprising integer promotion.
     bool operator==(const Userspace&) const = delete;
@@ -38,7 +40,8 @@ public:
     explicit operator bool() const { return m_ptr != 0; }
 
     FlatPtr ptr() const { return m_ptr; }
-    T unsafe_userspace_ptr() const { return (T)m_ptr; }
+    VirtualAddress vaddr() const { return VirtualAddress(m_ptr); }
+    T unsafe_userspace_ptr() const { return reinterpret_cast<T>(m_ptr); }
 #else
     Userspace(T ptr)
         : m_ptr(ptr)

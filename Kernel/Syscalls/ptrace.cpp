@@ -178,7 +178,7 @@ ErrorOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 
 ErrorOr<void> Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
-    Memory::VirtualRange range = { VirtualAddress(address), sizeof(u32) };
+    Memory::VirtualRange range = { address.vaddr(), sizeof(u32) };
     auto* region = address_space().find_region_containing(range);
     if (!region)
         return EFAULT;
