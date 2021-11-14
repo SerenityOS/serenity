@@ -130,11 +130,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
         callee_context.current_node = interpreter->current_node();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
-    prepare_for_ordinary_call(callee_context, nullptr);
-
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    TRY(prepare_for_ordinary_call(callee_context, nullptr));
 
     // 3. Assert: calleeContext is now the running execution context.
     VERIFY(&vm.running_execution_context() == &callee_context);
@@ -205,11 +202,8 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
         callee_context.current_node = interpreter->current_node();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
-    prepare_for_ordinary_call(callee_context, &new_target);
-
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    TRY(prepare_for_ordinary_call(callee_context, &new_target));
 
     // 5. Assert: calleeContext is now the running execution context.
     VERIFY(&vm.running_execution_context() == &callee_context);
@@ -552,7 +546,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 }
 
 // 10.2.1.1 PrepareForOrdinaryCall ( F, newTarget ), https://tc39.es/ecma262/#sec-prepareforordinarycall
-void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target)
+ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target)
 {
     auto& vm = this->vm();
 
@@ -604,9 +598,12 @@ void ECMAScriptFunctionObject::prepare_for_ordinary_call(ExecutionContext& calle
 
     // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
     vm.push_execution_context(callee_context, global_object());
+    if (auto* exception = vm.exception())
+        return throw_completion(exception->value());
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
     // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
+    return {};
 }
 
 // 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
