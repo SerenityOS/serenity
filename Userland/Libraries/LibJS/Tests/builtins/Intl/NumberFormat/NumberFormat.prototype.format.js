@@ -204,6 +204,52 @@ describe("style=decimal", () => {
         expect(ar.format(-0)).toBe("\u0660");
         expect(ar.format(-1)).toBe("\u061c-\u0661");
     });
+
+    test("useGrouping=true", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: true });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1,234");
+        expect(en.format(12345)).toBe("12,345");
+        expect(en.format(123456)).toBe("123,456");
+        expect(en.format(1234567)).toBe("1,234,567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: true });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1,234");
+        expect(enIn.format(12345)).toBe("12,345");
+        expect(enIn.format(123456)).toBe("1,23,456");
+        expect(enIn.format(1234567)).toBe("12,34,567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: true });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u066c\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u066c\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u066c\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667");
+    });
+
+    test("useGrouping=false", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: false });
+        expect(en.format(123)).toBe("123");
+        expect(en.format(1234)).toBe("1234");
+        expect(en.format(12345)).toBe("12345");
+        expect(en.format(123456)).toBe("123456");
+        expect(en.format(1234567)).toBe("1234567");
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: false });
+        expect(enIn.format(123)).toBe("123");
+        expect(enIn.format(1234)).toBe("1234");
+        expect(enIn.format(12345)).toBe("12345");
+        expect(enIn.format(123456)).toBe("123456");
+        expect(enIn.format(1234567)).toBe("1234567");
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: false });
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663");
+        expect(ar.format(1234)).toBe("\u0661\u0662\u0663\u0664");
+        expect(ar.format(12345)).toBe("\u0661\u0662\u0663\u0664\u0665");
+        expect(ar.format(123456)).toBe("\u0661\u0662\u0663\u0664\u0665\u0666");
+        expect(ar.format(1234567)).toBe("\u0661\u0662\u0663\u0664\u0665\u0666\u0667");
+    });
 });
 
 describe("style=percent", () => {
