@@ -103,14 +103,6 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_wrapper(BitmapFormat format, I
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, int scale_factor)
 {
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0)
-        return Error::from_errno(errno);
-    return try_load_from_fd_and_close(fd, path, scale_factor);
-}
-
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path, int scale_factor)
-{
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
@@ -120,18 +112,28 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String
         highdpi_icon_path.appendff("-{}x.", scale_factor);
         highdpi_icon_path.append(lexical_path.extension());
 
-        auto file = TRY(MappedFile::map_from_fd_and_close(fd, highdpi_icon_path.to_string()));
-        if (auto decoder = ImageDecoder::try_create(file->bytes())) {
-            auto bitmap = decoder->frame(0).image;
-            VERIFY(bitmap->width() % scale_factor == 0);
-            VERIFY(bitmap->height() % scale_factor == 0);
-            bitmap->m_size.set_width(bitmap->width() / scale_factor);
-            bitmap->m_size.set_height(bitmap->height() / scale_factor);
-            bitmap->m_scale = scale_factor;
-            return bitmap.release_nonnull();
-        }
+        auto highdpi_icon_string = highdpi_icon_path.to_string();
+        int fd = open(highdpi_icon_string.characters(), O_RDONLY);
+        if (fd < 0)
+            return Error::from_errno(errno);
+
+        auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
+        VERIFY(bitmap->width() % scale_factor == 0);
+        VERIFY(bitmap->height() % scale_factor == 0);
+        bitmap->m_size.set_width(bitmap->width() / scale_factor);
+        bitmap->m_size.set_height(bitmap->height() / scale_factor);
+        bitmap->m_scale = scale_factor;
+        return bitmap;
     }
 
+    int fd = open(path.characters(), O_RDONLY);
+    if (fd < 0)
+        return Error::from_errno(errno);
+    return try_load_from_fd_and_close(fd, path);
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path)
+{
     auto file = TRY(MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
         if (auto bitmap = decoder->frame(0).image)
