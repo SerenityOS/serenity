@@ -63,13 +63,20 @@ Value PromiseAllResolveElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    // 8. Set values[index] to x.
     m_values.values()[m_index] = vm.argument(0);
 
+    // 9. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+    // 10. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        auto values_array = Array::create_from(global_object, m_values.values());
+        // a. Let valuesArray be ! CreateArrayFromList(values).
+        auto* values_array = Array::create_from(global_object, m_values.values());
+
+        // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
+    // 11. Return undefined.
     return js_undefined();
 }
 
@@ -88,17 +95,29 @@ Value PromiseAllSettledResolveElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    // 9. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
+
+    // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "fulfilled"sv)));
+
+    // 11. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
     MUST(object->create_data_property_or_throw(vm.names.value, vm.argument(0)));
 
+    // 12. Set values[index] to obj.
     m_values.values()[m_index] = object;
 
+    // 13. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+    // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        auto values_array = Array::create_from(global_object, m_values.values());
+        // a. Let valuesArray be ! CreateArrayFromList(values).
+        auto* values_array = Array::create_from(global_object, m_values.values());
+
+        // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
+    // 15. Return undefined.
     return js_undefined();
 }
 
@@ -117,17 +136,29 @@ Value PromiseAllSettledRejectElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    // 9. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* object = Object::create(global_object, global_object.object_prototype());
+
+    // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
     MUST(object->create_data_property_or_throw(vm.names.status, js_string(vm, "rejected"sv)));
+
+    // 11. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
     MUST(object->create_data_property_or_throw(vm.names.reason, vm.argument(0)));
 
+    // 12. Set values[index] to obj.
     m_values.values()[m_index] = object;
 
+    // 13. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+    // 14. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
+        // a. Let valuesArray be ! CreateArrayFromList(values).
         auto values_array = Array::create_from(global_object, m_values.values());
+
+        // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
         return TRY_OR_DISCARD(vm.call(*m_capability.resolve, js_undefined(), values_array));
     }
 
+    // 15. Return undefined.
     return js_undefined();
 }
 
@@ -146,14 +177,20 @@ Value PromiseAnyRejectElementFunction::resolve_element()
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    // 8. Set errors[index] to x.
     m_values.values()[m_index] = vm.argument(0);
 
+    // 9. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
+    // 10. If remainingElementsCount.[[Value]] is 0, then
     if (--m_remaining_elements.value == 0) {
-        auto errors_array = Array::create_from(global_object, m_values.values());
-
+        // a. Let error be a newly created AggregateError object.
         auto* error = AggregateError::create(global_object);
+
+        // b. Perform ! DefinePropertyOrThrow(error, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errors) }).
+        auto errors_array = Array::create_from(global_object, m_values.values());
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
+        // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
         return TRY_OR_DISCARD(vm.call(*m_capability.reject, js_undefined(), error));
     }
 
