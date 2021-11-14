@@ -535,7 +535,8 @@ void VM::run_queued_promise_jobs()
         if (m_execution_context_stack.is_empty()) {
             static FlyString promise_execution_context_name = "(promise execution context)";
             execution_context.function_name = promise_execution_context_name;
-            push_execution_context(execution_context, job->global_object());
+            // FIXME: Propagate potential failure
+            MUST(push_execution_context(execution_context, job->global_object()));
             pushed_execution_context = true;
         }
 

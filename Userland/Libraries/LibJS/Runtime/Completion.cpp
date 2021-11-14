@@ -51,7 +51,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
         result = vm.argument(0);
 
         // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-        vm.push_execution_context(async_context, global_object);
+        TRY(vm.push_execution_context(async_context, global_object));
 
         // d. Resume the suspended evaluation of asyncContext using NormalCompletion(value) as the result of the operation that suspended it.
         // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
@@ -75,7 +75,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
         result = vm.argument(0);
 
         // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-        vm.push_execution_context(async_context, global_object);
+        TRY(vm.push_execution_context(async_context, global_object));
 
         // d. Resume the suspended evaluation of asyncContext using ThrowCompletion(reason) as the result of the operation that suspended it.
         // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
