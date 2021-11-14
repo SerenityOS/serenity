@@ -428,13 +428,13 @@ ISODate balance_iso_date(double year_, double month_, double day)
 
     // 8. Repeat, while day < −1 × ! ISODaysInYear(testYear),
     while (day < -1 * iso_days_in_year(test_year)) {
-        // a.Set day to day + !ISODaysInYear(testYear).
+        // a. Set day to day + !ISODaysInYear(testYear).
         day += iso_days_in_year(test_year);
 
-        // b.Set year to year − 1.
+        // b. Set year to year − 1.
         year--;
 
-        // c.Set testYear to testYear − 1.
+        // c. Set testYear to testYear − 1.
         test_year--;
     }
 
