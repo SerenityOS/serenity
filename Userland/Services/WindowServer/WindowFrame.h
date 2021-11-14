@@ -124,7 +124,7 @@ private:
     void paint_normal_frame(Gfx::Painter&);
     void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
-    MultiScaleBitmaps* shadow_bitmap() const;
+    MultiScaleBitmaps const* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
 
     void handle_menubar_mouse_event(const MouseEvent&);
