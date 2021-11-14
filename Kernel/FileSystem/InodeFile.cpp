@@ -74,7 +74,7 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
     }
     case FIONREAD: {
         int remaining_bytes = inode().size() - description.offset();
-        return copy_to_user(Userspace<int*>(arg), &remaining_bytes);
+        return copy_to_user(static_ptr_cast<int*>(arg), &remaining_bytes);
     }
     default:
         return EINVAL;
