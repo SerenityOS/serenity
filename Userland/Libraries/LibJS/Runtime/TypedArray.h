@@ -477,7 +477,8 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(GlobalObject& global_objec
                                                                                             \
     public:                                                                                 \
         virtual ~ClassName();                                                               \
-        static ClassName* create(GlobalObject&, u32 length, FunctionObject& new_target);    \
+        static ThrowCompletionOr<ClassName*> create(                                        \
+            GlobalObject&, u32 length, FunctionObject& new_target);                         \
         static ClassName* create(GlobalObject&, u32 length);                                \
         ClassName(u32 length, Object& prototype);                                           \
         virtual String element_name() const override;                                       \
