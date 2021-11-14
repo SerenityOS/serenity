@@ -135,7 +135,7 @@ is_valid_target() {
 
 create_build_dir() {
     if [ "$TARGET" != "lagom" ]; then
-        cmake -GNinja "${CMAKE_ARGS[@]}" -S "$SERENITY_SOURCE_DIR/Meta/CMake/Superbuild" -B "$SUPER_BUILD_DIR"
+        cmake -GNinja "${CMAKE_ARGS[@]}" -DENABLE_COMPILETIME_HEADER_CHECK=ON -S "$SERENITY_SOURCE_DIR/Meta/CMake/Superbuild" -B "$SUPER_BUILD_DIR"
     else
         cmake -GNinja "${CMAKE_ARGS[@]}" -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$SUPER_BUILD_DIR"
     fi
