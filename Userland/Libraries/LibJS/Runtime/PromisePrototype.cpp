@@ -73,12 +73,14 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     auto on_finally = vm.argument(0);
 
     // 1. Let promise be the this value.
+    auto promise = vm.this_value(global_object);
+
     // 2. If Type(promise) is not Object, throw a TypeError exception.
-    // FIXME: Don't coerce to object!
-    auto* promise = TRY(vm.this_value(global_object).to_object(global_object));
+    if (!promise.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, promise.to_string_without_side_effects());
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(global_object, *promise, *global_object.promise_constructor()));
+    auto* constructor = TRY(species_constructor(global_object, promise.as_object(), *global_object.promise_constructor()));
 
     // 4. Assert: IsConstructor(C) is true.
     VERIFY(constructor);
@@ -150,7 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     }
 
     // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
-    return TRY(Value(promise).invoke(global_object, vm.names.then, then_finally, catch_finally));
+    return TRY(promise.invoke(global_object, vm.names.then, then_finally, catch_finally));
 }
 
 }

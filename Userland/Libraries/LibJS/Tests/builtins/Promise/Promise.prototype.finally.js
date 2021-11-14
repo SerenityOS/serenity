@@ -52,3 +52,11 @@ describe("normal behavior", () => {
         expect(thenFinallyArg).not.toBe(catchFinallyArg);
     });
 });
+
+describe("errors", () => {
+    test("this value must be an object", () => {
+        expect(() => {
+            Promise.prototype.finally.call("foo");
+        }).toThrowWithMessage(TypeError, "foo is not an object");
+    });
+});
