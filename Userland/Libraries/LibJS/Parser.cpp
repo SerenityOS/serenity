@@ -621,9 +621,12 @@ static bool is_simple_parameter_list(Vector<FunctionNode::Parameter> const& para
     });
 }
 
-RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
+RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens, bool is_async)
 {
-    if (!expect_parens) {
+    if (is_async)
+        VERIFY(match(TokenType::Async));
+
+    if (!expect_parens && !is_async) {
         // NOTE: This is a fast path where we try to fail early in case this can't possibly
         //       be a match. The idea is to avoid the expensive parser state save/load mechanism.
         //       The logic is duplicated below in the "real" !expect_parens branch.
@@ -643,6 +646,22 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         load_state();
     };
 
+    auto function_kind = FunctionKind::Regular;
+
+    if (is_async) {
+        consume(TokenType::Async);
+        function_kind = FunctionKind::Async;
+        if (m_state.current_token.trivia_contains_line_terminator())
+            return nullptr;
+
+        // Since we have async it can be followed by paren open in the expect_parens case
+        // so we also consume that token.
+        if (expect_parens) {
+            VERIFY(match(TokenType::ParenOpen));
+            consume(TokenType::ParenOpen);
+        }
+    }
+
     Vector<FunctionNode::Parameter> parameters;
     i32 function_length = -1;
     if (expect_parens) {
@@ -652,7 +671,9 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         // check if it's about a wrong token (something like duplicate parameter name must
         // not abort), know parsing failed and rollback the parser state.
         auto previous_syntax_errors = m_state.errors.size();
-        parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction);
+        TemporaryChange in_async_context(m_state.in_async_function_context, is_async || m_state.in_async_function_context);
+
+        parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction | (is_async ? FunctionNodeParseOptions::IsAsyncFunction : 0));
         if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"))
             return nullptr;
         if (!match(TokenType::ParenClose))
@@ -665,6 +686,8 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         auto token = consume_identifier_reference();
         if (m_state.strict_mode && token.value().is_one_of("arguments"sv, "eval"sv))
             syntax_error("BindingIdentifier may not be 'arguments' or 'eval' in strict mode");
+        if (is_async && token.value() == "await"sv)
+            syntax_error("'await' is a reserved identifier in async functions");
         parameters.append({ FlyString { token.value() }, {} });
     }
     // If there's a newline between the closing paren and arrow it's not a valid arrow function,
@@ -687,9 +710,11 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     auto function_body_result = [&]() -> RefPtr<FunctionBody> {
         TemporaryChange change(m_state.in_arrow_function_context, true);
+        TemporaryChange async_context_change(m_state.in_async_function_context, is_async);
+
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_function_body(parameters, FunctionKind::Regular, contains_direct_call_to_eval);
+            return parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -730,7 +755,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     return create_ast_node<FunctionExpression>(
         { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
-        move(parameters), function_length, FunctionKind::Regular, body->in_strict_mode(),
+        move(parameters), function_length, function_kind, body->in_strict_mode(),
         /* might_need_arguments_object */ false, contains_direct_call_to_eval, /* is_arrow_function */ true);
 }
 
@@ -1164,18 +1189,24 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
     if (match_unary_prefixed_expression())
         return { parse_unary_prefixed_expression() };
 
+    auto try_arrow_function_parse_or_fail = [this](Position const& position, bool expect_paren, bool is_async = false) -> RefPtr<FunctionExpression> {
+        if (try_parse_arrow_function_expression_failed_at_position(position))
+            return nullptr;
+        auto arrow_function = try_parse_arrow_function_expression(expect_paren, is_async);
+        if (arrow_function)
+            return arrow_function;
+
+        set_try_parse_arrow_function_expression_failed_at_position(position, true);
+        return nullptr;
+    };
+
     switch (m_state.current_token.type()) {
     case TokenType::ParenOpen: {
         auto paren_position = position();
         consume(TokenType::ParenOpen);
-        if ((match(TokenType::ParenClose) || match_identifier() || match(TokenType::TripleDot) || match(TokenType::CurlyOpen) || match(TokenType::BracketOpen))
-            && !try_parse_arrow_function_expression_failed_at_position(paren_position)) {
-
-            auto arrow_function_result = try_parse_arrow_function_expression(true);
-            if (!arrow_function_result.is_null())
+        if ((match(TokenType::ParenClose) || match_identifier() || match(TokenType::TripleDot) || match(TokenType::CurlyOpen) || match(TokenType::BracketOpen))) {
+            if (auto arrow_function_result = try_arrow_function_parse_or_fail(paren_position, true))
                 return { arrow_function_result.release_nonnull(), false };
-
-            set_try_parse_arrow_function_expression_failed_at_position(paren_position, true);
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
@@ -1204,13 +1235,9 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         [[fallthrough]];
     case TokenType::Identifier: {
     read_as_identifier:;
-        if (!try_parse_arrow_function_expression_failed_at_position(position())) {
-            auto arrow_function_result = try_parse_arrow_function_expression(false);
-            if (!arrow_function_result.is_null())
-                return { arrow_function_result.release_nonnull(), false };
+        if (auto arrow_function_result = try_arrow_function_parse_or_fail(position(), false))
+            return { arrow_function_result.release_nonnull(), false };
 
-            set_try_parse_arrow_function_expression_failed_at_position(position(), true);
-        }
         auto string = m_state.current_token.value();
         // This could be 'eval' or 'arguments' and thus needs a custom check (`eval[1] = true`)
         if (m_state.strict_mode && (string == "let" || is_strict_reserved_word(string)))
@@ -1230,10 +1257,24 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         return { create_ast_node<NullLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }) };
     case TokenType::CurlyOpen:
         return { parse_object_expression() };
-    case TokenType::Async:
-        if (next_token().type() != TokenType::Function)
+    case TokenType::Async: {
+        auto lookahead_token = next_token();
+        // No valid async function (arrow or not) can have a line terminator after the async since asi would kick in.
+        if (lookahead_token.trivia_contains_line_terminator())
             goto read_as_identifier;
-        [[fallthrough]];
+
+        if (lookahead_token.type() == TokenType::Function)
+            return { parse_function_node<FunctionExpression>() };
+
+        if (lookahead_token.type() == TokenType::ParenOpen) {
+            if (auto arrow_function_result = try_arrow_function_parse_or_fail(position(), true, true))
+                return { arrow_function_result.release_nonnull(), false };
+        } else if (lookahead_token.is_identifier_name()) {
+            if (auto arrow_function_result = try_arrow_function_parse_or_fail(position(), false, true))
+                return { arrow_function_result.release_nonnull(), false };
+        }
+        goto read_as_identifier;
+    }
     case TokenType::Function:
         return { parse_function_node<FunctionExpression>() };
     case TokenType::BracketOpen:
@@ -3095,8 +3136,11 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
 NonnullRefPtr<Statement> Parser::parse_for_statement()
 {
     auto rule_start = push_start();
-    auto match_for_in_of = [&]() {
-        return match(TokenType::In) || (match(TokenType::Identifier) && m_state.current_token.original_value() == "of");
+    auto match_of = [&](Token const& token) {
+        return token.type() == TokenType::Identifier && token.original_value() == "of"sv;
+    };
+    auto match_for_in_of = [&] {
+        return match(TokenType::In) || match_of(m_state.current_token);
     };
 
     consume(TokenType::For);
@@ -3130,9 +3174,15 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
                 }
             }
         } else if (match_expression()) {
+            auto lookahead_token = next_token();
+            bool starts_with_async_of = match(TokenType::Async) && match_of(lookahead_token);
+
             init = parse_expression(0, Associativity::Right, { TokenType::In });
-            if (match_for_in_of())
+            if (match_for_in_of()) {
+                if (starts_with_async_of && match_of(m_state.current_token))
+                    syntax_error("for-of loop may not start with async of");
                 return parse_for_in_of_statement(*init);
+            }
         } else {
             syntax_error("Unexpected token in for loop");
         }

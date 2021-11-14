@@ -41,6 +41,65 @@ test("function expression names equal to 'await'", () => {
     expect(`async function foo() { function await() {} }`).not.toEval();
 });
 
+test("async function cannot use await in default parameters", () => {
+    expect("async function foo(x = await 3) {}").not.toEval();
+    expect("async function foo(x = await 3) {}").not.toEval();
+
+    // Even as a reference to some variable it is not allowed
+    expect(`
+        var await = 4;
+        async function foo(x = await) {} 
+    `).not.toEval();
+});
+
+describe("async arrow functions", () => {
+    test("basic syntax", () => {
+        expect("async () => await 3;").toEval();
+        expect("async param => await param();").toEval();
+        expect("async (param) => await param();").toEval();
+        expect("async (a, b) => await a();").toEval();
+
+        expect("async () => { await 3; }").toEval();
+        expect("async param => { await param(); }").toEval();
+        expect("async (param) => { await param(); }").toEval();
+        expect("async (a, b) => { await a(); }").toEval();
+
+        expect(`async
+                () => await 3;`).not.toEval();
+
+        expect("async async => await async()").toEval();
+        expect("async => async").toEval();
+        expect("async => await async()").not.toEval();
+
+        expect("async (b = await) => await b;").not.toEval();
+        expect("async (b = await 3) => await b;").not.toEval();
+
+        // Cannot escape the async keyword.
+        expect("\\u0061sync () => await 3").not.toEval();
+
+        expect("for (async of => {};;) {}").toEval();
+        expect("for (async of []) {}").not.toEval();
+    });
+
+    test("async within a for-loop", () => {
+        let called = false;
+        // Unfortunately we cannot really test the more horrible case above.
+        for (
+            const f = async of => {
+                return of;
+            };
+            ;
+
+        ) {
+            expect(f(43)).toBeInstanceOf(Promise);
+
+            called = true;
+            break;
+        }
+        expect(called).toBeTrue();
+    });
+});
+
 test("basic functionality", () => {
     test("simple", () => {
         let executionValue = null;
@@ -70,5 +129,26 @@ test("basic functionality", () => {
         bar();
         runQueuedPromiseJobs();
         expect(resultValue).toBe("someValue");
+    });
+});
+
+describe("non async function declaration usage of async still works", () => {
+    test("async as a function", () => {
+        function async(value = 4) {
+            return value;
+        }
+
+        expect(async(0)).toBe(0);
+
+        // We use eval here since it otherwise cannot find the async function.
+        const evalResult = eval("async(1)");
+        expect(evalResult).toBe(1);
+    });
+
+    test("async as a variable", () => {
+        let async = 3;
+
+        const evalResult = eval("async >= 2");
+        expect(evalResult).toBeTrue();
     });
 });

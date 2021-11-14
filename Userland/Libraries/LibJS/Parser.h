@@ -113,7 +113,7 @@ public:
     NonnullRefPtr<ImportStatement> parse_import_statement(Program& program);
     NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);
 
-    RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
+    RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens, bool is_async = false);
     RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
 
