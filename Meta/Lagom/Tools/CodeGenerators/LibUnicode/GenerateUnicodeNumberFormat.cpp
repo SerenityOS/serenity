@@ -57,6 +57,9 @@ struct NumberSystem {
     StringIndexType system { 0 };
     HashMap<String, StringIndexType> symbols {};
 
+    u8 primary_grouping_size { 0 };
+    u8 secondary_grouping_size { 0 };
+
     NumberFormat decimal_format {};
     Vector<NumberFormat> decimal_long_formats {};
     Vector<NumberFormat> decimal_short_formats {};
@@ -79,7 +82,7 @@ struct UnicodeLocaleData {
     Vector<String> numeric_symbols;
 };
 
-static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format)
+static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
@@ -103,6 +106,24 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
                 auto ch = pattern[end_number_index];
                 if ((ch != '#') && (ch != '0') && (ch != ',') && (ch != '.'))
                     break;
+            }
+
+            if (number_system_for_groupings) {
+                auto number_pattern = pattern.substring_view(*start_number_index, end_number_index - *start_number_index);
+
+                auto group_separators = number_pattern.find_all(","sv);
+                VERIFY((group_separators.size() == 1) || (group_separators.size() == 2));
+
+                auto decimal = number_pattern.find('.');
+                VERIFY(decimal.has_value());
+
+                if (group_separators.size() == 1) {
+                    number_system_for_groupings->primary_grouping_size = *decimal - group_separators[0] - 1;
+                    number_system_for_groupings->secondary_grouping_size = number_system_for_groupings->primary_grouping_size;
+                } else {
+                    number_system_for_groupings->primary_grouping_size = *decimal - group_separators[1] - 1;
+                    number_system_for_groupings->secondary_grouping_size = group_separators[1] - group_separators[0] - 1;
+                }
             }
 
             pattern = String::formatted("{}{{number}}{}",
@@ -208,7 +229,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, number_system.decimal_format);
+            parse_number_pattern(format_object.as_string(), locale_data, number_system.decimal_format, &number_system);
 
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
@@ -309,6 +330,7 @@ namespace Unicode {
 namespace Detail {
 
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView numeric_symbol);
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
@@ -366,6 +388,9 @@ struct NumberFormat {
 struct NumberSystem {
     @string_index_type@ system { 0 };
     Array<@string_index_type@, @numeric_symbols_size@> symbols {};
+
+    u8 primary_grouping_size { 0 };
+    u8 secondary_grouping_size { 0 };
 
     NumberFormat decimal_format {};
     Span<NumberFormat const> decimal_long_formats {};
@@ -438,6 +463,8 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
 
         for (auto const& number_system : number_systems) {
             generator.set("system"sv, String::number(number_system.value.system));
+            generator.set("primary_grouping_size"sv, String::number(number_system.value.primary_grouping_size));
+            generator.set("secondary_grouping_size"sv, String::number(number_system.value.secondary_grouping_size));
             generator.set("decimal_long_formats"sv, format_name(number_system.key, "dl"sv));
             generator.set("decimal_short_formats"sv, format_name(number_system.key, "ds"sv));
             generator.set("currency_unit_formats"sv, format_name(number_system.key, "cu"sv));
@@ -451,7 +478,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
                 generator.append(" @index@,");
             }
 
-            generator.append(" }, ");
+            generator.append(" }, @primary_grouping_size@, @secondary_grouping_size@, ");
             append_number_format(number_system.value.decimal_format);
             generator.append(" @decimal_long_formats@.span(), @decimal_short_formats@.span(), ");
             append_number_format(number_system.value.currency_format);
@@ -510,6 +537,13 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
         return s_string_list[number_system->symbols[symbol_index]];
     }
 
+    return {};
+}
+
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
+{
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
+        return NumberGroupings { number_system->primary_grouping_size, number_system->secondary_grouping_size };
     return {};
 }
 
