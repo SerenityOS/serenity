@@ -58,8 +58,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.variable_environment = &realm().global_environment();
     execution_context.realm = &realm();
     execution_context.is_strict_mode = program.is_strict_mode();
-    vm.push_execution_context(execution_context, global_object);
-    VERIFY(!vm.exception());
+    MUST(vm.push_execution_context(execution_context, global_object));
     auto value = program.execute(*this, global_object);
     vm.set_last_value(Badge<Interpreter> {}, value.value_or(js_undefined()));
 

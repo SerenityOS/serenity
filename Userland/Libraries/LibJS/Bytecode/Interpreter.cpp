@@ -57,8 +57,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         execution_context.realm = &m_realm;
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
         // execution_context.is_strict_mode = ???;
-        vm().push_execution_context(execution_context, global_object());
-        VERIFY(!vm().exception());
+        MUST(vm().push_execution_context(execution_context, global_object()));
     }
 
     auto block = entry_point ?: &executable.basic_blocks.first();

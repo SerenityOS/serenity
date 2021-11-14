@@ -597,9 +597,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     // FIXME: We don't have this concept yet.
 
     // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
-    vm.push_execution_context(callee_context, global_object());
-    if (auto* exception = vm.exception())
-        return throw_completion(exception->value());
+    TRY(vm.push_execution_context(callee_context, global_object()));
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
     // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
@@ -729,7 +727,9 @@ void ECMAScriptFunctionObject::async_block_start(PromiseCapability const& promis
     });
 
     // 4. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
-    vm.push_execution_context(async_context, global_object());
+    auto push_result = vm.push_execution_context(async_context, global_object());
+    if (push_result.is_error())
+        return;
 
     // 5. Resume the suspended evaluation of asyncContext. Let result be the value returned by the resumed computation.
     auto result = vm.call(*execution_steps, async_context.this_value.is_empty() ? js_undefined() : async_context.this_value);

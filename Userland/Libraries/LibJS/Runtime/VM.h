@@ -98,14 +98,14 @@ public:
 #endif
     }
 
-    void push_execution_context(ExecutionContext& context, GlobalObject& global_object)
+    ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)
     {
         VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
-            throw_exception<Error>(global_object, ErrorType::CallStackSizeExceeded);
-        else
-            m_execution_context_stack.append(&context);
+            return throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
+        m_execution_context_stack.append(&context);
+        return {};
     }
 
     void pop_execution_context()

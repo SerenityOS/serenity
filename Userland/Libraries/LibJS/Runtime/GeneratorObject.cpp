@@ -92,7 +92,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     bytecode_interpreter->enter_frame(m_frame);
 
     // Temporarily switch to the captured execution context
-    vm.push_execution_context(m_execution_context, global_object);
+    TRY(vm.push_execution_context(m_execution_context, global_object));
 
     // Pretend that 'yield' returned the passed value, or threw
     if (value_to_throw.has_value()) {

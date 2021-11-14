@@ -525,7 +525,7 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
     eval_context.variable_environment = variable_environment;
     eval_context.lexical_environment = lexical_environment;
     eval_context.private_environment = private_environment;
-    vm.push_execution_context(eval_context, eval_realm->global_object());
+    TRY(vm.push_execution_context(eval_context, eval_realm->global_object()));
 
     ScopeGuard pop_guard = [&] {
         vm.pop_execution_context();
