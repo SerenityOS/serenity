@@ -8,6 +8,7 @@
 #include "GlyphMapWidget.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
+#include <LibGfx/Emoji.h>
 #include <LibGfx/Palette.h>
 
 GlyphMapWidget::GlyphMapWidget()
@@ -102,9 +103,14 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
             if (m_font->contains_raw_glyph(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
+            else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph))
+                painter.draw_emoji(inner_rect.location(), *emoji, *m_font);
         } else if (m_font->contains_raw_glyph(glyph)) {
             painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
+        } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph)) {
+            painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
+            painter.draw_emoji(inner_rect.location(), *emoji, *m_font);
         }
     }
 }
