@@ -98,7 +98,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject&, Value item, Option
 ThrowCompletionOr<PartialUnregulatedTemporalTime> to_partial_time(GlobalObject&, Object& temporal_time_like);
 ThrowCompletionOr<TemporalTime> regulate_time(GlobalObject&, double hour, double minute, double second, double millisecond, double microsecond, double nanosecond, StringView overflow);
 bool is_valid_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
-DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 microsecond, i64 nanosecond);
+DaysAndTime balance_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 TemporalTime constrain_time(double hour, double minute, double second, double millisecond, double microsecond, double nanosecond);
 ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject&, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<UnregulatedTemporalTime> to_temporal_time_record(GlobalObject&, Object const& temporal_time_like);
