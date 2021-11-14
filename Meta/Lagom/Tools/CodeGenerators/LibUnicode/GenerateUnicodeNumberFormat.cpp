@@ -253,7 +253,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
                 number_system.currency_short_formats = parse_number_format(short_format.as_object());
             }
         } else if (key.starts_with(percent_formats_prefix)) {
-            auto system = key.substring(decimal_formats_prefix.length());
+            auto system = key.substring(percent_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
