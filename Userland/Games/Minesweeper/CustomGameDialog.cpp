@@ -26,7 +26,7 @@ int CustomGameDialog::show(GUI::Window* parent_window, Field& field)
     if (result != GUI::Dialog::ExecOK)
         return result;
 
-    field.set_field_size(dialog->m_rows_spinbox->value(), dialog->m_columns_spinbox->value(), dialog->m_mines_spinbox->value());
+    field.set_field_size(Field::Difficulty::Custom, dialog->m_rows_spinbox->value(), dialog->m_columns_spinbox->value(), dialog->m_mines_spinbox->value());
 
     return GUI::Dialog::ExecOK;
 }
