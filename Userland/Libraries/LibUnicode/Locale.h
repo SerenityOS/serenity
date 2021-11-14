@@ -85,6 +85,11 @@ enum class Style : u8 {
     Numeric,
 };
 
+struct NumberGroupings {
+    u8 primary_grouping_size { 0 };
+    u8 secondary_grouping_size { 0 };
+};
+
 enum class StandardNumberFormatType : u8 {
     Decimal,
     Currency,
@@ -181,6 +186,7 @@ Optional<StringView> get_locale_script_mapping(StringView locale, StringView scr
 Optional<StringView> get_locale_currency_mapping(StringView locale, StringView currency, Style style);
 Vector<StringView> get_locale_key_mapping(StringView locale, StringView keyword);
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol);
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
