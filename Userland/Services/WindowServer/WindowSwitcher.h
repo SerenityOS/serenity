@@ -50,11 +50,11 @@ public:
 private:
     WindowSwitcher();
 
-    int thumbnail_width() const { return 40; }
-    int thumbnail_height() const { return 40; }
-    int item_height() const { return 10 + thumbnail_height(); }
-    int padding() const { return 8; }
-    int item_padding() const { return 8; }
+    int thumbnail_width() const { return 64; }
+    int thumbnail_height() const { return 64; }
+    int item_height() const { return 14 + thumbnail_height(); }
+    int padding() const { return 30; }
+    int item_padding() const { return 10; }
 
     void draw();
     void redraw();

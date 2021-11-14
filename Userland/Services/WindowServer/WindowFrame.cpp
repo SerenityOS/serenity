@@ -178,6 +178,8 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
         return s_taskbar_shadow;
     case WindowType::AppletArea:
         return nullptr;
+    case WindowType::WindowSwitcher:
+        return nullptr;
     default:
         if (auto* highlight_window = WindowManager::the().highlight_window())
             return highlight_window == &m_window ? s_active_window_shadow : s_inactive_window_shadow;
