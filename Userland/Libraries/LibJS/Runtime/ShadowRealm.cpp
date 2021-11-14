@@ -105,7 +105,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     eval_context.is_strict_mode = strict_eval;
 
     // 18. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    vm.push_execution_context(eval_context, eval_realm.global_object());
+    TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
     // 19. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, null, strictEval).
     auto eval_result = eval_declaration_instantiation(vm, eval_realm.global_object(), program, variable_environment, lexical_environment, nullptr, strict_eval);
@@ -168,7 +168,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(GlobalObject& global_object, 
     // NOTE: We don't support this concept yet.
 
     // 9. Push evalContext onto the execution context stack; evalContext is now the running execution context.
-    vm.push_execution_context(eval_context, eval_realm.global_object());
+    TRY(vm.push_execution_context(eval_context, eval_realm.global_object()));
 
     // 10. Perform ! HostImportModuleDynamically(null, specifierString, innerCapability).
     // FIXME: We don't have this yet. We generally have very little support for modules and imports.
