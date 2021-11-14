@@ -180,6 +180,70 @@ describe("style=decimal", () => {
             { type: "integer", value: "\u0661" },
         ]);
     });
+
+    test("useGrouping=true", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: true });
+        expect(en.formatToParts(123456)).toEqual([
+            { type: "integer", value: "123" },
+            { type: "group", value: "," },
+            { type: "integer", value: "456" },
+        ]);
+        expect(en.formatToParts(1234567)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "," },
+            { type: "integer", value: "234" },
+            { type: "group", value: "," },
+            { type: "integer", value: "567" },
+        ]);
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: true });
+        expect(enIn.formatToParts(123456)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "group", value: "," },
+            { type: "integer", value: "23" },
+            { type: "group", value: "," },
+            { type: "integer", value: "456" },
+        ]);
+        expect(enIn.formatToParts(1234567)).toEqual([
+            { type: "integer", value: "12" },
+            { type: "group", value: "," },
+            { type: "integer", value: "34" },
+            { type: "group", value: "," },
+            { type: "integer", value: "567" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: true });
+        expect(ar.formatToParts(123456)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0663" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0664\u0665\u0666" },
+        ]);
+        expect(ar.formatToParts(1234567)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0662\u0663\u0664" },
+            { type: "group", value: "\u066c" },
+            { type: "integer", value: "\u0665\u0666\u0667" },
+        ]);
+    });
+
+    test("useGrouping=false", () => {
+        const en = new Intl.NumberFormat("en", { useGrouping: false });
+        expect(en.formatToParts(123456)).toEqual([{ type: "integer", value: "123456" }]);
+        expect(en.formatToParts(1234567)).toEqual([{ type: "integer", value: "1234567" }]);
+
+        const enIn = new Intl.NumberFormat("en-IN", { useGrouping: false });
+        expect(enIn.formatToParts(123456)).toEqual([{ type: "integer", value: "123456" }]);
+        expect(enIn.formatToParts(1234567)).toEqual([{ type: "integer", value: "1234567" }]);
+
+        const ar = new Intl.NumberFormat("ar", { useGrouping: false });
+        expect(ar.formatToParts(123456)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0663\u0664\u0665\u0666" },
+        ]);
+        expect(ar.formatToParts(1234567)).toEqual([
+            { type: "integer", value: "\u0661\u0662\u0663\u0664\u0665\u0666\u0667" },
+        ]);
+    });
 });
 
 describe("style=percent", () => {
