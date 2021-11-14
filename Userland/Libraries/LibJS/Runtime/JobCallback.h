@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
@@ -19,16 +20,19 @@ struct JobCallback {
 // 9.5.2 HostMakeJobCallback ( callback ), https://tc39.es/ecma262/#sec-hostmakejobcallback
 inline JobCallback make_job_callback(FunctionObject& callback)
 {
+    // 1. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
     return { &callback };
 }
 
 // 9.5.3 HostCallJobCallback ( jobCallback, V, argumentsList ), https://tc39.es/ecma262/#sec-hostcalljobcallback
 template<typename... Args>
-[[nodiscard]] inline Value call_job_callback(VM& vm, JobCallback& job_callback, Value this_value, Args... args)
+inline ThrowCompletionOr<Value> call_job_callback(GlobalObject& global_object, JobCallback& job_callback, Value this_value, Args... args)
 {
+    // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
     VERIFY(job_callback.callback);
-    auto& callback = *job_callback.callback;
-    return TRY_OR_DISCARD(vm.call(callback, this_value, args...));
+
+    // 2. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
+    return call(global_object, job_callback.callback, this_value, args...);
 }
 
 }
