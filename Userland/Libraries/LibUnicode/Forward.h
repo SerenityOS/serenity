@@ -30,6 +30,7 @@ struct ListPatterns;
 struct LocaleExtension;
 struct LocaleID;
 struct NumberFormat;
+struct NumberGroupings;
 struct OtherExtension;
 struct SpecialCasing;
 struct TransformedExtension;
