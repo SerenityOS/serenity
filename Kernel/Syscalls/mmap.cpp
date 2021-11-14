@@ -276,7 +276,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         REQUIRE_PROMISE(prot_exec);
     }
 
-    auto range_to_mprotect = TRY(expand_range_to_page_boundaries(addr, size));
+    auto range_to_mprotect = TRY(expand_range_to_page_boundaries(addr.ptr(), size));
     if (!range_to_mprotect.size())
         return EINVAL;
 
@@ -411,7 +411,7 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
-    auto range_to_madvise = TRY(expand_range_to_page_boundaries(address, size));
+    auto range_to_madvise = TRY(expand_range_to_page_boundaries(address.ptr(), size));
 
     if (!range_to_madvise.size())
         return EINVAL;
@@ -469,7 +469,7 @@ ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    TRY(address_space().unmap_mmap_range(VirtualAddress { addr }, size));
+    TRY(address_space().unmap_mmap_range(addr.vaddr(), size));
     return 0;
 }
 
@@ -576,10 +576,10 @@ ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
         return 0;
     }
 
-    if (!Memory::is_user_address(VirtualAddress { address }))
+    if (!Memory::is_user_address(address.vaddr()))
         return EFAULT;
 
-    auto* region = address_space().find_region_containing(Memory::VirtualRange { VirtualAddress { address }, 1 });
+    auto* region = address_space().find_region_containing(Memory::VirtualRange { address.vaddr(), 1 });
     if (!region)
         return EINVAL;
 
