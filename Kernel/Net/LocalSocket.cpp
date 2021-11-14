@@ -425,7 +425,7 @@ ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned requ
     switch (request) {
     case FIONREAD: {
         int readable = receive_buffer_for(description)->immediately_readable();
-        return copy_to_user(Userspace<int*>(arg), &readable);
+        return copy_to_user(static_ptr_cast<int*>(arg), &readable);
     }
     }
 
