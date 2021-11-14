@@ -1144,11 +1144,13 @@ bool Parser::matches_regular_character() const
 
 bool Parser::consume_eol()
 {
+    if (m_reader.done()) {
+        return false;
+    }
     if (m_reader.matches("\r\n")) {
         consume(2);
         return true;
     }
-
     auto consumed = consume();
     return consumed == 0xd || consumed == 0xa;
 }
