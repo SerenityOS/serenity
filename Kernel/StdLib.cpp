@@ -15,7 +15,7 @@
 
 ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*> user_str, size_t user_str_size)
 {
-    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(user_str), user_str_size);
+    bool is_user = Kernel::Memory::is_user_range(user_str.vaddr(), user_str_size);
     if (!is_user)
         return EFAULT;
     Kernel::SmapDisabler disabler;
