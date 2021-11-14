@@ -46,6 +46,8 @@ public:
             VERIFY(!m_value->is_empty());
     }
 
+    Completion(ThrowCompletionOr<Value> const&);
+
     // 5.2.3.1 Implicit Completion Values, https://tc39.es/ecma262/#sec-implicit-completion-values
     // Not `explicit` on purpose.
     Completion(Value value)
