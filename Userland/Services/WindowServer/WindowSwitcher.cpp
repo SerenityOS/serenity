@@ -42,7 +42,7 @@ void WindowSwitcher::set_visible(bool visible)
         m_switcher_window->set_visible(visible);
     if (!m_visible)
         return;
-    m_hovered_index = -1;
+    clear_hovered_index();
     refresh();
 }
 
@@ -55,6 +55,11 @@ Window* WindowSwitcher::selected_window()
 
 void WindowSwitcher::event(Core::Event& event)
 {
+    if (event.type() == Event::WindowLeft) {
+        clear_hovered_index();
+        return;
+    }
+
     if (!static_cast<Event&>(event).is_mouse_event())
         return;
 
@@ -259,6 +264,14 @@ void WindowSwitcher::refresh_if_needed()
 {
     if (m_visible)
         refresh();
+}
+
+void WindowSwitcher::clear_hovered_index()
+{
+    if (m_hovered_index == -1)
+        return;
+    m_hovered_index = -1;
+    redraw();
 }
 
 }
