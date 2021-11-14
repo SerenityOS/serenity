@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,17 @@
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
+
+Completion::Completion(ThrowCompletionOr<Value> const& throw_completion_or_value)
+{
+    if (throw_completion_or_value.is_throw_completion()) {
+        m_type = Type::Throw;
+        m_value = throw_completion_or_value.throw_completion().value();
+    } else {
+        m_type = Type::Normal;
+        m_value = throw_completion_or_value.value();
+    }
+}
 
 // 6.2.3.1 Await, https://tc39.es/ecma262/#await
 ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
