@@ -7,6 +7,7 @@
 #pragma once
 
 #include "UndoGlyph.h"
+#include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGUI/Widget.h>
@@ -15,7 +16,9 @@
 class GlyphEditorWidget;
 class GlyphMapWidget;
 
-class FontEditorWidget final : public GUI::Widget {
+class FontEditorWidget final
+    : public GUI::Widget
+    , public Config::Listener {
     C_OBJECT(FontEditorWidget)
 public:
     virtual ~FontEditorWidget() override;
@@ -40,12 +43,17 @@ private:
 
     virtual void drop_event(GUI::DropEvent&) override;
 
+    virtual void config_i32_did_change(String const& domain, String const& group, String const& key, i32 value) override;
+    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
+
     void undo();
     void redo();
     void did_modify_font();
     void did_resize_glyph_editor();
     void update_statusbar();
     void update_preview();
+    void set_scale(i32);
+    void set_scale_and_save(i32);
 
     RefPtr<Gfx::BitmapFont> m_edited_font;
 

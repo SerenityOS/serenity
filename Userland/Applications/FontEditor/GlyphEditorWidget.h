@@ -56,7 +56,7 @@ public:
     Function<void()> on_undo_event;
 
 private:
-    GlyphEditorWidget() {};
+    GlyphEditorWidget() = default;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
