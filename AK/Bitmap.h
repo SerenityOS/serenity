@@ -60,7 +60,7 @@ public:
         m_data = nullptr;
     }
 
-    [[nodiscard]] BitmapView const view() const { return *this; }
+    [[nodiscard]] BitmapView view() const { return *this; }
 
     void set(size_t index, bool value)
     {
