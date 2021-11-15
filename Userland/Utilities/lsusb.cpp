@@ -59,10 +59,9 @@ int main(int argc, char** argv)
         }
 
         auto contents = proc_usb_device->read_all();
-        auto json = JsonValue::from_string(contents);
-        VERIFY(json.has_value());
+        auto json = JsonValue::from_string(contents).release_value_but_fixme_should_propagate_errors();
 
-        json.value().as_array().for_each([usb_db](auto& value) {
+        json.as_array().for_each([usb_db](auto& value) {
             auto& device_descriptor = value.as_object();
 
             auto device_address = device_descriptor.get("device_address").to_u32();

@@ -67,9 +67,8 @@ int main(int argc, char** argv)
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 
-    auto json = JsonValue::from_string(proc_keymap->read_all());
-    VERIFY(json.has_value());
-    JsonObject keymap_object = json.value().as_object();
+    auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"));
     String current_keymap = keymap_object.get("keymap").to_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", current_keymap);

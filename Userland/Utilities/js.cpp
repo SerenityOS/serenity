@@ -918,7 +918,7 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm, JS::GlobalObj
         return vm.throw_completion<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    if (!json.has_value())
+    if (json.is_error())
         return vm.throw_completion<JS::SyntaxError>(global_object, JS::ErrorType::JsonMalformed);
     return JS::JSONObject::parse_json_value(global_object, json.value());
 }

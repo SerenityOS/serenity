@@ -18,19 +18,19 @@ public:
     {
     }
 
-    Optional<JsonValue> parse();
+    ErrorOr<JsonValue> parse();
 
 private:
-    Optional<JsonValue> parse_helper();
+    ErrorOr<JsonValue> parse_helper();
 
-    String consume_and_unescape_string();
-    Optional<JsonValue> parse_array();
-    Optional<JsonValue> parse_object();
-    Optional<JsonValue> parse_number();
-    Optional<JsonValue> parse_string();
-    Optional<JsonValue> parse_false();
-    Optional<JsonValue> parse_true();
-    Optional<JsonValue> parse_null();
+    ErrorOr<String> consume_and_unescape_string();
+    ErrorOr<JsonValue> parse_array();
+    ErrorOr<JsonValue> parse_object();
+    ErrorOr<JsonValue> parse_number();
+    ErrorOr<JsonValue> parse_string();
+    ErrorOr<JsonValue> parse_false();
+    ErrorOr<JsonValue> parse_true();
+    ErrorOr<JsonValue> parse_null();
 
     String m_last_string_starting_with_character[256];
 };

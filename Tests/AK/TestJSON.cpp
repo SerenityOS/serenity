@@ -86,7 +86,7 @@ FIXME: Parse JSON from a Utf8View
 TEST_CASE(json_utf8_multibyte)
 {
     auto json_or_error = JsonValue::from_string("\"š\"");
-    EXPECT_EQ(json_or_error.has_value(), true);
+    EXPECT_EQ(json_or_error.is_error(), false);
     
     auto& json = json_or_error.value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
@@ -119,6 +119,6 @@ TEST_CASE(json_u64_roundtrip)
     auto big_value = 0xffffffffffffffffull;
     auto json = JsonValue(big_value).to_string();
     auto value = JsonValue::from_string(json);
-    EXPECT_EQ_FORCE(value.has_value(), true);
-    EXPECT_EQ(value->as_u64(), big_value);
+    EXPECT_EQ_FORCE(value.is_error(), false);
+    EXPECT_EQ(value.value().as_u64(), big_value);
 }

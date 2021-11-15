@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     JsonObject json;
 
     if (!file_contents.is_empty()) {
-        if (!previous_json.has_value() || !previous_json.value().is_object()) {
+        if (previous_json.is_error() || !previous_json.value().is_object()) {
             dbgln("Error: Could not parse JSON");
         } else {
             json = previous_json.value().as_object();

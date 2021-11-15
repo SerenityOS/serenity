@@ -31,7 +31,7 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& filena
 
     auto file_contents = file->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    if (!json_result.has_value()) {
+    if (json_result.is_error()) {
         dbgln("Failed to load character map from file {}", path);
         return {};
     }

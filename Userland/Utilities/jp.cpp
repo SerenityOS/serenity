@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    if (!json.has_value()) {
+    if (json.is_error()) {
         warnln("Couldn't parse {} as JSON", path);
         return 1;
     }

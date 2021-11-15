@@ -18,11 +18,8 @@ class DOMTreeModel final : public GUI::Model {
 public:
     static NonnullRefPtr<DOMTreeModel> create(StringView dom_tree, GUI::TreeView& tree_view)
     {
-        auto json_or_error = JsonValue::from_string(dom_tree);
-        if (!json_or_error.has_value())
-            VERIFY_NOT_REACHED();
-
-        return adopt_ref(*new DOMTreeModel(json_or_error.value().as_object(), tree_view));
+        auto json_or_error = JsonValue::from_string(dom_tree).release_value_but_fixme_should_propagate_errors();
+        return adopt_ref(*new DOMTreeModel(json_or_error.as_object(), tree_view));
     }
 
     virtual ~DOMTreeModel() override;

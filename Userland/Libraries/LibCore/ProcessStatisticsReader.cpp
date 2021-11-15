@@ -35,7 +35,7 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
 
     auto file_contents = proc_all_file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    if (!json.has_value())
+    if (json.is_error())
         return {};
 
     auto& json_obj = json.value().as_object();

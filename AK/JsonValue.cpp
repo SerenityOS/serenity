@@ -228,7 +228,7 @@ void JsonValue::clear()
 }
 
 #ifndef KERNEL
-Optional<JsonValue> JsonValue::from_string(StringView input)
+ErrorOr<JsonValue> JsonValue::from_string(StringView input)
 {
     return JsonParser(input).parse();
 }

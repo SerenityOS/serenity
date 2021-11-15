@@ -405,10 +405,9 @@ void DebugSession::update_loaded_libs()
     VERIFY(rc);
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents);
-    VERIFY(json.has_value());
+    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
 
-    auto vm_entries = json.value().as_array();
+    auto const& vm_entries = json.as_array();
     Regex<PosixExtended> segment_name_re("(.+): ");
 
     auto get_path_to_object = [&segment_name_re](String const& vm_name) -> Optional<String> {
