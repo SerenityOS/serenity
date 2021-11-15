@@ -56,27 +56,35 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         painter.save();
         painter.add_clip_rect(clip_rect);
 
-        auto painting_rect = border_rect;
-
         // FIXME: Attachment
         // FIXME: Size
-        int scaled_width = image.width();
-        int scaled_height = image.height();
+        Gfx::IntRect image_rect { border_rect.x(), border_rect.y(), image.width(), image.height() };
 
         // FIXME: Origin
         // FIXME: Position
 
         // Repetition
+        bool repeat_x = false;
+        bool repeat_y = false;
+        float x_step = 0;
+        float y_step = 0;
+
         switch (layer.repeat_x) {
         case CSS::Repeat::Round:
         case CSS::Repeat::Space:
             // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
         case CSS::Repeat::Repeat:
-            // The background rect is already sized to align with 'repeat'.
+            x_step = image_rect.width();
+            repeat_x = true;
             break;
         case CSS::Repeat::NoRepeat:
-            painting_rect.set_width(min(painting_rect.width(), scaled_width));
+            repeat_x = false;
             break;
+        }
+        // Move image_rect to the left-most tile position that is still visible
+        if (repeat_x && image_rect.x() > clip_rect.x()) {
+            auto x_delta = floorf(x_step * ceilf((image_rect.x() - clip_rect.x()) / x_step));
+            image_rect.set_x(image_rect.x() - x_delta);
         }
 
         switch (layer.repeat_y) {
@@ -84,15 +92,39 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         case CSS::Repeat::Space:
             // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
         case CSS::Repeat::Repeat:
-            // The background rect is already sized to align with 'repeat'.
+            y_step = image_rect.height();
+            repeat_y = true;
             break;
         case CSS::Repeat::NoRepeat:
-            painting_rect.set_height(min(painting_rect.height(), scaled_height));
+            repeat_y = false;
             break;
+        }
+        // Move image_rect to the top-most tile position that is still visible
+        if (repeat_y && image_rect.y() > clip_rect.y()) {
+            auto y_delta = floorf(y_step * ceilf((image_rect.y() - clip_rect.y()) / y_step));
+            image_rect.set_y(image_rect.y() - y_delta);
         }
 
         // FIXME: Handle rounded corners
-        painter.blit_tiled(painting_rect, image, image.rect());
+        float initial_image_x = image_rect.x();
+        float image_y = image_rect.y();
+        while (image_y < clip_rect.bottom()) {
+            image_rect.set_y(roundf(image_y));
+
+            float image_x = initial_image_x;
+            while (image_x < clip_rect.right()) {
+                image_rect.set_x(roundf(image_x));
+                painter.draw_scaled_bitmap(image_rect, image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                if (!repeat_x)
+                    break;
+                image_x += x_step;
+            }
+
+            if (!repeat_y)
+                break;
+            image_y += y_step;
+        }
+
         painter.restore();
     }
 }
