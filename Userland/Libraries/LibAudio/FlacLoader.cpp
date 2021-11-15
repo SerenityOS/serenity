@@ -682,13 +682,17 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
     dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
     // decode residual
-    // FIXME: This order may be incorrect, the LPC is applied to the residual, probably leading to incorrect results.
     decoded = decode_residual(decoded, subframe, bit_input);
 
     // approximate the waveform with the predictor
     for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
+        // (see below)
         i64 sample = 0;
         for (size_t t = 0; t < subframe.order; ++t) {
+            // It's really important that we compute in 64-bit land here.
+            // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
+            // These will easily overflow 32 bits and cause strange white noise that apruptly stops intermittently (at the end of a frame).
+            // The simple fix of course is to do intermediate computations in 64 bits.
             sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
         }
         decoded[i] += sample >> lpc_shift;
