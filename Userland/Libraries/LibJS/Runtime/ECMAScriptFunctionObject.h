@@ -75,6 +75,8 @@ public:
     // Equivalent to absence of [[Construct]]
     virtual bool has_constructor() const override { return m_kind == FunctionKind::Regular && !m_is_arrow_function; }
 
+    FunctionKind kind() const { return m_kind; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
