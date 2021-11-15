@@ -16,7 +16,15 @@ namespace JS {
 ThrowCompletionOr<GeneratorObject*> GeneratorObject::create(GlobalObject& global_object, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::RegisterWindow frame)
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
-    auto generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
+    Value generating_function_prototype;
+    if (generating_function->kind() == FunctionKind::Async) {
+        // We implement async functions by transforming them to generator function in the bytecode
+        // interpreter. However an async function does not have a prototype and should not be
+        // changed thus we hardcode the prototype.
+        generating_function_prototype = global_object.generator_object_prototype();
+    } else {
+        generating_function_prototype = TRY(generating_function->get(global_object.vm().names.prototype));
+    }
     auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(global_object));
     auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_prototype_object, move(execution_context));
     object->m_generating_function = generating_function;
