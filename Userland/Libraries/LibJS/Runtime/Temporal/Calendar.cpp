@@ -665,10 +665,7 @@ u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
     auto normalized_year = year - (month < 3 ? 1 : 0);
     auto century = normalized_year / 100;
     auto truncated_year = normalized_year - (century * 100);
-    auto result = (day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4)) % 7;
-    if (result <= 0) // Mathematical modulo
-        result += 7;
-    return result;
+    return modulo(day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4), 7);
 }
 
 // 12.1.34 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
