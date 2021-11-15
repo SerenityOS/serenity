@@ -101,9 +101,10 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
-        case FunctionKind::Async:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
             prototype = global_object.generator_object_prototype();
+            break;
+        case FunctionKind::Async:
             break;
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
