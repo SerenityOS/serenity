@@ -19,7 +19,6 @@ class Track : public Core::Object {
 public:
     Track(NonnullRefPtr<Transport> transport)
         : m_transport(move(transport))
-        , m_current_signal(Sample {})
     {
     }
     virtual ~Track() override = default;
@@ -42,7 +41,7 @@ protected:
     NonnullRefPtrVector<Processor> m_processor_chain;
     NonnullRefPtr<Transport> m_transport;
     // The current signal is stored here, to prevent unnecessary reallocation.
-    Signal m_current_signal;
+    Signal m_current_signal { Audio::Sample {} };
 };
 
 class NoteTrack final : public Track {
@@ -53,7 +52,7 @@ public:
     NonnullRefPtrVector<NoteClip> const& clips() const { return m_clips; }
 
 protected:
-    virtual void compute_current_clips_signal() override;
+    void compute_current_clips_signal() override;
 
 private:
     NonnullRefPtrVector<NoteClip> m_clips;
@@ -67,7 +66,7 @@ public:
     NonnullRefPtrVector<AudioClip> const& clips() const { return m_clips; }
 
 protected:
-    virtual void compute_current_clips_signal() override;
+    void compute_current_clips_signal() override;
 
 private:
     NonnullRefPtrVector<AudioClip> m_clips;

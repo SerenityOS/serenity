@@ -6,8 +6,13 @@
 
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
+#include <time.h>
 
 namespace Audio {
+
+// FIXME: We don't know what is a good value for this.
+// Real-time audio may be improved with a lower value.
+static timespec g_enqueue_wait_time { 0, 10'000'000 };
 
 ClientConnection::ClientConnection()
     : IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>(*this, "/tmp/portal/audio")
@@ -20,9 +25,7 @@ void ClientConnection::enqueue(Buffer const& buffer)
         auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
         if (success)
             break;
-        // FIXME: We don't know what is a good value for this.
-        // For now, decrease it to enable better real-time audio.
-        usleep(10000);
+        nanosleep(&g_enqueue_wait_time, nullptr);
     }
 }
 
