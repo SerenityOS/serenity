@@ -85,7 +85,7 @@ bool FlacLoaderPlugin::parse_header()
     } while (0)
 
     // Magic number
-    u32 flac = bit_input.read_bits_big_endian(32);
+    u32 flac = static_cast<u32>(bit_input.read_bits_big_endian(32));
     m_data_start_location += 4;
     ok = ok && flac == 0x664C6143; // "flaC"
     CHECK_OK("FLAC magic number");
@@ -102,20 +102,20 @@ bool FlacLoaderPlugin::parse_header()
     ScopeGuard clear_streaminfo_errors([&streaminfo_data] { streaminfo_data.handle_any_error(); });
 
     // STREAMINFO block
-    m_min_block_size = streaminfo_data.read_bits_big_endian(16);
+    m_min_block_size = static_cast<u16>(streaminfo_data.read_bits_big_endian(16));
     ok = ok && (m_min_block_size >= 16);
     CHECK_OK("Minimum block size");
-    m_max_block_size = streaminfo_data.read_bits_big_endian(16);
+    m_max_block_size = static_cast<u16>(streaminfo_data.read_bits_big_endian(16));
     ok = ok && (m_max_block_size >= 16);
     CHECK_OK("Maximum block size");
-    m_min_frame_size = streaminfo_data.read_bits_big_endian(24);
-    m_max_frame_size = streaminfo_data.read_bits_big_endian(24);
-    m_sample_rate = streaminfo_data.read_bits_big_endian(20);
+    m_min_frame_size = static_cast<u32>(streaminfo_data.read_bits_big_endian(24));
+    m_max_frame_size = static_cast<u32>(streaminfo_data.read_bits_big_endian(24));
+    m_sample_rate = static_cast<u32>(streaminfo_data.read_bits_big_endian(20));
     ok = ok && (m_sample_rate <= 655350);
     CHECK_OK("Sample rate");
-    m_num_channels = streaminfo_data.read_bits_big_endian(3) + 1; // 0 ^= one channel
+    m_num_channels = static_cast<u8>(streaminfo_data.read_bits_big_endian(3)) + 1; // 0 ^= one channel
 
-    u8 bits_per_sample = streaminfo_data.read_bits_big_endian(5) + 1;
+    u8 bits_per_sample = static_cast<u8>(streaminfo_data.read_bits_big_endian(5)) + 1;
     if (bits_per_sample == 8) {
         // FIXME: Signed/Unsigned issues?
         m_sample_format = PcmSampleFormat::Uint8;
@@ -130,7 +130,7 @@ bool FlacLoaderPlugin::parse_header()
         CHECK_OK("Sample bit depth");
     }
 
-    m_total_samples = streaminfo_data.read_bits_big_endian(36);
+    m_total_samples = static_cast<u64>(streaminfo_data.read_bits_big_endian(36));
     ok = ok && (m_total_samples > 0);
     CHECK_OK("Number of samples");
     // Parse checksum into a buffer first
@@ -164,7 +164,7 @@ bool FlacLoaderPlugin::parse_header()
         for (unsigned int i = 0; i < md5_checksum.size(); ++i) {
             checksum_string.appendff("{:0X}", md5_checksum[i]);
         }
-        dbgln("Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, m_total_samples / static_cast<double>(m_sample_rate), checksum_string.to_string(), m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+        dbgln("Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<double>(m_total_samples) / static_cast<double>(m_sample_rate), checksum_string.to_string(), m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
     }
 
     return true;
@@ -192,7 +192,7 @@ FlacRawMetadataBlock FlacLoaderPlugin::next_meta_block(InputBitStream& bit_input
     }
     m_data_start_location += 1;
 
-    u32 block_length = bit_input.read_bits_big_endian(24);
+    u32 block_length = static_cast<u32>(bit_input.read_bits_big_endian(24));
     m_data_start_location += 3;
     CHECK_IO_ERROR();
     auto block_data_result = ByteBuffer::create_uninitialized(block_length);
@@ -232,7 +232,7 @@ void FlacLoaderPlugin::seek(const int position)
 RefPtr<Buffer> FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
     Vector<Sample> samples;
-    ssize_t remaining_samples = m_total_samples - m_loaded_samples;
+    ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0) {
         return nullptr;
     }
@@ -247,7 +247,7 @@ RefPtr<Buffer> FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_
             }
         }
         samples.append(m_current_frame_data.take_first());
-        if (m_current_frame_data.size() == 0) {
+        if (m_current_frame_data.is_empty()) {
             m_current_frame.clear();
         }
         --samples_to_read;
@@ -283,7 +283,7 @@ void FlacLoaderPlugin::next_frame()
     // TODO: Check the CRC-16 checksum (and others) by keeping track of read data
 
     // FLAC frame sync code starts header
-    u16 sync_code = bit_stream.read_bits_big_endian(14);
+    u16 sync_code = static_cast<u16>(bit_stream.read_bits_big_endian(14));
     ok = ok && (sync_code == 0b11111111111110);
     CHECK_OK("Sync code");
     bool reserved_bit = bit_stream.read_bit_big_endian();
@@ -291,20 +291,20 @@ void FlacLoaderPlugin::next_frame()
     CHECK_OK("Reserved frame header bit");
     [[maybe_unused]] bool blocking_strategy = bit_stream.read_bit_big_endian();
 
-    u32 sample_count = convert_sample_count_code(bit_stream.read_bits_big_endian(4));
+    u32 sample_count = convert_sample_count_code(static_cast<u8>(bit_stream.read_bits_big_endian(4)));
     CHECK_ERROR_STRING;
 
-    u32 frame_sample_rate = convert_sample_rate_code(bit_stream.read_bits_big_endian(4));
+    u32 frame_sample_rate = convert_sample_rate_code(static_cast<u8>(bit_stream.read_bits_big_endian(4)));
     CHECK_ERROR_STRING;
 
-    u8 channel_type_num = bit_stream.read_bits_big_endian(4);
+    u8 channel_type_num = static_cast<u8>(bit_stream.read_bits_big_endian(4));
     if (channel_type_num >= 0b1011) {
         ok = false;
         CHECK_OK("Channel assignment");
     }
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
-    PcmSampleFormat bit_depth = convert_bit_depth_code(bit_stream.read_bits_big_endian(3));
+    PcmSampleFormat bit_depth = convert_bit_depth_code(static_cast<u8>(bit_stream.read_bits_big_endian(3)));
     CHECK_ERROR_STRING;
 
     reserved_bit = bit_stream.read_bit_big_endian();
@@ -316,21 +316,21 @@ void FlacLoaderPlugin::next_frame()
 
     // Conditional header variables
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
-        sample_count = bit_stream.read_bits_big_endian(8) + 1;
+        sample_count = static_cast<u32>(bit_stream.read_bits_big_endian(8)) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
-        sample_count = bit_stream.read_bits_big_endian(16) + 1;
+        sample_count = static_cast<u32>(bit_stream.read_bits_big_endian(16)) + 1;
     }
 
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
-        frame_sample_rate = bit_stream.read_bits_big_endian(8) * 1000;
+        frame_sample_rate = static_cast<u32>(bit_stream.read_bits_big_endian(8)) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
-        frame_sample_rate = bit_stream.read_bits_big_endian(16);
+        frame_sample_rate = static_cast<u32>(bit_stream.read_bits_big_endian(16));
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10) {
-        frame_sample_rate = bit_stream.read_bits_big_endian(16) * 10;
+        frame_sample_rate = static_cast<u32>(bit_stream.read_bits_big_endian(16)) * 10;
     }
 
     // TODO: check header checksum, see above
-    [[maybe_unused]] u8 checksum = bit_stream.read_bits(8);
+    [[maybe_unused]] u8 checksum = static_cast<u8>(bit_stream.read_bits(8));
 
     dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, pcm_bits_per_sample(bit_depth), frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
 
@@ -356,9 +356,10 @@ void FlacLoaderPlugin::next_frame()
     bit_stream.align_to_byte_boundary();
 
     // TODO: check checksum, see above
-    [[maybe_unused]] u16 footer_checksum = bit_stream.read_bits_big_endian(16);
+    [[maybe_unused]] u16 footer_checksum = static_cast<u16>(bit_stream.read_bits_big_endian(16));
 
-    Vector<i32> left, right;
+    Vector<i32> left;
+    Vector<i32> right;
 
     switch (channel_type) {
     case FlacFrameChannelType::Mono:
@@ -514,7 +515,7 @@ u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type)
 
 FlacSubframeHeader FlacLoaderPlugin::next_subframe_header(InputBitStream& bit_stream, u8 channel_index)
 {
-    u8 bits_per_sample = pcm_bits_per_sample(m_current_frame->bit_depth);
+    u8 bits_per_sample = static_cast<u16>(pcm_bits_per_sample(m_current_frame->bit_depth));
 
     // For inter-channel correlation, the side channel needs an extra bit for its samples
     switch (m_current_frame->channels) {
@@ -541,7 +542,7 @@ FlacSubframeHeader FlacLoaderPlugin::next_subframe_header(InputBitStream& bit_st
     };
 
     // subframe type (encoding)
-    u8 subframe_code = bit_stream.read_bits_big_endian(6);
+    u8 subframe_code = static_cast<u8>(bit_stream.read_bits_big_endian(6));
     if ((subframe_code >= 0b000010 && subframe_code <= 0b000111) || (subframe_code > 0b001100 && subframe_code < 0b100000)) {
         m_error_string = "Subframe type";
         return {};
@@ -590,8 +591,10 @@ Vector<i32> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header
         dbgln_if(AFLACLOADER_DEBUG, "Constant subframe: {}", constant_value);
 
         samples.ensure_capacity(m_current_frame->sample_count);
+        VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
+        i32 constant = sign_extend(static_cast<u32>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
         for (u32 i = 0; i < m_current_frame->sample_count; ++i) {
-            samples.unchecked_append(sign_extend(constant_value, subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
+            samples.unchecked_append(constant);
         }
         break;
     }
@@ -632,8 +635,11 @@ Vector<i32> FlacLoaderPlugin::decode_verbatim(FlacSubframeHeader& subframe, Inpu
     Vector<i32> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
+    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
-        decoded.unchecked_append(sign_extend(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample), subframe.bits_per_sample - subframe.wasted_bits_per_sample));
+        decoded.unchecked_append(sign_extend(
+            static_cast<u32>(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
     return decoded;
@@ -645,13 +651,16 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
     Vector<i32> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
+    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
-        decoded.unchecked_append(sign_extend(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample), subframe.bits_per_sample - subframe.wasted_bits_per_sample));
+        decoded.unchecked_append(sign_extend(
+            static_cast<u32>(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
     // precision of the coefficients
-    u8 lpc_precision = bit_input.read_bits_big_endian(4);
+    u8 lpc_precision = static_cast<u8>(bit_input.read_bits_big_endian(4));
     if (lpc_precision == 0b1111) {
         m_error_string = "Invalid linear predictor coefficient precision";
         return {};
@@ -659,14 +668,14 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
     lpc_precision += 1;
 
     // shift needed on the data (signed!)
-    i8 lpc_shift = sign_extend(bit_input.read_bits_big_endian(5), 5);
+    i8 lpc_shift = sign_extend(static_cast<u32>(bit_input.read_bits_big_endian(5)), 5);
 
     Vector<i32> coefficients;
     coefficients.ensure_capacity(subframe.order);
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
-        u32 raw_coefficient = bit_input.read_bits_big_endian(lpc_precision);
-        i32 coefficient = sign_extend(raw_coefficient, lpc_precision);
+        u32 raw_coefficient = static_cast<u32>(bit_input.read_bits_big_endian(lpc_precision));
+        i32 coefficient = static_cast<i32>(sign_extend(raw_coefficient, lpc_precision));
         coefficients.unchecked_append(coefficient);
     }
 
@@ -694,9 +703,12 @@ Vector<i32> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, Inp
     Vector<i32> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
+    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
-        decoded.unchecked_append(sign_extend(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample), subframe.bits_per_sample - subframe.wasted_bits_per_sample));
+        decoded.unchecked_append(sign_extend(
+            static_cast<u32>(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
     decode_residual(decoded, subframe, bit_input);
@@ -740,8 +752,8 @@ Vector<i32> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, Inp
 // Decode the residual, the "error" between the function approximation and the actual audio data
 Vector<i32> FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input)
 {
-    u8 residual_mode = bit_input.read_bits_big_endian(2);
-    u8 partition_order = bit_input.read_bits_big_endian(4);
+    u8 residual_mode = static_cast<u8>(bit_input.read_bits_big_endian(2));
+    u8 partition_order = static_cast<u8>(bit_input.read_bits_big_endian(4));
     size_t partitions = 1 << partition_order;
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
@@ -768,7 +780,7 @@ Vector<i32> FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframe
 ALWAYS_INLINE Vector<i32> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, InputBitStream& bit_input)
 {
     // Rice parameter / Exp-Golomb order
-    u8 k = bit_input.read_bits_big_endian(partition_type);
+    u8 k = static_cast<u8>(bit_input.read_bits_big_endian(partition_type));
 
     u32 residual_sample_count;
     if (partitions == 0)
@@ -783,9 +795,9 @@ ALWAYS_INLINE Vector<i32> FlacLoaderPlugin::decode_rice_partition(u8 partition_t
 
     // escape code for unencoded binary partition
     if (k == (1 << partition_type) - 1) {
-        u8 unencoded_bps = bit_input.read_bits_big_endian(5);
+        u8 unencoded_bps = static_cast<u8>(bit_input.read_bits_big_endian(5));
         for (size_t r = 0; r < residual_sample_count; ++r) {
-            rice_partition[r] = bit_input.read_bits_big_endian(unencoded_bps);
+            rice_partition[r] = static_cast<u8>(bit_input.read_bits_big_endian(unencoded_bps));
         }
     } else {
         for (size_t r = 0; r < residual_sample_count; ++r) {
@@ -804,8 +816,8 @@ ALWAYS_INLINE i32 decode_unsigned_exp_golomb(u8 k, InputBitStream& bit_input)
         ++q;
 
     // least significant bits (remainder)
-    u32 rem = bit_input.read_bits_big_endian(k);
-    u32 value = (u32)(q << k | rem);
+    u32 rem = static_cast<u32>(bit_input.read_bits_big_endian(k));
+    u32 value = q << k | rem;
 
     return rice_to_signed(value);
 }
@@ -853,8 +865,8 @@ i32 rice_to_signed(u32 x)
 {
     // positive numbers are even, negative numbers are odd
     // bitmask for conditionally inverting the entire number, thereby "negating" it
-    i32 sign = -(x & 1);
+    i32 sign = -static_cast<i32>(x & 1);
     // copies the sign's sign onto the actual magnitude of x
-    return (i32)(sign ^ (x >> 1));
+    return static_cast<i32>(sign ^ (x >> 1));
 }
 }
