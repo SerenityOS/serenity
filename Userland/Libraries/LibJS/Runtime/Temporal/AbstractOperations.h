@@ -104,6 +104,7 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
 ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
+StringView negate_temporal_rounding_mode(String const& rounding_mode);
 ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const& normalized_options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject&, Object const& normalized_options);
