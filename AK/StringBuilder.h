@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +20,19 @@ public:
 
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
     ~StringBuilder() = default;
+
+    ErrorOr<void> try_append(StringView);
+    ErrorOr<void> try_append(Utf16View const&);
+    ErrorOr<void> try_append(Utf32View const&);
+    ErrorOr<void> try_append_code_point(u32);
+    ErrorOr<void> try_append(char);
+    template<typename... Parameters>
+    ErrorOr<void> try_appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+    {
+        VariadicFormatParams variadic_format_params { parameters... };
+        return vformat(*this, fmtstr.view(), variadic_format_params);
+    }
+    ErrorOr<void> try_append(char const*, size_t);
 
     void append(StringView);
     void append(Utf16View const&);
