@@ -78,8 +78,8 @@ public:
     RefPtr<Core::File> file() const { return m_plugin ? m_plugin->file() : nullptr; }
 
 private:
-    Loader(StringView path);
-    Loader(const ByteBuffer& buffer);
+    explicit Loader(StringView path);
+    explicit Loader(const ByteBuffer& buffer);
 
     mutable OwnPtr<LoaderPlugin> m_plugin;
 };

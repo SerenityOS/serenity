@@ -33,8 +33,8 @@ class Buffer;
 // Parses a WAV file and produces an Audio::Buffer.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
-    WavLoaderPlugin(StringView path);
-    WavLoaderPlugin(const ByteBuffer& buffer);
+    explicit WavLoaderPlugin(StringView path);
+    explicit WavLoaderPlugin(const ByteBuffer& buffer);
 
     virtual bool sniff() override { return valid; }
 

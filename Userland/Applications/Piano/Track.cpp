@@ -167,7 +167,7 @@ Audio::Sample Track::sine(size_t note)
     double sin_step = pos * 2 * M_PI;
     double w = sin(m_pos[note]);
     m_pos[note] += sin_step;
-    return w;
+    return Audio::Sample { w };
 }
 
 Audio::Sample Track::saw(size_t note)
@@ -176,7 +176,7 @@ Audio::Sample Track::saw(size_t note)
     double t = m_pos[note];
     double w = (0.5 - (t - floor(t))) * 2;
     m_pos[note] += saw_step;
-    return w;
+    return Audio::Sample { w };
 }
 
 Audio::Sample Track::square(size_t note)
@@ -185,7 +185,7 @@ Audio::Sample Track::square(size_t note)
     double square_step = pos * 2 * M_PI;
     double w = AK::sin(m_pos[note]) >= 0 ? 1 : -1;
     m_pos[note] += square_step;
-    return w;
+    return Audio::Sample { w };
 }
 
 Audio::Sample Track::triangle(size_t note)
@@ -194,7 +194,7 @@ Audio::Sample Track::triangle(size_t note)
     double t = m_pos[note];
     double w = AK::fabs(AK::fmod((4 * t) + 1, 4.) - 2) - 1.;
     m_pos[note] += triangle_step;
-    return w;
+    return Audio::Sample { w };
 }
 
 Audio::Sample Track::noise(size_t note)
@@ -207,14 +207,14 @@ Audio::Sample Track::noise(size_t note)
         m_last_w[note] = (random_percentage * 2) - 1;
         m_pos[note] = 0;
     }
-    return m_last_w[note];
+    return Audio::Sample { m_last_w[note] };
 }
 
 Audio::Sample Track::recorded_sample(size_t note)
 {
     int t = m_pos[note];
     if (t >= static_cast<int>(m_recorded_sample.size()))
-        return 0;
+        return {};
     double w_left = m_recorded_sample[t].left;
     double w_right = m_recorded_sample[t].right;
     if (t + 1 < static_cast<int>(m_recorded_sample.size())) {

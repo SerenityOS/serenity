@@ -114,7 +114,7 @@ void Mixer::mix()
 
                 // Even though it's not realistic, the user expects no sound at 0%.
                 if (m_main_volume < 0.01)
-                    mixed_sample = { 0 };
+                    mixed_sample = Audio::Sample { 0 };
                 else
                     mixed_sample.log_multiply(m_main_volume);
                 mixed_sample.clip();
