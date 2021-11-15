@@ -161,10 +161,9 @@ void parse_default_content_locales(String core_path, LocaleDataType& locale_data
     auto default_content_file_or_error = Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!default_content_file_or_error.is_error());
 
-    auto default_content = JsonParser(default_content_file_or_error.value()->read_all()).parse();
-    VERIFY(default_content.has_value());
+    auto default_content = JsonValue::from_string(default_content_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& default_content_array = default_content->as_object().get("defaultContent"sv);
+    auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
 
     default_content_array.as_array().for_each([&](JsonValue const& value) {
         auto locale = value.as_string();

@@ -209,7 +209,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(String
 
     auto import_worksheet = [&]() -> Result<NonnullRefPtrVector<Sheet>, String> {
         auto json_value_option = JsonParser(file.read_all()).parse();
-        if (!json_value_option.has_value()) {
+        if (json_value_option.is_error()) {
             StringBuilder sb;
             sb.append("Failed to parse ");
             sb.append(file.filename());

@@ -352,7 +352,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);
-    if (!json.has_value())
+    if (json.is_error())
         return vm.throw_completion<SyntaxError>(global_object, ErrorType::JsonMalformed);
     Value unfiltered = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {

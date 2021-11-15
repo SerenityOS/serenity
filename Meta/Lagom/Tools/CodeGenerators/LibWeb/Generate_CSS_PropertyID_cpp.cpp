@@ -58,11 +58,10 @@ int main(int argc, char** argv)
     if (!file->open(Core::OpenMode::ReadOnly))
         return 1;
 
-    auto json = JsonValue::from_string(file->read_all());
-    VERIFY(json.has_value());
-    VERIFY(json.value().is_object());
+    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    VERIFY(json.is_object());
 
-    auto& properties = json.value().as_object();
+    auto& properties = json.as_object();
 
     StringBuilder builder;
     SourceGenerator generator { builder };

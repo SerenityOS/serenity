@@ -156,10 +156,9 @@ int main(int argc, char** argv)
         }
 
         auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents);
-        VERIFY(json.has_value());
+        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
 
-        Vector<JsonValue> sorted_regions = json.value().as_array().values();
+        Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
             return a.as_object().get("local_port").to_u32() < b.as_object().get("local_port").to_u32();
         });
@@ -210,10 +209,9 @@ int main(int argc, char** argv)
         }
 
         auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents);
-        VERIFY(json.has_value());
+        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
 
-        Vector<JsonValue> sorted_regions = json.value().as_array().values();
+        Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
             return a.as_object().get("local_port").to_u32() < b.as_object().get("local_port").to_u32();
         });

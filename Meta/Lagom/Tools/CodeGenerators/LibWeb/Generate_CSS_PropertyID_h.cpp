@@ -36,9 +36,8 @@ int main(int argc, char** argv)
     if (!file->open(Core::OpenMode::ReadOnly))
         return 1;
 
-    auto json = JsonValue::from_string(file->read_all());
-    VERIFY(json.has_value());
-    VERIFY(json.value().is_object());
+    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    VERIFY(json.is_object());
 
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -60,7 +59,7 @@ enum class PropertyID {
     Vector<String> shorthand_property_ids;
     Vector<String> longhand_property_ids;
 
-    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+    json.as_object().for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         if (value.as_object().has("longhands"))
             shorthand_property_ids.append(name);

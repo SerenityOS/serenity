@@ -220,7 +220,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
     auto json = JsonValue::from_string(file->read_all());
-    if (!json.has_value() || !json.value().is_object())
+    if (json.is_error() || !json.value().is_object())
         return Error::from_string_literal("Invalid perfcore format (not a JSON object)"sv);
 
     auto& object = json.value().as_object();

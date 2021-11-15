@@ -96,10 +96,9 @@ static void parse_core_aliases(String core_supplemental_path, UnicodeLocaleData&
     auto core_aliases_file_or_error = Core::File::open(core_aliases_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!core_aliases_file_or_error.is_error());
 
-    auto core_aliases = JsonParser(core_aliases_file_or_error.value()->read_all()).parse();
-    VERIFY(core_aliases.has_value());
+    auto core_aliases = JsonValue::from_string(core_aliases_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& supplemental_object = core_aliases->as_object().get("supplemental"sv);
+    auto const& supplemental_object = core_aliases.as_object().get("supplemental"sv);
     auto const& metadata_object = supplemental_object.as_object().get("metadata"sv);
     auto const& alias_object = metadata_object.as_object().get("alias"sv);
 
@@ -137,10 +136,9 @@ static void parse_likely_subtags(String core_supplemental_path, UnicodeLocaleDat
     auto likely_subtags_file_or_error = Core::File::open(likely_subtags_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!likely_subtags_file_or_error.is_error());
 
-    auto likely_subtags = JsonParser(likely_subtags_file_or_error.value()->read_all()).parse();
-    VERIFY(likely_subtags.has_value());
+    auto likely_subtags = JsonValue::from_string(likely_subtags_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& supplemental_object = likely_subtags->as_object().get("supplemental"sv);
+    auto const& supplemental_object = likely_subtags.as_object().get("supplemental"sv);
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
     likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
@@ -163,10 +161,9 @@ static void parse_identity(String locale_path, UnicodeLocaleData& locale_data, L
     auto languages_file_or_error = Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!languages_file_or_error.is_error());
 
-    auto languages = JsonParser(languages_file_or_error.value()->read_all()).parse();
-    VERIFY(languages.has_value());
+    auto languages = JsonValue::from_string(languages_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = languages->as_object().get("main"sv);
+    auto const& main_object = languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& identity_object = locale_object.as_object().get("identity"sv);
     auto const& language_string = identity_object.as_object().get("language"sv);
@@ -199,10 +196,9 @@ static void parse_locale_languages(String locale_path, UnicodeLocaleData& locale
     auto languages_file_or_error = Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!languages_file_or_error.is_error());
 
-    auto languages = JsonParser(languages_file_or_error.value()->read_all()).parse();
-    VERIFY(languages.has_value());
+    auto languages = JsonValue::from_string(languages_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = languages->as_object().get("main"sv);
+    auto const& main_object = languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
@@ -225,10 +221,9 @@ static void parse_locale_territories(String locale_path, UnicodeLocaleData& loca
     auto territories_file_or_error = Core::File::open(territories_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!territories_file_or_error.is_error());
 
-    auto territories = JsonParser(territories_file_or_error.value()->read_all()).parse();
-    VERIFY(territories.has_value());
+    auto territories = JsonValue::from_string(territories_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = territories->as_object().get("main"sv);
+    auto const& main_object = territories.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(territories_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& territories_object = locale_display_names_object.as_object().get("territories"sv);
@@ -251,10 +246,9 @@ static void parse_locale_scripts(String locale_path, UnicodeLocaleData& locale_d
     auto scripts_file_or_error = Core::File::open(scripts_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!scripts_file_or_error.is_error());
 
-    auto scripts = JsonParser(scripts_file_or_error.value()->read_all()).parse();
-    VERIFY(scripts.has_value());
+    auto scripts = JsonValue::from_string(scripts_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = scripts->as_object().get("main"sv);
+    auto const& main_object = scripts.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(scripts_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
@@ -277,10 +271,9 @@ static void parse_locale_list_patterns(String misc_path, UnicodeLocaleData& loca
     auto list_patterns_file_or_error = Core::File::open(list_patterns_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!list_patterns_file_or_error.is_error());
 
-    auto list_patterns = JsonParser(list_patterns_file_or_error.value()->read_all()).parse();
-    VERIFY(list_patterns.has_value());
+    auto list_patterns = JsonValue::from_string(list_patterns_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = list_patterns->as_object().get("main"sv);
+    auto const& main_object = list_patterns.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(list_patterns_path.parent().basename());
     auto const& list_patterns_object = locale_object.as_object().get("listPatterns"sv);
 
@@ -329,10 +322,9 @@ static void parse_locale_currencies(String numbers_path, UnicodeLocaleData& loca
     auto currencies_file_or_error = Core::File::open(currencies_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!currencies_file_or_error.is_error());
 
-    auto currencies = JsonParser(currencies_file_or_error.value()->read_all()).parse();
-    VERIFY(currencies.has_value());
+    auto currencies = JsonValue::from_string(currencies_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = currencies->as_object().get("main"sv);
+    auto const& main_object = currencies.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(currencies_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
@@ -364,10 +356,9 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
     auto numbers_file_or_error = Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!numbers_file_or_error.is_error());
 
-    auto numbers = JsonParser(numbers_file_or_error.value()->read_all()).parse();
-    VERIFY(numbers.has_value());
+    auto numbers = JsonValue::from_string(numbers_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = numbers->as_object().get("main"sv);
+    auto const& main_object = numbers.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& default_numbering_system_object = locale_numbers_object.as_object().get("defaultNumberingSystem"sv);

@@ -144,7 +144,7 @@ private:
             auto request = m_socket->read(length);
 
             auto request_json = JsonValue::from_string(request);
-            if (!request_json.has_value() || !request_json.value().is_object()) {
+            if (request_json.is_error() || !request_json.value().is_object()) {
                 dbgln("RPC client sent invalid request");
                 shutdown();
                 return;

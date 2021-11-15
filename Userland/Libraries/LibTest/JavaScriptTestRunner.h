@@ -241,7 +241,7 @@ inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
     auto json_string = TRY_OR_DISCARD(JS::JSONObject::stringify_impl(interpreter.global_object(), results, JS::js_undefined(), JS::js_undefined()));
 
     auto json = JsonValue::from_string(json_string);
-    if (!json.has_value())
+    if (json.is_error())
         return {};
 
     return json.value();

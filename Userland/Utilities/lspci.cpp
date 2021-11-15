@@ -66,9 +66,8 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = proc_pci->read_all();
-    auto json = JsonValue::from_string(file_contents);
-    VERIFY(json.has_value());
-    json.value().as_array().for_each([db, format](auto& value) {
+    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+    json.as_array().for_each([db, format](auto& value) {
         auto& dev = value.as_object();
         auto domain = dev.get("domain").to_u32();
         auto bus = dev.get("bus").to_u32();

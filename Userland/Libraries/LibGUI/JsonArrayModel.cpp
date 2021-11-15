@@ -20,11 +20,10 @@ void JsonArrayModel::invalidate()
         return;
     }
 
-    auto json = JsonValue::from_string(file->read_all());
+    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    VERIFY(json.has_value());
-    VERIFY(json.value().is_array());
-    m_array = json.value().as_array();
+    VERIFY(json.is_array());
+    m_array = json.as_array();
 
     did_update();
 }

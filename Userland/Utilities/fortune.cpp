@@ -100,16 +100,16 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    if (!json.has_value()) {
+    if (json.is_error()) {
         warnln("Couldn't parse {} as JSON", path);
         return 1;
     }
-    if (!json->is_array()) {
+    if (!json.value().is_array()) {
         warnln("{} does not contain an array of quotes", path);
         return 1;
     }
 
-    const auto quotes = parse_all(json->as_array());
+    const auto quotes = parse_all(json.value().as_array());
     if (quotes.is_empty()) {
         warnln("{} does not contain any valid quotes", path);
         return 1;

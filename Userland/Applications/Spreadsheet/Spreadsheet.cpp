@@ -667,7 +667,7 @@ JsonObject Sheet::gather_documentation() const
         JsonParser parser(doc.to_string_without_side_effects());
         auto doc_object = parser.parse();
 
-        if (doc_object.has_value())
+        if (!doc_object.is_error())
             object.set(it.key.to_display_string(), doc_object.value());
         else
             dbgln("Sheet::gather_documentation(): Failed to parse the documentation for '{}'!", it.key.to_display_string());

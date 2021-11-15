@@ -94,7 +94,7 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
             } else if (peek() == GMLToken::Type::JsonValue) {
                 auto value_string = tokens.dequeue();
                 auto parsed_value = JsonValue::from_string(value_string.m_view);
-                if (!parsed_value.has_value()) {
+                if (parsed_value.is_error()) {
                     dbgln("Expected property to be JSON value");
                     return {};
                 }

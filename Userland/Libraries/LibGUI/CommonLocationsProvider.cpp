@@ -45,7 +45,7 @@ void CommonLocationsProvider::load_from_json(const String& json_path)
     }
 
     auto json = JsonValue::from_string(file->read_all());
-    if (!json.has_value()) {
+    if (json.is_error()) {
         dbgln("Common locations file {} is not a valid JSON file.", file->filename());
         return;
     }
@@ -55,7 +55,7 @@ void CommonLocationsProvider::load_from_json(const String& json_path)
     }
 
     s_common_locations.clear();
-    auto contents = json.value().as_array();
+    auto const& contents = json.value().as_array();
     for (size_t i = 0; i < contents.size(); ++i) {
         auto entry_value = contents.at(i);
         if (!entry_value.is_object())

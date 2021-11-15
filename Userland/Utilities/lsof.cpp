@@ -70,15 +70,10 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     }
     auto data = file.value()->read_all();
 
-    JsonParser parser(data);
-    auto result = parser.parse();
-
-    if (!result.has_value()) {
-        VERIFY_NOT_REACHED();
-    }
+    auto json = JsonValue::from_string(data).release_value_but_fixme_should_propagate_errors();
 
     Vector<OpenFile> files;
-    result.value().as_array().for_each([pid, &files](const JsonValue& object) {
+    json.as_array().for_each([pid, &files](const JsonValue& object) {
         OpenFile open_file;
         open_file.pid = pid;
         open_file.fd = object.as_object().get("fd").to_int();

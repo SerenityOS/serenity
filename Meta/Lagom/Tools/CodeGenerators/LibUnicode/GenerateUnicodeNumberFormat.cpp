@@ -240,10 +240,9 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
     auto numbers_file_or_error = Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!numbers_file_or_error.is_error());
 
-    auto numbers = JsonParser(numbers_file_or_error.value()->read_all()).parse();
-    VERIFY(numbers.has_value());
+    auto numbers = JsonValue::from_string(numbers_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = numbers->as_object().get("main"sv);
+    auto const& main_object = numbers.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
 
@@ -360,10 +359,9 @@ static void parse_units(String locale_units_path, UnicodeLocaleData& locale_data
     auto units_file_or_error = Core::File::open(units_path.string(), Core::OpenMode::ReadOnly);
     VERIFY(!units_file_or_error.is_error());
 
-    auto units = JsonParser(units_file_or_error.value()->read_all()).parse();
-    VERIFY(units.has_value());
+    auto units = JsonValue::from_string(units_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
 
-    auto const& main_object = units->as_object().get("main"sv);
+    auto const& main_object = units.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
     auto const& locale_units_object = locale_object.as_object().get("units"sv);
     auto const& long_object = locale_units_object.as_object().get("long"sv);
