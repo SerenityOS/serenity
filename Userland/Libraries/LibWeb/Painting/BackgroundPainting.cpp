@@ -60,8 +60,25 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         // FIXME: Size
         Gfx::IntRect image_rect { border_rect.x(), border_rect.y(), image.width(), image.height() };
 
-        // FIXME: Origin
-        // FIXME: Position
+        // Origin
+        auto background_positioning_area = get_box(layer.origin);
+        int space_x = background_positioning_area.width() - image_rect.width();
+        int space_y = background_positioning_area.height() - image_rect.height();
+
+        // Position
+        int offset_x = layer.position_offset_x.resolved_or_zero(layout_node, space_x).to_px(layout_node);
+        if (layer.position_edge_x == CSS::PositionEdge::Right) {
+            image_rect.set_right_without_resize(background_positioning_area.right() - offset_x);
+        } else {
+            image_rect.set_left(background_positioning_area.left() + offset_x);
+        }
+
+        int offset_y = layer.position_offset_y.resolved_or_zero(layout_node, space_y).to_px(layout_node);
+        if (layer.position_edge_y == CSS::PositionEdge::Bottom) {
+            image_rect.set_bottom_without_resize(background_positioning_area.bottom() - offset_y);
+        } else {
+            image_rect.set_top(background_positioning_area.top() + offset_y);
+        }
 
         // Repetition
         bool repeat_x = false;
