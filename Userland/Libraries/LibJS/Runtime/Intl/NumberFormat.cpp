@@ -992,7 +992,8 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 // 1. Let unknown be an ILND String based on x and p.
                 // 2. Append a new Record { [[Type]]: "unknown", [[Value]]: unknown } as the last element of result.
 
-                // FIXME: Implement this when GetNotationSubPattern is fully implemented.
+                // LibUnicode doesn't generate any "unknown" patterns.
+                VERIFY_NOT_REACHED();
             }
         }
     }
