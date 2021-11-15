@@ -1599,7 +1599,7 @@ int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude)
             best_number_format = &format_rule;
         }
 
-        return best_number_format ? best_number_format->compact_scale : 0;
+        return best_number_format ? best_number_format->exponent : 0;
     }
 
     default:

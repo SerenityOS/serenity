@@ -117,7 +117,7 @@ struct NumberFormat {
     };
 
     u8 magnitude { 0 };
-    u8 compact_scale { 0 };
+    u8 exponent { 0 };
     Plurality plurality { Plurality::Other };
     StringView zero_format {};
     StringView positive_format {};
