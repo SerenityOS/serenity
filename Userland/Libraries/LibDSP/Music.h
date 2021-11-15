@@ -40,8 +40,11 @@ struct Signal : public Variant<Sample, RollNotes> {
     using Variant::Variant;
     ALWAYS_INLINE SignalType type() const
     {
-        return has<Sample>() ? SignalType::Sample : has<RollNotes>() ? SignalType::Note
-                                                                     : SignalType::Invalid;
+        if (has<Sample>())
+            return SignalType::Sample;
+        if (has<RollNotes>())
+            return SignalType::Note;
+        return SignalType::Invalid;
     }
 };
 
