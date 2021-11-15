@@ -945,18 +945,15 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 }
             }
             // iv. Else if p is equal to "compactSymbol", then
-            else if (part == "compactSymbol"sv) {
-                // 1. Let compactSymbol be an ILD string representing exponent in short form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactSymbol}" placeholder.
-                // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
-
-                // FIXME: Implement this when GetNotationSubPattern is fully implemented.
-            }
             // v. Else if p is equal to "compactName", then
-            else if (part == "compactName"sv) {
-                // 1. Let compactName be an ILD string representing exponent in long form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactName}" placeholder.
-                // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactName } as the last element of result.
+            else if (part == "compactIdentifier"sv) {
+                // Note: Our implementation combines "compactSymbol" and "compactName" into one field, "compactIdentifier".
 
-                // FIXME: Implement this when GetNotationSubPattern is fully implemented.
+                // 1. Let compactSymbol be an ILD string representing exponent in short form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactSymbol}" placeholder.
+                auto compact_identifier = number_format.compact_format().compact_identifier;
+
+                // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
+                result.append({ "compact"sv, compact_identifier });
             }
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
@@ -1491,12 +1488,14 @@ Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int e
     }
     // 8. Else if exponent is not 0, then
     else if (exponent != 0) {
-        // FIXME: Implement this.
-
         // a. Assert: notation is "compact".
+        VERIFY(notation == NumberFormat::Notation::Compact);
+
         // b. Let compactDisplay be numberFormat.[[CompactDisplay]].
         // c. Let compactPatterns be notationSubPatterns.[[compact]].[[<compactDisplay>]].
         // d. Return compactPatterns.[[<exponent>]].
+        if (number_format.has_compact_format())
+            return number_format.compact_format().zero_format;
     }
 
     // 9. Else,
