@@ -102,16 +102,17 @@
 
     <h3>Images should fill the content-box, with padding on each side. (5px, 10px, 15px, 20px) and aligned so their top-left corner will be at the top-left of the box. This produces clipping.</h3>
     <div class="example">
-        <code>background: url('background-repeat.png') padding-box content-box</code>
-        <div class="box" style="background: url('background-repeat.png') padding-box content-box"></div>
+        <code>background: url('background-repeat.png') yellow padding-box content-box</code>
+        <div class="box" style="background: url('background-repeat.png') yellow padding-box content-box"></div>
     </div>
     <div class="example">
         <code>
             background-image: url('background-repeat.png');<br/>
+            background-color: yellow;<br/>
             background-origin: padding-box;<br/>
             background-clip: content-box;
         </code>
-        <div class="box" style="background-image: url('background-repeat.png'); background-origin: padding-box; background-clip: content-box"></div>
+        <div class="box" style="background-image: url('background-repeat.png'); background-color: yellow; background-origin: padding-box; background-clip: content-box"></div>
     </div>
 
     <h2>Size</h2>
@@ -183,6 +184,19 @@
             background-repeat: round;
         </code>
         <div class="box" style="background-image: url('background-repeat.png'); background-repeat: round"></div>
+    </div>
+
+    <h3>Images should all be whole, and be shrunk and spaced to fill the box</h3>
+    <div class="example">
+        <code>background: url('background-repeat.png') space round</code>
+        <div class="box" style="background: url('background-repeat.png') space round"></div>
+    </div>
+    <div class="example">
+        <code>
+            background-image: url('background-repeat.png');<br/>
+            background-repeat: space round;
+        </code>
+        <div class="box" style="background-image: url('background-repeat.png'); background-repeat: space round"></div>
     </div>
 
     <h2>Multiple backgrounds</h2>
