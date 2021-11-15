@@ -22,6 +22,8 @@
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/AsyncFunctionConstructor.h>
 #include <LibJS/Runtime/AsyncFunctionPrototype.h>
+#include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
+#include <LibJS/Runtime/AsyncGeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
@@ -272,6 +274,11 @@ void GlobalObject::initialize_global_object()
     m_generator_function_constructor = heap().allocate<GeneratorFunctionConstructor>(*this, *this);
     // 27.3.3.1 GeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-generatorfunction.prototype.constructor
     m_generator_function_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+
+    // The async generator constructor cannot be initialized with add_constructor as it has no global binding
+    m_async_generator_function_constructor = heap().allocate<AsyncGeneratorFunctionConstructor>(*this, *this);
+    // 27.4.3.1 AsyncGeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype-constructor
+    m_async_generator_function_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_constructor, Attribute::Configurable);
 
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();

@@ -1483,18 +1483,23 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         auto type = m_state.current_token.type();
 
+        if (match(TokenType::Async)) {
+            auto lookahead_token = next_token();
+
+            if (lookahead_token.type() != TokenType::ParenOpen && !lookahead_token.trivia_contains_line_terminator()) {
+                consume(TokenType::Async);
+                function_kind = FunctionKind::Async;
+            }
+        }
         if (match(TokenType::Asterisk)) {
             consume();
             property_type = ObjectProperty::Type::KeyValue;
             property_name = parse_property_key();
-            function_kind = FunctionKind::Generator;
+            VERIFY(function_kind == FunctionKind::Regular || function_kind == FunctionKind::Async);
+            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
         } else if (match_identifier()) {
             auto identifier = consume();
-            if (identifier.original_value() == "async" && match_property_key() && !m_state.current_token.trivia_contains_line_terminator()) {
-                property_type = ObjectProperty::Type::KeyValue;
-                property_name = parse_property_key();
-                function_kind = FunctionKind::Async;
-            } else if (identifier.original_value() == "get"sv && match_property_key()) {
+            if (identifier.original_value() == "get"sv && match_property_key()) {
                 property_type = ObjectProperty::Type::Getter;
                 property_name = parse_property_key();
             } else if (identifier.original_value() == "set"sv && match_property_key()) {
@@ -1531,9 +1536,9 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
             if (property_type == ObjectProperty::Type::Setter)
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
-            if (function_kind == FunctionKind::Generator)
+            if (function_kind == FunctionKind::Generator || function_kind == FunctionKind::AsyncGenerator)
                 parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
-            if (function_kind == FunctionKind::Async)
+            if (function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator)
                 parse_options |= FunctionNodeParseOptions::IsAsyncFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
@@ -2278,12 +2283,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange break_context_rollback(m_state.in_break_context, false);
     TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
     TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, false);
+    TemporaryChange class_static_initializer_rollback(m_state.in_class_static_init_block, false);
     TemporaryChange might_need_arguments_object_rollback(m_state.function_might_need_arguments_object, false);
 
     constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
     FunctionKind function_kind;
     if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0 && (parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
-        TODO();
+        function_kind = FunctionKind::AsyncGenerator;
     else if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0)
         function_kind = FunctionKind::Generator;
     else if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
@@ -2298,8 +2304,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
             parse_options = parse_options | FunctionNodeParseOptions::IsAsyncFunction;
         }
         consume(TokenType::Function);
-        if (function_kind == FunctionKind::Regular && match(TokenType::Asterisk)) {
-            function_kind = FunctionKind::Generator;
+        if (match(TokenType::Asterisk)) {
+            function_kind = function_kind == FunctionKind::Regular ? FunctionKind::Generator : FunctionKind::AsyncGenerator;
             consume(TokenType::Asterisk);
             parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
         }
@@ -2311,8 +2317,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
         check_identifier_name_for_assignment_validity(name);
     }
-    TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator);
-    TemporaryChange async_change(m_state.in_async_function_context, function_kind == FunctionKind::Async);
+    TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator || function_kind == FunctionKind::AsyncGenerator);
+    TemporaryChange async_change(m_state.in_async_function_context, function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator);
 
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
