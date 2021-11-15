@@ -45,7 +45,7 @@ private:
     StringView m_string_literal;
 };
 
-template<typename T, typename ErrorType = Error>
+template<typename T, typename ErrorType>
 class [[nodiscard]] ErrorOr {
 public:
     ErrorOr(T const& value)
