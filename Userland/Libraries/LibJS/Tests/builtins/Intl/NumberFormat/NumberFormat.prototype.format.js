@@ -227,6 +227,32 @@ describe("style=decimal", () => {
         expect(ar.format(1290000)).toBe("\u0661\u066b\u0663 مليون");
         expect(ar.format(12000000)).toBe("\u0661\u0662 مليون");
         expect(ar.format(12900000)).toBe("\u0661\u0663 مليون");
+
+        const ja = new Intl.NumberFormat("ja", { notation: "compact", compactDisplay: "long" });
+        expect(ja.format(1)).toBe("1");
+        expect(ja.format(1200)).toBe("1200");
+        expect(ja.format(1290)).toBe("1290");
+        expect(ja.format(12000)).toBe("1.2万");
+        expect(ja.format(12900)).toBe("1.3万");
+        expect(ja.format(1200000)).toBe("120万");
+        expect(ja.format(1290000)).toBe("129万");
+        expect(ja.format(12000000)).toBe("1200万");
+        expect(ja.format(12900000)).toBe("1290万");
+        expect(ja.format(120000000)).toBe("1.2億");
+        expect(ja.format(129000000)).toBe("1.3億");
+        expect(ja.format(12000000000)).toBe("120億");
+        expect(ja.format(12900000000)).toBe("129億");
+
+        const de = new Intl.NumberFormat("de", { notation: "compact", compactDisplay: "long" });
+        expect(de.format(1)).toBe("1");
+        expect(de.format(1200)).toBe("1,2 Tausend");
+        expect(de.format(1290)).toBe("1,3 Tausend");
+        expect(de.format(12000)).toBe("12 Tausend");
+        expect(de.format(12900)).toBe("13 Tausend");
+        expect(de.format(1200000)).toBe("1,2 Millionen");
+        expect(de.format(1290000)).toBe("1,3 Millionen");
+        expect(de.format(12000000)).toBe("12 Millionen");
+        expect(de.format(12900000)).toBe("13 Millionen");
     });
 
     test("notation=compact, compactDisplay=short", () => {
@@ -251,6 +277,32 @@ describe("style=decimal", () => {
         expect(ar.format(1290000)).toBe("\u0661\u066b\u0663\u00a0مليون");
         expect(ar.format(12000000)).toBe("\u0661\u0662\u00a0مليون");
         expect(ar.format(12900000)).toBe("\u0661\u0663\u00a0مليون");
+
+        const ja = new Intl.NumberFormat("ja", { notation: "compact", compactDisplay: "short" });
+        expect(ja.format(1)).toBe("1");
+        expect(ja.format(1200)).toBe("1200");
+        expect(ja.format(1290)).toBe("1290");
+        expect(ja.format(12000)).toBe("1.2万");
+        expect(ja.format(12900)).toBe("1.3万");
+        expect(ja.format(1200000)).toBe("120万");
+        expect(ja.format(1290000)).toBe("129万");
+        expect(ja.format(12000000)).toBe("1200万");
+        expect(ja.format(12900000)).toBe("1290万");
+        expect(ja.format(120000000)).toBe("1.2億");
+        expect(ja.format(129000000)).toBe("1.3億");
+        expect(ja.format(12000000000)).toBe("120億");
+        expect(ja.format(12900000000)).toBe("129億");
+
+        const de = new Intl.NumberFormat("de", { notation: "compact", compactDisplay: "short" });
+        expect(de.format(1)).toBe("1");
+        expect(de.format(1200)).toBe("1200");
+        expect(de.format(1290)).toBe("1290");
+        expect(de.format(12000)).toBe("12.000");
+        expect(de.format(12900)).toBe("12.900");
+        expect(de.format(1200000)).toBe("1,2\u00a0Mio.");
+        expect(de.format(1290000)).toBe("1,3\u00a0Mio.");
+        expect(de.format(12000000)).toBe("12\u00a0Mio.");
+        expect(de.format(12900000)).toBe("13\u00a0Mio.");
     });
 
     test("signDisplay=never", () => {
