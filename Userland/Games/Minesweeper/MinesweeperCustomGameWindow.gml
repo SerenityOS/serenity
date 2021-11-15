@@ -20,7 +20,7 @@
 
         @GUI::SpinBox {
             name: "columns_spinbox"
-            min: 10
+            min: 9
             max: 50
             fixed_width: 40
         }
@@ -35,7 +35,7 @@
 
         @GUI::SpinBox {
             name: "rows_spinbox"
-            min: 10
+            min: 9
             max: 50
             fixed_width: 40
         }
