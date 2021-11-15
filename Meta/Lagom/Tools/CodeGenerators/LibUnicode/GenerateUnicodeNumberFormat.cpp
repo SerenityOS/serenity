@@ -90,10 +90,12 @@ struct UnicodeLocaleData {
     Vector<String> numeric_symbols;
 };
 
-static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& locale_data, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
 {
     // https://unicode.org/reports/tr35/tr35-numbers.html#Number_Format_Patterns
     // https://cldr.unicode.org/translation/number-currency-formats/number-and-currency-patterns
+    VERIFY((patterns.size() == 1) || (patterns.size() == 2));
+
     auto replace_patterns = [&](String pattern) {
         static HashMap<StringView, StringView> replacements = {
             { "{0}"sv, "{number}"sv },
@@ -183,16 +185,6 @@ static void parse_number_pattern(String pattern, UnicodeLocaleData& locale_data,
         return pattern;
     };
 
-    auto patterns = pattern.split(';');
-    VERIFY((patterns.size() == 1) || (patterns.size() == 2));
-
-    if (format.magnitude != 0) {
-        auto number_of_zeroes_in_pattern = patterns[0].count("0"sv);
-
-        VERIFY(format.magnitude >= number_of_zeroes_in_pattern);
-        format.compact_scale = format.magnitude - number_of_zeroes_in_pattern;
-    }
-
     auto zero_format = replace_patterns(move(patterns[0]));
     format.positive_format_index = locale_data.unique_strings.ensure(String::formatted("{{plusSign}}{}", zero_format));
 
@@ -238,17 +230,25 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             if (split_key.size() != 3)
                 return;
 
+            auto patterns = value.as_string().split(';');
             NumberFormat format {};
 
             if (auto type = split_key[0].template to_uint<u64>(); type.has_value()) {
                 VERIFY(*type % 10 == 0);
                 format.magnitude = static_cast<u8>(log10(*type));
+
+                if (patterns[0] != "0"sv) {
+                    auto number_of_zeroes_in_pattern = patterns[0].count("0"sv);
+                    VERIFY(format.magnitude >= number_of_zeroes_in_pattern);
+
+                    format.exponent = format.magnitude + 1 - number_of_zeroes_in_pattern;
+                }
             } else {
                 VERIFY(split_key[0] == "unitPattern"sv);
             }
 
             format.plurality = NumberFormat::plurality_from_string(split_key[2]);
-            parse_number_pattern(value.as_string(), locale_data, NumberFormatType::Compact, format);
+            parse_number_pattern(move(patterns), locale_data, NumberFormatType::Compact, format);
 
             result.append(move(format));
         });
@@ -279,7 +279,7 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, NumberFormatType::Standard, number_system.decimal_format, &number_system);
+            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.decimal_format, &number_system);
 
             auto const& long_format = value.as_object().get("long"sv).as_object().get("decimalFormat"sv);
             number_system.decimal_long_formats = parse_number_format(long_format.as_object());
@@ -291,10 +291,10 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, NumberFormatType::Standard, number_system.currency_format);
+            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.currency_format);
 
             format_object = value.as_object().get("accounting"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, NumberFormatType::Standard, number_system.accounting_format);
+            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.accounting_format);
 
             number_system.currency_unit_formats = parse_number_format(value.as_object());
 
@@ -307,13 +307,13 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, NumberFormatType::Standard, number_system.percent_format);
+            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.percent_format);
         } else if (key.starts_with(scientific_formats_prefix)) {
             auto system = key.substring(scientific_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
 
             auto format_object = value.as_object().get("standard"sv);
-            parse_number_pattern(format_object.as_string(), locale_data, NumberFormatType::Standard, number_system.scientific_format);
+            parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
 }
@@ -424,7 +424,7 @@ struct NumberFormat {
         Unicode::NumberFormat number_format {};
 
         number_format.magnitude = magnitude;
-        number_format.compact_scale = compact_scale;
+        number_format.exponent = exponent;
         number_format.plurality = static_cast<Unicode::NumberFormat::Plurality>(plurality);
         number_format.zero_format = s_string_list[zero_format];
         number_format.positive_format = s_string_list[positive_format];
@@ -435,7 +435,7 @@ struct NumberFormat {
     }
 
     u8 magnitude { 0 };
-    u8 compact_scale { 0 };
+    u8 exponent { 0 };
     u8 plurality { 0 };
     @string_index_type@ zero_format { 0 };
     @string_index_type@ positive_format { 0 };
@@ -466,13 +466,13 @@ struct NumberSystem {
 
     auto append_number_format = [&](auto const& number_format) {
         generator.set("magnitude"sv, String::number(number_format.magnitude));
-        generator.set("compact_scale"sv, String::number(number_format.compact_scale));
+        generator.set("exponent"sv, String::number(number_format.exponent));
         generator.set("plurality"sv, String::number(static_cast<u8>(number_format.plurality)));
         generator.set("zero_format"sv, String::number(number_format.zero_format_index));
         generator.set("positive_format"sv, String::number(number_format.positive_format_index));
         generator.set("negative_format"sv, String::number(number_format.negative_format_index));
         generator.set("compact_identifier"sv, String::number(number_format.compact_identifier_index));
-        generator.append("{ @magnitude@, @compact_scale@, @plurality@, @zero_format@, @positive_format@, @negative_format@, @compact_identifier@ },");
+        generator.append("{ @magnitude@, @exponent@, @plurality@, @zero_format@, @positive_format@, @negative_format@, @compact_identifier@ },");
     };
 
     auto append_number_formats = [&](String name, auto const& number_formats) {
