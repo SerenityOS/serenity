@@ -13,30 +13,31 @@
     JS::ThrowCompletionOr<JS::Value> name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object)
 
 // NOTE: Proxy is not included here as it doesn't have a prototype - m_proxy_constructor is initialized separately.
-#define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                                                               \
-    __JS_ENUMERATE(AggregateError, aggregate_error, AggregateErrorPrototype, AggregateErrorConstructor, void)                         \
-    __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)                                                              \
-    __JS_ENUMERATE(ArrayBuffer, array_buffer, ArrayBufferPrototype, ArrayBufferConstructor, void)                                     \
-    __JS_ENUMERATE(AsyncFunction, async_function, AsyncFunctionPrototype, AsyncFunctionConstructor, void)                             \
-    __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)                                                    \
-    __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                                                \
-    __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                                                 \
-    __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                                                  \
-    __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                                              \
-    __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void) \
-    __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                            \
-    __JS_ENUMERATE(GeneratorFunction, generator_function, GeneratorFunctionPrototype, GeneratorFunctionConstructor, void)             \
-    __JS_ENUMERATE(Map, map, MapPrototype, MapConstructor, void)                                                                      \
-    __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                                                    \
-    __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                                                          \
-    __JS_ENUMERATE(Promise, promise, PromisePrototype, PromiseConstructor, void)                                                      \
-    __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                                                    \
-    __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                                                      \
-    __JS_ENUMERATE(ShadowRealm, shadow_realm, ShadowRealmPrototype, ShadowRealmConstructor, void)                                     \
-    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                                                    \
-    __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                                                    \
-    __JS_ENUMERATE(WeakMap, weak_map, WeakMapPrototype, WeakMapConstructor, void)                                                     \
-    __JS_ENUMERATE(WeakRef, weak_ref, WeakRefPrototype, WeakRefConstructor, void)                                                     \
+#define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                                                                        \
+    __JS_ENUMERATE(AggregateError, aggregate_error, AggregateErrorPrototype, AggregateErrorConstructor, void)                                  \
+    __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)                                                                       \
+    __JS_ENUMERATE(ArrayBuffer, array_buffer, ArrayBufferPrototype, ArrayBufferConstructor, void)                                              \
+    __JS_ENUMERATE(AsyncFunction, async_function, AsyncFunctionPrototype, AsyncFunctionConstructor, void)                                      \
+    __JS_ENUMERATE(AsyncGeneratorFunction, async_generator_function, AsyncGeneratorFunctionPrototype, AsyncGeneratorFunctionConstructor, void) \
+    __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)                                                             \
+    __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                                                         \
+    __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                                                          \
+    __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                                                           \
+    __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                                                       \
+    __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void)          \
+    __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                                     \
+    __JS_ENUMERATE(GeneratorFunction, generator_function, GeneratorFunctionPrototype, GeneratorFunctionConstructor, void)                      \
+    __JS_ENUMERATE(Map, map, MapPrototype, MapConstructor, void)                                                                               \
+    __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                                                             \
+    __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                                                                   \
+    __JS_ENUMERATE(Promise, promise, PromisePrototype, PromiseConstructor, void)                                                               \
+    __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                                                             \
+    __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                                                               \
+    __JS_ENUMERATE(ShadowRealm, shadow_realm, ShadowRealmPrototype, ShadowRealmConstructor, void)                                              \
+    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                                                             \
+    __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                                                             \
+    __JS_ENUMERATE(WeakMap, weak_map, WeakMapPrototype, WeakMapConstructor, void)                                                              \
+    __JS_ENUMERATE(WeakRef, weak_ref, WeakRefPrototype, WeakRefConstructor, void)                                                              \
     __JS_ENUMERATE(WeakSet, weak_set, WeakSetPrototype, WeakSetConstructor, void)
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                 \

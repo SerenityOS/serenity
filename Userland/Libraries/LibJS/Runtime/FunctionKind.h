@@ -12,6 +12,7 @@ enum class FunctionKind {
     Generator,
     Regular,
     Async,
+    AsyncGenerator
 };
 
 }

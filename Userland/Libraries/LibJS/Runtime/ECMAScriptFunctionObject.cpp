@@ -41,6 +41,9 @@ ECMAScriptFunctionObject* ECMAScriptFunctionObject::create(GlobalObject& global_
     case FunctionKind::Async:
         prototype = global_object.async_function_prototype();
         break;
+    case FunctionKind::AsyncGenerator:
+        prototype = global_object.async_generator_function_prototype();
+        break;
     }
     return global_object.heap().allocate<ECMAScriptFunctionObject>(global_object, move(name), ecmascript_code, move(parameters), m_function_length, parent_scope, private_scope, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function);
 }
@@ -105,6 +108,9 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
             prototype = global_object.generator_object_prototype();
             break;
         case FunctionKind::Async:
+            break;
+        case FunctionKind::AsyncGenerator:
+            // FIXME: Add the AsyncGeneratorObject and set it as prototype.
             break;
         }
         define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -749,6 +755,9 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
     auto& vm = this->vm();
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
+
+    if (m_kind == FunctionKind::AsyncGenerator)
+        return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Async Generator function execution");
 
     if (bytecode_interpreter) {
         // FIXME: pass something to evaluate default arguments with

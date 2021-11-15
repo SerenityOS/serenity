@@ -53,8 +53,8 @@ ThrowCompletionOr<RefPtr<FunctionExpression>> FunctionConstructor::create_dynami
         parameters_source = parameters_builder.build();
         body_source = TRY(vm.argument(vm.argument_count() - 1).to_string(global_object));
     }
-    auto is_generator = kind == FunctionKind::Generator;
-    auto is_async = kind == FunctionKind::Async;
+    auto is_generator = kind == FunctionKind::Generator || kind == FunctionKind::AsyncGenerator;
+    auto is_async = kind == FunctionKind::Async || kind == FunctionKind::AsyncGenerator;
     auto source = String::formatted("{}function{} anonymous({}\n) {{\n{}\n}}", is_async ? "async " : "", is_generator ? "*" : "", parameters_source, body_source);
     auto parser = Parser(Lexer(source));
     auto function = parser.parse_function_node<FunctionExpression>();
