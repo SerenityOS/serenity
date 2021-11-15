@@ -17,6 +17,7 @@ class ByteBuffer;
 
 class Bitmap;
 using ByteBuffer = AK::Detail::ByteBuffer<32>;
+class Error;
 class GenericLexer;
 class IPv4Address;
 class JsonArray;
@@ -125,6 +126,9 @@ class WeakPtr;
 template<typename T, size_t inline_capacity = 0>
 requires(!IsRvalueReference<T>) class Vector;
 
+template<typename T, typename ErrorType = Error>
+class [[nodiscard]] ErrorOr;
+
 }
 
 using AK::Array;
@@ -137,6 +141,8 @@ using AK::CircularDuplexStream;
 using AK::CircularQueue;
 using AK::DoublyLinkedList;
 using AK::DuplexMemoryStream;
+using AK::Error;
+using AK::ErrorOr;
 using AK::FixedArray;
 using AK::FlyString;
 using AK::Function;
