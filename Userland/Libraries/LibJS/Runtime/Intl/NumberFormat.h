@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibUnicode/Locale.h>
 
 namespace JS::Intl {
 
@@ -155,6 +156,10 @@ public:
     NativeFunction* bound_format() const { return m_bound_format; }
     void set_bound_format(NativeFunction* bound_format) { m_bound_format = bound_format; }
 
+    bool has_compact_format() const { return m_compact_format.has_value(); }
+    void set_compact_format(Unicode::NumberFormat compact_format) { m_compact_format = compact_format; }
+    Unicode::NumberFormat compact_format() const { return *m_compact_format; }
+
 private:
     virtual void visit_edges(Visitor&) override;
 
@@ -181,6 +186,9 @@ private:
 
     // Non-standard. Stores the resolved currency display string based on [[Locale]], [[Currency]], and [[CurrencyDisplay]].
     Optional<StringView> m_resolved_currency_display;
+
+    // Non-standard. Stores the resolved compact number format based on [[Locale]], [[Notation], [[Style]], and [[CompactDisplay]].
+    Optional<Unicode::NumberFormat> m_compact_format;
 };
 
 struct FormatResult {
