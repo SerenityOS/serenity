@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#if defined(__FreeBSD__)
+#    include <sys/ucred.h>
+#endif
 
 #ifndef SOCK_NONBLOCK
 #    include <sys/ioctl.h>
@@ -58,22 +61,30 @@ pid_t LocalSocket::peer_pid() const
 #ifdef AK_OS_MACOS
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
-
-    if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0) {
-        dbgln("LocalSocket: getsockopt failed, {}", strerror(errno));
-        VERIFY_NOT_REACHED();
-    }
-
-    return pid;
+#elif defined(__FreeBSD__)
+    struct xucred creds = {};
+    socklen_t creds_size = sizeof(creds);
 #else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
+#endif
 
+#ifdef AK_OS_MACOS
+    if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0) {
+#elif defined(__FreeBSD__)
+    if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size) < 0) {
+#else
     if (getsockopt(fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
+#endif
         dbgln("LocalSocket: getsockopt failed, {}", strerror(errno));
         VERIFY_NOT_REACHED();
     }
 
+#ifdef AK_OS_MACOS
+    return pid;
+#elif defined(__FreeBSD__)
+    return creds.cr_pid;
+#else
     return creds.pid;
 #endif
 }
