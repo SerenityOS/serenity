@@ -2647,7 +2647,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         if (seen_items == 2)
             break;
 
-        auto& token = tokens.next_token();
+        auto& token = tokens.peek_token();
         auto maybe_value = parse_css_value(token);
         if (!maybe_value || !property_accepts_value(PropertyID::BackgroundPosition, *maybe_value))
             break;
