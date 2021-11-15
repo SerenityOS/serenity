@@ -158,7 +158,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
         }
 
         auto json = JsonValue::from_string(file_or_error.value()->read_all());
-        if (!json.has_value() || !json.value().is_array()) {
+        if (json.is_error() || !json.value().is_array()) {
             warnln("Invalid contents in {}", stack_path);
             return {};
         }
@@ -178,7 +178,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
         }
 
         auto json = JsonValue::from_string(file_or_error.value()->read_all());
-        if (!json.has_value() || !json.value().is_array()) {
+        if (json.is_error() || !json.value().is_array()) {
             warnln("Invalid contents in {}", vm_path);
             return {};
         }

@@ -30,7 +30,7 @@ public:
         Object,
     };
 
-    static Optional<JsonValue> from_string(StringView);
+    static ErrorOr<JsonValue> from_string(StringView);
 
     explicit JsonValue(Type = Type::Null);
     ~JsonValue() { clear(); }

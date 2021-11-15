@@ -121,12 +121,11 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
     }
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents);
-    VERIFY(json.has_value());
+    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
 
     Vector<IPv4Address> addresses;
 
-    json.value().as_array().for_each([&addresses](auto& value) {
+    json.as_array().for_each([&addresses](auto& value) {
         auto if_object = value.as_object();
         auto address = if_object.get("ipv4_address").to_string();
         auto ipv4_address = IPv4Address::from_string(address);

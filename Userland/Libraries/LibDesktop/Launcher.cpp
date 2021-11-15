@@ -17,9 +17,8 @@ namespace Desktop {
 auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRefPtr<Details>
 {
     auto details = adopt_ref(*new Details);
-    auto json = JsonValue::from_string(details_str);
-    VERIFY(json.has_value());
-    auto obj = json.value().as_object();
+    auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
+    auto const& obj = json.as_object();
     details->executable = obj.get("executable").to_string();
     details->name = obj.get("name").to_string();
     if (auto type_value = obj.get_ptr("type")) {

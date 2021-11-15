@@ -84,10 +84,9 @@ static void fill_mounts(Vector<MountInfo>& output)
     }
 
     auto content = file->read_all();
-    auto json = JsonValue::from_string(content);
-    VERIFY(json.has_value());
+    auto json = JsonValue::from_string(content).release_value_but_fixme_should_propagate_errors();
 
-    json.value().as_array().for_each([&output](auto& value) {
+    json.as_array().for_each([&output](auto& value) {
         auto& filesystem_object = value.as_object();
         MountInfo mount_info;
         mount_info.mount_point = filesystem_object.get("mount_point").to_string();

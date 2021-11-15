@@ -26,7 +26,7 @@ ErrorOr<void> ProjectLoader::try_load_from_fd_and_close(int fd, StringView path)
     auto contents = file->read_all();
 
     auto json_or_error = JsonValue::from_string(contents);
-    if (!json_or_error.has_value()) {
+    if (json_or_error.is_error()) {
         m_is_raw_image = true;
 
         auto mapped_file = TRY(MappedFile::map_from_fd_and_close(fd, path));

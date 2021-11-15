@@ -36,9 +36,8 @@ int main(int argc, char** argv)
     if (!file->open(Core::OpenMode::ReadOnly))
         return 1;
 
-    auto json = JsonValue::from_string(file->read_all());
-    VERIFY(json.has_value());
-    VERIFY(json.value().is_array());
+    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    VERIFY(json.is_array());
 
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -54,7 +53,7 @@ enum class ValueID {
     Invalid,
 )~~~");
 
-    json.value().as_array().for_each([&](auto& name) {
+    json.as_array().for_each([&](auto& name) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name.to_string()));
 

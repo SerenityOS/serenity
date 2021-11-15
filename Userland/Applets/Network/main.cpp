@@ -115,7 +115,7 @@ private:
         auto file_contents = file->read_all();
         auto json = JsonValue::from_string(file_contents);
 
-        if (!json.has_value())
+        if (json.is_error())
             return adapter_info.to_string();
 
         int connected_adapters = 0;

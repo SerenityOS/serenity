@@ -23,11 +23,8 @@ public:
 
     static NonnullRefPtr<StylePropertiesModel> create(StringView properties)
     {
-        auto json_or_error = JsonValue::from_string(properties);
-        if (!json_or_error.has_value())
-            VERIFY_NOT_REACHED();
-
-        return adopt_ref(*new StylePropertiesModel(json_or_error.value().as_object()));
+        auto json_or_error = JsonValue::from_string(properties).release_value_but_fixme_should_propagate_errors();
+        return adopt_ref(*new StylePropertiesModel(json_or_error.as_object()));
     }
 
     virtual ~StylePropertiesModel() override;

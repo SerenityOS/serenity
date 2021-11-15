@@ -50,7 +50,7 @@ int main()
     }
     auto& file = *file_or_error.value();
     auto json = JsonValue::from_string(file.read_all());
-    if (!json.has_value() || !json.value().is_object()) {
+    if (json.is_error() || !json.value().is_object()) {
         warnln("Error: Could not parse /var/run/utmp");
         return 1;
     }
