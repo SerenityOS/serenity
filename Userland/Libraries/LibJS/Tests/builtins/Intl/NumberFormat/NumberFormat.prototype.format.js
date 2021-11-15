@@ -205,6 +205,54 @@ describe("style=decimal", () => {
         expect(ar.format(12.34)).toBe("\u0661\u0662");
     });
 
+    test("notation=compact, compactDisplay=long", () => {
+        const en = new Intl.NumberFormat("en", { notation: "compact", compactDisplay: "long" });
+        expect(en.format(1)).toBe("1");
+        expect(en.format(1200)).toBe("1.2 thousand");
+        expect(en.format(1290)).toBe("1.3 thousand");
+        expect(en.format(12000)).toBe("12 thousand");
+        expect(en.format(12900)).toBe("13 thousand");
+        expect(en.format(1200000)).toBe("1.2 million");
+        expect(en.format(1290000)).toBe("1.3 million");
+        expect(en.format(12000000)).toBe("12 million");
+        expect(en.format(12900000)).toBe("13 million");
+
+        const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "long" });
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(1200)).toBe("\u0661\u066b\u0662 ألف");
+        expect(ar.format(1290)).toBe("\u0661\u066b\u0663 ألف");
+        expect(ar.format(12000)).toBe("\u0661\u0662 ألف");
+        expect(ar.format(12900)).toBe("\u0661\u0663 ألف");
+        expect(ar.format(1200000)).toBe("\u0661\u066b\u0662 مليون");
+        expect(ar.format(1290000)).toBe("\u0661\u066b\u0663 مليون");
+        expect(ar.format(12000000)).toBe("\u0661\u0662 مليون");
+        expect(ar.format(12900000)).toBe("\u0661\u0663 مليون");
+    });
+
+    test("notation=compact, compactDisplay=short", () => {
+        const en = new Intl.NumberFormat("en", { notation: "compact", compactDisplay: "short" });
+        expect(en.format(1)).toBe("1");
+        expect(en.format(1200)).toBe("1.2K");
+        expect(en.format(1290)).toBe("1.3K");
+        expect(en.format(12000)).toBe("12K");
+        expect(en.format(12900)).toBe("13K");
+        expect(en.format(1200000)).toBe("1.2M");
+        expect(en.format(1290000)).toBe("1.3M");
+        expect(en.format(12000000)).toBe("12M");
+        expect(en.format(12900000)).toBe("13M");
+
+        const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "short" });
+        expect(ar.format(1)).toBe("\u0661");
+        expect(ar.format(1200)).toBe("\u0661\u066b\u0662\u00a0ألف");
+        expect(ar.format(1290)).toBe("\u0661\u066b\u0663\u00a0ألف");
+        expect(ar.format(12000)).toBe("\u0661\u0662\u00a0ألف");
+        expect(ar.format(12900)).toBe("\u0661\u0663\u00a0ألف");
+        expect(ar.format(1200000)).toBe("\u0661\u066b\u0662\u00a0مليون");
+        expect(ar.format(1290000)).toBe("\u0661\u066b\u0663\u00a0مليون");
+        expect(ar.format(12000000)).toBe("\u0661\u0662\u00a0مليون");
+        expect(ar.format(12900000)).toBe("\u0661\u0663\u00a0مليون");
+    });
+
     test("signDisplay=never", () => {
         const en = new Intl.NumberFormat("en", { signDisplay: "never" });
         expect(en.format(1)).toBe("1");

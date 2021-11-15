@@ -312,6 +312,64 @@ describe("style=decimal", () => {
             { type: "exponentInteger", value: "\u0663" },
         ]);
     });
+
+    test("notation=compact, compactDisplay=long", () => {
+        const en = new Intl.NumberFormat("en", { notation: "compact", compactDisplay: "long" });
+        expect(en.formatToParts(1200)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "compact", value: "thousand" },
+        ]);
+        expect(en.formatToParts(12900000)).toEqual([
+            { type: "integer", value: "13" },
+            { type: "literal", value: " " },
+            { type: "compact", value: "million" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "long" });
+        expect(ar.formatToParts(1200)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "literal", value: " " },
+            { type: "compact", value: "ألف" },
+        ]);
+        expect(ar.formatToParts(12900000)).toEqual([
+            { type: "integer", value: "\u0661\u0663" },
+            { type: "literal", value: " " },
+            { type: "compact", value: "مليون" },
+        ]);
+    });
+
+    test("notation=compact, compactDisplay=short", () => {
+        const en = new Intl.NumberFormat("en", { notation: "compact", compactDisplay: "short" });
+        expect(en.formatToParts(1200)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "compact", value: "K" },
+        ]);
+        expect(en.formatToParts(12900000)).toEqual([
+            { type: "integer", value: "13" },
+            { type: "compact", value: "M" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", { notation: "compact", compactDisplay: "short" });
+        expect(ar.formatToParts(1200)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "literal", value: "\u00a0" },
+            { type: "compact", value: "ألف" },
+        ]);
+        expect(ar.formatToParts(12900000)).toEqual([
+            { type: "integer", value: "\u0661\u0663" },
+            { type: "literal", value: "\u00a0" },
+            { type: "compact", value: "مليون" },
+        ]);
+    });
 });
 
 describe("style=percent", () => {
