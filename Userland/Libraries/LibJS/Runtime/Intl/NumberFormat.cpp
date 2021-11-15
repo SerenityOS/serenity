@@ -902,8 +902,24 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                     // b. Let fraction be undefined.
                 }
 
+                bool use_grouping = number_format.use_grouping();
+
+                // FIXME: The spec doesn't indicate this, but grouping should be disabled for numbers less than 10,000 when the notation is compact.
+                //        This is addressed in Intl.NumberFormat V3 with the "min2" [[UseGrouping]] option. However, test262 explicitly expects this
+                //        behavior in the "de-DE" locale tests, because this is how ICU (and therefore V8, SpiderMoney, etc.) has always behaved.
+                //
+                //        So, in locales "de-*", we must have:
+                //            Intl.NumberFormat("de", {notation: "compact"}).format(1234) === "1234"
+                //            Intl.NumberFormat("de", {notation: "compact"}).format(12345) === "12.345"
+                //            Intl.NumberFormat("de").format(1234) === "1.234"
+                //            Intl.NumberFormat("de").format(12345) === "12.345"
+                //
+                //        See: https://github.com/tc39/proposal-intl-numberformat-v3/issues/3
+                if (number_format.has_compact_format())
+                    use_grouping = number >= 10'000;
+
                 // 6. If the numberFormat.[[UseGrouping]] is true, then
-                if (number_format.use_grouping()) {
+                if (use_grouping) {
                     // a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
                     auto group_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "group"sv).value_or(","sv);
 
