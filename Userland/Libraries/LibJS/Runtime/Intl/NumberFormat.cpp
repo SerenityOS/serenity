@@ -11,7 +11,6 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
 #include <LibUnicode/CurrencyCode.h>
-#include <LibUnicode/Locale.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -1599,7 +1598,11 @@ int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude)
             best_number_format = &format_rule;
         }
 
-        return best_number_format ? best_number_format->exponent : 0;
+        if (best_number_format == nullptr)
+            return 0;
+
+        number_format.set_compact_format(*best_number_format);
+        return best_number_format->exponent;
     }
 
     default:
