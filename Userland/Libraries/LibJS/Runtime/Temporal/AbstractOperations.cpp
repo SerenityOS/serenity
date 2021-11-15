@@ -225,6 +225,21 @@ ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject& global_object,
     return option.as_string().string();
 }
 
+// 13.9 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
+StringView negate_temporal_rounding_mode(String const& rounding_mode)
+{
+    // 1. If roundingMode is "ceil", return "floor".
+    if (rounding_mode == "ceil"sv)
+        return "floor"sv;
+
+    // 2. If roundingMode is "floor", return "ceil".
+    if (rounding_mode == "floor"sv)
+        return "ceil"sv;
+
+    // 3. Return roundingMode.
+    return rounding_mode;
+}
+
 // 13.10 ToTemporalOffset ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
 ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
 {
