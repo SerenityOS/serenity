@@ -700,8 +700,12 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
     auto week = (day_of_year - day_of_week + 10) / 7;
 
     if (week < 1) {
+        // NOTE: The resulting week is actually part of the previous year. If that year ends with a
+        // Thursday (i.e. the first day of the given year is a Friday, or day 5), or the previous
+        // year is a leap year and ends with a Friday (i.e. the first day of the given year is a
+        // Saturday, or day 6), it has 53 weeks, and 52 weeks otherwise.
         auto day_of_jump = to_iso_day_of_week(year, 1, 1);
-        if (day_of_jump == 5 || (is_iso_leap_year(year) && day_of_jump == 6))
+        if (day_of_jump == 5 || (is_iso_leap_year(year - 1) && day_of_jump == 6))
             return 53;
         else
             return 52;
