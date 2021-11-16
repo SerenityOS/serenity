@@ -10,14 +10,18 @@ RUN apt-get update -y \
         curl \
         g++-10 \
         gcc-10 \
+        e2fsprogs \
         genext2fs \
         gettext \
         git \
         imagemagick \
-        libmpfr-dev \
-        libmpc-dev \
         libgmp-dev \
-        e2fsprogs \
+        libgtk-3-dev \
+        libmpc-dev \
+        libmpfr-dev \
+        libpixman-1-dev \
+        libsdl2-dev \
+        libspice-server-dev \
         ninja-build \
         qemu-utils \
         rsync \
