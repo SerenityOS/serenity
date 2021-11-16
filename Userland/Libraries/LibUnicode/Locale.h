@@ -122,7 +122,7 @@ struct NumberFormat {
     StringView zero_format {};
     StringView positive_format {};
     StringView negative_format {};
-    StringView compact_identifier {};
+    StringView identifier {};
 };
 
 struct ListPatterns {

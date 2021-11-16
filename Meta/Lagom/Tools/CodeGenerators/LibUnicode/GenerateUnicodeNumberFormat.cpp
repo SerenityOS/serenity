@@ -57,7 +57,7 @@ struct NumberFormat : public Unicode::NumberFormat {
     StringIndexType zero_format_index { 0 };
     StringIndexType positive_format_index { 0 };
     StringIndexType negative_format_index { 0 };
-    StringIndexType compact_identifier_index { 0 };
+    StringIndexType identifier_index { 0 };
 };
 
 struct NumberSystem {
@@ -89,6 +89,46 @@ struct UnicodeLocaleData {
     HashMap<String, Locale> locales;
     Vector<String> numeric_symbols;
 };
+
+static String parse_identifier(String pattern, StringView replacement, UnicodeLocaleData& locale_data, NumberFormat& format)
+{
+    static Utf8View whitespace { "\u0020\u00a0"sv };
+
+    Utf8View utf8_pattern { pattern };
+    Optional<size_t> start_index;
+    Optional<size_t> end_index;
+    bool inside_replacement = false;
+
+    for (auto it = utf8_pattern.begin(); it != utf8_pattern.end(); ++it) {
+        if (*it == '{') {
+            if (start_index.has_value()) {
+                end_index = utf8_pattern.byte_offset_of(it);
+                break;
+            }
+
+            inside_replacement = true;
+        } else if (*it == '}') {
+            inside_replacement = false;
+        } else if (!inside_replacement && !start_index.has_value() && !whitespace.contains(*it)) {
+            start_index = utf8_pattern.byte_offset_of(it);
+        }
+    }
+
+    if (!start_index.has_value())
+        return pattern;
+    end_index = end_index.value_or(pattern.length());
+
+    utf8_pattern = utf8_pattern.substring_view(*start_index, *end_index - *start_index);
+    utf8_pattern = utf8_pattern.trim(whitespace);
+
+    auto identifier = utf8_pattern.as_string().replace("'.'"sv, "."sv);
+    format.identifier_index = locale_data.unique_strings.ensure(move(identifier));
+
+    return String::formatted("{}{}{}",
+        *start_index > 0 ? pattern.substring_view(0, *start_index) : ""sv,
+        replacement,
+        pattern.substring_view(*start_index + utf8_pattern.byte_length()));
+}
 
 static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& locale_data, NumberFormatType type, NumberFormat& format, NumberSystem* number_system_for_groupings = nullptr)
 {
@@ -147,40 +187,8 @@ static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& loc
                 pattern = pattern.replace("0"sv, "{scientificExponent}"sv);
         }
 
-        if (type == NumberFormatType::Compact) {
-            static Utf8View whitespace { "\u0020\u00a0"sv };
-
-            Utf8View utf8_pattern { pattern };
-            Optional<size_t> start_compact_index;
-            Optional<size_t> end_compact_index;
-            bool inside_replacement = false;
-
-            for (auto it = utf8_pattern.begin(); it != utf8_pattern.end(); ++it) {
-                if (*it == '{') {
-                    if (start_compact_index.has_value()) {
-                        end_compact_index = utf8_pattern.byte_offset_of(it);
-                        break;
-                    }
-
-                    inside_replacement = true;
-                } else if (*it == '}') {
-                    inside_replacement = false;
-                } else if (!inside_replacement && !start_compact_index.has_value() && !whitespace.contains(*it)) {
-                    start_compact_index = utf8_pattern.byte_offset_of(it);
-                }
-            }
-
-            if (!start_compact_index.has_value())
-                return pattern;
-
-            utf8_pattern = utf8_pattern.substring_view(*start_compact_index, end_compact_index.value_or(pattern.length()) - *start_compact_index);
-            utf8_pattern = utf8_pattern.trim(whitespace);
-
-            auto identifier = utf8_pattern.as_string().replace("'.'"sv, "."sv);
-            format.compact_identifier_index = locale_data.unique_strings.ensure(move(identifier));
-
-            pattern = pattern.replace(utf8_pattern.as_string(), "{compactIdentifier}");
-        }
+        if (type == NumberFormatType::Compact)
+            return parse_identifier(move(pattern), "{compactIdentifier}"sv, locale_data, format);
 
         return pattern;
     };
@@ -429,7 +437,7 @@ struct NumberFormat {
         number_format.zero_format = s_string_list[zero_format];
         number_format.positive_format = s_string_list[positive_format];
         number_format.negative_format = s_string_list[negative_format];
-        number_format.compact_identifier = s_string_list[compact_identifier];
+        number_format.identifier = s_string_list[identifier];
 
         return number_format;
     }
@@ -440,7 +448,7 @@ struct NumberFormat {
     @string_index_type@ zero_format { 0 };
     @string_index_type@ positive_format { 0 };
     @string_index_type@ negative_format { 0 };
-    @string_index_type@ compact_identifier { 0 };
+    @string_index_type@ identifier { 0 };
 };
 
 struct NumberSystem {
@@ -471,8 +479,8 @@ struct NumberSystem {
         generator.set("zero_format"sv, String::number(number_format.zero_format_index));
         generator.set("positive_format"sv, String::number(number_format.positive_format_index));
         generator.set("negative_format"sv, String::number(number_format.negative_format_index));
-        generator.set("compact_identifier"sv, String::number(number_format.compact_identifier_index));
-        generator.append("{ @magnitude@, @exponent@, @plurality@, @zero_format@, @positive_format@, @negative_format@, @compact_identifier@ },");
+        generator.set("identifier"sv, String::number(number_format.identifier_index));
+        generator.append("{ @magnitude@, @exponent@, @plurality@, @zero_format@, @positive_format@, @negative_format@, @identifier@ },");
     };
 
     auto append_number_formats = [&](String name, auto const& number_formats) {
