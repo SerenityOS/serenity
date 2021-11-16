@@ -127,8 +127,19 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         switch (layer.repeat_x) {
         case CSS::Repeat::Round:
-        case CSS::Repeat::Space:
-            // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
+            break;
+        case CSS::Repeat::Space: {
+            int whole_images = background_positioning_area.width() / image_rect.width();
+            if (whole_images <= 1) {
+                x_step = image_rect.width();
+                repeat_x = false;
+            } else {
+                int space = background_positioning_area.width() % image_rect.width();
+                x_step = image_rect.width() + ((float)space / (float)(whole_images - 1));
+                repeat_x = true;
+            }
+            break;
+        }
         case CSS::Repeat::Repeat:
             x_step = image_rect.width();
             repeat_x = true;
@@ -145,8 +156,19 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         switch (layer.repeat_y) {
         case CSS::Repeat::Round:
-        case CSS::Repeat::Space:
-            // FIXME: Support 'round' and 'space'. Fall through to 'repeat' since that most closely resembles these.
+            break;
+        case CSS::Repeat::Space: {
+            int whole_images = background_positioning_area.height() / image_rect.height();
+            if (whole_images <= 1) {
+                y_step = image_rect.height();
+                repeat_y = false;
+            } else {
+                int space = background_positioning_area.height() % image_rect.height();
+                y_step = image_rect.height() + ((float)space / (float)(whole_images - 1));
+                repeat_y = true;
+            }
+            break;
+        }
         case CSS::Repeat::Repeat:
             y_step = image_rect.height();
             repeat_y = true;
