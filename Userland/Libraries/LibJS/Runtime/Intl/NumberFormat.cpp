@@ -962,11 +962,14 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             }
             // iv. Else if p is equal to "compactSymbol", then
             // v. Else if p is equal to "compactName", then
-            else if (part == "compactIdentifier"sv) {
+            else if (part.starts_with("compactIdentifier:"sv)) {
                 // Note: Our implementation combines "compactSymbol" and "compactName" into one field, "compactIdentifier".
 
+                auto identifier_index = part.substring_view("compactIdentifier:"sv.length()).to_uint();
+                VERIFY(identifier_index.has_value());
+
                 // 1. Let compactSymbol be an ILD string representing exponent in short form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactSymbol}" placeholder.
-                auto compact_identifier = number_format.compact_format().identifier;
+                auto compact_identifier = number_format.compact_format().identifiers[*identifier_index];
 
                 // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
                 result.append({ "compact"sv, compact_identifier });
