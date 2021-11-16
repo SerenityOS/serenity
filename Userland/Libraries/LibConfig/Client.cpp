@@ -30,6 +30,16 @@ void Client::monitor_domain(String const& domain)
     async_monitor_domain(domain);
 }
 
+Vector<String> Client::list_keys(StringView domain, StringView group)
+{
+    return list_config_keys(domain, group);
+}
+
+Vector<String> Client::list_groups(StringView domain)
+{
+    return list_config_groups(domain);
+}
+
 String Client::read_string(StringView domain, StringView group, StringView key, StringView fallback)
 {
     return read_string_value(domain, group, key).value_or(fallback);
