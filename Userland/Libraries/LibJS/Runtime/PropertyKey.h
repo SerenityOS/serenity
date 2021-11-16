@@ -225,14 +225,13 @@ struct Traits<JS::PropertyKey> : public GenericTraits<JS::PropertyKey> {
 
 template<>
 struct Formatter<JS::PropertyKey> : Formatter<StringView> {
-    void format(FormatBuilder& builder, JS::PropertyKey const& property_name)
+    ErrorOr<void> format(FormatBuilder& builder, JS::PropertyKey const& property_name)
     {
         if (!property_name.is_valid())
-            Formatter<StringView>::format(builder, "<invalid PropertyKey>");
-        else if (property_name.is_number())
-            Formatter<StringView>::format(builder, String::number(property_name.as_number()));
-        else
-            Formatter<StringView>::format(builder, property_name.to_string_or_symbol().to_display_string());
+            return Formatter<StringView>::format(builder, "<invalid PropertyKey>");
+        if (property_name.is_number())
+            return Formatter<StringView>::format(builder, String::number(property_name.as_number()));
+        return Formatter<StringView>::format(builder, property_name.to_string_or_symbol().to_display_string());
     }
 };
 

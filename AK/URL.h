@@ -147,9 +147,9 @@ private:
 
 template<>
 struct Formatter<URL> : Formatter<StringView> {
-    void format(FormatBuilder& builder, URL const& value)
+    ErrorOr<void> format(FormatBuilder& builder, URL const& value)
     {
-        Formatter<StringView>::format(builder, value.serialize());
+        return Formatter<StringView>::format(builder, value.serialize());
     }
 };
 

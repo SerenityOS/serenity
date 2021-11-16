@@ -201,9 +201,9 @@ struct B {
 };
 template<>
 struct AK::Formatter<B> : Formatter<StringView> {
-    void format(FormatBuilder& builder, B)
+    ErrorOr<void> format(FormatBuilder& builder, B)
     {
-        Formatter<StringView>::format(builder, "B");
+        return Formatter<StringView>::format(builder, "B");
     }
 };
 
@@ -283,7 +283,7 @@ struct C {
 };
 template<>
 struct AK::Formatter<C> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, C c)
+    ErrorOr<void> format(FormatBuilder& builder, C c)
     {
         return AK::Formatter<FormatString>::format(builder, "C(i={})", c.i);
     }
@@ -300,7 +300,7 @@ TEST_CASE(long_long_regression)
 
     StringBuilder builder;
     AK::FormatBuilder fmtbuilder { builder };
-    fmtbuilder.put_i64(0x0123456789abcdefLL);
+    MUST(fmtbuilder.put_i64(0x0123456789abcdefLL));
 
     EXPECT_EQ(builder.string_view(), "81985529216486895");
 }

@@ -75,9 +75,9 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Endpoint<T>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const Gfx::Endpoint<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Endpoint<T> const& value)
     {
-        Formatter<StringView>::format(builder, String::formatted("({}, {}, {})", value.x, value.y, value.z));
+        return Formatter<StringView>::format(builder, String::formatted("({}, {}, {})", value.x, value.y, value.z));
     }
 };
 

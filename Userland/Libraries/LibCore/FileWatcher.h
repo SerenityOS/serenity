@@ -85,15 +85,15 @@ namespace AK {
 
 template<>
 struct Formatter<Core::FileWatcherEvent> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Core::FileWatcherEvent& value)
+    ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent const& value)
     {
-        Formatter<FormatString>::format(builder, "FileWatcherEvent(\"{}\", {})", value.event_path, value.type);
+        return Formatter<FormatString>::format(builder, "FileWatcherEvent(\"{}\", {})", value.event_path, value.type);
     }
 };
 
 template<>
 struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Core::FileWatcherEvent::Type& value)
+    ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent::Type const& value)
     {
         char const* type;
         switch (value) {
@@ -116,7 +116,7 @@ struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
             VERIFY_NOT_REACHED();
         }
 
-        builder.put_string(type);
+        return builder.put_string(type);
     }
 };
 

@@ -536,7 +536,7 @@ using regex::RegexStringView;
 
 template<>
 struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
-    void format(FormatBuilder& builder, regex::RegexStringView value)
+    ErrorOr<void> format(FormatBuilder& builder, regex::RegexStringView value)
     {
         auto string = value.to_string();
         return Formatter<StringView>::format(builder, string);

@@ -47,7 +47,7 @@ namespace AK {
 
 template<>
 struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
-    void format(FormatBuilder& builder, JS::PropertyDescriptor const& property_descriptor)
+    ErrorOr<void> format(FormatBuilder& builder, JS::PropertyDescriptor const& property_descriptor)
     {
         Vector<String> parts;
         if (property_descriptor.value.has_value())
@@ -62,7 +62,7 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
             parts.append(String::formatted("[[Enumerable]]: {}", *property_descriptor.enumerable));
         if (property_descriptor.configurable.has_value())
             parts.append(String::formatted("[[Configurable]]: {}", *property_descriptor.configurable));
-        Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", ", parts)));
+        return Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", ", parts)));
     }
 };
 

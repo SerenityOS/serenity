@@ -286,27 +286,27 @@ private:
 
 template<>
 struct AK::Formatter<Wasm::Validator::StackEntry> : public AK::Formatter<StringView> {
-    void format(FormatBuilder& builder, Wasm::Validator::StackEntry const& value)
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Validator::StackEntry const& value)
     {
         if (value.is_known)
             return Formatter<StringView>::format(builder, Wasm::ValueType::kind_name(value.concrete_type.kind()));
 
-        Formatter<StringView>::format(builder, "<unknown>"sv);
+        return Formatter<StringView>::format(builder, "<unknown>"sv);
     }
 };
 
 template<>
 struct AK::Formatter<Wasm::ValueType> : public AK::Formatter<StringView> {
-    void format(FormatBuilder& builder, Wasm::ValueType const& value)
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::ValueType const& value)
     {
-        Formatter<StringView>::format(builder, Wasm::ValueType::kind_name(value.kind()));
+        return Formatter<StringView>::format(builder, Wasm::ValueType::kind_name(value.kind()));
     }
 };
 
 template<>
 struct AK::Formatter<Wasm::ValidationError> : public AK::Formatter<StringView> {
-    void format(FormatBuilder& builder, Wasm::ValidationError const& error)
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::ValidationError const& error)
     {
-        Formatter<StringView>::format(builder, error.error_string);
+        return Formatter<StringView>::format(builder, error.error_string);
     }
 };

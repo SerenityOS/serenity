@@ -714,7 +714,7 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
     {
     }
 
-    void format(FormatBuilder& builder, UFixedBigInt<T> value)
+    ErrorOr<void> format(FormatBuilder& builder, UFixedBigInt<T> value)
     {
         if (m_precision.has_value())
             VERIFY_NOT_REACHED();
@@ -751,12 +751,13 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
         ssize_t lower_length = ceil_div(sizeof(T) * 8, (ssize_t)base);
         Formatter<T> formatter { *this };
         formatter.m_width = max(width - lower_length, (ssize_t)0);
-        formatter.format(builder, value.high());
-        builder.put_literal("'"sv);
+        TRY(formatter.format(builder, value.high()));
+        TRY(builder.put_literal("'"sv));
         formatter.m_zero_pad = true;
         formatter.m_alternative_form = false;
         formatter.m_width = lower_length;
-        formatter.format(builder, value.low());
+        TRY(formatter.format(builder, value.low()));
+        return {};
     }
 };
 }

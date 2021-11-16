@@ -172,7 +172,7 @@ inline void ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& othe
 
 template<typename T>
 struct AK::Formatter<UserspaceEmulator::ValueWithShadow<T>> : AK::Formatter<T> {
-    void format(FormatBuilder& builder, UserspaceEmulator::ValueWithShadow<T> value)
+    ErrorOr<void> format(FormatBuilder& builder, UserspaceEmulator::ValueWithShadow<T> value)
     {
         return Formatter<T>::format(builder, value.value());
     }

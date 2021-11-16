@@ -190,9 +190,9 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
 
 template<typename T>
 struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
-    void format(FormatBuilder& builder, const NonnullOwnPtr<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, NonnullOwnPtr<T> const& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<const T*>::format(builder, value.ptr());
     }
 };
 

@@ -101,9 +101,9 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::XRefEntry const& entry)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::XRefEntry const& entry)
     {
-        Formatter<StringView>::format(builder,
+        return Formatter<StringView>::format(builder,
             String::formatted("XRefEntry {{ offset={} generation={} used={} }}",
                 entry.byte_offset,
                 entry.generation_number,
@@ -113,14 +113,14 @@ struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::XRefTable> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::XRefTable const& table)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::XRefTable const& table)
     {
         StringBuilder builder;
         builder.append("XRefTable {");
         for (auto& entry : table.m_entries)
             builder.appendff("\n  {}", entry);
         builder.append("\n}");
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 

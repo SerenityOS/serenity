@@ -178,9 +178,9 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Gfx::Size<T> const& value)
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Size<T> const& value)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

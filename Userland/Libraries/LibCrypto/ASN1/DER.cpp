@@ -395,7 +395,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
 
 }
 
-void AK::Formatter<Crypto::ASN1::DecodeError>::format(FormatBuilder& fmtbuilder, Crypto::ASN1::DecodeError error)
+ErrorOr<void> AK::Formatter<Crypto::ASN1::DecodeError>::format(FormatBuilder& fmtbuilder, Crypto::ASN1::DecodeError error)
 {
     using Crypto::ASN1::DecodeError;
 

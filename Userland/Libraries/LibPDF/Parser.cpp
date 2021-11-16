@@ -1187,7 +1187,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::Parser::LinearizationDictionary const& dict)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::LinearizationDictionary const& dict)
     {
         StringBuilder builder;
         builder.append("{\n");
@@ -1202,13 +1202,13 @@ struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
         builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
         builder.appendff("  first_page={}\n", dict.first_page);
         builder.append('}');
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 
 template<>
 struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTable const& table)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTable const& table)
     {
         StringBuilder builder;
         builder.append("{\n");
@@ -1226,13 +1226,13 @@ struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
         builder.appendff("  bits_required_for_fraction_numerator={}\n", table.bits_required_for_fraction_numerator);
         builder.appendff("  shared_object_reference_fraction_denominator={}\n", table.shared_object_reference_fraction_denominator);
         builder.append('}');
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 
 template<>
 struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTableEntry const& entry)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTableEntry const& entry)
     {
         StringBuilder builder;
         builder.append("{\n");
@@ -1250,7 +1250,7 @@ struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> 
         builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
         builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
         builder.append('}');
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 

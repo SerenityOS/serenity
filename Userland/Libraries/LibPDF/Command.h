@@ -166,7 +166,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Command> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::Command const& command)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Command const& command)
     {
         StringBuilder builder;
         builder.appendff("{} ({})",
@@ -180,7 +180,7 @@ struct Formatter<PDF::Command> : Formatter<StringView> {
             builder.append(" ]");
         }
 
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 

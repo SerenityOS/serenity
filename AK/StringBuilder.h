@@ -49,7 +49,7 @@ public:
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         VariadicFormatParams variadic_format_params { parameters... };
-        vformat(*this, fmtstr.view(), variadic_format_params);
+        MUST(vformat(*this, fmtstr.view(), variadic_format_params));
     }
 
     [[nodiscard]] String build() const;

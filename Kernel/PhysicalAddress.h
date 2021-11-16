@@ -58,7 +58,7 @@ private:
 
 template<>
 struct AK::Formatter<PhysicalAddress> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, PhysicalAddress value)
+    ErrorOr<void> format(FormatBuilder& builder, PhysicalAddress value)
     {
         if constexpr (sizeof(PhysicalPtr) == sizeof(u64))
             return AK::Formatter<FormatString>::format(builder, "P{:016x}", value.get());

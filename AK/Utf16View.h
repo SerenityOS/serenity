@@ -123,9 +123,9 @@ private:
 
 template<>
 struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, AK::Utf16View const& value)
+    ErrorOr<void> format(FormatBuilder& builder, AK::Utf16View const& value)
     {
-        return builder.builder().append(value);
+        return builder.builder().try_append(value);
     }
 };
 

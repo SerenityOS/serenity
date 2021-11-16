@@ -1512,7 +1512,7 @@ struct Formatter<Shell::AST::Command> : StandardFormatter {
     {
     }
 
-    void format(FormatBuilder&, const Shell::AST::Command& value);
+    ErrorOr<void> format(FormatBuilder&, Shell::AST::Command const& value);
 };
 
 }

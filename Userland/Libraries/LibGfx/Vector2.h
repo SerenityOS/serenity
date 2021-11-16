@@ -127,9 +127,9 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Vector2<T>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const Gfx::Vector2<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Vector2<T> const& value)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

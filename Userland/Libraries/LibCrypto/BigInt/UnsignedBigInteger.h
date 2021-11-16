@@ -125,7 +125,7 @@ struct UnsignedDivisionResult {
 
 template<>
 struct AK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
-    void format(FormatBuilder&, const Crypto::UnsignedBigInteger&);
+    ErrorOr<void> format(FormatBuilder&, Crypto::UnsignedBigInteger const&);
 };
 
 inline Crypto::UnsignedBigInteger

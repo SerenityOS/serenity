@@ -43,7 +43,7 @@ private:
 
 template<>
 struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, AK::SourceLocation location)
+    ErrorOr<void> format(FormatBuilder& builder, AK::SourceLocation location)
     {
         return AK::Formatter<FormatString>::format(builder, "[{} @ {}:{}]", location.function_name(), location.filename(), location.line_number());
     }

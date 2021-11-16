@@ -75,13 +75,13 @@ namespace AK {
 
 template<>
 struct Formatter<JS::PropertyAttributes> : Formatter<StringView> {
-    void format(FormatBuilder& builder, JS::PropertyAttributes const& property_attributes)
+    ErrorOr<void> format(FormatBuilder& builder, JS::PropertyAttributes const& property_attributes)
     {
         Vector<String> parts;
         parts.append(String::formatted("[[Writable]]: {}", property_attributes.is_writable()));
         parts.append(String::formatted("[[Enumerable]]: {}", property_attributes.is_enumerable()));
         parts.append(String::formatted("[[Configurable]]: {}", property_attributes.is_configurable()));
-        Formatter<StringView>::format(builder, String::formatted("PropertyAttributes {{ {} }}", String::join(", ", parts)));
+        return Formatter<StringView>::format(builder, String::formatted("PropertyAttributes {{ {} }}", String::join(", ", parts)));
     }
 };
 
