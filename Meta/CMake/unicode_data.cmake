@@ -58,6 +58,9 @@ set(CLDR_MISC_PATH "${CLDR_PATH}/${CLDR_MISC_SOURCE}")
 set(CLDR_NUMBERS_SOURCE cldr-numbers-modern)
 set(CLDR_NUMBERS_PATH "${CLDR_PATH}/${CLDR_NUMBERS_SOURCE}")
 
+set(CLDR_UNITS_SOURCE cldr-units-modern)
+set(CLDR_UNITS_PATH "${CLDR_PATH}/${CLDR_UNITS_SOURCE}")
+
 function(remove_unicode_data_if_version_changed version version_file cache_path)
     set(version_differs YES)
 
@@ -119,6 +122,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     extract_cldr_file("${CLDR_LOCALES_SOURCE}" "${CLDR_LOCALES_PATH}")
     extract_cldr_file("${CLDR_MISC_SOURCE}" "${CLDR_MISC_PATH}")
     extract_cldr_file("${CLDR_NUMBERS_SOURCE}" "${CLDR_NUMBERS_PATH}")
+    extract_cldr_file("${CLDR_UNITS_SOURCE}" "${CLDR_UNITS_PATH}")
 
     set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
@@ -170,12 +174,12 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_NUMBER_FORMAT_HEADER} ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
-        COMMAND $<TARGET_FILE:Lagom::GenerateUnicodeNumberFormat> -h ${UNICODE_NUMBER_FORMAT_HEADER}.tmp -c ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp -r ${CLDR_CORE_PATH} -n ${CLDR_NUMBERS_PATH}
+        COMMAND $<TARGET_FILE:Lagom::GenerateUnicodeNumberFormat> -h ${UNICODE_NUMBER_FORMAT_HEADER}.tmp -c ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp -r ${CLDR_CORE_PATH} -n ${CLDR_NUMBERS_PATH} -u ${CLDR_UNITS_PATH}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_NUMBER_FORMAT_HEADER}.tmp ${UNICODE_NUMBER_FORMAT_HEADER}
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
         COMMAND "${CMAKE_COMMAND}" -E remove ${UNICODE_NUMBER_FORMAT_HEADER}.tmp ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp
         VERBATIM
-        DEPENDS Lagom::GenerateUnicodeNumberFormat ${CLDR_CORE_PATH} ${CLDR_LOCALES_PATH} ${CLDR_MISC_PATH} ${CLDR_NUMBERS_PATH}
+        DEPENDS Lagom::GenerateUnicodeNumberFormat ${CLDR_CORE_PATH} ${CLDR_LOCALES_PATH} ${CLDR_MISC_PATH} ${CLDR_NUMBERS_PATH} ${CLDR_UNITS_PATH}
     )
     add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}UnicodeNumberFormat DEPENDS ${UNICODE_NUMBER_FORMAT_HEADER} ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION})
     add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}UnicodeNumberFormat)
