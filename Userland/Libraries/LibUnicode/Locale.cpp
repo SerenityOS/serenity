@@ -995,7 +995,7 @@ Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const&
     } else if (number == 2) {
         if (auto patterns = find_plurality(NumberFormat::Plurality::Two); patterns.has_value())
             return patterns;
-    } else {
+    } else if (number > 2) {
         if (auto patterns = find_plurality(NumberFormat::Plurality::Many); patterns.has_value())
             return patterns;
     }
