@@ -4,6 +4,9 @@ endpoint ConfigServer
 
     monitor_domain(String domain) =|
 
+    list_config_groups(String domain) => (Vector<String> groups)
+    list_config_keys(String domain, String group) => (Vector<String> keys)
+
     read_string_value(String domain, String group, String key) => (Optional<String> value)
     read_i32_value(String domain, String group, String key) => (Optional<i32> value)
     read_bool_value(String domain, String group, String key) => (Optional<bool> value)
