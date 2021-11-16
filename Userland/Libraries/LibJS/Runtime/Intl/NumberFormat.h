@@ -211,7 +211,7 @@ Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number
 RawFormatResult to_raw_precision(double number, int min_precision, int max_precision);
 RawFormatResult to_raw_fixed(double number, int min_fraction, int max_fraction);
 ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number);
+Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
 int compute_exponent(NumberFormat& number_format, double number);
 int compute_exponent_for_magniude(NumberFormat& number_format, int magnitude);

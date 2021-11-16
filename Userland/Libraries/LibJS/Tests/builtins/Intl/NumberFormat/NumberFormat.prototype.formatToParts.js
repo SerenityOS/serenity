@@ -1100,3 +1100,213 @@ describe("style=currency", () => {
         ]);
     });
 });
+
+describe("style=unit", () => {
+    test("unitDisplay=long", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "long",
+        });
+        expect(en1.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "gigabit" },
+        ]);
+        expect(en1.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "gigabits" },
+        ]);
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "long",
+        });
+        expect(en2.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "kilometer per hour" },
+        ]);
+        expect(en2.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "kilometers per hour" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "long",
+        });
+        expect(ar.formatToParts(1)).toEqual([{ type: "unit", value: "قدم" }]);
+        expect(ar.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "قدم" },
+        ]);
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "long",
+        });
+        expect(ja.formatToParts(1)).toEqual([
+            { type: "unit", value: "時速" },
+            { type: "literal", value: " " },
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "キロメートル" },
+        ]);
+        expect(ja.formatToParts(1.2)).toEqual([
+            { type: "unit", value: "時速" },
+            { type: "literal", value: " " },
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "キロメートル" },
+        ]);
+    });
+
+    test("unitDisplay=short", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "short",
+        });
+        expect(en1.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "Gb" },
+        ]);
+        expect(en1.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "Gb" },
+        ]);
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "short",
+        });
+        expect(en2.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "km/h" },
+        ]);
+        expect(en2.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "km/h" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "short",
+        });
+        expect(ar.formatToParts(1)).toEqual([{ type: "unit", value: "قدم" }]);
+        expect(ar.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "قدم" },
+        ]);
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "short",
+        });
+        expect(ja.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "km/h" },
+        ]);
+        expect(ja.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "km/h" },
+        ]);
+    });
+
+    test("unitDisplay=narrow", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "narrow",
+        });
+        expect(en1.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "unit", value: "Gb" },
+        ]);
+        expect(en1.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "unit", value: "Gb" },
+        ]);
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "narrow",
+        });
+        expect(en2.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "unit", value: "km/h" },
+        ]);
+        expect(en2.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "unit", value: "km/h" },
+        ]);
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "narrow",
+        });
+        expect(ar.formatToParts(1)).toEqual([{ type: "unit", value: "قدم" }]);
+        expect(ar.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "\u0661" },
+            { type: "decimal", value: "\u066b" },
+            { type: "fraction", value: "\u0662" },
+            { type: "literal", value: " " },
+            { type: "unit", value: "قدم" },
+        ]);
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "narrow",
+        });
+        expect(ja.formatToParts(1)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "unit", value: "km/h" },
+        ]);
+        expect(ja.formatToParts(1.2)).toEqual([
+            { type: "integer", value: "1" },
+            { type: "decimal", value: "." },
+            { type: "fraction", value: "2" },
+            { type: "unit", value: "km/h" },
+        ]);
+    });
+});
