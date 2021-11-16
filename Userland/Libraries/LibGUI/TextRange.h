@@ -68,11 +68,10 @@ private:
 
 template<>
 struct AK::Formatter<GUI::TextRange> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const GUI::TextRange& value)
+    ErrorOr<void> format(FormatBuilder& builder, GUI::TextRange const& value)
     {
         if (value.is_valid())
             return Formatter<FormatString>::format(builder, "{}-{}", value.start(), value.end());
-        else
-            return Formatter<FormatString>::format(builder, "GUI::TextRange(Invalid)");
+        return Formatter<FormatString>::format(builder, "GUI::TextRange(Invalid)");
     }
 };

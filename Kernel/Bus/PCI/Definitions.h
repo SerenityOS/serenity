@@ -298,7 +298,7 @@ class Device;
 
 template<>
 struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::PCI::Address value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::PCI::Address value)
     {
         return Formatter<FormatString>::format(
             builder,
@@ -308,7 +308,7 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
 
 template<>
 struct AK::Formatter<Kernel::PCI::HardwareID> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::PCI::HardwareID value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::PCI::HardwareID value)
     {
         return Formatter<FormatString>::format(
             builder,

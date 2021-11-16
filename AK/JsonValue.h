@@ -245,9 +245,9 @@ private:
 
 template<>
 struct Formatter<JsonValue> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const JsonValue& value)
+    ErrorOr<void> format(FormatBuilder& builder, JsonValue const& value)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

@@ -1432,5 +1432,5 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
 
 template<>
 struct AK::Formatter<Kernel::Thread> : AK::Formatter<FormatString> {
-    void format(FormatBuilder&, const Kernel::Thread&);
+    ErrorOr<void> format(FormatBuilder&, Kernel::Thread const&);
 };

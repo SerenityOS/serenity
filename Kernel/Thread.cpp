@@ -1279,7 +1279,7 @@ void Thread::track_lock_release(LockRank rank)
 
 }
 
-void AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, const Kernel::Thread& value)
+ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kernel::Thread const& value)
 {
     return AK::Formatter<FormatString>::format(
         builder,

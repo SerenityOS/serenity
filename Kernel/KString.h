@@ -46,28 +46,27 @@ namespace AK {
 
 template<>
 struct Formatter<Kernel::KString> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Kernel::KString const& value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::KString const& value)
     {
-        Formatter<StringView>::format(builder, value.view());
+        return Formatter<StringView>::format(builder, value.view());
     }
 };
 
 template<>
 struct Formatter<OwnPtr<Kernel::KString>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, OwnPtr<Kernel::KString> const& value)
+    ErrorOr<void> format(FormatBuilder& builder, OwnPtr<Kernel::KString> const& value)
     {
         if (value)
-            Formatter<StringView>::format(builder, value->view());
-        else
-            Formatter<StringView>::format(builder, "[out of memory]"sv);
+            return Formatter<StringView>::format(builder, value->view());
+        return Formatter<StringView>::format(builder, "[out of memory]"sv);
     }
 };
 
 template<>
 struct Formatter<NonnullOwnPtr<Kernel::KString>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, NonnullOwnPtr<Kernel::KString> const& value)
+    ErrorOr<void> format(FormatBuilder& builder, NonnullOwnPtr<Kernel::KString> const& value)
     {
-        Formatter<StringView>::format(builder, value->view());
+        return Formatter<StringView>::format(builder, value->view());
     }
 };
 

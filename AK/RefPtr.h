@@ -295,9 +295,9 @@ private:
 
 template<typename T>
 struct Formatter<RefPtr<T>> : Formatter<const T*> {
-    void format(FormatBuilder& builder, const RefPtr<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, RefPtr<T> const& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<const T*>::format(builder, value.ptr());
     }
 };
 

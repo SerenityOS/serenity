@@ -85,9 +85,9 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::Value const& value)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::Value const& value)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

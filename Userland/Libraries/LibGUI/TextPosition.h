@@ -40,11 +40,11 @@ private:
 
 template<>
 struct AK::Formatter<GUI::TextPosition> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const GUI::TextPosition& value)
+    ErrorOr<void> format(FormatBuilder& builder, GUI::TextPosition const& value)
     {
         if (value.is_valid())
-            Formatter<FormatString>::format(builder, "({},{})", value.line(), value.column());
-        else
-            Formatter<FormatString>::format(builder, "GUI::TextPosition(Invalid)");
+            return Formatter<FormatString>::format(builder, "({},{})", value.line(), value.column());
+
+        return Formatter<FormatString>::format(builder, "GUI::TextPosition(Invalid)");
     }
 };

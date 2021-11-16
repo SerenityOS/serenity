@@ -273,7 +273,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
     {
     }
 
-    void format(FormatBuilder& format_builder, BitflagDerivative const& value)
+    ErrorOr<void> format(FormatBuilder& format_builder, BitflagDerivative const& value)
     {
         bool had_any_output = false;
         int remaining = value.flagset;
@@ -283,25 +283,27 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
                 continue;
             remaining &= ~option.value;
             if (had_any_output)
-                format_builder.put_literal(" | ");
-            format_builder.put_literal(option.name);
+                TRY(format_builder.put_literal(" | "));
+            TRY(format_builder.put_literal(option.name));
             had_any_output = true;
         }
 
         if (remaining != 0) {
             // No more BitflagOptions are available. Any remaining flags are unrecognized.
             if (had_any_output)
-                format_builder.put_literal(" | ");
+                TRY(format_builder.put_literal(" | "));
             format_builder.builder().appendff("0x{:x} (?)", static_cast<unsigned>(remaining));
             had_any_output = true;
         }
 
         if (!had_any_output) {
             if constexpr (requires { BitflagDerivative::default_; })
-                format_builder.put_literal(BitflagDerivative::default_);
+                TRY(format_builder.put_literal(BitflagDerivative::default_));
             else
-                format_builder.put_literal("0");
+                TRY(format_builder.put_literal("0"));
         }
+
+        return {};
     }
 };
 }
@@ -319,13 +321,14 @@ struct Formatter<PointerArgument> : StandardFormatter {
     {
     }
 
-    void format(FormatBuilder& format_builder, PointerArgument const& value)
+    ErrorOr<void> format(FormatBuilder& format_builder, PointerArgument const& value)
     {
         auto& builder = format_builder.builder();
         if (value.value == nullptr)
             builder.append("null");
         else
             builder.appendff("{}", value.value);
+        return {};
     }
 };
 }
@@ -478,25 +481,27 @@ static void format_ioctl(FormattedSyscallBuilder& builder, int fd, unsigned requ
 namespace AK {
 template<>
 struct Formatter<struct timespec> : StandardFormatter {
-    void format(FormatBuilder& format_builder, struct timespec value)
+    ErrorOr<void> format(FormatBuilder& format_builder, struct timespec value)
     {
         auto& builder = format_builder.builder();
         builder.appendff("{{tv_sec={}, tv_nsec={}}}", value.tv_sec, value.tv_nsec);
+        return {};
     }
 };
 
 template<>
 struct Formatter<struct timeval> : StandardFormatter {
-    void format(FormatBuilder& format_builder, struct timeval value)
+    ErrorOr<void> format(FormatBuilder& format_builder, struct timeval value)
     {
         auto& builder = format_builder.builder();
         builder.appendff("{{tv_sec={}, tv_usec={}}}", value.tv_sec, value.tv_usec);
+        return {};
     }
 };
 
 template<>
 struct Formatter<struct stat> : StandardFormatter {
-    void format(FormatBuilder& format_builder, struct stat value)
+    ErrorOr<void> format(FormatBuilder& format_builder, struct stat value)
     {
         auto& builder = format_builder.builder();
         builder.appendff(
@@ -504,6 +509,7 @@ struct Formatter<struct stat> : StandardFormatter {
             "st_size={}, st_blksize={}, st_blocks={}, st_atim={}, st_mtim={}, st_ctim={}}}",
             value.st_dev, value.st_ino, value.st_mode, value.st_nlink, value.st_uid, value.st_gid, value.st_rdev,
             value.st_size, value.st_blksize, value.st_blocks, value.st_atim, value.st_mtim, value.st_ctim);
+        return {};
     }
 };
 }
@@ -561,7 +567,7 @@ static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_p
 namespace AK {
 template<>
 struct Formatter<struct sockaddr> : StandardFormatter {
-    void format(FormatBuilder& format_builder, struct sockaddr address)
+    ErrorOr<void> format(FormatBuilder& format_builder, struct sockaddr address)
     {
         auto& builder = format_builder.builder();
         builder.append("{sa_family=");
@@ -579,6 +585,7 @@ struct Formatter<struct sockaddr> : StandardFormatter {
                 address_un->sun_path);
         }
         builder.append('}');
+        return {};
     }
 };
 }

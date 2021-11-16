@@ -63,8 +63,8 @@ public:
 
 template<>
 struct AK::Formatter<Hearts::Player> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Hearts::Player const& player)
+    ErrorOr<void> format(FormatBuilder& builder, Hearts::Player const& player)
     {
-        builder.put_string(player.name);
+        return builder.put_string(player.name);
     }
 };

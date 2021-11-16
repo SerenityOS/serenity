@@ -206,5 +206,5 @@ void pretty_print(Decoder&, OutputStream&, int indent = 0);
 
 template<>
 struct AK::Formatter<Crypto::ASN1::DecodeError> : Formatter<StringView> {
-    void format(FormatBuilder&, Crypto::ASN1::DecodeError);
+    ErrorOr<void> format(FormatBuilder&, Crypto::ASN1::DecodeError);
 };

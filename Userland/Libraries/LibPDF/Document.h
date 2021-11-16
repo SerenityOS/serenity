@@ -143,9 +143,9 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Rectangle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::Rectangle const& rectangle)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::Rectangle const& rectangle)
     {
-        Formatter<StringView>::format(builder,
+        return Formatter<StringView>::format(builder,
             String::formatted("Rectangle {{ ll=({}, {}), ur=({}, {}) }}",
                 rectangle.lower_left_x,
                 rectangle.lower_left_y,
@@ -156,7 +156,7 @@ struct Formatter<PDF::Rectangle> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::Page> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::Page const& page)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::Page const& page)
     {
         constexpr auto fmt_string = "Page {{\n  resources={}\n  contents={}\n  media_box={}\n  crop_box={}\n  user_unit={}\n  rotate={}\n}}";
         auto str = String::formatted(fmt_string,
@@ -166,13 +166,13 @@ struct Formatter<PDF::Page> : Formatter<StringView> {
             page.crop_box,
             page.user_unit,
             page.rotate);
-        Formatter<StringView>::format(builder, str);
+        return Formatter<StringView>::format(builder, str);
     }
 };
 
 template<>
 struct Formatter<PDF::Destination> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::Destination const& destination)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::Destination const& destination)
     {
         String type_str;
         switch (destination.type) {
@@ -207,21 +207,21 @@ struct Formatter<PDF::Destination> : Formatter<StringView> {
             param_builder.appendff("{} ", param);
 
         auto str = String::formatted("{{ type={} page={} params={} }}", type_str, destination.page, param_builder.to_string());
-        Formatter<StringView>::format(builder, str);
+        return Formatter<StringView>::format(builder, str);
     }
 };
 
 template<>
 struct Formatter<PDF::OutlineItem> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::OutlineItem const& item)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::OutlineItem const& item)
     {
-        Formatter<StringView>::format(builder, item.to_string(0));
+        return Formatter<StringView>::format(builder, item.to_string(0));
     }
 };
 
 template<>
 struct Formatter<PDF::OutlineDict> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::OutlineDict const& dict)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::OutlineDict const& dict)
     {
         StringBuilder child_builder;
         child_builder.append('[');
@@ -229,7 +229,7 @@ struct Formatter<PDF::OutlineDict> : Formatter<StringView> {
             child_builder.appendff("{}\n", child.to_string(2));
         child_builder.append("  ]");
 
-        Formatter<StringView>::format(builder,
+        return Formatter<StringView>::format(builder,
             String::formatted("OutlineDict {{\n  count={}\n  children={}\n}}", dict.count, child_builder.to_string()));
     }
 };

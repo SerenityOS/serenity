@@ -63,17 +63,17 @@ namespace AK {
 
 template<PDF::IsObject T>
 struct Formatter<T> : Formatter<StringView> {
-    void format(FormatBuilder& builder, T const& object)
+    ErrorOr<void> format(FormatBuilder& builder, T const& object)
     {
-        Formatter<StringView>::format(builder, object.to_string(0));
+        return Formatter<StringView>::format(builder, object.to_string(0));
     }
 };
 
 template<PDF::IsObject T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<T> {
-    void format(FormatBuilder& builder, NonnullRefPtr<T> const& object)
+    ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& object)
     {
-        Formatter<T>::format(builder, *object);
+        return Formatter<T>::format(builder, *object);
     }
 };
 

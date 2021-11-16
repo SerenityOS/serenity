@@ -28,50 +28,42 @@ bool DNSAnswer::has_expired() const
 
 }
 
-void AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordType value)
+ErrorOr<void> AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordType value)
 {
     switch (value) {
     case LookupServer::DNSRecordType::A:
-        builder.put_string("A");
-        return;
+        return builder.put_string("A");
     case LookupServer::DNSRecordType::NS:
-        builder.put_string("NS");
-        return;
+        return builder.put_string("NS");
     case LookupServer::DNSRecordType::CNAME:
-        builder.put_string("CNAME");
-        return;
+        return builder.put_string("CNAME");
     case LookupServer::DNSRecordType::SOA:
-        builder.put_string("SOA");
-        return;
+        return builder.put_string("SOA");
     case LookupServer::DNSRecordType::PTR:
-        builder.put_string("PTR");
-        return;
+        return builder.put_string("PTR");
     case LookupServer::DNSRecordType::MX:
-        builder.put_string("MX");
-        return;
+        return builder.put_string("MX");
     case LookupServer::DNSRecordType::TXT:
-        builder.put_string("TXT");
-        return;
+        return builder.put_string("TXT");
     case LookupServer::DNSRecordType::AAAA:
-        builder.put_string("AAAA");
-        return;
+        return builder.put_string("AAAA");
     case LookupServer::DNSRecordType::SRV:
-        builder.put_string("SRV");
-        return;
+        return builder.put_string("SRV");
     }
 
-    builder.put_string("DNS record type ");
-    builder.put_u64((u16)value);
+    TRY(builder.put_string("DNS record type "));
+    TRY(builder.put_u64((u16)value));
+    return {};
 }
 
-void AK::Formatter<LookupServer::DNSRecordClass>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordClass value)
+ErrorOr<void> AK::Formatter<LookupServer::DNSRecordClass>::format(AK::FormatBuilder& builder, LookupServer::DNSRecordClass value)
 {
     switch (value) {
     case LookupServer::DNSRecordClass::IN:
-        builder.put_string("IN");
-        return;
+        return builder.put_string("IN");
     }
 
-    builder.put_string("DNS record class ");
-    builder.put_u64((u16)value);
+    TRY(builder.put_string("DNS record class "));
+    TRY(builder.put_u64((u16)value));
+    return {};
 }

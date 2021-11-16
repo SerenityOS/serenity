@@ -65,7 +65,7 @@ struct AK::Formatter<LookupServer::DNSRecordType> : StandardFormatter {
     {
     }
 
-    void format(AK::FormatBuilder&, LookupServer::DNSRecordType);
+    ErrorOr<void> format(AK::FormatBuilder&, LookupServer::DNSRecordType);
 };
 
 template<>
@@ -76,5 +76,5 @@ struct AK::Formatter<LookupServer::DNSRecordClass> : StandardFormatter {
     {
     }
 
-    void format(AK::FormatBuilder&, LookupServer::DNSRecordClass);
+    ErrorOr<void> format(AK::FormatBuilder&, LookupServer::DNSRecordClass);
 };

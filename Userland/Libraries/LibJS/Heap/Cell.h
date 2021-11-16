@@ -75,11 +75,11 @@ private:
 
 template<>
 struct AK::Formatter<JS::Cell> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const JS::Cell* cell)
+    ErrorOr<void> format(FormatBuilder& builder, JS::Cell const* cell)
     {
         if (!cell)
-            Formatter<FormatString>::format(builder, "Cell{nullptr}");
+            return Formatter<FormatString>::format(builder, "Cell{nullptr}");
         else
-            Formatter<FormatString>::format(builder, "{}({})", cell->class_name(), cell);
+            return Formatter<FormatString>::format(builder, "{}({})", cell->class_name(), cell);
     }
 };

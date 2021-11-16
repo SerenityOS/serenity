@@ -151,9 +151,9 @@ namespace AK {
 
 template<>
 struct Formatter<Web::CSS::Selector> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Web::CSS::Selector const& selector)
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Selector const& selector)
     {
-        Formatter<StringView>::format(builder, selector.serialize());
+        return Formatter<StringView>::format(builder, selector.serialize());
     }
 };
 

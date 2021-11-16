@@ -54,7 +54,7 @@ inline VirtualAddress operator-(const VirtualAddress& a, const VirtualAddress& b
 
 template<>
 struct AK::Formatter<VirtualAddress> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const VirtualAddress& value)
+    ErrorOr<void> format(FormatBuilder& builder, const VirtualAddress& value)
     {
         return AK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
     }

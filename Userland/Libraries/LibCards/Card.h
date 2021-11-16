@@ -82,7 +82,7 @@ private:
 
 template<>
 struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Cards::Card& card)
+    ErrorOr<void> format(FormatBuilder& builder, Cards::Card const& card)
     {
         StringView type;
 
@@ -103,6 +103,6 @@ struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
             VERIFY_NOT_REACHED();
         }
 
-        Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], type);
+        return Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], type);
     }
 };

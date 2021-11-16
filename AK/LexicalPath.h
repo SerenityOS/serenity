@@ -81,9 +81,9 @@ private:
 
 template<>
 struct Formatter<LexicalPath> : Formatter<StringView> {
-    void format(FormatBuilder& builder, LexicalPath const& value)
+    ErrorOr<void> format(FormatBuilder& builder, LexicalPath const& value)
     {
-        Formatter<StringView>::format(builder, value.string());
+        return Formatter<StringView>::format(builder, value.string());
     }
 };
 

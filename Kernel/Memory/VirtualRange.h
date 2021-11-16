@@ -62,7 +62,7 @@ private:
 
 template<>
 struct AK::Formatter<Kernel::Memory::VirtualRange> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::Memory::VirtualRange value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::Memory::VirtualRange value)
     {
         return Formatter<FormatString>::format(builder, "{} - {} (size {:p})", value.base().as_ptr(), value.base().offset(value.size() - 1).as_ptr(), value.size());
     }
