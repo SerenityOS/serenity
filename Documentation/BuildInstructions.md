@@ -30,7 +30,7 @@ QEMU version 5 is available in Ubuntu 20.10, but it is recommended to build Qemu
 Note that you might need additional dev packages:
 
 ```console
-sudo apt install libgtk-3-dev libpixman-1-dev libspice-server-dev
+sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
 ```
 
 ### Windows
