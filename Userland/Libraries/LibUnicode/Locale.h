@@ -203,7 +203,7 @@ Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
 Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
 String resolve_most_likely_territory(LanguageID const& language_id, StringView territory_alias);
 
-Optional<NumberFormat> select_currency_unit_pattern(StringView locale, StringView system, double number);
+Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number);
 Optional<String> augment_currency_format_pattern(StringView currency_display, StringView base_pattern);
 
 }
