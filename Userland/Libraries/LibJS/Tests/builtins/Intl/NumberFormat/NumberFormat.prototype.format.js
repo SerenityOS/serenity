@@ -889,3 +889,119 @@ describe("style=currency", () => {
         expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
     });
 });
+
+describe("style=unit", () => {
+    test("unitDisplay=long", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "long",
+        });
+        expect(en1.format(1)).toBe("1 gigabit");
+        expect(en1.format(1.2)).toBe("1.2 gigabits");
+        expect(en1.format(123)).toBe("123 gigabits");
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "long",
+        });
+        expect(en2.format(1)).toBe("1 kilometer per hour");
+        expect(en2.format(1.2)).toBe("1.2 kilometers per hour");
+        expect(en2.format(123)).toBe("123 kilometers per hour");
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "long",
+        });
+        expect(ar.format(1)).toBe("قدم");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662 قدم");
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663 قدم");
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "long",
+        });
+        expect(ja.format(1)).toBe("時速 1 キロメートル");
+        expect(ja.format(1.2)).toBe("時速 1.2 キロメートル");
+        expect(ja.format(123)).toBe("時速 123 キロメートル");
+    });
+
+    test("unitDisplay=short", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "short",
+        });
+        expect(en1.format(1)).toBe("1 Gb");
+        expect(en1.format(1.2)).toBe("1.2 Gb");
+        expect(en1.format(123)).toBe("123 Gb");
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "short",
+        });
+        expect(en2.format(1)).toBe("1 km/h");
+        expect(en2.format(1.2)).toBe("1.2 km/h");
+        expect(en2.format(123)).toBe("123 km/h");
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "short",
+        });
+        expect(ar.format(1)).toBe("قدم");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662 قدم");
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663 قدم");
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "short",
+        });
+        expect(ja.format(1)).toBe("1 km/h");
+        expect(ja.format(1.2)).toBe("1.2 km/h");
+        expect(ja.format(123)).toBe("123 km/h");
+    });
+
+    test("unitDisplay=narrow", () => {
+        const en1 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "gigabit",
+            unitDisplay: "narrow",
+        });
+        expect(en1.format(1)).toBe("1Gb");
+        expect(en1.format(1.2)).toBe("1.2Gb");
+        expect(en1.format(123)).toBe("123Gb");
+
+        const en2 = new Intl.NumberFormat("en", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "narrow",
+        });
+        expect(en2.format(1)).toBe("1km/h");
+        expect(en2.format(1.2)).toBe("1.2km/h");
+        expect(en2.format(123)).toBe("123km/h");
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "unit",
+            unit: "foot",
+            unitDisplay: "narrow",
+        });
+        expect(ar.format(1)).toBe("قدم");
+        expect(ar.format(1.2)).toBe("\u0661\u066b\u0662 قدم");
+        expect(ar.format(123)).toBe("\u0661\u0662\u0663 قدمًا");
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "unit",
+            unit: "kilometer-per-hour",
+            unitDisplay: "narrow",
+        });
+        expect(ja.format(1)).toBe("1km/h");
+        expect(ja.format(1.2)).toBe("1.2km/h");
+        expect(ja.format(123)).toBe("123km/h");
+    });
+});

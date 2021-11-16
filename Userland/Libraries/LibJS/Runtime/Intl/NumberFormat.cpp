@@ -617,8 +617,10 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         number = format_number_result.rounded_number;
     }
 
+    Unicode::NumberFormat found_pattern {};
+
     // 5. Let pattern be GetNumberFormatPattern(numberFormat, x).
-    auto pattern = get_number_format_pattern(number_format, number);
+    auto pattern = get_number_format_pattern(number_format, number, found_pattern);
     if (!pattern.has_value())
         return {};
 
@@ -672,23 +674,20 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         }
 
         // g. Else if p is equal to "unitPrefix" and numberFormat.[[Style]] is "unit", then
-        else if ((part == "unitPrefix"sv) && (number_format.style() == NumberFormat::Style::Unit)) {
+        // h. Else if p is equal to "unitSuffix" and numberFormat.[[Style]] is "unit", then
+        else if ((part.starts_with("unitIdentifier:"sv)) && (number_format.style() == NumberFormat::Style::Unit)) {
+            // Note: Our implementation combines "unitPrefix" and "unitSuffix" into one field, "unitIdentifier".
+
+            auto identifier_index = part.substring_view("unitIdentifier:"sv.length()).to_uint();
+            VERIFY(identifier_index.has_value());
+
             // i. Let unit be numberFormat.[[Unit]].
             // ii. Let unitDisplay be numberFormat.[[UnitDisplay]].
             // iii. Let mu be an ILD String value representing unit before x in unitDisplay form, which may depend on x in languages having different plural forms.
+            auto unit_identifier = found_pattern.identifiers[*identifier_index];
+
             // iv. Append a new Record { [[Type]]: "unit", [[Value]]: mu } as the last element of result.
-
-            // FIXME: LibUnicode will need to parse the cldr-units package.
-        }
-
-        // h. Else if p is equal to "unitSuffix" and numberFormat.[[Style]] is "unit", then
-        else if ((part == "unitSuffix"sv) && (number_format.style() == NumberFormat::Style::Unit)) {
-            // i. Let unit be numberFormat.[[Unit]].
-            // ii. Let unitDisplay be numberFormat.[[UnitDisplay]].
-            // iii. Let mu be an ILD String value representing unit after x in unitDisplay form, which may depend on x in languages having different plural forms.
-            // iv. Append a new Record { [[Type]]: "unit", [[Value]]: mu } as the last element of result.
-
-            // FIXME: LibUnicode will need to parse the cldr-units package.
+            result.append({ "unit"sv, unit_identifier });
         }
 
         // i. Else if p is equal to "currencyCode" and numberFormat.[[Style]] is "currency", then
@@ -1329,7 +1328,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
 }
 
 // 15.1.14 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
-Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number)
+Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, double number, Unicode::NumberFormat& found_pattern)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
@@ -1347,7 +1346,7 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         break;
 
     // 8. Else if style is "unit", then
-    case NumberFormat::Style::Unit:
+    case NumberFormat::Style::Unit: {
         // a. Let unit be numberFormat.[[Unit]].
         // b. Let unitDisplay be numberFormat.[[UnitDisplay]].
         // c. Let patterns be patterns.[[unit]].
@@ -1355,9 +1354,23 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
         //     i. Let unit be "fallback".
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
+        Vector<Unicode::NumberFormat> formats;
 
-        // FIXME: LibUnicode will need to parse the cldr-units package.
+        switch (number_format.unit_display()) {
+        case NumberFormat::UnitDisplay::Long:
+            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Long);
+            break;
+        case NumberFormat::UnitDisplay::Short:
+            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Short);
+            break;
+        case NumberFormat::UnitDisplay::Narrow:
+            formats = Unicode::get_unit_formats(number_format.data_locale(), number_format.unit(), Unicode::Style::Narrow);
+            break;
+        }
+
+        patterns = Unicode::select_pattern_with_plurality(formats, number);
         break;
+    }
 
     // 9. Else if style is "currency", then
     case NumberFormat::Style::Currency:
@@ -1473,6 +1486,8 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     default:
         VERIFY_NOT_REACHED();
     }
+
+    found_pattern = patterns.release_value();
 
     // Handling of steps 9b/9g: Depending on the currency display and the format pattern found above,
     // we might need to mutate the format pattern to inject a space between the currency display and
