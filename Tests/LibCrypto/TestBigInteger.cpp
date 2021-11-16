@@ -543,6 +543,15 @@ TEST_CASE(test_signed_subtraction_simple_subtraction_negative_result)
     EXPECT_EQ(num1.minus(num2), Crypto::SignedBigInteger { -20 });
 }
 
+TEST_CASE(test_signed_subtraction_both_negative)
+{
+    Crypto::SignedBigInteger num1(-50);
+    Crypto::SignedBigInteger num2(-70);
+
+    EXPECT_EQ(num1.minus(num2), Crypto::SignedBigInteger { 20 });
+    EXPECT_EQ(num2.minus(num1), Crypto::SignedBigInteger { -20 });
+}
+
 TEST_CASE(test_signed_subtraction_simple_subtraction_with_borrow)
 {
     Crypto::SignedBigInteger num1(Crypto::UnsignedBigInteger { UINT32_MAX });
