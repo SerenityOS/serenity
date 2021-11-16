@@ -966,7 +966,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 // Note: Our implementation combines "compactSymbol" and "compactName" into one field, "compactIdentifier".
 
                 // 1. Let compactSymbol be an ILD string representing exponent in short form, which may depend on x in languages having different plural forms. The implementation must be able to provide this string, or else the pattern would not have a "{compactSymbol}" placeholder.
-                auto compact_identifier = number_format.compact_format().compact_identifier;
+                auto compact_identifier = number_format.compact_format().identifier;
 
                 // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
                 result.append({ "compact"sv, compact_identifier });
