@@ -665,7 +665,10 @@ u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
     auto normalized_year = year - (month < 3 ? 1 : 0);
     auto century = normalized_year / 100;
     auto truncated_year = normalized_year - (century * 100);
-    return modulo(day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4), 7);
+    auto day_of_week = modulo(day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4), 7);
+
+    // https://cs.uwaterloo.ca/~alopez-o/math-faq/node73.html computes day_of_week as 0 = Sunday, ..., 6 = Saturday, but for ToISODayOfWeek Monday is 1 and Sunday is 7.
+    return day_of_week == 0 ? 7 : day_of_week;
 }
 
 // 12.1.34 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
