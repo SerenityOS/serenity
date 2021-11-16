@@ -24,6 +24,9 @@ public:
     void pledge_domains(Vector<String> const&);
     void monitor_domain(String const&);
 
+    Vector<String> list_groups(StringView domain);
+    Vector<String> list_keys(StringView domain, StringView group);
+
     String read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
     bool read_bool(StringView domain, StringView group, StringView key, bool fallback);
@@ -46,6 +49,16 @@ private:
     void notify_changed_bool_value(String const& domain, String const& group, String const& key, bool value) override;
     void notify_removed_key(String const& domain, String const& group, String const& key) override;
 };
+
+inline Vector<String> list_groups(StringView domain)
+{
+    return Client::the().list_groups(domain);
+}
+
+inline Vector<String> list_keys(StringView domain, StringView group)
+{
+    return Client::the().list_keys(domain, group);
+}
 
 inline String read_string(StringView domain, StringView group, StringView key, StringView fallback = {})
 {
