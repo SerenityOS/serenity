@@ -6,7 +6,9 @@
 
 #include "GeneratorUtil.h"
 #include <AK/AllOf.h>
+#include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Find.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
@@ -80,8 +82,16 @@ struct NumberSystem {
     NumberFormat scientific_format {};
 };
 
+struct Unit {
+    StringIndexType unit { 0 };
+    Vector<NumberFormat> long_formats {};
+    Vector<NumberFormat> short_formats {};
+    Vector<NumberFormat> narrow_formats {};
+};
+
 struct Locale {
     HashMap<String, NumberSystem> number_systems;
+    HashMap<String, Unit> units {};
 };
 
 struct UnicodeLocaleData {
@@ -341,9 +351,106 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
     });
 }
 
-static void parse_all_locales(String core_path, String numbers_path, UnicodeLocaleData& locale_data)
+static void parse_units(String locale_units_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    LexicalPath units_path(move(locale_units_path));
+    units_path = units_path.append("units.json"sv);
+    VERIFY(Core::File::exists(units_path.string()));
+
+    auto units_file_or_error = Core::File::open(units_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!units_file_or_error.is_error());
+
+    auto units = JsonParser(units_file_or_error.value()->read_all()).parse();
+    VERIFY(units.has_value());
+
+    auto const& main_object = units->as_object().get("main"sv);
+    auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
+    auto const& locale_units_object = locale_object.as_object().get("units"sv);
+    auto const& long_object = locale_units_object.as_object().get("long"sv);
+    auto const& short_object = locale_units_object.as_object().get("short"sv);
+    auto const& narrow_object = locale_units_object.as_object().get("narrow"sv);
+
+    auto ensure_unit = [&](auto const& unit) -> Unit& {
+        return locale.units.ensure(unit, [&]() {
+            auto unit_index = locale_data.unique_strings.ensure(unit);
+            return Unit { .unit = unit_index };
+        });
+    };
+
+    auto is_sanctioned_unit = [](StringView unit_name) {
+        // This is a copy of the units sanctioned for use within ECMA-402. LibUnicode generally tries to
+        // avoid being directly dependent on ECMA-402, but this rather significantly reduces the amount
+        // of data generated here, and ECMA-402 is currently the only consumer of this data.
+        // https://tc39.es/ecma402/#table-sanctioned-simple-unit-identifiers
+        constexpr auto sanctioned_units = AK::Array { "acre"sv, "bit"sv, "byte"sv, "celsius"sv, "centimeter"sv, "day"sv, "degree"sv, "fahrenheit"sv, "fluid-ounce"sv, "foot"sv, "gallon"sv, "gigabit"sv, "gigabyte"sv, "gram"sv, "hectare"sv, "hour"sv, "inch"sv, "kilobit"sv, "kilobyte"sv, "kilogram"sv, "kilometer"sv, "liter"sv, "megabit"sv, "megabyte"sv, "meter"sv, "mile"sv, "mile-scandinavian"sv, "milliliter"sv, "millimeter"sv, "millisecond"sv, "minute"sv, "month"sv, "ounce"sv, "percent"sv, "petabyte"sv, "pound"sv, "second"sv, "stone"sv, "terabit"sv, "terabyte"sv, "week"sv, "yard"sv, "year"sv };
+        return find(sanctioned_units.begin(), sanctioned_units.end(), unit_name) != sanctioned_units.end();
+    };
+
+    auto parse_units_object = [&](auto const& units_object, Unicode::Style style) {
+        constexpr auto unit_pattern_prefix = "unitPattern-count-"sv;
+        constexpr auto combined_unit_separator = "-per-"sv;
+
+        units_object.for_each_member([&](auto const& key, JsonValue const& value) {
+            auto end_of_category = key.find('-');
+            if (!end_of_category.has_value())
+                return;
+
+            auto unit_name = key.substring(*end_of_category + 1);
+
+            if (!is_sanctioned_unit(unit_name)) {
+                auto indices = unit_name.find_all(combined_unit_separator);
+                if (indices.size() != 1)
+                    return;
+
+                auto numerator = unit_name.substring_view(0, indices[0]);
+                auto denominator = unit_name.substring_view(indices[0] + combined_unit_separator.length());
+                if (!is_sanctioned_unit(numerator) || !is_sanctioned_unit(denominator))
+                    return;
+            }
+
+            value.as_object().for_each_member([&](auto const& unit_key, JsonValue const& pattern_value) {
+                if (!unit_key.starts_with(unit_pattern_prefix))
+                    return;
+
+                auto& unit = ensure_unit(unit_name);
+                NumberFormat format {};
+
+                auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
+                format.plurality = NumberFormat::plurality_from_string(plurality);
+
+                auto zero_format = pattern_value.as_string().replace("{0}"sv, "{number}"sv);
+                zero_format = parse_identifiers(zero_format, "unitIdentifier"sv, locale_data, format);
+
+                format.positive_format_index = locale_data.unique_strings.ensure(zero_format.replace("{number}"sv, "{plusSign}{number}"sv));
+                format.negative_format_index = locale_data.unique_strings.ensure(zero_format.replace("{number}"sv, "{minusSign}{number}"sv));
+                format.zero_format_index = locale_data.unique_strings.ensure(move(zero_format));
+
+                switch (style) {
+                case Unicode::Style::Long:
+                    unit.long_formats.append(move(format));
+                    break;
+                case Unicode::Style::Short:
+                    unit.short_formats.append(move(format));
+                    break;
+                case Unicode::Style::Narrow:
+                    unit.narrow_formats.append(move(format));
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            });
+        });
+    };
+
+    parse_units_object(long_object.as_object(), Unicode::Style::Long);
+    parse_units_object(short_object.as_object(), Unicode::Style::Short);
+    parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
+}
+
+static void parse_all_locales(String core_path, String numbers_path, String units_path, UnicodeLocaleData& locale_data)
 {
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
+    auto units_iterator = path_to_dir_iterator(move(units_path));
 
     auto remove_variants_from_path = [&](String path) -> Optional<String> {
         auto parsed_locale = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path));
@@ -370,6 +477,18 @@ static void parse_all_locales(String core_path, String numbers_path, UnicodeLoca
 
         auto& locale = locale_data.locales.ensure(*language);
         parse_number_systems(numbers_path, locale_data, locale);
+    }
+
+    while (units_iterator.has_next()) {
+        auto units_path = units_iterator.next_full_path();
+        VERIFY(Core::File::is_directory(units_path));
+
+        auto language = remove_variants_from_path(units_path);
+        if (!language.has_value())
+            continue;
+
+        auto& locale = locale_data.locales.ensure(*language);
+        parse_units(units_path, locale_data, locale);
     }
 
     parse_default_content_locales(move(core_path), locale_data);
@@ -412,6 +531,7 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
+Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style);
 Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 
 }
@@ -488,6 +608,13 @@ struct NumberSystem {
 
     NumberFormat percent_format {};
     NumberFormat scientific_format {};
+};
+
+struct Unit {
+    @string_index_type@ unit { 0 };
+    Span<NumberFormat const> long_formats {};
+    Span<NumberFormat const> short_formats {};
+    Span<NumberFormat const> narrow_formats {};
 };
 )~~~");
 
@@ -593,7 +720,40 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
 )~~~");
     };
 
+    auto append_units = [&](String name, auto const& units) {
+        auto format_name = [&](String unit, StringView format) {
+            unit = unit.replace("-"sv, "_"sv, true);
+            return String::formatted("{}_{}_{}", name, unit, format);
+        };
+
+        for (auto const& unit : units) {
+            append_number_formats(format_name(unit.key, "l"sv), unit.value.long_formats);
+            append_number_formats(format_name(unit.key, "s"sv), unit.value.short_formats);
+            append_number_formats(format_name(unit.key, "n"sv), unit.value.narrow_formats);
+        }
+
+        generator.set("name", name);
+        generator.set("size", String::number(units.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<Unit, @size@> @name@ { {)~~~");
+
+        for (auto const& unit : units) {
+            generator.set("unit"sv, String::number(unit.value.unit));
+            generator.set("long_formats"sv, format_name(unit.key, "l"sv));
+            generator.set("short_formats"sv, format_name(unit.key, "s"sv));
+            generator.set("narrow_formats"sv, format_name(unit.key, "n"sv));
+            generator.append(R"~~~(
+    { @unit@, @long_formats@.span(), @short_formats@.span(), @narrow_formats@.span() },)~~~");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
     generate_mapping(generator, locale_data.locales, "NumberSystem"sv, "s_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_number_systems(name, value.number_systems); });
+    generate_mapping(generator, locale_data.locales, "Unit"sv, "s_units"sv, "s_units_{}", [&](auto const& name, auto const& value) { append_units(name, value.units); });
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
         HashValueMap<String> hashes;
@@ -697,6 +857,53 @@ Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView local
     return formats;
 }
 
+static Unit const* find_units(StringView locale, StringView unit)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return nullptr;
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto const& locale_units = s_units.at(locale_index);
+
+    for (auto const& units : locale_units) {
+        if (unit == s_string_list[units.unit])
+            return &units;
+    };
+
+    return nullptr;
+}
+
+Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
+{
+    Vector<Unicode::NumberFormat> formats;
+
+    if (auto const* units = find_units(locale, unit); units != nullptr) {
+        Span<NumberFormat const> number_formats;
+
+        switch (style) {
+        case Style::Long:
+            number_formats = units->long_formats;
+            break;
+        case Style::Short:
+            number_formats = units->short_formats;
+            break;
+        case Style::Narrow:
+            number_formats = units->narrow_formats;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        formats.ensure_capacity(number_formats.size());
+
+        for (auto const& number_format : number_formats)
+            formats.append(number_format.to_unicode_number_format());
+    }
+
+    return formats;
+}
+
 }
 )~~~");
 
@@ -709,12 +916,14 @@ int main(int argc, char** argv)
     char const* generated_implementation_path = nullptr;
     char const* core_path = nullptr;
     char const* numbers_path = nullptr;
+    char const* units_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
+    args_parser.add_option(units_path, "Path to cldr-units directory", "units-path", 'u', "units-path");
     args_parser.parse(argc, argv);
 
     auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
@@ -737,7 +946,7 @@ int main(int argc, char** argv)
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(core_path, numbers_path, locale_data);
+    parse_all_locales(core_path, numbers_path, units_path, locale_data);
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);

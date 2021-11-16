@@ -851,6 +851,15 @@ Optional<NumberFormat> get_standard_number_system_format([[maybe_unused]] String
 #endif
 }
 
+Vector<NumberFormat> get_unit_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView unit, [[maybe_unused]] Style style)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_unit_formats(locale, unit, style);
+#else
+    return {};
+#endif
+}
+
 Optional<ListPatterns> get_locale_list_patterns([[maybe_unused]] StringView locale, [[maybe_unused]] StringView type, [[maybe_unused]] StringView style)
 {
 #if ENABLE_UNICODE_DATA
