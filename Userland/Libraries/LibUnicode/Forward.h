@@ -20,6 +20,7 @@ enum class Locale : u16;
 enum class Property : u8;
 enum class Script : u8;
 enum class StandardNumberFormatType : u8;
+enum class Style : u8;
 enum class Territory : u8;
 enum class WordBreakProperty : u8;
 

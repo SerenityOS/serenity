@@ -191,6 +191,7 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
+Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style);
 Optional<ListPatterns> get_locale_list_patterns(StringView locale, StringView type, StringView style);
 
 Optional<StringView> resolve_language_alias(StringView language);
