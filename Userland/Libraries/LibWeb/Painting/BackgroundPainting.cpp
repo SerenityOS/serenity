@@ -47,6 +47,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     // Note: Background layers are ordered front-to-back, so we paint them in reverse
     for (int layer_index = background_layers->size() - 1; layer_index >= 0; layer_index--) {
         auto& layer = background_layers->at(layer_index);
+        // TODO: Gradients!
         if (!layer.image || !layer.image->bitmap())
             continue;
         auto& image = *layer.image->bitmap();
@@ -57,11 +58,49 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         painter.add_clip_rect(clip_rect);
 
         // FIXME: Attachment
-        // FIXME: Size
-        Gfx::IntRect image_rect { border_rect.x(), border_rect.y(), image.width(), image.height() };
 
         // Origin
         auto background_positioning_area = get_box(layer.origin);
+
+        // Size
+        Gfx::IntRect image_rect;
+        switch (layer.size_type) {
+        case CSS::BackgroundSize::Contain: {
+            float max_width_ratio = (float)background_positioning_area.width() / (float)image.width();
+            float max_height_ratio = (float)background_positioning_area.height() / (float)image.height();
+            float ratio = min(max_width_ratio, max_height_ratio);
+            image_rect.set_size(roundf(image.width() * ratio), roundf(image.height() * ratio));
+            break;
+        }
+        case CSS::BackgroundSize::Cover: {
+            float max_width_ratio = (float)background_positioning_area.width() / (float)image.width();
+            float max_height_ratio = (float)background_positioning_area.height() / (float)image.height();
+            float ratio = max(max_width_ratio, max_height_ratio);
+            image_rect.set_size(roundf(image.width() * ratio), roundf(image.height() * ratio));
+            break;
+        }
+        case CSS::BackgroundSize::LengthPercentage: {
+            int width;
+            int height;
+            if (layer.size_x.is_auto() && layer.size_y.is_auto()) {
+                width = image.width();
+                height = image.height();
+            } else if (layer.size_x.is_auto()) {
+                height = layer.size_y.resolved_or_zero(layout_node, background_positioning_area.height()).to_px(layout_node);
+                width = roundf(image.width() * ((float)height / (float)image.height()));
+            } else if (layer.size_y.is_auto()) {
+                width = layer.size_x.resolved_or_zero(layout_node, background_positioning_area.width()).to_px(layout_node);
+                height = roundf(image.height() * ((float)width / (float)image.width()));
+            } else {
+                width = layer.size_x.resolved_or_zero(layout_node, background_positioning_area.width()).to_px(layout_node);
+                height = layer.size_y.resolved_or_zero(layout_node, background_positioning_area.height()).to_px(layout_node);
+            }
+
+            image_rect.set_size(width, height);
+            break;
+        }
+        }
+
         int space_x = background_positioning_area.width() - image_rect.width();
         int space_y = background_positioning_area.height() - image_rect.height();
 
