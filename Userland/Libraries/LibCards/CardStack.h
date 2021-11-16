@@ -98,7 +98,7 @@ private:
 
 template<>
 struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Cards::CardStack& stack)
+    ErrorOr<void> format(FormatBuilder& builder, Cards::CardStack const& stack)
     {
         StringView type;
 
@@ -130,6 +130,6 @@ struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
             first_card = false;
         }
 
-        Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}", type, stack.bounding_box(), cards.build());
+        return Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}", type, stack.bounding_box(), cards.build());
     }
 };

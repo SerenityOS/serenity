@@ -199,7 +199,7 @@ private:
 
 template<>
 struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Core::Object& value)
+    ErrorOr<void> format(FormatBuilder& builder, const Core::Object& value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
     }

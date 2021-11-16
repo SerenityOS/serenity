@@ -73,7 +73,7 @@ namespace AK {
 
 template<>
 struct Formatter<GUI::PersistentModelIndex> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const GUI::PersistentModelIndex& value)
+    ErrorOr<void> format(FormatBuilder& builder, GUI::PersistentModelIndex const& value)
     {
         return Formatter<FormatString>::format(builder, "PersistentModelIndex({},{},{})", value.row(), value.column(), value.internal_data());
     }

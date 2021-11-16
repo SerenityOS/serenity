@@ -350,14 +350,14 @@ bool UnsignedBigInteger::operator>=(UnsignedBigInteger const& other) const
 
 }
 
-void AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)
+ErrorOr<void> AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)
 {
     if (value.is_invalid())
         return Formatter<StringView>::format(fmtbuilder, "invalid");
 
     StringBuilder builder;
     for (int i = value.length() - 1; i >= 0; --i)
-        builder.appendff("{}|", value.words()[i]);
+        TRY(builder.try_appendff("{}|", value.words()[i]));
 
     return Formatter<StringView>::format(fmtbuilder, builder.string_view());
 }

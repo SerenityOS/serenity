@@ -143,7 +143,7 @@ private:
 
 template<>
 struct AK::Formatter<IOAddress> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, IOAddress value)
+    ErrorOr<void> format(FormatBuilder& builder, IOAddress value)
     {
         return Formatter<FormatString>::format(builder, "IO {:x}", value.get());
     }

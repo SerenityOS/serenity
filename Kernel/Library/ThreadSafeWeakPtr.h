@@ -217,13 +217,13 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
 
 template<typename T>
 struct Formatter<WeakPtr<T>> : Formatter<const T*> {
-    void format(FormatBuilder& builder, const WeakPtr<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, WeakPtr<T> const& value)
     {
 #ifdef KERNEL
         auto ref = value.strong_ref();
-        Formatter<const T*>::format(builder, ref.ptr());
+        return Formatter<const T*>::format(builder, ref.ptr());
 #else
-        Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<const T*>::format(builder, value.ptr());
 #endif
     }
 };

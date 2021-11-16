@@ -133,7 +133,7 @@ struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
 
 template<>
 struct Formatter<IPv4Address> : Formatter<String> {
-    void format(FormatBuilder& builder, IPv4Address value)
+    ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
         return Formatter<String>::format(builder, value.to_string());
     }

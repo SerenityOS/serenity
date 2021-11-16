@@ -322,9 +322,9 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
 
 template<typename T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
-    void format(FormatBuilder& builder, const NonnullRefPtr<T>& value)
+    ErrorOr<void> format(FormatBuilder& builder, const NonnullRefPtr<T>& value)
     {
-        Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<const T*>::format(builder, value.ptr());
     }
 };
 

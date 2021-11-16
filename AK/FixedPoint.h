@@ -322,10 +322,10 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
     {
     }
 
-    void format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
+    ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
     {
         Formatter<double> formatter { *this };
-        formatter.format(builder, (double)value);
+        return formatter.format(builder, (double)value);
     }
 };
 

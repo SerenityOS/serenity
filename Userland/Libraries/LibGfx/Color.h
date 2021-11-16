@@ -478,7 +478,7 @@ namespace AK {
 
 template<>
 struct Formatter<Gfx::Color> : public Formatter<StringView> {
-    void format(FormatBuilder& builder, Gfx::Color const& value);
+    ErrorOr<void> format(FormatBuilder&, Gfx::Color const&);
 };
 
 }

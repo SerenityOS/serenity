@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
@@ -129,16 +128,6 @@ public:
 
 private:
     Optional<ErrorType> m_error;
-};
-
-template<>
-struct Formatter<Error> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Error const& error)
-    {
-        if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "Error(errno={})", error.code());
-        return Formatter<FormatString>::format(builder, "Error({})", error.string_literal());
-    }
 };
 
 }

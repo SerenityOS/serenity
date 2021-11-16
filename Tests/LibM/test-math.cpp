@@ -128,15 +128,16 @@ union Extractor {
 namespace AK {
 template<>
 struct Formatter<Extractor> : StandardFormatter {
-    void format(FormatBuilder& builder, const Extractor& value)
+    ErrorOr<void> format(FormatBuilder& builder, Extractor const& value)
     {
-        builder.put_literal("{");
-        builder.put_u64(value.sign);
-        builder.put_literal(", ");
-        builder.put_u64(value.exponent, 16, true);
-        builder.put_literal(", ");
-        builder.put_u64(value.mantissa, 16, true);
-        builder.put_literal("}");
+        TRY(builder.put_literal("{"));
+        TRY(builder.put_u64(value.sign));
+        TRY(builder.put_literal(", "));
+        TRY(builder.put_u64(value.exponent, 16, true));
+        TRY(builder.put_literal(", "));
+        TRY(builder.put_u64(value.mantissa, 16, true));
+        TRY(builder.put_literal("}"));
+        return {};
     }
 };
 }

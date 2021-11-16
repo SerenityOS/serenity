@@ -94,7 +94,7 @@ private:
 
 template<>
 struct AK::Formatter<Core::SocketAddress> : Formatter<String> {
-    void format(FormatBuilder& builder, const Core::SocketAddress& value)
+    ErrorOr<void> format(FormatBuilder& builder, Core::SocketAddress const& value)
     {
         return Formatter<String>::format(builder, value.to_string());
     }

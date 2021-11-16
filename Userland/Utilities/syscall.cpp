@@ -28,7 +28,7 @@ static FlatPtr parse_from(ArgIter&);
 
 template<>
 struct AK::Formatter<Syscall::Function> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Syscall::Function function)
+    ErrorOr<void> format(FormatBuilder& builder, Syscall::Function function)
     {
         return Formatter<StringView>::format(builder, to_string(function));
     }

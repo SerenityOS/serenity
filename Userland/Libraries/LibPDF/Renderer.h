@@ -135,43 +135,37 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::LineCapStyle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::LineCapStyle const& style)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::LineCapStyle const& style)
     {
         switch (style) {
         case PDF::LineCapStyle::ButtCap:
-            Formatter<StringView>::format(builder, "LineCapStyle::ButtCap");
-            break;
+            return Formatter<StringView>::format(builder, "LineCapStyle::ButtCap");
         case PDF::LineCapStyle::RoundCap:
-            Formatter<StringView>::format(builder, "LineCapStyle::RoundCap");
-            break;
+            return Formatter<StringView>::format(builder, "LineCapStyle::RoundCap");
         case PDF::LineCapStyle::SquareCap:
-            Formatter<StringView>::format(builder, "LineCapStyle::SquareCap");
-            break;
+            return Formatter<StringView>::format(builder, "LineCapStyle::SquareCap");
         }
     }
 };
 
 template<>
 struct Formatter<PDF::LineJoinStyle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::LineJoinStyle const& style)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::LineJoinStyle const& style)
     {
         switch (style) {
         case PDF::LineJoinStyle::Miter:
-            Formatter<StringView>::format(builder, "LineJoinStyle::Miter");
-            break;
+            return Formatter<StringView>::format(builder, "LineJoinStyle::Miter");
         case PDF::LineJoinStyle::Round:
-            Formatter<StringView>::format(builder, "LineJoinStyle::Round");
-            break;
+            return Formatter<StringView>::format(builder, "LineJoinStyle::Round");
         case PDF::LineJoinStyle::Bevel:
-            Formatter<StringView>::format(builder, "LineJoinStyle::Bevel");
-            break;
+            return Formatter<StringView>::format(builder, "LineJoinStyle::Bevel");
         }
     }
 };
 
 template<>
 struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::LineDashPattern const& pattern)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::LineDashPattern const& pattern)
     {
         StringBuilder builder;
         builder.append("[");
@@ -191,40 +185,32 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::TextRenderingMode> : Formatter<StringView> {
-    void format(FormatBuilder& builder, PDF::TextRenderingMode const& style)
+    ErrorOr<void> format(FormatBuilder& builder, PDF::TextRenderingMode const& style)
     {
         switch (style) {
         case PDF::TextRenderingMode::Fill:
-            Formatter<StringView>::format(builder, "TextRenderingMode::Fill");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::Fill");
         case PDF::TextRenderingMode::Stroke:
-            Formatter<StringView>::format(builder, "TextRenderingMode::Stroke");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::Stroke");
         case PDF::TextRenderingMode::FillThenStroke:
-            Formatter<StringView>::format(builder, "TextRenderingMode::FillThenStroke");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::FillThenStroke");
         case PDF::TextRenderingMode::Invisible:
-            Formatter<StringView>::format(builder, "TextRenderingMode::Invisible");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::Invisible");
         case PDF::TextRenderingMode::FillAndClip:
-            Formatter<StringView>::format(builder, "TextRenderingMode::FillAndClip");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::FillAndClip");
         case PDF::TextRenderingMode::StrokeAndClip:
-            Formatter<StringView>::format(builder, "TextRenderingMode::StrokeAndClip");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::StrokeAndClip");
         case PDF::TextRenderingMode::FillStrokeAndClip:
-            Formatter<StringView>::format(builder, "TextRenderingMode::FillStrokeAndClip");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::FillStrokeAndClip");
         case PDF::TextRenderingMode::Clip:
-            Formatter<StringView>::format(builder, "TextRenderingMode::Clip");
-            break;
+            return Formatter<StringView>::format(builder, "TextRenderingMode::Clip");
         }
     }
 };
 
 template<>
 struct Formatter<PDF::TextState> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::TextState const& state)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::TextState const& state)
     {
         StringBuilder builder;
         builder.append("TextState {\n");
@@ -239,13 +225,13 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
         builder.append(" }");
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 
 template<>
 struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, PDF::GraphicsState const& state)
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::GraphicsState const& state)
     {
         StringBuilder builder;
         builder.append("GraphicsState {\n");
@@ -259,7 +245,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.appendff("  line_dash_pattern={}\n", state.line_dash_pattern);
         builder.appendff("  text_state={}\n", state.text_state);
         builder.append("}");
-        Formatter<StringView>::format(format_builder, builder.to_string());
+        return Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
 

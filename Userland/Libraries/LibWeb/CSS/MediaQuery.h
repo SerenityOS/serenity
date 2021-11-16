@@ -101,25 +101,25 @@ namespace AK {
 
 template<>
 struct Formatter<Web::CSS::MediaQuery::MediaFeature> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaFeature const& media_feature)
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaFeature const& media_feature)
     {
-        Formatter<StringView>::format(builder, media_feature.to_string());
+        return Formatter<StringView>::format(builder, media_feature.to_string());
     }
 };
 
 template<>
 struct Formatter<Web::CSS::MediaQuery::MediaCondition> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaCondition const& media_condition)
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaCondition const& media_condition)
     {
-        Formatter<StringView>::format(builder, media_condition.to_string());
+        return Formatter<StringView>::format(builder, media_condition.to_string());
     }
 };
 
 template<>
 struct Formatter<Web::CSS::MediaQuery> : Formatter<StringView> {
-    void format(FormatBuilder& builder, Web::CSS::MediaQuery const& media_query)
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaQuery const& media_query)
     {
-        Formatter<StringView>::format(builder, media_query.to_string());
+        return Formatter<StringView>::format(builder, media_query.to_string());
     }
 };
 

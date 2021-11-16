@@ -53,7 +53,7 @@ private:
 
 template<>
 struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::InodeIdentifier value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::InodeIdentifier value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
     }

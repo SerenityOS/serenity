@@ -980,7 +980,7 @@ inline static ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const K
 
 template<>
 struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Kernel::Process& value)
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::Process const& value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}({})", value.name(), value.pid().value());
     }

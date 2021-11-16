@@ -66,12 +66,11 @@ namespace AK {
 
 template<>
 struct Formatter<GUI::ModelIndex> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const GUI::ModelIndex& value)
+    ErrorOr<void> format(FormatBuilder& builder, GUI::ModelIndex const& value)
     {
         if (value.internal_data())
             return Formatter<FormatString>::format(builder, "ModelIndex({},{},{})", value.row(), value.column(), value.internal_data());
-        else
-            return Formatter<FormatString>::format(builder, "ModelIndex({},{})", value.row(), value.column());
+        return Formatter<FormatString>::format(builder, "ModelIndex({},{})", value.row(), value.column());
     }
 };
 

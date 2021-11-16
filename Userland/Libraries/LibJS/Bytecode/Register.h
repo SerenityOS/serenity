@@ -42,7 +42,7 @@ private:
 
 template<>
 struct AK::Formatter<JS::Bytecode::Register> : AK::Formatter<FormatString> {
-    void format(FormatBuilder& builder, JS::Bytecode::Register const& value)
+    ErrorOr<void> format(FormatBuilder& builder, JS::Bytecode::Register const& value)
     {
         if (value.index() == JS::Bytecode::Register::accumulator_index)
             return AK::Formatter<FormatString>::format(builder, "acc");
