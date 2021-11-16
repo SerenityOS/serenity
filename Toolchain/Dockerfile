@@ -1,4 +1,4 @@
-FROM ubuntu:21.04
+FROM ubuntu:21.10
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,6 +8,8 @@ RUN apt-get update -y \
         ccache \
         cmake \
         curl \
+        g++-10 \
+        gcc-10 \
         genext2fs \
         gettext \
         git \
@@ -22,9 +24,9 @@ RUN apt-get update -y \
         sudo \
         tzdata \
         unzip \
-        wget
-RUN apt install gcc-10 g++-10; \
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 900 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+        wget \
+    && rm -rf /var/lib/apt/lists/ \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 900 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
 RUN git clone --depth 1 https://github.com/SerenityOS/serenity.git /serenity/serenity-git
 RUN cd /serenity/serenity-git/Toolchain; \
