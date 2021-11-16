@@ -27,6 +27,8 @@ private:
 
     virtual void pledge_domains(Vector<String> const&) override;
     virtual void monitor_domain(String const&) override;
+    virtual Messages::ConfigServer::ListConfigGroupsResponse list_config_groups([[maybe_unused]] String const& domain) override;
+    virtual Messages::ConfigServer::ListConfigKeysResponse list_config_keys([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group) override;
     virtual Messages::ConfigServer::ReadStringValueResponse read_string_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
     virtual Messages::ConfigServer::ReadI32ValueResponse read_i32_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
     virtual Messages::ConfigServer::ReadBoolValueResponse read_bool_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;

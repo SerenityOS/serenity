@@ -135,6 +135,22 @@ void ClientConnection::sync_dirty_domains_to_disk()
     }
 }
 
+Messages::ConfigServer::ListConfigKeysResponse ClientConnection::list_config_keys(String const& domain, String const& group)
+{
+    if (!validate_access(domain, group, ""))
+        return Vector<String> {};
+    auto& config = ensure_domain_config(domain);
+    return { config.keys(group) };
+}
+
+Messages::ConfigServer::ListConfigGroupsResponse ClientConnection::list_config_groups(String const& domain)
+{
+    if (!validate_access(domain, "", ""))
+        return Vector<String> {};
+    auto& config = ensure_domain_config(domain);
+    return { config.groups() };
+}
+
 Messages::ConfigServer::ReadStringValueResponse ClientConnection::read_string_value(String const& domain, String const& group, String const& key)
 {
     if (!validate_access(domain, group, key))
