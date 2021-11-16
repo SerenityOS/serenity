@@ -333,58 +333,52 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
         // a. Let whole be roundResult.[[Years]].
         whole = round_result.years;
     }
-
-    // 13. If unit is "month", then
-    if (unit == "month"sv) {
+    // 13. Else if unit is "month", then
+    else if (unit == "month"sv) {
         // a. Let whole be roundResult.[[Months]].
         whole = round_result.months;
     }
-
-    // 14. If unit is "week", then
-    if (unit == "week"sv) {
+    // 14. Else if unit is "week", then
+    else if (unit == "week"sv) {
         // a. Let whole be roundResult.[[Weeks]].
         whole = round_result.weeks;
     }
-
-    // 15. If unit is "day", then
-    if (unit == "day"sv) {
+    // 15. Else if unit is "day", then
+    else if (unit == "day"sv) {
         // a. Let whole be roundResult.[[Days]].
         whole = round_result.days;
     }
-
-    // 16. If unit is "hour", then
-    if (unit == "hour"sv) {
+    // 16. Else if unit is "hour", then
+    else if (unit == "hour"sv) {
         // a. Let whole be roundResult.[[Hours]].
         whole = round_result.hours;
     }
-
-    // 17. If unit is "minute", then
-    if (unit == "minute"sv) {
+    // 17. Else if unit is "minute", then
+    else if (unit == "minute"sv) {
         // a. Let whole be roundResult.[[Minutes]].
         whole = round_result.minutes;
     }
-
-    // 18. If unit is "second", then
-    if (unit == "second"sv) {
+    // 18. Else if unit is "second", then
+    else if (unit == "second"sv) {
         // a. Let whole be roundResult.[[Seconds]].
         whole = round_result.seconds;
     }
-
-    // 19. If unit is "millisecond", then
-    if (unit == "millisecond"sv) {
+    // 19. Else if unit is "millisecond", then
+    else if (unit == "millisecond"sv) {
         // a. Let whole be roundResult.[[Milliseconds]].
         whole = round_result.milliseconds;
     }
-
-    // 20. If unit is "microsecond", then
-    if (unit == "microsecond"sv) {
+    // 20. Else if unit is "microsecond", then
+    else if (unit == "microsecond"sv) {
         // a. Let whole be roundResult.[[Microseconds]].
         whole = round_result.microseconds;
     }
+    // 21. Else,
+    else {
+        // a. Assert: unit is "nanosecond".
+        VERIFY(unit == "nanosecond"sv);
 
-    // 21. If unit is "nanosecond", then
-    if (unit == "nanosecond"sv) {
-        // a. Let whole be roundResult.[[Nanoseconds]].
+        // b. Let whole be roundResult.[[Nanoseconds]].
         whole = round_result.nanoseconds;
     }
 
