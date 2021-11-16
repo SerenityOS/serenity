@@ -1370,7 +1370,9 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
 
         // Handling of other [[CurrencyDisplay]] options will occur after [[SignDisplay]].
         if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
-            auto maybe_patterns = Unicode::select_currency_unit_pattern(number_format.data_locale(), number_format.numbering_system(), number);
+            auto formats = Unicode::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), Unicode::CompactNumberFormatType::CurrencyUnit);
+
+            auto maybe_patterns = Unicode::select_pattern_with_plurality(formats, number);
             if (maybe_patterns.has_value()) {
                 patterns = maybe_patterns.release_value();
                 break;

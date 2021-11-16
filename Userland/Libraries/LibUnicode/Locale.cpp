@@ -975,13 +975,11 @@ String resolve_most_likely_territory([[maybe_unused]] LanguageID const& language
     return aliases[0].to_string();
 }
 
-Optional<NumberFormat> select_currency_unit_pattern(StringView locale, StringView system, double number)
+Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number)
 {
     // FIXME: This is a rather naive and locale-unaware implementation Unicode's TR-35 pluralization
     //        rules: https://www.unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
     //        Once those rules are implemented for LibJS, we better use them instead.
-    auto formats = get_compact_number_system_formats(locale, system, CompactNumberFormatType::CurrencyUnit);
-
     auto find_plurality = [&](auto plurality) -> Optional<NumberFormat> {
         if (auto it = formats.find_if([&](auto& patterns) { return patterns.plurality == plurality; }); it != formats.end())
             return *it;
