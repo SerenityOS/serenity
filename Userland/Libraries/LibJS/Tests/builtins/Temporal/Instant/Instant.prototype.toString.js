@@ -62,4 +62,11 @@ describe("errors", () => {
             Temporal.Instant.prototype.toString.call("foo");
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Instant");
     });
+
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const instant = new Temporal.Instant(0n);
+        expect(() => {
+            instant.toString({ timeZone: {} });
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
 });
