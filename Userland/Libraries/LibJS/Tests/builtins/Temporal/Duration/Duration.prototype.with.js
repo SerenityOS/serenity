@@ -79,7 +79,9 @@ describe("errors", () => {
 
     test("invalid duration value", () => {
         for (const property of DURATION_PROPERTIES) {
-            for (const value of [1.23, NaN, Infinity]) {
+            // NOTE: NaN does *not* throw a RangeError anymore - which is questionable, IMO - as of:
+            // https://github.com/tc39/proposal-temporal/commit/8c854507a52efbc6e9eb2642f0f928df38e5c021
+            for (const value of [1.23, Infinity]) {
                 expect(() => {
                     new Temporal.Duration().with({ [property]: value });
                 }).toThrowWithMessage(
