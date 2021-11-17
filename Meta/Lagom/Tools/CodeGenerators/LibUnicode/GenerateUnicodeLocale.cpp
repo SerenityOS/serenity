@@ -427,6 +427,48 @@ static void parse_default_content_locales(String core_path, UnicodeLocaleData& l
     });
 }
 
+static void define_aliases_without_scripts(UnicodeLocaleData& locale_data)
+{
+    // From ECMA-402: https://tc39.es/ecma402/#sec-internal-slots
+    //
+    //     For locales that include a script subtag in addition to language and region, the
+    //     corresponding locale without a script subtag must also be supported.
+    //
+    // So we define aliases for locales that contain all three subtags, but we must also take
+    // care to handle when the locale itself or the locale without a script subtag are an alias
+    // by way of default-content locales.
+    auto find_alias = [&](auto const& locale) {
+        return locale_data.locale_aliases.find_if([&](auto const& alias) { return locale == alias.alias; });
+    };
+
+    auto append_alias_without_script = [&](auto const& locale) {
+        auto parsed_locale = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, locale);
+        VERIFY(parsed_locale.has_value());
+
+        if ((parsed_locale->language == 0) || (parsed_locale->script == 0) || (parsed_locale->region == 0))
+            return;
+
+        auto locale_without_script = String::formatted("{}-{}",
+            locale_data.unique_strings.get(parsed_locale->language),
+            locale_data.unique_strings.get(parsed_locale->region));
+
+        if (locale_data.locales.contains(locale_without_script))
+            return;
+        if (find_alias(locale_without_script) != locale_data.locale_aliases.end())
+            return;
+
+        if (auto it = find_alias(locale); it != locale_data.locale_aliases.end())
+            locale_data.locale_aliases.append({ it->name, locale_without_script });
+        else
+            locale_data.locale_aliases.append({ locale, locale_without_script });
+    };
+
+    for (auto const& locale : locale_data.locales)
+        append_alias_without_script(locale.key);
+    for (auto const& locale : locale_data.locale_aliases)
+        append_alias_without_script(locale.alias);
+}
+
 static void parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = path_to_dir_iterator(locale_names_path);
@@ -508,6 +550,7 @@ static void parse_all_locales(String core_path, String locale_names_path, String
     }
 
     parse_default_content_locales(move(core_path), locale_data);
+    define_aliases_without_scripts(locale_data);
 }
 
 static String format_identifier(StringView owner, String identifier)
