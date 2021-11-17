@@ -313,6 +313,7 @@ public:
     ErrorOr<FlatPtr> sys$mprotect(Userspace<void*>, size_t, int prot);
     ErrorOr<FlatPtr> sys$madvise(Userspace<void*>, size_t, int advice);
     ErrorOr<FlatPtr> sys$msyscall(Userspace<void*>);
+    ErrorOr<FlatPtr> sys$msync(Userspace<void*>, size_t, int flags);
     ErrorOr<FlatPtr> sys$purge(int mode);
     ErrorOr<FlatPtr> sys$select(Userspace<const Syscall::SC_select_params*>);
     ErrorOr<FlatPtr> sys$poll(Userspace<const Syscall::SC_poll_params*>);

@@ -89,4 +89,10 @@ int mlock(const void*, size_t)
     dbgln("FIXME: Implement mlock()");
     return 0;
 }
+
+int msync(void* address, size_t size, int flags)
+{
+    int rc = syscall(SC_msync, address, size, flags);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

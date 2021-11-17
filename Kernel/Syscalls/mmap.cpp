@@ -589,4 +589,21 @@ ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
     region->set_syscall_region(true);
     return 0;
 }
+
+ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, [[maybe_unused]] int flags)
+{
+    // FIXME: We probably want to sync all mappings in the address+size range.
+    auto* region = address_space().find_region_from_range(Memory::VirtualRange { address.vaddr(), size });
+    if (!region)
+        return EINVAL;
+
+    auto& vmobject = region->vmobject();
+    if (!vmobject.is_shared_inode())
+        return 0;
+
+    auto& inode_vmobject = static_cast<Memory::SharedInodeVMObject&>(vmobject);
+    TRY(inode_vmobject.sync());
+    return 0;
+}
+
 }
