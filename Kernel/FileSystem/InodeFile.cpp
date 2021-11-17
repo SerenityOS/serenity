@@ -83,11 +83,6 @@ ErrorOr<void> InodeFile::ioctl(OpenFileDescription& description, unsigned reques
 
 ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
-    // FIXME: Support writing changes made to shared file mappings back to disk.
-    // Some ports behave incorrectly if we silently discard writes to memory-mapped files, so let's not lie about what we can do.
-    if (shared && (prot & PROT_WRITE))
-        return ENOTSUP;
-
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<Memory::InodeVMObject> vmobject;
     if (shared)
