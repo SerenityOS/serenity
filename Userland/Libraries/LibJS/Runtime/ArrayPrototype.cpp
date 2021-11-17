@@ -388,9 +388,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     return TRY(vm.call(join_function.as_function(), this_object));
 }
 
-// 23.1.3.30 Array.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-array.prototype.tolocalestring
+// 18.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
 {
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let array be ? ToObject(this value).
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
 
     if (s_array_join_seen_objects.contains(this_object))
@@ -400,20 +404,41 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         s_array_join_seen_objects.remove(this_object);
     };
 
+    // 2. Let len be ? ToLength(? Get(array, "length")).
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
-    String separator = ","; // NOTE: This is implementation-specific.
+    // 3. Let separator be the String value for the list-separator String appropriate for the host environment's current locale (this is derived in an implementation-defined way).
+    constexpr auto separator = ","sv;
+
+    // 4. Let R be the empty String.
     StringBuilder builder;
+
+    // 5. Let k be 0.
+    // 6. Repeat, while k < len,
     for (size_t i = 0; i < length; ++i) {
-        if (i > 0)
+        // a. If k > 0, then
+        if (i > 0) {
+            // i. Set R to the string-concatenation of R and separator.
             builder.append(separator);
+        }
+
+        // b. Let nextElement be ? Get(array, ! ToString(k)).
         auto value = TRY(this_object->get(i));
-        if (value.is_nullish())
-            continue;
-        auto locale_string_result = TRY(value.invoke(global_object, vm.names.toLocaleString));
-        auto string = TRY(locale_string_result.to_string(global_object));
-        builder.append(string);
+
+        // c. If nextElement is not undefined or null, then
+        if (!value.is_nullish()) {
+            // i. Let S be ? ToString(? Invoke(nextElement, "toLocaleString", « locales, options »)).
+            auto locale_string_result = TRY(value.invoke(global_object, vm.names.toLocaleString, locales, options));
+
+            // ii. Set R to the string-concatenation of R and S.
+            auto string = TRY(locale_string_result.to_string(global_object));
+            builder.append(string);
+        }
+
+        // d. Increase k by 1.
     }
+
+    // 7. Return R.
     return js_string(vm, builder.to_string());
 }
 
