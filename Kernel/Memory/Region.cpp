@@ -38,6 +38,11 @@ Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size
 
 Region::~Region()
 {
+    if (is_writable() && vmobject().is_shared_inode()) {
+        // FIXME: This is very aggressive. Find a way to do less work!
+        (void)static_cast<SharedInodeVMObject&>(vmobject()).sync();
+    }
+
     m_vmobject->remove_region(*this);
 
     MM.unregister_region(*this);
