@@ -20,3 +20,11 @@ describe("correct behavior", () => {
         // FIXME: Compare these in a sensible way
     });
 });
+
+describe("errors", () => {
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        expect(() => {
+            Temporal.Now.plainTimeISO({});
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});

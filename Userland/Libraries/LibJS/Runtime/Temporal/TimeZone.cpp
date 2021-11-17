@@ -420,29 +420,25 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
     auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(global_object, vm.names.getOffsetNanosecondsFor));
 
-    // 2. If getOffsetNanosecondsFor is undefined, set getOffsetNanosecondsFor to %Temporal.TimeZone.prototype.getOffsetNanosecondsFor%.
-    if (!get_offset_nanoseconds_for)
-        get_offset_nanoseconds_for = global_object.temporal_time_zone_prototype_get_offset_nanoseconds_for_function();
+    // 2. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
+    auto offset_nanoseconds_value = TRY(call(global_object, get_offset_nanoseconds_for, time_zone, &instant));
 
-    // 3. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
-    auto offset_nanoseconds_value = TRY(vm.call(*get_offset_nanoseconds_for, time_zone, &instant));
-
-    // 4. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
+    // 3. If Type(offsetNanoseconds) is not Number, throw a TypeError exception.
     if (!offset_nanoseconds_value.is_number())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "Offset nanoseconds value", "number");
 
-    // 5. If ! IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
+    // 4. If ! IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
     if (!offset_nanoseconds_value.is_integral_number())
         return vm.throw_completion<RangeError>(global_object, ErrorType::IsNotAn, "Offset nanoseconds value", "integral number");
 
-    // 6. Set offsetNanoseconds to ℝ(offsetNanoseconds).
+    // 5. Set offsetNanoseconds to ℝ(offsetNanoseconds).
     auto offset_nanoseconds = offset_nanoseconds_value.as_double();
 
-    // 7. If abs(offsetNanoseconds) > 86400 × 10^9, throw a RangeError exception.
+    // 6. If abs(offsetNanoseconds) > 86400 × 10^9, throw a RangeError exception.
     if (fabs(offset_nanoseconds) > 86400000000000.0)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidOffsetNanosecondsValue);
 
-    // 8. Return offsetNanoseconds.
+    // 7. Return offsetNanoseconds.
     return offset_nanoseconds;
 }
 

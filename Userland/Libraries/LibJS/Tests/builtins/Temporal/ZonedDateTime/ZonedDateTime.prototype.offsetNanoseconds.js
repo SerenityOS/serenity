@@ -18,4 +18,11 @@ describe("errors", () => {
             Reflect.get(Temporal.ZonedDateTime.prototype, "offsetNanoseconds", "foo");
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
+
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
+        expect(() => {
+            zonedDateTime.offsetNanoseconds;
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
 });

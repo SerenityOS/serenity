@@ -17,4 +17,11 @@ describe("errors", () => {
             Temporal.ZonedDateTime.prototype.toLocaleString.call("foo");
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
+
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
+        expect(() => {
+            zonedDateTime.toLocaleString();
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
 });

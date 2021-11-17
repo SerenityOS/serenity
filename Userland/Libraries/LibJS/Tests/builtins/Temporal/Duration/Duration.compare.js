@@ -93,4 +93,12 @@ describe("errors", () => {
             "A starting point is required for balancing calendar units"
         );
     });
+
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
+        const duration = new Temporal.Duration();
+        expect(() => {
+            Temporal.Duration.compare(duration, duration, { relativeTo: zonedDateTime });
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
 });

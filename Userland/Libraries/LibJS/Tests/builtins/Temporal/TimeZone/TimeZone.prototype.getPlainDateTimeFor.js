@@ -49,3 +49,12 @@ describe("correct behavior", () => {
         expect(plainDateTime.nanosecond).toBe(123);
     });
 });
+
+describe("errors", () => {
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const instant = new Temporal.Instant(1n);
+        expect(() => {
+            Temporal.TimeZone.prototype.getPlainDateTimeFor.call({}, instant);
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});
