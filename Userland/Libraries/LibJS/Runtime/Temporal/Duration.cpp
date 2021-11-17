@@ -102,16 +102,10 @@ ThrowCompletionOr<TemporalDuration> to_temporal_duration_record(GlobalObject& gl
             // i. Set any to true.
             any = true;
 
-            // ii. Let val be ? ToNumber(val).
-            value = TRY(value.to_number(global_object));
+            // ii. Let val be 𝔽(? ToIntegerWithoutRounding(val)).
+            value = Value(TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects())));
 
-            // iii. If ! IsIntegralNumber(val) is false, then
-            if (!value.is_integral_number()) {
-                // 1. Throw a RangeError exception.
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-            }
-
-            // iv. Set result's internal slot whose name is the Internal Slot value of the current row to val.
+            // iii. Set result's internal slot whose name is the Internal Slot value of the current row to val.
             result.*internal_slot = value.as_double();
         }
     }
@@ -198,16 +192,10 @@ ThrowCompletionOr<PartialDuration> to_partial_duration(GlobalObject& global_obje
             // i. Set any to true.
             any = true;
 
-            // ii. Set value to ? ToNumber(value).
-            value = TRY(value.to_number(global_object));
+            // ii. Set value to 𝔽(? ToIntegerWithoutRounding(value)).
+            value = Value(TRY(to_integer_without_rounding(global_object, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects())));
 
-            // iii. If ! IsIntegralNumber(value) is false, then
-            if (!value.is_integral_number()) {
-                // 1. Throw a RangeError exception.
-                return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
-            }
-
-            // iv. Set result's internal slot whose name is the Internal Slot value of the current row to value.
+            // iii. Set result's internal slot whose name is the Internal Slot value of the current row to value.
             result.*internal_slot = value.as_double();
         }
     }
