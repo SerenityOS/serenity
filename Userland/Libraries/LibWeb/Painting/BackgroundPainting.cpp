@@ -101,6 +101,34 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
         }
 
+        // If background-repeat is round for one (or both) dimensions, there is a second step.
+        // The UA must scale the image in that dimension (or both dimensions) so that it fits a
+        // whole number of times in the background positioning area.
+        if (layer.repeat_x == CSS::Repeat::Round || layer.repeat_y == CSS::Repeat::Round) {
+            // If X ≠ 0 is the width of the image after step one and W is the width of the
+            // background positioning area, then the rounded width X' = W / round(W / X)
+            // where round() is a function that returns the nearest natural number
+            // (integer greater than zero).
+            if (layer.repeat_x == CSS::Repeat::Round) {
+                image_rect.set_width((float)background_positioning_area.width() / roundf((float)background_positioning_area.width() / (float)image_rect.width()));
+            }
+            if (layer.repeat_y == CSS::Repeat::Round) {
+                image_rect.set_height((float)background_positioning_area.height() / roundf((float)background_positioning_area.height() / (float)image_rect.height()));
+            }
+
+            // If background-repeat is round for one dimension only and if background-size is auto
+            // for the other dimension, then there is a third step: that other dimension is scaled
+            // so that the original aspect ratio is restored.
+            if (layer.repeat_x != layer.repeat_y) {
+                if (layer.size_x.is_auto()) {
+                    image_rect.set_width((float)image.width() * ((float)image_rect.height() / (float)image.height()));
+                }
+                if (layer.size_y.is_auto()) {
+                    image_rect.set_height((float)image.height() * ((float)image_rect.width() / (float)image.width()));
+                }
+            }
+        }
+
         int space_x = background_positioning_area.width() - image_rect.width();
         int space_y = background_positioning_area.height() - image_rect.height();
 
@@ -127,6 +155,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         switch (layer.repeat_x) {
         case CSS::Repeat::Round:
+            x_step = image_rect.width();
+            repeat_x = true;
             break;
         case CSS::Repeat::Space: {
             int whole_images = background_positioning_area.width() / image_rect.width();
@@ -156,6 +186,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         switch (layer.repeat_y) {
         case CSS::Repeat::Round:
+            y_step = image_rect.height();
+            repeat_y = true;
             break;
         case CSS::Repeat::Space: {
             int whole_images = background_positioning_area.height() / image_rect.height();
