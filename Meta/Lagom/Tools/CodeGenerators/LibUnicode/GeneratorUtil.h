@@ -91,6 +91,11 @@ private:
     HashMap<StringView, StringIndexType> m_unique_string_indices;
 };
 
+struct Alias {
+    String name;
+    String alias;
+};
+
 template<typename StringIndexType>
 struct CanonicalLanguageID {
     static Optional<CanonicalLanguageID> parse(UniqueStringStorage<StringIndexType>& unique_strings, StringView language)
