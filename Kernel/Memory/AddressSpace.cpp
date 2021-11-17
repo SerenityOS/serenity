@@ -267,8 +267,7 @@ ErrorOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     SpinlockLocker lock(m_lock);
-    if (!m_regions.try_insert(region->vaddr().get(), move(region)))
-        return ENOMEM;
+    TRY(m_regions.try_insert(region->vaddr().get(), move(region)));
     return ptr;
 }
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Error.h>
 #include <AK/Noncopyable.h>
 #include <AK/kmalloc.h>
 
@@ -453,19 +454,18 @@ public:
         insert(key, V(value));
     }
 
-    [[nodiscard]] bool try_insert(K key, V&& value)
+    ErrorOr<void> try_insert(K key, V&& value)
     {
         auto* node = new (nothrow) Node(key, move(value));
         if (!node)
-            return false;
+            return Error::from_errno(ENOMEM);
         BaseTree::insert(node);
-        return true;
+        return {};
     }
 
     void insert(K key, V&& value)
     {
-        auto success = try_insert(key, move(value));
-        VERIFY(success);
+        MUST(try_insert(key, move(value)));
     }
 
     using Iterator = RedBlackTreeIterator<RedBlackTree, V>;
