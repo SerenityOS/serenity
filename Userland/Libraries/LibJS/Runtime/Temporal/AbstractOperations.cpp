@@ -1477,7 +1477,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject& global_object, Value
     return integer;
 }
 
-// 13.48 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+// 13.49 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields)
 {
     auto& vm = global_object.vm();
@@ -1528,7 +1528,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
     return result;
 }
 
-// 13.49 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
+// 13.50 PreparePartialTemporalFields ( fields, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-preparepartialtemporalfields
 ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_object, Object const& fields, Vector<String> const& field_names)
 {
     auto& vm = global_object.vm();

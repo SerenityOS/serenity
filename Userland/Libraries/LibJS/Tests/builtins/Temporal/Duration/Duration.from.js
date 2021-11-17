@@ -39,6 +39,13 @@ describe("correct behavior", () => {
         expectDurationOneToTen(duration);
     });
 
+    test("NaN value becomes zero", () => {
+        // NOTE: NaN does *not* throw a RangeError anymore - which is questionable, IMO - as of:
+        // https://github.com/tc39/proposal-temporal/commit/8c854507a52efbc6e9eb2642f0f928df38e5c021
+        const duration = Temporal.Duration.from({ years: "foo" });
+        expect(duration.years).toBe(0);
+    });
+
     // Un-skip once ParseTemporalDurationString is implemented
     test.skip("Duration string argument", () => {
         const duration = Temporal.Duration.from("TODO");
@@ -59,12 +66,6 @@ describe("errors", () => {
         }).toThrowWithMessage(
             RangeError,
             "Invalid value for duration property 'years': must be an integer, got 1.2" // ...29999999999999 - let's not include that in the test :^)
-        );
-        expect(() => {
-            Temporal.Duration.from({ years: "foo" });
-        }).toThrowWithMessage(
-            RangeError,
-            "Invalid value for duration property 'years': must be an integer, got NaN"
         );
     });
 });
