@@ -12,7 +12,6 @@ RUN apt-get update -y \
         gcc-10 \
         e2fsprogs \
         genext2fs \
-        gettext \
         git \
         imagemagick \
         libgmp-dev \
