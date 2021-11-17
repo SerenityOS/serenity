@@ -837,7 +837,10 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
             if (s_run_bytecode) {
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
-                TRY_OR_DISCARD(bytecode_interpreter.run(executable));
+                auto result = bytecode_interpreter.run(executable);
+                // Since all the error handling code uses vm.exception() we just rethrow any exception we got here.
+                if (result.is_error())
+                    vm->throw_exception(interpreter.global_object(), result.throw_completion().value());
             } else {
                 return true;
             }
