@@ -254,6 +254,7 @@ class LineBox;
 class LineBoxFragment;
 class Node;
 class NodeWithStyle;
+class NodeWithStyleAndBoxModelMetrics;
 class RadioButton;
 class ReplacedBox;
 class TextNode;
