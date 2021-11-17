@@ -8,10 +8,6 @@
 
 #include <AK/Format.h>
 #include <AK/HashMap.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
@@ -156,39 +152,6 @@ inline Core::DirIterator path_to_dir_iterator(String path)
     return iterator;
 }
 
-template<typename LocaleDataType>
-void parse_default_content_locales(String core_path, LocaleDataType& locale_data)
-{
-    LexicalPath default_content_path(move(core_path));
-    default_content_path = default_content_path.append("defaultContent.json"sv);
-    VERIFY(Core::File::exists(default_content_path.string()));
-
-    auto default_content_file_or_error = Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly);
-    VERIFY(!default_content_file_or_error.is_error());
-
-    auto default_content = JsonValue::from_string(default_content_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
-
-    auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
-
-    default_content_array.as_array().for_each([&](JsonValue const& value) {
-        auto locale = value.as_string();
-        StringView default_locale = locale;
-
-        while (true) {
-            if (locale_data.locales.contains(default_locale))
-                break;
-
-            auto pos = default_locale.find_last('-');
-            if (!pos.has_value())
-                return;
-
-            default_locale = default_locale.substring_view(0, *pos);
-        }
-
-        locale_data.locales.set(locale, locale_data.locales.get(default_locale).value());
-    });
-}
-
 inline void ensure_from_string_types_are_generated(SourceGenerator& generator)
 {
     static bool generated_from_string_types = false;
@@ -275,9 +238,10 @@ Optional<@return_type@> @method_name@(StringView key)
 }
 
 template<typename IdentifierFormatter>
-void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values)
+void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values, Vector<Alias> aliases = {})
 {
     quick_sort(values);
+    quick_sort(aliases, [](auto const& alias1, auto const& alias2) { return alias1.alias < alias2.alias; });
 
     generator.set("name", name);
     generator.set("underlying", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
@@ -295,6 +259,13 @@ enum class @name@ : @underlying@ {)~~~");
         generator.set("value", format_identifier(name, value));
         generator.append(R"~~~(
     @value@,)~~~");
+    }
+
+    for (auto const& alias : aliases) {
+        generator.set("alias", format_identifier(name, alias.alias));
+        generator.set("value", format_identifier(name, alias.name));
+        generator.append(R"~~~(
+    @alias@ = @value@,)~~~");
     }
 
     generator.append(R"~~~(

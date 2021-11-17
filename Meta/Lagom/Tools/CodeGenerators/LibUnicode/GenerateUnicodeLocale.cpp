@@ -55,7 +55,10 @@ struct LanguageMapping {
 
 struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
+
     HashMap<String, Locale> locales;
+    Vector<Alias> locale_aliases;
+
     Vector<String> languages;
     Vector<String> territories;
     Vector<String> scripts;
@@ -392,6 +395,38 @@ static void parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData
         locale_data.keywords.append(key);
 }
 
+static void parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
+{
+    LexicalPath default_content_path(move(core_path));
+    default_content_path = default_content_path.append("defaultContent.json"sv);
+    VERIFY(Core::File::exists(default_content_path.string()));
+
+    auto default_content_file_or_error = Core::File::open(default_content_path.string(), Core::OpenMode::ReadOnly);
+    VERIFY(!default_content_file_or_error.is_error());
+
+    auto default_content = JsonValue::from_string(default_content_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto const& default_content_array = default_content.as_object().get("defaultContent"sv);
+
+    default_content_array.as_array().for_each([&](JsonValue const& value) {
+        auto locale = value.as_string();
+        StringView default_locale = locale;
+
+        while (true) {
+            if (locale_data.locales.contains(default_locale))
+                break;
+
+            auto pos = default_locale.find_last('-');
+            if (!pos.has_value())
+                return;
+
+            default_locale = default_locale.substring_view(0, *pos);
+        }
+
+        if (default_locale != locale)
+            locale_data.locale_aliases.append({ default_locale, move(locale) });
+    });
+}
+
 static void parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = path_to_dir_iterator(locale_names_path);
@@ -504,7 +539,7 @@ namespace Unicode {
 )~~~");
 
     auto locales = locale_data.locales.keys();
-    generate_enum(generator, format_identifier, "Locale"sv, "None"sv, locales);
+    generate_enum(generator, format_identifier, "Locale"sv, "None"sv, locales, locale_data.locale_aliases);
     generate_enum(generator, format_identifier, "Language"sv, {}, locale_data.languages);
     generate_enum(generator, format_identifier, "Territory"sv, {}, locale_data.territories);
     generate_enum(generator, format_identifier, "ScriptTag"sv, {}, locale_data.scripts);
@@ -885,12 +920,14 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 )~~~");
     };
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
         for (auto const& value : values)
             hashes.set(value.hash(), format_identifier(enum_title, value));
+        for (auto const& alias : aliases)
+            hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
@@ -905,7 +942,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), "StringView"sv, "s_string_list[{}]"sv);
     };
 
-    append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys());
+    append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys(), locale_data.locale_aliases);
 
     append_mapping_search("language"sv, "language"sv, "s_languages"sv);
     append_from_string("Language"sv, "language"sv, locale_data.languages);
