@@ -463,3 +463,11 @@ TEST_CASE(canonicalize_unicode_locale_id)
     test("zh-Hans-CN"sv, "zh-Hans-CN"sv);
     test("ZH-HANS-CN"sv, "zh-Hans-CN"sv);
 }
+
+TEST_CASE(supports_locale_aliases)
+{
+    EXPECT(Unicode::is_locale_available("zh"sv));
+    EXPECT(Unicode::is_locale_available("zh-Hant"sv));
+    EXPECT(Unicode::is_locale_available("zh-TW"sv));
+    EXPECT(Unicode::is_locale_available("zh-Hant-TW"sv));
+}
