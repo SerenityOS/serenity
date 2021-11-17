@@ -59,4 +59,12 @@ describe("normal behavior", () => {
         // [ "foo", <circular>, [ 1, 2, <circular> ], [ "bar" ] ]
         expect(a.toLocaleString()).toBe("foo,,1,2,,bar");
     });
+
+    test("with options", () => {
+        expect([12, 34].toLocaleString("en")).toBe("12");
+        expect([12, 34].toLocaleString("ar")).toBe("\u0661\u0662,\u0663\u0664");
+
+        expect([0.234].toLocaleString("en", { style: "percent" })).toBe("23%");
+        expect([0.234].toLocaleString("ar", { style: "percent" })).toBe("\u0662\u0663\u066a\u061c");
+    });
 });
