@@ -240,6 +240,8 @@ public:
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
     PhysicalAddress get_physical_address(PhysicalPage const&);
 
+    void copy_physical_page(PhysicalPage&, u8 page_buffer[PAGE_SIZE]);
+
 private:
     MemoryManager();
     ~MemoryManager();

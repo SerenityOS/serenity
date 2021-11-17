@@ -1118,4 +1118,12 @@ void CommittedPhysicalPageSet::uncommit_one()
     MM.uncommit_user_physical_pages({}, 1);
 }
 
+void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buffer[PAGE_SIZE])
+{
+    SpinlockLocker locker(s_mm_lock);
+    auto* quickmapped_page = quickmap_page(physical_page);
+    memcpy(page_buffer, quickmapped_page, PAGE_SIZE);
+    unquickmap_page();
+}
+
 }
