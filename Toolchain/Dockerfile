@@ -28,7 +28,6 @@ RUN apt-get update -y \
         sudo \
         tzdata \
         unzip \
-        wget \
     && rm -rf /var/lib/apt/lists/ \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 900 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
