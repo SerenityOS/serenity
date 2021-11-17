@@ -152,6 +152,7 @@ private:
     StringBuilder m_unit;
     HashType m_hash_type { HashType::Unrestricted };
     NumberType m_number_type { NumberType::Integer };
+    double m_number_value { 0 };
 
     Position m_start_position;
     Position m_end_position;
