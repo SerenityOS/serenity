@@ -488,8 +488,6 @@ static void parse_all_locales(String core_path, String numbers_path, String unit
         auto& locale = locale_data.locales.ensure(*language);
         parse_units(units_path, locale_data, locale);
     }
-
-    parse_default_content_locales(move(core_path), locale_data);
 }
 
 static String format_identifier(StringView owner, String identifier)
