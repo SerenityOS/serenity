@@ -18,8 +18,8 @@ public:
     VirtualRangeAllocator();
     ~VirtualRangeAllocator() = default;
 
-    void initialize_with_range(VirtualAddress, size_t);
-    void initialize_from_parent(VirtualRangeAllocator const&);
+    ErrorOr<void> initialize_with_range(VirtualAddress, size_t);
+    ErrorOr<void> initialize_from_parent(VirtualRangeAllocator const&);
 
     ErrorOr<VirtualRange> try_allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress, size_t);
