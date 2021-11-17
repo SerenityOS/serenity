@@ -35,3 +35,11 @@ describe("correct behavior", () => {
         }
     });
 });
+
+describe("errors", () => {
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        expect(() => {
+            Temporal.Now.plainDate({}, {});
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});

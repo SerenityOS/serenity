@@ -48,3 +48,12 @@ describe("correct behavior", () => {
         expect(createdPlainTime.nanosecond).toBe(0);
     });
 });
+
+describe("errors", () => {
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
+        expect(() => {
+            Temporal.PlainTime.from(zonedDateTime);
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});

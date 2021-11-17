@@ -36,3 +36,12 @@ describe("correct behavior", () => {
         expect(createdPlainDate.day).toBe(26);
     });
 });
+
+describe("errors", () => {
+    test("custom time zone doesn't have a getOffsetNanosecondsFor function", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(0n, {});
+        expect(() => {
+            Temporal.PlainDate.from(zonedDateTime);
+        }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+});
