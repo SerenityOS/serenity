@@ -118,11 +118,11 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
 
     // 2. Let remainderNs be remainder(epochNanoseconds, 10^6).
     auto remainder_ns_bigint = epoch_nanoseconds.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).remainder;
-    auto remainder_ns = remainder_ns_bigint.to_base(10).to_int<i64>().value();
+    auto remainder_ns = remainder_ns_bigint.to_double();
 
     // 3. Let epochMilliseconds be (epochNanoseconds − remainderNs) / 10^6.
     auto epoch_milliseconds_bigint = epoch_nanoseconds.big_integer().minus(remainder_ns_bigint).divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).quotient;
-    auto epoch_milliseconds = (double)epoch_milliseconds_bigint.to_base(10).to_int<i64>().value();
+    auto epoch_milliseconds = epoch_milliseconds_bigint.to_double();
 
     // 4. Let year be ! YearFromTime(epochMilliseconds).
     auto year = year_from_time(epoch_milliseconds);
@@ -146,13 +146,13 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     auto millisecond = ms_from_time(epoch_milliseconds);
 
     // 11. Let microsecond be floor(remainderNs / 1000) modulo 1000.
-    auto microsecond = static_cast<u16>((remainder_ns / 1000) % 1000);
+    auto microsecond = modulo(floor(remainder_ns / 1000), 1000.0);
 
     // 12. Let nanosecond be remainderNs modulo 1000.
-    auto nanosecond = static_cast<u16>(remainder_ns % 1000);
+    auto nanosecond = modulo(remainder_ns, 1000.0);
 
     // 13. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
-    return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond };
+    return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
 }
 
 // 11.6.4 GetIANATimeZoneEpochValue ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneepochvalue
