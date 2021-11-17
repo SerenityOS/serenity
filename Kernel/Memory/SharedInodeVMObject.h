@@ -18,6 +18,8 @@ public:
     static ErrorOr<NonnullRefPtr<SharedInodeVMObject>> try_create_with_inode(Inode&);
     virtual ErrorOr<NonnullRefPtr<VMObject>> try_clone() override;
 
+    ErrorOr<void> sync();
+
 private:
     virtual bool is_shared_inode() const override { return true; }
 

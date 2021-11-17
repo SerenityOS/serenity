@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 
 namespace Kernel::Memory {
@@ -32,6 +33,24 @@ SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
 SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other)
     : InodeVMObject(other)
 {
+}
+
+ErrorOr<void> SharedInodeVMObject::sync()
+{
+    SpinlockLocker locker(m_lock);
+
+    for (size_t page_index = 0; page_index < page_count(); ++page_index) {
+        auto& physical_page = m_physical_pages[page_index];
+        if (!physical_page)
+            continue;
+
+        u8 page_buffer[PAGE_SIZE];
+        MM.copy_physical_page(*physical_page, page_buffer);
+
+        TRY(m_inode->write_bytes(page_index * PAGE_SIZE, PAGE_SIZE, UserOrKernelBuffer::for_kernel_buffer(page_buffer), nullptr));
+    }
+
+    return {};
 }
 
 }
