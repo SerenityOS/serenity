@@ -7,9 +7,12 @@
 
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/NumberFormat.h>
+#include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/NumberPrototype.h>
 
@@ -37,6 +40,7 @@ void NumberPrototype::initialize(GlobalObject& object)
     Object::initialize(object);
     u8 attr = Attribute::Configurable | Attribute::Writable;
     define_native_function(vm.names.toFixed, to_fixed, 1, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.toString, to_string, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
@@ -75,6 +79,29 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
         return js_string(vm, MUST(number_value.to_string(global_object)));
 
     return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
+}
+
+// 18.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
+{
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let x be ? thisNumberValue(this value).
+    auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
+
+    MarkedValueList arguments { vm.heap() };
+    arguments.append(locales);
+    arguments.append(options);
+
+    // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(global_object, *global_object.intl_number_format_constructor(), move(arguments))));
+
+    // 3. Return ? FormatNumeric(numberFormat, x).
+    // Note: Our implementation of FormatNumeric does not throw.
+    auto formatted = Intl::format_numeric(*number_format, number_value.as_double());
+
+    return js_string(vm, move(formatted));
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
