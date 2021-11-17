@@ -45,12 +45,6 @@ struct SpecialCasing {
 // Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
 using PropList = HashMap<String, Vector<CodePointRange>>;
 
-// PropertyAliases source: https://www.unicode.org/Public/13.0.0/ucd/PropertyAliases.txt
-struct Alias {
-    String property;
-    String alias;
-};
-
 // Normalization source: https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt
 // Normalization descriptions: https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
@@ -479,7 +473,7 @@ enum class @name@ : @underlying@ {)~~~");
 
         for (auto const& alias : aliases) {
             generator.set("alias", alias.alias);
-            generator.set("value", alias.property);
+            generator.set("value", alias.name);
             generator.append(R"~~~(
     @alias@ = @value@,)~~~");
         }
@@ -929,7 +923,7 @@ static void normalize_script_extensions(PropList& script_extensions, PropList co
 
     for (auto const& extension : extensions) {
         auto it = find_if(script_aliases.begin(), script_aliases.end(), [&](auto const& alias) { return extension.key == alias.alias; });
-        auto const& key = (it == script_aliases.end()) ? extension.key : it->property;
+        auto const& key = (it == script_aliases.end()) ? extension.key : it->name;
 
         auto& code_points = script_extensions.find(key)->value;
         code_points.extend(extension.value);
