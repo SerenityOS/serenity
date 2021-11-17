@@ -405,7 +405,7 @@ struct Formatter<unsigned char[Size]> : Formatter<StringView> {
             Formatter<FlatPtr> formatter { *this };
             return formatter.format(builder, reinterpret_cast<FlatPtr>(value));
         }
-        Formatter<StringView>::format(builder, { value, Size });
+        return Formatter<StringView>::format(builder, { value, Size });
     }
 };
 template<>
