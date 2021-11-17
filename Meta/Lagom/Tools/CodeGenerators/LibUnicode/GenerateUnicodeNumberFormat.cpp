@@ -445,7 +445,7 @@ static void parse_units(String locale_units_path, UnicodeLocaleData& locale_data
     parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
 }
 
-static void parse_all_locales(String core_path, String numbers_path, String units_path, UnicodeLocaleData& locale_data)
+static void parse_all_locales(String numbers_path, String units_path, UnicodeLocaleData& locale_data)
 {
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
     auto units_iterator = path_to_dir_iterator(move(units_path));
@@ -910,14 +910,12 @@ int main(int argc, char** argv)
 {
     char const* generated_header_path = nullptr;
     char const* generated_implementation_path = nullptr;
-    char const* core_path = nullptr;
     char const* numbers_path = nullptr;
     char const* units_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
-    args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
     args_parser.add_option(units_path, "Path to cldr-units directory", "units-path", 'u', "units-path");
     args_parser.parse(argc, argv);
@@ -942,7 +940,7 @@ int main(int argc, char** argv)
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(core_path, numbers_path, units_path, locale_data);
+    parse_all_locales(numbers_path, units_path, locale_data);
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);
