@@ -1905,9 +1905,7 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
         numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().m_unit.string_view();
 
-        if (unit_string.equals_ignoring_case("%")) {
-            type = Length::Type::Percentage;
-        } else if (unit_string.equals_ignoring_case("px")) {
+        if (unit_string.equals_ignoring_case("px")) {
             type = Length::Type::Px;
         } else if (unit_string.equals_ignoring_case("pt")) {
             type = Length::Type::Pt;
@@ -1937,6 +1935,9 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
             type = Length::Type::In;
         } else if (unit_string.equals_ignoring_case("Q")) {
             type = Length::Type::Q;
+        } else if (unit_string.equals_ignoring_case("%")) {
+            // A number followed by `%` must always result in a Percentage token.
+            VERIFY_NOT_REACHED();
         } else {
             return {};
         }
