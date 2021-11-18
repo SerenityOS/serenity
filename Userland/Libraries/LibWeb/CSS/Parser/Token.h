@@ -14,7 +14,6 @@
 namespace Web::CSS {
 
 class Token {
-    friend class Parser;
     friend class Tokenizer;
 
 public:
@@ -68,6 +67,12 @@ public:
     StringView ident() const
     {
         VERIFY(m_type == Type::Ident);
+        return m_value.string_view();
+    }
+
+    StringView function() const
+    {
+        VERIFY(m_type == Type::Function);
         return m_value.string_view();
     }
 
