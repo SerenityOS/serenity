@@ -27,7 +27,6 @@ public:
     void delete_rule(size_t index);
 
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
-    virtual bool for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback);
 
 protected:
     explicit CSSGroupingRule(NonnullRefPtrVector<CSSRule>&&);
