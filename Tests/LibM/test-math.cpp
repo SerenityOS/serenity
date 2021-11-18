@@ -259,3 +259,11 @@ TEST_CASE(fmax_and_fmin)
     EXPECT(fmin(0, NAN) == 0);
     EXPECT(isnan(fmin(NAN, NAN)));
 }
+
+TEST_CASE(acos)
+{
+    EXPECT_APPROXIMATE(acos(-1), M_PI);
+    EXPECT_APPROXIMATE(acos(0), 0.5 * M_PI);
+    EXPECT_APPROXIMATE(acos(1), 0);
+    EXPECT(isnan(acos(1.1)));
+}
