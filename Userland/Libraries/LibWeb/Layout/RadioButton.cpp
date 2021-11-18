@@ -8,9 +8,9 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/RadioButton.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

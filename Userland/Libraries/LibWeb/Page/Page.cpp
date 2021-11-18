@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web {
@@ -12,21 +12,21 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_browsing_context = BrowsingContext::create(*this);
+    m_top_level_browsing_context = HTML::BrowsingContext::create(*this);
 }
 
 Page::~Page()
 {
 }
 
-BrowsingContext& Page::focused_context()
+HTML::BrowsingContext& Page::focused_context()
 {
     if (m_focused_context)
         return *m_focused_context;
     return top_level_browsing_context();
 }
 
-void Page::set_focused_browsing_context(Badge<EventHandler>, BrowsingContext& browsing_context)
+void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext& browsing_context)
 {
     m_focused_context = browsing_context.make_weak_ptr();
 }

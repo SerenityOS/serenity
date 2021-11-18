@@ -6,8 +6,8 @@
 
 #include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {

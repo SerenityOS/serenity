@@ -17,11 +17,9 @@
 
 namespace Web {
 
-class BrowsingContext;
-
 class EventHandler {
 public:
-    explicit EventHandler(Badge<BrowsingContext>, BrowsingContext&);
+    explicit EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
     ~EventHandler();
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
@@ -43,7 +41,7 @@ private:
     Layout::InitialContainingBlock* layout_root();
     const Layout::InitialContainingBlock* layout_root() const;
 
-    BrowsingContext& m_frame;
+    HTML::BrowsingContext& m_frame;
 
     bool m_in_mouse_selection { false };
 

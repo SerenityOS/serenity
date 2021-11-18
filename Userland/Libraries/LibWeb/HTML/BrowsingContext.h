@@ -20,7 +20,7 @@
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
 
-namespace Web {
+namespace Web::HTML {
 
 class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
@@ -60,8 +60,8 @@ public:
     FrameLoader& loader() { return m_loader; }
     FrameLoader const& loader() const { return m_loader; }
 
-    EventHandler& event_handler() { return m_event_handler; }
-    EventHandler const& event_handler() const { return m_event_handler; }
+    Web::EventHandler& event_handler() { return m_event_handler; }
+    Web::EventHandler const& event_handler() const { return m_event_handler; }
 
     void scroll_to_anchor(String const&);
 
@@ -112,7 +112,7 @@ private:
     WeakPtr<Page> m_page;
 
     FrameLoader m_loader;
-    EventHandler m_event_handler;
+    Web::EventHandler m_event_handler;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
     RefPtr<DOM::Document> m_active_document;

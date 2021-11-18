@@ -120,11 +120,11 @@ public:
     String title() const;
     void set_title(const String&);
 
-    void attach_to_browsing_context(Badge<BrowsingContext>, BrowsingContext&);
-    void detach_from_browsing_context(Badge<BrowsingContext>, BrowsingContext&);
+    void attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
+    void detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
 
-    BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
-    const BrowsingContext* browsing_context() const { return m_browsing_context.ptr(); }
+    HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
+    HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
 
     Page* page();
     const Page* page() const;
@@ -339,7 +339,7 @@ private:
     RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
-    WeakPtr<BrowsingContext> m_browsing_context;
+    WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;
 
     RefPtr<Window> m_window;

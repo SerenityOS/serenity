@@ -9,13 +9,13 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <typeinfo>
 
 namespace Web::Layout {
@@ -91,13 +91,13 @@ HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) co
     return result;
 }
 
-const BrowsingContext& Node::browsing_context() const
+HTML::BrowsingContext const& Node::browsing_context() const
 {
     VERIFY(document().browsing_context());
     return *document().browsing_context();
 }
 
-BrowsingContext& Node::browsing_context()
+HTML::BrowsingContext& Node::browsing_context()
 {
     VERIFY(document().browsing_context());
     return *document().browsing_context();

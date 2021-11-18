@@ -6,10 +6,10 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 
