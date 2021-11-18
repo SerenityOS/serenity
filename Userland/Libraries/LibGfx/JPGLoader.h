@@ -17,7 +17,6 @@ public:
     virtual ~JPGImageDecoderPlugin() override;
     JPGImageDecoderPlugin(const u8*, size_t);
     virtual IntSize size() override;
-    virtual RefPtr<Gfx::Bitmap> bitmap() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
     virtual bool sniff() override;

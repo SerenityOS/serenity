@@ -931,22 +931,6 @@ IntSize PNGImageDecoderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-RefPtr<Gfx::Bitmap> PNGImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == PNGLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
-        // NOTE: This forces the chunk decoding to happen.
-        bool success = decode_png_bitmap(*m_context);
-        if (!success)
-            return nullptr;
-    }
-
-    VERIFY(m_context->bitmap);
-    return m_context->bitmap;
-}
-
 void PNGImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -984,7 +968,19 @@ ImageFrameDescriptor PNGImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == PNGLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
+        // NOTE: This forces the chunk decoding to happen.
+        bool success = decode_png_bitmap(*m_context);
+        if (!success)
+            return {};
+    }
+
+    VERIFY(m_context->bitmap);
+    return { m_context->bitmap, 0 };
 }
 
 }

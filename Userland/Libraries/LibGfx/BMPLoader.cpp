@@ -1321,18 +1321,6 @@ IntSize BMPImageDecoderPlugin::size()
     return { m_context->dib.core.width, abs(m_context->dib.core.height) };
 }
 
-RefPtr<Gfx::Bitmap> BMPImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == BMPLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < BMPLoadingContext::State::PixelDataDecoded && !decode_bmp_pixel_data(*m_context))
-        return nullptr;
-
-    VERIFY(m_context->bitmap);
-    return m_context->bitmap;
-}
-
 void BMPImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -1370,7 +1358,15 @@ ImageFrameDescriptor BMPImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == BMPLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < BMPLoadingContext::State::PixelDataDecoded && !decode_bmp_pixel_data(*m_context))
+        return {};
+
+    VERIFY(m_context->bitmap);
+    return { m_context->bitmap, 0 };
 }
 
 }

@@ -623,14 +623,6 @@ IntSize GIFImageDecoderPlugin::size()
     return { m_context->logical_screen.width, m_context->logical_screen.height };
 }
 
-RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
-{
-    if (m_context->state < GIFLoadingContext::State::FrameComplete) {
-        return frame(0).image;
-    }
-    return m_context->frame_buffer;
-}
-
 void GIFImageDecoderPlugin::set_volatile()
 {
     if (m_context->frame_buffer) {
