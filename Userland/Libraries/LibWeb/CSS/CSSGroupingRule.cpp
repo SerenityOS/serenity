@@ -35,9 +35,4 @@ void CSSGroupingRule::for_each_effective_style_rule(Function<void(CSSStyleRule c
     m_rules->for_each_effective_style_rule(callback);
 }
 
-bool CSSGroupingRule::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback)
-{
-    return m_rules->for_first_not_loaded_import_rule(callback);
-}
-
 }
