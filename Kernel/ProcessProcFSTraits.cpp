@@ -45,7 +45,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(const ProcF
     return TRY(ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid()));
 }
 
-ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     auto process = m_process.strong_ref();
     if (!process)

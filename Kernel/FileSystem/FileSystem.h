@@ -26,8 +26,8 @@ class FileSystem : public RefCounted<FileSystem> {
 public:
     virtual ~FileSystem();
 
-    unsigned fsid() const { return m_fsid; }
-    static FileSystem* from_fsid(u32);
+    FileSystemID fsid() const { return m_fsid; }
+    static FileSystem* from_fsid(FileSystemID);
     static void sync();
     static void lock_all();
 
@@ -72,7 +72,7 @@ protected:
     mutable Mutex m_lock { "FS" };
 
 private:
-    unsigned m_fsid { 0 };
+    FileSystemID m_fsid;
     u64 m_block_size { 0 };
     size_t m_fragment_size { 0 };
     bool m_readonly { false };
@@ -94,7 +94,7 @@ namespace AK {
 
 template<>
 struct Traits<Kernel::InodeIdentifier> : public GenericTraits<Kernel::InodeIdentifier> {
-    static unsigned hash(const Kernel::InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index().value()); }
+    static unsigned hash(const Kernel::InodeIdentifier& inode) { return pair_int_hash(inode.fsid().value(), inode.index().value()); }
 };
 
 }

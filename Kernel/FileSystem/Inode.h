@@ -35,7 +35,7 @@ public:
 
     FileSystem& fs() { return m_file_system; }
     FileSystem const& fs() const { return m_file_system; }
-    unsigned fsid() const { return m_file_system.fsid(); }
+    FileSystemID fsid() const { return m_file_system.fsid(); }
     InodeIndex index() const { return m_index; }
 
     size_t size() const { return metadata().size; }
