@@ -895,6 +895,7 @@ TEST_CASE(optimizer_atomic_groups)
         // Fork -> ForkReplace
         Tuple { "a*b"sv, "aaaaa"sv, false },
         Tuple { "a+b"sv, "aaaaa"sv, false },
+        Tuple { "\\\\(\\d+)"sv, "\\\\"sv, false }, // Rewrite bug turning a+ to a*, see #10952.
         // Alternative fuse
         Tuple { "(abcfoo|abcbar|abcbaz).*x"sv, "abcbarx"sv, true },
         Tuple { "(a|a)"sv, "a"sv, true },
