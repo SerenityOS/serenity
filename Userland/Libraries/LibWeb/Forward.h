@@ -115,6 +115,7 @@ class DOMRectReadOnly;
 }
 
 namespace Web::HTML {
+class BrowsingContext;
 class CanvasRenderingContext2D;
 class CloseEvent;
 class DOMParser;
@@ -261,7 +262,6 @@ class TextNode;
 }
 
 namespace Web {
-class BrowsingContext;
 class EditEventHandler;
 class EventHandler;
 class FrameLoader;

@@ -10,8 +10,8 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {

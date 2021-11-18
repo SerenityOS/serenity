@@ -38,10 +38,10 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 

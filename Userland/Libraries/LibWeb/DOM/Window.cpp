@@ -15,11 +15,11 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Selection/Selection.h>
 

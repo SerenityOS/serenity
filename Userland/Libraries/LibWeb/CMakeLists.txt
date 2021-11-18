@@ -94,6 +94,7 @@ set(SOURCES
     Dump.cpp
     FontCache.cpp
     HTML/AttributeNames.cpp
+    HTML/BrowsingContext.cpp
     HTML/BrowsingContextContainer.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/DOMParser.cpp
@@ -242,7 +243,6 @@ set(SOURCES
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
     OutOfProcessWebView.cpp
-    Page/BrowsingContext.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp

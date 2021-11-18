@@ -10,9 +10,9 @@
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EditEventHandler.h>
 
 namespace Web {

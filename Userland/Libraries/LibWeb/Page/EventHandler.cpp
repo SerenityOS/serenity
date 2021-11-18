@@ -9,11 +9,11 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -88,7 +88,7 @@ static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, c
     };
 }
 
-EventHandler::EventHandler(Badge<BrowsingContext>, BrowsingContext& frame)
+EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& frame)
     : m_frame(frame)
     , m_edit_event_handler(make<EditEventHandler>(frame))
 {

@@ -34,13 +34,13 @@ public:
     PageClient& client() { return m_client; }
     const PageClient& client() const { return m_client; }
 
-    Web::BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
-    const Web::BrowsingContext& top_level_browsing_context() const { return *m_top_level_browsing_context; }
+    HTML::BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
+    HTML::BrowsingContext const& top_level_browsing_context() const { return *m_top_level_browsing_context; }
 
-    Web::BrowsingContext& focused_context();
-    const Web::BrowsingContext& focused_context() const { return const_cast<Page*>(this)->focused_context(); }
+    HTML::BrowsingContext& focused_context();
+    HTML::BrowsingContext const& focused_context() const { return const_cast<Page*>(this)->focused_context(); }
 
-    void set_focused_browsing_context(Badge<EventHandler>, BrowsingContext&);
+    void set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext&);
 
     void load(const AK::URL&);
     void load(LoadRequest&);
@@ -65,8 +65,8 @@ public:
 private:
     PageClient& m_client;
 
-    RefPtr<BrowsingContext> m_top_level_browsing_context;
-    WeakPtr<BrowsingContext> m_focused_context;
+    RefPtr<HTML::BrowsingContext> m_top_level_browsing_context;
+    WeakPtr<HTML::BrowsingContext> m_focused_context;
 
     // FIXME: Enable this by default once CORS preflight checks are supported.
     bool m_same_origin_policy_enabled { false };

@@ -6,6 +6,7 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
@@ -14,7 +15,6 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
