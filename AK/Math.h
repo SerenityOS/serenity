@@ -250,7 +250,7 @@ constexpr T acos(T value)
     CONSTEXPR_STATE(acos, value);
 
     // FIXME: I am naive
-    return Pi<T> + asin(value);
+    return static_cast<T>(0.5) * Pi<T> - asin<T>(value);
 }
 
 template<FloatingPoint T>
