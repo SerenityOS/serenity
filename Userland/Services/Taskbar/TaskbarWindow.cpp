@@ -7,9 +7,9 @@
 
 #include "TaskbarWindow.h"
 #include "ClockWidget.h"
+#include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -25,9 +25,6 @@
 #include <LibGfx/Palette.h>
 #include <serenity.h>
 #include <stdio.h>
-
-constexpr const char* quick_launch = "QuickLaunch";
-constexpr int quick_launch_button_size = 24;
 
 class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
@@ -75,7 +72,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_start_button->set_menu(m_start_menu);
 
     main_widget.add_child(*m_start_button);
-    create_quick_launch_bar();
+    main_widget.add<Taskbar::QuickLaunchWidget>();
 
     m_task_button_container = main_widget.add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -109,87 +106,6 @@ TaskbarWindow::~TaskbarWindow()
 void TaskbarWindow::show_desktop_button_clicked(unsigned)
 {
     GUI::WindowManagerServerConnection::the().async_toggle_show_desktop();
-}
-
-void TaskbarWindow::config_key_was_removed(String const& domain, String const& group, String const& key)
-{
-    if (domain == "Taskbar" && group == quick_launch) {
-        auto button = m_quick_launch_bar->find_child_of_type_named<GUI::Button>(key);
-        if (button)
-            m_quick_launch_bar->remove_child(*button);
-    }
-}
-
-void TaskbarWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
-{
-    if (domain == "Taskbar" && group == quick_launch) {
-        auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, value);
-        auto af = Desktop::AppFile::open(af_path);
-        if (!af->is_valid())
-            return;
-
-        auto button = m_quick_launch_bar->find_child_of_type_named<GUI::Button>(key);
-        if (button) {
-            set_quick_launch_button_data(*button, key, af);
-        } else {
-            auto& new_button = m_quick_launch_bar->add<GUI::Button>();
-            set_quick_launch_button_data(new_button, key, af);
-        }
-    }
-}
-
-void TaskbarWindow::create_quick_launch_bar()
-{
-    m_quick_launch_bar = main_widget()->add<GUI::Frame>();
-    m_quick_launch_bar->set_shrink_to_fit(true);
-    m_quick_launch_bar->set_layout<GUI::HorizontalBoxLayout>();
-    m_quick_launch_bar->layout()->set_spacing(0);
-    m_quick_launch_bar->set_frame_thickness(0);
-
-    auto config = Core::ConfigFile::open_for_app("Taskbar");
-
-    // FIXME: Core::ConfigFile does not keep the order of the entries.
-    for (auto& name : config->keys(quick_launch)) {
-        auto af_name = config->read_entry(quick_launch, name);
-        auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, af_name);
-        auto af = Desktop::AppFile::open(af_path);
-        if (!af->is_valid())
-            continue;
-        auto& button = m_quick_launch_bar->add<GUI::Button>();
-        set_quick_launch_button_data(button, name, af);
-    }
-    m_quick_launch_bar->set_fixed_height(24);
-}
-
-void TaskbarWindow::set_quick_launch_button_data(GUI::Button& button, String const& button_name, NonnullRefPtr<Desktop::AppFile> app_file)
-{
-    auto app_executable = app_file->executable();
-    auto app_run_in_terminal = app_file->run_in_terminal();
-    button.set_fixed_size(quick_launch_button_size, quick_launch_button_size);
-    button.set_button_style(Gfx::ButtonStyle::Coolbar);
-    button.set_icon(app_file->icon().bitmap_for_size(16));
-    button.set_tooltip(app_file->name());
-    button.set_name(button_name);
-    button.on_click = [app_executable, app_run_in_terminal](auto) {
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-        } else if (pid == 0) {
-            if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
-                perror("chdir");
-                exit(1);
-            }
-            if (app_run_in_terminal)
-                execl("/bin/Terminal", "Terminal", "-e", app_executable.characters(), nullptr);
-            else
-                execl(app_executable.characters(), app_executable.characters(), nullptr);
-            perror("execl");
-            VERIFY_NOT_REACHED();
-        } else {
-            if (disown(pid) < 0)
-                perror("disown");
-        }
-    };
 }
 
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
