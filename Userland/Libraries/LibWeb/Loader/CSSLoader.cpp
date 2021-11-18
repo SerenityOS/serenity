@@ -27,8 +27,6 @@ void CSSLoader::load_from_text(const String& text)
         m_style_sheet = CSS::CSSStyleSheet::create({});
         m_style_sheet->set_owner_node(&m_owner_element);
     }
-
-    load_next_import_if_needed();
 }
 
 void CSSLoader::load_from_url(const AK::URL& url)
@@ -60,20 +58,11 @@ void CSSLoader::resource_did_load()
         return;
     }
 
-    bool was_imported = m_style_sheet->for_first_not_loaded_import_rule([&](auto& rule) {
-        rule.set_style_sheet(sheet);
-    });
-
     // Transfer the rules from the successfully parsed sheet into the sheet we've already inserted.
-    // FIXME: @import rules need work.
-    if (!was_imported) {
-        m_style_sheet->set_rules(sheet->rules());
-    }
+    m_style_sheet->set_rules(sheet->rules());
 
     if (on_load)
         on_load();
-
-    load_next_import_if_needed();
 }
 
 void CSSLoader::resource_did_fail()
@@ -81,21 +70,6 @@ void CSSLoader::resource_did_fail()
     dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did fail. URL: {}", resource()->url());
 
     m_document_load_event_delayer.clear();
-
-    load_next_import_if_needed();
-}
-
-void CSSLoader::load_next_import_if_needed()
-{
-    // Create load request for the first import which isn't loaded.
-    // TODO: We need to somehow handle infinite cycles in imports.
-    m_style_sheet->for_first_not_loaded_import_rule([&](auto& rule) {
-        dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Loading @import {}", rule.url());
-
-        LoadRequest request;
-        request.set_url(rule.url());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-    });
 }
 
 }
