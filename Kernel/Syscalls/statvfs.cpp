@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custod
     kernelbuf.f_ffree = fs.free_inode_count();
     kernelbuf.f_favail = fs.free_inode_count(); // FIXME: same as f_bavail
 
-    kernelbuf.f_fsid = fs.fsid();
+    kernelbuf.f_fsid = fs.fsid().value();
 
     kernelbuf.f_namemax = 255;
 

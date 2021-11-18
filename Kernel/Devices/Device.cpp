@@ -45,7 +45,7 @@ SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory con
 {
 }
 
-ErrorOr<void> SysFSBlockDevicesDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSBlockDevicesDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
     TRY(callback({ ".", { fsid, component_index() }, 0 }));
@@ -82,7 +82,7 @@ SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirec
     : SysFSDirectory("char"sv, devices_directory)
 {
 }
-ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     VERIFY(m_parent_directory);
     TRY(callback({ ".", { fsid, component_index() }, 0 }));

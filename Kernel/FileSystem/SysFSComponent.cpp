@@ -31,7 +31,7 @@ mode_t SysFSComponent::permissions() const
     return S_IRUSR | S_IRGRP | S_IROTH;
 }
 
-ErrorOr<void> SysFSDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     VERIFY(m_parent_directory);
