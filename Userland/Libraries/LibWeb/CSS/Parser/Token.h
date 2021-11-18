@@ -9,7 +9,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <math.h>
 
 namespace Web::CSS {
@@ -68,37 +67,37 @@ public:
     StringView ident() const
     {
         VERIFY(m_type == Type::Ident);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     StringView function() const
     {
         VERIFY(m_type == Type::Function);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     StringView delim() const
     {
         VERIFY(m_type == Type::Delim);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     StringView string() const
     {
         VERIFY(m_type == Type::String);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     StringView url() const
     {
         VERIFY(m_type == Type::Url);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     StringView at_keyword() const
     {
         VERIFY(m_type == Type::AtKeyword);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     HashType hash_type() const
@@ -109,14 +108,14 @@ public:
     StringView hash_value() const
     {
         VERIFY(m_type == Type::Hash);
-        return m_value.string_view();
+        return m_value.view();
     }
 
     bool is(NumberType number_type) const { return is(Token::Type::Number) && m_number_type == number_type; }
     StringView number_string_value() const
     {
         VERIFY(m_type == Type::Number);
-        return m_value.string_view();
+        return m_value.view();
     }
     double number_value() const
     {
@@ -175,7 +174,7 @@ private:
 
     Type m_type { Type::Invalid };
 
-    StringBuilder m_value;
+    FlyString m_value;
     FlyString m_unit;
     HashType m_hash_type { HashType::Unrestricted };
     NumberType m_number_type { NumberType::Integer };
