@@ -37,6 +37,7 @@
 #include <LibGfx/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <stdlib.h>
 
 static constexpr int s_pangram_count = 7;
@@ -704,6 +705,12 @@ void FontEditorWidget::update_statusbar()
     }
 
     builder.append(")");
+
+    auto glyph_name = Unicode::code_point_display_name(glyph);
+    if (glyph_name.has_value()) {
+        builder.appendff(" {}", glyph_name.value());
+    }
+
     if (m_edited_font->raw_glyph_width(glyph) > 0)
         builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
     m_statusbar->set_text(builder.to_string());
