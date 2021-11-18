@@ -11,6 +11,6 @@
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     Gfx::PPMImageDecoderPlugin decoder(data, size);
-    (void)decoder.bitmap();
+    (void)decoder.frame(0);
     return 0;
 }
