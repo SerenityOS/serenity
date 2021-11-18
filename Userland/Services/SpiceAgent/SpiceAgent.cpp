@@ -142,11 +142,11 @@ void SpiceAgent::on_message_received()
         } else {
             RefPtr<Gfx::Bitmap> bitmap;
             if (type == ClipboardType::PNG) {
-                bitmap = Gfx::PNGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).bitmap();
+                bitmap = Gfx::PNGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
             } else if (type == ClipboardType::BMP) {
-                bitmap = Gfx::BMPImageDecoderPlugin(data_buffer.data(), data_buffer.size()).bitmap();
+                bitmap = Gfx::BMPImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
             } else if (type == ClipboardType::JPG) {
-                bitmap = Gfx::JPGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).bitmap();
+                bitmap = Gfx::JPGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
             } else {
                 dbgln("Unknown clipboard type: {}", (u32)type);
                 return;

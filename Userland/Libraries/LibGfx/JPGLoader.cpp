@@ -1240,21 +1240,6 @@ IntSize JPGImageDecoderPlugin::size()
     return {};
 }
 
-RefPtr<Gfx::Bitmap> JPGImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == JPGLoadingContext::State::Error)
-        return nullptr;
-    if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
-        if (!decode_jpg(*m_context)) {
-            m_context->state = JPGLoadingContext::State::Error;
-            return nullptr;
-        }
-        m_context->state = JPGLoadingContext::State::BitmapDecoded;
-    }
-
-    return m_context->bitmap;
-}
-
 void JPGImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -1295,7 +1280,19 @@ ImageFrameDescriptor JPGImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == JPGLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
+        if (!decode_jpg(*m_context)) {
+            m_context->state = JPGLoadingContext::State::Error;
+            return {};
+        }
+        m_context->state = JPGLoadingContext::State::BitmapDecoded;
+    }
+
+    return { m_context->bitmap, 0 };
 }
 
 }

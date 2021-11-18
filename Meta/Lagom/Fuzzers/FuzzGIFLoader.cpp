@@ -14,7 +14,7 @@
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     Gfx::GIFImageDecoderPlugin gif_decoder(data, size);
-    auto bitmap = gif_decoder.bitmap();
+    auto bitmap = gif_decoder.frame(0).image;
     if (bitmap) {
         // Looks like a valid GIF. Try to load the other frames:
         dbgln_if(GIF_DEBUG, "bitmap size: {}", bitmap->size());

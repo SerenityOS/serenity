@@ -263,7 +263,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 
     PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
     if (png_decoder.sniff()) {
-        desc.bitmap = png_decoder.bitmap();
+        desc.bitmap = png_decoder.frame(0).image;
         if (!desc.bitmap) {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
             return false;
@@ -304,25 +304,6 @@ IntSize ICOImageDecoderPlugin::size()
     return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
 }
 
-RefPtr<Gfx::Bitmap> ICOImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == ICOLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
-        // NOTE: This forces the chunk decoding to happen.
-        bool success = load_ico_bitmap(*m_context, {});
-        if (!success) {
-            m_context->state = ICOLoadingContext::State::Error;
-            return nullptr;
-        }
-        m_context->state = ICOLoadingContext::State::BitmapDecoded;
-    }
-
-    VERIFY(m_context->images[m_context->largest_index].bitmap);
-    return m_context->images[m_context->largest_index].bitmap;
-}
-
 void ICOImageDecoderPlugin::set_volatile()
 {
     if (m_context->images[0].bitmap)
@@ -361,7 +342,22 @@ ImageFrameDescriptor ICOImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == ICOLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
+        // NOTE: This forces the chunk decoding to happen.
+        bool success = load_ico_bitmap(*m_context, {});
+        if (!success) {
+            m_context->state = ICOLoadingContext::State::Error;
+            return {};
+        }
+        m_context->state = ICOLoadingContext::State::BitmapDecoded;
+    }
+
+    VERIFY(m_context->images[m_context->largest_index].bitmap);
+    return { m_context->images[m_context->largest_index].bitmap, 0 };
 }
 
 }

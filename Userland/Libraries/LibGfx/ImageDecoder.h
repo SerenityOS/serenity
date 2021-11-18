@@ -42,8 +42,6 @@ public:
     virtual ImageFrameDescriptor frame(size_t i) = 0;
 
 protected:
-    virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
-
     ImageDecoderPlugin() { }
 };
 
