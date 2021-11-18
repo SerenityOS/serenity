@@ -1,18 +1,21 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Loader/CSSLoader.h>
 
 namespace Web::HTML {
 
-class HTMLLinkElement final : public HTMLElement {
+class HTMLLinkElement final
+    : public HTMLElement
+    , public ResourceClient {
 public:
     using WrapperType = Bindings::HTMLLinkElementWrapper;
 
@@ -28,6 +31,10 @@ public:
 private:
     void parse_attribute(const FlyString&, const String&) override;
 
+    // ^ResourceClient
+    virtual void resource_did_fail() override;
+    virtual void resource_did_load() override;
+
     struct Relationship {
         enum {
             Alternate = 1 << 0,
@@ -40,7 +47,7 @@ private:
 
     RefPtr<Resource> m_preload_resource;
 
-    CSSLoader m_css_loader;
+    Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
     unsigned m_relationship { 0 };
 };
 
