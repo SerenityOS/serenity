@@ -607,7 +607,7 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
     size = Memory::page_round_up(size);
 
     // FIXME: We probably want to sync all mappings in the address+size range.
-    auto* region = address_space().find_region_from_range(Memory::VirtualRange { address.vaddr(), size });
+    auto* region = address_space().find_region_containing(Memory::VirtualRange { address.vaddr(), size });
     // All regions from address upto address+size shall be mapped
     if (!region)
         return ENOMEM;
