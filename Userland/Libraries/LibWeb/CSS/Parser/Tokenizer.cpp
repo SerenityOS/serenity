@@ -325,7 +325,7 @@ Token Tokenizer::create_value_token(Token::Type type, String value)
 {
     Token token;
     token.m_type = type;
-    token.m_value.append(move(value));
+    token.m_value = move(value);
     return token;
 }
 
@@ -333,7 +333,10 @@ Token Tokenizer::create_value_token(Token::Type type, u32 value)
 {
     Token token = {};
     token.m_type = type;
-    token.m_value.append_code_point(value);
+    // FIXME: Avoid temporary StringBuilder here
+    StringBuilder builder;
+    builder.append_code_point(value);
+    token.m_value = builder.to_string();
     return token;
 }
 
@@ -582,18 +585,24 @@ Token Tokenizer::consume_a_url_token()
 {
     auto token = create_new_token(Token::Type::Url);
     consume_as_much_whitespace_as_possible();
+    StringBuilder builder;
+
+    auto make_token = [&]() {
+        token.m_value = builder.to_string();
+        return token;
+    };
 
     for (;;) {
 
         auto input = peek_code_point();
         if (is_eof(input)) {
             log_parse_error();
-            return token;
+            return make_token();
         }
 
         if (is_right_paren(input)) {
             (void)next_code_point();
-            return token;
+            return make_token();
         }
 
         if (is_whitespace(input)) {
@@ -602,11 +611,11 @@ Token Tokenizer::consume_a_url_token()
 
             if (is_eof(input)) {
                 log_parse_error();
-                return token;
+                return make_token();
             }
 
             if (is_right_paren(input)) {
-                return token;
+                return make_token();
             }
 
             consume_the_remnants_of_a_bad_url();
@@ -622,7 +631,7 @@ Token Tokenizer::consume_a_url_token()
 
         if (is_reverse_solidus(input)) {
             if (is_valid_escape_sequence(peek_twin())) {
-                token.m_value.append_code_point(consume_escaped_code_point());
+                builder.append_code_point(consume_escaped_code_point());
             } else {
                 log_parse_error();
                 (void)next_code_point();
@@ -631,7 +640,7 @@ Token Tokenizer::consume_a_url_token()
             }
         }
 
-        token.m_value.append_code_point(next_code_point());
+        builder.append_code_point(next_code_point());
     }
 }
 
@@ -679,7 +688,7 @@ Token Tokenizer::consume_a_numeric_token()
     auto number = consume_a_number();
     if (would_start_an_identifier()) {
         auto token = create_new_token(Token::Type::Dimension);
-        token.m_value.append(number.string);
+        token.m_value = move(number.string);
         token.m_number_type = number.type;
         token.m_number_value = number.value;
 
@@ -694,14 +703,14 @@ Token Tokenizer::consume_a_numeric_token()
         (void)next_code_point();
 
         auto token = create_new_token(Token::Type::Percentage);
-        token.m_value.append(number.string);
+        token.m_value = move(number.string);
         token.m_number_type = number.type;
         token.m_number_value = number.value;
         return token;
     }
 
     auto token = create_new_token(Token::Type::Number);
-    token.m_value.append(number.string);
+    token.m_value = move(number.string);
     token.m_number_type = number.type;
     token.m_number_value = number.value;
     return token;
@@ -779,17 +788,23 @@ bool Tokenizer::would_start_an_identifier(U32Triplet values)
 Token Tokenizer::consume_string_token(u32 ending_code_point)
 {
     auto token = create_new_token(Token::Type::String);
+    StringBuilder builder;
+
+    auto make_token = [&]() {
+        token.m_value = builder.to_string();
+        return token;
+    };
 
     for (;;) {
         auto input = next_code_point();
 
         if (is_eof(input)) {
             log_parse_error();
-            return token;
+            return make_token();
         }
 
         if (input == ending_code_point)
-            return token;
+            return make_token();
 
         if (is_newline(input)) {
             reconsume_current_input_code_point();
@@ -807,10 +822,10 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
             }
 
             auto escaped = consume_escaped_code_point();
-            token.m_value.append_code_point(escaped);
+            builder.append_code_point(escaped);
         }
 
-        token.m_value.append_code_point(input);
+        builder.append_code_point(input);
     }
 }
 
@@ -877,7 +892,7 @@ Token Tokenizer::consume_a_token()
                 token.m_hash_type = Token::HashType::Id;
 
             auto name = consume_a_name();
-            token.m_value.append(name);
+            token.m_value = move(name);
 
             return token;
         }
