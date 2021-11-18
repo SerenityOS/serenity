@@ -178,7 +178,6 @@ private:
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
 
-    Optional<float> try_parse_float(StringView string);
     Optional<Color> parse_color(StyleComponentValueRule const&);
     Optional<Length> parse_length(StyleComponentValueRule const&);
 
