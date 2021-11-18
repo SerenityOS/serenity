@@ -1747,7 +1747,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             }
 
             if (url.has_value())
-                return CSSImportRule::create(url.value());
+                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
             else
                 dbgln("Unable to parse url from @import rule");
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,17 +10,20 @@
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 
 namespace Web::CSS {
 
-class CSSImportRule : public CSSRule {
+class CSSImportRule
+    : public CSSRule
+    , public ResourceClient {
     AK_MAKE_NONCOPYABLE(CSSImportRule);
     AK_MAKE_NONMOVABLE(CSSImportRule);
 
 public:
-    static NonnullRefPtr<CSSImportRule> create(AK::URL url)
+    static NonnullRefPtr<CSSImportRule> create(AK::URL url, DOM::Document& document)
     {
-        return adopt_ref(*new CSSImportRule(move(url)));
+        return adopt_ref(*new CSSImportRule(move(url), document));
     }
 
     ~CSSImportRule();
@@ -35,11 +39,17 @@ public:
     virtual Type type() const { return Type::Import; };
 
 private:
-    explicit CSSImportRule(AK::URL);
+    explicit CSSImportRule(AK::URL, DOM::Document&);
 
     virtual String serialized() const override;
 
+    // ^ResourceClient
+    virtual void resource_did_fail() override;
+    virtual void resource_did_load() override;
+
     AK::URL m_url;
+    DOM::Document& m_document;
+    Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
     RefPtr<CSSStyleSheet> m_style_sheet;
 };
 
