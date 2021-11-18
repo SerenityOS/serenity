@@ -336,7 +336,7 @@ ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription con
         return EINVAL;
     }
 
-    m_flocks.append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type });
+    TRY(m_flocks.try_append(Flock { new_lock.l_start, new_lock.l_len, &description, process.pid().value(), new_lock.l_type }));
     return {};
 }
 
