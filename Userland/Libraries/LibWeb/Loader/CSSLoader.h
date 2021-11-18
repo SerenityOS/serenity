@@ -21,8 +21,6 @@ public:
     void load_from_text(const String&);
     void load_from_url(const AK::URL&);
 
-    void load_next_import_if_needed();
-
     RefPtr<CSS::CSSStyleSheet> style_sheet() const { return m_style_sheet; };
 
     Function<void()> on_load;
