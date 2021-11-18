@@ -41,7 +41,7 @@ ErrorOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuil
     return 0;
 }
 
-ErrorOr<void> Process::traverse_stacks_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     TRY(callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 }));
     TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
@@ -89,7 +89,7 @@ ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBu
     return data->length();
 }
 
-ErrorOr<void> Process::traverse_file_descriptions_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     TRY(callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 }));
     TRY(callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 }));
@@ -205,7 +205,7 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
         Inode* inode = description->inode();
         if (inode != nullptr) {
             auto inode_object = description_object.add_object("inode");
-            inode_object.add("fsid", inode->fsid());
+            inode_object.add("fsid", inode->fsid().value());
             inode_object.add("index", inode->index().value());
             inode_object.finish();
         }

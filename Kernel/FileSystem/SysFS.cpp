@@ -46,7 +46,7 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
     return adopt_ref(*new (nothrow) SysFSRootDirectory);
 }
 
-ErrorOr<void> SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     TRY(callback({ ".", { fsid, component_index() }, 0 }));

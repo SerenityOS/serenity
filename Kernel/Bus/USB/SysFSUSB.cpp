@@ -91,7 +91,7 @@ ErrorOr<size_t> SysFSUSBDeviceInformation::read_bytes(off_t offset, size_t count
     return nread;
 }
 
-ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     SpinlockLocker lock(m_lock);
     // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.

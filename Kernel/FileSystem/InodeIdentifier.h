@@ -15,12 +15,13 @@ namespace Kernel {
 class FileSystem;
 struct InodeMetadata;
 
+TYPEDEF_DISTINCT_ORDERED_ID(u32, FileSystemID);
 TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
 
 class InodeIdentifier {
 public:
     InodeIdentifier() = default;
-    InodeIdentifier(u32 fsid, InodeIndex inode)
+    InodeIdentifier(FileSystemID fsid, InodeIndex inode)
         : m_fsid(fsid)
         , m_index(inode)
     {
@@ -28,7 +29,7 @@ public:
 
     bool is_valid() const { return m_fsid != 0 && m_index != 0; }
 
-    u32 fsid() const { return m_fsid; }
+    FileSystemID fsid() const { return m_fsid; }
     InodeIndex index() const { return m_index; }
 
     FileSystem* fs();
@@ -45,7 +46,7 @@ public:
     }
 
 private:
-    u32 m_fsid { 0 };
+    FileSystemID m_fsid { 0 };
     InodeIndex m_index { 0 };
 };
 
