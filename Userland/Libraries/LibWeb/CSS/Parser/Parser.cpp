@@ -1288,7 +1288,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 {
     auto name_ident = tokens.current_token();
     VERIFY(name_ident.is(Token::Type::Function));
-    auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).m_value.to_string());
+    auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).function());
 
     for (;;) {
         auto& token = tokens.next_token();
@@ -1903,7 +1903,7 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
 
     if (component_value.is(Token::Type::Dimension)) {
         numeric_value = component_value.token().dimension_value();
-        auto unit_string = component_value.token().m_unit.string_view();
+        auto unit_string = component_value.token().dimension_unit();
 
         if (unit_string.equals_ignoring_case("px")) {
             type = Length::Type::Px;
@@ -2022,7 +2022,7 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
             return color;
 
     } else if (component_value.is(Token::Type::Hash)) {
-        auto color = Color::from_string(String::formatted("#{}", component_value.token().m_value.to_string()));
+        auto color = Color::from_string(String::formatted("#{}", component_value.token().hash_value()));
         if (color.has_value())
             return color;
         return {};
