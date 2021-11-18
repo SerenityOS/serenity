@@ -22,7 +22,7 @@ String Token::to_debug_string() const
         break;
     case Type::Ident:
         builder.append("Identifier: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         return builder.to_string();
     case Type::Function:
         builder.append("Function");
@@ -32,11 +32,11 @@ String Token::to_debug_string() const
         break;
     case Type::Hash:
         builder.append("Hash: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         return builder.to_string();
     case Type::String:
         builder.append("String: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         return builder.to_string();
     case Type::BadString:
         builder.append("Invalid String");
@@ -49,21 +49,21 @@ String Token::to_debug_string() const
         break;
     case Type::Delim:
         builder.append("Delimiter: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         return builder.to_string();
     case Type::Number:
         builder.append("Number: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         builder.append(m_number_type == NumberType::Integer ? " (int)" : " (float)");
         return builder.to_string();
     case Type::Percentage:
         builder.append("Percentage: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         builder.append('%');
         return builder.to_string();
     case Type::Dimension:
         builder.append("Dimension: ");
-        builder.append(m_value.to_string());
+        builder.append(m_value);
         builder.append(m_unit);
         return builder.to_string();
     case Type::Whitespace:
@@ -111,7 +111,7 @@ String Token::to_debug_string() const
     builder.append(" ");
 
     builder.append(" { value: '");
-    builder.append(m_value.to_string());
+    builder.append(m_value);
 
     if (m_type == Token::Type::Hash) {
         builder.append("', hash_type: '");
