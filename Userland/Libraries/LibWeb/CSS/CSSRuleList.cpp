@@ -103,29 +103,6 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
     }
 }
 
-bool CSSRuleList::for_first_not_loaded_import_rule(Function<void(CSSImportRule&)> const& callback)
-{
-    for (auto& rule : m_rules) {
-        if (rule.type() == CSSRule::Type::Import) {
-            auto& import_rule = verify_cast<CSSImportRule>(rule);
-            if (!import_rule.has_import_result()) {
-                callback(import_rule);
-                return true;
-            }
-
-            if (import_rule.loaded_style_sheet()->for_first_not_loaded_import_rule(callback)) {
-                return true;
-            }
-        } else if (rule.type() == CSSRule::Type::Media) {
-            return verify_cast<CSSMediaRule>(rule).for_first_not_loaded_import_rule(callback);
-        } else if (rule.type() == CSSRule::Type::Supports) {
-            return verify_cast<CSSSupportsRule>(rule).for_first_not_loaded_import_rule(callback);
-        }
-    }
-
-    return false;
-}
-
 void CSSRuleList::evaluate_media_queries(DOM::Window const& window)
 {
     for (auto& rule : m_rules) {
