@@ -590,12 +590,27 @@ ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, [[maybe_unused]] int flags)
+ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int flags)
 {
+    if ((flags & (MS_SYNC | MS_ASYNC | MS_INVALIDATE)) != flags)
+        return EINVAL;
+
+    bool is_async = (flags & MS_ASYNC) == MS_ASYNC;
+    bool is_sync = (flags & MS_SYNC) == MS_SYNC;
+    if (is_sync == is_async)
+        return EINVAL;
+
+    if (address.ptr() % PAGE_SIZE != 0)
+        return EINVAL;
+
+    // Note: This is not specified
+    size = Memory::page_round_up(size);
+
     // FIXME: We probably want to sync all mappings in the address+size range.
     auto* region = address_space().find_region_from_range(Memory::VirtualRange { address.vaddr(), size });
+    // All regions from address upto address+size shall be mapped
     if (!region)
-        return EINVAL;
+        return ENOMEM;
 
     auto& vmobject = region->vmobject();
     if (!vmobject.is_shared_inode())
@@ -603,6 +618,7 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, [[may
 
     auto& inode_vmobject = static_cast<Memory::SharedInodeVMObject&>(vmobject);
     TRY(inode_vmobject.sync());
+    // FIXME: If msync() causes any write to a file, the file's st_ctime and st_mtime fields shall be marked for update.
     return 0;
 }
 
