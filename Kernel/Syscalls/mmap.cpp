@@ -616,8 +616,12 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
     if (!vmobject.is_shared_inode())
         return 0;
 
+    off_t offset = region->offset_in_vmobject() + address.ptr() - region->range().base().get();
+
     auto& inode_vmobject = static_cast<Memory::SharedInodeVMObject&>(vmobject);
-    TRY(inode_vmobject.sync());
+    // FIXME: Handle MS_ASYNC
+    TRY(inode_vmobject.sync(offset / PAGE_SIZE, size / PAGE_SIZE));
+    // FIXME: Handle MS_INVALIDATE
     // FIXME: If msync() causes any write to a file, the file's st_ctime and st_mtime fields shall be marked for update.
     return 0;
 }
