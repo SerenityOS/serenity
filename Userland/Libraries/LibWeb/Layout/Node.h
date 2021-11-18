@@ -65,8 +65,8 @@ public:
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
 
-    const BrowsingContext& browsing_context() const;
-    BrowsingContext& browsing_context();
+    HTML::BrowsingContext const& browsing_context() const;
+    HTML::BrowsingContext& browsing_context();
 
     const InitialContainingBlock& root() const;
     InitialContainingBlock& root();

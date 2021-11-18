@@ -10,9 +10,9 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 

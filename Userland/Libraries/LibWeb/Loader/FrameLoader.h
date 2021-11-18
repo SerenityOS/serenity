@@ -23,7 +23,7 @@ public:
         IFrame,
     };
 
-    explicit FrameLoader(BrowsingContext&);
+    explicit FrameLoader(HTML::BrowsingContext&);
     ~FrameLoader();
 
     bool load(const AK::URL&, Type);
@@ -31,8 +31,8 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
-    BrowsingContext& browsing_context() { return m_browsing_context; }
-    const BrowsingContext& browsing_context() const { return m_browsing_context; }
+    HTML::BrowsingContext& browsing_context() { return m_browsing_context; }
+    HTML::BrowsingContext const& browsing_context() const { return m_browsing_context; }
 
 private:
     // ^ResourceClient
@@ -43,7 +43,7 @@ private:
     void load_favicon(RefPtr<Gfx::Bitmap> bitmap = nullptr);
     bool parse_document(DOM::Document&, const ByteBuffer& data);
 
-    BrowsingContext& m_browsing_context;
+    HTML::BrowsingContext& m_browsing_context;
     size_t m_redirects_count { 0 };
 };
 

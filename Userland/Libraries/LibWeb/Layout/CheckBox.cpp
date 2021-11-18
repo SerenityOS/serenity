@@ -8,9 +8,9 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

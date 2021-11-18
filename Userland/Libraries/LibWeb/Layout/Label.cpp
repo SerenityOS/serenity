@@ -9,11 +9,11 @@
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/LabelableNode.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

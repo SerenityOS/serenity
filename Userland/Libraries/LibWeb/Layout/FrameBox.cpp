@@ -7,9 +7,9 @@
 #include <AK/Debug.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

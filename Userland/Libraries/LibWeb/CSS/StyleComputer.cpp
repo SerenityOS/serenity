@@ -18,7 +18,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/FontCache.h>
-#include <LibWeb/Page/BrowsingContext.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <ctype.h>
 #include <stdio.h>
 
