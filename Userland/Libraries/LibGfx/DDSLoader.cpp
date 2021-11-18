@@ -959,21 +959,6 @@ IntSize DDSImageDecoderPlugin::size()
     return {};
 }
 
-RefPtr<Gfx::Bitmap> DDSImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == DDSLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < DDSLoadingContext::State::BitmapDecoded) {
-        bool success = decode_dds(*m_context);
-        if (!success)
-            return nullptr;
-    }
-
-    VERIFY(m_context->bitmap);
-    return m_context->bitmap;
-}
-
 void DDSImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -1016,7 +1001,18 @@ ImageFrameDescriptor DDSImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == DDSLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < DDSLoadingContext::State::BitmapDecoded) {
+        bool success = decode_dds(*m_context);
+        if (!success)
+            return {};
+    }
+
+    VERIFY(m_context->bitmap);
+    return { m_context->bitmap, 0 };
 }
 
 }

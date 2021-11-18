@@ -119,21 +119,6 @@ IntSize PBMImageDecoderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-RefPtr<Gfx::Bitmap> PBMImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == PBMLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < PBMLoadingContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
-            return nullptr;
-    }
-
-    VERIFY(m_context->bitmap);
-    return m_context->bitmap;
-}
-
 void PBMImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -181,7 +166,18 @@ ImageFrameDescriptor PBMImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == PBMLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < PBMLoadingContext::State::Decoded) {
+        bool success = decode(*m_context);
+        if (!success)
+            return {};
+    }
+
+    VERIFY(m_context->bitmap);
+    return { m_context->bitmap, 0 };
 }
 
 }

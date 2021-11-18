@@ -122,21 +122,6 @@ IntSize PGMImageDecoderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-RefPtr<Gfx::Bitmap> PGMImageDecoderPlugin::bitmap()
-{
-    if (m_context->state == PGMLoadingContext::State::Error)
-        return nullptr;
-
-    if (m_context->state < PGMLoadingContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
-            return nullptr;
-    }
-
-    VERIFY(m_context->bitmap);
-    return m_context->bitmap;
-}
-
 void PGMImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
@@ -184,7 +169,18 @@ ImageFrameDescriptor PGMImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
         return {};
-    return { bitmap(), 0 };
+
+    if (m_context->state == PGMLoadingContext::State::Error)
+        return {};
+
+    if (m_context->state < PGMLoadingContext::State::Decoded) {
+        bool success = decode(*m_context);
+        if (!success)
+            return {};
+    }
+
+    VERIFY(m_context->bitmap);
+    return { m_context->bitmap, 0 };
 }
 
 }
