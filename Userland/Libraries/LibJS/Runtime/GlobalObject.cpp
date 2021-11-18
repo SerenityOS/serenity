@@ -47,6 +47,8 @@
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
+#include <LibJS/Runtime/Intl/DateTimeFormatPrototype.h>
 #include <LibJS/Runtime/Intl/DisplayNamesConstructor.h>
 #include <LibJS/Runtime/Intl/DisplayNamesPrototype.h>
 #include <LibJS/Runtime/Intl/Intl.h>
