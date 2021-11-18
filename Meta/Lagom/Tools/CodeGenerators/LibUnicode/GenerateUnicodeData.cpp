@@ -281,6 +281,52 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
     }
 }
 
+static void parse_name_aliases(Core::File& file, Vector<CodePointData>& code_point_data)
+{
+    auto iterator = code_point_data.begin();
+    VERIFY(!iterator.is_end());
+    // We use a single iterator because both lists should be sorted, and repeated lookups are unnecessary.
+
+    auto code_point_data_at = [&iterator](u32 code_point) -> CodePointData& {
+        VERIFY(!iterator.is_end());
+        while (iterator->code_point < code_point) {
+            ++iterator;
+            VERIFY(!iterator.is_end());
+        }
+        VERIFY(iterator->code_point == code_point);
+        return *iterator;
+    };
+
+    // We always use the *first* "control"-type alias. The actual reason for this is to avoid the silly name "END OF LINE" for code point 0x000a.
+    u32 last_overridden = (u32)-1;
+
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        auto segments = line.split_view(';', true);
+        VERIFY(segments.size() == 3);
+
+        auto code_point_optional = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0].trim_whitespace());
+        auto alias = segments[1].trim_whitespace();
+        auto reason = segments[2].trim_whitespace();
+
+        VERIFY(code_point_optional.has_value());
+        VERIFY(!alias.is_empty());
+        // Thankfully, there is no correction alias for any of the control code points (yet).
+        if (!reason.is_one_of("correction", "control"))
+            continue;
+
+        auto code_point = code_point_optional.value();
+        if (code_point == last_overridden)
+            continue;
+
+        code_point_data_at(code_point).name = alias;
+        last_overridden = code_point;
+    }
+}
+
 static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
 {
     VERIFY(file.seek(0));
@@ -519,6 +565,8 @@ struct SpecialCasing {
 
 namespace Detail {
 
+StringView code_point_display_name(u32 code_point);
+
 u32 canonical_combining_class(u32 code_point);
 
 u32 simple_uppercase_mapping(u32 code_point);
@@ -755,8 +803,33 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
 
     generator.append(R"~~~(
+struct CodePointName {
+    u32 code_point { 0 };
+    StringView display_name;
+};
+)~~~");
+
+    generator.set("code_point_names_size", String::number(unicode_data.code_point_data.size()));
+    generator.append(R"~~~(
+static constexpr Array<CodePointName, @code_point_names_size@> s_code_point_names { {
+)~~~");
+    for (auto const& code_point_data : unicode_data.code_point_data) {
+        generator.set("code_point", String::formatted("{:#x}", code_point_data.code_point));
+        generator.set("code_point_name", code_point_data.name);
+        generator.append(R"~~~(    { @code_point@, "@code_point_name@"sv },
+)~~~");
+    }
+    generator.append(R"~~~(} };
+)~~~");
+
+    generator.append(R"~~~(
 namespace Detail {
 
+StringView code_point_display_name(u32 code_point)
+{
+    auto const* entry = binary_search(s_code_point_names, code_point, nullptr, CodePointComparator<CodePointName> {});
+    return entry ? entry->display_name : StringView();
+}
 )~~~");
 
     auto append_code_point_mapping_search = [&](StringView method, StringView mappings, StringView fallback) {
@@ -971,6 +1044,7 @@ int main(int argc, char** argv)
     char const* derived_binary_prop_path = nullptr;
     char const* prop_alias_path = nullptr;
     char const* prop_value_alias_path = nullptr;
+    char const* name_alias_path = nullptr;
     char const* scripts_path = nullptr;
     char const* script_extensions_path = nullptr;
     char const* emoji_data_path = nullptr;
@@ -987,6 +1061,7 @@ int main(int argc, char** argv)
     args_parser.add_option(derived_binary_prop_path, "Path to DerivedBinaryProperties.txt file", "derived-binary-prop-path", 'b', "derived-binary-prop-path");
     args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
     args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
+    args_parser.add_option(name_alias_path, "Path to NameAliases.txt file", "name-alias-path", 'm', "name-alias-path");
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
@@ -1019,6 +1094,7 @@ int main(int argc, char** argv)
     auto derived_binary_prop_file = open_file(derived_binary_prop_path, "-b/--derived-binary-prop-path");
     auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
     auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
+    auto name_alias_file = open_file(name_alias_path, "-m/--name-alias-path");
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
     auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
     auto emoji_data_file = open_file(emoji_data_path, "-e/--emoji-data-path");
@@ -1038,6 +1114,7 @@ int main(int argc, char** argv)
 
     populate_general_category_unions(unicode_data.general_categories);
     parse_unicode_data(unicode_data_file, unicode_data);
+    parse_name_aliases(name_alias_file, unicode_data.code_point_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false);
     normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);

@@ -222,6 +222,18 @@ u32 to_unicode_uppercase(u32 code_point)
 #endif
 }
 
+Optional<StringView> code_point_display_name([[maybe_unused]] u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    auto name = Detail::code_point_display_name(code_point);
+    if (name.is_null())
+        return {};
+    return name;
+#else
+    return {};
+#endif
+}
+
 String to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
 {
 #if ENABLE_UNICODE_DATA
