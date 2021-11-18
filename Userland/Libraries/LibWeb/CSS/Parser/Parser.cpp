@@ -1854,79 +1854,6 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
     }
 }
 
-Optional<float> Parser::try_parse_float(StringView string)
-{
-    // FIXME: This is copied from DeprecatedCSSParser, so may not be to spec.
-
-    const char* str = string.characters_without_null_termination();
-    size_t len = string.length();
-    size_t weight = 1;
-    int exp_val = 0;
-    float value = 0.0f;
-    float fraction = 0.0f;
-    bool has_sign = false;
-    bool is_negative = false;
-    bool is_fractional = false;
-    bool is_scientific = false;
-
-    if (str[0] == '-') {
-        is_negative = true;
-        has_sign = true;
-    }
-    if (str[0] == '+') {
-        has_sign = true;
-    }
-
-    for (size_t i = has_sign; i < len; i++) {
-
-        // Looks like we're about to start working on the fractional part
-        if (str[i] == '.') {
-            is_fractional = true;
-            continue;
-        }
-
-        if (str[i] == 'e' || str[i] == 'E') {
-            if (str[i + 1] == '-' || str[i + 1] == '+')
-                exp_val = atoi(str + i + 2);
-            else
-                exp_val = atoi(str + i + 1);
-
-            is_scientific = true;
-            continue;
-        }
-
-        if (str[i] < '0' || str[i] > '9' || exp_val != 0)
-            return {};
-
-        if (is_fractional) {
-            fraction *= 10;
-            fraction += str[i] - '0';
-            weight *= 10;
-        } else {
-            value = value * 10;
-            value += str[i] - '0';
-        }
-    }
-
-    fraction /= weight;
-    value += fraction;
-
-    if (is_scientific) {
-        bool divide = exp_val < 0;
-        if (divide)
-            exp_val *= -1;
-
-        for (int i = 0; i < exp_val; i++) {
-            if (divide)
-                value /= 10;
-            else
-                value *= 10;
-        }
-    }
-
-    return is_negative ? -value : value;
-}
-
 RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
@@ -1975,7 +1902,7 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
     Optional<float> numeric_value;
 
     if (component_value.is(Token::Type::Dimension)) {
-        auto length_string = component_value.token().m_value.string_view();
+        numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().m_unit.string_view();
 
         if (unit_string.equals_ignoring_case("%")) {
@@ -2013,26 +1940,21 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
         } else {
             return {};
         }
-
-        numeric_value = try_parse_float(length_string);
     } else if (component_value.is(Token::Type::Percentage)) {
         type = Length::Type::Percentage;
-        auto value_string = component_value.token().m_value.string_view();
-        numeric_value = try_parse_float(value_string);
+        numeric_value = component_value.token().percentage();
     } else if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto")) {
         return Length::make_auto();
     } else if (component_value.is(Token::Type::Number)) {
-        auto value_string = component_value.token().m_value.string_view();
-        if (value_string == "0") {
+        numeric_value = component_value.token().number_value();
+        if (numeric_value == 0) {
             type = Length::Type::Px;
-            numeric_value = 0;
         } else if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)) {
             // https://quirks.spec.whatwg.org/#quirky-length-value
             // FIXME: Disallow quirk when inside a CSS sub-expression (like `calc()`)
             // "The <quirky-length> value must not be supported in arguments to CSS expressions other than the rect()
             // expression, and must not be supported in the supports() static method of the CSS interface."
             type = Length::Type::Px;
-            numeric_value = try_parse_float(value_string);
         }
     }
 
@@ -2054,7 +1976,7 @@ RefPtr<StyleValue> Parser::parse_length_value(StyleComponentValueRule const& com
     // Right now, it instead is quietly converted to an Identifier when needed.
     if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Percentage)
         || (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
-        || (m_context.in_quirks_mode() && component_value.is(Token::Type::Number) && component_value.token().m_value.string_view() != "0"sv)) {
+        || (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength) && component_value.is(Token::Type::Number) && component_value.token().number_value() != 0)) {
         auto length = parse_length(component_value);
         if (length.has_value())
             return LengthStyleValue::create(length.value());
@@ -2067,12 +1989,10 @@ RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& co
 {
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
-        if (number.m_number_type == Token::NumberType::Integer) {
+        if (number.number_type() == Token::NumberType::Integer) {
             return NumericStyleValue::create_integer(number.to_integer());
         } else {
-            auto float_value = try_parse_float(number.m_value.string_view());
-            if (float_value.has_value())
-                return NumericStyleValue::create_float(float_value.value());
+            return NumericStyleValue::create_float(number.number_value());
         }
     }
 
@@ -2143,25 +2063,20 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && g_val.is(Token::NumberType::Integer)
                 && b_val.is(Token::NumberType::Integer)) {
 
-                auto maybe_r = r_val.m_value.string_view().to_uint<u8>();
-                auto maybe_g = g_val.m_value.string_view().to_uint<u8>();
-                auto maybe_b = b_val.m_value.string_view().to_uint<u8>();
-                if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value())
-                    return Color(maybe_r.value(), maybe_g.value(), maybe_b.value());
+                auto r = r_val.to_integer();
+                auto g = g_val.to_integer();
+                auto b = b_val.to_integer();
+                if (AK::is_within_range<u8>(r) && AK::is_within_range<u8>(g) && AK::is_within_range<u8>(b))
+                    return Color(r, g, b);
 
             } else if (r_val.is(Token::Type::Percentage)
                 && g_val.is(Token::Type::Percentage)
                 && b_val.is(Token::Type::Percentage)) {
 
-                auto maybe_r = try_parse_float(r_val.m_value.string_view());
-                auto maybe_g = try_parse_float(g_val.m_value.string_view());
-                auto maybe_b = try_parse_float(b_val.m_value.string_view());
-                if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value()) {
-                    u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
-                    u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
-                    u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
-                    return Color(r, g, b);
-                }
+                u8 r = clamp(lroundf(r_val.percentage() * 2.55), 0, 255);
+                u8 g = clamp(lroundf(g_val.percentage() * 2.55), 0, 255);
+                u8 b = clamp(lroundf(b_val.percentage() * 2.55), 0, 255);
+                return Color(r, g, b);
             }
         } else if (function.name().equals_ignoring_case("rgba")) {
             if (params.size() != 4)
@@ -2177,31 +2092,28 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && b_val.is(Token::NumberType::Integer)
                 && a_val.is(Token::Type::Number)) {
 
-                auto maybe_r = r_val.m_value.string_view().to_uint<u8>();
-                auto maybe_g = g_val.m_value.string_view().to_uint<u8>();
-                auto maybe_b = b_val.m_value.string_view().to_uint<u8>();
-                auto maybe_a = try_parse_float(a_val.m_value.string_view());
-                if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
-                    u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
-                    return Color(maybe_r.value(), maybe_g.value(), maybe_b.value(), a);
-                }
+                auto r = r_val.to_integer();
+                auto g = g_val.to_integer();
+                auto b = b_val.to_integer();
+                auto a = clamp(lroundf(a_val.number_value() * 255.0), 0, 255);
+                if (AK::is_within_range<u8>(r) && AK::is_within_range<u8>(g) && AK::is_within_range<u8>(b))
+                    return Color(r, g, b, a);
 
             } else if (r_val.is(Token::Type::Percentage)
                 && g_val.is(Token::Type::Percentage)
                 && b_val.is(Token::Type::Percentage)
                 && a_val.is(Token::Type::Number)) {
 
-                auto maybe_r = try_parse_float(r_val.m_value.string_view());
-                auto maybe_g = try_parse_float(g_val.m_value.string_view());
-                auto maybe_b = try_parse_float(b_val.m_value.string_view());
-                auto maybe_a = try_parse_float(a_val.m_value.string_view());
-                if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
-                    u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
-                    u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
-                    u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
-                    u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
-                    return Color(r, g, b, a);
-                }
+                auto r = r_val.percentage();
+                auto g = g_val.percentage();
+                auto b = b_val.percentage();
+                auto a = a_val.number_value();
+
+                u8 r_255 = clamp(lroundf(r * 2.55), 0, 255);
+                u8 g_255 = clamp(lroundf(g * 2.55), 0, 255);
+                u8 b_255 = clamp(lroundf(b * 2.55), 0, 255);
+                u8 a_255 = clamp(lroundf(a * 255.0), 0, 255);
+                return Color(r_255, g_255, b_255, a_255);
             }
         } else if (function.name().equals_ignoring_case("hsl")) {
             if (params.size() != 3)
@@ -2215,15 +2127,10 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && s_val.is(Token::Type::Percentage)
                 && l_val.is(Token::Type::Percentage)) {
 
-                auto maybe_h = try_parse_float(h_val.m_value.string_view());
-                auto maybe_s = try_parse_float(s_val.m_value.string_view());
-                auto maybe_l = try_parse_float(l_val.m_value.string_view());
-                if (maybe_h.has_value() && maybe_s.has_value() && maybe_l.has_value()) {
-                    float h = maybe_h.value();
-                    float s = maybe_s.value() / 100.0f;
-                    float l = maybe_l.value() / 100.0f;
-                    return Color::from_hsl(static_cast<double>(h), static_cast<double>(s), static_cast<double>(l));
-                }
+                auto h = h_val.number_value();
+                auto s = s_val.percentage() / 100.0;
+                auto l = l_val.percentage() / 100.0;
+                return Color::from_hsl(h, s, l);
             }
         } else if (function.name().equals_ignoring_case("hsla")) {
             if (params.size() != 4)
@@ -2239,17 +2146,11 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && l_val.is(Token::Type::Percentage)
                 && a_val.is(Token::Type::Number)) {
 
-                auto maybe_h = try_parse_float(h_val.m_value.string_view());
-                auto maybe_s = try_parse_float(s_val.m_value.string_view());
-                auto maybe_l = try_parse_float(l_val.m_value.string_view());
-                auto maybe_a = try_parse_float(a_val.m_value.string_view());
-                if (maybe_h.has_value() && maybe_s.has_value() && maybe_l.has_value() && maybe_a.has_value()) {
-                    float h = maybe_h.value();
-                    float s = maybe_s.value() / 100.0f;
-                    float l = maybe_l.value() / 100.0f;
-                    float a = maybe_a.value();
-                    return Color::from_hsla(static_cast<double>(h), static_cast<double>(s), static_cast<double>(l), static_cast<double>(a));
-                }
+                auto h = h_val.number_value();
+                auto s = s_val.percentage() / 100.0;
+                auto l = l_val.percentage() / 100.0;
+                auto a = a_val.number_value();
+                return Color::from_hsla(h, s, l, a);
             }
         }
         return {};
@@ -3988,20 +3889,16 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
         auto parsed_calc_sum = parse_calc_sum(block_values);
         if (!parsed_calc_sum)
             return {};
-        return (CalculatedStyleValue::CalcValue) { parsed_calc_sum.release_nonnull() };
+        return CalculatedStyleValue::CalcValue { parsed_calc_sum.release_nonnull() };
     }
 
-    if (current_token.is(Token::Type::Number)) {
-        auto try_the_number = try_parse_float(current_token.token().number_string_value());
-        if (try_the_number.has_value())
-            return (CalculatedStyleValue::CalcValue) { try_the_number.value() };
-        return {};
-    }
+    if (current_token.is(Token::Type::Number))
+        return CalculatedStyleValue::CalcValue { static_cast<float>(current_token.token().number_value()) };
 
     if (current_token.is(Token::Type::Dimension) || current_token.is(Token::Type::Percentage)) {
         auto maybe_length = parse_length(current_token);
         if (maybe_length.has_value() && !maybe_length.value().is_undefined())
-            return (CalculatedStyleValue::CalcValue) { maybe_length.value() };
+            return CalculatedStyleValue::CalcValue { maybe_length.value() };
         return {};
     }
 
@@ -4161,10 +4058,7 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
         return {};
     tokens.next_token();
 
-    auto try_the_number = try_parse_float(first.token().number_string_value());
-    if (!try_the_number.has_value())
-        return {};
-    return try_the_number.value();
+    return first.token().number_value();
 }
 
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
