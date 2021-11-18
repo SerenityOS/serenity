@@ -1,18 +1,27 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSImportRule.h>
-#include <LibWeb/CSS/CSSStyleSheet.h>
+#include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::CSS {
 
-CSSImportRule::CSSImportRule(AK::URL url)
+CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     : m_url(move(url))
+    , m_document(document)
 {
+    dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
+    auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    m_document_load_event_delayer.emplace(m_document);
 }
 
 CSSImportRule::~CSSImportRule()
@@ -40,6 +49,34 @@ String CSSImportRule::serialized() const
     builder.append(';');
 
     return builder.to_string();
+}
+
+void CSSImportRule::resource_did_fail()
+{
+    dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did fail. URL: {}", resource()->url());
+
+    m_document_load_event_delayer.clear();
+}
+
+void CSSImportRule::resource_did_load()
+{
+    VERIFY(resource());
+
+    m_document_load_event_delayer.clear();
+
+    if (!resource()->has_encoded_data()) {
+        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, no encoded data. URL: {}", resource()->url());
+    } else {
+        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, has encoded data. URL: {}", resource()->url());
+    }
+
+    auto sheet = parse_css(CSS::ParsingContext(m_document), resource()->encoded_data());
+    if (!sheet) {
+        dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Failed to parse stylesheet: {}", resource()->url());
+        return;
+    }
+
+    m_style_sheet = move(sheet);
 }
 
 }
