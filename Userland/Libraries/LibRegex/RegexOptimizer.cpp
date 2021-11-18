@@ -103,7 +103,12 @@ typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks()
     return block_boundaries;
 }
 
-static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode, Block const& repeated_block, Block const& following_block)
+enum class AtomicRewritePreconditionResult {
+    SatisfiedWithProperHeader,
+    SatisfiedWithEmptyHeader,
+    NotSatisfied,
+};
+static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode, Block const& repeated_block, Block const& following_block)
 {
     Vector<Vector<CompareTypeAndValuePair>> repeated_values;
     HashTable<size_t> active_capture_groups;
@@ -114,21 +119,21 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
         case OpCodeId::Compare: {
             auto compares = static_cast<OpCode_Compare const&>(opcode).flat_compares();
             if (repeated_values.is_empty() && any_of(compares, [](auto& compare) { return compare.type == CharacterCompareType::AnyChar; }))
-                return false;
+                return AtomicRewritePreconditionResult::NotSatisfied;
             repeated_values.append(move(compares));
             break;
         }
         case OpCodeId::CheckBegin:
         case OpCodeId::CheckEnd:
             if (repeated_values.is_empty())
-                return true;
+                return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
             break;
         case OpCodeId::CheckBoundary:
             // FIXME: What should we do with these? for now, let's fail.
-            return false;
+            return AtomicRewritePreconditionResult::NotSatisfied;
         case OpCodeId::Restore:
         case OpCodeId::GoBack:
-            return false;
+            return AtomicRewritePreconditionResult::NotSatisfied;
         case OpCodeId::SaveRightCaptureGroup:
             active_capture_groups.set(static_cast<OpCode_SaveRightCaptureGroup const&>(opcode).id());
             break;
@@ -144,6 +149,7 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
     dbgln_if(REGEX_DEBUG, "Found {} entries in reference", repeated_values.size());
     dbgln_if(REGEX_DEBUG, "Found {} active capture groups", active_capture_groups.size());
 
+    bool following_block_has_at_least_one_compare = false;
     // Find the first compare in the following block, it must NOT match any of the values in `repeated_values'.
     for (state.instruction_position = following_block.start; state.instruction_position < following_block.end;) {
         auto& opcode = bytecode.get_opcode(state);
@@ -156,6 +162,7 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
             active_capture_groups.set(static_cast<OpCode_SaveLeftCaptureGroup const&>(opcode).id());
             break;
         case OpCodeId::Compare: {
+            following_block_has_at_least_one_compare = true;
             // We found a compare, let's see what it has.
             auto compares = static_cast<OpCode_Compare const&>(opcode).flat_compares();
             if (compares.is_empty())
@@ -165,27 +172,27 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
                     return compare.type == CharacterCompareType::AnyChar
                         || (compare.type == CharacterCompareType::Reference && active_capture_groups.contains(compare.value));
                 }))
-                return false;
+                return AtomicRewritePreconditionResult::NotSatisfied;
 
             for (auto& repeated_value : repeated_values) {
                 // FIXME: This is too naive!
                 if (any_of(repeated_value, [](auto& compare) { return compare.type == CharacterCompareType::AnyChar; }))
-                    return false;
+                    return AtomicRewritePreconditionResult::NotSatisfied;
 
                 for (auto& repeated_compare : repeated_value) {
                     // FIXME: This is too naive! it will miss _tons_ of cases since it doesn't check ranges!
                     if (any_of(compares, [&](auto& compare) { return compare.type == repeated_compare.type && compare.value == repeated_compare.value; }))
-                        return false;
+                        return AtomicRewritePreconditionResult::NotSatisfied;
                 }
             }
-            return true;
+            return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
         }
         case OpCodeId::CheckBegin:
         case OpCodeId::CheckEnd:
-            return true; // Nothing can match the end!
+            return AtomicRewritePreconditionResult::SatisfiedWithProperHeader; // Nothing can match the end!
         case OpCodeId::CheckBoundary:
             // FIXME: What should we do with these? For now, consider them a failure.
-            return false;
+            return AtomicRewritePreconditionResult::NotSatisfied;
         default:
             break;
         }
@@ -193,7 +200,9 @@ static bool block_satisfies_atomic_rewrite_precondition(ByteCode const& bytecode
         state.instruction_position += opcode.size();
     }
 
-    return true;
+    if (following_block_has_at_least_one_compare)
+        return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
+    return AtomicRewritePreconditionResult::SatisfiedWithEmptyHeader;
 }
 
 template<typename Parser>
@@ -213,7 +222,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     //     -------------------------
     //     bb1       |  RE1
     // can be rewritten as:
-    //     loop.hdr  | ForkStay bb1
+    //     loop.hdr  | ForkStay bb1 (if RE1 matches _something_, empty otherwise)
     //     -------------------------
     //     bb0       | RE0
     //               | ForkReplaceX bb0
@@ -240,8 +249,9 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     //     bb2 | RE1
 
     enum class AlternateForm {
-        DirectLoopWithoutHeader, // loop without proper header, a block forking to itself. i.e. the first form.
-        DirectLoopWithHeader,    // loop with proper header, i.e. the second form.
+        DirectLoopWithoutHeader,               // loop without proper header, a block forking to itself. i.e. the first form.
+        DirectLoopWithoutHeaderAndEmptyFollow, // loop without proper header, a block forking to itself. i.e. the first form but with RE1 being empty.
+        DirectLoopWithHeader,                  // loop with proper header, i.e. the second form.
     };
     struct CandidateBlock {
         Block forking_block;
@@ -298,8 +308,13 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
                     break;
                 }
 
-                if (block_satisfies_atomic_rewrite_precondition(bytecode, forking_block, *fork_fallback_block)) {
+                auto precondition = block_satisfies_atomic_rewrite_precondition(bytecode, forking_block, *fork_fallback_block);
+                if (precondition == AtomicRewritePreconditionResult::SatisfiedWithProperHeader) {
                     candidate_blocks.append({ forking_block, fork_fallback_block, AlternateForm::DirectLoopWithoutHeader });
+                    break;
+                }
+                if (precondition == AtomicRewritePreconditionResult::SatisfiedWithEmptyHeader) {
+                    candidate_blocks.append({ forking_block, fork_fallback_block, AlternateForm::DirectLoopWithoutHeaderAndEmptyFollow });
                     break;
                 }
             }
@@ -316,7 +331,8 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
                     Optional<Block> block_following_fork_fallback;
                     if (i + 2 < basic_blocks.size())
                         block_following_fork_fallback = basic_blocks[i + 2];
-                    if (!block_following_fork_fallback.has_value() || block_satisfies_atomic_rewrite_precondition(bytecode, *fork_fallback_block, *block_following_fork_fallback)) {
+                    if (!block_following_fork_fallback.has_value()
+                        || block_satisfies_atomic_rewrite_precondition(bytecode, *fork_fallback_block, *block_following_fork_fallback) != AtomicRewritePreconditionResult::NotSatisfied) {
                         candidate_blocks.append({ forking_block, {}, AlternateForm::DirectLoopWithHeader });
                         break;
                     }
