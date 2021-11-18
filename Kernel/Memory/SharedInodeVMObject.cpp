@@ -35,11 +35,13 @@ SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other)
 {
 }
 
-ErrorOr<void> SharedInodeVMObject::sync()
+ErrorOr<void> SharedInodeVMObject::sync(off_t offset_in_pages, size_t pages)
 {
     SpinlockLocker locker(m_lock);
 
-    for (size_t page_index = 0; page_index < page_count(); ++page_index) {
+    size_t highest_page_to_flush = min(page_count(), offset_in_pages + pages);
+
+    for (size_t page_index = offset_in_pages; page_index < highest_page_to_flush; ++page_index) {
         auto& physical_page = m_physical_pages[page_index];
         if (!physical_page)
             continue;
