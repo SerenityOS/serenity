@@ -148,4 +148,10 @@ describe("errors", () => {
             });
         }).toThrowWithMessage(TypeError, "Required property day is missing or undefined");
     });
+
+    test("invalid zoned date time string", () => {
+        expect(() => {
+            Temporal.ZonedDateTime.from("foo");
+        }).toThrowWithMessage(RangeError, "Invalid zoned date time string 'foo'");
+    });
 });
