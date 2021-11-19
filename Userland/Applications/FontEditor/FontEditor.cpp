@@ -327,7 +327,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         else
             m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     };
-    move_glyph_button.set_checkable(true);
     move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png").release_value_but_fixme_should_propagate_errors());
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
