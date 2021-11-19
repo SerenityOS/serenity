@@ -35,8 +35,14 @@ describe("correct behavior", () => {
         expect(plainMonthDay.day).toBe(6);
     });
 
+    test("from month day string", () => {
+        const plainMonthDay = Temporal.PlainMonthDay.from("--07-06");
+        expect(plainMonthDay.monthCode).toBe("M07");
+        expect(plainMonthDay.day).toBe(6);
+    });
+
     // Un-skip once ParseISODateTime, ToTemporalMonthDay & ParseTemporalMonthDayString are fully implemented
-    test.skip("PlainMonthDay string argument", () => {
+    test.skip("from date time string", () => {
         const plainMonthDay = Temporal.PlainMonthDay.from("2021-07-06T23:42:01Z");
         expect(plainMonthDay.monthCode).toBe("M07");
         expect(plainMonthDay.day).toBe(6);
@@ -54,5 +60,11 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainMonthDay.from({ day: 1 });
         }).toThrowWithMessage(TypeError, "Required property month is missing or undefined");
+    });
+
+    test("invalid month day string", () => {
+        expect(() => {
+            Temporal.PlainMonthDay.from("foo");
+        }).toThrowWithMessage(RangeError, "Invalid month day string 'foo'");
     });
 });
