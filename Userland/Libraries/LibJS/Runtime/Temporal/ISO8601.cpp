@@ -210,6 +210,24 @@ bool ISO8601Parser::parse_date_day()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-DateSpecMonthDay
+bool ISO8601Parser::parse_date_spec_month_day()
+{
+    // TwoDashes :
+    //     --
+    // DateSpecMonthDay :
+    //     TwoDashes[opt] DateMonth -[opt] DateDay
+    StateTransaction transaction { *this };
+    m_state.lexer.consume_specific("--"sv);
+    if (!parse_date_month())
+        return false;
+    m_state.lexer.consume_specific('-');
+    if (!parse_date_day())
+        return false;
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-Date
 bool ISO8601Parser::parse_date()
 {
@@ -486,6 +504,18 @@ bool ISO8601Parser::parse_temporal_date_time_string()
     return parse_calendar_date_time();
 }
 
+// https://tc39.es/proposal-temporal/#prod-TemporalMonthDayString
+bool ISO8601Parser::parse_temporal_month_day_string()
+{
+    // TemporalMonthDayString :
+    //     DateSpecMonthDay
+    //     DateTime
+    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `DateTime`,
+    // so we'd not attempt to parse that but may not exhaust the input string.
+    return parse_date_time()
+        || parse_date_spec_month_day();
+}
+
 // https://tc39.es/proposal-temporal/#prod-TemporalTimeString
 bool ISO8601Parser::parse_temporal_time_string()
 {
@@ -503,6 +533,7 @@ bool ISO8601Parser::parse_temporal_time_string()
 #define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                             \
     __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)          \
     __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string) \
+    __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string) \
     __JS_ENUMERATE(TemporalTimeString, parse_temporal_time_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
