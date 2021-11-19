@@ -381,6 +381,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_show_rulers_action->set_checked(Config::read_bool("PixelPaint", "Rulers", "Show", true));
     view_menu.add_action(*m_show_rulers_action);
 
+    m_show_active_layer_boundary_action = GUI::Action::create_checkable(
+        "Show Active Layer &Boundary", [&](auto& action) {
+            Config::write_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", action.is_checked());
+            if (auto* editor = current_image_editor())
+                editor->set_show_active_layer_boundary(action.is_checked());
+        });
+    m_show_active_layer_boundary_action->set_checked(Config::read_bool("PixelPaint", "ImageEditor", "ShowActiveLayerBoundary", true));
+    view_menu.add_action(*m_show_active_layer_boundary_action);
+
     auto& tool_menu = window.add_menu("&Tool");
     m_toolbox->for_each_tool([&](auto& tool) {
         if (tool.action())
