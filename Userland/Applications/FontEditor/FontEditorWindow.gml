@@ -1,5 +1,6 @@
 @GUI::Widget {
     fill_with_background_color: true
+
     layout: @GUI::VerticalBoxLayout {
         spacing: 2
     }
@@ -18,21 +19,24 @@
 
         @GUI::Widget {
             name: "left_column_container"
+
             layout: @GUI::VerticalBoxLayout {
             }
 
             @GUI::Widget {
                 name: "glyph_editor_container"
+
                 layout: @GUI::VerticalBoxLayout {
                 }
             }
 
             @GUI::Widget {
-                fixed_height: 22
                 layout: @GUI::VerticalBoxLayout {
                 }
 
                 @GUI::Widget {
+                    shrink_to_fit: true
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
@@ -60,12 +64,14 @@
 
         @GUI::Widget {
             name: "right_column_container"
+
             layout: @GUI::VerticalBoxLayout {
                 spacing: 6
             }
 
             @GUI::Widget {
                 name: "glyph_map_container"
+
                 layout: @GUI::VerticalBoxLayout {
                 }
             }
@@ -74,6 +80,7 @@
                 name: "font_metadata_groupbox"
                 title: "Metadata"
                 fixed_height: 220
+
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6, 6, 6, 6]
                 }
@@ -198,6 +205,7 @@
 
                 @GUI::Widget {
                     fixed_height: 22
+
                     layout: @GUI::HorizontalBoxLayout {
                     }
 
