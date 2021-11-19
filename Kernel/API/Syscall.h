@@ -461,13 +461,13 @@ struct SC_stat_params {
 struct SC_ptrace_params {
     int request;
     pid_t tid;
-    u8* addr;
-    int data;
+    void* addr;
+    FlatPtr data;
 };
 
 struct SC_ptrace_peek_params {
-    const u32* address;
-    u32* out_data;
+    const void* address;
+    FlatPtr* out_data;
 };
 
 struct SC_set_coredump_metadata_params {
