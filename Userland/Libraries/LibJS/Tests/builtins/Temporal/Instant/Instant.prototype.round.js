@@ -21,6 +21,13 @@ describe("correct behavior", () => {
             }).epochNanoseconds
         ).toBe(1800000000000n);
     });
+
+    test("string argument is implicitly converted to options object", () => {
+        const instant = new Temporal.Instant(1111111111111n);
+        expect(
+            instant.round("second").equals(instant.round({ smallestUnit: "second" }))
+        ).toBeTrue();
+    });
 });
 
 describe("errors", () => {

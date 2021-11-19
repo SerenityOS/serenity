@@ -288,92 +288,107 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
     return TRY(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
 }
 
-// 7.3.21 Temporal.Duration.prototype.total ( options ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
+// 7.3.21 Temporal.Duration.prototype.total ( totalOf ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total
 JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
 {
     // 1. Let duration be the this value.
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. If options is undefined, throw a TypeError exception.
+    // 3. If totalOf is undefined, throw a TypeError exception.
     if (vm.argument(0).is_undefined())
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
 
-    // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+    Object* total_of;
 
-    // 5. Let relativeTo be ? ToRelativeTemporalObject(options).
-    auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
+    // 4. If Type(totalOf) is String, then
+    if (vm.argument(0).is_string()) {
+        // a. Let paramString be totalOf.
 
-    // 6. Let unit be ? ToTemporalDurationTotalUnit(options).
-    auto unit = TRY(to_temporal_duration_total_unit(global_object, *options));
+        // b. Set totalOf to ! OrdinaryObjectCreate(null).
+        total_of = Object::create(global_object, nullptr);
 
-    // 7. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], unit, relativeTo).
+        // c. Perform ! CreateDataPropertyOrThrow(totalOf, "unit", paramString).
+        MUST(total_of->create_data_property_or_throw(vm.names.unit, vm.argument(0)));
+    }
+    // 5. Else,
+    else {
+        // a. Set totalOf to ? GetOptionsObject(totalOf).
+        total_of = TRY(get_options_object(global_object, vm.argument(0)));
+    }
+
+    // 6. Let relativeTo be ? ToRelativeTemporalObject(totalOf).
+    auto relative_to = TRY(to_relative_temporal_object(global_object, *total_of));
+
+    // 7. Let unit be ? ToTemporalDurationTotalUnit(totalOf).
+    auto unit = TRY(to_temporal_duration_total_unit(global_object, *total_of));
+
+    // 8. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], unit, relativeTo).
     auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), unit, relative_to));
 
-    // 8. Let intermediate be undefined.
+    // 9. Let intermediate be undefined.
     ZonedDateTime* intermediate = nullptr;
 
-    // 9. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
+    // 10. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
         // a. Set intermediate to ? MoveRelativeZonedDateTime(relativeTo, unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], 0).
         intermediate = TRY(move_relative_zoned_date_time(global_object, static_cast<ZonedDateTime&>(relative_to.as_object()), unbalance_result.years, unbalance_result.months, unbalance_result.weeks, 0));
     }
 
-    // 10. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
+    // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
     auto balance_result = TRY(balance_duration(global_object, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds())), unit, intermediate));
 
-    // 11. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
+    // 12. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
     auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
 
     double whole;
 
-    // 12. If unit is "year", then
+    // 13. If unit is "year", then
     if (unit == "year"sv) {
         // a. Let whole be roundResult.[[Years]].
         whole = round_result.years;
     }
-    // 13. Else if unit is "month", then
+    // 14. Else if unit is "month", then
     else if (unit == "month"sv) {
         // a. Let whole be roundResult.[[Months]].
         whole = round_result.months;
     }
-    // 14. Else if unit is "week", then
+    // 15. Else if unit is "week", then
     else if (unit == "week"sv) {
         // a. Let whole be roundResult.[[Weeks]].
         whole = round_result.weeks;
     }
-    // 15. Else if unit is "day", then
+    // 16. Else if unit is "day", then
     else if (unit == "day"sv) {
         // a. Let whole be roundResult.[[Days]].
         whole = round_result.days;
     }
-    // 16. Else if unit is "hour", then
+    // 17. Else if unit is "hour", then
     else if (unit == "hour"sv) {
         // a. Let whole be roundResult.[[Hours]].
         whole = round_result.hours;
     }
-    // 17. Else if unit is "minute", then
+    // 18. Else if unit is "minute", then
     else if (unit == "minute"sv) {
         // a. Let whole be roundResult.[[Minutes]].
         whole = round_result.minutes;
     }
-    // 18. Else if unit is "second", then
+    // 19. Else if unit is "second", then
     else if (unit == "second"sv) {
         // a. Let whole be roundResult.[[Seconds]].
         whole = round_result.seconds;
     }
-    // 19. Else if unit is "millisecond", then
+    // 20. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
         // a. Let whole be roundResult.[[Milliseconds]].
         whole = round_result.milliseconds;
     }
-    // 20. Else if unit is "microsecond", then
+    // 21. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
         // a. Let whole be roundResult.[[Microseconds]].
         whole = round_result.microseconds;
     }
-    // 21. Else,
+    // 22. Else,
     else {
         // a. Assert: unit is "nanosecond".
         VERIFY(unit == "nanosecond"sv);
@@ -382,7 +397,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
         whole = round_result.nanoseconds;
     }
 
-    // 22. Return whole + roundResult.[[Remainder]].
+    // 23. Return whole + roundResult.[[Remainder]].
     return whole + round_result.remainder;
 }
 

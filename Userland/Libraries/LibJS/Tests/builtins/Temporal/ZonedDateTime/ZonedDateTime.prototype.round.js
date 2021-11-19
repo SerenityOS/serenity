@@ -29,6 +29,16 @@ describe("correct behavior", () => {
             }).epochNanoseconds
         ).toBe(1800000000000n);
     });
+
+    test("string argument is implicitly converted to options object", () => {
+        const zonedDateTime = new Temporal.ZonedDateTime(
+            1111111111111n,
+            new Temporal.TimeZone("UTC")
+        );
+        expect(
+            zonedDateTime.round("second").equals(zonedDateTime.round({ smallestUnit: "second" }))
+        ).toBeTrue();
+    });
 });
 
 describe("errors", () => {
