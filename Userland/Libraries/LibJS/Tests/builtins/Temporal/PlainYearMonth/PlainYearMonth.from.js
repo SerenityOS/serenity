@@ -55,8 +55,15 @@ describe("correct behavior", () => {
         expect(plainYearMonth.inLeapYear).toBeFalse();
     });
 
+    test("from year month string", () => {
+        const plainYearMonth = Temporal.PlainYearMonth.from("2021-07");
+        expect(plainYearMonth.year).toBe(2021);
+        expect(plainYearMonth.month).toBe(7);
+        expect(plainYearMonth.monthCode).toBe("M07");
+    });
+
     // Un-skip once ParseISODateTime & ParseTemporalYearMonthString are fully implemented
-    test.skip("PlainYearMonth string argument", () => {
+    test.skip("from date time string", () => {
         const plainYearMonth = Temporal.PlainYearMonth.from("2021-07-06T23:42:01Z");
         expect(plainYearMonth.year).toBe(2021);
         expect(plainYearMonth.month).toBe(7);
@@ -79,5 +86,11 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainYearMonth.from({ month: 1 });
         }).toThrowWithMessage(TypeError, "Required property year is missing or undefined");
+    });
+
+    test("invalid year month string", () => {
+        expect(() => {
+            Temporal.PlainYearMonth.from("foo");
+        }).toThrowWithMessage(RangeError, "Invalid year month string 'foo'");
     });
 });

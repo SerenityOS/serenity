@@ -1466,16 +1466,21 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 }
 
 // 13.45 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
-ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObject& global_object, String const& iso_string)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalYearMonthString (see 13.33), then
-    // a. Throw a RangeError exception.
-    // TODO
+    auto parse_result = parse_iso8601(Production::TemporalYearMonthString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
+    }
 
     // 3. Let result be ? ParseISODateTime(isoString).
-    auto result = TRY(parse_iso_date_time(global_object, {}));
+    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
