@@ -98,8 +98,7 @@ describe("correct behavior", () => {
         );
     });
 
-    // FIXME: This currently yields an incorrect result (epochNanoseconds = 1635984000000000000)
-    test.skip("from plain time string", () => {
+    test("from plain time string", () => {
         const plainDateTime = new Temporal.PlainDateTime(2021, 11, 4, 21, 16, 56, 100, 200, 300);
         const timeZone = new Temporal.TimeZone("UTC");
         const zonedDateTime = plainDateTime.toZonedDateTime(timeZone);
