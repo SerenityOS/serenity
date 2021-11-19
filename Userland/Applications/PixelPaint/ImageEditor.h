@@ -107,6 +107,9 @@ public:
     bool pixel_grid_visibility() const { return m_show_pixel_grid; }
     void set_pixel_grid_visibility(bool show_pixel_grid);
 
+    bool show_active_layer_boundary() const { return m_show_active_layer_boundary; }
+    void set_show_active_layer_boundary(bool);
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -146,6 +149,8 @@ private:
     bool m_show_guides { true };
     bool m_show_rulers { true };
     bool m_show_pixel_grid { true };
+
+    bool m_show_active_layer_boundary { true };
 
     Tool* m_active_tool { nullptr };
 
