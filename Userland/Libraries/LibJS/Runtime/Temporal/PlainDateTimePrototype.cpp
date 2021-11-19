@@ -506,42 +506,58 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::subtract)
     return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time->calendar()));
 }
 
-// 5.3.30 Temporal.PlainDateTime.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round
+// 5.3.30 Temporal.PlainDateTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
 {
     // 1. Let dateTime be the this value.
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
     auto* date_time = TRY(typed_this_object(global_object));
 
-    // 3. If options is undefined, then
+    // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
     }
 
-    // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+    Object* round_to;
 
-    // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week" », undefined).
-    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv }, {}));
+    // 4. If Type(roundTo) is String, then
+    if (vm.argument(0).is_string()) {
+        // a. Let paramString be roundTo.
 
-    // 6. If smallestUnit is undefined, throw a RangeError exception.
+        // b. Set roundTo to ! OrdinaryObjectCreate(null).
+        round_to = Object::create(global_object, nullptr);
+
+        // FIXME: "_smallestUnit_" is a spec bug, see https://github.com/tc39/proposal-temporal/pull/1931
+        // c. Perform ! CreateDataPropertyOrThrow(roundTo, "_smallestUnit_", paramString).
+        MUST(round_to->create_data_property_or_throw(vm.names.smallestUnit, vm.argument(0)));
+    }
+    // 5. Else,
+    else {
+        // a. Set roundTo to ? GetOptionsObject(roundTo).
+        round_to = TRY(get_options_object(global_object, vm.argument(0)));
+    }
+
+    // 6. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « "year", "month", "week" », undefined).
+    auto smallest_unit_value = TRY(to_smallest_temporal_unit(global_object, *round_to, { "year"sv, "month"sv, "week"sv }, {}));
+
+    // 7. If smallestUnit is undefined, throw a RangeError exception.
     if (!smallest_unit_value.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.undefined.as_string(), "smallestUnit");
 
     // NOTE: At this point smallest_unit_value can only be a string
     auto& smallest_unit = *smallest_unit_value;
 
-    // 7. Let roundingMode be ? ToTemporalRoundingMode(options, "halfExpand").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "halfExpand"));
+    // 8. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"));
 
-    // 8. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(options, smallestUnit).
-    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(global_object, *options, smallest_unit));
+    // 9. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo, smallestUnit).
+    auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(global_object, *round_to, smallest_unit));
 
-    // 9. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
+    // 10. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
     auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, smallest_unit, rounding_mode);
 
-    // 10. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
+    // 11. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
     return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time->calendar()));
 }
 

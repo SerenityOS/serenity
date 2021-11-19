@@ -61,6 +61,13 @@ describe("correct behavior", () => {
         expect(fifthRoundedPlainTime.microsecond).toBe(0);
         expect(fifthRoundedPlainTime.nanosecond).toBe(0);
     });
+
+    test("string argument is implicitly converted to options object", () => {
+        const plainTime = new Temporal.PlainTime(18, 15, 9, 100, 200, 300);
+        expect(
+            plainTime.round("minute").equals(plainTime.round({ smallestUnit: "minute" }))
+        ).toBeTrue();
+    });
 });
 
 describe("errors", () => {
