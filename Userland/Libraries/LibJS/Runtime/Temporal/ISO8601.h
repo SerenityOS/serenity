@@ -77,6 +77,7 @@ public:
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_calendar_date_time();
     [[nodiscard]] bool parse_temporal_date_string();
+    [[nodiscard]] bool parse_temporal_date_time_string();
 
 private:
     struct State {

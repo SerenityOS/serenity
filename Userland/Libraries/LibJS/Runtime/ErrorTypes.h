@@ -208,6 +208,7 @@
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidDateString, "Invalid date string '{}'")                                                                            \
+    M(TemporalInvalidDateTimeString, "Invalid date time string '{}'")                                                                   \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
     M(TemporalInvalidDurationLikeObject, "Invalid duration-like object")                                                                \
     M(TemporalInvalidDurationPropertyValueNonIntegral, "Invalid value for duration property '{}': must be an integer, got {}")          \
