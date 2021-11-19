@@ -587,18 +587,18 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
     if (value.is_object()) {
         auto& value_object = value.as_object();
 
-        // a. If value has either an [[InitializedTemporalDateTime]] or [[InitializedTemporalZonedDateTime]] internal slot, then
-        if (is<PlainDateTime>(value_object) || is<ZonedDateTime>(value_object)) {
+        // a. If value has either an [[InitializedTemporalDate]] or [[InitializedTemporalZonedDateTime]] internal slot, then
+        if (is<PlainDate>(value_object) || is<ZonedDateTime>(value_object)) {
             // i. Return value.
             return value;
         }
 
-        // b. If value has an [[InitializedTemporalDate]] internal slot, then
-        if (is<PlainDate>(value_object)) {
-            auto& plain_date_object = static_cast<PlainDate&>(value_object);
+        // b. If value has an [[InitializedTemporalDateTime]] internal slot, then
+        if (is<PlainDateTime>(value_object)) {
+            auto& plain_date_time = static_cast<PlainDateTime&>(value_object);
 
-            // i. Return ? CreateTemporalDateTime(value.[[ISOYear]], value.[[ISOMonth]], value.[[ISODay]], 0, 0, 0, 0, 0, 0, value.[[Calendar]]).
-            return TRY(create_temporal_date_time(global_object, plain_date_object.iso_year(), plain_date_object.iso_month(), plain_date_object.iso_day(), 0, 0, 0, 0, 0, 0, plain_date_object.calendar()));
+            // i. Return ? CreateTemporalDate(value.[[ISOYear]], value.[[ISOMonth]], value.[[ISODay]], 0, 0, 0, 0, 0, 0, value.[[Calendar]]).
+            return TRY(create_temporal_date(global_object, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.calendar()));
         }
 
         // c. Let calendar be ? GetTemporalCalendarWithISODefault(value).
@@ -698,8 +698,8 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, time_zone.as_object(), *calendar));
     }
 
-    // 9. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
-    return TRY(create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, *calendar));
+    // 9. Return ! CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+    return TRY(create_temporal_date(global_object, result.year, result.month, result.day, *calendar));
 }
 
 // 13.22 ValidateTemporalUnitRange ( largestUnit, smallestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-validatetemporalunitrange

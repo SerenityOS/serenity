@@ -487,12 +487,12 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
 
     // 7. If relativeTo is not undefined, then
     if (!relative_to.is_undefined()) {
-        // a. Set relativeTo to ? ToTemporalDateTime(relativeTo).
-        PlainDateTime* relative_to_plain_date_time = TRY(to_temporal_date_time(global_object, relative_to));
-        relative_to = relative_to_plain_date_time;
+        // a. Set relativeTo to ? ToTemporalDate(relativeTo).
+        auto* relative_to_plain_date = TRY(to_temporal_date(global_object, relative_to));
+        relative_to = relative_to_plain_date;
 
         // b. Let calendar be relativeTo.[[Calendar]].
-        calendar = &relative_to_plain_date_time->calendar();
+        calendar = &relative_to_plain_date->calendar();
     }
     // 8. Else,
     else {
@@ -555,7 +555,7 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
         // b. Repeat, while years ≠ 0,
         while (years != 0) {
             // i. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
-            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_year));
+            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDate>(relative_to.as_object()), *one_year));
 
             // ii. Set relativeTo to moveResult.[[RelativeTo]].
             relative_to = move_result.relative_to.cell();
@@ -570,7 +570,7 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
         // c. Repeat, while months ≠ 0,
         while (months != 0) {
             // i. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
-            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_month));
+            auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDate>(relative_to.as_object()), *one_month));
 
             // ii. Set relativeTo to moveResult.[[RelativeTo]].
             relative_to = move_result.relative_to.cell();
@@ -595,7 +595,7 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
             // ii. Repeat, while years ≠ 0,
             while (years != 0) {
                 // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
-                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_year));
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDate>(relative_to.as_object()), *one_year));
 
                 // 2. Set relativeTo to moveResult.[[RelativeTo]].
                 relative_to = move_result.relative_to.cell();
@@ -610,7 +610,7 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
             // iii. Repeat, while months ≠ 0,
             while (months != 0) {
                 // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
-                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_month));
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDate>(relative_to.as_object()), *one_month));
 
                 // 2. Set relativeTo to moveResult.[[RelativeTo]].
                 relative_to = move_result.relative_to.cell();
@@ -625,7 +625,7 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
             // iv. Repeat, while weeks ≠ 0,
             while (weeks != 0) {
                 // 1. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
-                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDateTime>(relative_to.as_object()), *one_week));
+                auto move_result = TRY(move_relative_date(global_object, *calendar, verify_cast<PlainDate>(relative_to.as_object()), *one_week));
 
                 // 2. Set relativeTo to moveResult.[[RelativeTo]].
                 relative_to = move_result.relative_to.cell();
@@ -644,25 +644,22 @@ ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject& 
 }
 
 // 7.5.16 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
-ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& global_object, Object& calendar, PlainDateTime& relative_to, Duration& duration)
+ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& global_object, Object& calendar, PlainDate& relative_to, Duration& duration)
 {
     // 1. Assert: Type(relativeTo) is Object.
-    // 2. Assert: relativeTo has an [[InitializedTemporalDateTime]] internal slot.
+    // 2. Assert: relativeTo has an [[InitializedTemporalDate]] internal slot.
 
     // 3. Let options be ! OrdinaryObjectCreate(null).
     auto* options = Object::create(global_object, nullptr);
 
-    // 4. Let later be ? CalendarDateAdd(calendar, relativeTo, duration, options).
-    auto* later = TRY(calendar_date_add(global_object, calendar, &relative_to, duration, options));
+    // 4. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, options).
+    auto* new_date = TRY(calendar_date_add(global_object, calendar, &relative_to, duration, options));
 
-    // 5. Let days be ? DaysUntil(relativeTo, later).
-    auto days = days_until(global_object, relative_to, *later);
+    // 5. Let days be ! DaysUntil(relativeTo, newDate).
+    auto days = days_until(global_object, relative_to, *new_date);
 
-    // 6. Let dateTime be ? CreateTemporalDateTime(later.[[ISOYear]], later.[[ISOMonth]], later.[[ISODay]], relativeTo.[[ISOHour]], relativeTo.[[ISOMinute]], relativeTo.[[ISOSecond]], relativeTo.[[ISOMillisecond]], relativeTo.[[ISOMicrosecond]], relativeTo.[[ISONanosecond]], relativeTo.[[Calendar]]).
-    auto* date_time = TRY(create_temporal_date_time(global_object, later->iso_year(), later->iso_month(), later->iso_day(), relative_to.iso_hour(), relative_to.iso_minute(), relative_to.iso_second(), relative_to.iso_millisecond(), relative_to.iso_microsecond(), relative_to.iso_nanosecond(), relative_to.calendar()));
-
-    // 7. Return the Record { [[RelativeTo]]: dateTime, [[Days]]: days }.
-    return MoveRelativeDateResult { .relative_to = make_handle(date_time), .days = days };
+    // 6. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
+    return MoveRelativeDateResult { .relative_to = make_handle(new_date), .days = days };
 }
 
 // 7.5.17 MoveRelativeZonedDateTime ( zonedDateTime, years, months, weeks, days ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativezoneddatetime
@@ -684,11 +681,9 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     double fractional_seconds = 0;
 
     // 1. If relativeTo is not present, set relativeTo to undefined.
-    // NOTE: `relative_to_object`, `relative_to_date`, and `relative_to` in the various code paths below
-    // are all the same as far as the spec is concerned, but the latter two are more strictly typed for convenience.
-    // The `_date` suffix is used as relativeTo is guaranteed to be a PlainDateTime object or undefined after step 5
-    // (i.e. PlainDateTime*), but a PlainDate object is assigned in a couple of cases.
-    PlainDateTime* relative_to = nullptr;
+    // NOTE: `relative_to_object` and `relative_to` in the various code paths below are all the same as far as the
+    // spec is concerned, but the latter is more strictly typed for convenience.
+    PlainDate* relative_to = nullptr;
 
     // 2. Let years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, and increment each be the mathematical values of themselves.
 
@@ -716,15 +711,18 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             // ii. Set zonedRelativeTo to relativeTo.
             zoned_relative_to = relative_to_zoned_date_time;
 
-            // iii. Set relativeTo to ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], instant, relativeTo.[[Calendar]]).
-            relative_to = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to_zoned_date_time->time_zone(), *instant, relative_to_zoned_date_time->calendar()));
+            // iii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], instant, relativeTo.[[Calendar]]).
+            auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to_zoned_date_time->time_zone(), *instant, relative_to_zoned_date_time->calendar()));
+
+            // iv. Set relativeTo to ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], relativeTo.[[Calendar]]).
+            relative_to = TRY(create_temporal_date(global_object, plain_date_time->iso_year(), plain_date_time->iso_month(), plain_date_time->iso_day(), relative_to_zoned_date_time->calendar()));
         }
         // b. Else,
         else {
-            // i. Assert: relativeTo has an [[InitializedTemporalDateTime]] internal slot.
-            VERIFY(is<PlainDateTime>(relative_to_object));
+            //     i. Assert: relativeTo has an [[InitializedTemporalDate]] internal slot.
+            VERIFY(is<PlainDate>(relative_to_object));
 
-            relative_to = static_cast<PlainDateTime*>(relative_to_object);
+            relative_to = static_cast<PlainDate*>(relative_to_object);
         }
 
         // c. Let calendar be relativeTo.[[Calendar]].
@@ -800,7 +798,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto months_weeks_in_days = days_until(global_object, *years_later, *years_months_weeks_later);
 
         // i. Set relativeTo to yearsLater.
-        auto* relative_to_date = years_later;
+        relative_to = years_later;
 
         // j. Let days be days + monthsWeeksInDays.
         days += months_weeks_in_days;
@@ -812,7 +810,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto* third_add_options = Object::create(global_object, nullptr);
 
         // m. Let daysLater be ? CalendarDateAdd(calendar, relativeTo, daysDuration, thirdAddOptions, dateAdd).
-        auto* days_later = TRY(calendar_date_add(global_object, *calendar, relative_to_date, *days_duration, third_add_options, date_add));
+        auto* days_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *days_duration, third_add_options, date_add));
 
         // n. Let untilOptions be ! OrdinaryObjectCreate(null).
         auto* until_options = Object::create(global_object, nullptr);
@@ -821,7 +819,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "year"sv)));
 
         // p. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, daysLater, untilOptions).
-        auto* time_passed = TRY(calendar_date_until(global_object, *calendar, relative_to_date, days_later, *until_options));
+        auto* time_passed = TRY(calendar_date_until(global_object, *calendar, relative_to, days_later, *until_options));
 
         // q. Let yearsPassed be timePassed.[[Years]].
         auto years_passed = time_passed->years();
@@ -830,7 +828,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         years += years_passed;
 
         // s. Let oldRelativeTo be relativeTo.
-        auto* old_relative_to_date = relative_to_date;
+        auto* old_relative_to = relative_to;
 
         // t. Let yearsDuration be ? CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         years_duration = TRY(create_temporal_duration(global_object, years_passed, 0, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -839,10 +837,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto* fourth_add_options = Object::create(global_object, nullptr);
 
         // v. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, fourthAddOptions, dateAdd).
-        relative_to_date = TRY(calendar_date_add(global_object, *calendar, relative_to_date, *years_duration, fourth_add_options, date_add));
+        relative_to = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_duration, fourth_add_options, date_add));
 
         // w. Let daysPassed be ? DaysUntil(oldRelativeTo, relativeTo).
-        auto days_passed = days_until(global_object, *old_relative_to_date, *relative_to_date);
+        auto days_passed = days_until(global_object, *old_relative_to, *relative_to);
 
         // x. Set days to days - daysPassed.
         days -= days_passed;
@@ -857,25 +855,22 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // aa. Let oneYear be ? CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_year = TRY(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // ab. Set relativeTo to ! CreateTemporalDateTime(relativeTo.[[ISOYear]], relativeTo.[[ISOMonth]], relativeTo.[[ISODay]], 0, 0, 0, 0, 0, 0, relativeTo.[[Calendar]]).
-        relative_to = MUST(create_temporal_date_time(global_object, relative_to_date->iso_year(), relative_to_date->iso_month(), relative_to_date->iso_day(), 0, 0, 0, 0, 0, 0, relative_to->calendar()));
-
-        // ac. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
+        // ab. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_year));
 
-        // ad. Let oneYearDays be moveResult.[[Days]].
+        // ac. Let oneYearDays be moveResult.[[Days]].
         auto one_year_days = move_result.days;
 
-        // ae. Let fractionalYears be years + days / abs(oneYearDays).
+        // ad. Let fractionalYears be years + days / abs(oneYearDays).
         auto fractional_years = years + days / fabs(one_year_days);
 
-        // af. Set years to ! RoundNumberToIncrement(fractionalYears, increment, roundingMode).
+        // ae. Set years to ! RoundNumberToIncrement(fractionalYears, increment, roundingMode).
         years = (double)round_number_to_increment(fractional_years, increment, rounding_mode);
 
-        // ag. Set remainder to fractionalYears - years.
+        // af. Set remainder to fractionalYears - years.
         remainder = fractional_years - years;
 
-        // ah. Set months, weeks, and days to 0.
+        // ag. Set months, weeks, and days to 0.
         months = 0;
         weeks = 0;
         days = 0;
@@ -909,7 +904,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         auto weeks_in_days = days_until(global_object, *years_months_later, *years_months_weeks_later);
 
         // i. Set relativeTo to yearsMonthsLater.
-        auto* relative_to_date = years_months_later;
+        relative_to = years_months_later;
 
         // j. Let days be days + weeksInDays.
         days += weeks_in_days;
@@ -924,19 +919,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // m. Let oneMonth be ? CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_month = TRY(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // n. Set relativeTo to ! CreateTemporalDateTime(relativeTo.[[ISOYear]], relativeTo.[[ISOMonth]], relativeTo.[[ISODay]], 0, 0, 0, 0, 0, 0, relativeTo.[[Calendar]]).
-        relative_to = MUST(create_temporal_date_time(global_object, relative_to_date->iso_year(), relative_to_date->iso_month(), relative_to_date->iso_day(), 0, 0, 0, 0, 0, 0, relative_to_date->calendar()));
-
-        // o. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+        // n. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_month));
 
-        // p. Set relativeTo to moveResult.[[RelativeTo]].
+        // o. Set relativeTo to moveResult.[[RelativeTo]].
         relative_to = move_result.relative_to.cell();
 
-        // q. Let oneMonthDays be moveResult.[[Days]].
+        // p. Let oneMonthDays be moveResult.[[Days]].
         auto one_month_days = move_result.days;
 
-        // r. Repeat, while abs(days) ≥ abs(oneMonthDays),
+        // q. Repeat, while abs(days) ≥ abs(oneMonthDays),
         while (fabs(days) >= fabs(one_month_days)) {
             // i. Set months to months + sign.
             months += sign;
@@ -954,16 +946,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             one_month_days = move_result.days;
         }
 
-        // s. Let fractionalMonths be months + days / abs(oneMonthDays).
+        // r. Let fractionalMonths be months + days / abs(oneMonthDays).
         auto fractional_months = months + days / fabs(one_month_days);
 
-        // t. Set months to ! RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
+        // s. Set months to ! RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
         months = (double)round_number_to_increment(fractional_months, increment, rounding_mode);
 
-        // u. Set remainder to fractionalMonths - months.
+        // t. Set remainder to fractionalMonths - months.
         remainder = fractional_months - months;
 
-        // v. Set weeks and days to 0.
+        // u. Set weeks and days to 0.
         weeks = 0;
         days = 0;
     }

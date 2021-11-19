@@ -90,7 +90,7 @@ struct BalancedDuration {
 
 // Used by MoveRelativeDate to temporarily hold values
 struct MoveRelativeDateResult {
-    Handle<PlainDateTime> relative_to;
+    Handle<PlainDate> relative_to;
     double days;
 };
 
@@ -153,7 +153,7 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_t
 BigInt* total_duration_nanoseconds(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift);
 ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
 ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
-ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDateTime& relative_to, Duration& duration);
+ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDate& relative_to, Duration& duration);
 ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject&, ZonedDateTime&, double years, double months, double weeks, double days);
 ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
 ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
