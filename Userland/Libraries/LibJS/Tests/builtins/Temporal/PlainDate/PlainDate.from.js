@@ -28,8 +28,7 @@ describe("correct behavior", () => {
         expect(createdPlainDate.day).toBe(26);
     });
 
-    // Un-skip once ParseISODateTime & ParseTemporalDateString are implemented
-    test.skip("PlainDate string argument", () => {
+    test("PlainDate string argument", () => {
         const createdPlainDate = Temporal.PlainDate.from("2021-07-26");
         expect(createdPlainDate.year).toBe(2021);
         expect(createdPlainDate.month).toBe(7);

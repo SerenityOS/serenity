@@ -459,9 +459,18 @@ bool ISO8601Parser::parse_calendar_date_time()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-TemporalDateString
+bool ISO8601Parser::parse_temporal_date_string()
+{
+    // TemporalDateString :
+    //     CalendarDateTime
+    return parse_calendar_date_time();
 }
 
-#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS
+}
+
+#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS \
+    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
