@@ -62,8 +62,7 @@ describe("correct behavior", () => {
         expect(plainYearMonth.monthCode).toBe("M07");
     });
 
-    // Un-skip once ParseISODateTime & ParseTemporalYearMonthString are fully implemented
-    test.skip("from date time string", () => {
+    test("from date time string", () => {
         const plainYearMonth = Temporal.PlainYearMonth.from("2021-07-06T23:42:01Z");
         expect(plainYearMonth.year).toBe(2021);
         expect(plainYearMonth.month).toBe(7);
