@@ -23,6 +23,13 @@ struct ParseResult {
     Optional<StringView> time_second;
     Optional<StringView> time_fractional_part;
     Optional<StringView> calendar_name;
+    Optional<StringView> utc_designator;
+    Optional<StringView> time_zone_utc_offset_sign;
+    Optional<StringView> time_zone_utc_offset_hour;
+    Optional<StringView> time_zone_utc_offset_minute;
+    Optional<StringView> time_zone_utc_offset_second;
+    Optional<StringView> time_zone_utc_offset_fractional_part;
+    Optional<StringView> time_zone_iana_name;
 };
 
 enum class Production {
@@ -30,8 +37,10 @@ enum class Production {
     TemporalDateTimeString,
     TemporalMonthDayString,
     TemporalTimeString,
+    TemporalTimeZoneString,
     TemporalYearMonthString,
     TemporalZonedDateTimeString,
+    TemporalRelativeToString,
 };
 
 Optional<ParseResult> parse_iso8601(Production, StringView);
@@ -60,6 +69,7 @@ public:
     [[nodiscard]] bool parse_minute_second();
     [[nodiscard]] bool parse_decimal_separator();
     [[nodiscard]] bool parse_date_time_separator();
+    [[nodiscard]] bool parse_utc_designator();
     [[nodiscard]] bool parse_date_year();
     [[nodiscard]] bool parse_date_month();
     [[nodiscard]] bool parse_date_day();
@@ -73,6 +83,18 @@ public:
     [[nodiscard]] bool parse_time_fractional_part();
     [[nodiscard]] bool parse_fraction();
     [[nodiscard]] bool parse_time_fraction();
+    [[nodiscard]] bool parse_time_zone_utc_offset_sign();
+    [[nodiscard]] bool parse_time_zone_utc_offset_hour();
+    [[nodiscard]] bool parse_time_zone_utc_offset_minute();
+    [[nodiscard]] bool parse_time_zone_utc_offset_second();
+    [[nodiscard]] bool parse_time_zone_utc_offset_fractional_part();
+    [[nodiscard]] bool parse_time_zone_utc_offset_fraction();
+    [[nodiscard]] bool parse_time_zone_numeric_utc_offset();
+    [[nodiscard]] bool parse_time_zone_utc_offset();
+    [[nodiscard]] bool parse_time_zone_utc_offset_name();
+    [[nodiscard]] bool parse_time_zone_iana_name();
+    [[nodiscard]] bool parse_time_zone_bracketed_name();
+    [[nodiscard]] bool parse_time_zone_bracketed_annotation();
     [[nodiscard]] bool parse_time_zone_offset_required();
     [[nodiscard]] bool parse_time_zone_name_required();
     [[nodiscard]] bool parse_time_zone();
@@ -87,8 +109,11 @@ public:
     [[nodiscard]] bool parse_temporal_date_time_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
     [[nodiscard]] bool parse_temporal_time_string();
+    [[nodiscard]] bool parse_temporal_time_zone_identifier();
+    [[nodiscard]] bool parse_temporal_time_zone_string();
     [[nodiscard]] bool parse_temporal_year_month_string();
     [[nodiscard]] bool parse_temporal_zoned_date_time_string();
+    [[nodiscard]] bool parse_temporal_relative_to_string();
 
 private:
     struct State {

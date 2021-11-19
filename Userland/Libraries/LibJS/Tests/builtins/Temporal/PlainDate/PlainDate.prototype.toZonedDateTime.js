@@ -58,8 +58,7 @@ describe("correct behavior", () => {
         expect(zonedDateTime.timeZone).toBe(timeZone);
     });
 
-    // TODO: Enable when parse_temporal_time_zone_string() is fully implemented
-    test.skip("basic functionality - time zone identifier", () => {
+    test("basic functionality - time zone identifier", () => {
         // 4. in the spec
         const plainDate = new Temporal.PlainDate(2021, 7, 6);
         const zonedDateTime = plainDate.toZonedDateTime("UTC");
