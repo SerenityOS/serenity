@@ -76,10 +76,16 @@ DebugInfoWidget::DebugInfoWidget()
         // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
         // (Other registers may be needed to get the values of variables who are not stored on the stack)
         PtraceRegisters frame_regs {};
-        frame_regs.set_ip(model.frames()[index.row()].instruction_address);
-        frame_regs.set_bp(model.frames()[index.row()].frame_base);
+        auto backtrace_frame = model.frames()[index.row()];
+        frame_regs.set_ip(backtrace_frame.instruction_address);
+        frame_regs.set_bp(backtrace_frame.frame_base);
 
-        m_variables_view->set_model(VariablesModel::create(frame_regs));
+        m_variables_view->set_model(VariablesModel::create(static_cast<VariablesModel&>(*m_variables_view->model()).inspector(), frame_regs));
+        if (on_backtrace_frame_selection && backtrace_frame.m_source_position.has_value()) {
+            on_backtrace_frame_selection(*backtrace_frame.m_source_position);
+        } else {
+            dbgln("no source position info");
+        }
     };
 }
 
@@ -149,9 +155,9 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
     return registers_widget;
 }
 
-void DebugInfoWidget::update_state(const Debug::ProcessInspector& inspector, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(Debug::ProcessInspector& inspector, const PtraceRegisters& regs)
 {
-    m_variables_view->set_model(VariablesModel::create(regs));
+    m_variables_view->set_model(VariablesModel::create(inspector, regs));
     m_backtrace_view->set_model(BacktraceModel::create(inspector, regs));
     if (m_registers_view->model()) {
         auto& previous_registers = static_cast<RegistersModel*>(m_registers_view->model())->raw_registers();

@@ -78,7 +78,7 @@
 
 namespace HackStudio {
 
-HackStudioWidget::HackStudioWidget(const String& path_to_project)
+HackStudioWidget::HackStudioWidget(String path_to_project)
     : m_editor_font(read_editor_font_from_config())
 {
     set_fill_with_background_color(true);
@@ -207,7 +207,7 @@ void HackStudioWidget::open_project(const String& root_path)
         m_project_tree_view->set_model(m_project->model());
         m_project_tree_view->update();
     }
-    if (m_git_widget) {
+    if (m_git_widget && m_git_widget->initialized()) {
         m_git_widget->change_repo(LexicalPath(root_path));
         m_git_widget->refresh();
     }
@@ -855,8 +855,9 @@ void HackStudioWidget::initialize_debugger()
 String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
 {
     auto path_parts = LexicalPath(file).parts();
-    VERIFY(path_parts[0] == "..");
-    path_parts.remove(0);
+    while (!path_parts.is_empty() && path_parts[0] == "..") {
+        path_parts.remove(0);
+    }
     StringBuilder relative_path_builder;
     relative_path_builder.join("/", path_parts);
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
@@ -864,12 +865,20 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
     return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
+String HackStudioWidget::get_absolute_path(const String& path) const
+{
+    // TODO: We can probably do a more specific condition here, something like
+    // "if (file.starts_with("../Libraries/") || file.starts_with("../AK/"))"
+    if (path.starts_with("..")) {
+        return get_full_path_of_serenity_source(path);
+    }
+    return m_project->to_absolute_path(path);
+}
+
 RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& filename)
 {
     String file_path = filename;
 
-    // TODO: We can probably do a more specific condition here, something like
-    // "if (file.starts_with("../Libraries/") || file.starts_with("../AK/"))"
     if (filename.starts_with("../")) {
         file_path = get_full_path_of_serenity_source(filename);
     }
@@ -1060,6 +1069,11 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO");
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
+
+    m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
+        open_file(get_absolute_path(source_position.file_path), source_position.line_number - 1);
+    };
+
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
     m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_path()));
     m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
@@ -1450,6 +1464,22 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
     Config::write_string("HackStudio", "EditorFont", "Family", m_editor_font->family());
     Config::write_string("HackStudio", "EditorFont", "Variant", m_editor_font->variant());
     Config::write_i32("HackStudio", "EditorFont", "Size", m_editor_font->presentation_size());
+}
+
+void HackStudioWidget::open_coredump(String const& coredump_path)
+{
+    open_project("/usr/src/serenity");
+    m_mode = Mode::Coredump;
+
+    m_coredump_inspector = Coredump::Inspector::create(coredump_path, [this](float progress) {
+        window()->set_progress(progress * 100);
+    });
+    window()->set_progress(0);
+
+    if (m_coredump_inspector) {
+        m_debug_info_widget->update_state(*m_coredump_inspector, m_coredump_inspector->get_registers());
+        reveal_action_tab(*m_debug_info_widget);
+    }
 }
 
 }

@@ -51,7 +51,7 @@ NonnullRefPtr<ProjectFile> Project::create_file(const String& path) const
     return ProjectFile::construct_with_name(full_path);
 }
 
-String Project::to_absolute_path(const String& path) const
+String Project::to_absolute_path(String const& path) const
 {
     if (LexicalPath { path }.is_absolute()) {
         return path;
