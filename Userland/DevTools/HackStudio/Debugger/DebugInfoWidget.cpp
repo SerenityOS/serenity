@@ -13,7 +13,6 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
-#include <LibGUI/Layout.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
@@ -150,10 +149,10 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
     return registers_widget;
 }
 
-void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(const Debug::ProcessInspector& inspector, const PtraceRegisters& regs)
 {
     m_variables_view->set_model(VariablesModel::create(regs));
-    m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
+    m_backtrace_view->set_model(BacktraceModel::create(inspector, regs));
     if (m_registers_view->model()) {
         auto& previous_registers = static_cast<RegistersModel*>(m_registers_view->model())->raw_registers();
         m_registers_view->set_model(RegistersModel::create(regs, previous_registers));

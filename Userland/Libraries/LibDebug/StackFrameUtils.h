@@ -18,6 +18,6 @@ struct StackFrameInfo {
     FlatPtr next_ebp;
 };
 
-Optional<StackFrameInfo> get_info(DebugSession const&, FlatPtr current_ebp);
+Optional<StackFrameInfo> get_info(ProcessInspector const&, FlatPtr current_ebp);
 
 }
