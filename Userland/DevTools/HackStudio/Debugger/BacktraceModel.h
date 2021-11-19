@@ -38,8 +38,9 @@ public:
 
     struct FrameInfo {
         String function_name;
-        FlatPtr instruction_address;
-        FlatPtr frame_base;
+        FlatPtr instruction_address { 0 };
+        FlatPtr frame_base { 0 };
+        Optional<Debug::DebugInfo::SourcePosition> m_source_position;
     };
 
     const Vector<FrameInfo>& frames() const { return m_frames; }
