@@ -13,6 +13,6 @@ __BEGIN_DECLS
 // FIXME: PID/TID ISSUE
 // Affects the entirety of LibDebug and Userland/strace.cpp.
 // See also Kernel/Ptrace.cpp
-int ptrace(int request, pid_t tid, void* addr, int data);
+long ptrace(int request, pid_t tid, void* addr, void* data);
 
 __END_DECLS
