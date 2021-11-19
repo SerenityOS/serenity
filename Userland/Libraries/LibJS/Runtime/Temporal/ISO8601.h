@@ -30,6 +30,7 @@ enum class Production {
     TemporalDateTimeString,
     TemporalMonthDayString,
     TemporalTimeString,
+    TemporalYearMonthString,
 };
 
 Optional<ParseResult> parse_iso8601(Production, StringView);
@@ -61,6 +62,7 @@ public:
     [[nodiscard]] bool parse_date_year();
     [[nodiscard]] bool parse_date_month();
     [[nodiscard]] bool parse_date_day();
+    [[nodiscard]] bool parse_date_spec_year_month();
     [[nodiscard]] bool parse_date_spec_month_day();
     [[nodiscard]] bool parse_date();
     [[nodiscard]] bool parse_time_hour();
@@ -84,6 +86,7 @@ public:
     [[nodiscard]] bool parse_temporal_date_time_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
     [[nodiscard]] bool parse_temporal_time_string();
+    [[nodiscard]] bool parse_temporal_year_month_string();
 
 private:
     struct State {
