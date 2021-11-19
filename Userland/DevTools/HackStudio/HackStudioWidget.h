@@ -21,6 +21,7 @@
 #include "ProjectFile.h"
 #include "TerminalWrapper.h"
 #include "ToDoEntriesWidget.h"
+#include <LibCoredump/Inspector.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
@@ -62,11 +63,19 @@ public:
     };
     ContinueDecision warn_unsaved_changes(const String& prompt);
 
+    enum class Mode {
+        Code,
+        Coredump
+    };
+
+    void open_coredump(String const& coredump_path);
+
 private:
     static String get_full_path_of_serenity_source(const String& file);
+    String get_absolute_path(String const&) const;
     Vector<String> selected_file_paths() const;
 
-    HackStudioWidget(const String& path_to_project);
+    HackStudioWidget(String path_to_project);
     void open_project(const String& root_path);
 
     enum class EditMode {
@@ -215,5 +224,8 @@ private:
     RefPtr<GUI::Action> m_no_wrapping_action;
     RefPtr<GUI::Action> m_wrap_anywhere_action;
     RefPtr<GUI::Action> m_wrap_at_words_action;
+
+    Mode m_mode { Mode::Code };
+    OwnPtr<Coredump::Inspector> m_coredump_inspector;
 };
 }

@@ -29,11 +29,10 @@ public:
     NonnullRefPtr<ProjectFile> create_file(const String& path) const;
 
     void for_each_text_file(Function<void(const ProjectFile&)>) const;
+    String to_absolute_path(String const&) const;
 
 private:
     explicit Project(const String& root_path);
-
-    String to_absolute_path(const String&) const;
 
     RefPtr<GUI::FileSystemModel> m_model;
 

@@ -26,9 +26,11 @@ class DebugInfoWidget final : public GUI::Widget {
 public:
     virtual ~DebugInfoWidget() override { }
 
-    void update_state(Debug::ProcessInspector const&, PtraceRegisters const&);
+    void update_state(Debug::ProcessInspector&, PtraceRegisters const&);
     void program_stopped();
     void set_debug_actions_enabled(bool enabled);
+
+    Function<void(Debug::DebugInfo::SourcePosition const&)> on_backtrace_frame_selection;
 
 private:
     explicit DebugInfoWidget();
