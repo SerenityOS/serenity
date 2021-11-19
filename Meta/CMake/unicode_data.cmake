@@ -99,6 +99,23 @@ function(extract_cldr_file source path)
     endif()
 endfunction()
 
+function(invoke_generator name generator header implementation)
+    cmake_parse_arguments(invoke_generator "" "" "arguments" ${ARGN})
+
+    add_custom_command(
+        OUTPUT "${header}" "${implementation}"
+        COMMAND $<TARGET_FILE:${generator}> -h "${header}.tmp" -c "${implementation}.tmp" ${invoke_generator_arguments}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${header}.tmp" "${header}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${implementation}.tmp" "${implementation}"
+        COMMAND "${CMAKE_COMMAND}" -E remove "${header}.tmp" "${implementation}.tmp"
+        VERBATIM
+        DEPENDS ${generator} "${UCD_VERSION_FILE}" "${CLDR_VERSION_FILE}"
+    )
+
+    add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}${name} DEPENDS "${header}" "${implementation}")
+    add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}${name})
+endfunction()
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     remove_unicode_data_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
     remove_unicode_data_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
@@ -152,41 +169,27 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         set(UNICODE_META_TARGET_PREFIX "")
     endif()
 
-    add_custom_command(
-        OUTPUT ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION}
-        COMMAND $<TARGET_FILE:Lagom::GenerateUnicodeData> -h ${UNICODE_DATA_HEADER}.tmp -c ${UNICODE_DATA_IMPLEMENTATION}.tmp -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -g ${DERIVED_GENERAL_CATEGORY_PATH} -p ${PROP_LIST_PATH} -d ${DERIVED_CORE_PROP_PATH} -b ${DERIVED_BINARY_PROP_PATH} -a ${PROP_ALIAS_PATH} -v ${PROP_VALUE_ALIAS_PATH} -m ${NAME_ALIAS_PATH} -r ${SCRIPTS_PATH} -x ${SCRIPT_EXTENSIONS_PATH} -e ${EMOJI_DATA_PATH} -n ${NORM_PROPS_PATH}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_DATA_HEADER}.tmp ${UNICODE_DATA_HEADER}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_DATA_IMPLEMENTATION}.tmp ${UNICODE_DATA_IMPLEMENTATION}
-        COMMAND "${CMAKE_COMMAND}" -E remove ${UNICODE_DATA_HEADER}.tmp ${UNICODE_DATA_IMPLEMENTATION}.tmp
-        VERBATIM
-        DEPENDS Lagom::GenerateUnicodeData ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH} ${DERIVED_GENERAL_CATEGORY_PATH} ${PROP_LIST_PATH} ${DERIVED_CORE_PROP_PATH} ${DERIVED_BINARY_PROP_PATH} ${PROP_ALIAS_PATH} ${PROP_VALUE_ALIAS_PATH} ${NAME_ALIAS_PATH} ${SCRIPTS_PATH} ${SCRIPT_EXTENSIONS_PATH} ${EMOJI_DATA_PATH} ${NORM_PROPS_PATH}
+    invoke_generator(
+        "UnicodeData"
+        Lagom::GenerateUnicodeData
+        "${UNICODE_DATA_HEADER}"
+        "${UNICODE_DATA_IMPLEMENTATION}"
+        arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}"
     )
-    add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}UnicodeData DEPENDS ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION})
-    add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}UnicodeData)
-
-    add_custom_command(
-        OUTPUT ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION}
-        COMMAND $<TARGET_FILE:Lagom::GenerateUnicodeLocale> -h ${UNICODE_LOCALE_HEADER}.tmp -c ${UNICODE_LOCALE_IMPLEMENTATION}.tmp -r ${CLDR_CORE_PATH} -l ${CLDR_LOCALES_PATH} -m ${CLDR_MISC_PATH} -n ${CLDR_NUMBERS_PATH}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_LOCALE_HEADER}.tmp ${UNICODE_LOCALE_HEADER}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_LOCALE_IMPLEMENTATION}.tmp ${UNICODE_LOCALE_IMPLEMENTATION}
-        COMMAND "${CMAKE_COMMAND}" -E remove ${UNICODE_LOCALE_HEADER}.tmp ${UNICODE_LOCALE_IMPLEMENTATION}.tmp
-        VERBATIM
-        DEPENDS Lagom::GenerateUnicodeLocale ${CLDR_CORE_PATH} ${CLDR_LOCALES_PATH} ${CLDR_MISC_PATH} ${CLDR_NUMBERS_PATH}
+    invoke_generator(
+        "UnicodeLocale"
+        Lagom::GenerateUnicodeLocale
+        "${UNICODE_LOCALE_HEADER}"
+        "${UNICODE_LOCALE_IMPLEMENTATION}"
+        arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}"
     )
-    add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}UnicodeLocale DEPENDS ${UNICODE_LOCALE_HEADER} ${UNICODE_LOCALE_IMPLEMENTATION})
-    add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}UnicodeLocale)
-
-    add_custom_command(
-        OUTPUT ${UNICODE_NUMBER_FORMAT_HEADER} ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
-        COMMAND $<TARGET_FILE:Lagom::GenerateUnicodeNumberFormat> -h ${UNICODE_NUMBER_FORMAT_HEADER}.tmp -c ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp -n ${CLDR_NUMBERS_PATH} -u ${CLDR_UNITS_PATH}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_NUMBER_FORMAT_HEADER}.tmp ${UNICODE_NUMBER_FORMAT_HEADER}
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}
-        COMMAND "${CMAKE_COMMAND}" -E remove ${UNICODE_NUMBER_FORMAT_HEADER}.tmp ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}.tmp
-        VERBATIM
-        DEPENDS Lagom::GenerateUnicodeNumberFormat ${CLDR_LOCALES_PATH} ${CLDR_MISC_PATH} ${CLDR_NUMBERS_PATH} ${CLDR_UNITS_PATH}
+    invoke_generator(
+        "UnicodeNumberFormat"
+        Lagom::GenerateUnicodeNumberFormat
+        "${UNICODE_NUMBER_FORMAT_HEADER}"
+        "${UNICODE_NUMBER_FORMAT_IMPLEMENTATION}"
+        arguments -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"
     )
-    add_custom_target(generate_${UNICODE_META_TARGET_PREFIX}UnicodeNumberFormat DEPENDS ${UNICODE_NUMBER_FORMAT_HEADER} ${UNICODE_NUMBER_FORMAT_IMPLEMENTATION})
-    add_dependencies(all_generated generate_${UNICODE_META_TARGET_PREFIX}UnicodeNumberFormat)
 
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
