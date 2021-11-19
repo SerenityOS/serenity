@@ -15,6 +15,7 @@
 #include <AK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibDebug/ProcessInspector.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
@@ -23,19 +24,23 @@
 
 namespace Debug {
 
-class DebugSession {
+class DebugSession : public ProcessInspector {
 public:
     static OwnPtr<DebugSession> exec_and_attach(String const& command, String source_root = {});
 
-    ~DebugSession();
+    virtual ~DebugSession() override;
+
+    // ^Debug::ProcessInspector
+    virtual bool poke(void* address, FlatPtr data) override;
+    virtual Optional<FlatPtr> peek(void* address) const override;
+    virtual PtraceRegisters get_registers() const override;
+    virtual void set_registers(PtraceRegisters const&) override;
+    virtual void for_each_loaded_library(Function<IterationDecision(LoadedLibrary const&)>) const override;
 
     int pid() const { return m_debuggee_pid; }
 
-    bool poke(u32* address, u32 data);
-    Optional<u32> peek(u32* address) const;
-
-    bool poke_debug(u32 register_index, u32 data);
-    Optional<u32> peek_debug(u32 register_index) const;
+    bool poke_debug(u32 register_index, FlatPtr data);
+    Optional<FlatPtr> peek_debug(u32 register_index) const;
 
     enum class BreakPointState {
         Enabled,
@@ -44,7 +49,7 @@ public:
 
     struct BreakPoint {
         void* address { nullptr };
-        u32 original_first_word { 0 };
+        FlatPtr original_first_word { 0 };
         BreakPointState state { BreakPointState::Disabled };
     };
 
@@ -88,9 +93,6 @@ public:
         }
     }
 
-    PtraceRegisters get_registers() const;
-    void set_registers(PtraceRegisters const&);
-
     enum class ContinueType {
         FreeRun,
         Syscall,
@@ -126,45 +128,6 @@ public:
         Exited,
     };
 
-    struct LoadedLibrary {
-        String name;
-        NonnullRefPtr<MappedFile> file;
-        NonnullOwnPtr<ELF::Image> image;
-        NonnullOwnPtr<DebugInfo> debug_info;
-        FlatPtr base_address;
-
-        LoadedLibrary(String const& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<ELF::Image> image, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
-            : name(name)
-            , file(move(file))
-            , image(move(image))
-            , debug_info(move(debug_info))
-            , base_address(base_address)
-        {
-        }
-    };
-
-    template<typename Func>
-    void for_each_loaded_library(Func f) const
-    {
-        for (const auto& lib_name : m_loaded_libraries.keys()) {
-            const auto& lib = *m_loaded_libraries.get(lib_name).value();
-            if (f(lib) == IterationDecision::Break)
-                break;
-        }
-    }
-
-    const LoadedLibrary* library_at(FlatPtr address) const;
-
-    struct SymbolicationResult {
-        String library_name;
-        String symbol;
-    };
-    Optional<SymbolicationResult> symbolicate(FlatPtr address) const;
-
-    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(String const& file, size_t line) const;
-
-    Optional<DebugInfo::SourcePosition> get_source_position(FlatPtr address) const;
-
 private:
     explicit DebugSession(pid_t, String source_root);
 
@@ -180,7 +143,7 @@ private:
     HashMap<void*, BreakPoint> m_breakpoints;
     HashMap<void*, WatchPoint> m_watchpoints;
 
-    // Maps from base address to loaded library
+    // Maps from library name to LoadedLibrary obect
     HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
 };
 

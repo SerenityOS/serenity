@@ -9,6 +9,7 @@ set(SOURCES
     Dwarf/DwarfInfo.cpp
     Dwarf/Expression.cpp
     Dwarf/LineProgram.cpp
+    ProcessInspector.cpp
     StackFrameUtils.cpp
 )
 
