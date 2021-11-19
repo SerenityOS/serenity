@@ -22,7 +22,9 @@ int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
     const char* path = nullptr;
+    bool verbose = false;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
+    args_parser.add_option(verbose, "Display all input data", "verbose", 'v');
 
     args_parser.parse(argc, argv);
 
@@ -79,6 +81,11 @@ int main(int argc, char** argv)
 
         size_t offset;
         for (offset = 0; offset + LINE_LENGTH_BYTES - 1 < contents_size; offset += LINE_LENGTH_BYTES) {
+            if (verbose) {
+                print_line(&contents[offset], LINE_LENGTH_BYTES);
+                continue;
+            }
+
             auto current_line = contents.span().slice(offset, LINE_LENGTH_BYTES);
             bool is_same_contents = (current_line == previous_line);
             if (!is_same_contents)
