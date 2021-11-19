@@ -480,8 +480,8 @@ public:
         m_wait_for_tracer_at_next_execve = val;
     }
 
-    ErrorOr<u32> peek_user_data(Userspace<const u32*> address);
-    ErrorOr<void> poke_user_data(Userspace<u32*> address, u32 data);
+    ErrorOr<FlatPtr> peek_user_data(Userspace<const FlatPtr*> address);
+    ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
     void disowned_by_waiter(Process& process);
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);

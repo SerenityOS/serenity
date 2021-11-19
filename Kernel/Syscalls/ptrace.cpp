@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static ErrorOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
+static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
 {
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
@@ -118,7 +118,7 @@ static ErrorOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& param
         TRY(copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)));
         if (!Memory::is_user_address(VirtualAddress { peek_params.address }))
             return EFAULT;
-        auto data = TRY(peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address }));
+        auto data = TRY(peer->process().peek_user_data(Userspace<const FlatPtr*> { (FlatPtr)peek_params.address }));
         TRY(copy_to_user(peek_params.out_data, &data));
         break;
     }
@@ -126,7 +126,7 @@ static ErrorOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& param
     case PT_POKE:
         if (!Memory::is_user_address(VirtualAddress { params.addr }))
             return EFAULT;
-        TRY(peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data));
+        TRY(peer->process().poke_user_data(Userspace<FlatPtr*> { (FlatPtr)params.addr }, params.data));
         return 0;
 
     case PT_PEEKDEBUG: {
@@ -166,19 +166,19 @@ bool Process::has_tracee_thread(ProcessID tracer_pid)
     return false;
 }
 
-ErrorOr<u32> Process::peek_user_data(Userspace<const u32*> address)
+ErrorOr<FlatPtr> Process::peek_user_data(Userspace<const FlatPtr*> address)
 {
     // This function can be called from the context of another
     // process that called PT_PEEK
     ScopedAddressSpaceSwitcher switcher(*this);
-    uint32_t data;
+    FlatPtr data;
     TRY(copy_from_user(&data, address));
     return data;
 }
 
-ErrorOr<void> Process::poke_user_data(Userspace<u32*> address, u32 data)
+ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
 {
-    Memory::VirtualRange range = { address.vaddr(), sizeof(u32) };
+    Memory::VirtualRange range = { address.vaddr(), sizeof(FlatPtr) };
     auto* region = address_space().find_region_containing(range);
     if (!region)
         return EFAULT;
@@ -206,9 +206,9 @@ ErrorOr<void> Process::poke_user_data(Userspace<u32*> address, u32 data)
     return copy_to_user(address, &data);
 }
 
-ErrorOr<u32> Thread::peek_debug_register(u32 register_index)
+ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
 {
-    u32 data;
+    FlatPtr data;
     switch (register_index) {
     case 0:
         data = m_debug_register_state.dr0;
@@ -234,7 +234,7 @@ ErrorOr<u32> Thread::peek_debug_register(u32 register_index)
     return data;
 }
 
-ErrorOr<void> Thread::poke_debug_register(u32 register_index, u32 data)
+ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
 {
     switch (register_index) {
     case 0:
