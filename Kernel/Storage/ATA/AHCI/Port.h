@@ -20,8 +20,8 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATA/AHCI.h>
-#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
+#include <Kernel/Storage/ATA/AHCI/Definitions.h>
+#include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
 #include <Kernel/Storage/ATA/ATADevice.h>
 #include <Kernel/WaitQueue.h>
 

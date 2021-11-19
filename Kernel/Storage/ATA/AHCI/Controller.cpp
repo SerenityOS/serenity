@@ -12,8 +12,8 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Storage/ATA/AHCIController.h>
-#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
+#include <Kernel/Storage/ATA/AHCI/Controller.h>
+#include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
 
 namespace Kernel {
 

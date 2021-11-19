@@ -13,7 +13,6 @@
 namespace Kernel {
 
 class IDEController;
-class IDEChannel;
 class ATADiskDevice final : public ATADevice {
     friend class IDEController;
     friend class DeviceManagement;

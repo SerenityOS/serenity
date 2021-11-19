@@ -11,8 +11,8 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Storage/ATA/BMIDEChannel.h>
-#include <Kernel/Storage/ATA/ISAIDEController.h>
+#include <Kernel/Storage/ATA/GenericIDE/BusMasterChannel.h>
+#include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
 
 namespace Kernel {
 
