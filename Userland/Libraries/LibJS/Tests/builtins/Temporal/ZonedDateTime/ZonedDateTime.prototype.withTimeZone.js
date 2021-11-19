@@ -13,8 +13,7 @@ describe("correct behavior", () => {
         expect(withTimeZoneZonedDateTime.timeZone).toBe(timeZone);
     });
 
-    // FIXME: Enable this when time zone string parsing is implemented.
-    test.skip("from time zone string", () => {
+    test("from time zone string", () => {
         const object = {};
         const zonedDateTime = new Temporal.ZonedDateTime(1n, object);
         expect(zonedDateTime.timeZone).toBe(object);
@@ -32,13 +31,11 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
 
-    // FIXME: Enable this when time zone string parsing is implemented.
-    test.skip("from invalid time zone string", () => {
+    test("from invalid time zone string", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(1n, {});
 
-        // FIXME: Use "toThrowWithMessage" once this has an error message.
         expect(() => {
             zonedDateTime.withTimeZone("UTCfoobar");
-        }).toThrow(RangeError);
+        }).toThrowWithMessage(RangeError, "Invalid time zone string 'UTCfoobar'");
     });
 });

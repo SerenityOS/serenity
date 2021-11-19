@@ -37,8 +37,7 @@ describe("correct behavior", () => {
         expect(createdPlainTime.nanosecond).toBe(0);
     });
 
-    // Un-skip once ParseISODateTime & ParseTemporalTimeString are implemented
-    test.skip("PlainTime string argument", () => {
+    test("PlainTime string argument", () => {
         const createdPlainTime = Temporal.PlainTime.from("2021-08-27T18:44:11Z");
         expect(createdPlainTime.hour).toBe(18);
         expect(createdPlainTime.minute).toBe(44);

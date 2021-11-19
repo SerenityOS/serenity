@@ -224,9 +224,11 @@
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
     M(TemporalInvalidPlainTimeLikeObject, "Invalid plain time-like object")                                                             \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
+    M(TemporalInvalidRelativeToString, "Invalid relative to string '{}'")                                                               \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalInvalidTimeZoneString, "Invalid time zone string '{}'")                                                                   \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalInvalidYearMonthString, "Invalid year month string '{}'")                                                                 \
     M(TemporalInvalidZonedDateTimeOffset, "Invalid offset for the provided date and time in the current time zone")                     \

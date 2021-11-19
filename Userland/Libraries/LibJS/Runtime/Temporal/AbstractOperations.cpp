@@ -1325,27 +1325,31 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
 }
 
 // 13.42 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
-ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject& global_object, String const& iso_string)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalRelativeToString (see 13.33), then
-    // a. Throw a RangeError exception.
-    // TODO
+    auto parse_result = parse_iso8601(Production::TemporalRelativeToString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidRelativeToString, iso_string);
+    }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, {}));
+    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
 
     bool z;
     Optional<String> offset;
     Optional<String> time_zone;
 
     // 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
-    auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
+    parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
     if (parse_result.has_value()) {
         // a. Let timeZoneResult be ! ParseTemporalTimeZoneString(isoString).
-        // TODO: TRY() instead of MUST() as parse_temporal_time_zone_string() still throws more than it parses :^)
-        auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
+        auto time_zone_result = MUST(parse_temporal_time_zone_string(global_object, iso_string));
 
         // b. Let z be timeZoneResult.[[Z]].
         z = time_zone_result.z;
@@ -1391,23 +1395,27 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
 }
 
 // 13.44 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
-ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalTimeZoneString (see 13.33), then
-    // a. Throw a RangeError exception.
+    auto parse_result = parse_iso8601(Production::TemporalTimeZoneString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneString, iso_string);
+    }
+
     // 3. Let z, sign, hours, minutes, seconds, fraction and name be the parts of isoString produced respectively by the UTCDesignator, TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, TimeZoneUTCOffsetFractionalPart, and TimeZoneIANAName productions, or undefined if not present.
-    Optional<StringView> z_part;
-    Optional<StringView> sign_part;
-    Optional<StringView> hours_part;
-    Optional<StringView> minutes_part;
-    Optional<StringView> seconds_part;
-    Optional<StringView> fraction_part;
-    Optional<StringView> name_part;
-    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalTimeZoneString");
+    auto z_part = parse_result->utc_designator;
+    auto sign_part = parse_result->time_zone_utc_offset_sign;
+    auto hours_part = parse_result->time_zone_utc_offset_hour;
+    auto minutes_part = parse_result->time_zone_utc_offset_minute;
+    auto seconds_part = parse_result->time_zone_utc_offset_second;
+    auto fraction_part = parse_result->time_zone_utc_offset_fractional_part;
+    auto name_part = parse_result->time_zone_iana_name;
 
     // 4. If z is not undefined, then
     if (z_part.has_value()) {
@@ -1427,7 +1435,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         VERIFY(sign_part.has_value());
 
         // b. Set hours to ! ToIntegerOrInfinity(hours).
-        u8 hours = MUST(Value(js_string(vm, *hours_part)).to_integer_or_infinity(global_object));
+        u8 hours = *hours_part->to_uint<u8>();
 
         u8 sign;
         // c. If sign is the code unit 0x002D (HYPHEN-MINUS) or the code unit 0x2212 (MINUS SIGN), then
@@ -1442,10 +1450,10 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
         }
 
         // e. Set minutes to ! ToIntegerOrInfinity(minutes).
-        u8 minutes = MUST(Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object));
+        u8 minutes = *minutes_part.value_or("0"sv).to_uint<u8>();
 
         // f. Set seconds to ! ToIntegerOrInfinity(seconds).
-        u8 seconds = MUST(Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object));
+        u8 seconds = *seconds_part.value_or("0"sv).to_uint<u8>();
 
         i32 nanoseconds;
         // g. If fraction is not undefined, then
@@ -1454,7 +1462,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
             auto fraction = String::formatted("{}000000000", *fraction_part);
             // ii. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
             // iii. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
-            nanoseconds = MUST(Value(js_string(vm, fraction.substring(1, 10))).to_integer_or_infinity(global_object));
+            nanoseconds = *fraction.substring(1, 10).to_int<i32>();
         }
         // h. Else,
         else {
