@@ -1192,14 +1192,19 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& g
 // 13.36 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject& global_object, String const& iso_string)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalZonedDateTimeString (see 13.33), then
-    // a. Throw a RangeError exception.
-    // TODO
+    auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidZonedDateTimeString, iso_string);
+    }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, {}));
+    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
@@ -1335,18 +1340,30 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(Globa
     Optional<String> offset;
     Optional<String> time_zone;
 
-    // TODO: 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
-    //          a. Let timeZoneResult be ! ParseTemporalTimeZoneString(isoString).
-    //          b. Let z be timeZoneResult.[[Z]].
-    //          c. Let offset be timeZoneResult.[[Offset]].
-    //          d. Let timeZone be timeZoneResult.[[Name]].
+    // 4. If isoString satisfies the syntax of a TemporalZonedDateTimeString (see 13.33), then
+    auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
+    if (parse_result.has_value()) {
+        // a. Let timeZoneResult be ! ParseTemporalTimeZoneString(isoString).
+        // TODO: TRY() instead of MUST() as parse_temporal_time_zone_string() still throws more than it parses :^)
+        auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));
 
-    // TODO: 5. Else,
-    // a. Let z be false.
-    z = false;
+        // b. Let z be timeZoneResult.[[Z]].
+        z = time_zone_result.z;
 
-    // b. Let offset be undefined. (NOTE: It already is)
-    // c. Let timeZone be undefined. (NOTE: It already is)
+        // c. Let offset be timeZoneResult.[[Offset]].
+        offset = time_zone_result.offset;
+
+        // d. Let timeZone be timeZoneResult.[[Name]].
+        time_zone = time_zone_result.name;
+    }
+    // 5. Else,
+    else {
+        // a. Let z be false.
+        z = false;
+
+        // b. Let offset be undefined.
+        // c. Let timeZone be undefined.
+    }
 
     // 6. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]], [[TimeZoneZ]]: z, [[TimeZoneOffset]]: offset, [[TimeZoneIANAName]]: timeZone }.
     return TemporalZonedDateTime { .date_time = move(result), .time_zone = { .z = z, .offset = move(offset), .name = move(time_zone) } };
