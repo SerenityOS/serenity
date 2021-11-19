@@ -46,7 +46,7 @@
 
                     @GUI::CheckBox {
                         name: "glyph_editor_present_checkbox"
-                        text: "Show"
+                        text: "Present"
                     }
 
                     @GUI::Button {
@@ -54,6 +54,7 @@
                         fixed_width: 22
                         tooltip: "Move Glyph"
                         button_style: "Coolbar"
+                        checkable: true
                     }
                 }
             }
