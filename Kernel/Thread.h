@@ -1011,8 +1011,8 @@ public:
     u32 signal_mask() const;
     void clear_signals();
 
-    ErrorOr<u32> peek_debug_register(u32 register_index);
-    ErrorOr<void> poke_debug_register(u32 register_index, u32 data);
+    ErrorOr<FlatPtr> peek_debug_register(u32 register_index);
+    ErrorOr<void> poke_debug_register(u32 register_index, FlatPtr data);
 
     void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
 
