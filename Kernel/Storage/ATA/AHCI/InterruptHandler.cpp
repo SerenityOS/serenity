@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
+#include <Kernel/Storage/ATA/AHCI/InterruptHandler.h>
 
 namespace Kernel {
 

@@ -16,9 +16,10 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Storage/ATA/AHCIController.h>
-#include <Kernel/Storage/ATA/ISAIDEController.h>
-#include <Kernel/Storage/ATA/PCIIDEController.h>
+#include <Kernel/Storage/ATA/AHCI/Controller.h>
+#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
+#include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
+#include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>

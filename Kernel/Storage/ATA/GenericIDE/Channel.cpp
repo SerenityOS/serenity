@@ -13,8 +13,8 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATA.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Storage/ATA/IDEChannel.h>
-#include <Kernel/Storage/ATA/IDEController.h>
+#include <Kernel/Storage/ATA/GenericIDE/Channel.h>
+#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {

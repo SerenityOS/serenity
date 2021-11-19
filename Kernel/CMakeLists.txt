@@ -92,17 +92,17 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     SanCov.cpp
-    Storage/ATA/AHCIController.cpp
-    Storage/ATA/AHCIInterruptHandler.cpp
-    Storage/ATA/AHCIPort.cpp
+    Storage/ATA/AHCI/Controller.cpp
+    Storage/ATA/AHCI/Port.cpp
+    Storage/ATA/AHCI/InterruptHandler.cpp
+    Storage/ATA/GenericIDE/BusMasterChannel.cpp
+    Storage/ATA/GenericIDE/Controller.cpp
+    Storage/ATA/GenericIDE/Channel.cpp
+    Storage/ATA/GenericIDE/ISAController.cpp
+    Storage/ATA/GenericIDE/PCIController.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
-    Storage/ATA/BMIDEChannel.cpp
-    Storage/ATA/ISAIDEController.cpp
-    Storage/ATA/PCIIDEController.cpp
-    Storage/ATA/IDEController.cpp
-    Storage/ATA/IDEChannel.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
