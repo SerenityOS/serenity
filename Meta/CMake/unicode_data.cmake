@@ -52,6 +52,9 @@ set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
 set(CLDR_CORE_SOURCE cldr-core)
 set(CLDR_CORE_PATH "${CLDR_PATH}/${CLDR_CORE_SOURCE}")
 
+set(CLDR_DATES_SOURCE cldr-dates-modern)
+set(CLDR_DATES_PATH "${CLDR_PATH}/${CLDR_DATES_SOURCE}")
+
 set(CLDR_LOCALES_SOURCE cldr-localenames-modern)
 set(CLDR_LOCALES_PATH "${CLDR_PATH}/${CLDR_LOCALES_SOURCE}")
 
@@ -140,6 +143,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     endif()
 
     extract_cldr_file("${CLDR_CORE_SOURCE}" "${CLDR_CORE_PATH}")
+    extract_cldr_file("${CLDR_DATES_SOURCE}" "${CLDR_DATES_PATH}")
     extract_cldr_file("${CLDR_LOCALES_SOURCE}" "${CLDR_LOCALES_PATH}")
     extract_cldr_file("${CLDR_MISC_SOURCE}" "${CLDR_MISC_PATH}")
     extract_cldr_file("${CLDR_NUMBERS_SOURCE}" "${CLDR_NUMBERS_PATH}")
@@ -147,6 +151,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+
+    set(UNICODE_DATE_TIME_FORMAT_HEADER LibUnicode/UnicodeDateTimeFormat.h)
+    set(UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION LibUnicode/UnicodeDateTimeFormat.cpp)
 
     set(UNICODE_LOCALE_HEADER LibUnicode/UnicodeLocale.h)
     set(UNICODE_LOCALE_IMPLEMENTATION LibUnicode/UnicodeLocale.cpp)
@@ -159,6 +166,9 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
         set(UNICODE_DATA_HEADER UnicodeData.h)
         set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
+
+        set(UNICODE_DATE_TIME_FORMAT_HEADER UnicodeDateTimeFormat.h)
+        set(UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION UnicodeDateTimeFormat.cpp)
 
         set(UNICODE_LOCALE_HEADER UnicodeLocale.h)
         set(UNICODE_LOCALE_IMPLEMENTATION UnicodeLocale.cpp)
@@ -175,6 +185,13 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
         arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}"
+    )
+    invoke_generator(
+        "UnicodeDateTimeFormat"
+        Lagom::GenerateUnicodeDateTimeFormat
+        "${UNICODE_DATE_TIME_FORMAT_HEADER}"
+        "${UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION}"
+        arguments -d "${CLDR_DATES_PATH}"
     )
     invoke_generator(
         "UnicodeLocale"
@@ -194,6 +211,8 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
         ${UNICODE_DATA_IMPLEMENTATION}
+        ${UNICODE_DATE_TIME_FORMAT_HEADER}
+        ${UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION}
         ${UNICODE_LOCALE_HEADER}
         ${UNICODE_LOCALE_IMPLEMENTATION}
         ${UNICODE_NUMBER_FORMAT_HEADER}
