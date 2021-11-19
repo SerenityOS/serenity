@@ -50,8 +50,7 @@ describe("correct behavior", () => {
         checkExpectedResults(withPlainDateZonedDateTime);
     });
 
-    // FIXME: Enable when time string parsing is implemented.
-    test.skip("from plain date string", () => {
+    test("from plain date string", () => {
         const plainDateTime = new Temporal.PlainDateTime(2021, 11, 4, 21, 16, 56, 100, 200, 300);
         const timeZone = new Temporal.TimeZone("UTC");
         const zonedDateTime = plainDateTime.toZonedDateTime(timeZone);
