@@ -16,7 +16,7 @@ namespace HackStudio {
 
 class VariablesModel final : public GUI::Model {
 public:
-    static RefPtr<VariablesModel> create(const PtraceRegisters& regs);
+    static RefPtr<VariablesModel> create(Debug::ProcessInspector&, PtraceRegisters const& regs);
 
     void set_variable_value(const GUI::ModelIndex&, StringView, GUI::Window*);
 
@@ -25,11 +25,13 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    Debug::ProcessInspector& inspector() { return m_inspector; }
 
 private:
-    explicit VariablesModel(NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
+    explicit VariablesModel(Debug::ProcessInspector& inspector, NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
         : m_variables(move(variables))
         , m_regs(regs)
+        , m_inspector(inspector)
     {
         m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png").release_value_but_fixme_should_propagate_errors());
     }
@@ -37,6 +39,7 @@ private:
     PtraceRegisters m_regs;
 
     GUI::Icon m_variable_icon;
+    Debug::ProcessInspector& m_inspector;
 };
 
 }

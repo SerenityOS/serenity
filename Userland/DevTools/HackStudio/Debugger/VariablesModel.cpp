@@ -12,9 +12,14 @@ namespace HackStudio {
 
 GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
-    if (!parent_index.is_valid())
+    if (!parent_index.is_valid()) {
+        if (static_cast<size_t>(row) >= m_variables.size())
+            return {};
         return create_index(row, column, &m_variables[row]);
+    }
     auto* parent = static_cast<const Debug::DebugInfo::VariableInfo*>(parent_index.internal_data());
+    if (static_cast<size_t>(row) >= parent->members.size())
+        return {};
     auto* child = &parent->members[row];
     return create_index(row, column, child);
 }
@@ -158,13 +163,13 @@ GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     }
 }
 
-RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
+RefPtr<VariablesModel> VariablesModel::create(Debug::ProcessInspector& inspector, PtraceRegisters const& regs)
 {
-    auto lib = Debugger::the().session()->library_at(regs.ip());
+    auto lib = inspector.library_at(regs.ip());
     if (!lib)
         return nullptr;
     auto variables = lib->debug_info->get_variables_in_current_scope(regs);
-    return adopt_ref(*new VariablesModel(move(variables), regs));
+    return adopt_ref(*new VariablesModel(inspector, move(variables), regs));
 }
 
 }
