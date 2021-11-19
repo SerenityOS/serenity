@@ -422,6 +422,17 @@ bool ISO8601Parser::parse_time_spec()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-Time
+bool ISO8601Parser::parse_time()
+{
+    // Time :
+    //     TimeSpec TimeZone[opt]
+    if (!parse_time_spec())
+        return false;
+    (void)parse_time_zone();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-TimeSpecSeparator
 bool ISO8601Parser::parse_time_spec_separator()
 {
@@ -475,11 +486,24 @@ bool ISO8601Parser::parse_temporal_date_time_string()
     return parse_calendar_date_time();
 }
 
+// https://tc39.es/proposal-temporal/#prod-TemporalTimeString
+bool ISO8601Parser::parse_temporal_time_string()
+{
+    // TemporalTimeString :
+    //     Time
+    //     DateTime
+    // NOTE: Reverse order here because `Time` can be a subset of `DateTime`,
+    // so we'd not attempt to parse that but may not exhaust the input string.
+    return parse_date_time()
+        || parse_time();
 }
 
-#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                    \
-    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string) \
-    __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string)
+}
+
+#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                             \
+    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)          \
+    __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string) \
+    __JS_ENUMERATE(TemporalTimeString, parse_temporal_time_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
