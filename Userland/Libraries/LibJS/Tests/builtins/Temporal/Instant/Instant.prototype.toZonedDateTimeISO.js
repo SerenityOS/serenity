@@ -3,8 +3,7 @@ describe("correct behavior", () => {
         expect(Temporal.Instant.prototype.toZonedDateTimeISO).toHaveLength(1);
     });
 
-    // TODO: Un-skip when ParseTemporalTimeZoneString is fully implemented
-    test.skip("basic functionality", () => {
+    test("basic functionality", () => {
         const instant = new Temporal.Instant(1625614921123456789n);
         const zonedDateTime = instant.toZonedDateTimeISO("UTC");
         expect(zonedDateTime.year).toBe(2021);

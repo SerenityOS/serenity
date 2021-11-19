@@ -95,8 +95,7 @@ describe("correct behavior", () => {
         expect(plainDateTime.nanosecond).toBe(999);
     });
 
-    // Un-skip once ParseISODateTime & ParseTemporalDateString are implemented
-    test.skip("PlainDateTime string argument", () => {
+    test("PlainDateTime string argument", () => {
         const plainDateTime = Temporal.PlainDateTime.from("2021-07-06T23:42:01Z");
         expect(plainDateTime.year).toBe(2021);
         expect(plainDateTime.month).toBe(7);

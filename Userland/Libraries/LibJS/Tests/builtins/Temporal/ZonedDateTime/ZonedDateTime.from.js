@@ -96,7 +96,7 @@ describe("correct behavior", () => {
     });
 
     // FIXME: Enable when parse_iso_date_time is implemented.
-    test.skip("from string", () => {
+    test("from string", () => {
         const zonedDateTime = Temporal.ZonedDateTime.from(
             "2021-11-07T00:20:05.100200300+00:00[UTC][u-ca=iso8601]"
         );
@@ -106,17 +106,17 @@ describe("correct behavior", () => {
         expect(zonedDateTime.timeZone.id).toBe("UTC");
         expect(zonedDateTime.calendar).toBeInstanceOf(Temporal.Calendar);
         expect(zonedDateTime.calendar.id).toBe("iso8601");
-        expect(createdZoneDateTime.year).toBe(2021);
-        expect(createdZoneDateTime.month).toBe(11);
-        expect(createdZoneDateTime.day).toBe(7);
-        expect(createdZoneDateTime.hour).toBe(0);
-        expect(createdZoneDateTime.minute).toBe(20);
-        expect(createdZoneDateTime.second).toBe(5);
-        expect(createdZoneDateTime.millisecond).toBe(100);
-        expect(createdZoneDateTime.microsecond).toBe(200);
-        expect(createdZoneDateTime.nanosecond).toBe(300);
-        expect(createdZoneDateTime.offset).toBe("+00:00");
-        expect(createdZoneDateTime.offsetNanoseconds).toBe(0);
+        expect(zonedDateTime.year).toBe(2021);
+        expect(zonedDateTime.month).toBe(11);
+        expect(zonedDateTime.day).toBe(7);
+        expect(zonedDateTime.hour).toBe(0);
+        expect(zonedDateTime.minute).toBe(20);
+        expect(zonedDateTime.second).toBe(5);
+        expect(zonedDateTime.millisecond).toBe(100);
+        expect(zonedDateTime.microsecond).toBe(200);
+        expect(zonedDateTime.nanosecond).toBe(300);
+        expect(zonedDateTime.offset).toBe("+00:00");
+        expect(zonedDateTime.offsetNanoseconds).toBe(0);
     });
 });
 
