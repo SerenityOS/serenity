@@ -52,14 +52,16 @@ int main(int argc, char** argv)
     }
 
     const char* path_argument = nullptr;
+    bool mode_coredump = false;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
+    args_parser.add_option(mode_coredump, "Inspect a coredump in HackStudio", "coredump", 'c');
     args_parser.parse(argc, argv);
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
 
     auto project_path = argument_absolute_path;
-    if (argument_absolute_path.is_null())
+    if (argument_absolute_path.is_null() || mode_coredump)
         project_path = Core::File::real_path_for(".");
 
     s_hack_studio_widget = window->set_main_widget<HackStudioWidget>(project_path);
@@ -76,8 +78,10 @@ int main(int argc, char** argv)
     };
 
     window->show();
-
     s_hack_studio_widget->update_actions();
+
+    if (mode_coredump)
+        s_hack_studio_widget->open_coredump(argument_absolute_path);
 
     return app->exec();
 }
