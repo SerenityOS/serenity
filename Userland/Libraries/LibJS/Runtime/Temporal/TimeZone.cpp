@@ -343,8 +343,10 @@ String format_time_zone_offset_string(double offset_nanoseconds)
         // a. Let post be the string-concatenation of the code unit 0x003A (COLON) and s.
         builder.appendff(":{:02}", seconds);
     }
+    // 13. Else,
+    //    a. Let post be the empty String.
 
-    // 13. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
+    // 14. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
     return builder.to_string();
 }
 
