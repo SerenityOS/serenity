@@ -97,8 +97,7 @@ describe("correct behavior", () => {
         }
     });
 
-    // FIXME: Unskip when plain date string parsing is implemented.
-    test.skip("PlainDate string argument", () => {
+    test("PlainDate string argument", () => {
         const dateOne = new Temporal.PlainDate(2021, 11, 14);
         const untilDuration = dateOne.until("2022-12-25");
 
