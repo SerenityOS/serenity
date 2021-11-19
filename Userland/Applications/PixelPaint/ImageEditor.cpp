@@ -101,7 +101,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);
     m_image->paint_into(painter, m_editor_image_rect);
 
-    if (m_active_layer) {
+    if (m_active_layer && m_show_active_layer_boundary) {
         painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
     }
 
@@ -698,6 +698,15 @@ Result<void, String> ImageEditor::save_project_to_fd_and_close(int fd) const
     if (!file->write(builder.string_view()))
         return String { file->error_string() };
     return {};
+}
+
+void ImageEditor::set_show_active_layer_boundary(bool show)
+{
+    if (m_show_active_layer_boundary == show)
+        return;
+
+    m_show_active_layer_boundary = show;
+    update();
 }
 
 }
