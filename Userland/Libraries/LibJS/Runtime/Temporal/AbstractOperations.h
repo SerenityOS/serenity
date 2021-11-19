@@ -13,6 +13,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/ISO8601.h>
 
 namespace JS::Temporal {
 
@@ -126,7 +127,7 @@ double sign(double);
 double constrain_to_range(double x, double minimum, double maximum);
 i64 round_number_to_increment(double, u64 increment, StringView rounding_mode);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);
-ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject&, ParseResult const& parse_result);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
