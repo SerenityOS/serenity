@@ -28,6 +28,7 @@ struct ParseResult {
 enum class Production {
     TemporalDateString,
     TemporalDateTimeString,
+    TemporalTimeString,
 };
 
 Optional<ParseResult> parse_iso8601(Production, StringView);
@@ -73,11 +74,13 @@ public:
     [[nodiscard]] bool parse_calendar_name();
     [[nodiscard]] bool parse_calendar();
     [[nodiscard]] bool parse_time_spec();
+    [[nodiscard]] bool parse_time();
     [[nodiscard]] bool parse_time_spec_separator();
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_calendar_date_time();
     [[nodiscard]] bool parse_temporal_date_string();
     [[nodiscard]] bool parse_temporal_date_time_string();
+    [[nodiscard]] bool parse_temporal_time_string();
 
 private:
     struct State {
