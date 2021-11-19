@@ -10,9 +10,9 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<BacktraceModel> BacktraceModel::create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+NonnullRefPtr<BacktraceModel> BacktraceModel::create(Debug::ProcessInspector const& inspector, const PtraceRegisters& regs)
 {
-    return adopt_ref(*new BacktraceModel(create_backtrace(debug_session, regs)));
+    return adopt_ref(*new BacktraceModel(create_backtrace(inspector, regs)));
 }
 
 GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
@@ -31,13 +31,13 @@ GUI::ModelIndex BacktraceModel::index(int row, int column, const GUI::ModelIndex
     return create_index(row, column, &m_frames.at(row));
 }
 
-Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(Debug::ProcessInspector const& inspector, PtraceRegisters const& regs)
 {
     FlatPtr current_ebp = regs.bp();
     FlatPtr current_instruction = regs.ip();
     Vector<BacktraceModel::FrameInfo> frames;
     do {
-        auto lib = debug_session.library_at(regs.ip());
+        auto lib = inspector.library_at(regs.ip());
         if (!lib)
             continue;
         String name = lib->debug_info->name_of_containing_function(current_instruction - lib->base_address);
@@ -47,7 +47,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::
         }
 
         frames.append({ name, current_instruction, current_ebp });
-        auto frame_info = Debug::StackFrameUtils::get_info(*Debugger::the().session(), current_ebp);
+        auto frame_info = Debug::StackFrameUtils::get_info(inspector, current_ebp);
         VERIFY(frame_info.has_value());
         current_instruction = frame_info.value().return_address;
         current_ebp = frame_info.value().next_ebp;
