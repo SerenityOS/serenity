@@ -1105,13 +1105,13 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     }
 
     // 10. Set hour to ! ToIntegerOrInfinity(hour).
-    u8 hour = hour_part->to_uint<u8>().value_or(0);
+    u8 hour = *hour_part.value_or("0"sv).to_uint<u8>();
 
     // 11. Set minute to ! ToIntegerOrInfinity(minute).
-    u8 minute = minute_part->to_uint<u8>().value_or(0);
+    u8 minute = *minute_part.value_or("0"sv).to_uint<u8>();
 
     // 12. Set second to ! ToIntegerOrInfinity(second).
-    u8 second = second_part->to_uint<u8>().value_or(0);
+    u8 second = *second_part.value_or("0"sv).to_uint<u8>();
 
     // 13. If second is 60, then
     if (second == 60) {
