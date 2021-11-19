@@ -230,6 +230,7 @@
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalInvalidYearMonthString, "Invalid year month string '{}'")                                                                 \
     M(TemporalInvalidZonedDateTimeOffset, "Invalid offset for the provided date and time in the current time zone")                     \
+    M(TemporalInvalidZonedDateTimeString, "Invalid zoned date time string '{}'")                                                        \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingStartingPoint, "A starting point is required for balancing {}")                                                    \
     M(TemporalObjectMustHaveOneOf, "Object must have at least one of the following properties: {}")                                     \

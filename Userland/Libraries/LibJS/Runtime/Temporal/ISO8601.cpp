@@ -555,14 +555,31 @@ bool ISO8601Parser::parse_temporal_year_month_string()
         || parse_date_spec_year_month();
 }
 
+// https://tc39.es/proposal-temporal/#prod-TemporalZonedDateTimeString
+bool ISO8601Parser::parse_temporal_zoned_date_time_string()
+{
+    // TemporalZonedDateTimeString :
+    //     Date TimeSpecSeparator[opt] TimeZoneNameRequired Calendar[opt]
+    StateTransaction transaction { *this };
+    if (!parse_date())
+        return false;
+    (void)parse_time_spec_separator();
+    if (!parse_time_zone_name_required())
+        return false;
+    (void)parse_calendar();
+    transaction.commit();
+    return true;
 }
 
-#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                             \
-    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)          \
-    __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string) \
-    __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string) \
-    __JS_ENUMERATE(TemporalTimeString, parse_temporal_time_string)          \
-    __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)
+}
+
+#define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                               \
+    __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)            \
+    __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string)   \
+    __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string)   \
+    __JS_ENUMERATE(TemporalTimeString, parse_temporal_time_string)            \
+    __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string) \
+    __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
