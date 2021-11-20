@@ -6,6 +6,17 @@
 
 #pragma once
 
+namespace Kernel::ATA {
+
+enum DeviceSignature : u32 {
+    ATA = 0x00000101,
+    ATAPI = 0xEB140101,
+    EnclosureManagementBridge = 0xC33C0101,
+    PortMultiplier = 0x96690101,
+    Unconnected = 0xFFFFFFFF
+};
+}
+
 #define ATA_SR_BSY 0x80
 #define ATA_SR_DRDY 0x40
 #define ATA_SR_DF 0x20

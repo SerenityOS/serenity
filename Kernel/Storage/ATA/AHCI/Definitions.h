@@ -264,14 +264,6 @@ struct [[gnu::packed]] HBADefinedCapabilities {
     bool devsleep_entrance_from_slumber_only : 1 { false };
 };
 
-enum DeviceSignature : u32 {
-    ATA = 0x00000101,
-    ATAPI = 0xEB140101,
-    EnclosureManagementBridge = 0xC33C0101,
-    PortMultiplier = 0x96690101,
-    Unconnected = 0xFFFFFFFF
-};
-
 enum class DeviceDetectionInitialization {
     NoActionRequested,
     PerformInterfaceInitializationSequence,

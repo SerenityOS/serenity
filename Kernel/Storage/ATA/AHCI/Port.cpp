@@ -686,7 +686,7 @@ bool AHCIPort::identify_device()
     command_table.descriptors[0].byte_count = 512 - 1;
     auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
     fis.header.fis_type = (u8)FIS::Type::RegisterHostToDevice;
-    fis.command = m_port_registers.sig == AHCI::DeviceSignature::ATAPI ? ATA_CMD_IDENTIFY_PACKET : ATA_CMD_IDENTIFY;
+    fis.command = m_port_registers.sig == ATA::DeviceSignature::ATAPI ? ATA_CMD_IDENTIFY_PACKET : ATA_CMD_IDENTIFY;
     fis.device = 0;
     fis.header.port_muliplier = fis.header.port_muliplier | (u8)FIS::HeaderAttributes::C;
 
