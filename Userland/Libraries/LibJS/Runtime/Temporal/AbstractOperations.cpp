@@ -1216,17 +1216,21 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
 }
 
 // 13.37 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalCalendarString (see 13.33), then
-    // a. Throw a RangeError exception.
+    auto parse_result = parse_iso8601(Production::TemporalCalendarString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarString, iso_string);
+    }
+
     // 3. Let id be the part of isoString produced by the CalendarName production, or undefined if not present.
-    Optional<StringView> id_part;
-    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalCalendarString");
+    auto id_part = parse_result->calendar_name;
 
     // 4. If id is undefined, then
     if (!id_part.has_value()) {
