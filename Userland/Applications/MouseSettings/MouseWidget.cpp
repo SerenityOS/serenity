@@ -57,7 +57,7 @@ MouseWidget::MouseWidget()
     switch_buttons_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/switch-mouse-buttons.png").release_value_but_fixme_should_propagate_errors());
 }
 
-void MouseWidget::update_window_server()
+void MouseWidget::apply_settings()
 {
     float const factor = m_speed_slider->value() / speed_slider_scale;
     GUI::WindowServerConnection::the().async_set_mouse_acceleration(factor);
@@ -72,7 +72,6 @@ void MouseWidget::reset_default_values()
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
     m_switch_buttons_checkbox->set_checked(false);
-    update_window_server();
 }
 
 MouseWidget::~MouseWidget()
