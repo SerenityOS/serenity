@@ -8,7 +8,7 @@
 
     @GUI::GroupBox {
         title: "Cursor speed"
-        fixed_height: 110
+        fixed_height: 106
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -57,7 +57,7 @@
 
     @GUI::GroupBox {
         title: "Scroll wheel step size"
-        fixed_height: 110
+        fixed_height: 106
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -111,7 +111,7 @@
 
     @GUI::GroupBox {
         title: "Double-click speed"
-        fixed_height: 110
+        fixed_height: 106
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -161,7 +161,7 @@
 
     @GUI::GroupBox {
         title: "Button configuration"
-        fixed_height: 60
+        fixed_height: 68
 
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
