@@ -74,12 +74,16 @@ ThrowCompletionOr<String> parse_temporal_time_zone(GlobalObject& global_object, 
     // 2. Let result be ? ParseTemporalTimeZoneString(string).
     auto result = TRY(parse_temporal_time_zone_string(global_object, string));
 
-    // 3. If result.[[Z]] is not undefined, return "UTC".
+    // 3. If result.[[Name]] is not undefined, return result.[[Name]].
+    if (result.name.has_value())
+        return *result.name;
+
+    // 4. If result.[[Z]] is true, return "UTC".
     if (result.z)
         return String { "UTC" };
 
-    // 4. Return result.[[Name]].
-    return *result.name;
+    // 5. Return result.[[OffsetString]].
+    return *result.offset;
 }
 
 // 11.6.2 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
