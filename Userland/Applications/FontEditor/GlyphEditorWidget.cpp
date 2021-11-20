@@ -88,25 +88,35 @@ void GlyphEditorWidget::paste_glyph()
     if (!mime_type.starts_with("glyph/"))
         return;
 
+    auto byte_buffer = data.data();
+    auto buffer_height = metadata.get("height").value_or("0").to_int().value_or(0);
+    auto buffer_width = metadata.get("width").value_or("0").to_int().value_or(0);
+
+    if (buffer_height <= 0 || buffer_width <= 0 || buffer_height > 128 || buffer_width > 128) {
+        dbgln("Refusing to receive glyph of dimensions {}x{}", buffer_width, buffer_height);
+        return;
+    }
+    if (data.size() != static_cast<size_t>(buffer_width * buffer_height)) {
+        dbgln("Refusing to receive glyph with mismatching buffer sizes: Expected {}x{}={} bytes, received {} bytes.",
+            buffer_width, buffer_height, buffer_width * buffer_height, data.size());
+        return;
+    }
+
     if (on_undo_event)
         on_undo_event();
 
-    auto byte_buffer = data.data();
-    auto buffer_height = metadata.get("height").value().to_int();
-    auto buffer_width = metadata.get("width").value().to_int();
-
-    u8 bits[buffer_width.value()][buffer_height.value()];
+    u8 bits[buffer_width][buffer_height];
     int i = 0;
-    for (int x = 0; x < buffer_width.value(); x++) {
-        for (int y = 0; y < buffer_height.value(); y++) {
+    for (int x = 0; x < buffer_width; x++) {
+        for (int y = 0; y < buffer_height; y++) {
             bits[x][y] = byte_buffer[i];
             i++;
         }
     }
 
     auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
-    for (int x = 0; x < min(bitmap.width(), buffer_width.value()); x++) {
-        for (int y = 0; y < min(bitmap.height(), buffer_height.value()); y++) {
+    for (int x = 0; x < min(bitmap.width(), buffer_width); x++) {
+        for (int y = 0; y < min(bitmap.height(), buffer_height); y++) {
             bitmap.set_bit_at(x, y, bits[x][y]);
         }
     }
