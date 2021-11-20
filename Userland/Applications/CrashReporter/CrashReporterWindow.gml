@@ -82,6 +82,13 @@
 
         layout: @GUI::HorizontalBoxLayout
 
+        @GUI::Button {
+            name: "inspect_button"
+            text: "Inspect in Hack Studio"
+            fixed_width: 150
+            fixed_height: 22
+        }
+
         // HACK: We need something like Layout::add_spacer() in GML! :^)
         @GUI::Widget
 
