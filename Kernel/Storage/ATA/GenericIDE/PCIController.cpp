@@ -11,7 +11,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Storage/ATA/GenericIDE/BusMasterChannel.h>
+#include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 
 namespace Kernel {
@@ -105,31 +105,19 @@ UNMAP_AFTER_INIT void PCIIDEController::initialize(bool force_pio)
     }
 
     if (is_pci_native_mode_enabled_on_primary_channel()) {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
     } else {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
     }
-
+    m_channels[0].initialize_with_pci_controller({}, force_pio);
     m_channels[0].enable_irq();
 
     if (is_pci_native_mode_enabled_on_secondary_channel()) {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        m_channels.append(IDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
     } else {
-        if (force_pio)
-            m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
-        else
-            m_channels.append(BMIDEChannel::create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
     }
-
+    m_channels[1].initialize_with_pci_controller({}, force_pio);
     m_channels[1].enable_irq();
 }
 
