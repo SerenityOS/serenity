@@ -11,8 +11,8 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATA/ATA.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
+#include <Kernel/Storage/ATA/Definitions.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/WorkQueue.h>
