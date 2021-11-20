@@ -13,16 +13,17 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/RadioButton.h>
+#include <LibGUI/SettingsWindow.h>
 
 namespace DisplaySettings {
 
-class BackgroundSettingsWidget : public GUI::Widget {
+class BackgroundSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT(BackgroundSettingsWidget);
 
 public:
     virtual ~BackgroundSettingsWidget() override;
 
-    void apply_settings();
+    virtual void apply_settings() override;
 
 private:
     BackgroundSettingsWidget();
