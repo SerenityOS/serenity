@@ -28,6 +28,10 @@ public:
     void apply_settings();
     void show_screen_numbers(bool);
 
+protected:
+    void show_event(GUI::ShowEvent& event) override;
+    void hide_event(GUI::HideEvent& event) override;
+
 private:
     MonitorSettingsWidget();
 

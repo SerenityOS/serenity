@@ -179,4 +179,14 @@ void MonitorSettingsWidget::show_screen_numbers(bool show)
     GUI::WindowServerConnection::the().async_show_screen_numbers(show);
 }
 
+void MonitorSettingsWidget::show_event(GUI::ShowEvent&)
+{
+    show_screen_numbers(true);
+}
+
+void MonitorSettingsWidget::hide_event(GUI::HideEvent&)
+{
+    show_screen_numbers(false);
+}
+
 }
