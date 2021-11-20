@@ -169,7 +169,7 @@ ErrorOr<size_t> FramebufferDevice::vertical_offset(size_t head) const
     MutexLocker locker(m_buffer_offset_lock);
     return m_y_offset;
 }
-ErrorOr<bool> FramebufferDevice::vertical_offseted(size_t head) const
+ErrorOr<bool> FramebufferDevice::vertical_offsetted(size_t head) const
 {
     // Note: This FramebufferDevice class doesn't support multihead setup.
     // We take care to verify this at the GenericFramebufferDevice::ioctl method

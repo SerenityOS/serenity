@@ -395,7 +395,7 @@ void Screen::set_buffer(int index)
     FBHeadVerticalOffset offset;
     memset(&offset, 0, sizeof(FBHeadVerticalOffset));
     if (index == 1)
-        offset.offseted = 1;
+        offset.offsetted = 1;
     int rc = fb_set_head_vertical_offset_buffer(m_framebuffer_fd, &offset);
     VERIFY(rc == 0);
 }

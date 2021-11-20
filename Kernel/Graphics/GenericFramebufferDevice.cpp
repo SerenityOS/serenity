@@ -81,9 +81,9 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
-        if (head_vertical_buffer_offset.offseted < 0 || head_vertical_buffer_offset.offseted > 1)
+        if (head_vertical_buffer_offset.offsetted < 0 || head_vertical_buffer_offset.offsetted > 1)
             return Error::from_errno(EINVAL);
-        TRY(set_head_buffer(head_vertical_buffer_offset.head_index, head_vertical_buffer_offset.offseted));
+        TRY(set_head_buffer(head_vertical_buffer_offset.head_index, head_vertical_buffer_offset.offsetted));
         return {};
     }
     case FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
@@ -92,7 +92,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
-        head_vertical_buffer_offset.offseted = TRY(vertical_offseted(head_vertical_buffer_offset.head_index));
+        head_vertical_buffer_offset.offsetted = TRY(vertical_offsetted(head_vertical_buffer_offset.head_index));
         return copy_to_user(user_head_vertical_buffer_offset, &head_vertical_buffer_offset);
     }
     case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
