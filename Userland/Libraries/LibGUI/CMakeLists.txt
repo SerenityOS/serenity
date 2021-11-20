@@ -84,6 +84,7 @@ set(SOURCES
     ScrollableContainerWidget.cpp
     Scrollbar.cpp
     SeparatorWidget.cpp
+    SettingsWindow.cpp
     Shortcut.cpp
     Slider.cpp
     SortingProxyModel.cpp
