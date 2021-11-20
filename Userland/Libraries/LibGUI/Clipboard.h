@@ -32,6 +32,8 @@ public:
         ByteBuffer data;
         String mime_type;
         HashMap<String, String> metadata;
+
+        RefPtr<Gfx::Bitmap> as_bitmap() const;
     };
 
     static void initialize(Badge<Application>);
@@ -40,7 +42,6 @@ public:
     DataAndType data_and_type() const;
     ByteBuffer data() const { return data_and_type().data; }
     String mime_type() const { return data_and_type().mime_type; }
-    RefPtr<Gfx::Bitmap> bitmap() const;
 
     void set_data(ReadonlyBytes data, String const& mime_type = "text/plain", HashMap<String, String> const& metadata = {});
     void set_plain_text(String const& text) { set_data(text.bytes()); }

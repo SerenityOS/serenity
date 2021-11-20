@@ -214,7 +214,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        auto bitmap = GUI::Clipboard::the().bitmap();
+        auto bitmap = GUI::Clipboard::the().data_and_type().as_bitmap();
         if (!bitmap)
             return;
 
