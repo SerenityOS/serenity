@@ -136,10 +136,10 @@ index 58ae08a38..8e9a3fee6 100644
                     options::OPT_foperator_names, false))
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..461f55ad3
+index 000000000..4d653d86f
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,281 @@
+@@ -0,0 +1,327 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -158,6 +158,7 @@ index 000000000..461f55ad3
 +#include "clang/Driver/SanitizerArgs.h"
 +#include "llvm/Option/ArgList.h"
 +#include "llvm/Support/VirtualFileSystem.h"
++#include <string>
 +
 +using namespace clang::driver;
 +using namespace clang::driver::toolchains;
@@ -348,28 +349,73 @@ index 000000000..461f55ad3
 +
 +  addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/local/include");
 +  addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/include");
++}
++
++static std::string getLibStdCXXVersion(const Driver &D, StringRef IncludePath) {
++  SmallString<128> Path(IncludePath);
++  llvm::sys::path::append(Path, "c++");
++
++  std::error_code EC;
++  std::tuple<int, int, int> Newest{0, 0, 0};
++  std::string Result;
++
++  for (llvm::vfs::directory_iterator LI = D.getVFS().dir_begin(Path, EC), LE;
++       !EC && LI != LE; LI = LI.increment(EC)) {
++    StringRef VersionText = llvm::sys::path::filename(LI->path());
++
++    // This is libc++
++    if (VersionText[0] == 'v')
++      continue;
++
++    llvm::SmallVector<StringRef, 3> Parts;
++    VersionText.split(Parts, '.');
++
++    // SerenityOS always builds GCC with <major>.<minor>.<patch> versions
++    if (Parts.size() < 3)
++      continue;
++
++    std::tuple<int, int, int> Current;
++    if (!llvm::to_integer(Parts[0], std::get<0>(Current)))
++      continue;
++    if (!llvm::to_integer(Parts[1], std::get<1>(Current)))
++      continue;
++    if (!llvm::to_integer(Parts[2], std::get<2>(Current)))
++      continue;
++
++    if (Current > Newest) {
++      Newest = Current;
++      Result = VersionText.str();
++    }
 +  }
++  return Result;
 +}
 +
 +void Serenity::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
 +                                            ArgStringList &CC1Args) const {
 +  if (DriverArgs.hasArg(options::OPT_nostdinc, options::OPT_nostdincxx,
-+                        +options::OPT_nostdlibinc))
++                        options::OPT_nostdlibinc))
 +    return;
 +
-+  if (GetCXXStdlibType(DriverArgs) != ToolChain::CST_Libcxx)
-+    llvm_unreachable("Only libc++ is supported on the Serenity target");
++  const auto StdLib = GetCXXStdlibType(DriverArgs);
 +
 +  const Driver &D = getDriver();
 +  std::string SysRoot = computeSysRoot();
 +  std::string Target = getTripleString();
 +
 +  auto AddIncludePath = [&](std::string Path) {
-+    std::string Version = detectLibcxxVersion(Path);
++    std::string Version = StdLib == CXXStdlibType::CST_Libstdcxx
++                              ? getLibStdCXXVersion(D, Path)
++                              : detectLibcxxVersion(Path);
 +    if (Version.empty())
 +      return false;
 +
-+    std::string TargetDir = Path + "/" + Target + "/c++/" + Version;
++    std::string TargetDir;
++    if (StdLib == CXXStdlibType::CST_Libstdcxx) {
++      TargetDir = Path + "/c++/" + Version + "/" + Target;
++    } else {
++      TargetDir = Path + "/" + Target + "/c++/" + Version;
++    }
++
 +    if (D.getVFS().exists(TargetDir))
 +      addSystemInclude(DriverArgs, CC1Args, TargetDir);
 +
