@@ -1161,14 +1161,19 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 // 13.35 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_object, String const& iso_string)
 {
+    auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalInstantString (see 13.33), then
-    // a. Throw a RangeError exception.
-    // TODO
+    auto parse_result = parse_iso8601(Production::TemporalInstantString, iso_string);
+    if (!parse_result.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidInstantString, iso_string);
+    }
 
     // 3. Let result be ! ParseISODateTime(isoString).
-    auto result = MUST(parse_iso_date_time(global_object, {}));
+    auto result = MUST(parse_iso_date_time(global_object, *parse_result));
 
     // 4. Let timeZoneResult be ? ParseTemporalTimeZoneString(isoString).
     auto time_zone_result = TRY(parse_temporal_time_zone_string(global_object, iso_string));

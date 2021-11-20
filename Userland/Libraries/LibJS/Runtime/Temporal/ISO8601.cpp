@@ -746,6 +746,27 @@ bool ISO8601Parser::parse_calendar_date_time()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-TemporalInstantString
+bool ISO8601Parser::parse_temporal_instant_string()
+{
+    // TemporalInstantString :
+    //     Date TimeZoneOffsetRequired
+    //     Date DateTimeSeparator TimeSpec TimeZoneOffsetRequired
+    StateTransaction transaction { *this };
+    if (!parse_date())
+        return false;
+    if (!parse_time_zone_offset_required()) {
+        if (!parse_date_time_separator())
+            return false;
+        if (!parse_time_spec())
+            return false;
+        if (!parse_time_zone_offset_required())
+            return false;
+    }
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-TemporalDateString
 bool ISO8601Parser::parse_temporal_date_string()
 {
@@ -874,6 +895,7 @@ bool ISO8601Parser::parse_temporal_relative_to_string()
 }
 
 #define JS_ENUMERATE_ISO8601_PRODUCTION_PARSERS                                        \
+    __JS_ENUMERATE(TemporalInstantString, parse_temporal_instant_string)               \
     __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)                     \
     __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string)            \
     __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string)            \

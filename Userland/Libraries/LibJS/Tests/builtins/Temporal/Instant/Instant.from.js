@@ -14,10 +14,17 @@ describe("correct behavior", () => {
         expect(Temporal.Instant.from(zonedDateTime).epochNanoseconds).toBe(123n);
     });
 
-    // Un-skip once ParseISODateTime & ParseTemporalTimeZoneString are implemented
-    test.skip("Instant string argument", () => {
+    test("Instant string argument", () => {
         expect(Temporal.Instant.from("1975-02-02T14:25:36.123456789Z").epochNanoseconds).toBe(
             160583136123456789n
         );
+    });
+});
+
+describe("errors", () => {
+    test("invalid instant string", () => {
+        expect(() => {
+            Temporal.Instant.from("foo");
+        }).toThrowWithMessage(RangeError, "Invalid instant string 'foo'");
     });
 });
