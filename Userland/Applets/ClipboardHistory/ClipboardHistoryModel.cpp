@@ -77,7 +77,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
             builder.append('x');
             builder.append(data_and_type.metadata.get("height").value_or("?"));
             builder.append('x');
-            builder.append(bpp_for_format_resilient(data_and_type.metadata.get("height").value_or("0")));
+            builder.append(bpp_for_format_resilient(data_and_type.metadata.get("format").value_or("0")));
             builder.append(" bitmap");
             builder.append("]");
             return builder.to_string();
