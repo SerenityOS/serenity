@@ -64,34 +64,34 @@ Clipboard::DataAndType Clipboard::data_and_type() const
     return { data.release_value(), type, metadata };
 }
 
-RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
+RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
 {
-    auto clipping = data_and_type();
-
-    if (clipping.mime_type != "image/x-serenityos")
+    if (mime_type != "image/x-serenityos")
         return nullptr;
 
-    auto width = clipping.metadata.get("width").value_or("0").to_uint();
+    auto width = metadata.get("width").value_or("0").to_uint();
     if (!width.has_value() || width.value() == 0)
         return nullptr;
 
-    auto height = clipping.metadata.get("height").value_or("0").to_uint();
+    auto height = metadata.get("height").value_or("0").to_uint();
     if (!height.has_value() || height.value() == 0)
         return nullptr;
 
-    auto scale = clipping.metadata.get("scale").value_or("0").to_uint();
+    auto scale = metadata.get("scale").value_or("0").to_uint();
     if (!scale.has_value() || scale.value() == 0)
         return nullptr;
 
-    auto pitch = clipping.metadata.get("pitch").value_or("0").to_uint();
+    auto pitch = metadata.get("pitch").value_or("0").to_uint();
     if (!pitch.has_value() || pitch.value() == 0)
         return nullptr;
 
-    auto format = clipping.metadata.get("format").value_or("0").to_uint();
+    auto format = metadata.get("format").value_or("0").to_uint();
     if (!format.has_value() || format.value() == 0)
         return nullptr;
 
-    auto clipping_bitmap_or_error = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping.data.data());
+    // We won't actually write to the clipping_bitmap, so casting away the const is okay.
+    auto clipping_data = const_cast<u8*>(data.data());
+    auto clipping_bitmap_or_error = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping_data);
     if (clipping_bitmap_or_error.is_error())
         return nullptr;
     auto clipping_bitmap = clipping_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
