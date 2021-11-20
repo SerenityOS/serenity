@@ -319,7 +319,7 @@ ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& conte
     }
 }
 
-NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
+NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 {
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {
@@ -393,7 +393,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if (palette_index[i] >= context.palette_data.size())
-                        return false;
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
                     auto& color = context.palette_data.at((int)palette_index[i]);
                     auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
                         ? context.palette_transparency_data.data()[palette_index[i]]
@@ -414,7 +414,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
                     auto palette_index = (palette_indices[i / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if ((size_t)palette_index >= context.palette_data.size())
-                        return false;
+                        return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range"sv);
                     auto& color = context.palette_data.at(palette_index);
                     auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
                         ? context.palette_transparency_data.data()[palette_index]
@@ -476,7 +476,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
         }
     }
 
-    return true;
+    return {};
 }
 
 static bool decode_png_header(PNGLoadingContext& context)
@@ -556,7 +556,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
     return true;
 }
 
-static bool decode_png_bitmap_simple(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
 
@@ -564,34 +564,27 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         u8 filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
         }
 
         if (filter > 4) {
-            dbgln_if(PNG_DEBUG, "Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
         }
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
         auto row_size = context.compute_row_size_for_width(context.width);
         if (row_size.has_overflow())
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
 
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
         }
     }
 
-    auto bitmap_or_error = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
-    if (bitmap_or_error.is_error()) {
-        context.state = PNGLoadingContext::State::Error;
-        return false;
-    }
-
-    context.bitmap = bitmap_or_error.release_value();
+    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     return unfilter(context);
 }
 
@@ -645,7 +638,7 @@ static int adam7_startx[8] = { 0, 0, 4, 0, 2, 0, 1, 0 };
 static int adam7_stepy[8] = { 1, 8, 8, 8, 4, 4, 2, 2 };
 static int adam7_stepx[8] = { 1, 8, 8, 4, 4, 2, 2, 1 };
 
-static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
+static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
 {
     PNGLoadingContext subimage_context;
     subimage_context.width = adam7_width(context, pass);
@@ -659,20 +652,19 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 
     // For small images, some passes might be empty
     if (!subimage_context.width || !subimage_context.height)
-        return true;
+        return {};
 
     subimage_context.scanlines.clear_with_capacity();
     for (int y = 0; y < subimage_context.height; ++y) {
         u8 filter;
         if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
         }
 
         if (filter > 4) {
-            dbgln_if(PNG_DEBUG, "Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter"sv);
         }
 
         subimage_context.scanlines.append({ filter });
@@ -680,22 +672,15 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 
         auto row_size = context.compute_row_size_for_width(subimage_context.width);
         if (row_size.has_overflow())
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow"sv);
         if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
         }
     }
 
-    auto bitmap_or_error = Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height });
-    if (bitmap_or_error.is_error())
-        return false;
-
-    subimage_context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    if (!unfilter(subimage_context)) {
-        subimage_context.bitmap = nullptr;
-        return false;
-    }
+    subimage_context.bitmap = TRY(Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
+    TRY(unfilter(subimage_context));
 
     // Copy the subimage data into the main image according to the pass pattern
     for (int y = 0, dy = adam7_starty[pass]; y < subimage_context.height && dy < context.height; ++y, dy += adam7_stepy[pass]) {
@@ -703,44 +688,38 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
             context.bitmap->set_pixel(dx, dy, subimage_context.bitmap->get_pixel(x, y));
         }
     }
-    return true;
+    return {};
 }
 
-static bool decode_png_adam7(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
-    auto bitmap_or_error = Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
-    if (bitmap_or_error.is_error())
-        return false;
-    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-
-    for (int pass = 1; pass <= 7; ++pass) {
-        if (!decode_adam7_pass(context, streamer, pass))
-            return false;
-    }
-    return true;
+    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
+    for (int pass = 1; pass <= 7; ++pass)
+        TRY(decode_adam7_pass(context, streamer, pass));
+    return {};
 }
 
-static bool decode_png_bitmap(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
 {
     if (context.state < PNGLoadingContext::State::ChunksDecoded) {
         if (!decode_png_chunks(context))
-            return false;
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
     }
 
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
-        return true;
+        return {};
 
     if (context.width == -1 || context.height == -1)
-        return false; // Didn't see an IHDR chunk.
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk."sv);
 
     if (context.color_type == 3 && context.palette_data.is_empty())
-        return false; // Didn't see a PLTE chunk for a palettized image, or it was empty.
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palettized image, or it was empty."sv);
 
     auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {
         context.state = PNGLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed"sv);
     }
     context.decompression_buffer = &result.value();
     context.compressed_data.clear();
@@ -748,22 +727,20 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     context.scanlines.ensure_capacity(context.height);
     switch (context.interlace_method) {
     case PngInterlaceMethod::Null:
-        if (!decode_png_bitmap_simple(context))
-            return false;
+        TRY(decode_png_bitmap_simple(context));
         break;
     case PngInterlaceMethod::Adam7:
-        if (!decode_png_adam7(context))
-            return false;
+        TRY(decode_png_adam7(context));
         break;
     default:
         context.state = PNGLoadingContext::State::Error;
-        return false;
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method"sv);
     }
 
     context.decompression_buffer = nullptr;
 
     context.state = PNGLoadingContext::State::BitmapDecoded;
-    return true;
+    return {};
 }
 
 static bool is_valid_compression_method(u8 compression_method)
@@ -974,9 +951,7 @@ ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 
     if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
-        bool success = decode_png_bitmap(*m_context);
-        if (!success)
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
+        TRY(decode_png_bitmap(*m_context));
     }
 
     VERIFY(m_context->bitmap);
