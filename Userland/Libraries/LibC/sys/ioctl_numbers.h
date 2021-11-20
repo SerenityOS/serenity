@@ -45,7 +45,7 @@ struct FBHeadResolution {
 
 struct FBHeadVerticalOffset {
     int head_index;
-    int offseted;
+    int offsetted;
 };
 
 struct FBRect {

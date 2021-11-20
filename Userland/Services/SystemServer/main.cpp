@@ -121,10 +121,10 @@ constexpr unsigned encoded_device(unsigned major, unsigned minor)
 
 inline char offset_character_with_number(char base_char, u8 offset)
 {
-    char offseted_char = base_char;
-    VERIFY(static_cast<size_t>(offseted_char) + static_cast<size_t>(offset) < 256);
-    offseted_char += offset;
-    return offseted_char;
+    char offsetted_char = base_char;
+    VERIFY(static_cast<size_t>(offsetted_char) + static_cast<size_t>(offset) < 256);
+    offsetted_char += offset;
+    return offsetted_char;
 }
 
 static void create_devfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
