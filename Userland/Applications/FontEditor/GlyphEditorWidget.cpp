@@ -250,6 +250,92 @@ void GlyphEditorWidget::move_at_mouse(const GUI::MouseEvent& event)
     update();
 }
 
+static Vector<Vector<u8>> glyph_as_matrix(Gfx::GlyphBitmap const& bitmap)
+{
+    Vector<Vector<u8>> result;
+    result.ensure_capacity(bitmap.height());
+
+    for (int y = 0; y < bitmap.height(); y++) {
+        result.empend();
+        auto& row = result.last();
+        row.ensure_capacity(bitmap.width());
+        for (int x = 0; x < bitmap.width(); x++) {
+            row.append(bitmap.bit_at(x, y));
+        }
+    }
+
+    return result;
+}
+
+void GlyphEditorWidget::rotate_90()
+{
+    if (on_undo_event)
+        on_undo_event();
+
+    auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
+    auto matrix = glyph_as_matrix(bitmap);
+
+    for (int y = 0; y < bitmap.height(); y++) {
+        for (int x = 0; x < bitmap.width(); x++) {
+            int source_x = y;
+            int source_y = bitmap.width() - 1 - x;
+            bool value = false;
+            if (source_x < bitmap.width() && source_y < bitmap.height()) {
+                value = matrix[source_y][source_x];
+            }
+            bitmap.set_bit_at(x, y, value);
+        }
+    }
+
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
+void GlyphEditorWidget::flip_vertically()
+{
+    if (on_undo_event)
+        on_undo_event();
+
+    auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
+    auto matrix = glyph_as_matrix(bitmap);
+
+    for (int y = 0; y < bitmap.height(); y++) {
+        for (int x = 0; x < bitmap.width(); x++) {
+            int source_x = x;
+            int source_y = bitmap.height() - 1 - y;
+            bool value = matrix[source_y][source_x];
+            bitmap.set_bit_at(x, y, value);
+        }
+    }
+
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
+void GlyphEditorWidget::flip_horizontally()
+{
+    if (on_undo_event)
+        on_undo_event();
+
+    auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
+    auto matrix = glyph_as_matrix(bitmap);
+
+    for (int y = 0; y < bitmap.height(); y++) {
+        for (int x = 0; x < bitmap.width(); x++) {
+            int source_x = bitmap.width() - 1 - x;
+            int source_y = y;
+            bool value = matrix[source_y][source_x];
+            bitmap.set_bit_at(x, y, value);
+        }
+    }
+
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
 int GlyphEditorWidget::preferred_width() const
 {
     return frame_thickness() * 2 + font().max_glyph_width() * m_scale - 1;

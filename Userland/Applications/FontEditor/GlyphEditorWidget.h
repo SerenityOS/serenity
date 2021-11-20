@@ -34,6 +34,10 @@ public:
     void delete_glyph();
     bool is_glyph_empty();
 
+    void rotate_90();
+    void flip_vertically();
+    void flip_horizontally();
+
     int preferred_width() const;
     int preferred_height() const;
 
