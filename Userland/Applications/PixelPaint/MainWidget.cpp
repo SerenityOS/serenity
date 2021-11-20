@@ -214,7 +214,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        auto bitmap = GUI::Clipboard::the().data_and_type().as_bitmap();
+        auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
         if (!bitmap)
             return;
 
@@ -226,7 +226,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     GUI::Clipboard::the().on_change = [&](auto& mime_type) {
         m_paste_action->set_enabled(mime_type == "image/x-serenityos");
     };
-    m_paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "image/x-serenityos");
+    m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "image/x-serenityos");
 
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         if (auto* editor = current_image_editor())
