@@ -50,9 +50,6 @@ int main(int argc, char** argv)
     auto& font_settings_widget = tab_widget.add_tab<DisplaySettings::FontSettingsWidget>("Fonts");
     auto& monitor_settings_widget = tab_widget.add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor");
     auto& desktop_settings_widget = tab_widget.add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces");
-    tab_widget.on_change = [&](auto& widget) {
-        monitor_settings_widget.show_screen_numbers(&widget == &monitor_settings_widget);
-    };
 
     auto& button_container = main_widget.add<GUI::Widget>();
     button_container.set_shrink_to_fit(true);
