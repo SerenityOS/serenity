@@ -43,12 +43,12 @@ ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
 
 ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_GET_HEAD_VERITCAL_OFFSET_BUFFER, vertical_offset);
+    return ioctl(fd, FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
 ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
-    return ioctl(fd, FB_IOCTL_SET_HEAD_VERITCAL_OFFSET_BUFFER, vertical_offset);
+    return ioctl(fd, FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
 ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsigned count)
