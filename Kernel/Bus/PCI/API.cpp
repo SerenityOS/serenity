@@ -131,22 +131,22 @@ void disable_bus_mastering(Address address)
     write16(address, PCI::RegisterOffset::COMMAND, value);
 }
 
-static void write8_offseted(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
-static void write16_offseted(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
-static void write32_offseted(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
-static u8 read8_offseted(Address address, u32 field) { return Access::the().read8_field(address, field); }
-static u16 read16_offseted(Address address, u32 field) { return Access::the().read16_field(address, field); }
-static u32 read32_offseted(Address address, u32 field) { return Access::the().read32_field(address, field); }
+static void write8_offsetted(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
+static void write16_offsetted(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
+static void write32_offsetted(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
+static u8 read8_offsetted(Address address, u32 field) { return Access::the().read8_field(address, field); }
+static u16 read16_offsetted(Address address, u32 field) { return Access::the().read16_field(address, field); }
+static u32 read32_offsetted(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
 size_t get_BAR_space_size(Address address, u8 bar_number)
 {
     // See PCI Spec 2.3, Page 222
     VERIFY(bar_number < 6);
     u8 field = to_underlying(PCI::RegisterOffset::BAR0) + (bar_number << 2);
-    u32 bar_reserved = read32_offseted(address, field);
-    write32_offseted(address, field, 0xFFFFFFFF);
-    u32 space_size = read32_offseted(address, field);
-    write32_offseted(address, field, bar_reserved);
+    u32 bar_reserved = read32_offsetted(address, field);
+    write32_offsetted(address, field, 0xFFFFFFFF);
+    u32 space_size = read32_offsetted(address, field);
+    write32_offsetted(address, field, bar_reserved);
     space_size &= 0xfffffff0;
     space_size = (~space_size) + 1;
     return space_size;
@@ -156,15 +156,15 @@ void raw_access(Address address, u32 field, size_t access_size, u32 value)
 {
     VERIFY(access_size != 0);
     if (access_size == 1) {
-        write8_offseted(address, field, value);
+        write8_offsetted(address, field, value);
         return;
     }
     if (access_size == 2) {
-        write16_offseted(address, field, value);
+        write16_offsetted(address, field, value);
         return;
     }
     if (access_size == 4) {
-        write32_offseted(address, field, value);
+        write32_offsetted(address, field, value);
         return;
     }
     VERIFY_NOT_REACHED();
@@ -172,32 +172,32 @@ void raw_access(Address address, u32 field, size_t access_size, u32 value)
 
 u8 Capability::read8(u32 field) const
 {
-    return read8_offseted(m_address, m_ptr + field);
+    return read8_offsetted(m_address, m_ptr + field);
 }
 
 u16 Capability::read16(u32 field) const
 {
-    return read16_offseted(m_address, m_ptr + field);
+    return read16_offsetted(m_address, m_ptr + field);
 }
 
 u32 Capability::read32(u32 field) const
 {
-    return read32_offseted(m_address, m_ptr + field);
+    return read32_offsetted(m_address, m_ptr + field);
 }
 
 void Capability::write8(u32 field, u8 value)
 {
-    write8_offseted(m_address, m_ptr + field, value);
+    write8_offsetted(m_address, m_ptr + field, value);
 }
 
 void Capability::write16(u32 field, u16 value)
 {
-    write16_offseted(m_address, m_ptr + field, value);
+    write16_offsetted(m_address, m_ptr + field, value);
 }
 
 void Capability::write32(u32 field, u32 value)
 {
-    write32_offseted(m_address, m_ptr + field, value);
+    write32_offsetted(m_address, m_ptr + field, value);
 }
 
 }
