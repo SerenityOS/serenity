@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/HashTable.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCompress/Gzip.h>
@@ -290,6 +291,28 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 
     auto lib_data = cached_libs.get(path).value();
     return lib_data;
+}
+
+void Reader::for_each_library(Function<void(LibraryInfo)> func) const
+{
+    HashTable<String> libraries;
+    for_each_memory_region_info([&](ELF::Core::MemoryRegionInfo const& region) {
+        auto name = region.object_name();
+        if (name.is_null() || libraries.contains(name))
+            return IterationDecision::Continue;
+
+        libraries.set(name);
+
+        String path;
+        if (Core::File::looks_like_shared_library(name))
+            path = String::formatted("/usr/lib/{}", name);
+        else {
+            path = name;
+        }
+
+        func(LibraryInfo { name, path, (FlatPtr)region.region_start });
+        return IterationDecision::Continue;
+    });
 }
 
 }
