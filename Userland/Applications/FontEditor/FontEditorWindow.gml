@@ -80,11 +80,29 @@
                         button_style: "Coolbar"
                         focus_policy: "TabFocus"
                     }
+                }
+
+                @GUI::Widget {
+                    shrink_to_fit: true
+
+                    layout: @GUI::HorizontalBoxLayout {
+                    }
 
                     @GUI::Button {
                         name: "rotate_90"
                         fixed_width: 22
                         tooltip: "Rotate 90° clockwise"
+                        button_style: "Coolbar"
+                        focus_policy: "TabFocus"
+                    }
+
+                    @GUI::Widget {
+                    }
+
+                    @GUI::Button {
+                        name: "copy_code_point"
+                        fixed_width: 22
+                        tooltip: "Copy this codepoint (not glyph)"
                         button_style: "Coolbar"
                         focus_policy: "TabFocus"
                     }
