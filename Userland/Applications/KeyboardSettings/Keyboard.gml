@@ -8,7 +8,7 @@
 
     @GUI::GroupBox {
         title: "Mapping"
-        fixed_height: 60
+        fixed_height: 200
 
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
@@ -29,6 +29,27 @@
             @GUI::ComboBox {
                 name: "character_map_file_combo"
             }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                text: "Test your current keymap below"
+                text_alignment: "CenterLeft"
+            }
+            @GUI::Button {
+                text: "Clear"
+                name: "button_clear_test_typing_area"
+                fixed_width: 48
+            }
+        }
+
+        @GUI::TextEditor {
+            fixed_height: 100
+            name: "test_typing_area"
         }
     }
 
