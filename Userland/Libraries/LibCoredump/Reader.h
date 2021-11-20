@@ -20,7 +20,7 @@ class Reader {
     AK_MAKE_NONMOVABLE(Reader);
 
 public:
-    static OwnPtr<Reader> create(const String&);
+    static OwnPtr<Reader> create(StringView);
     ~Reader();
 
     template<typename Func>
