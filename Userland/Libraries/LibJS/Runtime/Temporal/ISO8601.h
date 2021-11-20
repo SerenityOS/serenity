@@ -33,6 +33,7 @@ struct ParseResult {
 };
 
 enum class Production {
+    TemporalInstantString,
     TemporalDateString,
     TemporalDateTimeString,
     TemporalMonthDayString,
@@ -106,6 +107,7 @@ public:
     [[nodiscard]] bool parse_time_spec_separator();
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_calendar_date_time();
+    [[nodiscard]] bool parse_temporal_instant_string();
     [[nodiscard]] bool parse_temporal_date_string();
     [[nodiscard]] bool parse_temporal_date_time_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
