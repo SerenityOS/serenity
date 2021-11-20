@@ -45,7 +45,11 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
 * Make sure your commits are rebased on the master branch.
 * Wrap your commit messages at 72 characters.
-* The first line of the commit message is the subject line, and should have the format "Category: Brief description of what's being changed". The "category" can be a subdirectory, but also something like "POSIX compliance" or "ClassName". Whatever seems logical.
+* The first line of the commit message is the subject line, and must have the format "Category: Brief description of what's being changed". The category should be the name of a library, application, service, utility, etc.
+  * Examples: `LibAudio`, `HackStudio`, `Base`, `Kernel`, `ConfigServer`, `cat`
+  * Don't use a category like "`Userland`" or "`Utilities`", except for generic changes that affect a large portion of code within these directories.
+  * Don't use specific component names, e.g. C++ class names, as the category either - mention them in the summary instead. E.g. `LibGUI: Brief description of what's being changed in FooWidget` rather than `FooWidget: Brief description of what's being changed`
+  * Several categories may be combined with `+`, e.g. `LibJS+LibWeb+Browser: ...`
 * Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
 * Write your commit messages in proper English, with care and punctuation.
 * Squash your commits when making revisions after a patch review.
