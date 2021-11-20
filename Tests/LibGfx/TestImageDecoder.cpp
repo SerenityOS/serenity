@@ -31,7 +31,7 @@ TEST_CASE(test_bmp)
     EXPECT(!bmp.is_animated());
     EXPECT(!bmp.loop_count());
 
-    auto frame = bmp.frame(1);
+    auto frame = bmp.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }
 
@@ -45,7 +45,7 @@ TEST_CASE(test_gif)
     EXPECT(gif.is_animated());
     EXPECT(!gif.loop_count());
 
-    auto frame = gif.frame(1);
+    auto frame = gif.frame(1).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 400);
 }
 
@@ -60,8 +60,7 @@ TEST_CASE(test_ico)
     EXPECT(!ico.is_animated());
     EXPECT(!ico.loop_count());
 
-    auto frame = ico.frame(1);
-    EXPECT(frame.duration == 0);
+    EXPECT(ico.frame(0).is_error());
 }
 
 TEST_CASE(test_jpg)
@@ -74,7 +73,7 @@ TEST_CASE(test_jpg)
     EXPECT(!jpg.is_animated());
     EXPECT(!jpg.loop_count());
 
-    auto frame = jpg.frame(1);
+    auto frame = jpg.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }
 
@@ -88,7 +87,7 @@ TEST_CASE(test_pbm)
     EXPECT(!pbm.is_animated());
     EXPECT(!pbm.loop_count());
 
-    auto frame = pbm.frame(1);
+    auto frame = pbm.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }
 
@@ -102,7 +101,7 @@ TEST_CASE(test_pgm)
     EXPECT(!pgm.is_animated());
     EXPECT(!pgm.loop_count());
 
-    auto frame = pgm.frame(1);
+    auto frame = pgm.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }
 
@@ -116,7 +115,7 @@ TEST_CASE(test_png)
     EXPECT(!png.is_animated());
     EXPECT(!png.loop_count());
 
-    auto frame = png.frame(1);
+    auto frame = png.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }
 
@@ -130,6 +129,6 @@ TEST_CASE(test_ppm)
     EXPECT(!ppm.is_animated());
     EXPECT(!ppm.loop_count());
 
-    auto frame = ppm.frame(1);
+    auto frame = ppm.frame(0).release_value_but_fixme_should_propagate_errors();
     EXPECT(frame.duration == 0);
 }

@@ -140,17 +140,18 @@ void SpiceAgent::on_message_received()
             m_clipboard_connection.async_set_clipboard_data(anon_buffer, "text/plain", {});
             return;
         } else {
-            RefPtr<Gfx::Bitmap> bitmap;
+            ErrorOr<Gfx::ImageFrameDescriptor> frame_or_error = Gfx::ImageFrameDescriptor {};
             if (type == ClipboardType::PNG) {
-                bitmap = Gfx::PNGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
+                frame_or_error = Gfx::PNGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0);
             } else if (type == ClipboardType::BMP) {
-                bitmap = Gfx::BMPImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
+                frame_or_error = Gfx::BMPImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0);
             } else if (type == ClipboardType::JPG) {
-                bitmap = Gfx::JPGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0).image;
+                frame_or_error = Gfx::JPGImageDecoderPlugin(data_buffer.data(), data_buffer.size()).frame(0);
             } else {
                 dbgln("Unknown clipboard type: {}", (u32)type);
                 return;
             }
+            auto const& bitmap = frame_or_error.value().image;
             m_clipboard_connection.set_bitmap(*bitmap);
         }
         break;

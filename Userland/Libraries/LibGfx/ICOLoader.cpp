@@ -263,11 +263,12 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 
     PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
     if (png_decoder.sniff()) {
-        desc.bitmap = png_decoder.frame(0).image;
-        if (!desc.bitmap) {
+        auto decoded_png_frame = png_decoder.frame(0);
+        if (!decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
             return false;
         }
+        desc.bitmap = decoded_png_frame.value().image;
         return true;
     } else {
         if (!load_ico_bmp(context, desc)) {
@@ -338,26 +339,26 @@ size_t ICOImageDecoderPlugin::frame_count()
     return 1;
 }
 
-ImageFrameDescriptor ICOImageDecoderPlugin::frame(size_t i)
+ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
 {
-    if (i > 0)
-        return {};
+    if (index > 0)
+        return Error::from_string_literal("ICOImageDecoderPlugin: Invalid frame index"sv);
 
     if (m_context->state == ICOLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed"sv);
 
     if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
         bool success = load_ico_bitmap(*m_context, {});
         if (!success) {
             m_context->state = ICOLoadingContext::State::Error;
-            return {};
+            return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed"sv);
         }
         m_context->state = ICOLoadingContext::State::BitmapDecoded;
     }
 
     VERIFY(m_context->images[m_context->largest_index].bitmap);
-    return { m_context->images[m_context->largest_index].bitmap, 0 };
+    return ImageFrameDescriptor { m_context->images[m_context->largest_index].bitmap, 0 };
 }
 
 }

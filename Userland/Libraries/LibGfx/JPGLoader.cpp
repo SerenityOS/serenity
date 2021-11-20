@@ -1276,23 +1276,23 @@ size_t JPGImageDecoderPlugin::frame_count()
     return 1;
 }
 
-ImageFrameDescriptor JPGImageDecoderPlugin::frame(size_t i)
+ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
 {
-    if (i > 0)
-        return {};
+    if (index > 0)
+        return Error::from_string_literal("JPGImageDecoderPlugin: Invalid frame index"sv);
 
     if (m_context->state == JPGLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed"sv);
 
     if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
         if (!decode_jpg(*m_context)) {
             m_context->state = JPGLoadingContext::State::Error;
-            return {};
+            return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed"sv);
         }
         m_context->state = JPGLoadingContext::State::BitmapDecoded;
     }
 
-    return { m_context->bitmap, 0 };
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 }

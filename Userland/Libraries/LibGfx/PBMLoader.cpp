@@ -162,22 +162,22 @@ size_t PBMImageDecoderPlugin::frame_count()
     return 1;
 }
 
-ImageFrameDescriptor PBMImageDecoderPlugin::frame(size_t i)
+ErrorOr<ImageFrameDescriptor> PBMImageDecoderPlugin::frame(size_t index)
 {
-    if (i > 0)
-        return {};
+    if (index > 0)
+        return Error::from_string_literal("PBMImageDecoderPlugin: Invalid frame index"sv);
 
     if (m_context->state == PBMLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("PBMImageDecoderPlugin: Decoding failed"sv);
 
     if (m_context->state < PBMLoadingContext::State::Decoded) {
         bool success = decode(*m_context);
         if (!success)
-            return {};
+            return Error::from_string_literal("PBMImageDecoderPlugin: Decoding failed"sv);
     }
 
     VERIFY(m_context->bitmap);
-    return { m_context->bitmap, 0 };
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 }

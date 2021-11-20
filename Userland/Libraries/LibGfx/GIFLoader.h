@@ -25,7 +25,7 @@ public:
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
-    virtual ImageFrameDescriptor frame(size_t i) override;
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
 
 private:
     OwnPtr<GIFLoadingContext> m_context;
