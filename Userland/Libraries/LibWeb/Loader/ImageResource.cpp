@@ -5,7 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibImageDecoderClient/Client.h>
+#include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/ImageResource.h>
 
 namespace Web {
@@ -25,18 +25,6 @@ int ImageResource::frame_duration(size_t frame_index) const
     if (frame_index >= m_decoded_frames.size())
         return 0;
     return m_decoded_frames[frame_index].duration;
-}
-
-static ImageDecoderClient::Client& image_decoder_client()
-{
-    static RefPtr<ImageDecoderClient::Client> image_decoder_client;
-    if (!image_decoder_client) {
-        image_decoder_client = ImageDecoderClient::Client::construct();
-        image_decoder_client->on_death = [&] {
-            image_decoder_client = nullptr;
-        };
-    }
-    return *image_decoder_client;
 }
 
 void ImageResource::decode_if_needed() const
