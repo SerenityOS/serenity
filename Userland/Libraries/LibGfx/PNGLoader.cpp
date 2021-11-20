@@ -964,23 +964,23 @@ size_t PNGImageDecoderPlugin::frame_count()
     return 1;
 }
 
-ImageFrameDescriptor PNGImageDecoderPlugin::frame(size_t i)
+ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 {
-    if (i > 0)
-        return {};
+    if (index > 0)
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index"sv);
 
     if (m_context->state == PNGLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
 
     if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
         bool success = decode_png_bitmap(*m_context);
         if (!success)
-            return {};
+            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed"sv);
     }
 
     VERIFY(m_context->bitmap);
-    return { m_context->bitmap, 0 };
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 }

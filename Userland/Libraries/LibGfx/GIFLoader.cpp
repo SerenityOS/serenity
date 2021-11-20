@@ -691,36 +691,30 @@ size_t GIFImageDecoderPlugin::frame_count()
     return m_context->images.size();
 }
 
-ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
+ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
 {
     if (m_context->error_state >= GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame) {
-        return {};
+        return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
-            return {};
+            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
         }
     }
 
-    if (m_context->error_state == GIFLoadingContext::ErrorState::NoError && !decode_frame(*m_context, i)) {
+    if (m_context->error_state == GIFLoadingContext::ErrorState::NoError && !decode_frame(*m_context, index)) {
         if (m_context->state < GIFLoadingContext::State::FrameComplete || !decode_frame(*m_context, 0)) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
-            return {};
+            return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed"sv);
         }
         m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
-    }
-
-    auto image_or_error = m_context->frame_buffer->clone();
-    if (image_or_error.is_error()) {
-        m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
-        return {};
     }
 
     ImageFrameDescriptor frame {};
-    frame.image = image_or_error.release_value_but_fixme_should_propagate_errors();
-    frame.duration = m_context->images.at(i).duration * 10;
+    frame.image = TRY(m_context->frame_buffer->clone());
+    frame.duration = m_context->images.at(index).duration * 10;
 
     if (frame.duration <= 10) {
         frame.duration = 100;
