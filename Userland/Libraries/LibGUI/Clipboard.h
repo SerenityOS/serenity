@@ -39,9 +39,8 @@ public:
     static void initialize(Badge<Application>);
     static Clipboard& the();
 
-    DataAndType data_and_type() const;
-    ByteBuffer data() const { return data_and_type().data; }
-    String mime_type() const { return data_and_type().mime_type; }
+    DataAndType fetch_data_and_type() const;
+    String fetch_mime_type() const { return fetch_data_and_type().mime_type; }
 
     void set_data(ReadonlyBytes data, String const& mime_type = "text/plain", HashMap<String, String> const& metadata = {});
     void set_plain_text(String const& text) { set_data(text.bytes()); }
