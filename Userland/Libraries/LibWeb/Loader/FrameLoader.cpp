@@ -178,15 +178,12 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                 if (data.is_empty())
                     return;
                 RefPtr<Gfx::Bitmap> favicon_bitmap;
-                auto decoder = Gfx::ImageDecoder::try_create(data);
-                if (!decoder) {
-                    dbgln("No image decoder plugin for favicon {}", favicon_url);
+                auto decoded_image = image_decoder_client().decode_image(data);
+                if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
+                    dbgln("Could not decode favicon {}", favicon_url);
                 } else {
-                    favicon_bitmap = decoder->frame(0).image;
-                    if (!favicon_bitmap)
-                        dbgln("Could not decode favicon {}", favicon_url);
-                    else
-                        dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+                    favicon_bitmap = decoded_image->frames[0].bitmap;
+                    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
                 }
                 load_favicon(favicon_bitmap);
             },
