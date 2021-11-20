@@ -39,7 +39,7 @@ public:
     virtual bool is_animated() = 0;
     virtual size_t loop_count() = 0;
     virtual size_t frame_count() = 0;
-    virtual ImageFrameDescriptor frame(size_t i) = 0;
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) = 0;
 
 protected:
     ImageDecoderPlugin() { }
@@ -59,7 +59,7 @@ public:
     bool is_animated() const { return m_plugin->is_animated(); }
     size_t loop_count() const { return m_plugin->loop_count(); }
     size_t frame_count() const { return m_plugin->frame_count(); }
-    ImageFrameDescriptor frame(size_t i) const { return m_plugin->frame(i); }
+    ErrorOr<ImageFrameDescriptor> frame(size_t index) const { return m_plugin->frame(index); }
 
 private:
     explicit ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin>);

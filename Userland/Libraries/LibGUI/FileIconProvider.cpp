@@ -188,7 +188,11 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         if (!section.has_value()) {
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
-            bitmap = Gfx::PNGImageDecoderPlugin(reinterpret_cast<u8 const*>(section->raw_data()), section->size()).frame(0).image;
+            // FIXME: Use the ImageDecoder service.
+            auto frame_or_error = Gfx::PNGImageDecoderPlugin(reinterpret_cast<u8 const*>(section->raw_data()), section->size()).frame(0);
+            if (!frame_or_error.is_error()) {
+                bitmap = frame_or_error.value().image;
+            }
         }
 
         if (!bitmap) {

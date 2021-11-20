@@ -136,7 +136,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String
 {
     auto file = TRY(MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
-        if (auto bitmap = decoder->frame(0).image)
+        auto frame = TRY(decoder->frame(0));
+        if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();
     }
 
