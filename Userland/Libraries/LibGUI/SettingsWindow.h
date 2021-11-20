@@ -20,7 +20,8 @@ public:
     class Tab : public GUI::Widget {
     public:
         virtual void apply_settings() = 0;
-        virtual void reset_default_values() {};
+        virtual void cancel_settings() { }
+        virtual void reset_default_values() { }
     };
 
     enum class ShowDefaultsButton {
