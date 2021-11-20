@@ -58,6 +58,8 @@ SettingsWindow::SettingsWindow(StringView title, ShowDefaultsButton show_default
     m_cancel_button = button_container.add<GUI::Button>("Cancel");
     m_cancel_button->set_fixed_width(75);
     m_cancel_button->on_click = [&](auto) {
+        for (auto& tab : m_tabs)
+            tab.cancel_settings();
         GUI::Application::the()->quit();
     };
 
