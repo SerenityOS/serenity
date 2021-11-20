@@ -1453,18 +1453,17 @@ void TextEditor::paste()
     if (!is_editable())
         return;
 
-    if (!Clipboard::the().mime_type().starts_with("text/"))
+    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
+    if (!mime_type.starts_with("text/"))
         return;
 
-    auto paste_text = Clipboard::the().data();
-
-    if (paste_text.is_empty())
+    if (data.is_empty())
         return;
 
-    dbgln_if(TEXTEDITOR_DEBUG, "Paste: \"{}\"", String::copy(paste_text));
+    dbgln_if(TEXTEDITOR_DEBUG, "Paste: \"{}\"", String::copy(data));
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
-    insert_at_cursor_or_replace_selection(paste_text);
+    insert_at_cursor_or_replace_selection(data);
 }
 
 void TextEditor::defer_reflow()
