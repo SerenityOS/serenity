@@ -615,20 +615,12 @@ Icon FileSystemModel::icon_for(Node const& node) const
 
 static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
-static RefPtr<Gfx::Bitmap> render_thumbnail(StringView path)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
-    auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path);
-    if (bitmap_or_error.is_error())
-        return nullptr;
-    auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY(Gfx::Bitmap::try_load_from_file(path));
+    auto thumbnail = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { 32, 32 }));
 
     double scale = min(32 / (double)bitmap->width(), 32 / (double)bitmap->height());
-
-    auto thumbnail_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
-    if (thumbnail_or_error.is_error())
-        return nullptr;
-    auto thumbnail = thumbnail_or_error.release_value_but_fixme_should_propagate_errors();
-
     auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
 
     Painter painter(thumbnail);
@@ -657,13 +649,17 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
 
     auto weak_this = make_weak_ptr();
 
-    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::construct(
+    Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
         [path](auto&) {
             return render_thumbnail(path);
         },
 
-        [this, path, weak_this](auto thumbnail) {
-            s_thumbnail_cache.set(path, move(thumbnail));
+        [this, path, weak_this](auto thumbnail_or_error) {
+            if (thumbnail_or_error.is_error()) {
+                s_thumbnail_cache.set(path, nullptr);
+                return;
+            }
+            s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
 
             // The model was destroyed, no need to update
             // progress or call any event handlers.
