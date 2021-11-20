@@ -207,6 +207,7 @@
     M(TemporalInvalidCalendarFieldValue, "Invalid calendar field {}, expected a string")                                                \
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned {}")                                             \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
+    M(TemporalInvalidCalendarString, "Invalid calendar string '{}'")                                                                    \
     M(TemporalInvalidDateString, "Invalid date string '{}'")                                                                            \
     M(TemporalInvalidDateTimeString, "Invalid date time string '{}'")                                                                   \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
