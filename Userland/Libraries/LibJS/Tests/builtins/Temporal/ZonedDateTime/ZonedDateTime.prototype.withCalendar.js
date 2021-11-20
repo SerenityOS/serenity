@@ -31,13 +31,11 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
 
-    // FIXME: Enable this when calendar string parsing is implemented.
-    test.skip("from invalid calendar string", () => {
+    test("from invalid calendar string", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(1n, {}, {});
 
-        // FIXME: Use "toThrowWithMessage" once this has an error message.
         expect(() => {
             zonedDateTime.withCalendar("iso8602foobar");
-        }).toThrow(RangeError);
+        }).toThrowWithMessage(RangeError, "Invalid calendar string 'iso8602foobar'");
     });
 });

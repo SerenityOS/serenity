@@ -22,6 +22,6 @@ describe("normal behavior", () => {
         expect(Temporal.Calendar.from(calendarLike)).toBe(calendarLike);
         expect(Temporal.Calendar.from(withCalendarLike)).toBe(withCalendarLike.calendar);
         expect(Temporal.Calendar.from("iso8601").id).toBe("iso8601");
-        // TODO: test Temporal.Calendar.from("TemporalCalendarString") once ParseTemporalCalendarString is working
+        expect(Temporal.Calendar.from("2021-07-06[u-ca=iso8601]").id).toBe("iso8601");
     });
 });

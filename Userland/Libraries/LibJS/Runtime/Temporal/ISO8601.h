@@ -40,6 +40,7 @@ enum class Production {
     TemporalTimeZoneString,
     TemporalYearMonthString,
     TemporalZonedDateTimeString,
+    TemporalCalendarString,
     TemporalRelativeToString,
 };
 
@@ -113,6 +114,7 @@ public:
     [[nodiscard]] bool parse_temporal_time_zone_string();
     [[nodiscard]] bool parse_temporal_year_month_string();
     [[nodiscard]] bool parse_temporal_zoned_date_time_string();
+    [[nodiscard]] bool parse_temporal_calendar_string();
     [[nodiscard]] bool parse_temporal_relative_to_string();
 
 private:
