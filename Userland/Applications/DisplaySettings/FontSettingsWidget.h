@@ -7,17 +7,17 @@
 #pragma once
 
 #include <LibGUI/Label.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/SettingsWindow.h>
 
 namespace DisplaySettings {
 
-class FontSettingsWidget : public GUI::Widget {
+class FontSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(FontSettingsWidget);
 
 public:
     virtual ~FontSettingsWidget() override;
 
-    void apply_settings();
+    virtual void apply_settings() override;
 
 private:
     FontSettingsWidget();
