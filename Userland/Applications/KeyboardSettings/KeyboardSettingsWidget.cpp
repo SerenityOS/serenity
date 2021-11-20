@@ -14,6 +14,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
@@ -51,6 +52,9 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     }
     VERIFY(initial_keymap_index < m_character_map_files.size());
 
+    auto& character_map_image_label = *find_descendant_of_type_named<GUI::Label>("character_map_image_label");
+    character_map_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-keyboard-mapper.png").release_value_but_fixme_should_propagate_errors());
+
     m_character_map_file_combo = find_descendant_of_type_named<GUI::ComboBox>("character_map_file_combo");
     m_character_map_file_combo->set_only_allow_values_from_model(true);
     m_character_map_file_combo->set_model(*GUI::ItemListModel<String>::create(m_character_map_files));
@@ -69,6 +73,8 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         m_test_typing_area->set_focus(true);
     };
 
+    auto& num_lock_image_label = *find_descendant_of_type_named<GUI::Label>("num_lock_image_label");
+    num_lock_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-calculator.png").release_value_but_fixme_should_propagate_errors());
     m_num_lock_checkbox = find_descendant_of_type_named<GUI::CheckBox>("num_lock_checkbox");
     m_num_lock_checkbox->set_checked(Config::read_bool("KeyboardSettings", "StartupEnable", "NumLock", true));
 }
