@@ -1,22 +1,25 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibGUI/SettingsWindow.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
-class MailSettingsWindow final : public GUI::Window {
-    C_OBJECT(MailSettingsWindow)
+class MailSettingsWidget final : public GUI::SettingsWindow::Tab {
+    C_OBJECT(MailSettingsWidget)
+
+public:
+    virtual void apply_settings() override;
+    virtual void reset_default_values() override;
 
 private:
-    MailSettingsWindow();
-
-    void reset_default_values();
-    void write_values();
+    MailSettingsWidget();
 
     String m_server;
     String m_port;
@@ -28,9 +31,4 @@ private:
     RefPtr<GUI::ComboBox> m_port_combobox;
     RefPtr<GUI::CheckBox> m_tls_checkbox;
     RefPtr<GUI::TextBox> m_email_inputbox;
-
-    RefPtr<GUI::Button> m_reset_button;
-    RefPtr<GUI::Button> m_ok_button;
-    RefPtr<GUI::Button> m_cancel_button;
-    RefPtr<GUI::Button> m_apply_button;
 };
