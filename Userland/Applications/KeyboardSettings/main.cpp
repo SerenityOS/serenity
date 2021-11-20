@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
+#include <Applications/KeyboardSettings/KeyboardWidgetGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
@@ -16,9 +18,8 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Menu.h>
-#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
@@ -95,35 +96,28 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Settings");
-    window->resize(300, 78);
+    window->resize(400, 480);
     window->set_resizable(false);
     window->set_minimizable(false);
-    window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& root_widget = window->set_main_widget<GUI::Widget>();
-    root_widget.set_layout<GUI::VerticalBoxLayout>();
-    root_widget.set_fill_with_background_color(true);
-    root_widget.layout()->set_spacing(0);
-    root_widget.layout()->set_margins(4);
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.layout()->set_margins(4);
+    main_widget.layout()->set_spacing(6);
 
-    auto& character_map_file_selection_container = root_widget.add<GUI::Widget>();
-    character_map_file_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    character_map_file_selection_container.set_fixed_height(22);
+    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+    auto& keyboard_widget = tab_widget.add_tab<GUI::Widget>("Keyboard");
 
-    auto& character_map_file_label = character_map_file_selection_container.add<GUI::Label>();
-    character_map_file_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    character_map_file_label.set_fixed_width(130);
-    character_map_file_label.set_text("Character Mapping File:");
+    keyboard_widget.load_from_gml(keyboard_widget_gml);
 
-    auto& character_map_file_combo = character_map_file_selection_container.add<GUI::ComboBox>();
+    auto& character_map_file_combo = *keyboard_widget.find_descendant_of_type_named<GUI::ComboBox>("character_map_file_combo");
     character_map_file_combo.set_only_allow_values_from_model(true);
     character_map_file_combo.set_model(*GUI::ItemListModel<String>::create(character_map_files));
     character_map_file_combo.set_selected_index(initial_keymap_index);
 
-    auto& num_lock_checkbox = root_widget.add<GUI::CheckBox>("Enable Num Lock on login");
+    auto& num_lock_checkbox = *keyboard_widget.find_descendant_of_type_named<GUI::CheckBox>("num_lock_checkbox");
     num_lock_checkbox.set_checked(Config::read_bool("KeyboardSettings", "StartupEnable", "NumLock", true));
-
-    root_widget.layout()->add_spacer();
 
     auto apply_settings = [&](bool quit) {
         String character_map_file = character_map_file_combo.text();
