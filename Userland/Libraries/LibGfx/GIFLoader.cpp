@@ -87,8 +87,8 @@ enum class GIFFormat {
 
 static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
 {
-    static const char valid_header_87[] = "GIF87a";
-    static const char valid_header_89[] = "GIF89a";
+    static auto valid_header_87 = "GIF87a"sv;
+    static auto valid_header_89 = "GIF89a"sv;
 
     Array<u8, 6> header;
     stream >> header;
@@ -96,9 +96,9 @@ static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
     if (stream.handle_any_error())
         return {};
 
-    if (header.span() == ReadonlyBytes { valid_header_87, 6 })
+    if (header.span() == valid_header_87.bytes())
         return GIFFormat::GIF87a;
-    if (header.span() == ReadonlyBytes { valid_header_89, 6 })
+    if (header.span() == valid_header_89.bytes())
         return GIFFormat::GIF89a;
 
     return {};
