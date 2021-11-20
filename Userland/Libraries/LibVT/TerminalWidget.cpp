@@ -752,13 +752,12 @@ void TerminalWidget::paste()
     if (m_ptm_fd == -1)
         return;
 
-    auto mime_type = GUI::Clipboard::the().mime_type();
+    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
     if (!mime_type.starts_with("text/"))
         return;
-    auto text = GUI::Clipboard::the().data();
-    if (text.is_empty())
+    if (data.is_empty())
         return;
-    send_non_user_input(text);
+    send_non_user_input(data);
 }
 
 void TerminalWidget::copy()
@@ -1167,7 +1166,8 @@ void TerminalWidget::update_copy_action()
 
 void TerminalWidget::update_paste_action()
 {
-    m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
+    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
+    m_paste_action->set_enabled(mime_type.starts_with("text/") && !data.is_empty());
 }
 
 void TerminalWidget::set_color_scheme(StringView name)
