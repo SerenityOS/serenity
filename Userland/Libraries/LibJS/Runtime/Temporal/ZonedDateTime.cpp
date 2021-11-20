@@ -219,7 +219,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         time_zone = TRY(create_temporal_time_zone(global_object, *parsed_result.time_zone.name));
 
         // i. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, js_string(vm, parsed_result.date_time.calendar.value())));
+        auto temporal_calendar_like = parsed_result.date_time.calendar.has_value()
+            ? js_string(vm, parsed_result.date_time.calendar.value())
+            : js_undefined();
+        calendar = TRY(to_temporal_calendar_with_iso_default(global_object, temporal_calendar_like));
 
         // j. Set matchBehaviour to match minutes.
         match_behavior = MatchBehavior::MatchMinutes;
