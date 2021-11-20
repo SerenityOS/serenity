@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
@@ -72,13 +73,14 @@ static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
     return true;
 }
 
-static bool build_image_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_image_document(DOM::Document& document, ByteBuffer const& data)
 {
-    auto image_decoder = Gfx::ImageDecoder::try_create(data.bytes());
-    if (!image_decoder)
+    NonnullRefPtr decoder = image_decoder_client();
+    auto image = decoder->decode_image(data);
+    if (!image.has_value() || image->frames.is_empty())
         return false;
-    auto frame = image_decoder->frame(0);
-    auto bitmap = frame.image;
+    auto const& frame = image->frames[0];
+    auto const& bitmap = frame.bitmap;
     if (!bitmap)
         return false;
 
