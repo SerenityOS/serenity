@@ -10,46 +10,66 @@
         title: "Mapping"
         fixed_height: 200
 
-        layout: @GUI::VerticalBoxLayout {
+        layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
-            spacing: 2
+            spacing: 16
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 16
+            fixed_width: 32
+            layout: @GUI::VerticalBoxLayout {
             }
 
             @GUI::Label {
-                text: "Character mapping file:"
-                fixed_width: 130
-                text_alignment: "CenterLeft"
+                fixed_width: 32
+                fixed_height: 32
+                name: "character_map_image_label"
             }
 
-            @GUI::ComboBox {
-                name: "character_map_file_combo"
-            }
+            @GUI::Widget
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
-                spacing: 16
+            layout: @GUI::VerticalBoxLayout {
+                spacing: 2
             }
 
-            @GUI::Label {
-                text: "Test your current keymap below"
-                text_alignment: "CenterLeft"
-            }
-            @GUI::Button {
-                text: "Clear"
-                name: "button_clear_test_typing_area"
-                fixed_width: 48
-            }
-        }
+            @GUI::Widget {
+                layout: @GUI::HorizontalBoxLayout {
+                    spacing: 16
+                }
 
-        @GUI::TextEditor {
-            fixed_height: 100
-            name: "test_typing_area"
+                @GUI::Label {
+                    text: "Character mapping file:"
+                    fixed_width: 130
+                    text_alignment: "CenterLeft"
+                }
+
+                @GUI::ComboBox {
+                    name: "character_map_file_combo"
+                }
+            }
+
+            @GUI::Widget {
+                layout: @GUI::HorizontalBoxLayout {
+                    spacing: 16
+                }
+
+                @GUI::Label {
+                    text: "Test your current keymap below"
+                    text_alignment: "CenterLeft"
+                }
+                @GUI::Button {
+                    text: "Clear"
+                    name: "button_clear_test_typing_area"
+                    fixed_width: 48
+                }
+            }
+
+            @GUI::TextEditor {
+                fixed_height: 100
+                name: "test_typing_area"
+            }
         }
     }
 
@@ -59,6 +79,13 @@
 
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
+            spacing: 16
+        }
+
+        @GUI::Label {
+            fixed_width: 32
+            fixed_height: 32
+            name: "num_lock_image_label"
         }
 
         @GUI::CheckBox {
