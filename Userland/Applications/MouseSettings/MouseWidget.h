@@ -6,18 +6,18 @@
 
 #pragma once
 
+#include "DoubleClickArrowWidget.h"
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/SettingsWindow.h>
 #include <LibGUI/Window.h>
 
-#include "DoubleClickArrowWidget.h"
-
-class MouseWidget final : public GUI::Widget {
+class MouseWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(MouseWidget)
 public:
     virtual ~MouseWidget() override;
 
-    void update_window_server();
-    void reset_default_values();
+    virtual void apply_settings() override;
+    virtual void reset_default_values() override;
 
 private:
     MouseWidget();

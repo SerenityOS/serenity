@@ -6,6 +6,7 @@
 
 #include "ThemeWidget.h"
 
+#include <AK/LexicalPath.h>
 #include <Applications/MouseSettings/ThemeWidgetGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Button.h>
@@ -127,7 +128,7 @@ ThemeWidget::ThemeWidget()
     m_theme_name_box->set_text(m_theme_name);
 }
 
-void ThemeWidget::update_window_server()
+void ThemeWidget::apply_settings()
 {
     GUI::WindowServerConnection::the().async_apply_cursor_theme(m_theme_name_box->text());
 }
@@ -135,7 +136,6 @@ void ThemeWidget::update_window_server()
 void ThemeWidget::reset_default_values()
 {
     m_theme_name_box->set_text("Default");
-    update_window_server();
 }
 
 ThemeWidget::~ThemeWidget()
