@@ -6,7 +6,7 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/ATA/ATA.h>
+#include <Kernel/Storage/ATA/Definitions.h>
 #include <Kernel/Storage/ATA/GenericIDE/BusMasterChannel.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/WorkQueue.h>
