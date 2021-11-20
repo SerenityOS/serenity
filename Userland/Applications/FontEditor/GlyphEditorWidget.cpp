@@ -84,16 +84,16 @@ void GlyphEditorWidget::copy_glyph()
 
 void GlyphEditorWidget::paste_glyph()
 {
-    auto mime_type = GUI::Clipboard::the().mime_type();
+    auto [data, mime_type, metadata] = GUI::Clipboard::the().data_and_type();
     if (!mime_type.starts_with("glyph/"))
         return;
 
     if (on_undo_event)
         on_undo_event();
 
-    auto byte_buffer = GUI::Clipboard::the().data();
-    auto buffer_height = GUI::Clipboard::the().data_and_type().metadata.get("height").value().to_int();
-    auto buffer_width = GUI::Clipboard::the().data_and_type().metadata.get("width").value().to_int();
+    auto byte_buffer = data.data();
+    auto buffer_height = metadata.get("height").value().to_int();
+    auto buffer_width = metadata.get("width").value().to_int();
 
     u8 bits[buffer_width.value()][buffer_height.value()];
     int i = 0;
