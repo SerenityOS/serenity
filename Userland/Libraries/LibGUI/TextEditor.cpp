@@ -83,7 +83,7 @@ void TextEditor::create_actions()
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
-    m_paste_action->set_enabled(is_editable() && Clipboard::the().mime_type().starts_with("text/"));
+    m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"));
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
@@ -1453,7 +1453,7 @@ void TextEditor::paste()
     if (!is_editable())
         return;
 
-    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
+    auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
     if (!mime_type.starts_with("text/"))
         return;
 

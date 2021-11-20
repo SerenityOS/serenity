@@ -752,7 +752,7 @@ void TerminalWidget::paste()
     if (m_ptm_fd == -1)
         return;
 
-    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
+    auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
     if (!mime_type.starts_with("text/"))
         return;
     if (data.is_empty())
@@ -1166,7 +1166,7 @@ void TerminalWidget::update_copy_action()
 
 void TerminalWidget::update_paste_action()
 {
-    auto [data, mime_type, _] = GUI::Clipboard::the().data_and_type();
+    auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
     m_paste_action->set_enabled(mime_type.starts_with("text/") && !data.is_empty());
 }
 

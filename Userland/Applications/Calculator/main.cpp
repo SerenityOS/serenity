@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         GUI::Clipboard::the().set_plain_text(widget.get_entry());
     }));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
-        auto clipboard = GUI::Clipboard::the().data_and_type();
+        auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
                 auto data = atof(StringView(clipboard.data).to_string().characters());
