@@ -17,7 +17,7 @@ public:
         , m_font(font)
     {
     }
-    RefPtr<UndoGlyph> save_state() const
+    NonnullRefPtr<UndoGlyph> save_state() const
     {
         auto state = adopt_ref(*new UndoGlyph(m_code_point, *m_font));
         auto glyph = font().glyph(m_code_point).glyph_bitmap();
@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    RefPtr<UndoGlyph> m_undo_state;
+    NonnullRefPtr<UndoGlyph> m_undo_state;
     RefPtr<UndoGlyph> m_redo_state;
     UndoGlyph& m_undo_glyph;
 };
