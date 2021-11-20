@@ -136,10 +136,10 @@ index 58ae08a38..8e9a3fee6 100644
                     options::OPT_foperator_names, false))
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..8f3e125dd
+index 000000000..512eafd72
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,275 @@
+@@ -0,0 +1,281 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -271,12 +271,18 @@ index 000000000..8f3e125dd
 +      CmdArgs.push_back("-lubsan");
 +  }
 +
-+  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
-+    if (D.CCCIsCXX()) {
-+      if (TC.ShouldLinkCXXStdlib(Args))
-+        TC.AddCXXStdlibLibArgs(Args, CmdArgs);
-+      CmdArgs.push_back("-lm");
-+    }
++  if (D.CCCIsCXX() && TC.ShouldLinkCXXStdlib(Args)) {
++    bool OnlyLibstdcxxStatic = Args.hasArg(options::OPT_static_libstdcxx) &&
++                               !Args.hasArg(options::OPT_static);
++    CmdArgs.push_back("--push-state");
++    CmdArgs.push_back("--as-needed");
++    if (OnlyLibstdcxxStatic)
++      CmdArgs.push_back("-Bstatic");
++    TC.AddCXXStdlibLibArgs(Args, CmdArgs);
++    if (OnlyLibstdcxxStatic)
++      CmdArgs.push_back("-Bdynamic");
++    CmdArgs.push_back("-lm");
++    CmdArgs.push_back("--pop-state");
 +  }
 +
 +  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
@@ -415,7 +421,6 @@ index 000000000..8f3e125dd
 +
 +  return ToolChain::UNW_None;
 +}
-\ No newline at end of file
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
 index 000000000..50b0dbe62
