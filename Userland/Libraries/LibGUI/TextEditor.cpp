@@ -83,7 +83,7 @@ void TextEditor::create_actions()
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
-    m_paste_action->set_enabled(is_editable() && Clipboard::the().mime_type().starts_with("text/") && !Clipboard::the().data().is_empty());
+    m_paste_action->set_enabled(is_editable() && Clipboard::the().mime_type().starts_with("text/"));
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
@@ -1882,7 +1882,7 @@ void TextEditor::cursor_did_change()
 
 void TextEditor::clipboard_content_did_change(String const& mime_type)
 {
-    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/") && !Clipboard::the().data().is_empty());
+    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/"));
 }
 
 void TextEditor::set_document(TextDocument& document)
