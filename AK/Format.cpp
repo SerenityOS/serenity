@@ -873,8 +873,11 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 
 #    ifdef __serenity__
     struct timespec ts = {};
+
+#        if !ARCH(AARCH64)
     if (TimeManagement::is_initialized())
         ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
+#        endif
 
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
