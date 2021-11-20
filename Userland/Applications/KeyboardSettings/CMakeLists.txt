@@ -8,6 +8,7 @@ compile_gml(Keyboard.gml KeyboardWidgetGML.h keyboard_widget_gml)
 
 set(SOURCES
     main.cpp
+    KeyboardSettingsWidget.cpp
     KeyboardWidgetGML.h
 )
 
