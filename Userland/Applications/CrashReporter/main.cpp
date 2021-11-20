@@ -156,6 +156,12 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     };
 }
 
+static void unlink_coredump(StringView const& coredump_path)
+{
+    if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed, false).is_error())
+        dbgln("Failed deleting coredump file");
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio recvfd sendfd cpath rpath unix", nullptr) < 0) {
@@ -166,12 +172,12 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
 
     const char* coredump_path = nullptr;
-    bool unlink_after_use = false;
+    bool unlink_on_exit = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
-    args_parser.add_option(unlink_after_use, "Delete the coredump after its parsed", "unlink", 0);
+    args_parser.add_option(unlink_on_exit, "Delete the coredump after its parsed", "unlink", 0);
     args_parser.parse(argc, argv);
 
     Vector<TitleAndText> thread_backtraces;
@@ -205,12 +211,7 @@ int main(int argc, char** argv)
         termination_signal = coredump->process_termination_signal();
     }
 
-    if (unlink_after_use) {
-        if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed, false).is_error())
-            dbgln("Failed deleting coredump file");
-    }
-
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -230,6 +231,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unlink_on_exit) {
+        if (unveil(coredump_path, "c") < 0) {
+            perror("unveil");
+            return 1;
+        }
+    }
+
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
@@ -242,6 +250,10 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(460, 340);
     window->center_on_screen();
+    window->on_close = [unlink_on_exit, &coredump_path]() {
+        if (unlink_on_exit)
+            unlink_coredump(coredump_path);
+    };
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(crash_reporter_window_gml);
@@ -327,6 +339,8 @@ int main(int argc, char** argv)
 
     auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
+        if (unlink_on_exit)
+            unlink_coredump(coredump_path);
         app->quit();
     };
 
