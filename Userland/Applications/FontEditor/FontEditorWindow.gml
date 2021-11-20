@@ -58,9 +58,37 @@
                         checkable: true
                     }
                 }
-            }
 
-            @GUI::Widget {
+                @GUI::Widget {
+                    shrink_to_fit: true
+
+                    layout: @GUI::HorizontalBoxLayout {
+                    }
+
+                    @GUI::Button {
+                        name: "flip_vertical"
+                        fixed_width: 22
+                        tooltip: "Flip vertically (top to bottom)"
+                        button_style: "Coolbar"
+                        focus_policy: "TabFocus"
+                    }
+
+                    @GUI::Button {
+                        name: "flip_horizontal"
+                        fixed_width: 22
+                        tooltip: "Flip horizontally (left to right)"
+                        button_style: "Coolbar"
+                        focus_policy: "TabFocus"
+                    }
+
+                    @GUI::Button {
+                        name: "rotate_90"
+                        fixed_width: 22
+                        tooltip: "Rotate 90° clockwise"
+                        button_style: "Coolbar"
+                        focus_policy: "TabFocus"
+                    }
+                }
             }
         }
 

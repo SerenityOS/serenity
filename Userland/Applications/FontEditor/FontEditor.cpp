@@ -113,6 +113,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
     auto& move_glyph_button = *find_descendant_of_type_named<GUI::Button>("move_glyph_button");
+    auto& rotate_90_button = *find_descendant_of_type_named<GUI::Button>("rotate_90");
+    auto& flip_vertical_button = *find_descendant_of_type_named<GUI::Button>("flip_vertical");
+    auto& flip_horizontal_button = *find_descendant_of_type_named<GUI::Button>("flip_horizontal");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
@@ -328,6 +331,21 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     };
     move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png").release_value_but_fixme_should_propagate_errors());
+
+    rotate_90_button.on_click = [&](auto) {
+        m_glyph_editor_widget->rotate_90();
+    };
+    rotate_90_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors());
+
+    flip_vertical_button.on_click = [&](auto) {
+        m_glyph_editor_widget->flip_vertically();
+    };
+    flip_vertical_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png").release_value_but_fixme_should_propagate_errors());
+
+    flip_horizontal_button.on_click = [&](auto) {
+        m_glyph_editor_widget->flip_horizontally();
+    };
+    flip_horizontal_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png").release_value_but_fixme_should_propagate_errors());
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
