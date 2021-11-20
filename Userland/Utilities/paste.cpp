@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
         clipboard.on_change = [&](const String&) {
             // Technically there's a race here...
-            auto data_and_type = clipboard.data_and_type();
+            auto data_and_type = clipboard.fetch_data_and_type();
             if (data_and_type.mime_type.is_null()) {
                 spawn_command(watch_command, {}, "clear");
             } else {
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         return app->exec();
     }
 
-    auto data_and_type = clipboard.data_and_type();
+    auto data_and_type = clipboard.fetch_data_and_type();
 
     if (data_and_type.mime_type.is_null()) {
         warnln("Nothing copied");

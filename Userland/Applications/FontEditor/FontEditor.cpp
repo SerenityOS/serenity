@@ -202,7 +202,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_glyph_editor_widget->paste_glyph();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
     });
-    m_paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "glyph/x-fonteditor");
+    m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
         if (m_glyph_editor_widget->is_glyph_empty() && m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()) == 0)
             return;

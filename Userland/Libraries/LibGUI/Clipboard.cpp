@@ -50,7 +50,7 @@ Clipboard& Clipboard::the()
     return *s_the;
 }
 
-Clipboard::DataAndType Clipboard::data_and_type() const
+Clipboard::DataAndType Clipboard::fetch_data_and_type() const
 {
     auto response = connection().get_clipboard_data();
     if (!response.data().is_valid())

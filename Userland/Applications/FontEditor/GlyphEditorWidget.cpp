@@ -84,7 +84,7 @@ void GlyphEditorWidget::copy_glyph()
 
 void GlyphEditorWidget::paste_glyph()
 {
-    auto [data, mime_type, metadata] = GUI::Clipboard::the().data_and_type();
+    auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
     if (!mime_type.starts_with("glyph/"))
         return;
 
