@@ -3,6 +3,7 @@ set(SOURCES
     Track.cpp
     Effects.cpp
     Synthesizers.cpp
+    FFT.cpp
 )
 
 serenity_lib(LibDSP dsp)

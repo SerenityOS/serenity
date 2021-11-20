@@ -9,4 +9,8 @@
 #include <AK/Complex.h>
 #include <AK/Vector.h>
 
-void fft(Vector<Complex<double>>& sample_data, bool invert);
+namespace LibDSP {
+
+void fft(Vector<Complex<double>>& sample_data, bool invert = false);
+
+}
