@@ -136,10 +136,10 @@ index 58ae08a38..8e9a3fee6 100644
                     options::OPT_foperator_names, false))
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..512eafd72
+index 000000000..b21be0f9d
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,281 @@
+@@ -0,0 +1,280 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -345,9 +345,8 @@ index 000000000..512eafd72
 +  if (DriverArgs.hasArg(options::OPT_nostdlibinc))
 +    return;
 +
-+  if (!D.SysRoot.empty()) {
-+    addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/local/include");
-+    addExternCSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/include");
++  addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/local/include");
++  addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/include");
 +  }
 +}
 +
