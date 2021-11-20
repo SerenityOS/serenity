@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AudioAlgorithms.h"
+#include "FFT.h"
 #include <AK/Complex.h>
 #include <AK/Math.h>
+
+namespace LibDSP {
 
 // This function uses the input vector as output too. therefore, if you wish to
 // leave it intact, pass a copy to this function
@@ -55,4 +57,6 @@ void fft(Vector<Complex<double>>& sample_data, bool invert)
         for (int i = 0; i < n; i++)
             data[i] /= n;
     }
+}
+
 }

@@ -5,8 +5,8 @@
  */
 
 #include "BarsVisualizationWidget.h"
-#include "AudioAlgorithms.h"
 #include <AK/Math.h>
+#include <LibDSP/FFT.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -25,7 +25,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     if (m_sample_buffer.is_empty())
         return;
 
-    fft(m_sample_buffer, false);
+    LibDSP::fft(m_sample_buffer, false);
     double max = AK::sqrt(m_sample_count * 2.);
 
     double freq_bin = m_samplerate / (double)m_sample_count;
