@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
+#include <AK/StringBuilder.h>
 #include <Kernel/KString.h>
 
 extern bool g_in_early_boot;
@@ -19,6 +21,13 @@ ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView string)
         __builtin_memcpy(characters, string.characters_without_null_termination(), length);
     characters[length] = '\0';
     return new_string;
+}
+
+ErrorOr<NonnullOwnPtr<KString>> KString::vformatted(StringView fmtstr, AK::TypeErasedFormatParams& params)
+{
+    StringBuilder builder;
+    TRY(AK::vformat(builder, fmtstr, params));
+    return try_create(builder.string_view());
 }
 
 NonnullOwnPtr<KString> KString::must_create(StringView string)
