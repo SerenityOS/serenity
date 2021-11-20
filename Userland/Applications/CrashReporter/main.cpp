@@ -10,6 +10,8 @@
 #include <AK/Types.h>
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
+#include <LibC/serenity.h>
+#include <LibC/spawn.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCoredump/Backtrace.h>
@@ -164,7 +166,7 @@ static void unlink_coredump(StringView const& coredump_path)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd cpath rpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd cpath rpath unix proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -211,7 +213,7 @@ int main(int argc, char** argv)
         termination_signal = coredump->process_termination_signal();
     }
 
-    if (pledge("stdio recvfd sendfd rpath unix cpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix cpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -236,6 +238,11 @@ int main(int argc, char** argv)
             perror("unveil");
             return 1;
         }
+    }
+
+    if (unveil("/bin/HackStudio", "rx") < 0) {
+        perror("unveil");
+        return 1;
     }
 
     if (unveil(nullptr, nullptr) < 0) {
@@ -342,6 +349,19 @@ int main(int argc, char** argv)
         if (unlink_on_exit)
             unlink_coredump(coredump_path);
         app->quit();
+    };
+
+    auto& inspect_button = *widget.find_descendant_of_type_named<GUI::Button>("inspect_button");
+    inspect_button.set_icon(MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
+    inspect_button.on_click = [&](int) {
+        pid_t child;
+        const char* argv[4] = { "HackStudio", "-c", coredump_path, nullptr };
+        if ((errno = posix_spawn(&child, "/bin/HackStudio", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child) < 0)
+                perror("disown");
+        }
     };
 
     window->show();
