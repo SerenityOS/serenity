@@ -195,6 +195,7 @@ set(SOURCES
     HTML/TagNames.cpp
     HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
+    ImageDecoding.cpp
     InProcessWebView.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
