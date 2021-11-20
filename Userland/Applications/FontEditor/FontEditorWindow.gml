@@ -47,6 +47,7 @@
                     @GUI::CheckBox {
                         name: "glyph_editor_present_checkbox"
                         text: "Present"
+                        focus_policy: "TabFocus"
                     }
 
                     @GUI::Button {
