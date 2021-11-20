@@ -1,13 +1,15 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MailSettingsWindow.h"
+#include "MailSettingsWidget.h"
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/SettingsWindow.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -38,11 +40,8 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-mail");
 
-    auto window = MailSettingsWindow::construct();
-    window->set_title("Mail Settings");
-    window->resize(400, 480);
-    window->set_resizable(false);
-    window->set_minimizable(false);
+    auto window = GUI::SettingsWindow::construct("Mail Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes);
+    window->add_tab<MailSettingsWidget>("Mail");
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();
