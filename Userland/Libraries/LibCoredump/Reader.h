@@ -26,6 +26,14 @@ public:
     template<typename Func>
     void for_each_memory_region_info(Func func) const;
 
+    struct LibraryInfo {
+        String name;
+        String path;
+        FlatPtr base_address { 0 };
+    };
+
+    void for_each_library(Function<void(LibraryInfo)> func) const;
+
     template<typename Func>
     void for_each_thread_info(Func func) const;
 
