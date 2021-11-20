@@ -107,8 +107,7 @@ void GlyphEditorWidget::paste_glyph()
     auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
     for (int x = 0; x < min(bitmap.width(), buffer_width.value()); x++) {
         for (int y = 0; y < min(bitmap.height(), buffer_height.value()); y++) {
-            if (bits[x][y])
-                bitmap.set_bit_at(x, y, bits[x][y]);
+            bitmap.set_bit_at(x, y, bits[x][y]);
         }
     }
 
