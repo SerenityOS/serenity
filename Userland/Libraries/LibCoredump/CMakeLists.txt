@@ -1,5 +1,6 @@
 set(SOURCES
     Backtrace.cpp
+    Inspector.cpp
     Reader.cpp
 )
 

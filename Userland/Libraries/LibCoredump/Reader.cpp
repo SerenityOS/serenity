@@ -15,7 +15,7 @@
 
 namespace Coredump {
 
-OwnPtr<Reader> Reader::create(const String& path)
+OwnPtr<Reader> Reader::create(StringView path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
