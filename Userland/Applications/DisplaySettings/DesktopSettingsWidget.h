@@ -7,17 +7,18 @@
 #pragma once
 
 #include <LibCore/Timer.h>
+#include <LibGUI/SettingsWindow.h>
 #include <LibGUI/SpinBox.h>
 
 namespace DisplaySettings {
 
-class DesktopSettingsWidget : public GUI::Widget {
+class DesktopSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT(DesktopSettingsWidget);
 
 public:
     virtual ~DesktopSettingsWidget() override;
 
-    void apply_settings();
+    virtual void apply_settings() override;
 
 private:
     DesktopSettingsWidget();

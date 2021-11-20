@@ -11,11 +11,12 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
+#include <LibGUI/SettingsWindow.h>
 #include <WindowServer/ScreenLayout.h>
 
 namespace DisplaySettings {
 
-class MonitorSettingsWidget : public GUI::Widget {
+class MonitorSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(MonitorSettingsWidget);
 
 public:
@@ -25,7 +26,7 @@ public:
             show_screen_numbers(false);
     }
 
-    void apply_settings();
+    virtual void apply_settings() override;
     void show_screen_numbers(bool);
 
 protected:
