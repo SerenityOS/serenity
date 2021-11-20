@@ -10,7 +10,6 @@ compile_gml(Theme.gml ThemeWidgetGML.h theme_widget_gml)
 set(SOURCES
     main.cpp
     DoubleClickArrowWidget.cpp
-    MouseSettingsWindow.cpp
     MouseWidget.cpp
     MouseWidget.h
     MouseWidgetGML.h

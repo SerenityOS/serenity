@@ -6,13 +6,10 @@
 
 #pragma once
 
-#include <LibGUI/Model.h>
-#include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/CursorParams.h>
-
 #include "DoubleClickArrowWidget.h"
-#include "LibGUI/FilePicker.h"
+#include <LibGUI/Model.h>
+#include <LibGUI/SettingsWindow.h>
+#include <LibGfx/CursorParams.h>
 
 class MouseCursorModel final : public GUI::Model {
 public:
@@ -65,13 +62,13 @@ private:
     Vector<String> m_themes;
 };
 
-class ThemeWidget final : public GUI::Widget {
+class ThemeWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(ThemeWidget)
 public:
     virtual ~ThemeWidget() override;
 
-    void update_window_server();
-    void reset_default_values();
+    virtual void apply_settings() override;
+    virtual void reset_default_values() override;
 
 private:
     ThemeWidget();
