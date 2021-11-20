@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
@@ -26,6 +27,7 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Storage/ATA/ATADevice.h>
+#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/WaitQueue.h>
 
@@ -33,7 +35,8 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class IDEController;
+class PCIIDEController;
+class ISAIDEController;
 class IDEChannel : public RefCounted<IDEChannel>
     , public IRQHandler {
     friend class IDEController;
@@ -51,6 +54,13 @@ public:
 
     struct IOAddressGroup {
         IOAddressGroup(IOAddress io_base, IOAddress control_base, IOAddress bus_master_base)
+            : m_io_base(io_base)
+            , m_control_base(control_base)
+            , m_bus_master_base(bus_master_base)
+        {
+        }
+
+        IOAddressGroup(IOAddress io_base, IOAddress control_base, Optional<IOAddress> bus_master_base)
             : m_io_base(io_base)
             , m_control_base(control_base)
             , m_bus_master_base(bus_master_base)
@@ -93,6 +103,9 @@ public:
 public:
     static NonnullRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
     static NonnullRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
+
+    void initialize_with_pci_controller(Badge<PCIIDEController>, bool force_pio);
+    void initialize_with_isa_controller(Badge<ISAIDEController>, bool force_pio);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -100,14 +113,15 @@ public:
 
     virtual StringView purpose() const override { return "PATA Channel"sv; }
 
-    virtual bool is_dma_enabled() const { return false; }
-
 private:
-    void complete_current_request(AsyncDeviceRequest::RequestResult);
-    void initialize();
     static constexpr size_t m_logical_sector_size = 512;
+    void initialize(bool force_pio);
+    struct [[gnu::packed]] PhysicalRegionDescriptor {
+        u32 offset;
+        u16 size { 0 };
+        u16 end_of_table { 0 };
+    };
 
-protected:
     enum class LBAMode : u8 {
         None, // CHS
         TwentyEightBit,
@@ -123,11 +137,18 @@ protected:
     IDEChannel(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
     //^ IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
+    bool handle_irq_for_dma_transaction();
+    void complete_dma_transaction(AsyncDeviceRequest::RequestResult);
+    bool handle_irq_for_pio_transaction();
+    void complete_pio_transaction(AsyncDeviceRequest::RequestResult);
 
-    virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;
+    void send_ata_pio_command(LBAMode lba_mode, Direction direction) const;
+    void ata_read_sectors_with_pio(bool, u16);
+    void ata_write_sectors_with_pio(bool, u16);
 
-    virtual void ata_read_sectors(bool, u16);
-    virtual void ata_write_sectors(bool, u16);
+    void send_ata_dma_command(LBAMode lba_mode, Direction direction) const;
+    void ata_read_sectors_with_dma(bool, u16);
+    void ata_write_sectors_with_dma(bool, u16);
 
     void detect_disks();
     StringView channel_type_string() const;
@@ -142,8 +163,10 @@ protected:
 
     void ata_access(Direction, bool, u64, u8, u16);
 
-    bool ata_do_read_sector();
-    void ata_do_write_sector();
+    bool ata_do_pio_read_sector();
+    void ata_do_pio_write_sector();
+
+    PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_region->vaddr().as_ptr()); }
 
     // Data members
     ChannelType m_channel_type { ChannelType::Primary };
@@ -160,7 +183,13 @@ protected:
     Spinlock m_request_lock;
     Mutex m_lock { "IDEChannel"sv };
 
+    bool m_dma_enabled { false };
+
     IOAddressGroup m_io_group;
+    OwnPtr<Memory::Region> m_prdt_region;
+    OwnPtr<Memory::Region> m_dma_buffer_region;
+    RefPtr<Memory::PhysicalPage> m_prdt_page;
+    RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
     NonnullRefPtr<IDEController> m_parent_controller;
 };
 }

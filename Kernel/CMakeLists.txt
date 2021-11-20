@@ -95,7 +95,6 @@ set(KERNEL_SOURCES
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
     Storage/ATA/AHCI/InterruptHandler.cpp
-    Storage/ATA/GenericIDE/BusMasterChannel.cpp
     Storage/ATA/GenericIDE/Controller.cpp
     Storage/ATA/GenericIDE/Channel.cpp
     Storage/ATA/GenericIDE/ISAController.cpp

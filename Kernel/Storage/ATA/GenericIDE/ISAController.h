@@ -9,7 +9,6 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/StorageDevice.h>
 

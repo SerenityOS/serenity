@@ -11,7 +11,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Storage/ATA/GenericIDE/BusMasterChannel.h>
+#include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
 
 namespace Kernel {
@@ -34,9 +34,11 @@ UNMAP_AFTER_INIT void ISAIDEController::initialize_channels()
     auto secondary_control_io = IOAddress(0x376);
 
     m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+    m_channels[0].initialize_with_isa_controller({}, true);
     m_channels[0].enable_irq();
 
     m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+    m_channels[1].initialize_with_isa_controller({}, true);
     m_channels[1].enable_irq();
     dbgln("ISA IDE controller detected and initialized");
 }

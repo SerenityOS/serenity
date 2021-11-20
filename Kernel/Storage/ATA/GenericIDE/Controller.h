@@ -10,13 +10,12 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Storage/ATA/ATAController.h>
-#include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
 class AsyncBlockDeviceRequest;
-
+class IDEChannel;
 class IDEController : public ATAController {
 public:
     static NonnullRefPtr<IDEController> initialize();
