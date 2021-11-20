@@ -136,10 +136,10 @@ index 58ae08a38..8e9a3fee6 100644
                     options::OPT_foperator_names, false))
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..b21be0f9d
+index 000000000..461f55ad3
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,281 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -150,6 +150,7 @@ index 000000000..b21be0f9d
 +
 +#include "Serenity.h"
 +#include "CommonArgs.h"
++#include "clang/Config/config.h"
 +#include "clang/Driver/Compilation.h"
 +#include "clang/Driver/Driver.h"
 +#include "clang/Driver/DriverDiagnostic.h"
@@ -396,7 +397,7 @@ index 000000000..b21be0f9d
 +Serenity::GetUnwindLibType(const llvm::opt::ArgList &Args) const {
 +
 +  const Arg *A = Args.getLastArg(options::OPT_unwindlib_EQ);
-+  StringRef LibName = A ? A->getValue() : "";
++  StringRef LibName = A ? A->getValue() : CLANG_DEFAULT_UNWINDLIB;
 +
 +  if (LibName == "none") {
 +    return ToolChain::UNW_None;
