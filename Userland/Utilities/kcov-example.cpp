@@ -18,7 +18,7 @@ int main(void)
 {
     constexpr size_t num_entries = 1024 * 100;
 
-    int fd = open("/dev/kcov", O_RDWR);
+    int fd = open("/dev/kcov0", O_RDWR);
     if (fd == -1) {
         perror("open");
         return 1;

@@ -150,6 +150,10 @@ static void populate_devfs_block_devices()
             create_devfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
             break;
         }
+        case 30: {
+            create_devfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+            break;
+        }
         case 3: {
             create_devfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
             break;
