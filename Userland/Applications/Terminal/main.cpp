@@ -6,8 +6,8 @@
 
 #include <AK/QuickSort.h>
 #include <AK/URL.h>
-#include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>
@@ -21,17 +21,14 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/FontPicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/OpacitySlider.h>
-#include <LibGUI/RadioButton.h>
-#include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibVT/TerminalWidget.h>
@@ -46,6 +43,54 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+class TerminalChangeListener : public Config::Listener {
+public:
+    TerminalChangeListener(VT::TerminalWidget& parent_terminal)
+        : m_parent_terminal(parent_terminal)
+    {
+    }
+
+    virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+    {
+        VERIFY(domain == "Terminal");
+
+        if (group == "Window") {
+            if (key == "Bell") {
+                auto bell_mode = VT::TerminalWidget::BellMode::Visible;
+                if (value == "AudibleBeep")
+                    bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
+                if (value == "Visible")
+                    bell_mode = VT::TerminalWidget::BellMode::Visible;
+                if (value == "Disabled")
+                    bell_mode = VT::TerminalWidget::BellMode::Disabled;
+                m_parent_terminal.set_bell_mode(bell_mode);
+            } else if (key == "ColorScheme") {
+                m_parent_terminal.set_color_scheme(value);
+            }
+        } else if (group == "Text" && key == "Font") {
+            auto font = Gfx::FontDatabase::the().get_by_name(value);
+            if (font.is_null())
+                font = Gfx::FontDatabase::default_fixed_width_font();
+            m_parent_terminal.set_font_and_resize_to_fit(*font);
+            m_parent_terminal.window()->resize(m_parent_terminal.size());
+        }
+    }
+
+    virtual void config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
+    {
+        VERIFY(domain == "Terminal");
+
+        if (group == "Terminal" && key == "MaxHistorySize") {
+            m_parent_terminal.set_max_history_size(value);
+        } else if (group == "Window" && key == "Opacity") {
+            m_parent_terminal.set_opacity(value);
+        }
+    }
+
+private:
+    VT::TerminalWidget& m_parent_terminal;
+};
 
 static void utmp_update(String const& tty, pid_t pid, bool create)
 {
@@ -102,78 +147,6 @@ static void run_command(String command, bool keep_open)
         exit(1);
     }
     VERIFY_NOT_REACHED();
-}
-
-static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
-{
-    auto window = GUI::Window::construct();
-    window->set_window_type(GUI::WindowType::ToolWindow);
-    window->set_title("Terminal settings");
-    window->set_resizable(false);
-    window->resize(200, 240);
-    window->center_within(*terminal.window());
-
-    auto& settings = window->set_main_widget<GUI::Widget>();
-    settings.load_from_gml(terminal_settings_window_gml);
-
-    auto& beep_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
-    auto& visual_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
-    auto& no_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
-
-    switch (terminal.bell_mode()) {
-    case VT::TerminalWidget::BellMode::Visible:
-        visual_bell_radio.set_checked(true);
-        break;
-    case VT::TerminalWidget::BellMode::AudibleBeep:
-        beep_bell_radio.set_checked(true);
-        break;
-    case VT::TerminalWidget::BellMode::Disabled:
-        no_bell_radio.set_checked(true);
-        break;
-    }
-
-    beep_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
-    };
-    visual_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Visible);
-    };
-    no_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Disabled);
-    };
-
-    auto& slider = *settings.find_descendant_of_type_named<GUI::OpacitySlider>("background_opacity_slider");
-    slider.on_change = [&terminal](int value) {
-        terminal.set_opacity(value);
-    };
-    slider.set_value(terminal.opacity());
-
-    auto& history_size_spinbox = *settings.find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
-    history_size_spinbox.set_value(terminal.max_history_size());
-    history_size_spinbox.on_change = [&terminal](int value) {
-        terminal.set_max_history_size(value);
-    };
-
-    // The settings window takes a reference to this vector, so it needs to outlive this scope.
-    // As long as we ensure that only one settings window may be open at a time (which we do),
-    // this should cause no problems.
-    static Vector<String> color_scheme_names;
-    color_scheme_names.clear();
-    Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
-    while (iterator.has_next()) {
-        auto path = iterator.next_path();
-        color_scheme_names.append(path.replace(".ini", ""));
-    }
-    quick_sort(color_scheme_names);
-    auto& color_scheme_combo = *settings.find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
-    color_scheme_combo.set_only_allow_values_from_model(true);
-    color_scheme_combo.set_model(*GUI::ItemListModel<String>::create(color_scheme_names));
-    color_scheme_combo.set_selected_index(color_scheme_names.find_first_index(terminal.color_scheme_name()).value());
-    color_scheme_combo.set_enabled(color_scheme_names.size() > 1);
-    color_scheme_combo.on_change = [&](auto&, const GUI::ModelIndex& index) {
-        terminal.set_color_scheme(index.data().as_string());
-    };
-    return window;
 }
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget& terminal)
@@ -317,6 +290,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     terminal->apply_size_increments_to_window(*window);
     window->set_icon(app_icon.bitmap_for_size(16));
 
+    Config::monitor_domain("Terminal");
+    TerminalChangeListener listener { terminal };
+
     auto bell = Config::read_string("Terminal", "Window", "Bell", "Visible");
     if (bell == "AudibleBeep") {
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
@@ -325,8 +301,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         terminal->set_bell_mode(VT::TerminalWidget::BellMode::Visible);
     }
-
-    RefPtr<GUI::Window> settings_window;
 
     auto find_window = TRY(create_find_window(terminal));
 
@@ -338,40 +312,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     terminal->set_max_history_size(new_scrollback_size);
 
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value_but_fixme_should_propagate_errors(),
-        [&](const GUI::Action&) {
-            if (!settings_window)
-                settings_window = create_settings_window(terminal);
-            settings_window->show();
-            settings_window->move_to_front();
-            settings_window->on_close = [&]() {
-                Config::write_i32("Terminal", "Window", "Opacity", terminal->opacity());
-                Config::write_i32("Terminal", "Terminal", "MaxHistorySize", terminal->max_history_size());
-
-                auto bell = terminal->bell_mode();
-                auto bell_setting = String::empty();
-                if (bell == VT::TerminalWidget::BellMode::AudibleBeep) {
-                    bell_setting = "AudibleBeep";
-                } else if (bell == VT::TerminalWidget::BellMode::Disabled) {
-                    bell_setting = "Disabled";
-                } else {
-                    bell_setting = "Visible";
-                }
-                Config::write_string("Terminal", "Window", "Bell", bell_setting);
-            };
-        });
-
-    TRY(terminal->context_menu().try_add_separator());
-    auto pick_font_action = GUI::Action::create("&Terminal Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            auto picker = GUI::FontPicker::construct(window, &terminal->font(), true);
-            if (picker->exec() == GUI::Dialog::ExecOK) {
-                terminal->set_font_and_resize_to_fit(*picker->font());
-                window->resize(terminal->size());
-                Config::write_string("Terminal", "Text", "Font", picker->font()->qualified_name());
-            }
+            Core::Process::spawn("/bin/TerminalSettings");
         });
 
-    TRY(terminal->context_menu().try_add_action(pick_font_action));
     TRY(terminal->context_menu().try_add_separator());
     TRY(terminal->context_menu().try_add_action(open_settings_action));
 
@@ -402,8 +346,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_fullscreen(!window->is_fullscreen());
     })));
     TRY(view_menu->try_add_action(terminal->clear_including_history_action()));
-    TRY(view_menu->try_add_separator());
-    TRY(view_menu->try_add_action(pick_font_action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
@@ -413,13 +355,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->on_close = [&]() {
         find_window->close();
-        if (settings_window)
-            settings_window->close();
     };
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/bin/Terminal", "x"));
+    TRY(Core::System::unveil("/bin/TerminalSettings", "x"));
     TRY(Core::System::unveil("/bin/utmpupdate", "x"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
