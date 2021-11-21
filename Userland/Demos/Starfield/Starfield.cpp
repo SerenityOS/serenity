@@ -47,6 +47,7 @@ private:
 
     Vector<Coordinate> m_stars;
     int m_sweep_plane = 2000;
+    unsigned m_speed = 1;
 };
 
 Starfield::Starfield(int interval)
@@ -102,18 +103,26 @@ void Starfield::timer_event(Core::TimerEvent&)
     auto half_x = width() / 2;
     auto half_y = height() / 2;
 
+    GUI::Painter painter(*m_bitmap);
+
     for (auto star : m_stars) {
         auto z = ((star.z + m_sweep_plane) % 2000) * 0.0005;
         computed_point.set_x(half_x + star.x / z);
         computed_point.set_y(half_y + star.y / z);
 
+        auto computed_end_point = Gfx::IntPoint();
+
+        auto z_end = ((star.z + m_sweep_plane - m_speed) % 2000) * 0.0005;
+        computed_end_point.set_x(half_x + star.x / z_end);
+        computed_end_point.set_y(half_y + star.y / z_end);
+
         if (computed_point.x() < 0 || computed_point.x() >= width() || computed_point.y() < 0 || computed_point.y() >= height())
             continue;
 
         u8 falloff = (1 - z * z) * 255;
-        m_bitmap->set_pixel(computed_point, Color(falloff, falloff, falloff));
+        painter.draw_line(computed_point, computed_end_point, Color(falloff, falloff, falloff));
     }
-    m_sweep_plane -= 1;
+    m_sweep_plane -= m_speed;
     if (m_sweep_plane < 0)
         m_sweep_plane = 2000;
     update();
