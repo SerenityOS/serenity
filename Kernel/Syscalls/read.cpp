@@ -12,7 +12,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-static ErrorOr<OpenFileDescription*> open_readable_file_description(Process::OpenFileDescriptions const& fds, int fd)
+static ErrorOr<NonnullRefPtr<OpenFileDescription>> open_readable_file_description(Process::OpenFileDescriptions const& fds, int fd)
 {
     auto description = TRY(fds.open_file_description(fd));
     if (!description->is_readable())
