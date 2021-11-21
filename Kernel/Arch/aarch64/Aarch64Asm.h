@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Arch/aarch64/Aarch64Registers.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 
 namespace Kernel {
 
