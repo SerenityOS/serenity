@@ -186,8 +186,6 @@ ErrorOr<void> Coredump::write_regions()
                 if (page)
                     return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
                 // If the current page is not backed by a physical page, we zero it in the coredump file.
-                // TODO: Do we want to include the contents of pages that have not been faulted-in in the coredump?
-                //       (A page may not be backed by a physical page because it has never been faulted in when the process ran).
                 return UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }();
             TRY(m_description->write(src_buffer.value(), PAGE_SIZE));
