@@ -43,6 +43,7 @@ set(KERNEL_SOURCES
     CommandLine.cpp
     Coredump.cpp
     Devices/AsyncDeviceRequest.cpp
+    Devices/Audio/SB16.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/ConsoleDevice.cpp
@@ -56,7 +57,6 @@ set(KERNEL_SOURCES
     Devices/PCISerialDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/RandomDevice.cpp
-    Devices/SB16.cpp
     Devices/SerialDevice.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp

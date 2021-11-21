@@ -15,10 +15,10 @@
 #include <AK/Types.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Devices/Audio/SB16.h>
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/NullDevice.h>
-#include <Kernel/Devices/SB16.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

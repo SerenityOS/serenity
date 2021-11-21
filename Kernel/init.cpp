@@ -13,6 +13,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Devices/Audio/SB16.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -21,7 +22,6 @@
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
