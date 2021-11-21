@@ -167,6 +167,8 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 
 ErrorOr<void> Coredump::write_regions()
 {
+    u8 zero_buffer[PAGE_SIZE] = {};
+
     for (auto& region : m_process->address_space().regions()) {
         VERIFY(!region->is_kernel());
 
@@ -180,8 +182,6 @@ ErrorOr<void> Coredump::write_regions()
 
         for (size_t i = 0; i < region->page_count(); i++) {
             auto* page = region->physical_page(i);
-
-            uint8_t zero_buffer[PAGE_SIZE] = {};
             auto src_buffer = [&]() -> ErrorOr<UserOrKernelBuffer> {
                 if (page)
                     return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
