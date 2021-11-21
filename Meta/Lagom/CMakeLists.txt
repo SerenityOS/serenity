@@ -548,6 +548,12 @@ if (BUILD_LAGOM)
             lagom_test(${source} LIBS LagomGL)
         endforeach()
 
+        # PDF
+        file(GLOB LIBPDF_TESTS CONFIGURE_DEPENDS "../../Tests/LibPDF/*.cpp")
+        foreach(source ${LIBPDF_TESTS})
+            lagom_test(${source} LIBS LagomPDF WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Base/home/anon/Documents/pdf/)
+        endforeach()
+
         # Regex
         file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
         # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
