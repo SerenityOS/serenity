@@ -20,11 +20,9 @@ ErrorOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_s
     if (buffer_size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
-    if (!data_buffer.has_value())
-        return EFAULT;
+    auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer(buffer, buffer_size));
 
-    return TRY(data_buffer.value().write_buffered<1024>(buffer_size, [&](Bytes bytes) {
+    return TRY(data_buffer.write_buffered<1024>(buffer_size, [&](Bytes bytes) {
         get_good_random_bytes(bytes);
         return bytes.size();
     }));

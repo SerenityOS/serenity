@@ -38,10 +38,8 @@ ErrorOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov,
 
     int nwritten = 0;
     for (auto& vec : vecs) {
-        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
-        if (!buffer.has_value())
-            return EFAULT;
-        auto result = do_write(*description, buffer.value(), vec.iov_len);
+        auto buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len));
+        auto result = do_write(*description, buffer, vec.iov_len);
         if (result.is_error()) {
             if (nwritten == 0)
                 return result.release_error();
@@ -104,10 +102,8 @@ ErrorOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t si
     if (!description->is_writable())
         return EBADF;
 
-    auto buffer = UserOrKernelBuffer::for_user_buffer(data, static_cast<size_t>(size));
-    if (!buffer.has_value())
-        return EFAULT;
-    return do_write(*description, buffer.value(), size);
+    auto buffer = TRY(UserOrKernelBuffer::for_user_buffer(data, static_cast<size_t>(size)));
+    return do_write(*description, buffer, size);
 }
 
 }
