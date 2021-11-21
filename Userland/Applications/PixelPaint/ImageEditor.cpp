@@ -548,13 +548,24 @@ Layer* ImageEditor::layer_at_editor_position(Gfx::IntPoint const& editor_positio
     return nullptr;
 }
 
-void ImageEditor::clamped_scale(float scale_delta)
+void ImageEditor::set_absolute_scale(float scale, bool do_relayout)
 {
-    m_scale *= AK::exp2(scale_delta);
-    if (m_scale < 0.1f)
-        m_scale = 0.1f;
-    if (m_scale > 100.0f)
-        m_scale = 100.0f;
+    if (scale < 0.1f)
+        scale = 0.1f;
+    if (scale > 100.0f)
+        scale = 100.0f;
+    if (scale == m_scale)
+        return;
+    m_scale = scale;
+    if (on_scale_changed)
+        on_scale_changed(m_scale);
+    if (do_relayout)
+        relayout();
+}
+
+void ImageEditor::clamped_scale_by(float scale_delta, bool do_relayout)
+{
+    set_absolute_scale(m_scale * AK::exp2(scale_delta), do_relayout);
 }
 
 void ImageEditor::scale_centered_on_position(Gfx::IntPoint const& position, float scale_delta)
@@ -572,7 +583,7 @@ void ImageEditor::scale_centered_on_position(Gfx::IntPoint const& position, floa
         position.y() - height() / 2.0f
     };
 
-    clamped_scale(scale_delta);
+    clamped_scale_by(scale_delta, false);
 
     m_pan_origin = {
         offset_from_center_in_image_coords.x() * m_scale - offset_from_center_in_editor_coords.x(),
@@ -585,10 +596,9 @@ void ImageEditor::scale_centered_on_position(Gfx::IntPoint const& position, floa
 
 void ImageEditor::scale_by(float scale_delta)
 {
-    if (scale_delta != 0) {
-        clamped_scale(scale_delta);
-        relayout();
-    }
+    if (scale_delta == 0)
+        return;
+    clamped_scale_by(scale_delta, true);
 }
 
 void ImageEditor::set_pan_origin(Gfx::FloatPoint const& pan_origin)
@@ -618,7 +628,7 @@ void ImageEditor::fit_image_to_view()
     auto image_size = image().size();
     auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
     auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
-    m_scale = min(height_ratio, width_ratio);
+    set_absolute_scale(min(height_ratio, width_ratio), false);
 
     float offset = m_show_rulers ? -m_ruler_thickness / (m_scale * 2.0f) : 0.0f;
     m_pan_origin = Gfx::FloatPoint(offset, offset);
@@ -628,8 +638,7 @@ void ImageEditor::fit_image_to_view()
 
 void ImageEditor::reset_scale_and_position()
 {
-    if (m_scale != 1.0f)
-        m_scale = 1.0f;
+    set_absolute_scale(1.0f, false);
 
     m_pan_origin = Gfx::FloatPoint(0, 0);
     relayout();
