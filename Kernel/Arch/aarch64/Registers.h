@@ -9,11 +9,11 @@
 
 #include <AK/Types.h>
 
-namespace Kernel {
+namespace Kernel::Aarch64 {
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // Memory Model Feature Register 0
-struct Aarch64_ID_AA64MMFR0_EL1 {
+struct ID_AA64MMFR0_EL1 {
     int PARange : 4;
     int ASIDBits : 4;
     int BigEnd : 4;
@@ -30,9 +30,9 @@ struct Aarch64_ID_AA64MMFR0_EL1 {
     int FGT : 4;
     int ECV : 4;
 
-    static inline Aarch64_ID_AA64MMFR0_EL1 read()
+    static inline ID_AA64MMFR0_EL1 read()
     {
-        Aarch64_ID_AA64MMFR0_EL1 feature_register;
+        ID_AA64MMFR0_EL1 feature_register;
 
         asm("mrs %[value], ID_AA64MMFR0_EL1"
             : [value] "=r"(feature_register));
@@ -43,7 +43,7 @@ struct Aarch64_ID_AA64MMFR0_EL1 {
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
 // Translation Control Register
-struct Aarch64_TCR_EL1 {
+struct TCR_EL1 {
 
     enum Shareability {
         NonSharable = 0b00,
@@ -130,14 +130,14 @@ struct Aarch64_TCR_EL1 {
     int DS : 1;
     int RES0_2 : 4;
 
-    static inline void write(Aarch64_TCR_EL1 tcr_el1)
+    static inline void write(TCR_EL1 tcr_el1)
     {
         asm("msr tcr_el1, %[value]" ::[value] "r"(tcr_el1));
     }
 
-    static inline Aarch64_TCR_EL1 read()
+    static inline TCR_EL1 read()
     {
-        Aarch64_TCR_EL1 tcr_el1;
+        TCR_EL1 tcr_el1;
 
         asm("mrs %[value], tcr_el1_el1"
             : [value] "=r"(tcr_el1));
@@ -145,16 +145,16 @@ struct Aarch64_TCR_EL1 {
         return tcr_el1;
     }
 
-    static inline constexpr Aarch64_TCR_EL1 reset_value()
+    static inline constexpr TCR_EL1 reset_value()
     {
         return {};
     }
 };
-static_assert(sizeof(Aarch64_TCR_EL1) == 8);
+static_assert(sizeof(TCR_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
 // System Control Register
-struct Aarch64_SCTLR_EL1 {
+struct SCTLR_EL1 {
     int M : 1;
     int A : 1;
     int C : 1;
@@ -205,14 +205,14 @@ struct Aarch64_SCTLR_EL1 {
     int EPAN : 1;
     int _reserved58 : 6 = 0;
 
-    static inline void write(Aarch64_SCTLR_EL1 sctlr_el1)
+    static inline void write(SCTLR_EL1 sctlr_el1)
     {
         asm("msr sctlr_el1, %[value]" ::[value] "r"(sctlr_el1));
     }
 
-    static inline Aarch64_SCTLR_EL1 read()
+    static inline SCTLR_EL1 read()
     {
-        Aarch64_SCTLR_EL1 sctlr;
+        SCTLR_EL1 sctlr;
 
         asm("mrs %[value], sctlr_el1"
             : [value] "=r"(sctlr));
@@ -220,9 +220,9 @@ struct Aarch64_SCTLR_EL1 {
         return sctlr;
     }
 
-    static inline constexpr Aarch64_SCTLR_EL1 reset_value()
+    static inline constexpr SCTLR_EL1 reset_value()
     {
-        Aarch64_SCTLR_EL1 system_control_register_el1 = {};
+        SCTLR_EL1 system_control_register_el1 = {};
         system_control_register_el1.LSMAOE = 1;
         system_control_register_el1.nTLSMD = 1;
         system_control_register_el1.SPAN = 1;
@@ -230,11 +230,11 @@ struct Aarch64_SCTLR_EL1 {
         return system_control_register_el1;
     }
 };
-static_assert(sizeof(Aarch64_SCTLR_EL1) == 8);
+static_assert(sizeof(SCTLR_EL1) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register
-struct Aarch64_HCR_EL2 {
+struct HCR_EL2 {
     int VM : 1;
     int SWIO : 1;
     int PTW : 1;
@@ -280,14 +280,14 @@ struct Aarch64_HCR_EL2 {
     int AT : 1 = 0;
     int _reserved45 : 18 = 0;
 
-    static inline void write(Aarch64_HCR_EL2 hcr_el2)
+    static inline void write(HCR_EL2 hcr_el2)
     {
         asm("msr hcr_el2, %[value]" ::[value] "r"(hcr_el2));
     }
 
-    static inline Aarch64_HCR_EL2 read()
+    static inline HCR_EL2 read()
     {
-        Aarch64_HCR_EL2 spsr;
+        HCR_EL2 spsr;
 
         asm("mrs %[value], hcr_el2"
             : [value] "=r"(spsr));
@@ -295,11 +295,11 @@ struct Aarch64_HCR_EL2 {
         return spsr;
     }
 };
-static_assert(sizeof(Aarch64_HCR_EL2) == 8);
+static_assert(sizeof(HCR_EL2) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
 // Secure Configuration Register
-struct Aarch64_SCR_EL3 {
+struct SCR_EL3 {
     int NS : 1;
     int IRQ : 1;
     int FIQ : 1;
@@ -336,14 +336,14 @@ struct Aarch64_SCR_EL3 {
     int HXEn : 1;
     int _reserved39 : 14 = 0;
 
-    static inline void write(Aarch64_SCR_EL3 scr_el3)
+    static inline void write(SCR_EL3 scr_el3)
     {
         asm("msr scr_el3, %[value]" ::[value] "r"(scr_el3));
     }
 
-    static inline Aarch64_SCR_EL3 read()
+    static inline SCR_EL3 read()
     {
-        Aarch64_SCR_EL3 scr;
+        SCR_EL3 scr;
 
         asm("mrs %[value], scr_el3"
             : [value] "=r"(scr));
@@ -351,9 +351,9 @@ struct Aarch64_SCR_EL3 {
         return scr;
     }
 };
-static_assert(sizeof(Aarch64_SCR_EL3) == 8);
+static_assert(sizeof(SCR_EL3) == 8);
 
-struct Aarch64_SPSR_EL2 {
+struct SPSR_EL2 {
     enum Mode : u16 {
         EL0t = 0b0000,
         EL1t = 0b0100,
@@ -385,14 +385,14 @@ struct Aarch64_SPSR_EL2 {
     int N : 1;
     int _reserved32 : 32 = 0;
 
-    static inline void write(Aarch64_SPSR_EL2 spsr_el2)
+    static inline void write(SPSR_EL2 spsr_el2)
     {
         asm("msr spsr_el2, %[value]" ::[value] "r"(spsr_el2));
     }
 
-    static inline Aarch64_SPSR_EL2 read()
+    static inline SPSR_EL2 read()
     {
-        Aarch64_SPSR_EL2 spsr;
+        SPSR_EL2 spsr;
 
         asm("mrs %[value], spsr_el2"
             : [value] "=r"(spsr));
@@ -400,11 +400,11 @@ struct Aarch64_SPSR_EL2 {
         return spsr;
     }
 };
-static_assert(sizeof(Aarch64_SPSR_EL2) == 8);
+static_assert(sizeof(SPSR_EL2) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-
 // Saved Program Status Register
-struct Aarch64_SPSR_EL3 {
+struct SPSR_EL3 {
     enum Mode : uint16_t {
         EL0t = 0b0000,
         EL1t = 0b0100,
@@ -434,14 +434,14 @@ struct Aarch64_SPSR_EL3 {
     int N : 1;
     int _reserved32 : 32 = 0;
 
-    static inline void write(Aarch64_SPSR_EL3 spsr_el3)
+    static inline void write(SPSR_EL3 spsr_el3)
     {
         asm("msr spsr_el3, %[value]" ::[value] "r"(spsr_el3));
     }
 
-    static inline Aarch64_SPSR_EL3 read()
+    static inline SPSR_EL3 read()
     {
-        Aarch64_SPSR_EL3 spsr;
+        SPSR_EL3 spsr;
 
         asm("mrs %[value], spsr_el3"
             : [value] "=r"(spsr));
@@ -449,18 +449,19 @@ struct Aarch64_SPSR_EL3 {
         return spsr;
     }
 };
-static_assert(sizeof(Aarch64_SPSR_EL3) == 8);
+static_assert(sizeof(SPSR_EL3) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/MAIR-EL1--Memory-Attribute-Indirection-Register--EL1-?lang=en#fieldset_0-63_0
 // Memory Attribute Indirection Register
-struct Aarch64_MAIR_EL1 {
+struct MAIR_EL1 {
     using AttributeEncoding = uint8_t;
     AttributeEncoding Attr[8];
 
-    static inline void write(Aarch64_MAIR_EL1 mair_el1)
+    static inline void write(MAIR_EL1 mair_el1)
     {
         asm("msr mair_el1, %[value]" ::[value] "r"(mair_el1));
     }
 };
-static_assert(sizeof(Aarch64_MAIR_EL1) == 8);
+static_assert(sizeof(MAIR_EL1) == 8);
+
 }
