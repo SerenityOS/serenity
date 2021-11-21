@@ -85,9 +85,19 @@ void Starfield::mousedown_event(GUI::MouseEvent&)
     GUI::Application::the()->quit();
 }
 
-void Starfield::keydown_event(GUI::KeyEvent&)
+void Starfield::keydown_event(GUI::KeyEvent& event)
 {
-    GUI::Application::the()->quit();
+    switch (event.key()) {
+    case Key_Plus:
+        m_speed++;
+        break;
+    case Key_Minus:
+        if (--m_speed < 1)
+            m_speed = 1;
+        break;
+    default:
+        GUI::Application::the()->quit();
+    }
 }
 
 void Starfield::paint_event(GUI::PaintEvent& event)
