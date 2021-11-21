@@ -59,6 +59,8 @@ public:
     void fit_image_to_view();
     void reset_scale_and_position();
     void scale_by(float);
+    void set_absolute_scale(float, bool do_relayout = true);
+    Function<void(float)> on_scale_changed;
 
     void set_pan_origin(Gfx::FloatPoint const&);
     Gfx::FloatPoint pan_origin() const { return m_pan_origin; }
@@ -134,7 +136,7 @@ private:
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
-    void clamped_scale(float);
+    void clamped_scale_by(float, bool do_relayout);
     void relayout();
 
     int calculate_ruler_step_size() const;
