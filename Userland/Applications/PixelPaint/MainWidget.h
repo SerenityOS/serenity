@@ -18,6 +18,7 @@
 #include "ToolboxWidget.h"
 #include "Tools/Tool.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
@@ -54,6 +55,7 @@ private:
     RefPtr<ToolPropertiesWidget> m_tool_properties_widget;
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::ComboBox> m_zoom_combobox;
 
     RefPtr<GUI::Action> m_new_image_action;
     RefPtr<GUI::Action> m_open_image_action;

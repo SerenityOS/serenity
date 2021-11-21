@@ -19,6 +19,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Toolbar.h>
@@ -83,8 +84,16 @@ MainWidget::MainWidget()
             image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());
         m_show_rulers_action->set_checked(image_editor.ruler_visibility());
+        image_editor.on_scale_changed(image_editor.scale());
     };
 }
+
+// Note: Update these together! v
+static const Vector<String> s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
+static constexpr int s_zoom_level_fit_width = 8;
+static constexpr int s_zoom_level_fit_height = 9;
+static constexpr int s_zoom_level_fit_image = 10;
+// Note: Update these together! ^
 
 void MainWidget::initialize_menubar(GUI::Window& window)
 {
@@ -729,6 +738,44 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     toolbar.add_action(*m_zoom_in_action);
     toolbar.add_action(*m_zoom_out_action);
     toolbar.add_action(*m_reset_zoom_action);
+    m_zoom_combobox = toolbar.add<GUI::ComboBox>();
+    m_zoom_combobox->set_max_width(75);
+    m_zoom_combobox->set_model(*GUI::ItemListModel<String>::create(s_suggested_zoom_levels));
+    m_zoom_combobox->on_change = [this](String const& value, GUI::ModelIndex const& index) {
+        auto* editor = current_image_editor();
+        if (editor == nullptr)
+            return;
+
+        if (index.is_valid()) {
+            switch (index.row()) {
+            case s_zoom_level_fit_width:
+                editor->fit_image_to_view(ImageEditor::FitType::Width);
+                return;
+            case s_zoom_level_fit_height:
+                editor->fit_image_to_view(ImageEditor::FitType::Height);
+                return;
+            case s_zoom_level_fit_image:
+                editor->fit_image_to_view(ImageEditor::FitType::Image);
+                return;
+            }
+        }
+
+        auto zoom_level_optional = value.view().trim("%"sv, TrimMode::Right).to_int();
+        if (!zoom_level_optional.has_value()) {
+            // Indicate that a parse-error occurred by resetting the text to the current state.
+            editor->on_scale_changed(editor->scale());
+            return;
+        }
+
+        editor->set_absolute_scale(zoom_level_optional.value() * 1.0f / 100);
+        // If the selected zoom level got clamped, or a "fit to …" level was selected,
+        // there is a chance that the new scale is identical to the old scale.
+        // In these cases, we need to manually reset the text:
+        editor->on_scale_changed(editor->scale());
+    };
+    m_zoom_combobox->on_return_pressed = [this]() {
+        m_zoom_combobox->on_change(m_zoom_combobox->text(), GUI::ModelIndex());
+    };
 }
 
 void MainWidget::open_image_fd(int fd, String const& path)
@@ -823,6 +870,10 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 
     // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
     image_editor.on_image_title_change(image->title());
+
+    image_editor.on_scale_changed = [this](float scale) {
+        m_zoom_combobox->set_text(String::formatted("{}%", roundf(scale * 100)));
+    };
 
     if (image->layer_count())
         image_editor.set_active_layer(&image->layer(0));
