@@ -468,11 +468,13 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     return sheet;
 }
 
-Position Sheet::written_data_bounds() const
+Position Sheet::written_data_bounds(Optional<size_t> column_index) const
 {
     Position bound;
-    for (auto& entry : m_cells) {
+    for (auto const& entry : m_cells) {
         if (entry.value->data().is_empty())
+            continue;
+        if (column_index.has_value() && entry.key.column != *column_index)
             continue;
         if (entry.key.row >= bound.row)
             bound.row = entry.key.row;

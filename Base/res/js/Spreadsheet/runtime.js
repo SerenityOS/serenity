@@ -1,5 +1,7 @@
 "use strict";
 
+const Break = {};
+
 // FIXME: Figure out a way to document non-function entities too.
 class Position {
     constructor(column, row, sheet) {
@@ -80,42 +82,148 @@ class Position {
     }
 }
 
+class Ranges {
+    constructor(ranges) {
+        this.ranges = ranges;
+    }
+
+    static from(...ranges) {
+        return new Ranges(ranges);
+    }
+
+    forEach(callback) {
+        for (const range of this.ranges) {
+            if (range.forEach(callback) === Break) break;
+        }
+    }
+
+    union(other, direction = "right") {
+        if (direction === "left") {
+            if (other instanceof Ranges) return Ranges.from(...other.ranges, ...this.ranges);
+            return Ranges.from(other, ...this.ranges);
+        } else if (direction === "right") {
+            if (other instanceof Ranges) return Ranges.from(...this.ranges, ...other.ranges);
+            return Ranges.from(...this.ranges, other);
+        } else {
+            throw new Error(`Invalid direction '${direction}'`);
+        }
+    }
+
+    toString() {
+        return `Ranges.from(${this.ranges.map(r => r.toString()).join(", ")})`;
+    }
+}
+
+class Range {
+    constructor(startingColumnName, endingColumnName, startingRow, endingRow, columnStep, rowStep) {
+        this.startingColumnName = startingColumnName;
+        this.endingColumnName = endingColumnName;
+        this.startingRow = startingRow;
+        this.endingRow = endingRow;
+        this.columnStep = columnStep ?? 1;
+        this.rowStep = rowStep ?? 1;
+        this.spansEntireColumn = endingRow === undefined;
+        if (!this.spansEntireColumn && startingRow === undefined)
+            throw new Error("A Range with a defined end row must also have a defined start row");
+
+        this.normalize();
+    }
+
+    forEach(callback) {
+        const ranges = [];
+        let startingColumnIndex = thisSheet.column_index(this.startingColumnName);
+        let endingColumnIndex = thisSheet.column_index(this.endingColumnName);
+        let columnDistance = endingColumnIndex - startingColumnIndex;
+        for (
+            let columnOffset = 0;
+            columnOffset <= columnDistance;
+            columnOffset += this.columnStep
+        ) {
+            const columnName = thisSheet.column_arithmetic(this.startingColumnName, columnOffset);
+            ranges.push({
+                column: columnName,
+                rowStart: this.startingRow,
+                rowEnd: this.spansEntireColumn
+                    ? thisSheet.get_column_bound(columnName)
+                    : this.endingRow,
+            });
+        }
+
+        for (const range of ranges) {
+            for (let row = range.rowStart; row < range.rowEnd; row += this.rowStep) {
+                callback(range.column + row);
+            }
+        }
+    }
+
+    union(other) {
+        if (other instanceof Ranges) return other.union(this, "left");
+
+        if (other instanceof Range) return Ranges.from(this, other);
+
+        throw new Error(`Cannot add ${other} to a Range`);
+    }
+
+    normalize() {
+        const startColumnIndex = thisSheet.column_index(this.startingColumnName);
+        const endColumnIndex = thisSheet.column_index(this.endingColumnName);
+        if (startColumnIndex > endColumnIndex) {
+            const temp = this.startingColumnName;
+            this.startingColumnName = this.endingColumnName;
+            this.endingColumnName = temp;
+        }
+
+        if (this.startingRow !== undefined && this.endingRow !== undefined) {
+            if (this.startingRow > this.endingRow) {
+                const temp = this.startingRow;
+                this.startingRow = this.endingRow;
+                this.endingRow = temp;
+            }
+        }
+    }
+
+    toString() {
+        return `Range(${this.startingColumnName}, ${this.endingColumnName}, ${this.startingRow}, ${this.endingRow}, ${this.columnStep}, ${this.rowStep})`;
+    }
+}
+
 function range(start, end, columnStep, rowStep) {
     columnStep = integer(columnStep ?? 1);
     rowStep = integer(rowStep ?? 1);
     if (!(start instanceof Position)) {
-        start = thisSheet.parse_cell_name(start) ?? { column: "A", row: 0 };
-    }
-    if (!(end instanceof Position)) {
-        end = thisSheet.parse_cell_name(end) ?? start;
+        start = thisSheet.parse_cell_name(start) ?? { column: undefined, row: undefined };
     }
 
-    const cells = [];
-
-    const start_column_index = thisSheet.column_index(start.column);
-    const end_column_index = thisSheet.column_index(end.column);
-    const start_column = start_column_index > end_column_index ? end.column : start.column;
-    const distance = Math.abs(start_column_index - end_column_index);
-
-    for (let col = 0; col <= distance; col += columnStep) {
-        const column = thisSheet.column_arithmetic(start_column, col);
-        for (
-            let row = Math.min(start.row, end.row);
-            row <= Math.max(start.row, end.row);
-            row += rowStep
-        ) {
-            cells.push(column + row);
-        }
+    let didAssignToEnd = false;
+    if (end !== undefined && !(end instanceof Position)) {
+        didAssignToEnd = true;
+        if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
+        else end = thisSheet.parse_cell_name(end);
+    } else if (end === undefined) {
+        didAssignToEnd = true;
+        end = start;
     }
 
-    return cells;
+    if (!didAssignToEnd) throw new Error(`Invalid value for range 'end': ${end}`);
+
+    return new Range(start.column, end.column, start.row, end.row, columnStep, rowStep);
 }
 
 function R(fmt, ...args) {
-    if (args.length !== 0) throw new TypeError("R`` format must be literal");
+    if (args.length !== 0) throw new TypeError("R`` format must be a literal");
 
     fmt = fmt[0];
-    return range(...fmt.split(":"));
+
+    // CellName (: (CellName|ColumnName) (: Integer (: Integer)?)?)?
+    // ColumnName (: ColumnName (: Integer (: Integer)?)?)?
+    let specs = fmt.split(":");
+
+    if (specs.length > 4 || specs.length < 1) throw new SyntaxError(`Invalid range ${fmt}`);
+
+    if (/^[a-zA-Z_]+\d+$/.test(specs[0])) return range(...specs);
+
+    // Otherwise, it has to be a column name.
+    return new Range(specs[0], specs[1], undefined, undefined, specs[2], specs[3]);
 }
 
 function select(criteria, t, f) {
@@ -150,10 +258,10 @@ function sheet(name) {
 }
 
 function reduce(op, accumulator, cells) {
-    for (let name of cells) {
+    cells.forEach(name => {
         let cell = thisSheet[name];
         accumulator = op(accumulator, cell);
-    }
+    });
     return accumulator;
 }
 
@@ -163,13 +271,13 @@ function numericReduce(op, accumulator, cells) {
 
 function numericResolve(cells) {
     const values = [];
-    for (let name of cells) values.push(Number(thisSheet[name]));
+    cells.forEach(name => values.push(Number(thisSheet[name])));
     return values;
 }
 
 function resolve(cells) {
     const values = [];
-    for (let name of cells) values.push(thisSheet[name]);
+    cells.forEach(name => values.push(thisSheet[name]));
     return values;
 }
 
@@ -270,16 +378,6 @@ function internal_lookup(
     mode,
     reference
 ) {
-    lookup_outputs = lookup_outputs ?? lookup_inputs;
-
-    if (lookup_inputs.length > lookup_outputs.length)
-        throw new Error(
-            `Uneven lengths in outputs and inputs: ${lookup_inputs.length} > ${lookup_outputs.length}`
-        );
-
-    let references = lookup_outputs;
-    lookup_inputs = resolve(lookup_inputs);
-    lookup_outputs = resolve(lookup_outputs);
     if_missing = if_missing ?? undefined;
     mode = mode ?? "exact";
     const lookup_value = req_lookup_value;
@@ -295,15 +393,40 @@ function internal_lookup(
         throw new Error(`Match mode '${mode}' not supported`);
     }
 
-    let retval = if_missing;
-    for (let i = 0; i < lookup_inputs.length; ++i) {
-        if (matches(lookup_inputs[i])) {
-            retval = reference ? Position.from_name(references[i]) : lookup_outputs[i];
-            break;
+    let i = 0;
+    let didMatch = false;
+    let value = null;
+    let matchingName = null;
+    lookup_inputs.forEach(name => {
+        value = thisSheet[name];
+        if (matches(value)) {
+            didMatch = true;
+            matchingName = name;
+            return Break;
         }
+        ++i;
+    });
+
+    if (!didMatch) return if_missing;
+
+    if (lookup_outputs === undefined) {
+        if (reference) return Position.from_name(matchingName);
+
+        return value;
     }
 
-    return retval;
+    lookup_outputs.forEach(name => {
+        matchingName = name;
+        if (i === 0) return Break;
+        --i;
+    });
+
+    if (i > 0)
+        throw new Error("Lookup target length must not be smaller than lookup source length");
+
+    if (reference) return Position.from_name(matchingName);
+
+    return thisSheet[matchingName];
 }
 
 function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
@@ -349,11 +472,22 @@ R.__documentation = JSON.stringify({
     argc: 1,
     argnames: ["range specifier"],
     doc:
-        "Generates a list of cell names in a rectangle defined by " +
-        "_range specifier_, which must be two cell names " +
-        "delimited by a comma ':'. Operates the same as [`range`](spreadsheet://doc/range)",
+        "Generates a Range object, denoted by the" +
+        "_range specifier_, which must conform to the following syntax.\n\n" +
+        "```\n" +
+        "RangeSpecifier : RangeBounds RangeStep?\n" +
+        "RangeBounds :\n" +
+        "              CellName (':' CellName)?\n" +
+        "            | ColumnName (':' ColumnName)?\n" +
+        "RangeStep : Integer (':' Integer)?\n" +
+        "```\n",
     examples: {
-        "R`A1:C4`": "Generate the range A1:C4",
+        "R`A1:C4`":
+            "Generate a Range representing all cells in a rectangle with the top-left cell A1, and the bottom-right cell C4",
+        "R`A`": "Generate a Range representing all the cells in the column A",
+        "R`A:C`": "Generate a Range representing all the cells in the columns A through C",
+        "R`A:C:2:2`":
+            "Generate a Range representing every other cells in every other column in A through C",
     },
 });
 
