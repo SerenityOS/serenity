@@ -17,21 +17,24 @@
 
 namespace Spreadsheet {
 
-static JS::VM& global_vm()
-{
-    static RefPtr<JS::VM> vm;
-    if (!vm)
-        vm = JS::VM::create();
-    return *vm;
-}
-
 Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
     : m_sheets(move(sheets))
-    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(global_vm()))
-    , m_interpreter_scope(JS::VM::InterpreterExecutionScope(interpreter()))
+    , m_vm(JS::VM::create())
+    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_vm))
+    , m_interpreter_scope(*m_interpreter)
+    , m_main_execution_context(m_vm->heap())
 {
-    m_workbook_object = interpreter().heap().allocate<WorkbookObject>(global_object(), *this);
-    global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
+    m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->global_object(), *this);
+    m_interpreter->global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
+
+    m_main_execution_context.current_node = nullptr;
+    m_main_execution_context.this_value = &m_interpreter->global_object();
+    m_main_execution_context.function_name = "(global execution context)"sv;
+    m_main_execution_context.lexical_environment = &m_interpreter->realm().global_environment();
+    m_main_execution_context.variable_environment = &m_interpreter->realm().global_environment();
+    m_main_execution_context.realm = &m_interpreter->realm();
+    m_main_execution_context.is_strict_mode = true;
+    MUST(m_vm->push_execution_context(m_main_execution_context, m_interpreter->global_object()));
 }
 
 bool Workbook::set_filename(const String& filename)
