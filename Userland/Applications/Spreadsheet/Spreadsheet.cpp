@@ -598,8 +598,11 @@ Vector<Vector<String>> Sheet::to_xsv() const
         row.resize(column_count);
         for (size_t j = 0; j < column_count; ++j) {
             auto cell = at({ j, i });
-            if (cell)
-                row[j] = cell->typed_display();
+            if (cell) {
+                auto result = cell->typed_display();
+                if (result.has_value())
+                    row[j] = result.value();
+            }
         }
 
         data.append(move(row));

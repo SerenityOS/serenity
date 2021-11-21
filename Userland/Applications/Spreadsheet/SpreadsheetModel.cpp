@@ -27,29 +27,46 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         if (!cell)
             return String::empty();
 
-        if (cell->kind() == Spreadsheet::Cell::Formula) {
-            if (auto exception = cell->exception()) {
-                StringBuilder builder;
-                builder.append("Error: ");
-                auto value = exception->value();
-                if (value.is_object()) {
-                    auto& object = value.as_object();
-                    if (is<JS::Error>(object)) {
-                        auto error = object.get_without_side_effects("message").to_string_without_side_effects();
-                        builder.append(error);
-                        return builder.to_string();
-                    }
+        Function<String(JS::Value)> to_string_as_exception = [&](JS::Value value) {
+            ScopeGuard clear_exception {
+                [&] {
+                    cell->sheet().interpreter().vm().clear_exception();
                 }
-                auto error = value.to_string_without_side_effects();
-                // This is annoying, but whatever.
-                cell->sheet().interpreter().vm().clear_exception();
+            };
 
-                builder.append(error);
-                return builder.to_string();
+            StringBuilder builder;
+            builder.append("Error: "sv);
+            if (value.is_object()) {
+                auto& object = value.as_object();
+                if (is<JS::Error>(object)) {
+                    auto message = object.get_without_side_effects("message");
+                    auto error = message.to_string(cell->sheet().global_object());
+                    if (error.is_throw_completion())
+                        builder.append(message.to_string_without_side_effects());
+                    else
+                        builder.append(error.release_value());
+                    return builder.to_string();
+                }
             }
+            auto error_message = value.to_string(cell->sheet().global_object());
+
+            if (error_message.is_throw_completion())
+                return to_string_as_exception(error_message.release_error().value());
+
+            builder.append(error_message.release_value());
+            return builder.to_string();
+        };
+
+        if (cell->kind() == Spreadsheet::Cell::Formula) {
+            if (auto exception = cell->exception())
+                return to_string_as_exception(exception->value());
         }
 
-        return cell->typed_display();
+        auto display = cell->typed_display();
+        if (display.is_error())
+            return to_string_as_exception(display.release_error().value());
+
+        return display.release_value();
     }
 
     if (role == GUI::ModelRole::MimeData)
@@ -155,5 +172,4 @@ void SheetModel::update()
     m_sheet->update();
     did_update(UpdateFlag::DontInvalidateIndices);
 }
-
 }
