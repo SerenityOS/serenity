@@ -54,6 +54,8 @@ private:
     void flip();
     void compute_lockfree_metadata();
 
+    ErrorOr<size_t> read_impl(UserOrKernelBuffer&, size_t, MutexLocker&, bool advance_buffer_index);
+
     struct InnerBuffer {
         u8* data { nullptr };
         size_t size;
