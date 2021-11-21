@@ -166,6 +166,8 @@ ResampleHelper<SampleType>::ResampleHelper(u32 source, u32 target)
     : m_source(source)
     , m_target(target)
 {
+    VERIFY(source > 0);
+    VERIFY(target > 0);
 }
 template ResampleHelper<i32>::ResampleHelper(u32, u32);
 template ResampleHelper<double>::ResampleHelper(u32, u32);
