@@ -1,0 +1,5 @@
+[App]
+Name=Terminal Settings
+Executable=/bin/TerminalSettings
+Category=Settings
+Description=Configure the Terminal appearance and behavior.
