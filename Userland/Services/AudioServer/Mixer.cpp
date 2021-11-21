@@ -169,7 +169,7 @@ int Mixer::audiodevice_set_sample_rate(u16 sample_rate)
 {
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_SET_SAMPLE_RATE, sample_rate);
     if (code != 0)
-        dbgln("Error while setting sample rate to {}: ioctl returned with {}", sample_rate, strerror(code));
+        dbgln("Error while setting sample rate to {}: ioctl error: {}", sample_rate, strerror(errno));
     return code;
 }
 
@@ -178,7 +178,7 @@ u16 Mixer::audiodevice_get_sample_rate() const
     u16 sample_rate = 0;
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_SAMPLE_RATE, &sample_rate);
     if (code != 0)
-        dbgln("Error while getting sample rate: ioctl returned with {}", strerror(code));
+        dbgln("Error while getting sample rate: ioctl error: {}", strerror(errno));
     return sample_rate;
 }
 
