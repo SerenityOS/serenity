@@ -157,6 +157,7 @@ void SheetGlobalObject::initialize_global_object()
     define_native_function("current_cell_position", current_cell_position, 0, attr);
     define_native_function("column_arithmetic", column_arithmetic, 2, attr);
     define_native_function("column_index", column_index, 1, attr);
+    define_native_function("get_column_bound", get_column_bound, 1, attr);
 }
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
@@ -327,6 +328,31 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
         return vm.throw_completion<JS::TypeError>(global_object, String::formatted("'{}' is not a valid column", column_name_str));
 
     return JS::js_string(vm, new_column.release_value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
+{
+    if (vm.argument_count() != 1)
+        return vm.throw_completion<JS::TypeError>(global_object, "Expected exactly one argument to get_column_bound()");
+
+    auto column_name = vm.argument(0);
+    if (!column_name.is_string())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "String");
+
+    auto& column_name_str = column_name.as_string().string();
+    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+
+    if (!is<SheetGlobalObject>(this_object))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "SheetGlobalObject");
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+    auto& sheet = sheet_object->m_sheet;
+    auto maybe_column_index = sheet.column_index(column_name_str);
+    if (!maybe_column_index.has_value())
+        return vm.throw_completion<JS::TypeError>(global_object, String::formatted("'{}' is not a valid column", column_name_str));
+
+    auto bounds = sheet.written_data_bounds(*maybe_column_index);
+    return JS::Value(bounds.row);
 }
 
 WorkbookObject::WorkbookObject(Workbook& workbook)
