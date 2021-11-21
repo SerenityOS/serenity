@@ -6,7 +6,7 @@
 
 #include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
 
-#include <Kernel/Arch/aarch64/Aarch64Asm.h>
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
 namespace Prekernel {
@@ -19,7 +19,14 @@ namespace Prekernel {
         uart.print_str(msg);
     }
 
-    Kernel::halt();
+    Prekernel::halt();
+}
+
+[[noreturn]] void halt()
+{
+    for (;;) {
+        asm volatile("wfi");
+    }
 }
 
 }

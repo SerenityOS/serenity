@@ -8,7 +8,7 @@
 
 #include <Kernel/Arch/aarch64/Registers.h>
 
-namespace Kernel {
+namespace Kernel::Aarch64::Asm {
 
 inline void set_ttbr1_el1(FlatPtr ttbr1_el1)
 {
