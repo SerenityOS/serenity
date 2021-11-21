@@ -5,14 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-.global get_current_exception_level
-.type get_current_exception_level, @function
-get_current_exception_level:
-  mrs x0, CurrentEL
-  lsr x0, x0, #2
-  and x0, x0, #0x3
-  ret
-
 .global wait_cycles
 .type wait_cycles, @function
 wait_cycles:
