@@ -13,11 +13,6 @@ void init_prekernel_page_tables();
 
 [[noreturn]] void panic(const char* msg);
 
-[[noreturn]] inline void halt()
-{
-    for (;;) {
-        asm volatile("wfi");
-    }
-}
+[[noreturn]] void halt();
 
 }
