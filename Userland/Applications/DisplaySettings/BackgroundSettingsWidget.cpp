@@ -141,12 +141,8 @@ void BackgroundSettingsWidget::apply_settings()
 {
     Config::write_string("WindowManager", "Background", "Wallpaper", m_monitor_widget->wallpaper());
 
-    if (!m_monitor_widget->wallpaper().is_empty()) {
-        GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
-    } else {
-        GUI::Desktop::the().set_wallpaper("");
-        GUI::Desktop::the().set_background_color(m_color_input->text());
-    }
+    GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
+    GUI::Desktop::the().set_background_color(m_color_input->text());
 
     GUI::Desktop::the().set_wallpaper_mode(m_monitor_widget->wallpaper_mode());
 }
