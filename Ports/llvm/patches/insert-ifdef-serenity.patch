@@ -1,19 +1,8 @@
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/lib/Support/SmallVector.cpp	2021-06-09 16:18:35.039546181 +0300
-@@ -132,7 +132,7 @@
- // Both uint32_t and uint64_t instantiations are needed for 64-bit builds.
- // This instantiation will never be used in 32-bit builds, and will cause
- // warnings when sizeof(Size_T) > sizeof(size_t).
--#if SIZE_MAX > UINT32_MAX
-+#if SIZE_MAX > UINT32_MAX && !defined(__serenity__)
- template class llvm::SmallVectorBase<uint64_t>;
- 
- // Assertions to ensure this #if stays in sync with SmallVectorSizeType.
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc	2021-06-09 16:24:37.446095863 +0300
-@@ -108,7 +108,7 @@
+diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
+index c37b3a546..e51badb34 100644
+--- a/llvm/lib/Support/Unix/Path.inc
++++ b/llvm/lib/Support/Unix/Path.inc
+@@ -109,7 +109,7 @@ typedef uint_t uint;
  #endif
  
  #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) || \
@@ -22,7 +11,7 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc l
  #define STATVFS_F_FLAG(vfs) (vfs).f_flag
  #else
  #define STATVFS_F_FLAG(vfs) (vfs).f_flags
-@@ -524,7 +524,7 @@
+@@ -531,7 +531,7 @@ static bool is_local_impl(struct STATVFS &Vfs) {
  
    // vmount entry not found; "remote" is the conservative answer.
    return false;
@@ -31,10 +20,11 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Path.inc l
    // The file system can have an arbitrary structure on z/OS; must go with the
    // conservative answer.
    return false;
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.inc llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.inc
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.inc	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.inc	2021-06-10 11:04:28.765989133 +0300
-@@ -335,7 +335,7 @@
+diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
+index be59bb023..ff8931308 100644
+--- a/llvm/lib/Support/Unix/Program.inc
++++ b/llvm/lib/Support/Unix/Program.inc
+@@ -335,7 +335,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
  namespace llvm {
  namespace sys {
  
@@ -43,7 +33,7 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.in
  using ::wait4;
  #else
  static pid_t (wait4)(pid_t pid, int *status, int options, struct rusage *usage);
-@@ -344,7 +344,7 @@
+@@ -344,7 +344,7 @@ static pid_t (wait4)(pid_t pid, int *status, int options, struct rusage *usage);
  } // namespace sys
  } // namespace llvm
  
@@ -52,7 +42,7 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.in
  #ifndef _ALL_SOURCE
  extern "C" pid_t (wait4)(pid_t pid, int *status, int options,
                           struct rusage *usage);
-@@ -357,7 +357,7 @@
+@@ -357,7 +357,7 @@ pid_t (llvm::sys::wait4)(pid_t pid, int *status, int options,
  
    // AIX wait4 does not work well with WNOHANG.
    if (!(options & WNOHANG))
@@ -61,7 +51,7 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.in
  
    // For WNOHANG, we use waitid (which supports WNOWAIT) until the child process
    // has terminated.
-@@ -374,7 +374,7 @@
+@@ -374,7 +374,7 @@ pid_t (llvm::sys::wait4)(pid_t pid, int *status, int options,
    // The child has already terminated, so a blocking wait on it is okay in the
    // absence of indiscriminate `wait` calls from the current process (which
    // would cause the call here to fail with ECHILD).
@@ -70,7 +60,7 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.in
  }
  #endif
  
-@@ -519,10 +519,10 @@
+@@ -534,10 +534,10 @@ llvm::sys::writeFileWithEncoding(StringRef FileName, StringRef Contents,
  
  bool llvm::sys::commandLineFitsWithinSystemLimits(StringRef Program,
                                                    ArrayRef<StringRef> Args) {
@@ -83,27 +73,29 @@ diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/lib/Support/Unix/Program.in
  
    // This the same baseline used by xargs.
    long EffectiveArgMax = 128 * 1024;
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink.cpp llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink.cpp
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink.cpp	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink.cpp	2021-06-09 19:52:15.384543089 +0300
-@@ -660,7 +660,7 @@
- 
- Expected<std::unique_ptr<TargetProcessControl>>
- LLVMJITLinkRemoteTargetProcessControl::ConnectToExecutor() {
--#ifndef LLVM_ON_UNIX
-+#if !defined(LLVM_ON_UNIX) || defined(__serenity__)
-   // FIXME: Add TCP support for Windows.
-   return make_error<StringError>("-" + OutOfProcessExecutorConnect.ArgStr +
-                                      " not supported on non-unix platforms",
-diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
---- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp	2021-04-06 19:38:18.000000000 +0300
-+++ llvm-project-llvmorg-12.0.0/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp	2021-06-09 16:43:06.154952293 +0300
-@@ -45,7 +45,7 @@
+diff --git a/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp b/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
+index 7f197a50c..03bf029db 100644
+--- a/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
++++ b/llvm/tools/llvm-jitlink/llvm-jitlink-executor/llvm-jitlink-executor.cpp
+@@ -50,7 +50,7 @@ void printErrorAndExit(Twine ErrMsg) {
  }
  
- int openListener(std::string Host, int Port) {
+ int openListener(std::string Host, std::string PortStr) {
 -#ifndef LLVM_ON_UNIX
 +#if !defined(LLVM_ON_UNIX) || defined(__serenity__)
    // FIXME: Add TCP support for Windows.
    printErrorAndExit("listen option not supported");
    return 0;
+diff --git a/llvm/tools/llvm-jitlink/llvm-jitlink.cpp b/llvm/tools/llvm-jitlink/llvm-jitlink.cpp
+index 8bd384ec7..a28e938ec 100644
+--- a/llvm/tools/llvm-jitlink/llvm-jitlink.cpp
++++ b/llvm/tools/llvm-jitlink/llvm-jitlink.cpp
+@@ -770,7 +770,7 @@ static Expected<int> connectTCPSocket(std::string Host, std::string PortStr) {
+ 
+ Expected<std::unique_ptr<ExecutorProcessControl>>
+ LLVMJITLinkRemoteExecutorProcessControl::ConnectToExecutor() {
+-#ifndef LLVM_ON_UNIX
++#if !defined(LLVM_ON_UNIX) || defined(__serenity__)
+   // FIXME: Add TCP support for Windows.
+   return make_error<StringError>("-" + OutOfProcessExecutorConnect.ArgStr +
+                                      " not supported on non-unix platforms",
