@@ -60,40 +60,34 @@ ErrorOr<size_t> DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
     return bytes_to_write;
 }
 
-ErrorOr<size_t> DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> DoubleBuffer::read_impl(UserOrKernelBuffer& data, size_t size, MutexLocker&, bool advance_buffer_index)
 {
-    if (!size)
+    if (size == 0)
         return 0;
-    MutexLocker locker(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0)
         flip();
     if (m_read_buffer_index >= m_read_buffer->size)
         return 0;
     size_t nread = min(m_read_buffer->size - m_read_buffer_index, size);
     TRY(data.write(m_read_buffer->data + m_read_buffer_index, nread));
-    m_read_buffer_index += nread;
+    if (advance_buffer_index)
+        m_read_buffer_index += nread;
     compute_lockfree_metadata();
     if (m_unblock_callback && m_space_for_writing > 0)
         m_unblock_callback();
     return nread;
 }
 
+ErrorOr<size_t> DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
+{
+    MutexLocker locker(m_lock);
+    return read_impl(data, size, locker, true);
+}
+
 ErrorOr<size_t> DoubleBuffer::peek(UserOrKernelBuffer& data, size_t size)
 {
-    if (!size)
-        return 0;
     MutexLocker locker(m_lock);
-    if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0) {
-        flip();
-    }
-    if (m_read_buffer_index >= m_read_buffer->size)
-        return 0;
-    size_t nread = min(m_read_buffer->size - m_read_buffer_index, size);
-    TRY(data.write(m_read_buffer->data + m_read_buffer_index, nread));
-    compute_lockfree_metadata();
-    if (m_unblock_callback && m_space_for_writing > 0)
-        m_unblock_callback();
-    return nread;
+    return read_impl(data, size, locker, false);
 }
 
 }
