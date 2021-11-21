@@ -204,7 +204,7 @@ function(lagom_lib library fs_name)
 endfunction()
 
 function(lagom_test source)
-    cmake_parse_arguments(LAGOM_TEST "" "" "LIBS" ${ARGN})
+    cmake_parse_arguments(LAGOM_TEST "" "WORKING_DIRECTORY" "LIBS" ${ARGN})
     get_filename_component(name ${source} NAME_WE)
     add_executable(${name}_lagom ${source})
     set_target_properties(${name}_lagom PROPERTIES OUTPUT_NAME ${name})
@@ -212,6 +212,7 @@ function(lagom_test source)
     add_test(
             NAME ${name}
             COMMAND ${name}_lagom
+            WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
     )
 endfunction()
 
@@ -483,13 +484,11 @@ if (BUILD_LAGOM)
         # AK
         file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
         foreach(source ${AK_TEST_SOURCES})
-            lagom_test(${source})
+            lagom_test(${source} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
         endforeach()
-        set_tests_properties(TestJSON PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK)
 
         # Core
-        lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp)
-        set_tests_properties(TestLibCoreIODevice PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
+        lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
 
         # Crypto
         file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
@@ -521,8 +520,8 @@ if (BUILD_LAGOM)
         # TLS
         file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
         foreach(source ${LIBTLS_TESTS})
-            lagom_test(${source} LIBS LagomTLS)
-            set_tests_properties(TestTLSHandshake PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
+            lagom_test(${source} LIBS LagomTLS
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
         endforeach()
 
         # Unicode
