@@ -164,6 +164,11 @@ LexicalPath LexicalPath::append(StringView value) const
     return LexicalPath::join(m_string, value);
 }
 
+LexicalPath LexicalPath::prepend(StringView value) const
+{
+    return LexicalPath::join(value, m_string);
+}
+
 LexicalPath LexicalPath::parent() const
 {
     return append("..");

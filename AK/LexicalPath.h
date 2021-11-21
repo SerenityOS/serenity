@@ -30,6 +30,7 @@ public:
     bool has_extension(StringView) const;
 
     [[nodiscard]] LexicalPath append(StringView) const;
+    [[nodiscard]] LexicalPath prepend(StringView) const;
     [[nodiscard]] LexicalPath parent() const;
 
     [[nodiscard]] static String canonicalized_path(String);
