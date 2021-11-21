@@ -74,12 +74,12 @@ const CellType& Cell::type() const
     return *CellType::get_by_name("Identity");
 }
 
-String Cell::typed_display() const
+JS::ThrowCompletionOr<String> Cell::typed_display() const
 {
     return type().display(const_cast<Cell&>(*this), m_type_metadata);
 }
 
-JS::Value Cell::typed_js_data() const
+JS::ThrowCompletionOr<JS::Value> Cell::typed_js_data() const
 {
     return type().js_value(const_cast<Cell&>(*this), m_type_metadata);
 }
