@@ -31,7 +31,11 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
         (void)buffer_id;
         enqueue_audio();
     };
-    m_resampler = Audio::ResampleHelper<double>(Music::sample_rate, m_audio_client->get_sample_rate());
+
+    auto target_sample_rate = m_audio_client->get_sample_rate();
+    if (target_sample_rate == 0)
+        target_sample_rate = Music::sample_rate;
+    m_resampler = Audio::ResampleHelper<double>(Music::sample_rate, target_sample_rate);
 }
 
 void AudioPlayerLoop::enqueue_audio()
