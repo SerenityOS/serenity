@@ -17,6 +17,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <ctype.h>
@@ -38,15 +39,12 @@ Sheet::Sheet(StringView name, Workbook& workbook)
 
 Sheet::Sheet(Workbook& workbook)
     : m_workbook(workbook)
+    , m_interpreter(JS::Interpreter::create<SheetGlobalObject>(m_workbook.vm(), *this))
 {
-    JS::DeferGC defer_gc(m_workbook.interpreter().heap());
-    m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
-    global_object().initialize_global_object();
+    JS::DeferGC defer_gc(m_workbook.vm().heap());
+    m_global_object = static_cast<SheetGlobalObject*>(&m_interpreter->global_object());
     global_object().define_direct_property("workbook", m_workbook.workbook_object(), JS::default_attributes);
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
-
-    // Note: We have to set the global object here otherwise the functions in runtime.js are not registered correctly.
-    interpreter().realm().set_global_object(global_object(), &global_object());
 
     // Sadly, these have to be evaluated once per sheet.
     auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::OpenMode::ReadOnly);
@@ -77,7 +75,7 @@ Sheet::~Sheet()
 
 JS::Interpreter& Sheet::interpreter() const
 {
-    return m_workbook.interpreter();
+    return const_cast<JS::Interpreter&>(*m_interpreter);
 }
 
 size_t Sheet::add_row()
