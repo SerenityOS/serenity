@@ -182,10 +182,8 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     auto& socket = *description->socket();
     if (socket.is_shut_down_for_writing())
         return EPIPE;
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
-    if (!data_buffer.has_value())
-        return EFAULT;
-    auto bytes_sent = TRY(socket.sendto(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, addr_length));
+    auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
+    auto bytes_sent = TRY(socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length));
     return bytes_sent;
 }
 
@@ -218,11 +216,9 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
-    if (!data_buffer.has_value())
-        return EFAULT;
+    auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
     Time timestamp {};
-    auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp);
+    auto result = socket.recvfrom(*description, data_buffer, iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 

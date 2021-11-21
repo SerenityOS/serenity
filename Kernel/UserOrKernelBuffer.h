@@ -26,18 +26,18 @@ public:
         return UserOrKernelBuffer(kernel_buffer);
     }
 
-    static Optional<UserOrKernelBuffer> for_user_buffer(u8* user_buffer, size_t size)
+    static ErrorOr<UserOrKernelBuffer> for_user_buffer(u8* user_buffer, size_t size)
     {
         if (user_buffer && !Memory::is_user_range(VirtualAddress(user_buffer), size))
-            return {};
+            return Error::from_errno(EFAULT);
         return UserOrKernelBuffer(user_buffer);
     }
 
     template<typename UserspaceType>
-    static Optional<UserOrKernelBuffer> for_user_buffer(UserspaceType userspace, size_t size)
+    static ErrorOr<UserOrKernelBuffer> for_user_buffer(UserspaceType userspace, size_t size)
     {
         if (!Memory::is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
-            return {};
+            return Error::from_errno(EFAULT);
         return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
     }
 

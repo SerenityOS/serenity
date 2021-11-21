@@ -63,10 +63,8 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
     int nread = 0;
     for (auto& vec : vecs) {
         TRY(check_blocked_read(description));
-        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
-        if (!buffer.has_value())
-            return EFAULT;
-        auto nread_here = TRY(description->read(buffer.value(), vec.iov_len));
+        auto buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len));
+        auto nread_here = TRY(description->read(buffer, vec.iov_len));
         nread += nread_here;
     }
 
@@ -84,10 +82,8 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = TRY(open_readable_file_description(fds(), fd));
     TRY(check_blocked_read(description));
-    auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
-    if (!user_buffer.has_value())
-        return EFAULT;
-    return TRY(description->read(user_buffer.value(), size));
+    auto user_buffer = TRY(UserOrKernelBuffer::for_user_buffer(buffer, size));
+    return TRY(description->read(user_buffer, size));
 }
 
 ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t*> userspace_offset)
@@ -107,10 +103,8 @@ ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, 
     if (!description->file().is_seekable())
         return EINVAL;
     TRY(check_blocked_read(description));
-    auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
-    if (!user_buffer.has_value())
-        return EFAULT;
-    return TRY(description->read(user_buffer.value(), offset, size));
+    auto user_buffer = TRY(UserOrKernelBuffer::for_user_buffer(buffer, size));
+    return TRY(description->read(user_buffer, offset, size));
 }
 
 }
