@@ -479,8 +479,7 @@ sumIf.__documentation = JSON.stringify({
     name: "sumIf",
     argc: 2,
     argnames: ["condition", "cell names"],
-    doc:
-        "Calculates the sum of cells the value of which evaluates to true when passed to `condition`",
+    doc: "Calculates the sum of cells the value of which evaluates to true when passed to `condition`",
     examples: {
         'sumIf(x => x instanceof Number, range("A1", "C4"))':
             "Calculates the sum of all numbers within A1:C4",
@@ -524,8 +523,7 @@ averageIf.__documentation = JSON.stringify({
     name: "averageIf",
     argc: 2,
     argnames: ["condition", "cell names"],
-    doc:
-        "Calculates the average of cells the value of which evaluates to true when passed to `condition`",
+    doc: "Calculates the average of cells the value of which evaluates to true when passed to `condition`",
     examples: {
         'averageIf(x => x > 4, range("A1", "C4"))':
             "Calculate the sum of all numbers larger then 4 within A1:C4",
