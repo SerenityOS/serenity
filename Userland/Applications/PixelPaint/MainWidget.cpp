@@ -794,7 +794,7 @@ void MainWidget::open_image_fd(int fd, String const& path)
 
 void MainWidget::create_default_image()
 {
-    auto image = Image::try_create_with_size({ 480, 360 }).release_value_but_fixme_should_propagate_errors();
+    auto image = Image::try_create_with_size({ 510, 356 }).release_value_but_fixme_should_propagate_errors();
 
     auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*bg_layer);

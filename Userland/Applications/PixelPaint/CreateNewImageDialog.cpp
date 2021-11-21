@@ -72,8 +72,8 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     width_spinbox.set_range(1, 16384);
     height_spinbox.set_range(1, 16384);
 
-    width_spinbox.set_value(480);
-    height_spinbox.set_value(360);
+    width_spinbox.set_value(510);
+    height_spinbox.set_value(356);
 }
 
 }
