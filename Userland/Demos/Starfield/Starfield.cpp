@@ -34,6 +34,8 @@ public:
     virtual ~Starfield() override;
     void create_stars(int, int, int);
 
+    void set_speed(unsigned speed) { m_speed = speed; }
+
 private:
     Starfield(int);
     RefPtr<Gfx::Bitmap> m_bitmap;
@@ -142,20 +144,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    int star_count = 0;
-    int refresh_rate = 0;
+    unsigned star_count = 1000;
+    unsigned refresh_rate = 16;
+    unsigned speed = 1;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The classic starfield screensaver.");
     args_parser.add_option(star_count, "Number of stars to draw (default = 1000)", "stars", 'c', "number");
     args_parser.add_option(refresh_rate, "Refresh rate (default = 16)", "rate", 'r', "milliseconds");
+    args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
     args_parser.parse(argc, argv);
-
-    if (star_count == 0)
-        star_count = 1000;
-
-    if (refresh_rate == 0)
-        refresh_rate = 16;
 
     auto app = GUI::Application::construct(argc, argv);
 
@@ -182,6 +180,7 @@ int main(int argc, char** argv)
     window->show();
 
     starfield_window.create_stars(window->width(), window->height(), star_count);
+    starfield_window.set_speed(speed);
     starfield_window.update();
 
     window->move_to_front();
