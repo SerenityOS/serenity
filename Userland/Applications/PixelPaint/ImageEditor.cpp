@@ -616,9 +616,9 @@ void ImageEditor::fit_image_to_view()
 
     const float border_ratio = 0.95f;
     auto image_size = image().size();
-    auto height_ratio = viewport_rect.height() / (float)image_size.height();
-    auto width_ratio = viewport_rect.width() / (float)image_size.width();
-    m_scale = border_ratio * min(height_ratio, width_ratio);
+    auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
+    auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
+    m_scale = min(height_ratio, width_ratio);
 
     float offset = m_show_rulers ? -m_ruler_thickness / (m_scale * 2.0f) : 0.0f;
     m_pan_origin = Gfx::FloatPoint(offset, offset);
