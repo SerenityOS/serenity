@@ -813,12 +813,15 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
         },
 
         [this, path, callback = move(callback)](ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap) {
-            if (bitmap.is_error()) {
+            if (bitmap.is_error() && !path.is_empty()) {
                 callback(false);
                 return;
             }
             m_wallpaper_path = path;
-            m_wallpaper = bitmap.release_value();
+            if (bitmap.is_error())
+                m_wallpaper = nullptr;
+            else
+                m_wallpaper = bitmap.release_value();
             invalidate_screen();
             callback(true);
         });
