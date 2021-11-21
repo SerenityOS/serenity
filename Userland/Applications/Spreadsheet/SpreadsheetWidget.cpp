@@ -42,7 +42,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     auto& current_cell_label = top_bar.add<GUI::Label>("");
     current_cell_label.set_fixed_width(50);
 
-    auto& help_button = top_bar.add<GUI::Button>("🛈");
+    auto& help_button = top_bar.add<GUI::Button>("i");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
         if (!m_selected_view) {
