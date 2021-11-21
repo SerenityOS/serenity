@@ -166,9 +166,6 @@ Sheet::ValueAndException Sheet::evaluate(StringView source, Cell* on_behalf_of)
     if (parser.has_errors() || interpreter().exception())
         return { JS::js_undefined(), interpreter().exception() };
 
-    // FIXME: This creates a GlobalEnvironment for every evaluate call which we might be able to circumvent with multiple realms.
-    interpreter().realm().set_global_object(global_object(), &global_object());
-
     interpreter().run(global_object(), program);
     if (interpreter().exception()) {
         auto exc = interpreter().exception();
