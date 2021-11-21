@@ -21,6 +21,7 @@ int main(void)
     int fd = open("/dev/kcov0", O_RDWR);
     if (fd == -1) {
         perror("open");
+        fprintf(stderr, "Could not open /dev/kcov0 - is ENABLE_KERNEL_COVERAGE_COLLECTION enabled?\n");
         return 1;
     }
     if (ioctl(fd, KCOV_SETBUFSIZE, num_entries) == -1) {
