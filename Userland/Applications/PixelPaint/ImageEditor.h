@@ -54,9 +54,15 @@ public:
 
     Layer* layer_at_editor_position(Gfx::IntPoint const&);
 
+    enum class FitType {
+        Width,
+        Height,
+        Image
+    };
+
     float scale() const { return m_scale; }
     void scale_centered_on_position(Gfx::IntPoint const&, float);
-    void fit_image_to_view();
+    void fit_image_to_view(FitType type = FitType::Image);
     void reset_scale_and_position();
     void scale_by(float);
     void set_absolute_scale(float, bool do_relayout = true);

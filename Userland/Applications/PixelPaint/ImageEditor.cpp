@@ -610,7 +610,7 @@ void ImageEditor::set_pan_origin(Gfx::FloatPoint const& pan_origin)
     relayout();
 }
 
-void ImageEditor::fit_image_to_view()
+void ImageEditor::fit_image_to_view(FitType type)
 {
     auto viewport_rect = rect();
     m_pan_origin = Gfx::FloatPoint(0, 0);
@@ -628,7 +628,17 @@ void ImageEditor::fit_image_to_view()
     auto image_size = image().size();
     auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
     auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
-    set_absolute_scale(min(height_ratio, width_ratio), false);
+    switch (type) {
+    case FitType::Width:
+        set_absolute_scale(width_ratio, false);
+        break;
+    case FitType::Height:
+        set_absolute_scale(height_ratio, false);
+        break;
+    case FitType::Image:
+        set_absolute_scale(min(height_ratio, width_ratio), false);
+        break;
+    }
 
     float offset = m_show_rulers ? -m_ruler_thickness / (m_scale * 2.0f) : 0.0f;
     m_pan_origin = Gfx::FloatPoint(offset, offset);
