@@ -7,7 +7,7 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/Arch/aarch64/Aarch64Asm.h>
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Prekernel/Arch/aarch64/Framebuffer.h>
@@ -19,6 +19,8 @@
 
 static void draw_logo();
 static u32 query_firmware_version();
+
+extern "C" void wait_cycles(int n);
 
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
@@ -37,7 +39,7 @@ extern "C" [[noreturn]] void init()
     uart.print_str("\r\n");
 
     uart.print_str("CPU started in: EL");
-    uart.print_num(static_cast<u64>(Kernel::get_current_exception_level()));
+    uart.print_num(static_cast<u64>(Kernel::Aarch64::Asm::get_current_exception_level()));
     uart.print_str("\r\n");
 
     uart.print_str("Drop CPU to EL1\r\n");
@@ -71,21 +73,14 @@ extern size_t __stack_chk_guard;
 size_t __stack_chk_guard;
 extern "C" [[noreturn]] void __stack_chk_fail();
 
-[[noreturn]] void halt()
-{
-    for (;;) {
-        asm volatile("wfi");
-    }
-}
-
 void __stack_chk_fail()
 {
-    halt();
+    Prekernel::halt();
 }
 
 [[noreturn]] void __assertion_failed(char const*, char const*, unsigned int, char const*)
 {
-    halt();
+    Prekernel::halt();
 }
 
 class QueryFirmwareVersionMboxMessage : Prekernel::Mailbox::Message {
@@ -160,7 +155,7 @@ static void draw_logo()
                     break;
                 default:
                     Prekernel::warnln("Unsupported pixel format");
-                    halt();
+                    Prekernel::halt();
                 }
 
                 logo_pixels += 3;

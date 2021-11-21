@@ -8,7 +8,7 @@
 
 #include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
 
-#include <Kernel/Arch/aarch64/Aarch64Asm.h>
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Prekernel/Arch/aarch64/UART.h>
 
@@ -108,8 +108,8 @@ static void build_identity_map(page_table_t page_table)
 
 static void switch_to_page_table(u8* page_table)
 {
-    set_ttbr0_el1((FlatPtr)page_table);
-    set_ttbr1_el1((FlatPtr)page_table);
+    Aarch64::Asm::set_ttbr0_el1((FlatPtr)page_table);
+    Aarch64::Asm::set_ttbr1_el1((FlatPtr)page_table);
 }
 
 static void activate_mmu()
@@ -144,7 +144,7 @@ static void activate_mmu()
     sctlr_el1.M = 1; //Enable MMU
     Aarch64::SCTLR_EL1::write(sctlr_el1);
 
-    flush();
+    Aarch64::Asm::flush();
 }
 
 void init_prekernel_page_tables()
