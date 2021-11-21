@@ -6,7 +6,14 @@
 
 #pragma once
 
-extern "C" uint8_t get_current_exception_level();
+enum class ExceptionLevel : u8 {
+    EL0 = 0,
+    EL1 = 1,
+    EL2 = 2,
+    EL3 = 3,
+};
+
+extern "C" ExceptionLevel get_current_exception_level();
 extern "C" void wait_cycles(int n);
 
 // CPU initialization functions

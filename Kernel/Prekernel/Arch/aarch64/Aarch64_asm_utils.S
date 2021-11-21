@@ -23,25 +23,20 @@ Lstart:
   bne Lstart
   ret
 
-.global return_from_el2
-.type return_from_el2, @function
-return_from_el2:
-  adr x0, jump_to_os_start
-  msr elr_el2, x0
-  eret
-
-.global return_from_el3
-.type return_from_el3, @function
-return_from_el3:
-  adr x0, jump_to_os_start
+.global enter_el2_from_el3
+.type enter_el2_from_el3, @function
+enter_el2_from_el3:
+  adr x0, entered_el2
   msr elr_el3, x0
   eret
+entered_el2:
+  ret
 
-jump_to_os_start:
-  // Let stack start before .text for now.
-  // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
-  // but for now it's ok.
-  ldr x14, =start
-  mov sp, x14
-
-  b os_start
+.global enter_el1_from_el2
+.type enter_el1_from_el2, @function
+enter_el1_from_el2:
+  adr x0, entered_el1
+  msr elr_el2, x0
+  eret
+entered_el1:
+  ret

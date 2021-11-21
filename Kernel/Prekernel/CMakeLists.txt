@@ -14,9 +14,15 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
         Arch/aarch64/Utils.cpp
-        Arch/aarch64/Aarch64_asm_utils.S
-        Arch/aarch64/boot.S
+
+        # Preload specific
         Arch/aarch64/init.cpp
+        Arch/aarch64/PrekernelExceptions.cpp
+        Arch/aarch64/PrekernelCommon.cpp
+
+        # Assembly
+        Arch/aarch64/boot.S
+        Arch/aarch64/Aarch64_asm_utils.S
     )
 else()
     set(SOURCES
