@@ -20,6 +20,7 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
@@ -139,11 +140,12 @@ void BackgroundSettingsWidget::load_current_settings()
 
 void BackgroundSettingsWidget::apply_settings()
 {
-    Config::write_string("WindowManager", "Background", "Wallpaper", m_monitor_widget->wallpaper());
+    if (GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper()))
+        Config::write_string("WindowManager", "Background", "Wallpaper", m_monitor_widget->wallpaper());
+    else
+        GUI::MessageBox::show_error(window(), String::formatted("Unable to load file {} as wallpaper", m_monitor_widget->wallpaper()));
 
-    GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
     GUI::Desktop::the().set_background_color(m_color_input->text());
-
     GUI::Desktop::the().set_wallpaper_mode(m_monitor_widget->wallpaper_mode());
 }
 
