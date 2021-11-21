@@ -76,7 +76,13 @@ int main(int argc, char** argv)
                 Archive::TarFileStream file_stream = tar_stream.file_contents();
 
                 const Archive::TarFileHeader& header = tar_stream.header();
-                String absolute_path = Core::File::absolute_path(header.filename());
+
+                LexicalPath path = LexicalPath(header.filename());
+                if (!header.prefix().is_empty())
+                    path = path.prepend(header.prefix());
+
+                String absolute_path = Core::File::absolute_path(path.string());
+
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
                 case Archive::TarFileType::AlternateNormalFile: {
