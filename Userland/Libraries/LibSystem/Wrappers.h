@@ -7,10 +7,12 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <signal.h>
 
 namespace System {
 
 ErrorOr<void> pledge(StringView promises, StringView execpromises);
 ErrorOr<void> unveil(StringView path, StringView permissions);
+ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
 
 }
