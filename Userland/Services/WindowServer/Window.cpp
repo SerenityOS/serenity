@@ -146,7 +146,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
     m_rect = rect;
     if (rect.is_empty()) {
         m_backing_store = nullptr;
-    } else if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
+    } else if (is_internal() && (!m_backing_store || old_rect.size() != rect.size())) {
         auto format = has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
         m_backing_store = Gfx::Bitmap::try_create(format, m_rect.size()).release_value_but_fixme_should_propagate_errors();
     }
@@ -525,7 +525,7 @@ void Window::set_resizable(bool resizable)
 
 void Window::event(Core::Event& event)
 {
-    if (!m_client) {
+    if (is_internal()) {
         VERIFY(parent());
         event.ignore();
         return;
