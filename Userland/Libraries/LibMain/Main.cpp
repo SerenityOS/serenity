@@ -8,6 +8,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {
@@ -22,7 +23,13 @@ int main(int argc, char** argv)
         .arguments = arguments.span(),
     });
     if (result.is_error()) {
-        warnln("Runtime error: {}", result.error());
+        auto error = result.release_error();
+        if (error.is_syscall())
+            warnln("Runtime error: {}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
+        else if (error.is_errno())
+            warnln("Runtime error: {} (errno={})", strerror(error.code()), error.code());
+        else
+            warnln("Runtime error: {}", error.string_literal());
         return 1;
     }
     return result.value();
