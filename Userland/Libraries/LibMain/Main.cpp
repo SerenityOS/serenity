@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     auto result = serenity_main({
         .argc = argc,
         .argv = argv,
-        .arguments = arguments.span(),
+        .strings = arguments.span(),
     });
     if (result.is_error()) {
         auto error = result.release_error();
