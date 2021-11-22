@@ -18,34 +18,22 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <stdio.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     Config::pledge_domains("Minesweeper");
 
-    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath recvfd sendfd", nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-minesweeper");
 
