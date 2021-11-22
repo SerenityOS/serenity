@@ -60,6 +60,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1102,7 +1103,7 @@ public:
     }
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
@@ -1123,7 +1124,7 @@ int main(int argc, char** argv)
 #endif
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
     bool syntax_highlight = !disable_syntax_highlight;
 

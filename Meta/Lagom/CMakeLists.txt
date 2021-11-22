@@ -455,7 +455,7 @@ if (BUILD_LAGOM)
 
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
-        target_link_libraries(js_lagom LagomJS LagomLine Threads::Threads)
+        target_link_libraries(js_lagom LagomJS LagomLine LagomMain Threads::Threads)
 
         add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
         set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
