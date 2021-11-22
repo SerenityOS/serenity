@@ -35,4 +35,10 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
     HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc);
 }
 
+ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
+{
+    int rc = syscall(SC_sigaction, signal, action, old_action);
+    HANDLE_SYSCALL_RETURN_VALUE("sigaction"sv, rc);
+}
+
 }
