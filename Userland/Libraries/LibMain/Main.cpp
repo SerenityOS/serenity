@@ -10,7 +10,7 @@
 #include <LibMain/Main.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+int main(int argc, char** argv, char** envp)
 {
     Vector<StringView> arguments;
     arguments.ensure_capacity(argc);
@@ -20,6 +20,7 @@ int main(int argc, char** argv)
     auto result = serenity_main({
         .argc = argc,
         .argv = argv,
+        .envp = envp,
         .strings = arguments.span(),
     });
     if (result.is_error()) {

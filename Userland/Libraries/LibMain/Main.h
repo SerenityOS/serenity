@@ -13,6 +13,7 @@ namespace Main {
 struct Arguments {
     int argc {};
     char** argv {};
+    char** envp {};
     Span<StringView> strings;
 };
 
