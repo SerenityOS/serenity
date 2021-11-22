@@ -22,7 +22,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
 #include "Mesh.h"
 #include "WavefrontOBJLoader.h"
@@ -281,39 +282,17 @@ bool GLContextWidget::load_file(Core::File& file, String const& filename)
     return true;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
-    if (pledge("stdio thread recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio thread recvfd sendfd rpath unix", nullptr));
 
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/home/anon/Documents/3D Models/teapot.obj", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/home/anon/Documents/3D Models/teapot.bmp", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(System::unveil("/home/anon/Documents/3D Models/teapot.obj", "r"));
+    TRY(System::unveil("/home/anon/Documents/3D Models/teapot.bmp", "r"));
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil(nullptr, nullptr));
 
     // Construct the main window
     auto window = GUI::Window::construct();
@@ -521,7 +500,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto filename = argc > 1 ? argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
+    auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
     if (widget.load_path(filename)) {
         auto canonical_path = Core::File::absolute_path(filename);
         window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
