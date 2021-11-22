@@ -345,6 +345,16 @@ if (BUILD_LAGOM)
         SOURCES ${LIBLINE_SOURCES}
     )
 
+    # Main
+    file(GLOB LIBMAIN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMain/*.cpp")
+    lagom_lib(Main main
+        SOURCES ${LIBMAIN_SOURCES}
+    )
+    # The macOS linker is not happy about LibMain's main() calling an undefined symbol (serenity_main()).
+    if (APPLE)
+        target_link_options(LagomMain PRIVATE -undefined dynamic_lookup)
+    endif()
+
     # Markdown
     file(GLOB LIBMARKDOWN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMarkdown/*.cpp")
     lagom_lib(Markdown markdown
