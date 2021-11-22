@@ -13,9 +13,10 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 
 struct Coordinate {
     int x;
@@ -146,13 +147,9 @@ void Starfield::draw()
     painter.fill_rect(m_bitmap->rect(), Color::Black);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
     unsigned star_count = 1000;
     unsigned refresh_rate = 16;
@@ -163,14 +160,11 @@ int main(int argc, char** argv)
     args_parser.add_option(star_count, "Number of stars to draw (default = 1000)", "stars", 'c', "number");
     args_parser.add_option(refresh_rate, "Refresh rate (default = 16)", "rate", 'r', "milliseconds");
     args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
     auto window = GUI::Window::construct();

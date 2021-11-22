@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Starfield ICON app-screensaver)
-target_link_libraries(Starfield LibGUI LibCore LibGfx)
+target_link_libraries(Starfield LibGUI LibCore LibGfx LibMain)
