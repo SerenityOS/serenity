@@ -26,4 +26,4 @@ set(SOURCES
 )
 
 serenity_app(Browser ICON app-browser)
-target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop LibConfig)
+target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop LibConfig LibMain)
