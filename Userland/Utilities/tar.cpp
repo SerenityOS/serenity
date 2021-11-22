@@ -105,6 +105,16 @@ int main(int argc, char** argv)
                     close(fd);
                     break;
                 }
+                case Archive::TarFileType::SymLink: {
+                    Core::File::ensure_parent_directories(absolute_path);
+
+                    if (symlink(header.link_name().to_string().characters(), absolute_path.characters())) {
+                        perror("symlink");
+                        return 1;
+                    }
+
+                    break;
+                }
                 case Archive::TarFileType::Directory: {
                     Core::File::ensure_parent_directories(absolute_path);
 
