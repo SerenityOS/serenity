@@ -14,6 +14,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -181,26 +183,20 @@ private:
     RefPtr<Core::File> m_proc_mem;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd proc exec rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd proc exec rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
-    if (pledge("stdio recvfd sendfd proc exec rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
 
     const char* cpu = nullptr;
     const char* memory = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
     args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
     if (!cpu && !memory) {
         printf("At least one of --cpu or --memory must be used");
@@ -235,27 +231,11 @@ int main(int argc, char** argv)
     if (memory)
         create_applet(GraphType::Memory, memory);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/stat", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/memstat", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/SystemMonitor", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/proc/stat", "r"));
+    TRY(System::unveil("/proc/memstat", "r"));
+    TRY(System::unveil("/bin/SystemMonitor", "x"));
+    TRY(System::unveil(nullptr, nullptr));
 
     return app->exec();
 }
