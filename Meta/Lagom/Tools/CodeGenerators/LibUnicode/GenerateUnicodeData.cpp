@@ -95,7 +95,6 @@ struct UnicodeData {
     Vector<String> conditions;
 
     Vector<CodePointData> code_point_data;
-    Vector<CodePointRange> code_point_ranges;
 
     PropList general_categories;
     Vector<Alias> general_category_aliases;
@@ -454,7 +453,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             VERIFY(code_point_range_start.has_value());
 
             CodePointRange code_point_range { *code_point_range_start, data.code_point };
-            unicode_data.code_point_ranges.append(code_point_range);
             assigned_code_points.append(code_point_range);
 
             data.name = data.name.substring(1, data.name.length() - 8);
