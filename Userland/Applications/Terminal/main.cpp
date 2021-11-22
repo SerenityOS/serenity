@@ -32,6 +32,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>
@@ -248,29 +250,20 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
     return window;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr));
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
-    int rc = sigaction(SIGCHLD, &act, nullptr);
-    if (rc < 0) {
-        perror("sigaction");
-        return 1;
-    }
 
-    auto app = GUI::Application::construct(argc, argv);
+    TRY(System::sigaction(SIGCHLD, &act, nullptr));
 
-    if (pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+
+    TRY(System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr));
 
     Config::pledge_domains("Terminal");
 
@@ -281,7 +274,7 @@ int main(int argc, char** argv)
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
     args_parser.add_option(keep_open, "Keep the terminal open after the command has finished executing", nullptr, 'k');
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
     if (keep_open && !command_to_execute) {
         warnln("Option -k can only be used in combination with -e.");
@@ -429,42 +422,14 @@ int main(int argc, char** argv)
             settings_window->close();
     };
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/Terminal", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/utmpupdate", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/FileIconProvider.ini", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/config", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/bin", "r"));
+    TRY(System::unveil("/bin/Terminal", "x"));
+    TRY(System::unveil("/bin/utmpupdate", "x"));
+    TRY(System::unveil("/etc/FileIconProvider.ini", "r"));
+    TRY(System::unveil("/tmp/portal/launch", "rw"));
+    TRY(System::unveil("/tmp/portal/config", "rw"));
+    TRY(System::unveil(nullptr, nullptr));
 
     window->show();
     int result = app->exec();
