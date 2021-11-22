@@ -12,30 +12,21 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
 
     auto window = GUI::Window::construct();
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto& pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
 
@@ -44,8 +35,8 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    if (argc >= 2) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), argv[1]);
+    if (arguments.argc >= 2) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window->window_id(), arguments.argv[1]);
 
         if (response.error != 0) {
             if (response.error != -1)
