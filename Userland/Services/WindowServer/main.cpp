@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,47 +14,23 @@
 #include <LibCore/File.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <signal.h>
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr));
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/tmp", "cw"));
+    TRY(System::unveil("/etc/WindowServer.ini", "rwc"));
+    TRY(System::unveil("/dev", "rw"));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil /res");
-        return 1;
-    }
-
-    if (unveil("/tmp", "cw") < 0) {
-        perror("unveil /tmp cw");
-        return 1;
-    }
-
-    if (unveil("/etc/WindowServer.ini", "rwc") < 0) {
-        perror("unveil /etc/WindowServer.ini");
-        return 1;
-    }
-
-    if (unveil("/dev", "rw") < 0) {
-        perror("unveil /dev rw");
-        return 1;
-    }
-
-    struct sigaction act;
-    memset(&act, 0, sizeof(act));
+    struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
-    int rc = sigaction(SIGCHLD, &act, nullptr);
-    if (rc < 0) {
-        perror("sigaction");
-        return 1;
-    }
+    TRY(System::sigaction(SIGCHLD, &act, nullptr));
 
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
@@ -72,10 +48,7 @@ int main(int, char**)
 
     WindowServer::EventLoop loop;
 
-    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr));
 
     // First check which screens are explicitly configured
     {
@@ -141,19 +114,13 @@ int main(int, char**)
     auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
-    if (unveil("/tmp", "") < 0) {
-        perror("unveil /tmp");
-        return 1;
-    }
+    TRY(System::unveil("/tmp", ""));
 
     // NOTE: Because we dynamically need to be able to open new /dev/fb*
     // devices we can't really unveil all of /dev unless we have some
     // other mechanism that can hand us file descriptors for these.
 
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil(nullptr, nullptr));
 
     dbgln("Entering WindowServer main loop");
     loop.exec();
