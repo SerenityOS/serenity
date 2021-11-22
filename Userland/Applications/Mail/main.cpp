@@ -11,44 +11,22 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix inet", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath unix inet", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     Config::pledge_domains("Mail");
 
-    if (unveil("/res", "r") < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/etc", "r") < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/lookup", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/etc", "r"));
+    TRY(System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
 
