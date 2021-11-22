@@ -42,6 +42,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -60,22 +62,14 @@ static void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Win
 static void show_properties(String const& container_dir_path, String const& path, Vector<String> const& selected, GUI::Window* window);
 static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, String const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr));
 
-    struct sigaction act;
-    memset(&act, 0, sizeof(act));
+    struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
-    int rc = sigaction(SIGCHLD, &act, nullptr);
-    if (rc < 0) {
-        perror("sigaction");
-        return 1;
-    }
+    TRY(System::sigaction(SIGCHLD, &act, nullptr));
 
     Core::ArgsParser args_parser;
     bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };
@@ -84,14 +78,11 @@ int main(int argc, char** argv)
     args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's');
     args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
     args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
-    if (pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr));
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
     Config::monitor_domain("FileManager");
