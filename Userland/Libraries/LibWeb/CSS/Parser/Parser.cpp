@@ -1111,10 +1111,26 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComp
     return {};
 }
 
-template<typename T>
-Optional<Parser::GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<T>&)
+// https://www.w3.org/TR/mediaqueries-4/#typedef-general-enclosed
+Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<StyleComponentValueRule>& tokens)
 {
-    // FIXME: Actually parse this! https://www.w3.org/TR/mediaqueries-5/#typedef-general-enclosed
+    tokens.skip_whitespace();
+    auto start_position = tokens.position();
+
+    auto& first_token = tokens.next_token();
+
+    // `[ <function-token> <any-value> ) ]`
+    if (first_token.is_function())
+        return GeneralEnclosed { first_token.to_string() };
+
+    // `( <ident> <any-value> )`
+    if (first_token.is_block() && first_token.block().is_paren()) {
+        auto& block = first_token.block();
+        if (!block.values().is_empty() && block.values().first().is(Token::Type::Ident))
+            return GeneralEnclosed { first_token.to_string() };
+    }
+
+    tokens.rewind_to_position(start_position);
     return {};
 }
 
