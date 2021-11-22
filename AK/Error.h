@@ -21,9 +21,11 @@ namespace AK {
 class Error {
 public:
     static Error from_errno(int code) { return Error(code); }
+    static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
     static Error from_string_literal(StringView string_literal) { return Error(string_literal); }
 
     bool is_errno() const { return m_code != 0; }
+    bool is_syscall() const { return m_syscall; }
 
     int code() const { return m_code; }
     StringView string_literal() const { return m_string_literal; }
@@ -40,8 +42,16 @@ private:
     {
     }
 
+    Error(StringView syscall_name, int rc)
+        : m_code(-rc)
+        , m_string_literal(syscall_name)
+        , m_syscall(true)
+    {
+    }
+
     int m_code { 0 };
     StringView m_string_literal;
+    bool m_syscall { false };
 };
 
 template<typename T, typename ErrorType>
