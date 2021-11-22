@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ByteReader.h>
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -27,16 +28,17 @@ public:
     }
 
     const unsigned* rows() const { return m_rows; }
-    unsigned row(unsigned index) const { return m_rows[index]; }
+    unsigned row(unsigned index) const { return ByteReader::load32(reinterpret_cast<u8 const*>(m_rows + index)); }
 
     bool bit_at(int x, int y) const { return row(y) & (1 << x); }
     void set_bit_at(int x, int y, bool b)
     {
-        auto& mutable_row = const_cast<unsigned*>(m_rows)[y];
+        unsigned row_value = row(y);
         if (b)
-            mutable_row |= 1 << x;
+            row_value |= 1 << x;
         else
-            mutable_row &= ~(1 << x);
+            row_value &= ~(1 << x);
+        __builtin_memcpy(const_cast<unsigned*>(m_rows + y), &row_value, sizeof(unsigned));
     }
 
     IntSize size() const { return m_size; }
@@ -59,7 +61,7 @@ public:
     }
 
     Glyph(RefPtr<Bitmap> bitmap, int left_bearing, int advance, int ascent)
-        : m_bitmap(bitmap)
+        : m_bitmap(move(bitmap))
         , m_left_bearing(left_bearing)
         , m_advance(advance)
         , m_ascent(ascent)
