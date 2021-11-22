@@ -6,25 +6,17 @@
 
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main()
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    auto file = Core::File::construct("/proc/cpuinfo");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        perror("Core::File::open()");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath", nullptr));
+    auto file = TRY(Core::File::open("/proc/cpuinfo", Core::OpenMode::ReadOnly));
 
     auto buffer = file->read_all();
-    auto json = JsonValue::from_string({ buffer });
-    auto cpuinfo_array = json.value().as_array();
+    auto json = TRY(JsonValue::from_string({ buffer }));
+    auto const& cpuinfo_array = json.as_array();
     outln("{}", cpuinfo_array.size());
 
     return 0;
