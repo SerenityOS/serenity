@@ -16,53 +16,29 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     Config::pledge_domains("Chess");
 
-    if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-chess");
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/ChessEngine", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(Core::StandardPaths::home_directory().characters(), "wcbr") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/bin/ChessEngine", "x"));
+    TRY(System::unveil("/etc/passwd", "r"));
+    TRY(System::unveil(Core::StandardPaths::home_directory().characters(), "wcbr"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto size = Config::read_i32("Chess", "Display", "size", 512);
     window->set_title("Chess");
