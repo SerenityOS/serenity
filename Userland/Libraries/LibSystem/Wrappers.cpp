@@ -7,6 +7,12 @@
 #include <LibSystem/Wrappers.h>
 #include <LibSystem/syscall.h>
 
+#define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc) \
+    if ((rc) < 0) {                                   \
+        return Error::from_syscall(syscall_name, rc); \
+    }                                                 \
+    return {};
+
 namespace System {
 
 ErrorOr<void> pledge(StringView promises, StringView execpromises)
@@ -16,9 +22,7 @@ ErrorOr<void> pledge(StringView promises, StringView execpromises)
         { execpromises.characters_without_null_termination(), execpromises.length() },
     };
     int rc = syscall(SC_pledge, &params);
-    if (rc < 0)
-        return Error::from_errno(-rc);
-    return {};
+    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc);
 }
 
 ErrorOr<void> unveil(StringView path, StringView permissions)
@@ -28,9 +32,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
         { permissions.characters_without_null_termination(), permissions.length() },
     };
     int rc = syscall(SC_unveil, &params);
-    if (rc < 0)
-        return Error::from_errno(-rc);
-    return {};
+    HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc);
 }
 
 }
