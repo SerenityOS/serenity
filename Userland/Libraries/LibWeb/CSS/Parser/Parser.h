@@ -13,6 +13,7 @@
 #include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
+#include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
@@ -170,10 +171,7 @@ private:
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
-    struct GeneralEnclosed {
-    };
-    template<typename T>
-    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<T>&);
+    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
