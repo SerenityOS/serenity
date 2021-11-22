@@ -7,6 +7,8 @@
 #include <AK/StringUtils.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <alloca.h>
 #include <grp.h>
 #include <pwd.h>
@@ -21,27 +23,12 @@ static bool flag_print_name = false;
 static bool flag_print_gid_all = false;
 static String user_str;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/group", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::unveil("/etc/passwd", "r"));
+    TRY(System::unveil("/etc/group", "r"));
+    TRY(System::unveil(nullptr, nullptr));
+    TRY(System::pledge("stdio rpath", nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');
@@ -49,7 +36,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');
     args_parser.add_option(flag_print_name, "Print name", nullptr, 'n');
     args_parser.add_positional_argument(user_str, "User name/UID to query", "USER", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
     if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
         warnln("cannot print only names or real IDs in default format");
@@ -63,21 +50,10 @@ int main(int argc, char** argv)
 
     Optional<Core::Account> account;
     if (!user_str.is_empty()) {
-        if (auto user_id = user_str.to_uint(); user_id.has_value()) {
-            auto result = Core::Account::from_uid(user_id.value(), Core::Account::Read::PasswdOnly);
-            if (result.is_error()) {
-                warnln("Couldn't retrieve user id '{}': {}", user_str, result.error());
-                return 1;
-            }
-            account = result.release_value();
-        } else {
-            auto result = Core::Account::from_name(user_str.characters(), Core::Account::Read::PasswdOnly);
-            if (result.is_error()) {
-                warnln("Couldn't retrieve user name '{}': {}", user_str, result.error());
-                return 1;
-            }
-            account = result.release_value();
-        }
+        if (auto user_id = user_str.to_uint(); user_id.has_value())
+            account = TRY(Core::Account::from_uid(user_id.value(), Core::Account::Read::PasswdOnly));
+        else
+            account = TRY(Core::Account::from_name(user_str.characters(), Core::Account::Read::PasswdOnly));
     } else {
         account = Core::Account::self(Core::Account::Read::PasswdOnly);
     }
