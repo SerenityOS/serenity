@@ -19,40 +19,28 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
     srand(time(nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     auto app_icon = GUI::Icon::default_icon("app-2048");
 
     auto window = GUI::Window::construct();
 
     Config::pledge_domains("2048");
 
-    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio rpath recvfd sendfd", nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil(nullptr, nullptr));
 
     size_t board_size = Config::read_i32("2048", "", "board_size", 4);
     u32 target_tile = Config::read_i32("2048", "", "target_tile", 2048);
