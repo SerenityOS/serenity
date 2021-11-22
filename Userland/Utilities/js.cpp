@@ -61,6 +61,7 @@
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1105,6 +1106,10 @@ public:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+#ifdef __serenity__
+    TRY(System::pledge("stdio rpath wpath cpath tty sigaction", nullptr));
+#endif
+
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
     Vector<String> script_paths;
