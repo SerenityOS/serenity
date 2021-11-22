@@ -9,7 +9,6 @@
 #include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
@@ -237,13 +236,6 @@ int main(int argc, char** argv)
         create_applet(GraphType::Memory, memory);
 
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    // FIXME: This is required by Core::ProcessStatisticsReader.
-    //        It would be good if we didn't depend on that.
-    if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");
         return 1;
     }
