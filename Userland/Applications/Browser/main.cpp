@@ -19,6 +19,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -30,25 +32,22 @@ Vector<String> g_content_filters;
 
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (getuid() == 0) {
         warnln("Refusing to run as root");
         return 1;
     }
 
-    if (pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr));
 
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments.argc, arguments.argv);
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     Config::pledge_domains("Browser");
 
@@ -61,37 +60,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/home", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/image", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/request", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(System::unveil("/home", "rwc"));
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil("/etc/passwd", "r"));
+    TRY(System::unveil("/tmp/portal/image", "rw"));
+    TRY(System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(System::unveil("/tmp/portal/request", "rw"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
