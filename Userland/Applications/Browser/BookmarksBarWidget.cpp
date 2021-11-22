@@ -124,23 +124,31 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_separator = GUI::Widget::construct();
 
     m_context_menu = GUI::Menu::construct();
-    auto default_action = GUI::Action::create("&Open", [this](auto&) {
-        if (on_bookmark_click)
-            on_bookmark_click(m_context_menu_url, Mod_None);
-    });
+    auto default_action = GUI::Action::create(
+        "&Open", [this](auto&) {
+            if (on_bookmark_click)
+                on_bookmark_click(m_context_menu_url, Mod_None);
+        },
+        this);
     m_context_menu_default_action = default_action;
     m_context_menu->add_action(default_action);
-    m_context_menu->add_action(GUI::Action::create("Open in New &Tab", [this](auto&) {
-        if (on_bookmark_click)
-            on_bookmark_click(m_context_menu_url, Mod_Ctrl);
-    }));
+    m_context_menu->add_action(GUI::Action::create(
+        "Open in New &Tab", [this](auto&) {
+            if (on_bookmark_click)
+                on_bookmark_click(m_context_menu_url, Mod_Ctrl);
+        },
+        this));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GUI::Action::create("&Edit...", [this](auto&) {
-        edit_bookmark(m_context_menu_url);
-    }));
-    m_context_menu->add_action(GUI::CommonActions::make_delete_action([this](auto&) {
-        remove_bookmark(m_context_menu_url);
-    }));
+    m_context_menu->add_action(GUI::Action::create(
+        "&Edit...", [this](auto&) {
+            edit_bookmark(m_context_menu_url);
+        },
+        this));
+    m_context_menu->add_action(GUI::CommonActions::make_delete_action(
+        [this](auto&) {
+            remove_bookmark(m_context_menu_url);
+        },
+        this));
 
     Vector<GUI::JsonArrayModel::FieldSpec> fields;
     fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
