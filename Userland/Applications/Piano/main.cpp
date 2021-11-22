@@ -22,15 +22,14 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     TrackManager track_manager;
 
