@@ -106,7 +106,7 @@ public:
     String qualified_name() const override;
 
 private:
-    BitmapFont(String name, String family, u32* rows, u8* widths, bool is_fixed_width,
+    BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
@@ -126,7 +126,7 @@ private:
     u8* m_range_mask { nullptr };
     Vector<Optional<size_t>> m_range_indices;
 
-    u32* m_rows { nullptr };
+    u8* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
     RefPtr<MappedFile> m_mapped_file;
 

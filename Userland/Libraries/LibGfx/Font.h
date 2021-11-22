@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Bitmap.h>
+#include <AK/ByteReader.h>
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -20,31 +22,30 @@ namespace Gfx {
 class GlyphBitmap {
 public:
     GlyphBitmap() = default;
-    GlyphBitmap(const unsigned* rows, IntSize size)
+    GlyphBitmap(const u8* rows, size_t start_index, IntSize size)
         : m_rows(rows)
+        , m_start_index(start_index)
         , m_size(size)
     {
     }
 
-    const unsigned* rows() const { return m_rows; }
-    unsigned row(unsigned index) const { return m_rows[index]; }
+    unsigned row(unsigned index) const { return ByteReader::load32(bitmap(index).data()); }
 
-    bool bit_at(int x, int y) const { return row(y) & (1 << x); }
-    void set_bit_at(int x, int y, bool b)
-    {
-        auto& mutable_row = const_cast<unsigned*>(m_rows)[y];
-        if (b)
-            mutable_row |= 1 << x;
-        else
-            mutable_row &= ~(1 << x);
-    }
+    bool bit_at(int x, int y) const { return bitmap(y).get(x); }
+    void set_bit_at(int x, int y, bool b) { bitmap(y).set(x, b); }
 
     IntSize size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
 
 private:
-    const unsigned* m_rows { nullptr };
+    AK::Bitmap bitmap(size_t y) const
+    {
+        return { const_cast<u8*>(m_rows) + sizeof(u32) * (m_start_index + y), sizeof(u32) * 8 };
+    }
+
+    const u8* m_rows { nullptr };
+    size_t m_start_index { 0 };
     IntSize m_size { 0, 0 };
 };
 
