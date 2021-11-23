@@ -392,6 +392,54 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
     return MUST(add_instant(global_object, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 }
 
+// 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
+ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(ns1) is BigInt.
+    // 2. Assert: Type(ns2) is BigInt.
+
+    // 3. If ns1 is ns2, then
+    if (nanoseconds1.big_integer() == nanoseconds2.big_integer()) {
+        // a. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0, [[Hours]]: 0, [[Minutes]]: 0, [[Seconds]]: 0, [[Milliseconds]]: 0, [[Microseconds]]: 0, [[Nanoseconds]]: 0 }.
+        return TemporalDuration { .years = 0, .months = 0, .weeks = 0, .days = 0, .hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0, .microseconds = 0, .nanoseconds = 0 };
+    }
+
+    // 4. Let startInstant be ! CreateTemporalInstant(ns1).
+    auto* start_instant = MUST(create_temporal_instant(global_object, nanoseconds1));
+
+    // 5. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, startInstant, calendar).
+    auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *start_instant, calendar));
+
+    // 6. Let endInstant be ! CreateTemporalInstant(ns2).
+    auto* end_instant = MUST(create_temporal_instant(global_object, nanoseconds2));
+
+    // 7. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, endInstant, calendar).
+    auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *end_instant, calendar));
+
+    // 8. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], calendar, largestUnit, options).
+    auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), calendar, largest_unit, options));
+
+    // 9. Let intermediateNs be ? AddZonedDateTime(ns1, timeZone, calendar, dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], 0, 0, 0, 0, 0, 0, 0).
+    auto* intermediate_ns = TRY(add_zoned_date_time(global_object, nanoseconds1, &time_zone, calendar, date_difference.years, date_difference.months, date_difference.weeks, 0, 0, 0, 0, 0, 0, 0));
+
+    // 10. Let timeRemainderNs be ns2 − intermediateNs.
+    auto time_remainder_ns = nanoseconds2.big_integer().minus(intermediate_ns->big_integer());
+
+    // 11. Let intermediate be ! CreateTemporalZonedDateTime(intermediateNs, timeZone, calendar).
+    auto* intermediate = MUST(create_temporal_zoned_date_time(global_object, *intermediate_ns, time_zone, calendar));
+
+    // 12. Let result be ? NanosecondsToDays(timeRemainderNs, intermediate).
+    auto result = TRY(nanoseconds_to_days(global_object, *js_bigint(vm, time_remainder_ns), intermediate));
+
+    // 13. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
+    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
+
+    // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: result.[[Days]], [[Hours]]: timeDifference.[[Hours]], [[Minutes]]: timeDifference.[[Minutes]], [[Seconds]]: timeDifference.[[Seconds]], [[Milliseconds]]: timeDifference.[[Milliseconds]], [[Microseconds]]: timeDifference.[[Microseconds]], [[Nanoseconds]]: timeDifference.[[Nanoseconds]] }.
+    return TemporalDuration { .years = date_difference.years, .months = date_difference.months, .weeks = date_difference.weeks, .days = result.days, .hours = time_difference.hours, .minutes = time_difference.minutes, .seconds = time_difference.seconds, .milliseconds = time_difference.milliseconds, .microseconds = time_difference.microseconds, .nanoseconds = time_difference.nanoseconds };
+}
+
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays
 ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& global_object, BigInt const& nanoseconds_bigint, Value relative_to_value)
 {
