@@ -6,7 +6,9 @@
 
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
+#include <LibMain/Main.h>
 #include <Services/LoginServer/LoginWindow.h>
 #include <errno.h>
 #include <string.h>
@@ -49,46 +51,18 @@ static void login(Core::Account const& account, LoginWindow& window)
     window.show();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
-    if (pledge("stdio recvfd sendfd rpath exec proc id", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/home", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/shadow", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/group", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/SystemServer", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath exec proc id", nullptr));
+    TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/shadow", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
+    TRY(Core::System::unveil("/bin/SystemServer", "x"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = LoginWindow::construct();
     window->on_submit = [&]() {
@@ -118,7 +92,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "username");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!auto_login) {
         window->show();
