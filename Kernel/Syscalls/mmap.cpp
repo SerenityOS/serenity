@@ -128,7 +128,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
 
     FlatPtr addr = params.addr;
     auto size = params.size;
-    auto alignment = params.alignment;
+    auto alignment = params.alignment ? params.alignment : PAGE_SIZE;
     auto prot = params.prot;
     auto flags = params.flags;
     auto fd = params.fd;
