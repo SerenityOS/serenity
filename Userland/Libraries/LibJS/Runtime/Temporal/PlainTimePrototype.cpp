@@ -272,7 +272,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, "hour"sv));
 
     // 7. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -290,7 +290,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
     auto rounded_result = TRY(round_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode));
 
     // 13. Set result to ! BalanceDuration(0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], largestUnit).
-    result = MUST(balance_duration(global_object, 0, rounded_result.hours, rounded_result.minutes, rounded_result.seconds, rounded_result.milliseconds, rounded_result.microseconds, *js_bigint(vm, { (i32)rounded_result.nanoseconds }), largest_unit));
+    result = MUST(balance_duration(global_object, 0, rounded_result.hours, rounded_result.minutes, rounded_result.seconds, rounded_result.milliseconds, rounded_result.microseconds, *js_bigint(vm, { (i32)rounded_result.nanoseconds }), *largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -316,7 +316,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, "hour"sv));
 
     // 7. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 8. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -337,7 +337,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
     auto rounded_result = TRY(round_duration(global_object, 0, 0, 0, 0, -result.hours, -result.minutes, -result.seconds, -result.milliseconds, -result.microseconds, -result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode));
 
     // 14. Set result to ! BalanceDuration(0, −result.[[Hours]], −result.[[Minutes]], −result.[[Seconds]], −result.[[Milliseconds]], −result.[[Microseconds]], −result.[[Nanoseconds]], largestUnit).
-    result = MUST(balance_duration(global_object, 0, -rounded_result.hours, -rounded_result.minutes, -rounded_result.seconds, -rounded_result.milliseconds, -rounded_result.microseconds, *js_bigint(vm, { (i32)-rounded_result.nanoseconds }), largest_unit));
+    result = MUST(balance_duration(global_object, 0, -rounded_result.hours, -rounded_result.minutes, -rounded_result.seconds, -rounded_result.milliseconds, -rounded_result.microseconds, *js_bigint(vm, { (i32)-rounded_result.nanoseconds }), *largest_unit));
 
     // 15. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
