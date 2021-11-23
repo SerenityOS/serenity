@@ -18,8 +18,9 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <stdio.h>
-#include <unistd.h>
 
 enum class StatisticDisplay : u8 {
     HighScore,
@@ -36,32 +37,19 @@ static String format_seconds(uint64_t seconds_elapsed)
     return String::formatted("{:02}:{:02}:{:02}", hours, minutes, seconds);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     auto app_icon = GUI::Icon::default_icon("app-spider");
 
     Config::pledge_domains("Spider");
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::unveil("/res", "r"));
+    TRY(System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
     window->set_title("Spider");
