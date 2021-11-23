@@ -6,9 +6,9 @@
 
 #include "MatroskaReader.h"
 #include <AK/Function.h>
-#include <AK/MappedFile.h>
 #include <AK/Optional.h>
 #include <AK/Utf8View.h>
+#include <LibCore/MappedFile.h>
 
 namespace Video {
 
@@ -43,7 +43,7 @@ constexpr u32 TIMESTAMP_ID = 0xE7;
 
 OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView path)
 {
-    auto mapped_file_result = MappedFile::map(path);
+    auto mapped_file_result = Core::MappedFile::map(path);
     if (mapped_file_result.is_error())
         return {};
 

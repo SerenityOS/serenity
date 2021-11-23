@@ -14,7 +14,7 @@ namespace PCIDB {
 
 RefPtr<Database> Database::open(const String& filename)
 {
-    auto file_or_error = MappedFile::map(filename);
+    auto file_or_error = Core::MappedFile::map(filename);
     if (file_or_error.is_error())
         return nullptr;
     auto res = adopt_ref(*new Database(file_or_error.release_value()));

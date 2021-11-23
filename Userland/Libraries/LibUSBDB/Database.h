@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibCore/MappedFile.h>
 
 namespace USBDB {
 
@@ -63,7 +63,7 @@ public:
     const StringView get_protocol(u8 class_id, u8 subclass_id, u8 protocol_id) const;
 
 private:
-    explicit Database(NonnullRefPtr<MappedFile> file)
+    explicit Database(NonnullRefPtr<Core::MappedFile> file)
         : m_file(move(file))
     {
     }
@@ -76,7 +76,7 @@ private:
         ClassMode,
     };
 
-    NonnullRefPtr<MappedFile> m_file;
+    NonnullRefPtr<Core::MappedFile> m_file;
     StringView m_view {};
     HashMap<int, NonnullOwnPtr<Vendor>> m_vendors;
     HashMap<int, NonnullOwnPtr<Class>> m_classes;

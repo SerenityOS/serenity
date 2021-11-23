@@ -13,9 +13,9 @@
 #include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/StringUtils.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -149,7 +149,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 
 bool Emulator::load_elf()
 {
-    auto file_or_error = MappedFile::map(m_executable_path);
+    auto file_or_error = Core::MappedFile::map(m_executable_path);
     if (file_or_error.is_error()) {
         reportln("Unable to map {}: {}", m_executable_path, file_or_error.error());
         return false;
@@ -172,7 +172,7 @@ bool Emulator::load_elf()
     VERIFY(!interpreter_path.is_null());
     dbgln("interpreter: {}", interpreter_path);
 
-    auto interpreter_file_or_error = MappedFile::map(interpreter_path);
+    auto interpreter_file_or_error = Core::MappedFile::map(interpreter_path);
     VERIFY(!interpreter_file_or_error.is_error());
     auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
     ELF::Image interpreter_image(interpreter_image_data);
@@ -400,7 +400,7 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
         lib_path = String::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
-        auto file_or_error = MappedFile::map(lib_path);
+        auto file_or_error = Core::MappedFile::map(lib_path);
         if (file_or_error.is_error())
             return {};
 

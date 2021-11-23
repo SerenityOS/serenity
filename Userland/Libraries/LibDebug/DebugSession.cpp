@@ -452,7 +452,7 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
         }
 
-        auto file_or_error = MappedFile::map(object_path.value());
+        auto file_or_error = Core::MappedFile::map(object_path.value());
         if (file_or_error.is_error())
             return IterationDecision::Continue;
 

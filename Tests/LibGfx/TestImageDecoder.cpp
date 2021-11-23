@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <AK/String.h>
+#include <LibCore/MappedFile.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
@@ -23,7 +23,7 @@
 
 TEST_CASE(test_bmp)
 {
-    auto file = MappedFile::map("/res/html/misc/bmpsuite_files/rgba32-1.bmp").release_value();
+    auto file = Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgba32-1.bmp").release_value();
     auto bmp = Gfx::BMPImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(bmp.frame_count());
 
@@ -37,7 +37,7 @@ TEST_CASE(test_bmp)
 
 TEST_CASE(test_gif)
 {
-    auto file = MappedFile::map("/res/graphics/download-animation.gif").release_value();
+    auto file = Core::MappedFile::map("/res/graphics/download-animation.gif").release_value();
     auto gif = Gfx::GIFImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(gif.frame_count());
 
@@ -52,7 +52,7 @@ TEST_CASE(test_gif)
 TEST_CASE(test_ico)
 {
     // FIXME: Use an ico file
-    auto file = MappedFile::map("/res/graphics/buggie.png").release_value();
+    auto file = Core::MappedFile::map("/res/graphics/buggie.png").release_value();
     auto ico = Gfx::ICOImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(ico.frame_count());
 
@@ -65,7 +65,7 @@ TEST_CASE(test_ico)
 
 TEST_CASE(test_jpg)
 {
-    auto file = MappedFile::map("/res/html/misc/bmpsuite_files/rgb24.jpg").release_value();
+    auto file = Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgb24.jpg").release_value();
     auto jpg = Gfx::JPGImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(jpg.frame_count());
 
@@ -79,7 +79,7 @@ TEST_CASE(test_jpg)
 
 TEST_CASE(test_pbm)
 {
-    auto file = MappedFile::map("/res/html/misc/pbmsuite_files/buggie-raw.pbm").release_value();
+    auto file = Core::MappedFile::map("/res/html/misc/pbmsuite_files/buggie-raw.pbm").release_value();
     auto pbm = Gfx::PBMImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(pbm.frame_count());
 
@@ -93,7 +93,7 @@ TEST_CASE(test_pbm)
 
 TEST_CASE(test_pgm)
 {
-    auto file = MappedFile::map("/res/html/misc/pgmsuite_files/buggie-raw.pgm").release_value();
+    auto file = Core::MappedFile::map("/res/html/misc/pgmsuite_files/buggie-raw.pgm").release_value();
     auto pgm = Gfx::PGMImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(pgm.frame_count());
 
@@ -107,7 +107,7 @@ TEST_CASE(test_pgm)
 
 TEST_CASE(test_png)
 {
-    auto file = MappedFile::map("/res/graphics/buggie.png").release_value();
+    auto file = Core::MappedFile::map("/res/graphics/buggie.png").release_value();
     auto png = Gfx::PNGImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(png.frame_count());
 
@@ -121,7 +121,7 @@ TEST_CASE(test_png)
 
 TEST_CASE(test_ppm)
 {
-    auto file = MappedFile::map("/res/html/misc/ppmsuite_files/buggie-raw.ppm").release_value();
+    auto file = Core::MappedFile::map("/res/html/misc/ppmsuite_files/buggie-raw.ppm").release_value();
     auto ppm = Gfx::PPMImageDecoderPlugin((u8 const*)file->data(), file->size());
     EXPECT(ppm.frame_count());
 

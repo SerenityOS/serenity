@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <AK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -25,7 +25,7 @@ static Optional<String> description_only(String description, [[maybe_unused]] co
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
 static Optional<String> image_details(const String& description, const String& path)
 {
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
 
@@ -39,7 +39,7 @@ static Optional<String> image_details(const String& description, const String& p
 
 static Optional<String> gzip_details(String description, const String& path)
 {
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
 
@@ -56,7 +56,7 @@ static Optional<String> gzip_details(String description, const String& path)
 
 static Optional<String> elf_details(String description, const String& path)
 {
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
     auto& mapped_file = *file_or_error.value();

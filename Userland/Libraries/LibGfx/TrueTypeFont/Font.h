@@ -87,7 +87,7 @@ private:
     {
     }
 
-    RefPtr<MappedFile> m_mapped_file;
+    RefPtr<Core::MappedFile> m_mapped_file;
 
     ReadonlyBytes m_buffer;
 

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/MappedFile.h>
 #include <LibDeviceTree/Validation.h>
 #include <serenity.h>
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     args.parse(argc, argv);
 
     // FIXME: Figure out how to do this sanely from stdin
-    auto maybe_file = MappedFile::map(filename);
+    auto maybe_file = Core::MappedFile::map(filename);
     if (maybe_file.is_error()) {
         warnln("Unable to dump device tree from file {}: {}", filename, maybe_file.error());
         return 1;
