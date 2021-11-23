@@ -105,6 +105,7 @@ static bool s_opt_bytecode = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
 static bool s_strip_ansi = false;
+static bool s_disable_source_location_hints = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
 static int s_repl_line_level = 0;
@@ -868,9 +869,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        auto hint = error.source_location_hint(source);
-        if (!hint.is_empty())
-            js_outln("{}", hint);
+        if (!s_disable_source_location_hints) {
+            auto hint = error.source_location_hint(source);
+            if (!hint.is_empty())
+                js_outln("{}", hint);
+        }
         vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
@@ -1171,6 +1174,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'c');
+    args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
 #ifdef JS_TRACK_ZOMBIE_CELLS
     bool zombify_dead_cells = false;
