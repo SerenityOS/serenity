@@ -77,17 +77,21 @@ struct UnicodeLocaleData {
     size_t max_variant_size { 0 };
 };
 
-static Optional<LanguageMapping> parse_language_mapping(UnicodeLocaleData& locale_data, StringView key, StringView alias)
+// Some parsing is expected to fail. For example, the CLDR contains language mappings
+// with locales such as "en-GB-oed" that are canonically invalid locale IDs.
+#define TRY_OR_DISCARD(expression)             \
+    ({                                         \
+        auto _temporary_result = (expression); \
+        if (_temporary_result.is_error())      \
+            return;                            \
+        _temporary_result.release_value();     \
+    })
+
+static ErrorOr<LanguageMapping> parse_language_mapping(UnicodeLocaleData& locale_data, StringView key, StringView alias)
 {
-    auto parsed_key = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, key);
-    if (!parsed_key.has_value())
-        return {};
-
-    auto parsed_alias = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, alias);
-    if (!parsed_alias.has_value())
-        return {};
-
-    return LanguageMapping { parsed_key.release_value(), parsed_alias.release_value() };
+    auto parsed_key = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, key));
+    auto parsed_alias = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, alias));
+    return LanguageMapping { move(parsed_key), move(parsed_alias) };
 }
 
 static ErrorOr<void> parse_core_aliases(String core_supplemental_path, UnicodeLocaleData& locale_data)
@@ -107,13 +111,10 @@ static ErrorOr<void> parse_core_aliases(String core_supplemental_path, UnicodeLo
             auto alias = value.as_object().get("_replacement"sv).as_string();
 
             if (key.contains('-')) {
-                auto mapping = parse_language_mapping(locale_data, key, alias);
-                if (!mapping.has_value())
-                    return;
-
-                locale_data.max_variant_size = max(mapping->key.variants.size(), locale_data.max_variant_size);
-                locale_data.max_variant_size = max(mapping->alias.variants.size(), locale_data.max_variant_size);
-                locale_data.complex_mappings.append(mapping.release_value());
+                auto mapping = TRY_OR_DISCARD(parse_language_mapping(locale_data, key, alias));
+                locale_data.max_variant_size = max(mapping.key.variants.size(), locale_data.max_variant_size);
+                locale_data.max_variant_size = max(mapping.alias.variants.size(), locale_data.max_variant_size);
+                locale_data.complex_mappings.append(move(mapping));
             } else {
                 alias_map.set(key, locale_data.unique_strings.ensure(alias));
             }
@@ -141,13 +142,10 @@ static ErrorOr<void> parse_likely_subtags(String core_supplemental_path, Unicode
     auto const& likely_subtags_object = supplemental_object.as_object().get("likelySubtags"sv);
 
     likely_subtags_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto mapping = parse_language_mapping(locale_data, key, value.as_string());
-        if (!mapping.has_value())
-            return;
-
-        locale_data.max_variant_size = max(mapping->key.variants.size(), locale_data.max_variant_size);
-        locale_data.max_variant_size = max(mapping->alias.variants.size(), locale_data.max_variant_size);
-        locale_data.likely_subtags.append(mapping.release_value());
+        auto mapping = TRY_OR_DISCARD(parse_language_mapping(locale_data, key, value.as_string()));
+        locale_data.max_variant_size = max(mapping.key.variants.size(), locale_data.max_variant_size);
+        locale_data.max_variant_size = max(mapping.alias.variants.size(), locale_data.max_variant_size);
+        locale_data.likely_subtags.append(move(mapping));
     });
 
     return {};
@@ -417,7 +415,7 @@ static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLoca
     return {};
 }
 
-static void define_aliases_without_scripts(UnicodeLocaleData& locale_data)
+static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_data)
 {
     // From ECMA-402: https://tc39.es/ecma402/#sec-internal-slots
     //
@@ -431,40 +429,42 @@ static void define_aliases_without_scripts(UnicodeLocaleData& locale_data)
         return locale_data.locale_aliases.find_if([&](auto const& alias) { return locale == alias.alias; });
     };
 
-    auto append_alias_without_script = [&](auto const& locale) {
-        auto parsed_locale = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, locale);
-        VERIFY(parsed_locale.has_value());
-
-        if ((parsed_locale->language == 0) || (parsed_locale->script == 0) || (parsed_locale->region == 0))
-            return;
+    auto append_alias_without_script = [&](auto const& locale) -> ErrorOr<void> {
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, locale));
+        if ((parsed_locale.language == 0) || (parsed_locale.script == 0) || (parsed_locale.region == 0))
+            return {};
 
         auto locale_without_script = String::formatted("{}-{}",
-            locale_data.unique_strings.get(parsed_locale->language),
-            locale_data.unique_strings.get(parsed_locale->region));
+            locale_data.unique_strings.get(parsed_locale.language),
+            locale_data.unique_strings.get(parsed_locale.region));
 
         if (locale_data.locales.contains(locale_without_script))
-            return;
+            return {};
         if (find_alias(locale_without_script) != locale_data.locale_aliases.end())
-            return;
+            return {};
 
         if (auto it = find_alias(locale); it != locale_data.locale_aliases.end())
             locale_data.locale_aliases.append({ it->name, locale_without_script });
         else
             locale_data.locale_aliases.append({ locale, locale_without_script });
+
+        return {};
     };
 
     for (auto const& locale : locale_data.locales)
-        append_alias_without_script(locale.key);
+        TRY(append_alias_without_script(locale.key));
     for (auto const& locale : locale_data.locale_aliases)
-        append_alias_without_script(locale.alias);
+        TRY(append_alias_without_script(locale.alias));
+
+    return {};
 }
 
 static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
 {
-    auto identity_iterator = path_to_dir_iterator(locale_names_path);
-    auto locale_names_iterator = path_to_dir_iterator(move(locale_names_path));
-    auto misc_iterator = path_to_dir_iterator(move(misc_path));
-    auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
+    auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
+    auto locale_names_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
+    auto misc_iterator = TRY(path_to_dir_iterator(move(misc_path)));
+    auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
 
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
@@ -473,74 +473,56 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     TRY(parse_core_aliases(core_supplemental_path.string(), locale_data));
     TRY(parse_likely_subtags(core_supplemental_path.string(), locale_data));
 
-    auto remove_variants_from_path = [&](String path) -> Optional<String> {
-        auto parsed_locale = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path));
-        if (!parsed_locale.has_value())
-            return {};
+    auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale->language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale->script); !script.is_empty())
+        builder.append(locale_data.unique_strings.get(parsed_locale.language));
+        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale->region); !region.is_empty())
+        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
     };
 
     while (identity_iterator.has_next()) {
-        auto locale_path = identity_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(locale_path));
+        auto locale_path = TRY(next_path_from_dir_iterator(identity_iterator));
+        auto language = TRY(remove_variants_from_path(locale_path));
 
-        auto language = remove_variants_from_path(locale_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_identity(locale_path, locale_data, locale));
     }
 
     while (locale_names_iterator.has_next()) {
-        auto locale_path = locale_names_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(locale_path));
+        auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
+        auto language = TRY(remove_variants_from_path(locale_path));
 
-        auto language = remove_variants_from_path(locale_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_languages(locale_path, locale_data, locale));
         TRY(parse_locale_territories(locale_path, locale_data, locale));
         TRY(parse_locale_scripts(locale_path, locale_data, locale));
     }
 
     while (misc_iterator.has_next()) {
-        auto misc_path = misc_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(misc_path));
+        auto misc_path = TRY(next_path_from_dir_iterator(misc_iterator));
+        auto language = TRY(remove_variants_from_path(misc_path));
 
-        auto language = remove_variants_from_path(misc_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_list_patterns(misc_path, locale_data, locale));
     }
 
     while (numbers_iterator.has_next()) {
-        auto numbers_path = numbers_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(numbers_path));
+        auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
+        auto language = TRY(remove_variants_from_path(numbers_path));
 
-        auto language = remove_variants_from_path(numbers_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_currencies(numbers_path, locale_data, locale));
         TRY(parse_numeric_keywords(numbers_path, locale_data, locale));
     }
 
     TRY(parse_default_content_locales(move(core_path), locale_data));
-    define_aliases_without_scripts(locale_data);
+    TRY(define_aliases_without_scripts(locale_data));
 
     return {};
 }

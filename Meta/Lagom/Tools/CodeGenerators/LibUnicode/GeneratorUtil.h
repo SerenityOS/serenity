@@ -94,7 +94,7 @@ struct Alias {
 
 template<typename StringIndexType>
 struct CanonicalLanguageID {
-    static Optional<CanonicalLanguageID> parse(UniqueStringStorage<StringIndexType>& unique_strings, StringView language)
+    static ErrorOr<CanonicalLanguageID> parse(UniqueStringStorage<StringIndexType>& unique_strings, StringView language)
     {
         CanonicalLanguageID language_id {};
 
@@ -107,7 +107,7 @@ struct CanonicalLanguageID {
             if (segments.size() == ++index)
                 return language_id;
         } else {
-            return {};
+            return Error::from_string_literal("Expected language subtag"sv);
         }
 
         if (Unicode::is_unicode_script_subtag(segments[index])) {
@@ -124,7 +124,7 @@ struct CanonicalLanguageID {
 
         while (index < segments.size()) {
             if (!Unicode::is_unicode_variant_subtag(segments[index]))
-                return {};
+                return Error::from_string_literal("Expected variant subtag"sv);
             language_id.variants.append(unique_strings.ensure(segments[index++]));
         }
 
@@ -137,19 +137,25 @@ struct CanonicalLanguageID {
     Vector<StringIndexType> variants {};
 };
 
-inline Core::DirIterator path_to_dir_iterator(String path)
+inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path)
 {
     LexicalPath lexical_path(move(path));
     lexical_path = lexical_path.append("main"sv);
-    VERIFY(Core::File::is_directory(lexical_path.string()));
 
     Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (iterator.has_error()) {
-        warnln("{}: {}", lexical_path.string(), iterator.error_string());
-        VERIFY_NOT_REACHED();
-    }
+    if (iterator.has_error())
+        return Error::from_string_literal(iterator.error_string());
 
     return iterator;
+}
+
+inline ErrorOr<String> next_path_from_dir_iterator(Core::DirIterator& iterator)
+{
+    auto next_path = iterator.next_full_path();
+    if (iterator.has_error())
+        return Error::from_string_literal(iterator.error_string());
+
+    return next_path;
 }
 
 inline void ensure_from_string_types_are_generated(SourceGenerator& generator)
