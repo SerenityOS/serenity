@@ -231,16 +231,13 @@ static void parse_number_pattern(Vector<String> patterns, UnicodeLocaleData& loc
     format.zero_format_index = locale_data.unique_strings.ensure(move(zero_format));
 }
 
-static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath numbers_path(move(locale_numbers_path));
     numbers_path = numbers_path.append("numbers.json"sv);
-    VERIFY(Core::File::exists(numbers_path.string()));
 
-    auto numbers_file_or_error = Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly);
-    VERIFY(!numbers_file_or_error.is_error());
-
-    auto numbers = JsonValue::from_string(numbers_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto numbers_file = TRY(Core::File::open(numbers_path.string(), Core::OpenMode::ReadOnly));
+    auto numbers = TRY(JsonValue::from_string(numbers_file->read_all()));
 
     auto const& main_object = numbers.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
@@ -348,18 +345,17 @@ static void parse_number_systems(String locale_numbers_path, UnicodeLocaleData& 
             parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
+
+    return {};
 }
 
-static void parse_units(String locale_units_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath units_path(move(locale_units_path));
     units_path = units_path.append("units.json"sv);
-    VERIFY(Core::File::exists(units_path.string()));
 
-    auto units_file_or_error = Core::File::open(units_path.string(), Core::OpenMode::ReadOnly);
-    VERIFY(!units_file_or_error.is_error());
-
-    auto units = JsonValue::from_string(units_file_or_error.value()->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto units_file = TRY(Core::File::open(units_path.string(), Core::OpenMode::ReadOnly));
+    auto units = TRY(JsonValue::from_string(units_file->read_all()));
 
     auto const& main_object = units.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
@@ -443,9 +439,11 @@ static void parse_units(String locale_units_path, UnicodeLocaleData& locale_data
     parse_units_object(long_object.as_object(), Unicode::Style::Long);
     parse_units_object(short_object.as_object(), Unicode::Style::Short);
     parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
+
+    return {};
 }
 
-static void parse_all_locales(String numbers_path, String units_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String numbers_path, String units_path, UnicodeLocaleData& locale_data)
 {
     auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
     auto units_iterator = path_to_dir_iterator(move(units_path));
@@ -474,7 +472,7 @@ static void parse_all_locales(String numbers_path, String units_path, UnicodeLoc
             continue;
 
         auto& locale = locale_data.locales.ensure(*language);
-        parse_number_systems(numbers_path, locale_data, locale);
+        TRY(parse_number_systems(numbers_path, locale_data, locale));
     }
 
     while (units_iterator.has_next()) {
@@ -486,8 +484,10 @@ static void parse_all_locales(String numbers_path, String units_path, UnicodeLoc
             continue;
 
         auto& locale = locale_data.locales.ensure(*language);
-        parse_units(units_path, locale_data, locale);
+        TRY(parse_units(units_path, locale_data, locale));
     }
+
+    return {};
 }
 
 static String format_identifier(StringView owner, String identifier)
@@ -535,7 +535,7 @@ Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 }
 )~~~");
 
-    file.write(generator.as_string_view());
+    VERIFY(file.write(generator.as_string_view()));
 }
 
 static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
@@ -903,44 +903,37 @@ Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView uni
 }
 )~~~");
 
-    file.write(generator.as_string_view());
+    VERIFY(file.write(generator.as_string_view()));
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* generated_header_path = nullptr;
-    char const* generated_implementation_path = nullptr;
-    char const* numbers_path = nullptr;
-    char const* units_path = nullptr;
+    StringView generated_header_path = nullptr;
+    StringView generated_implementation_path = nullptr;
+    StringView numbers_path = nullptr;
+    StringView units_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
     args_parser.add_option(units_path, "Path to cldr-units directory", "units-path", 'u', "units-path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
+    auto open_file = [&](StringView path) -> ErrorOr<NonnullRefPtr<Core::File>> {
         if (path.is_empty()) {
-            warnln("{} is required", flags);
-            args_parser.print_usage(stderr, argv[0]);
-            exit(1);
+            args_parser.print_usage(stderr, arguments.argv[0]);
+            return Error::from_string_literal("Must provide all command line options"sv);
         }
 
-        auto file_or_error = Core::File::open(path, mode);
-        if (file_or_error.is_error()) {
-            warnln("Failed to open {}: {}", path, file_or_error.release_error());
-            exit(1);
-        }
-
-        return file_or_error.release_value();
+        return Core::File::open(path, Core::OpenMode::ReadWrite);
     };
 
-    auto generated_header_file = open_file(generated_header_path, "-h/--generated-header-path", Core::OpenMode::ReadWrite);
-    auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
+    auto generated_header_file = TRY(open_file(generated_header_path));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path));
 
     UnicodeLocaleData locale_data;
-    parse_all_locales(numbers_path, units_path, locale_data);
+    TRY(parse_all_locales(numbers_path, units_path, locale_data));
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);
