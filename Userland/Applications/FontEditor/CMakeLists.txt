@@ -22,4 +22,4 @@ set(SOURCES
 )
 
 serenity_app(FontEditor ICON app-font-editor)
-target_link_libraries(FontEditor LibGUI LibDesktop LibGfx)
+target_link_libraries(FontEditor LibGUI LibDesktop LibGfx LibMain)
