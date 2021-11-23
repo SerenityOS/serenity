@@ -164,4 +164,11 @@ ErrorOr<ssize_t> write(int fd, void const* data, size_t data_size)
     return rc;
 }
 
+ErrorOr<void> kill(pid_t pid, int signal)
+{
+    if (::kill(pid, signal) < 0)
+        return Error::from_syscall("kill"sv, -errno);
+    return {};
+}
+
 }
