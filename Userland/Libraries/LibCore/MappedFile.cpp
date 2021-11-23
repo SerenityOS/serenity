@@ -36,16 +36,7 @@ ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[m
     auto stat = TRY(Core::System::fstat(fd));
     auto size = stat.st_size;
 
-    auto* ptr = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
-
-    if (ptr == MAP_FAILED)
-        return Error::from_errno(errno);
-
-#ifdef __serenity__
-    if (set_mmap_name(ptr, size, path.characters()) < 0) {
-        perror("set_mmap_name");
-    }
-#endif
+    auto* ptr = TRY(Core::System::mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, 0, path));
 
     return adopt_ref(*new MappedFile(ptr, size));
 }
@@ -58,8 +49,7 @@ MappedFile::MappedFile(void* ptr, size_t size)
 
 MappedFile::~MappedFile()
 {
-    auto rc = munmap(m_data, m_size);
-    VERIFY(rc == 0);
+    MUST(Core::System::munmap(m_data, m_size));
 }
 
 }
