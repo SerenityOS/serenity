@@ -5,12 +5,12 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/MappedFile.h>
 #include <AK/NumberFormat.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto file_or_error = MappedFile::map(zip_file_path);
+    auto file_or_error = Core::MappedFile::map(zip_file_path);
     if (file_or_error.is_error()) {
         warnln("Failed to open {}: {}", zip_file_path, file_or_error.error());
         return 1;

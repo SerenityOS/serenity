@@ -41,5 +41,5 @@ private:
     GUI::Icon m_section_open_icon;
     GUI::Icon m_section_icon;
     GUI::Icon m_page_icon;
-    mutable HashMap<String, NonnullRefPtr<MappedFile>> m_mapped_files;
+    mutable HashMap<String, NonnullRefPtr<Core::MappedFile>> m_mapped_files;
 };

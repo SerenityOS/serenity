@@ -8,16 +8,16 @@
 
 #include "EventSerialNumber.h"
 #include <AK/HashMap.h>
-#include <AK/MappedFile.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 
 namespace Profiler {
 
 struct MappedObject {
-    NonnullRefPtr<MappedFile> file;
+    NonnullRefPtr<Core::MappedFile> file;
     ELF::Image elf;
 };
 

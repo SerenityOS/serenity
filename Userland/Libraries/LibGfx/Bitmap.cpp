@@ -6,13 +6,13 @@
 
 #include <AK/Checked.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Try.h>
+#include <LibCore/MappedFile.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
@@ -134,7 +134,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, String const& path)
 {
-    auto file = TRY(MappedFile::map_from_fd_and_close(fd, path));
+    auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
     if (auto decoder = ImageDecoder::try_create(file->bytes())) {
         auto frame = TRY(decoder->frame(0));
         if (auto& bitmap = frame.image)

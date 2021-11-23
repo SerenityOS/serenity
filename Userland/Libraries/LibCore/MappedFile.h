@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Result.h>
 
-namespace AK {
+namespace Core {
 
 class MappedFile : public RefCounted<MappedFile> {
     AK_MAKE_NONCOPYABLE(MappedFile);
@@ -38,5 +38,3 @@ private:
 };
 
 }
-
-using AK::MappedFile;

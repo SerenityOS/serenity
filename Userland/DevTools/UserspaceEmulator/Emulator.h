@@ -13,8 +13,8 @@
 #include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/FileStream.h>
-#include <AK/MappedFile.h>
 #include <AK/Types.h>
+#include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
@@ -273,7 +273,7 @@ private:
     Optional<size_t> m_loader_text_size;
 
     struct CachedELF {
-        NonnullRefPtr<MappedFile> mapped_file;
+        NonnullRefPtr<Core::MappedFile> mapped_file;
         NonnullOwnPtr<Debug::DebugInfo> debug_info;
         NonnullOwnPtr<ELF::Image> image;
     };

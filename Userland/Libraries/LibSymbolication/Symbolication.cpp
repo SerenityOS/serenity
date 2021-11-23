@@ -10,15 +10,15 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibSymbolication/Symbolication.h>
 
 namespace Symbolication {
 
 struct CachedELF {
-    NonnullRefPtr<MappedFile> mapped_file;
+    NonnullRefPtr<Core::MappedFile> mapped_file;
     NonnullOwnPtr<Debug::DebugInfo> debug_info;
     NonnullOwnPtr<ELF::Image> image;
 };
@@ -81,7 +81,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address, IncludeSourceP
         }
     }
     if (!s_cache.contains(full_path)) {
-        auto mapped_file = MappedFile::map(full_path);
+        auto mapped_file = Core::MappedFile::map(full_path);
         if (mapped_file.is_error()) {
             dbgln("Failed to map {}: {}", full_path, mapped_file.error());
             s_cache.set(full_path, {});

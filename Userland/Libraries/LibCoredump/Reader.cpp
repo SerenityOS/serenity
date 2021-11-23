@@ -17,7 +17,7 @@ namespace Coredump {
 
 OwnPtr<Reader> Reader::create(StringView path)
 {
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
 
@@ -38,7 +38,7 @@ Reader::Reader(ByteBuffer buffer)
     m_coredump_buffer = move(buffer);
 }
 
-Reader::Reader(NonnullRefPtr<MappedFile> file)
+Reader::Reader(NonnullRefPtr<Core::MappedFile> file)
     : Reader(file->bytes())
 {
     m_mapped_file = move(file);
@@ -261,7 +261,6 @@ HashMap<String, String> Reader::metadata() const
 
 struct LibraryData {
     String name;
-    OwnPtr<MappedFile> file;
     ELF::Image lib_elf;
 };
 
@@ -282,7 +281,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
     }
 
     if (!cached_libs.contains(path)) {
-        auto file_or_error = MappedFile::map(path);
+        auto file_or_error = Core::MappedFile::map(path);
         if (file_or_error.is_error())
             return {};
         auto image = ELF::Image(file_or_error.value()->bytes());

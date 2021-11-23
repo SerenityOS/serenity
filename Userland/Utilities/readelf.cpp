@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
@@ -283,7 +283,7 @@ int main(int argc, char** argv)
         display_hardening = true;
     }
 
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
 
     if (file_or_error.is_error()) {
         warnln("Unable to map file {}: {}", path, file_or_error.error());
@@ -315,7 +315,7 @@ int main(int argc, char** argv)
             warnln("Warning: Dynamic ELF object has no interpreter path. Using: {}", interpreter_path);
         }
 
-        auto interpreter_file_or_error = MappedFile::map(interpreter_path);
+        auto interpreter_file_or_error = Core::MappedFile::map(interpreter_path);
 
         if (interpreter_file_or_error.is_error()) {
             warnln("Unable to map interpreter file {}: {}", interpreter_path, interpreter_file_or_error.error());

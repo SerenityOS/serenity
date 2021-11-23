@@ -8,10 +8,10 @@
 #include "Image.h"
 #include "Layer.h"
 #include <AK/JsonObject.h>
-#include <AK/MappedFile.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace PixelPaint {
@@ -29,7 +29,7 @@ ErrorOr<void> ProjectLoader::try_load_from_fd_and_close(int fd, StringView path)
     if (json_or_error.is_error()) {
         m_is_raw_image = true;
 
-        auto mapped_file = TRY(MappedFile::map_from_fd_and_close(fd, path));
+        auto mapped_file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
 
         // FIXME: Find a way to avoid the memory copy here.
         auto bitmap = TRY(Image::try_decode_bitmap(mapped_file->bytes()));

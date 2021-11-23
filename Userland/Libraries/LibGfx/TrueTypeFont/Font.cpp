@@ -6,11 +6,11 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/MappedFile.h>
 #include <AK/Try.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibGfx/TrueTypeFont/Cmap.h>
 #include <LibGfx/TrueTypeFont/Font.h>
 #include <LibGfx/TrueTypeFont/Glyf.h>
@@ -227,7 +227,7 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 
 ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_file(String path, unsigned index)
 {
-    auto file = TRY(MappedFile::map(path));
+    auto file = TRY(Core::MappedFile::map(path));
     auto font = TRY(try_load_from_externally_owned_memory(file->bytes(), index));
     font->m_mapped_file = move(file);
     return font;

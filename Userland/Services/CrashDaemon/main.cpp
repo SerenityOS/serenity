@@ -5,9 +5,9 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/FileWatcher.h>
+#include <LibCore/MappedFile.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -72,7 +72,7 @@ int main()
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
 
-        auto file_or_error = MappedFile::map(coredump_path);
+        auto file_or_error = Core::MappedFile::map(coredump_path);
         if (file_or_error.is_error()) {
             dbgln("Unable to map coredump {}: {}", coredump_path, file_or_error.error());
             continue;
