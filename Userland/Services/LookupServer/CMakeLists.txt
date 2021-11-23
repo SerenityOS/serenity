@@ -21,4 +21,4 @@ set(SOURCES
 )
 
 serenity_bin(LookupServer)
-target_link_libraries(LookupServer LibCore LibIPC)
+target_link_libraries(LookupServer LibCore LibIPC LibMain)
