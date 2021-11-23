@@ -23,4 +23,4 @@ set(SOURCES
 )
 
 serenity_bin(RequestServer)
-target_link_libraries(RequestServer LibCore LibIPC LibGemini LibHTTP)
+target_link_libraries(RequestServer LibCore LibIPC LibGemini LibHTTP LibMain)

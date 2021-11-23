@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/GeminiProtocol.h>
@@ -16,12 +17,9 @@
 #include <RequestServer/HttpsProtocol.h>
 #include <signal.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr));
 
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
 
@@ -30,18 +28,9 @@ int main(int, char**)
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    if (pledge("stdio inet accept unix sendfd recvfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    if (unveil("/tmp/portal/lookup", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(System::pledge("stdio inet accept unix sendfd recvfd", nullptr));
+    TRY(System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(System::unveil(nullptr, nullptr));
 
     [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
     [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
