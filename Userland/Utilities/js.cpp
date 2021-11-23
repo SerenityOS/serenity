@@ -104,6 +104,7 @@ static bool s_run_bytecode = false;
 static bool s_opt_bytecode = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
+static bool s_strip_ansi = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
 static int s_repl_line_level = 0;
@@ -193,22 +194,62 @@ static String read_next_piece()
     return piece.to_string();
 }
 
+static String strip_ansi(StringView format_string)
+{
+    if (format_string.is_empty())
+        return String::empty();
+
+    StringBuilder builder;
+    size_t i;
+    for (i = 0; i < format_string.length() - 1; ++i) {
+        if (format_string[i] == '\033' && format_string[i + 1] == '[') {
+            while (i < format_string.length() && format_string[i] != 'm')
+                ++i;
+        } else {
+            builder.append(format_string[i]);
+        }
+    }
+    if (i < format_string.length())
+        builder.append(format_string[i]);
+    return builder.to_string();
+}
+
+template<typename... Parameters>
+static void js_out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    if (!s_strip_ansi)
+        return out(move(fmtstr), parameters...);
+    auto stripped_fmtstr = strip_ansi(fmtstr.view());
+    out(stripped_fmtstr, parameters...);
+}
+
+template<typename... Parameters>
+static void js_outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    if (!s_strip_ansi)
+        return outln(move(fmtstr), parameters...);
+    auto stripped_fmtstr = strip_ansi(fmtstr.view());
+    outln(stripped_fmtstr, parameters...);
+}
+
+inline void js_outln() { outln(); }
+
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
 
 static void print_type(FlyString const& name)
 {
-    out("[\033[36;1m{}\033[0m]", name);
+    js_out("[\033[36;1m{}\033[0m]", name);
 }
 
 static void print_separator(bool& first)
 {
-    out(first ? " " : ", ");
+    js_out(first ? " " : ", ");
     first = false;
 }
 
 static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
 {
-    out("[");
+    js_out("[");
     bool first = true;
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
         print_separator(first);
@@ -222,17 +263,17 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
         print_value(value, seen_objects);
     }
     if (!first)
-        out(" ");
-    out("]");
+        js_out(" ");
+    js_out("]");
 }
 
 static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
-    out("{{");
+    js_out("{{");
     bool first = true;
     for (auto& entry : object.indexed_properties()) {
         print_separator(first);
-        out("\"\033[33;1m{}\033[0m\": ", entry.index());
+        js_out("\"\033[33;1m{}\033[0m\": ", entry.index());
         auto value_or_error = object.get(entry.index());
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
@@ -245,30 +286,30 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
     for (auto& it : object.shape().property_table_ordered()) {
         print_separator(first);
         if (it.key.is_string()) {
-            out("\"\033[33;1m{}\033[0m\": ", it.key.to_display_string());
+            js_out("\"\033[33;1m{}\033[0m\": ", it.key.to_display_string());
         } else {
-            out("[\033[33;1m{}\033[0m]: ", it.key.to_display_string());
+            js_out("[\033[33;1m{}\033[0m]: ", it.key.to_display_string());
         }
         print_value(object.get_direct(it.value.offset), seen_objects);
     }
     if (!first)
-        out(" ");
-    out("}}");
+        js_out(" ");
+    js_out("}}");
 }
 
 static void print_function(JS::Object const& object, HashTable<JS::Object*>&)
 {
     print_type(object.class_name());
     if (is<JS::ECMAScriptFunctionObject>(object))
-        out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(object).name());
+        js_out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(object).name());
     else if (is<JS::NativeFunction>(object))
-        out(" {}", static_cast<JS::NativeFunction const&>(object).name());
+        js_out(" {}", static_cast<JS::NativeFunction const&>(object).name());
 }
 
 static void print_date(JS::Object const& object, HashTable<JS::Object*>&)
 {
     print_type("Date");
-    out(" \033[34;1m{}\033[0m", static_cast<JS::Date const&>(object).string());
+    js_out(" \033[34;1m{}\033[0m", static_cast<JS::Date const&>(object).string());
 }
 
 static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
@@ -282,7 +323,7 @@ static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_o
         auto message_string = message.to_string_without_side_effects();
         print_type(name_string);
         if (!message_string.is_empty())
-            out(" \033[31;1m{}\033[0m", message_string);
+            js_out(" \033[31;1m{}\033[0m", message_string);
     }
 }
 
@@ -290,16 +331,16 @@ static void print_regexp_object(JS::Object const& object, HashTable<JS::Object*>
 {
     auto& regexp_object = static_cast<JS::RegExpObject const&>(object);
     print_type("RegExp");
-    out(" \033[34;1m/{}/{}\033[0m", regexp_object.escape_regexp_pattern(), regexp_object.flags());
+    js_out(" \033[34;1m/{}/{}\033[0m", regexp_object.escape_regexp_pattern(), regexp_object.flags());
 }
 
 static void print_proxy_object(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& proxy_object = static_cast<JS::ProxyObject const&>(object);
     print_type("Proxy");
-    out("\n  target: ");
+    js_out("\n  target: ");
     print_value(&proxy_object.target(), seen_objects);
-    out("\n  handler: ");
+    js_out("\n  handler: ");
     print_value(&proxy_object.handler(), seen_objects);
 }
 
@@ -308,17 +349,17 @@ static void print_map(JS::Object const& object, HashTable<JS::Object*>& seen_obj
     auto& map = static_cast<JS::Map const&>(object);
     auto& entries = map.entries();
     print_type("Map");
-    out(" {{");
+    js_out(" {{");
     bool first = true;
     for (auto& entry : entries) {
         print_separator(first);
         print_value(entry.key, seen_objects);
-        out(" => ");
+        js_out(" => ");
         print_value(entry.value, seen_objects);
     }
     if (!first)
-        out(" ");
-    out("}}");
+        js_out(" ");
+    js_out("}}");
 }
 
 static void print_set(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
@@ -326,15 +367,15 @@ static void print_set(JS::Object const& object, HashTable<JS::Object*>& seen_obj
     auto& set = static_cast<JS::Set const&>(object);
     auto& values = set.values();
     print_type("Set");
-    out(" {{");
+    js_out(" {{");
     bool first = true;
     for (auto& value : values) {
         print_separator(first);
         print_value(value, seen_objects);
     }
     if (!first)
-        out(" ");
-    out("}}");
+        js_out(" ");
+    js_out("}}");
 }
 
 static void print_promise(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
@@ -343,19 +384,19 @@ static void print_promise(JS::Object const& object, HashTable<JS::Object*>& seen
     print_type("Promise");
     switch (promise.state()) {
     case JS::Promise::State::Pending:
-        out("\n  state: ");
-        out("\033[36;1mPending\033[0m");
+        js_out("\n  state: ");
+        js_out("\033[36;1mPending\033[0m");
         break;
     case JS::Promise::State::Fulfilled:
-        out("\n  state: ");
-        out("\033[32;1mFulfilled\033[0m");
-        out("\n  result: ");
+        js_out("\n  state: ");
+        js_out("\033[32;1mFulfilled\033[0m");
+        js_out("\n  result: ");
         print_value(promise.result(), seen_objects);
         break;
     case JS::Promise::State::Rejected:
-        out("\n  state: ");
-        out("\033[31;1mRejected\033[0m");
-        out("\n  result: ");
+        js_out("\n  state: ");
+        js_out("\033[31;1mRejected\033[0m");
+        js_out("\n  result: ");
         print_value(promise.result(), seen_objects);
         break;
     default:
@@ -369,20 +410,20 @@ static void print_array_buffer(JS::Object const& object, HashTable<JS::Object*>&
     auto& buffer = array_buffer.buffer();
     auto byte_length = array_buffer.byte_length();
     print_type("ArrayBuffer");
-    out("\n  byteLength: ");
+    js_out("\n  byteLength: ");
     print_value(JS::Value((double)byte_length), seen_objects);
     if (!byte_length)
         return;
-    outln();
+    js_outln();
     for (size_t i = 0; i < byte_length; ++i) {
-        out("{:02x}", buffer[i]);
+        js_out("{:02x}", buffer[i]);
         if (i + 1 < byte_length) {
             if ((i + 1) % 32 == 0)
-                outln();
+                js_outln();
             else if ((i + 1) % 16 == 0)
-                out("  ");
+                js_out("  ");
             else
-                out(" ");
+                js_out(" ");
         }
     }
 }
@@ -396,9 +437,9 @@ static void print_shadow_realm(JS::Object const&, HashTable<JS::Object*>&)
 template<typename T>
 static void print_number(T number) requires IsArithmetic<T>
 {
-    out("\033[35;1m");
-    out("{}", number);
-    out("\033[0m");
+    js_out("\033[35;1m");
+    js_out("{}", number);
+    js_out("\033[0m");
 }
 
 static void print_typed_array(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
@@ -407,30 +448,30 @@ static void print_typed_array(JS::Object const& object, HashTable<JS::Object*>& 
     auto& array_buffer = *typed_array_base.viewed_array_buffer();
     auto length = typed_array_base.array_length();
     print_type(object.class_name());
-    out("\n  length: ");
+    js_out("\n  length: ");
     print_value(JS::Value(length), seen_objects);
-    out("\n  byteLength: ");
+    js_out("\n  byteLength: ");
     print_value(JS::Value(typed_array_base.byte_length()), seen_objects);
-    out("\n  buffer: ");
+    js_out("\n  buffer: ");
     print_type("ArrayBuffer");
     if (array_buffer.is_detached())
-        out(" (detached)");
-    out(" @ {:p}", &array_buffer);
+        js_out(" (detached)");
+    js_out(" @ {:p}", &array_buffer);
     if (!length || array_buffer.is_detached())
         return;
-    outln();
+    js_outln();
     // FIXME: This kinda sucks.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     if (is<JS::ClassName>(object)) {                                                     \
-        out("[ ");                                                                       \
+        js_out("[ ");                                                                    \
         auto& typed_array = static_cast<JS::ClassName const&>(typed_array_base);         \
         auto data = typed_array.data();                                                  \
         for (size_t i = 0; i < length; ++i) {                                            \
             if (i > 0)                                                                   \
-                out(", ");                                                               \
+                js_out(", ");                                                            \
             print_number(data[i]);                                                       \
         }                                                                                \
-        out(" ]");                                                                       \
+        js_out(" ]");                                                                    \
         return;                                                                          \
     }
     JS_ENUMERATE_TYPED_ARRAYS
@@ -442,20 +483,20 @@ static void print_data_view(JS::Object const& object, HashTable<JS::Object*>& se
 {
     auto& data_view = static_cast<JS::DataView const&>(object);
     print_type("DataView");
-    out("\n  byteLength: ");
+    js_out("\n  byteLength: ");
     print_value(JS::Value(data_view.byte_length()), seen_objects);
-    out("\n  byteOffset: ");
+    js_out("\n  byteOffset: ");
     print_value(JS::Value(data_view.byte_offset()), seen_objects);
-    out("\n  buffer: ");
+    js_out("\n  buffer: ");
     print_type("ArrayBuffer");
-    out(" @ {:p}", data_view.viewed_array_buffer());
+    js_out(" @ {:p}", data_view.viewed_array_buffer());
 }
 
 static void print_temporal_calendar(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& calendar = static_cast<JS::Temporal::Calendar const&>(object);
     print_type("Temporal.Calendar");
-    out(" ");
+    js_out(" ");
     print_value(JS::js_string(object.vm(), calendar.identifier()), seen_objects);
 }
 
@@ -463,14 +504,14 @@ static void print_temporal_duration(JS::Object const& object, HashTable<JS::Obje
 {
     auto& duration = static_cast<JS::Temporal::Duration const&>(object);
     print_type("Temporal.Duration");
-    out(" \033[34;1m{} y, {} M, {} w, {} d, {} h, {} m, {} s, {} ms, {} us, {} ns\033[0m", duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
+    js_out(" \033[34;1m{} y, {} M, {} w, {} d, {} h, {} m, {} s, {} ms, {} us, {} ns\033[0m", duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
 }
 
 static void print_temporal_instant(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& instant = static_cast<JS::Temporal::Instant const&>(object);
     print_type("Temporal.Instant");
-    out(" ");
+    js_out(" ");
     // FIXME: Print human readable date and time, like in print_date() - ideally handling arbitrarily large values since we get a bigint.
     print_value(&instant.nanoseconds(), seen_objects);
 }
@@ -479,8 +520,8 @@ static void print_temporal_plain_date(JS::Object const& object, HashTable<JS::Ob
 {
     auto& plain_date = static_cast<JS::Temporal::PlainDate const&>(object);
     print_type("Temporal.PlainDate");
-    out(" \033[34;1m{:04}-{:02}-{:02}\033[0m", plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day());
-    out("\n  calendar: ");
+    js_out(" \033[34;1m{:04}-{:02}-{:02}\033[0m", plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day());
+    js_out("\n  calendar: ");
     print_value(&plain_date.calendar(), seen_objects);
 }
 
@@ -488,8 +529,8 @@ static void print_temporal_plain_date_time(JS::Object const& object, HashTable<J
 {
     auto& plain_date_time = static_cast<JS::Temporal::PlainDateTime const&>(object);
     print_type("Temporal.PlainDateTime");
-    out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
-    out("\n  calendar: ");
+    js_out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
+    js_out("\n  calendar: ");
     print_value(&plain_date_time.calendar(), seen_objects);
 }
 
@@ -498,8 +539,8 @@ static void print_temporal_plain_month_day(JS::Object const& object, HashTable<J
     auto& plain_month_day = static_cast<JS::Temporal::PlainMonthDay const&>(object);
     print_type("Temporal.PlainMonthDay");
     // Also has an [[ISOYear]] internal slot, but showing that here seems rather unexpected.
-    out(" \033[34;1m{:02}-{:02}\033[0m", plain_month_day.iso_month(), plain_month_day.iso_day());
-    out("\n  calendar: ");
+    js_out(" \033[34;1m{:02}-{:02}\033[0m", plain_month_day.iso_month(), plain_month_day.iso_day());
+    js_out("\n  calendar: ");
     print_value(&plain_month_day.calendar(), seen_objects);
 }
 
@@ -507,8 +548,8 @@ static void print_temporal_plain_time(JS::Object const& object, HashTable<JS::Ob
 {
     auto& plain_time = static_cast<JS::Temporal::PlainTime const&>(object);
     print_type("Temporal.PlainTime");
-    out(" \033[34;1m{:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
-    out("\n  calendar: ");
+    js_out(" \033[34;1m{:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
+    js_out("\n  calendar: ");
     print_value(&plain_time.calendar(), seen_objects);
 }
 
@@ -517,8 +558,8 @@ static void print_temporal_plain_year_month(JS::Object const& object, HashTable<
     auto& plain_year_month = static_cast<JS::Temporal::PlainYearMonth const&>(object);
     print_type("Temporal.PlainYearMonth");
     // Also has an [[ISODay]] internal slot, but showing that here seems rather unexpected.
-    out(" \033[34;1m{:04}-{:02}\033[0m", plain_year_month.iso_year(), plain_year_month.iso_month());
-    out("\n  calendar: ");
+    js_out(" \033[34;1m{:04}-{:02}\033[0m", plain_year_month.iso_year(), plain_year_month.iso_month());
+    js_out("\n  calendar: ");
     print_value(&plain_year_month.calendar(), seen_objects);
 }
 
@@ -526,10 +567,10 @@ static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Obj
 {
     auto& time_zone = static_cast<JS::Temporal::TimeZone const&>(object);
     print_type("Temporal.TimeZone");
-    out(" ");
+    js_out(" ");
     print_value(JS::js_string(object.vm(), time_zone.identifier()), seen_objects);
     if (time_zone.offset_nanoseconds().has_value()) {
-        out("\n  offset (ns): ");
+        js_out("\n  offset (ns): ");
         print_value(JS::Value(*time_zone.offset_nanoseconds()), seen_objects);
     }
 }
@@ -538,11 +579,11 @@ static void print_temporal_zoned_date_time(JS::Object const& object, HashTable<J
 {
     auto& zoned_date_time = static_cast<JS::Temporal::ZonedDateTime const&>(object);
     print_type("Temporal.ZonedDateTime");
-    out("\n  epochNanoseconds: ");
+    js_out("\n  epochNanoseconds: ");
     print_value(&zoned_date_time.nanoseconds(), seen_objects);
-    out("\n  timeZone: ");
+    js_out("\n  timeZone: ");
     print_value(&zoned_date_time.time_zone(), seen_objects);
-    out("\n  calendar: ");
+    js_out("\n  calendar: ");
     print_value(&zoned_date_time.calendar(), seen_objects);
 }
 
@@ -550,13 +591,13 @@ static void print_intl_display_names(JS::Object const& object, HashTable<JS::Obj
 {
     auto& display_names = static_cast<JS::Intl::DisplayNames const&>(object);
     print_type("Intl.DisplayNames");
-    out("\n  locale: ");
+    js_out("\n  locale: ");
     print_value(js_string(object.vm(), display_names.locale()), seen_objects);
-    out("\n  type: ");
+    js_out("\n  type: ");
     print_value(js_string(object.vm(), display_names.type_string()), seen_objects);
-    out("\n  style: ");
+    js_out("\n  style: ");
     print_value(js_string(object.vm(), display_names.style_string()), seen_objects);
-    out("\n  fallback: ");
+    js_out("\n  fallback: ");
     print_value(js_string(object.vm(), display_names.fallback_string()), seen_objects);
 }
 
@@ -564,29 +605,29 @@ static void print_intl_locale(JS::Object const& object, HashTable<JS::Object*>& 
 {
     auto& locale = static_cast<JS::Intl::Locale const&>(object);
     print_type("Intl.Locale");
-    out("\n  locale: ");
+    js_out("\n  locale: ");
     print_value(js_string(object.vm(), locale.locale()), seen_objects);
     if (locale.has_calendar()) {
-        out("\n  calendar: ");
+        js_out("\n  calendar: ");
         print_value(js_string(object.vm(), locale.calendar()), seen_objects);
     }
     if (locale.has_case_first()) {
-        out("\n  caseFirst: ");
+        js_out("\n  caseFirst: ");
         print_value(js_string(object.vm(), locale.case_first()), seen_objects);
     }
     if (locale.has_collation()) {
-        out("\n  collation: ");
+        js_out("\n  collation: ");
         print_value(js_string(object.vm(), locale.collation()), seen_objects);
     }
     if (locale.has_hour_cycle()) {
-        out("\n  hourCycle: ");
+        js_out("\n  hourCycle: ");
         print_value(js_string(object.vm(), locale.hour_cycle()), seen_objects);
     }
     if (locale.has_numbering_system()) {
-        out("\n  numberingSystem: ");
+        js_out("\n  numberingSystem: ");
         print_value(js_string(object.vm(), locale.numbering_system()), seen_objects);
     }
-    out("\n  numeric: ");
+    js_out("\n  numeric: ");
     print_value(JS::Value(locale.numeric()), seen_objects);
 }
 
@@ -594,11 +635,11 @@ static void print_intl_list_format(JS::Object const& object, HashTable<JS::Objec
 {
     auto& list_format = static_cast<JS::Intl::ListFormat const&>(object);
     print_type("Intl.ListFormat");
-    out("\n  locale: ");
+    js_out("\n  locale: ");
     print_value(js_string(object.vm(), list_format.locale()), seen_objects);
-    out("\n  type: ");
+    js_out("\n  type: ");
     print_value(js_string(object.vm(), list_format.type_string()), seen_objects);
-    out("\n  style: ");
+    js_out("\n  style: ");
     print_value(js_string(object.vm(), list_format.style_string()), seen_objects);
 }
 
@@ -606,63 +647,63 @@ static void print_intl_number_format(JS::Object const& object, HashTable<JS::Obj
 {
     auto& number_format = static_cast<JS::Intl::NumberFormat const&>(object);
     print_type("Intl.NumberFormat");
-    out("\n  locale: ");
+    js_out("\n  locale: ");
     print_value(js_string(object.vm(), number_format.locale()), seen_objects);
-    out("\n  dataLocale: ");
+    js_out("\n  dataLocale: ");
     print_value(js_string(object.vm(), number_format.data_locale()), seen_objects);
-    out("\n  numberingSystem: ");
+    js_out("\n  numberingSystem: ");
     print_value(js_string(object.vm(), number_format.numbering_system()), seen_objects);
-    out("\n  style: ");
+    js_out("\n  style: ");
     print_value(js_string(object.vm(), number_format.style_string()), seen_objects);
     if (number_format.has_currency()) {
-        out("\n  currency: ");
+        js_out("\n  currency: ");
         print_value(js_string(object.vm(), number_format.currency()), seen_objects);
     }
     if (number_format.has_currency_display()) {
-        out("\n  currencyDisplay: ");
+        js_out("\n  currencyDisplay: ");
         print_value(js_string(object.vm(), number_format.currency_display_string()), seen_objects);
     }
     if (number_format.has_currency_sign()) {
-        out("\n  currencySign: ");
+        js_out("\n  currencySign: ");
         print_value(js_string(object.vm(), number_format.currency_sign_string()), seen_objects);
     }
     if (number_format.has_unit()) {
-        out("\n  unit: ");
+        js_out("\n  unit: ");
         print_value(js_string(object.vm(), number_format.unit()), seen_objects);
     }
     if (number_format.has_unit_display()) {
-        out("\n  unitDisplay: ");
+        js_out("\n  unitDisplay: ");
         print_value(js_string(object.vm(), number_format.unit_display_string()), seen_objects);
     }
-    out("\n  minimumIntegerDigits: ");
+    js_out("\n  minimumIntegerDigits: ");
     print_value(JS::Value(number_format.min_integer_digits()), seen_objects);
     if (number_format.has_min_fraction_digits()) {
-        out("\n  minimumFractionDigits: ");
+        js_out("\n  minimumFractionDigits: ");
         print_value(JS::Value(number_format.min_fraction_digits()), seen_objects);
     }
     if (number_format.has_max_fraction_digits()) {
-        out("\n  maximumFractionDigits: ");
+        js_out("\n  maximumFractionDigits: ");
         print_value(JS::Value(number_format.max_fraction_digits()), seen_objects);
     }
     if (number_format.has_min_significant_digits()) {
-        out("\n  minimumSignificantDigits: ");
+        js_out("\n  minimumSignificantDigits: ");
         print_value(JS::Value(number_format.min_significant_digits()), seen_objects);
     }
     if (number_format.has_max_significant_digits()) {
-        out("\n  maximumSignificantDigits: ");
+        js_out("\n  maximumSignificantDigits: ");
         print_value(JS::Value(number_format.max_significant_digits()), seen_objects);
     }
-    out("\n  useGrouping: ");
+    js_out("\n  useGrouping: ");
     print_value(JS::Value(number_format.use_grouping()), seen_objects);
-    out("\n  roundingType: ");
+    js_out("\n  roundingType: ");
     print_value(js_string(object.vm(), number_format.rounding_type_string()), seen_objects);
-    out("\n  notation: ");
+    js_out("\n  notation: ");
     print_value(js_string(object.vm(), number_format.notation_string()), seen_objects);
     if (number_format.has_compact_display()) {
-        out("\n  compactDisplay: ");
+        js_out("\n  compactDisplay: ");
         print_value(js_string(object.vm(), number_format.compact_display_string()), seen_objects);
     }
-    out("\n  signDisplay: ");
+    js_out("\n  signDisplay: ");
     print_value(js_string(object.vm(), number_format.sign_display_string()), seen_objects);
 }
 
@@ -670,14 +711,14 @@ static void print_primitive_wrapper_object(FlyString const& name, JS::Object con
 {
     // BooleanObject, NumberObject, StringObject
     print_type(name);
-    out(" ");
+    js_out(" ");
     print_value(object.value_of(), seen_objects);
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_empty()) {
-        out("\033[34;1m<empty>\033[0m");
+        js_out("\033[34;1m<empty>\033[0m");
         return;
     }
 
@@ -685,7 +726,7 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
             //        not for all reoccurring objects.
-            out("<already printed Object {}>", &value.as_object());
+            js_out("<already printed Object {}>", &value.as_object());
             return;
         }
         seen_objects.set(&value.as_object());
@@ -757,30 +798,30 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
     }
 
     if (value.is_string())
-        out("\033[32;1m");
+        js_out("\033[32;1m");
     else if (value.is_number() || value.is_bigint())
-        out("\033[35;1m");
+        js_out("\033[35;1m");
     else if (value.is_boolean())
-        out("\033[33;1m");
+        js_out("\033[33;1m");
     else if (value.is_null())
-        out("\033[33;1m");
+        js_out("\033[33;1m");
     else if (value.is_undefined())
-        out("\033[34;1m");
+        js_out("\033[34;1m");
     if (value.is_string())
-        out("\"");
+        js_out("\"");
     else if (value.is_negative_zero())
-        out("-");
-    out("{}", value.to_string_without_side_effects());
+        js_out("-");
+    js_out("{}", value.to_string_without_side_effects());
     if (value.is_string())
-        out("\"");
-    out("\033[0m");
+        js_out("\"");
+    js_out("\033[0m");
 }
 
 static void print(JS::Value value)
 {
     HashTable<JS::Object*> seen_objects;
     print_value(value, seen_objects);
-    outln();
+    js_outln();
 }
 
 static bool write_to_file(String const& path)
@@ -822,7 +863,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         auto error = parser.errors()[0];
         auto hint = error.source_location_hint(source);
         if (!hint.is_empty())
-            outln("{}", hint);
+            js_outln("{}", hint);
         vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
@@ -854,7 +895,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
     auto handle_exception = [&] {
         auto* exception = vm->exception();
         vm->clear_exception();
-        out("Uncaught exception: ");
+        js_out("Uncaught exception: ");
         print(exception->value());
         auto& traceback = exception->traceback();
         if (traceback.size() > 1) {
@@ -872,11 +913,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                     // If more than 5 (1 + >4) consecutive function calls with the same name, print
                     // the name only once and show the number of repetitions instead. This prevents
                     // printing ridiculously large call stacks of recursive functions.
-                    outln(" -> {}", traceback_frame.function_name);
-                    outln(" {} more calls", repetitions);
+                    js_outln(" -> {}", traceback_frame.function_name);
+                    js_outln(" {} more calls", repetitions);
                 } else {
                     for (size_t j = 0; j < repetitions + 1; ++j)
-                        outln(" -> {}", traceback_frame.function_name);
+                        js_outln(" -> {}", traceback_frame.function_name);
                 }
                 repetitions = 0;
             }
@@ -961,11 +1002,11 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 {
-    outln("REPL commands:");
-    outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
-    outln("    help(): display this menu");
-    outln("    load(file): load given JS file into running session. For example: load(\"foo.js\")");
-    outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
+    js_outln("REPL commands:");
+    js_outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
+    js_outln("    help(): display this menu");
+    js_outln("    load(file): load given JS file into running session. For example: load(\"foo.js\")");
+    js_outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
@@ -1024,49 +1065,49 @@ public:
 
     virtual JS::Value log() override
     {
-        outln("{}", vm().join_arguments());
+        js_outln("{}", vm().join_arguments());
         return JS::js_undefined();
     }
 
     virtual JS::Value info() override
     {
-        outln("(i) {}", vm().join_arguments());
+        js_outln("(i) {}", vm().join_arguments());
         return JS::js_undefined();
     }
 
     virtual JS::Value debug() override
     {
-        outln("\033[36;1m{}\033[0m", vm().join_arguments());
+        js_outln("\033[36;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
 
     virtual JS::Value warn() override
     {
-        outln("\033[33;1m{}\033[0m", vm().join_arguments());
+        js_outln("\033[33;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
 
     virtual JS::Value error() override
     {
-        outln("\033[31;1m{}\033[0m", vm().join_arguments());
+        js_outln("\033[31;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
 
     virtual JS::Value clear() override
     {
-        out("\033[3J\033[H\033[2J");
+        js_out("\033[3J\033[H\033[2J");
         fflush(stdout);
         return JS::js_undefined();
     }
 
     virtual JS::Value trace() override
     {
-        outln("{}", vm().join_arguments());
+        js_outln("{}", vm().join_arguments());
         auto trace = get_trace();
         for (auto& function_name : trace) {
             if (function_name.is_empty())
                 function_name = "<anonymous>";
-            outln(" -> {}", function_name);
+            js_outln(" -> {}", function_name);
         }
         return JS::js_undefined();
     }
@@ -1075,7 +1116,7 @@ public:
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
         auto counter_value = m_console.counter_increment(label);
-        outln("{}: {}", label, counter_value);
+        js_outln("{}: {}", label, counter_value);
         return JS::js_undefined();
     }
 
@@ -1083,9 +1124,9 @@ public:
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
         if (m_console.counter_reset(label))
-            outln("{}: 0", label);
+            js_outln("{}: 0", label);
         else
-            outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
+            js_outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
         return JS::js_undefined();
     }
 
@@ -1094,10 +1135,10 @@ public:
         auto& vm = this->vm();
         if (!vm.argument(0).to_boolean()) {
             if (vm.argument_count() > 1) {
-                out("\033[31;1mAssertion failed:\033[0m");
-                outln(" {}", vm.join_arguments(1));
+                js_out("\033[31;1mAssertion failed:\033[0m");
+                js_outln(" {}", vm.join_arguments(1));
             } else {
-                outln("\033[31;1mAssertion failed\033[0m");
+                js_outln("\033[31;1mAssertion failed\033[0m");
             }
         }
         return JS::js_undefined();
@@ -1122,6 +1163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
+    args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'c');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
 #ifdef JS_TRACK_ZOMBIE_CELLS
     bool zombify_dead_cells = false;
@@ -1140,19 +1182,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // might want to revisit at a later point and disable warnings for promises created this way.
     vm->on_promise_unhandled_rejection = [](auto& promise) {
         // FIXME: Optionally make print_value() to print to stderr
-        out("WARNING: A promise was rejected without any handlers");
-        out(" (result: ");
+        js_out("WARNING: A promise was rejected without any handlers");
+        js_out(" (result: ");
         HashTable<JS::Object*> seen_objects;
         print_value(promise.result(), seen_objects);
-        outln(")");
+        js_outln(")");
     };
     vm->on_promise_rejection_handled = [](auto& promise) {
         // FIXME: Optionally make print_value() to print to stderr
-        out("WARNING: A handler was added to an already rejected promise");
-        out(" (result: ");
+        js_out("WARNING: A handler was added to an already rejected promise");
+        js_out(" (result: ");
         HashTable<JS::Object*> seen_objects;
         print_value(promise.result(), seen_objects);
-        outln(")");
+        js_outln(")");
     };
     OwnPtr<JS::Interpreter> interpreter;
 
