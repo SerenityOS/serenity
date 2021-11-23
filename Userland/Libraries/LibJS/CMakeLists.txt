@@ -43,6 +43,7 @@ set(SOURCES
     Runtime/AsyncFunctionPrototype.cpp
     Runtime/AsyncGeneratorFunctionConstructor.cpp
     Runtime/AsyncGeneratorFunctionPrototype.cpp
+    Runtime/AsyncIteratorPrototype.cpp
     Runtime/AtomicsObject.cpp
     Runtime/BigInt.cpp
     Runtime/BigIntConstructor.cpp
