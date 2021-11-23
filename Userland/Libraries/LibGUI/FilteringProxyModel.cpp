@@ -46,7 +46,6 @@ Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
 
 void FilteringProxyModel::invalidate()
 {
-    m_model.invalidate();
     filter();
     did_update();
 }

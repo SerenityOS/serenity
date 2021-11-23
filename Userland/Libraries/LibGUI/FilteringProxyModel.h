@@ -14,14 +14,18 @@
 
 namespace GUI {
 
-class FilteringProxyModel final : public Model {
+class FilteringProxyModel final : public Model
+    , public ModelClient {
 public:
     static NonnullRefPtr<FilteringProxyModel> construct(Model& model)
     {
         return adopt_ref(*new FilteringProxyModel(model));
     }
 
-    virtual ~FilteringProxyModel() override {};
+    virtual ~FilteringProxyModel() override
+    {
+        m_model.unregister_client(*this);
+    };
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
@@ -35,11 +39,15 @@ public:
 
     ModelIndex map(ModelIndex const&) const;
 
+protected:
+    virtual void model_did_update([[maybe_unused]] unsigned flags) override { invalidate(); }
+
 private:
     void filter();
     explicit FilteringProxyModel(Model& model)
         : m_model(model)
     {
+        m_model.register_client(*this);
     }
 
     Model& m_model;
