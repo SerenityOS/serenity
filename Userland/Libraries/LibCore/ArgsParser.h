@@ -9,6 +9,7 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 
 namespace Core {
@@ -54,6 +55,11 @@ public:
     };
 
     bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
+    bool parse(Main::Arguments const& arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit)
+    {
+        return parse(arguments.argc, arguments.argv, failure_behavior);
+    }
+
     // *Without* trailing newline!
     void set_general_help(const char* help_string) { m_general_help = help_string; };
     void set_stop_on_first_non_option(bool stop_on_first_non_option) { m_stop_on_first_non_option = stop_on_first_non_option; }
