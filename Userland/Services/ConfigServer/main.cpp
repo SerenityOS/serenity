@@ -7,24 +7,17 @@
 #include "ClientConnection.h"
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio accept rpath wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil(Core::StandardPaths::config_directory().characters(), "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio accept rpath wpath cpath", nullptr));
+    TRY(Core::System::unveil(Core::StandardPaths::config_directory(), "rwc"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop event_loop;
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
 
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
