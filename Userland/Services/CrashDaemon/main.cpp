@@ -8,6 +8,8 @@
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -49,19 +51,12 @@ static void launch_crash_reporter(const String& coredump_path, bool unlink_on_ex
     }
 }
 
-int main()
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio rpath wpath cpath proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec", nullptr));
 
     Core::BlockingFileWatcher watcher;
-    auto watch_result = watcher.add_watch("/tmp/coredump", Core::FileWatcherEvent::Type::ChildCreated);
-    if (watch_result.is_error()) {
-        warnln("Failed to watch the coredump directory: {}", watch_result.error());
-        VERIFY_NOT_REACHED();
-    }
+    TRY(watcher.add_watch("/tmp/coredump", Core::FileWatcherEvent::Type::ChildCreated));
 
     while (true) {
         auto event = watcher.wait_for_event();
