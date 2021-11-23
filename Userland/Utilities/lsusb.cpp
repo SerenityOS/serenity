@@ -12,35 +12,22 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibUSBDB/Database.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/sys/bus/usb", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res/usb.ids", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::unveil("/sys/bus/usb", "r"));
+    TRY(Core::System::unveil("/res/usb.ids", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args;
     args.set_general_help("List USB devices.");
-    args.parse(argc, argv);
+    args.parse(arguments);
 
     Core::DirIterator usb_devices("/sys/bus/usb", Core::DirIterator::SkipDots);
 
