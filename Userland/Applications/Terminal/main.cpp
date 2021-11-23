@@ -261,7 +261,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(System::sigaction(SIGCHLD, &act, nullptr));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     TRY(System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr));
 
