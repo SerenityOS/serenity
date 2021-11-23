@@ -27,6 +27,11 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
+#ifdef __APPLE__
+ErrorOr<sig_t> signal(int signal, sig_t handler);
+#else
+ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
+#endif
 ErrorOr<struct stat> fstat(int fd);
 ErrorOr<int> fcntl(int fd, int command, ...);
 ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
