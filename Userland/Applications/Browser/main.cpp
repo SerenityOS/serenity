@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
