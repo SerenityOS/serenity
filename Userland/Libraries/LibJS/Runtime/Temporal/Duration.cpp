@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -161,6 +162,49 @@ bool is_valid_duration(double years, double months, double weeks, double days, d
 
     // 3. Return true.
     return true;
+}
+
+// 7.5.5 DefaultTemporalLargestUnit ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds ), https://tc39.es/proposal-temporal/#sec-temporal-defaulttemporallargestunit
+StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds)
+{
+    // 1. If years is not zero, return "year".
+    if (years != 0)
+        return "year"sv;
+
+    // 2. If months is not zero, return "month".
+    if (months != 0)
+        return "month"sv;
+
+    // 3. If weeks is not zero, return "week".
+    if (weeks != 0)
+        return "week"sv;
+
+    // 4. If days is not zero, return "day".
+    if (days != 0)
+        return "day"sv;
+
+    // 5. If hours is not zero, return "hour".
+    if (hours != 0)
+        return "hour"sv;
+
+    // 6. If minutes is not zero, return "minute".
+    if (minutes != 0)
+        return "minute"sv;
+
+    // 7. If seconds is not zero, return "second".
+    if (seconds != 0)
+        return "second"sv;
+
+    // 8. If milliseconds is not zero, return "millisecond".
+    if (milliseconds != 0)
+        return "millisecond"sv;
+
+    // 9. If microseconds is not zero, return "microsecond".
+    if (microseconds != 0)
+        return "microsecond"sv;
+
+    // 10. Return "nanosecond".
+    return "nanosecond"sv;
 }
 
 // 7.5.6 ToPartialDuration ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-topartialduration
