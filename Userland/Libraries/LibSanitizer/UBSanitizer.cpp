@@ -9,7 +9,6 @@
 
 using namespace AK::UBSanitizer;
 
-// FIXME: Parse option from UBSAN_OPTIONS: halt_on_error=0 or 1
 bool AK::UBSanitizer::g_ubsan_is_deadly { false };
 
 #define WARNLN_AND_DBGLN(fmt, ...) \
@@ -34,8 +33,12 @@ static void print_location(const SourceLocation& location)
         checked_env_for_deadly = true;
         StringView options = getenv("UBSAN_OPTIONS");
         // FIXME: Parse more options and complain about invalid options
-        if (!options.is_null() && options.contains("halt_on_error=1"))
-            g_ubsan_is_deadly = true;
+        if (!options.is_null()) {
+            if (options.contains("halt_on_error=1"))
+                g_ubsan_is_deadly = true;
+            else if (options.contains("halt_on_error=0"))
+                g_ubsan_is_deadly = false;
+        }
     }
     if (g_ubsan_is_deadly) {
         WARNLN_AND_DBGLN("UB is configured to be deadly");
