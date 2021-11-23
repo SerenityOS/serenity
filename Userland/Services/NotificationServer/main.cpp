@@ -1,24 +1,22 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClientConnection.h"
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd accept rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
-    auto server = Core::LocalServer::construct();
+    auto app = TRY(GUI::Application::try_create(arguments));
+    auto server = TRY(Core::LocalServer::try_create());
 
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
@@ -33,17 +31,9 @@ int main(int argc, char** argv)
         IPC::new_client_connection<NotificationServer::ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
-
-    if (pledge("stdio recvfd sendfd accept rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath", nullptr));
 
     return app->exec();
 }
