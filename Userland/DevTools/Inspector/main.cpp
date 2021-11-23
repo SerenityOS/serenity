@@ -9,6 +9,7 @@
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
 #include <AK/URL.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -21,6 +22,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -32,59 +34,35 @@ using namespace Inspector;
     exit(0);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin", "r"));
+    TRY(Core::System::unveil("/tmp", "rwc"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
-
-    bool gui_mode = argc != 2;
+    bool gui_mode = arguments.argc != 2;
     pid_t pid;
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-inspector");
     if (gui_mode) {
     choose_pid:
-        auto process_chooser = GUI::ProcessChooser::construct("Inspector", "Inspect", app_icon.bitmap_for_size(16));
+        auto process_chooser = TRY(GUI::ProcessChooser::try_create("Inspector", "Inspect", app_icon.bitmap_for_size(16)));
         if (process_chooser->exec() == GUI::Dialog::ExecCancel)
             return 0;
         pid = process_chooser->pid();
     } else {
-        auto pid_opt = String(argv[1]).to_int();
+        auto pid_opt = String(arguments.strings[1]).to_int();
         if (!pid_opt.has_value())
             print_usage_and_exit();
         pid = pid_opt.value();
     }
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
 
     if (pid == getpid()) {
         GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
@@ -151,7 +129,7 @@ int main(int argc, char** argv)
         remote_process.set_inspected_object(remote_object->address);
     };
 
-    auto properties_tree_view_context_menu = GUI::Menu::construct("Properties Tree View");
+    auto properties_tree_view_context_menu = TRY(GUI::Menu::try_create("Properties Tree View"));
 
     auto copy_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors();
     auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
