@@ -15,7 +15,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
-#include <Kernel/Devices/Audio/SB16.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/NullDevice.h>
@@ -36,7 +36,7 @@ public:
     void attach_console_device(ConsoleDevice const&);
 
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
-    void attach_sb16_device(SB16 const&);
+    void attach_audio_device(CharacterDevice const&);
 
     void after_inserting_device(Badge<Device>, Device&);
     void before_device_removal(Badge<Device>, Device&);
@@ -62,7 +62,7 @@ private:
     RefPtr<NullDevice> m_null_device;
     RefPtr<ConsoleDevice> m_console_device;
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
-    RefPtr<SB16> m_sb16_device;
+    NonnullRefPtrVector<CharacterDevice, 1> m_audio_devices;
     MutexProtected<HashMap<u32, Device*>> m_devices;
 };
 
