@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
@@ -113,9 +114,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
         highdpi_icon_path.append(lexical_path.extension());
 
         auto highdpi_icon_string = highdpi_icon_path.to_string();
-        int fd = open(highdpi_icon_string.characters(), O_RDONLY);
-        if (fd < 0)
-            return Error::from_errno(errno);
+        auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
 
         auto bitmap = TRY(try_load_from_fd_and_close(fd, highdpi_icon_string));
         VERIFY(bitmap->width() % scale_factor == 0);
@@ -126,9 +125,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(String const& path, in
         return bitmap;
     }
 
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0)
-        return Error::from_errno(errno);
+    auto fd = TRY(Core::System::open(path, O_RDONLY));
     return try_load_from_fd_and_close(fd, path);
 }
 
