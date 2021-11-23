@@ -130,4 +130,22 @@ ErrorOr<void> ftruncate(int fd, off_t length)
     return {};
 }
 
+ErrorOr<struct stat> stat(StringView path)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("stat"sv, -EFAULT);
+
+    struct stat st = {};
+#ifdef __serenity__
+    Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, AT_FDCWD, true };
+    int rc = syscall(SC_stat, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("stat"sv, rc, st);
+#else
+    String path_string = path;
+    if (::stat(path_string.characters(), &st) < 0)
+        return Error::from_syscall("stat"sv, -errno);
+    return st;
+#endif
+}
+
 }
