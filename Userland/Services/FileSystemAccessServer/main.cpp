@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);
 
-    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    IPC::new_client_connection<FileSystemAccessServer::ClientConnection>(socket.release_nonnull(), 1);
+    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
+    IPC::new_client_connection<FileSystemAccessServer::ClientConnection>(move(socket), 1);
     return app->exec();
 }

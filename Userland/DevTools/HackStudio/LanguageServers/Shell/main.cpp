@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio unix rpath recvfd", nullptr));
 
-    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    IPC::new_client_connection<LanguageServers::Shell::ClientConnection>(socket.release_nonnull(), 1);
+    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
+    IPC::new_client_connection<LanguageServers::Shell::ClientConnection>(move(socket), 1);
     TRY(Core::System::pledge("stdio rpath recvfd", nullptr));
     TRY(Core::System::unveil("/etc/passwd", "r"));
 

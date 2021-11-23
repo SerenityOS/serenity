@@ -5,12 +5,13 @@
  */
 
 #include <LibCore/LocalSocket.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
+
 #if defined(__FreeBSD__)
 #    include <sys/ucred.h>
 #endif
@@ -114,7 +115,7 @@ void LocalSocket::parse_sockets_from_system_server()
     unsetenv(socket_takeover);
 }
 
-RefPtr<LocalSocket> LocalSocket::take_over_accepted_socket_from_system_server(String const& socket_path)
+ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::take_over_accepted_socket_from_system_server(String const& socket_path)
 {
     if (!s_overtaken_sockets_parsed)
         parse_sockets_from_system_server();
@@ -126,29 +127,24 @@ RefPtr<LocalSocket> LocalSocket::take_over_accepted_socket_from_system_server(St
         fd = s_overtaken_sockets.begin()->value;
     } else {
         auto it = s_overtaken_sockets.find(socket_path);
-        if (it == s_overtaken_sockets.end()) {
-            dbgln("Non-existent socket requested");
-            return nullptr;
-        }
+        if (it == s_overtaken_sockets.end())
+            return Error::from_string_literal("Non-existent socket requested"sv);
         fd = it->value;
     }
 
     // Sanity check: it has to be a socket.
-    struct stat stat;
-    int rc = fstat(fd, &stat);
-    if (rc < 0 || !S_ISSOCK(stat.st_mode)) {
-        if (rc != 0)
-            perror("fstat");
-        dbgln("ERROR: The fd we got from SystemServer is not a socket");
-        return nullptr;
-    }
+    auto stat = TRY(Core::System::fstat(fd));
+
+    if (!S_ISSOCK(stat.st_mode))
+        return Error::from_string_literal("The fd we got from SystemServer is not a socket"sv);
 
     auto socket = LocalSocket::construct(fd);
 
     // It had to be !CLOEXEC for obvious reasons, but we
     // don't need it to be !CLOEXEC anymore, so set the
     // CLOEXEC flag now.
-    fcntl(fd, F_SETFD, FD_CLOEXEC);
+    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
+
     return socket;
 }
 
