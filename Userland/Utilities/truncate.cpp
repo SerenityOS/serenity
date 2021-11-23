@@ -20,6 +20,8 @@ enum TruncateOperation {
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio rpath wpath cpath", nullptr));
+
     const char* resize = nullptr;
     const char* reference = nullptr;
     const char* file = nullptr;
