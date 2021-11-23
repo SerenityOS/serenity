@@ -38,21 +38,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer")) {
-        warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
-
-    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md") })) {
-        warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
-
-    if (!Desktop::Launcher::seal_allowlist()) {
-        warnln("Failed to seal allowed launch URLs");
-        return 1;
-    }
+    TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer"));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     auto app_icon = GUI::Icon::default_icon("filetype-image");
 

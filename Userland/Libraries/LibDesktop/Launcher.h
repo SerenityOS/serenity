@@ -31,10 +31,10 @@ public:
         static NonnullRefPtr<Details> from_details_str(const String&);
     };
 
-    [[nodiscard]] static bool add_allowed_url(const URL&);
-    [[nodiscard]] static bool add_allowed_handler_with_any_url(const String& handler);
-    [[nodiscard]] static bool add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>&);
-    [[nodiscard]] static bool seal_allowlist();
+    static ErrorOr<void> add_allowed_url(URL const&);
+    static ErrorOr<void> add_allowed_handler_with_any_url(String const& handler);
+    static ErrorOr<void> add_allowed_handler_with_only_specific_urls(String const& handler, Vector<URL> const&);
+    static ErrorOr<void> seal_allowlist();
     static bool open(const URL&, const String& handler_name = {});
     static bool open(const URL&, const Details& details);
     static Vector<String> get_handlers_for_url(const URL&);

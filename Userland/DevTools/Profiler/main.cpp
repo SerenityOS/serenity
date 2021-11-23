@@ -78,13 +78,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
 
-    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help",
-            { URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md") })
-        || !Desktop::Launcher::seal_allowlist()) {
-        warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     window->set_title("Profiler");
     window->set_icon(app_icon.bitmap_for_size(16));

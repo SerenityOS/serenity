@@ -66,13 +66,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr));
-    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help",
-            { URL::create_with_file_protocol("/usr/share/man/man1/Playground.md") })
-        || !Desktop::Launcher::seal_allowlist()) {
-        warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
+
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/Playground.md") }));
+    TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr));
 
