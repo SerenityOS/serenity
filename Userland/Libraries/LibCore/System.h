@@ -20,5 +20,6 @@ ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
 ErrorOr<struct stat> fstat(int fd);
 ErrorOr<int> fcntl(int fd, int command, ...);
+ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
 
 }
