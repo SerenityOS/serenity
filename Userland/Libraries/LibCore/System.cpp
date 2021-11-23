@@ -148,4 +148,20 @@ ErrorOr<struct stat> stat(StringView path)
 #endif
 }
 
+ErrorOr<ssize_t> read(int fd, void* buffer, size_t buffer_size)
+{
+    ssize_t rc = ::read(fd, buffer, buffer_size);
+    if (rc < 0)
+        return Error::from_syscall("read"sv, -errno);
+    return rc;
+}
+
+ErrorOr<ssize_t> write(int fd, void const* data, size_t data_size)
+{
+    ssize_t rc = ::write(fd, data, data_size);
+    if (rc < 0)
+        return Error::from_syscall("write"sv, -errno);
+    return rc;
+}
+
 }
