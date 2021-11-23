@@ -19,7 +19,7 @@ namespace Unicode {
 u32 to_unicode_lowercase(u32 code_point);
 u32 to_unicode_uppercase(u32 code_point);
 
-Optional<StringView> code_point_display_name(u32 code_point);
+Optional<String> code_point_display_name(u32 code_point);
 
 String to_unicode_lowercase_full(StringView, Optional<StringView> locale = {});
 String to_unicode_uppercase_full(StringView, Optional<StringView> locale = {});

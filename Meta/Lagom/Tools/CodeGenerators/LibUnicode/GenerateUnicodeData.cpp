@@ -61,6 +61,11 @@ struct Normalization {
 
 using NormalizationProps = HashMap<String, Vector<Normalization>>;
 
+struct CodePointName {
+    CodePointRange code_point_range;
+    StringView name;
+};
+
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
 //                     https://www.unicode.org/reports/tr44/#General_Category_Values
@@ -95,6 +100,9 @@ struct UnicodeData {
     Vector<String> conditions;
 
     Vector<CodePointData> code_point_data;
+
+    HashMap<u32, String> code_point_display_name_aliases;
+    Vector<CodePointName> code_point_display_names;
 
     PropList general_categories;
     Vector<Alias> general_category_aliases;
@@ -280,25 +288,8 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
     }
 }
 
-static void parse_name_aliases(Core::File& file, Vector<CodePointData>& code_point_data)
+static void parse_name_aliases(Core::File& file, UnicodeData& unicode_data)
 {
-    auto iterator = code_point_data.begin();
-    VERIFY(!iterator.is_end());
-    // We use a single iterator because both lists should be sorted, and repeated lookups are unnecessary.
-
-    auto code_point_data_at = [&iterator](u32 code_point) -> CodePointData& {
-        VERIFY(!iterator.is_end());
-        while (iterator->code_point < code_point) {
-            ++iterator;
-            VERIFY(!iterator.is_end());
-        }
-        VERIFY(iterator->code_point == code_point);
-        return *iterator;
-    };
-
-    // We always use the *first* "control"-type alias. The actual reason for this is to avoid the silly name "END OF LINE" for code point 0x000a.
-    u32 last_overridden = (u32)-1;
-
     while (file.can_read_line()) {
         auto line = file.read_line();
         if (line.is_empty() || line.starts_with('#'))
@@ -307,22 +298,15 @@ static void parse_name_aliases(Core::File& file, Vector<CodePointData>& code_poi
         auto segments = line.split_view(';', true);
         VERIFY(segments.size() == 3);
 
-        auto code_point_optional = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0].trim_whitespace());
+        auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0].trim_whitespace());
         auto alias = segments[1].trim_whitespace();
         auto reason = segments[2].trim_whitespace();
 
-        VERIFY(code_point_optional.has_value());
-        VERIFY(!alias.is_empty());
-        // Thankfully, there is no correction alias for any of the control code points (yet).
-        if (!reason.is_one_of("correction", "control"))
+        if (!reason.is_one_of("correction"sv, "control"sv))
             continue;
 
-        auto code_point = code_point_optional.value();
-        if (code_point == last_overridden)
-            continue;
-
-        code_point_data_at(code_point).name = alias;
-        last_overridden = code_point;
+        if (!unicode_data.code_point_display_name_aliases.contains(*code_point))
+            unicode_data.code_point_display_name_aliases.set(*code_point, alias);
     }
 }
 
@@ -406,6 +390,60 @@ static void parse_normalization_props(Core::File& file, UnicodeData& unicode_dat
     }
 }
 
+static void add_canonical_code_point_name(CodePointRange range, StringView name, UnicodeData& unicode_data)
+{
+    // https://www.unicode.org/versions/Unicode14.0.0/ch04.pdf#G142981
+    // FIXME: Implement the NR1 rules for Hangul syllables.
+
+    // These code point ranges are the NR2 set of name replacements defined by Table 4-8.
+    constexpr Array<CodePointName, 15> s_ideographic_replacements { {
+        { { 0x3400, 0x4DBF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x4E00, 0x9FFC }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0xF900, 0xFA6D }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
+        { { 0xFA70, 0xFAD9 }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
+        { { 0x17000, 0x187F7 }, "TANGUT IDEOGRAPH-{:X}"sv },
+        { { 0x18B00, 0x18CD5 }, "KHITAN SMALL SCRIPT CHARACTER-{:X}"sv },
+        { { 0x18D00, 0x18D08 }, "TANGUT IDEOGRAPH-{:X}"sv },
+        { { 0x1B170, 0x1B2FB }, "NUSHU CHARACTER-{:X}"sv },
+        { { 0x20000, 0x2A6DD }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2A700, 0x2B734 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2B740, 0x2B81D }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2B820, 0x2CEA1 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2CEB0, 0x2EBE0 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2F800, 0x2FA1D }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
+        { { 0x30000, 0x3134A }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+    } };
+
+    auto it = find_if(s_ideographic_replacements.begin(), s_ideographic_replacements.end(),
+        [&](auto const& replacement) {
+            return replacement.code_point_range.first == range.first;
+        });
+
+    if (it != s_ideographic_replacements.end()) {
+        unicode_data.code_point_display_names.append(*it);
+        return;
+    }
+
+    it = find_if(s_ideographic_replacements.begin(), s_ideographic_replacements.end(),
+        [&](auto const& replacement) {
+            return (replacement.code_point_range.first <= range.first) && (range.first <= replacement.code_point_range.last);
+        });
+
+    if (it != s_ideographic_replacements.end()) {
+        // Drop code points that will have been captured by a range defined by the ideographic replacements.
+        return;
+    }
+
+    if (auto alias = unicode_data.code_point_display_name_aliases.get(range.first); alias.has_value()) {
+        // NR4 states that control code points have a null string as their name. Our implementation
+        // uses the control code's alias as its display name.
+        unicode_data.code_point_display_names.append({ range, *alias });
+        return;
+    }
+
+    unicode_data.code_point_display_names.append({ range, name });
+}
+
 static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
@@ -457,11 +495,17 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 
             data.name = data.name.substring(1, data.name.length() - 8);
             code_point_range_start.clear();
-        } else if ((data.code_point > 0) && (data.code_point - previous_code_point) != 1) {
-            VERIFY(assigned_code_point_range_start.has_value());
 
-            assigned_code_points.append({ *assigned_code_point_range_start, previous_code_point });
-            assigned_code_point_range_start = data.code_point;
+            add_canonical_code_point_name(code_point_range, data.name, unicode_data);
+        } else {
+            add_canonical_code_point_name({ data.code_point, data.code_point }, data.name, unicode_data);
+
+            if ((data.code_point > 0) && (data.code_point - previous_code_point) != 1) {
+                VERIFY(assigned_code_point_range_start.has_value());
+
+                assigned_code_points.append({ *assigned_code_point_range_start, previous_code_point });
+                assigned_code_point_range_start = data.code_point;
+            }
         }
 
         bool has_special_casing { false };
@@ -563,7 +607,7 @@ struct SpecialCasing {
 
 namespace Detail {
 
-StringView code_point_display_name(u32 code_point);
+Optional<String> code_point_display_name(u32 code_point);
 
 u32 canonical_combining_class(u32 code_point);
 
@@ -802,19 +846,27 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
 
     generator.append(R"~~~(
 struct CodePointName {
-    u32 code_point { 0 };
+    CodePointRange code_point_range {};
     StringView display_name;
+};
+
+struct CodePointNameComparator : public CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointName const& name)
+    {
+        return CodePointRangeComparator::operator()(code_point, name.code_point_range);
+    }
 };
 )~~~");
 
-    generator.set("code_point_names_size", String::number(unicode_data.code_point_data.size()));
+    generator.set("code_point_display_names_size", String::number(unicode_data.code_point_display_names.size()));
     generator.append(R"~~~(
-static constexpr Array<CodePointName, @code_point_names_size@> s_code_point_names { {
+static constexpr Array<CodePointName, @code_point_display_names_size@> s_code_point_display_names { {
 )~~~");
-    for (auto const& code_point_data : unicode_data.code_point_data) {
-        generator.set("code_point", String::formatted("{:#x}", code_point_data.code_point));
-        generator.set("code_point_name", code_point_data.name);
-        generator.append(R"~~~(    { @code_point@, "@code_point_name@"sv },
+    for (auto const& code_point_name : unicode_data.code_point_display_names) {
+        generator.set("first", String::formatted("{:#x}", code_point_name.code_point_range.first));
+        generator.set("last", String::formatted("{:#x}", code_point_name.code_point_range.last));
+        generator.set("name", code_point_name.name);
+        generator.append(R"~~~(    { { @first@, @last@ }, "@name@"sv },
 )~~~");
     }
     generator.append(R"~~~(} };
@@ -823,10 +875,16 @@ static constexpr Array<CodePointName, @code_point_names_size@> s_code_point_name
     generator.append(R"~~~(
 namespace Detail {
 
-StringView code_point_display_name(u32 code_point)
+Optional<String> code_point_display_name(u32 code_point)
 {
-    auto const* entry = binary_search(s_code_point_names, code_point, nullptr, CodePointComparator<CodePointName> {});
-    return entry ? entry->display_name : StringView();
+    if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
+        if (entry->display_name.ends_with("{:X}"sv))
+            return String::formatted(entry->display_name, code_point);
+
+        return entry->display_name;
+    }
+
+    return {};
 }
 )~~~");
 
@@ -1102,10 +1160,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
+    parse_name_aliases(name_alias_file, unicode_data);
 
     populate_general_category_unions(unicode_data.general_categories);
     parse_unicode_data(unicode_data_file, unicode_data);
-    parse_name_aliases(name_alias_file, unicode_data.code_point_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false);
     normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);
