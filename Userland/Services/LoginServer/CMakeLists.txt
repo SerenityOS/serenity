@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_bin(LoginServer)
-target_link_libraries(LoginServer LibGUI)
+target_link_libraries(LoginServer LibGUI LibMain)
