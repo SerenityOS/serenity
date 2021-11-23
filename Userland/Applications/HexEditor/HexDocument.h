@@ -34,7 +34,7 @@ protected:
     HashMap<size_t, u8> m_changes;
 };
 
-class HexDocumentMemory : public HexDocument {
+class HexDocumentMemory final : public HexDocument {
 public:
     explicit HexDocumentMemory(ByteBuffer&& buffer);
     virtual ~HexDocumentMemory() = default;
@@ -49,7 +49,7 @@ private:
     ByteBuffer m_buffer;
 };
 
-class HexDocumentFile : public HexDocument {
+class HexDocumentFile final : public HexDocument {
 public:
     explicit HexDocumentFile(NonnullRefPtr<Core::File> file);
     virtual ~HexDocumentFile() = default;
