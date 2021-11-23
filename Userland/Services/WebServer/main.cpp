@@ -9,14 +9,16 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibHTTP/HttpRequest.h>
+#include <LibMain/Main.h>
 #include <WebServer/Client.h>
 #include <WebServer/Configuration.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String default_listen_address = "0.0.0.0";
     u16 default_port = 8000;
@@ -33,7 +35,7 @@ int main(int argc, char** argv)
     args_parser.add_option(username, "HTTP basic authentication username", "user", 'U', "username");
     args_parser.add_option(password, "HTTP basic authentication password", "pass", 'P', "password");
     args_parser.add_positional_argument(root_path, "Path to serve the contents of", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto ipv4_address = IPv4Address::from_string(listen_address);
     if (!ipv4_address.has_value()) {
@@ -58,10 +60,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio accept rpath inet unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio accept rpath inet unix", nullptr));
 
     WebServer::Configuration configuration(real_root_path);
 
@@ -70,7 +69,7 @@ int main(int argc, char** argv)
 
     Core::EventLoop loop;
 
-    auto server = Core::TCPServer::construct();
+    auto server = TRY(Core::TCPServer::try_create());
 
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
@@ -86,22 +85,10 @@ int main(int argc, char** argv)
 
     outln("Listening on {}:{}", ipv4_address.value(), port);
 
-    if (unveil("/res/icons", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/res/icons", "r"));
+    TRY(Core::System::unveil(real_root_path.characters(), "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil(real_root_path.characters(), "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
-
-    if (pledge("stdio accept rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio accept rpath", nullptr));
     return loop.exec();
 }
