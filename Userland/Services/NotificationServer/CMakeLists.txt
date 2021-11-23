@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_bin(NotificationServer)
-target_link_libraries(NotificationServer LibGUI LibIPC)
+target_link_libraries(NotificationServer LibGUI LibIPC LibMain)
