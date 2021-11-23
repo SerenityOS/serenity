@@ -1,3 +1,3 @@
 lagom_tool(GenerateUnicodeData SOURCES GenerateUnicodeData.cpp LIBS LagomMain)
-lagom_tool(GenerateUnicodeLocale SOURCES GenerateUnicodeLocale.cpp)
+lagom_tool(GenerateUnicodeLocale SOURCES GenerateUnicodeLocale.cpp LIBS LagomMain)
 lagom_tool(GenerateUnicodeNumberFormat SOURCES GenerateUnicodeNumberFormat.cpp)
