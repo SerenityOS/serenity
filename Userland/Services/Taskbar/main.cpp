@@ -15,12 +15,14 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibMain/Main.h>
 #include <WindowServer/Window.h>
 #include <serenity.h>
 #include <signal.h>
@@ -29,16 +31,13 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static Vector<String> discover_apps_and_categories();
-static NonnullRefPtr<GUI::Menu> build_system_menu();
+static ErrorOr<Vector<String>> discover_apps_and_categories();
+static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu();
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd proc exec rpath unix sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    auto app = GUI::Application::construct(argc, argv);
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction", nullptr));
+    auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("Taskbar");
     Config::monitor_domain("Taskbar");
     app->event_loop().register_signal(SIGCHLD, [](int) {
@@ -50,15 +49,12 @@ int main(int argc, char** argv)
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::WindowManagerServerConnection::the();
 
-    if (pledge("stdio recvfd sendfd proc exec rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
 
-    auto menu = build_system_menu();
+    auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
 
-    auto window = TaskbarWindow::construct(move(menu));
+    auto window = TRY(TaskbarWindow::try_create(move(menu)));
     window->show();
 
     window->make_window_manager(
@@ -90,7 +86,7 @@ Vector<ThemeMetadata> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
-Vector<String> discover_apps_and_categories()
+ErrorOr<Vector<String>> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
@@ -102,18 +98,18 @@ Vector<String> discover_apps_and_categories()
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
     Vector<String> sorted_app_categories;
-    for (auto& category : seen_app_categories) {
-        sorted_app_categories.append(category);
-    }
+    TRY(sorted_app_categories.try_ensure_capacity(seen_app_categories.size()));
+    for (auto const& category : seen_app_categories)
+        sorted_app_categories.unchecked_append(category);
     quick_sort(sorted_app_categories);
 
     return sorted_app_categories;
 }
 
-NonnullRefPtr<GUI::Menu> build_system_menu()
+ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
 {
-    const Vector<String> sorted_app_categories = discover_apps_and_categories();
-    auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
+    Vector<String> const sorted_app_categories = TRY(discover_apps_and_categories());
+    auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Core::Process::spawn("/bin/About"sv);
