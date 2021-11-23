@@ -8,6 +8,7 @@
 
 #include <LibAudio/ClientConnection.h>
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -19,6 +20,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
 
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
@@ -208,31 +210,19 @@ private:
     RefPtr<GUI::Label> m_root_container;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
-    if (unveil("/tmp/portal/config", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil("/tmp/portal/audio", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    unveil(nullptr, nullptr);
+    auto app = TRY(GUI::Application::try_create(arguments));
+    TRY(Core::System::unveil("/tmp/portal/config", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/audio", "rw"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Config::pledge_domains("AudioApplet");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_has_alpha_channel(true);
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
@@ -243,10 +233,7 @@ int main(int argc, char** argv)
     // This positioning code depends on the window actually existing.
     static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     return app->exec();
 }
