@@ -152,6 +152,7 @@ private:
     void set_master_output_volume(u8, u8, Muted);
     void set_pcm_output_sample_rate(u16);
     void set_pcm_output_volume(u8, u8, Muted);
+    ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index = 0;
