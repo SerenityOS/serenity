@@ -29,6 +29,16 @@ DirIterator::~DirIterator()
     }
 }
 
+DirIterator::DirIterator(DirIterator&& other)
+    : m_dir(other.m_dir)
+    , m_error(other.m_error)
+    , m_next(move(other.m_next))
+    , m_path(move(other.m_path))
+    , m_flags(other.m_flags)
+{
+    other.m_dir = nullptr;
+}
+
 bool DirIterator::advance_next()
 {
     if (!m_dir)
