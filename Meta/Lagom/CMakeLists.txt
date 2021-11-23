@@ -39,7 +39,7 @@ if(ENABLE_ALL_THE_DEBUG_MACROS)
 endif()
 
 # FIXME: BUILD_SHARED_LIBS has a default of OFF, as it's intended to be set by the
-#        user when configuring the project. We should instead change libjs-test262 
+#        user when configuring the project. We should instead change libjs-test262
 #        and oss-fuzz to set this option on their end, and enable it by default in
 #        Meta/serenity.sh
 #        This is #9867. We can change the oss-fuzz escape hatch to be a FATAL_ERROR
@@ -227,6 +227,16 @@ if (NOT APPLE)
     target_link_libraries(LagomCore crypt) # Core::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 
+# Main
+file(GLOB LIBMAIN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMain/*.cpp")
+lagom_lib(Main main
+    SOURCES ${LIBMAIN_SOURCES}
+)
+# The macOS linker is not happy about LibMain's main() calling an undefined symbol (serenity_main()).
+if (APPLE)
+    target_link_options(LagomMain PRIVATE -undefined dynamic_lookup)
+endif()
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
@@ -344,16 +354,6 @@ if (BUILD_LAGOM)
     lagom_lib(Line line
         SOURCES ${LIBLINE_SOURCES}
     )
-
-    # Main
-    file(GLOB LIBMAIN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMain/*.cpp")
-    lagom_lib(Main main
-        SOURCES ${LIBMAIN_SOURCES}
-    )
-    # The macOS linker is not happy about LibMain's main() calling an undefined symbol (serenity_main()).
-    if (APPLE)
-        target_link_options(LagomMain PRIVATE -undefined dynamic_lookup)
-    endif()
 
     # Markdown
     file(GLOB LIBMARKDOWN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMarkdown/*.cpp")
