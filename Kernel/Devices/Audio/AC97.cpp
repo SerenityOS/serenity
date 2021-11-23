@@ -169,8 +169,6 @@ void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)
 
 ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
 {
-    VERIFY(length <= PAGE_SIZE);
-
     if (!m_output_buffer) {
         m_output_buffer = TRY(allocate_physical_buffer(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv));
     }
@@ -179,9 +177,23 @@ ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const&
         m_buffer_descriptor_list = TRY(allocate_physical_buffer(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv));
     }
 
-    cli();
+    auto remaining = length;
+    size_t offset = 0;
+    while (remaining > 0) {
+        TRY(write_single_buffer(data, offset, min(remaining, PAGE_SIZE)));
+        offset += PAGE_SIZE;
+        remaining -= PAGE_SIZE;
+    }
+
+    return length;
+}
+
+ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t offset, size_t length)
+{
+    VERIFY(length <= PAGE_SIZE);
 
     // Block until we can write into an unused buffer
+    cli();
     do {
         auto pcm_out_status = m_pcm_out_channel.reg(AC97Channel::Register::Status).in<u16>();
         auto is_dma_controller_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
@@ -199,11 +211,10 @@ ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const&
 
         m_irq_queue.wait_forever("AC97"sv);
     } while (m_pcm_out_channel.dma_running());
-
     sti();
 
     // Copy data from userspace into one of our buffers
-    TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), length));
+    TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), offset, length));
 
     if (!m_pcm_out_channel.dma_running()) {
         reset_pcm_out();
@@ -226,7 +237,7 @@ ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const&
     m_output_buffer_page_index = (m_output_buffer_page_index + 1) % m_output_buffer_page_count;
     m_buffer_descriptor_list_index = (m_buffer_descriptor_list_index + 1) % buffer_descriptor_list_max_entries;
 
-    return length;
+    return {};
 }
 
 void AC97::AC97Channel::reset()
