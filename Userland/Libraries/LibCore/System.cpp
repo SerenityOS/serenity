@@ -123,4 +123,11 @@ ErrorOr<void> close(int fd)
     return {};
 }
 
+ErrorOr<void> ftruncate(int fd, off_t length)
+{
+    if (::ftruncate(fd, length) < 0)
+        return Error::from_syscall("ftruncate"sv, -errno);
+    return {};
+}
+
 }

@@ -24,5 +24,6 @@ ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, of
 ErrorOr<void> munmap(void* address, size_t);
 ErrorOr<int> open(StringView path, int options, ...);
 ErrorOr<void> close(int fd);
+ErrorOr<void> ftruncate(int fd, off_t length);
 
 }
