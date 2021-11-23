@@ -403,13 +403,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     auto nanoseconds = nanoseconds_bigint.big_integer();
 
     // 3. Let sign be ! ℝ(Sign(𝔽(nanoseconds))).
-    i8 sign;
-    if (nanoseconds == Crypto::UnsignedBigInteger { 0 })
-        sign = 0;
-    else if (nanoseconds.is_negative())
-        sign = -1;
-    else
-        sign = 1;
+    auto sign = Temporal::sign(nanoseconds);
 
     // 4. Let dayLengthNs be 8.64 × 10^13.
     auto day_length_ns = "86400000000000"_sbigint;
@@ -425,7 +419,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         // a. Return the Record { [[Days]]: the integral part of nanoseconds / dayLengthNs, [[Nanoseconds]]: (abs(nanoseconds) modulo dayLengthNs) × sign, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult {
             .days = nanoseconds.divided_by(day_length_ns).quotient.to_double(),
-            .nanoseconds = make_handle(js_bigint(vm, Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { sign }))),
+            .nanoseconds = make_handle(js_bigint(vm, Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { (i32)sign }))),
             .day_length = day_length_ns.to_double()
         };
     }
@@ -484,7 +478,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         day_length_ns = one_day_farther_ns.minus(intermediate_ns);
 
         // c. If (nanoseconds − dayLengthNs) × sign ≥ 0, then
-        if (nanoseconds.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { sign }) >= "0"_sbigint) {
+        if (nanoseconds.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { (i32)sign }) >= "0"_sbigint) {
             // i. Set nanoseconds to nanoseconds − dayLengthNs.
             nanoseconds = nanoseconds.minus(day_length_ns);
 
