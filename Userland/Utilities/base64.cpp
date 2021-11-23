@@ -9,16 +9,15 @@
 #include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     bool decode = false;
     const char* filepath = nullptr;
@@ -26,7 +25,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(decode, "Decode data", "decode", 'd');
     args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     ByteBuffer buffer;
     if (filepath == nullptr || strcmp(filepath, "-") == 0) {
@@ -44,10 +43,7 @@ int main(int argc, char** argv)
         buffer = file->read_all();
     }
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio", nullptr));
 
     if (decode) {
         auto decoded = decode_base64(StringView(buffer));
@@ -61,4 +57,5 @@ int main(int argc, char** argv)
 
     auto encoded = encode_base64(buffer);
     outln("{}", encoded);
+    return 0;
 }
