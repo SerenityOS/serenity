@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/AsyncFromSyncIteratorPrototype.h>
 #include <LibJS/Runtime/AsyncFunctionConstructor.h>
 #include <LibJS/Runtime/AsyncFunctionPrototype.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
@@ -165,6 +166,8 @@ void GlobalObject::initialize_global_object()
     // companion constructor
     m_generator_object_prototype = heap().allocate<GeneratorObjectPrototype>(*this, *this);
     m_generator_object_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+
+    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(*this, *this);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     if (!m_##snake_name##_prototype)                                                     \
