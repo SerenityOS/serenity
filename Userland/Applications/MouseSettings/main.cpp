@@ -9,29 +9,23 @@
 
 #include "MouseWidget.h"
 #include "ThemeWidget.h"
-#include <LibGUI/Action.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/SettingsWindow.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio cpath rpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio cpath rpath recvfd sendfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 
-    auto window = GUI::SettingsWindow::construct("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes);
+    auto window = TRY(GUI::SettingsWindow::try_create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->add_tab<MouseWidget>("Mouse");
     window->add_tab<ThemeWidget>("Cursor Theme");
     window->set_icon(app_icon.bitmap_for_size(16));
