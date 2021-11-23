@@ -12,25 +12,25 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <signal.h>
 #include <string.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr));
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/tmp", "cw"));
-    TRY(System::unveil("/etc/WindowServer.ini", "rwc"));
-    TRY(System::unveil("/dev", "rw"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp", "cw"));
+    TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
+    TRY(Core::System::unveil("/dev", "rw"));
 
     struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
-    TRY(System::sigaction(SIGCHLD, &act, nullptr));
+    TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
 
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     WindowServer::EventLoop loop;
 
-    TRY(System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr));
 
     // First check which screens are explicitly configured
     {
@@ -114,13 +114,13 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
-    TRY(System::unveil("/tmp", ""));
+    TRY(Core::System::unveil("/tmp", ""));
 
     // NOTE: Because we dynamically need to be able to open new /dev/fb*
     // devices we can't really unveil all of /dev unless we have some
     // other mechanism that can hand us file descriptors for these.
 
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     dbgln("Entering WindowServer main loop");
     loop.exec();

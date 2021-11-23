@@ -6,6 +6,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -23,7 +24,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 #include "Mesh.h"
 #include "WavefrontOBJLoader.h"
@@ -286,13 +286,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio thread recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix", nullptr));
 
-    TRY(System::unveil("/tmp/portal/filesystemaccess", "rw"));
-    TRY(System::unveil("/home/anon/Documents/3D Models/teapot.obj", "r"));
-    TRY(System::unveil("/home/anon/Documents/3D Models/teapot.bmp", "r"));
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.obj", "r"));
+    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.bmp", "r"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     // Construct the main window
     auto window = GUI::Window::construct();

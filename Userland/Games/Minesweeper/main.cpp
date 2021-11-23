@@ -7,6 +7,7 @@
 #include "CustomGameDialog.h"
 #include "Field.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -19,21 +20,20 @@
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domains("Minesweeper");
 
-    TRY(System::pledge("stdio rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-minesweeper");
 

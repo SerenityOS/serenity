@@ -10,9 +10,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <unistd.h>
 
 static ErrorOr<int> mode_server();
@@ -34,13 +34,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 ErrorOr<int> mode_server()
 {
     Core::EventLoop event_loop;
-    TRY(System::pledge("stdio unix recvfd rpath ", nullptr));
+    TRY(Core::System::pledge("stdio unix recvfd rpath ", nullptr));
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(socket.release_nonnull(), 1);
 
-    TRY(System::pledge("stdio recvfd rpath", nullptr));
-    TRY(System::unveil("/usr/include", "r"));
+    TRY(Core::System::pledge("stdio recvfd rpath", nullptr));
+    TRY(Core::System::unveil("/usr/include", "r"));
 
     // unveil will be sealed later, when we know the project's root path.
     return event_loop.exec();

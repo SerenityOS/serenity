@@ -14,13 +14,13 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(System::pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr));
 
     const char* specified_url = nullptr;
 
@@ -60,13 +60,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(System::unveil("/home", "rwc"));
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/etc/passwd", "r"));
-    TRY(System::unveil("/tmp/portal/image", "rw"));
-    TRY(System::unveil("/tmp/portal/webcontent", "rw"));
-    TRY(System::unveil("/tmp/portal/request", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/home", "rwc"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/tmp/portal/image", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/request", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 

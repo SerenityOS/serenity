@@ -6,14 +6,14 @@
 
 #include <FileSystemAccessServer/ClientConnection.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread", nullptr));
 
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);

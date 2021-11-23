@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -33,7 +34,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>
@@ -252,18 +252,18 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr));
+    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr));
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
 
-    TRY(System::sigaction(SIGCHLD, &act, nullptr));
+    TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr));
 
     Config::pledge_domains("Terminal");
 
@@ -422,14 +422,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             settings_window->close();
     };
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/bin", "r"));
-    TRY(System::unveil("/bin/Terminal", "x"));
-    TRY(System::unveil("/bin/utmpupdate", "x"));
-    TRY(System::unveil("/etc/FileIconProvider.ini", "r"));
-    TRY(System::unveil("/tmp/portal/launch", "rw"));
-    TRY(System::unveil("/tmp/portal/config", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin", "r"));
+    TRY(Core::System::unveil("/bin/Terminal", "x"));
+    TRY(Core::System::unveil("/bin/utmpupdate", "x"));
+    TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/config", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     window->show();
     int result = app->exec();

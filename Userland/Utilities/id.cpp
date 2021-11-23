@@ -7,8 +7,8 @@
 #include <AK/StringUtils.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <alloca.h>
 #include <grp.h>
 #include <pwd.h>
@@ -25,10 +25,10 @@ static String user_str;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::unveil("/etc/passwd", "r"));
-    TRY(System::unveil("/etc/group", "r"));
-    TRY(System::unveil(nullptr, nullptr));
-    TRY(System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');

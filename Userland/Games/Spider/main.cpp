@@ -8,6 +8,7 @@
 #include "Game.h"
 #include <Games/Spider/SpiderGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -19,7 +20,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 
 enum class StatisticDisplay : u8 {
@@ -39,17 +39,17 @@ static String format_seconds(uint64_t seconds_elapsed)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     auto app_icon = GUI::Icon::default_icon("app-spider");
 
     Config::pledge_domains("Spider");
 
-    TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
     window->set_title("Spider");

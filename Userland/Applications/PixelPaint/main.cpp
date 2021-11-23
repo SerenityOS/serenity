@@ -8,6 +8,7 @@
 #include "MainWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -17,11 +18,10 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath", nullptr));
 
     auto app = GUI::Application::construct(arguments);
     Config::pledge_domains("PixelPaint");
@@ -31,11 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/tmp/portal/clipboard", "rw"));
-    TRY(System::unveil("/tmp/portal/filesystemaccess", "rw"));
-    TRY(System::unveil("/tmp/portal/image", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/image", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
 
