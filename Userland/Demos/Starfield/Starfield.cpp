@@ -162,7 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
     args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
 

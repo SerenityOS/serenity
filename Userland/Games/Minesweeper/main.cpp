@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domains("Minesweeper");
 

@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     TrackManager track_manager;
 

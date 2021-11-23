@@ -80,7 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     TRY(System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr));
 
