@@ -167,6 +167,7 @@ ThrowCompletionOr<TemporalDuration> add_duration(GlobalObject&, double years1, d
 ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDate& relative_to, Duration& duration);
 ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject&, ZonedDateTime&, double years, double months, double weeks, double days);
 ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
+ThrowCompletionOr<TemporalDuration> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
 ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
 String temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
 

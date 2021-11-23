@@ -1608,6 +1608,53 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     return RoundedDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds, .remainder = remainder };
 }
 
+// 7.5.19 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
+ThrowCompletionOr<TemporalDuration> adjust_rounded_duration_days(GlobalObject& global_object, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If relativeTo is not present; or Type(relativeTo) is not Object; or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot; or unit is one of "year", "month", "week", or "day"; or unit is "nanosecond" and increment is 1, then
+    if (relative_to_object == nullptr || !is<ZonedDateTime>(relative_to_object) || unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv) || (unit == "nanosecond"sv && increment == 1)) {
+        // a. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+        return TemporalDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
+    }
+
+    auto& relative_to = static_cast<ZonedDateTime&>(*relative_to_object);
+
+    // 2. Let timeRemainderNs be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
+    auto time_remainder_ns = total_duration_nanoseconds(global_object, 0, hours, minutes, seconds, milliseconds, microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)nanoseconds)), 0)->big_integer();
+
+    // 3. Let direction be ! ℝ(Sign(𝔽(timeRemainderNs))).
+    auto direction = Temporal::sign(time_remainder_ns);
+
+    // 4. Let dayStart be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    auto* day_start = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, 0, 0, 0, 0, 0, 0));
+
+    // 5. Let dayEnd be ? AddZonedDateTime(dayStart, relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, direction, 0, 0, 0, 0, 0, 0).
+    auto* day_end = TRY(add_zoned_date_time(global_object, *day_start, &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, direction, 0, 0, 0, 0, 0, 0));
+
+    // 6. Let dayLengthNs be ℝ(dayEnd − dayStart).
+    auto day_length_ns = day_end->big_integer().minus(day_start->big_integer());
+
+    // 7. If (timeRemainderNs − dayLengthNs) × direction < 0, then
+    if (time_remainder_ns.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { (i32)direction }).is_negative()) {
+        // a. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+        return TemporalDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
+    }
+
+    // 8. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs − dayLengthNs), increment, unit, roundingMode).
+    time_remainder_ns = round_temporal_instant(global_object, *js_bigint(vm, time_remainder_ns.minus(day_length_ns)), increment, unit, rounding_mode)->big_integer();
+
+    // 9. Let adjustedDateDuration be ? AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, relativeTo).
+    auto adjusted_date_duration = TRY(add_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, &relative_to));
+
+    // 10. Let adjustedTimeDuration be ? BalanceDuration(0, 0, 0, 0, 0, 0, timeRemainderNs, "hour").
+    auto adjusted_time_duration = TRY(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *js_bigint(vm, move(time_remainder_ns)), "hour"sv));
+
+    // 11. Return the Record { [[Years]]: adjustedDateDuration.[[Years]], [[Months]]: adjustedDateDuration.[[Months]], [[Weeks]]: adjustedDateDuration.[[Weeks]], [[Days]]: adjustedDateDuration.[[Days]], [[Hours]]: adjustedTimeDuration.[[Hours]], [[Minutes]]: adjustedTimeDuration.[[Minutes]], [[Seconds]]: adjustedTimeDuration.[[Seconds]], [[Milliseconds]]: adjustedTimeDuration.[[Milliseconds]], [[Microseconds]]: adjustedTimeDuration.[[Microseconds]], [[Nanoseconds]]: adjustedTimeDuration.[[Nanoseconds]] }.
+    return TemporalDuration { .years = adjusted_date_duration.years, .months = adjusted_date_duration.months, .weeks = adjusted_date_duration.weeks, .days = adjusted_date_duration.days, .hours = adjusted_time_duration.hours, .minutes = adjusted_time_duration.minutes, .seconds = adjusted_time_duration.seconds, .milliseconds = adjusted_time_duration.milliseconds, .microseconds = adjusted_time_duration.microseconds, .nanoseconds = adjusted_time_duration.nanoseconds };
+}
+
 // 7.5.20 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ), https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
 ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
 {
