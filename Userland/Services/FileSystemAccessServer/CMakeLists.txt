@@ -15,5 +15,5 @@ set(SOURCES
 )
 
 serenity_bin(FileSystemAccessServer)
-target_link_libraries(FileSystemAccessServer LibCore LibIPC LibGUI)
+target_link_libraries(FileSystemAccessServer LibCore LibIPC LibGUI LibMain)
 add_dependencies(FileSystemAccessServer WindowServer)
