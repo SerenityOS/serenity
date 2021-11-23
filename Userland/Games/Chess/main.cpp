@@ -7,6 +7,7 @@
 #include "ChessWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/System.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -17,28 +18,27 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domains("Chess");
 
-    TRY(System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-chess");
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/bin/ChessEngine", "x"));
-    TRY(System::unveil("/etc/passwd", "r"));
-    TRY(System::unveil(Core::StandardPaths::home_directory().characters(), "wcbr"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/bin/ChessEngine", "x"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(Core::StandardPaths::home_directory().characters(), "wcbr"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto size = Config::read_i32("Chess", "Display", "size", 512);
     window->set_title("Chess");

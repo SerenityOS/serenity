@@ -15,6 +15,7 @@
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -23,11 +24,10 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 

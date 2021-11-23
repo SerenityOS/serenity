@@ -27,6 +27,7 @@ set(SOURCES
     SecretString.cpp
     Socket.cpp
     StandardPaths.cpp
+    System.cpp
     TCPServer.cpp
     TCPSocket.cpp
     Timer.cpp

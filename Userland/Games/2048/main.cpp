@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "GameSizeDialog.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -20,13 +21,12 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <time.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
     srand(time(nullptr));
 
@@ -37,10 +37,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("2048");
 
-    TRY(System::pledge("stdio rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     size_t board_size = Config::read_i32("2048", "", "board_size", 4);
     u32 target_tile = Config::read_i32("2048", "", "target_tile", 2048);

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibSystem/Wrappers.h>
+#include <LibCore/System.h>
 #include <LibSystem/syscall.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -13,8 +13,9 @@
     }                                                                \
     return success_value;
 
-namespace System {
+namespace Core::System {
 
+#ifdef __serenity__
 ErrorOr<void> pledge(StringView promises, StringView execpromises)
 {
     Syscall::SC_pledge_params params {
@@ -34,18 +35,13 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
     int rc = syscall(SC_unveil, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc, {});
 }
+#endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
 {
-    int rc = syscall(SC_sigaction, signal, action, old_action);
-    HANDLE_SYSCALL_RETURN_VALUE("sigaction"sv, rc, {});
-}
-
-ErrorOr<struct stat> fstat(int fd)
-{
-    struct stat st;
-    int rc = syscall(SC_fstat, fd, &st);
-    HANDLE_SYSCALL_RETURN_VALUE("fstat"sv, rc, st);
+    if (::sigaction(signal, action, old_action) < 0)
+        return Error::from_syscall("sigaction"sv, -errno);
+    return {};
 }
 
 }

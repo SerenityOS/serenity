@@ -6,6 +6,7 @@
 
 #include "Game.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -13,20 +14,19 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     Config::pledge_domains("FlappyBug");
 
-    TRY(System::pledge("stdio rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     u32 high_score = Config::read_i32("FlappyBug", "Game", "HighScore", 0);
 
