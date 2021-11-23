@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(Network.Applet ICON network)
-target_link_libraries(Network.Applet LibGUI LibCore LibGfx)
+target_link_libraries(Network.Applet LibGUI LibCore LibGfx LibMain)

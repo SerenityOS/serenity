@@ -6,6 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ImageWidget.h>
@@ -13,6 +14,7 @@
 #include <LibGUI/Notification.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -155,51 +157,28 @@ private:
     RefPtr<Gfx::Bitmap> m_disconnected_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png").release_value_but_fixme_should_propagate_errors();
 };
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec", nullptr));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    auto app = GUI::Application::construct(argc, argv);
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/notify", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/net/adapters", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/SystemMonitor", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/notify", "rw"));
+    TRY(Core::System::unveil("/proc/net/adapters", "r"));
+    TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool display_notifications = false;
     const char* name = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(display_notifications, "Display notifications", "display-notifications", 'd');
     args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (name == nullptr)
         name = "Network";
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title(name);
     window->set_window_type(GUI::WindowType::Applet);
     window->set_has_alpha_channel(true);
