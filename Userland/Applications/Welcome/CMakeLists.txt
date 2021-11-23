@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(Welcome ICON app-welcome)
-target_link_libraries(Welcome LibGUI LibWeb)
+target_link_libraries(Welcome LibGUI LibWeb LibMain)

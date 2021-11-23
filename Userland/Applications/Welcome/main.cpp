@@ -6,50 +6,28 @@
 
 #include "WelcomeWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    auto app = GUI::Application::construct(argc, argv);
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec", nullptr));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("SystemServer");
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/home", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/Help", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/bin/Help", "x"));
+    TRY(Core::System::unveil(nullptr, nullptr));
     auto app_icon = GUI::Icon::default_icon("app-welcome");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->resize(480, 250);
     window->center_on_screen();
 
