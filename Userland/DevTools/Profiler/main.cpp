@@ -15,6 +15,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -33,6 +34,7 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <string.h>
 
@@ -40,21 +42,21 @@ using namespace Profiler;
 
 static bool generate_profile(pid_t& pid);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int pid = 0;
     const char* perfcore_file_arg = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
     args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (pid && perfcore_file_arg) {
         warnln("-p/--pid option and perfcore-file argument must not be used together!");
         return 1;
     }
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-profiler");
 
     String perfcore_file;
@@ -74,7 +76,7 @@ int main(int argc, char** argv)
 
     auto& profile = profile_or_error.value();
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
 
     if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
             "/bin/Help",
@@ -92,12 +94,12 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto timeline_header_container = GUI::Widget::construct();
+    auto timeline_header_container = TRY(GUI::Widget::try_create());
     timeline_header_container->set_layout<GUI::VerticalBoxLayout>();
     timeline_header_container->set_fill_with_background_color(true);
     timeline_header_container->set_shrink_to_fit(true);
 
-    auto timeline_view = TimelineView::construct(*profile);
+    auto timeline_view = TRY(TimelineView::try_create(*profile));
     for (auto& process : profile->processes()) {
         bool matching_event_found = false;
         for (auto& event : profile->events()) {
