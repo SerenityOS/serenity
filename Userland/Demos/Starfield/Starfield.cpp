@@ -160,7 +160,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(star_count, "Number of stars to draw (default = 1000)", "stars", 'c', "number");
     args_parser.add_option(refresh_rate, "Refresh rate (default = 16)", "rate", 'r', "milliseconds");
     args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 

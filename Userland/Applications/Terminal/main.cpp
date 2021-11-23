@@ -274,7 +274,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
     args_parser.add_option(keep_open, "Keep the terminal open after the command has finished executing", nullptr, 'k');
 
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     if (keep_open && !command_to_execute) {
         warnln("Option -k can only be used in combination with -e.");
