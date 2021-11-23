@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(Inspector ICON app-inspector)
-target_link_libraries(Inspector LibDesktop LibGUI)
+target_link_libraries(Inspector LibDesktop LibGUI LibMain)
