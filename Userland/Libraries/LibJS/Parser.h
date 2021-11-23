@@ -77,7 +77,13 @@ public:
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
-    NonnullRefPtr<Statement> parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs);
+
+    enum class IsForAwaitLoop {
+        No,
+        Yes
+    };
+
+    NonnullRefPtr<Statement> parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs, IsForAwaitLoop is_await);
     NonnullRefPtr<IfStatement> parse_if_statement();
     NonnullRefPtr<ThrowStatement> parse_throw_statement();
     NonnullRefPtr<TryStatement> parse_try_statement();

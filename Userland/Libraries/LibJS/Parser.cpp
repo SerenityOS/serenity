@@ -3142,14 +3142,33 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
 NonnullRefPtr<Statement> Parser::parse_for_statement()
 {
     auto rule_start = push_start();
+    auto is_await_loop = IsForAwaitLoop::No;
+
     auto match_of = [&](Token const& token) {
         return token.type() == TokenType::Identifier && token.original_value() == "of"sv;
     };
-    auto match_for_in_of = [&] {
-        return match(TokenType::In) || match_of(m_state.current_token);
+
+    auto match_for_in_of = [&]() {
+        bool is_of = match_of(m_state.current_token);
+        if (is_await_loop == IsForAwaitLoop::Yes) {
+            if (!is_of)
+                syntax_error("for await loop is only valid with 'of'");
+            else if (!m_state.in_async_function_context)
+                syntax_error("for await loop is only valid in async function or generator");
+            return true;
+        }
+
+        return match(TokenType::In) || is_of;
     };
 
     consume(TokenType::For);
+
+    if (match(TokenType::Await)) {
+        consume();
+        if (!m_state.in_async_function_context)
+            syntax_error("for-await-of is only allowed in async function context");
+        is_await_loop = IsForAwaitLoop::Yes;
+    }
 
     consume(TokenType::ParenOpen);
 
@@ -3172,7 +3191,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 
             init = move(declaration);
             if (match_for_in_of())
-                return parse_for_in_of_statement(*init);
+                return parse_for_in_of_statement(*init, is_await_loop);
             if (static_cast<VariableDeclaration&>(*init).declaration_kind() == DeclarationKind::Const) {
                 for (auto& variable : static_cast<VariableDeclaration&>(*init).declarations()) {
                     if (!variable.init())
@@ -3185,9 +3204,10 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 
             init = parse_expression(0, Associativity::Right, { TokenType::In });
             if (match_for_in_of()) {
-                if (starts_with_async_of && match_of(m_state.current_token))
+                if (is_await_loop != IsForAwaitLoop::Yes
+                    && starts_with_async_of && match_of(m_state.current_token))
                     syntax_error("for-of loop may not start with async of");
-                return parse_for_in_of_statement(*init);
+                return parse_for_in_of_statement(*init, is_await_loop);
             }
         } else {
             syntax_error("Unexpected token in for loop");
@@ -3215,7 +3235,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
     return create_ast_node<ForStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(init), move(test), move(update), move(body));
 }
 
-NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs)
+NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs, IsForAwaitLoop is_for_await_loop)
 {
     Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> for_declaration = lhs;
     auto rule_start = push_start();
@@ -3272,6 +3292,8 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
     auto body = parse_statement();
     if (is_in)
         return create_ast_node<ForInStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(for_declaration), move(rhs), move(body));
+    if (is_for_await_loop == IsForAwaitLoop::Yes)
+        return create_ast_node<ForAwaitOfStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(for_declaration), move(rhs), move(body));
     return create_ast_node<ForOfStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(for_declaration), move(rhs), move(body));
 }
 
