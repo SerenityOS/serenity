@@ -7,6 +7,7 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -24,6 +25,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -58,20 +60,12 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
 
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio thread recvfd sendfd cpath rpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix", nullptr));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr));
     if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
             "/bin/Help",
             { URL::create_with_file_protocol("/usr/share/man/man1/Playground.md") })
@@ -80,18 +74,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr));
 
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto app_icon = GUI::Icon::default_icon("app-playground");
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("GML Playground");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
