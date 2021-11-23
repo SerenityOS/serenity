@@ -123,13 +123,13 @@ bool HexEditor::save_as(int fd)
     }
 
     if (m_document->type() == HexDocument::Type::File) {
-        HexDocumentFile* fileDoc = static_cast<HexDocumentFile*>(m_document.ptr());
-        if (!fileDoc->write_to_file(new_file))
+        HexDocumentFile* fileDocument = static_cast<HexDocumentFile*>(m_document.ptr());
+        if (!fileDocument->write_to_file(new_file))
             return false;
-        fileDoc->set_file(new_file);
+        fileDocument->set_file(new_file);
     } else {
-        HexDocumentMemory* memDoc = static_cast<HexDocumentMemory*>(m_document.ptr());
-        if (!memDoc->write_to_file(new_file))
+        HexDocumentMemory* memoryDocument = static_cast<HexDocumentMemory*>(m_document.ptr());
+        if (!memoryDocument->write_to_file(new_file))
             return false;
         m_document = make<HexDocumentFile>(new_file);
     }
