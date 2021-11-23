@@ -64,6 +64,7 @@ static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_under
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
     MassStorage = 0x1,
+    Multimedia = 0x4,
     Bridge = 0x6,
 };
 
@@ -75,6 +76,14 @@ enum class SubclassID {
 };
 enum class SATAProgIF {
     AHCI = 0x1,
+};
+
+}
+
+namespace Multimedia {
+
+enum class SubclassID {
+    AudioController = 0x1,
 };
 
 }

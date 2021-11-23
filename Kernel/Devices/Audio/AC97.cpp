@@ -1,0 +1,258 @@
+/*
+ * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <Kernel/Devices/Audio/AC97.h>
+#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
+#include <LibC/sys/ioctl_numbers.h>
+
+namespace Kernel {
+
+static constexpr int buffer_descriptor_list_max_entries = 32;
+
+static ErrorOr<OwnPtr<Memory::Region>> allocate_physical_buffer(size_t size, StringView name)
+{
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(Memory::page_round_up(size)));
+    return TRY(MM.allocate_kernel_region_with_vmobject(move(vmobject), vmobject->size(), name, Memory::Region::Access::Write));
+}
+
+UNMAP_AFTER_INIT void AC97::detect()
+{
+    PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        // Only consider PCI audio controllers
+        if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia)
+            || device_identifier.subclass_code().value() != to_underlying(PCI::Multimedia::SubclassID::AudioController))
+            return;
+
+        dbgln("AC97: found audio controller at {}", device_identifier.address());
+        auto device_or_error = DeviceManagement::try_create_device<AC97>(device_identifier);
+        if (device_or_error.is_error()) {
+            dbgln("AC97: failed to initialize device {}", device_identifier.address());
+            return;
+        }
+        DeviceManagement::the().attach_audio_device(device_or_error.release_value());
+    });
+}
+
+UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier pci_device_identifier)
+    : PCI::Device(pci_device_identifier.address())
+    , IRQHandler(pci_device_identifier.interrupt_line().value())
+    , CharacterDevice(42, 42)
+    , m_io_mixer_base(PCI::get_BAR0(pci_address()) & ~1)
+    , m_io_bus_base(PCI::get_BAR1(pci_address()) & ~1)
+{
+    initialize();
+}
+
+UNMAP_AFTER_INIT AC97::~AC97()
+{
+}
+
+bool AC97::handle_irq(RegisterState const&)
+{
+    auto pcm_out_status_register = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutStatus);
+    auto pcm_out_status = pcm_out_status_register.in<u16>();
+
+    bool is_dma_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
+    bool is_completion_interrupt = (pcm_out_status & AudioStatusRegisterFlag::BufferCompletionInterruptStatus) > 0;
+    bool is_fifo_error = (pcm_out_status & AudioStatusRegisterFlag::FIFOError) > 0;
+
+    VERIFY(is_completion_interrupt);
+    VERIFY(!is_fifo_error);
+
+    // On interrupt, we need to reset PCM interrupt flags by setting their bits
+    pcm_out_status = AudioStatusRegisterFlag::LastValidBufferCompletionInterrupt
+        | AudioStatusRegisterFlag::BufferCompletionInterruptStatus
+        | AudioStatusRegisterFlag::FIFOError;
+    pcm_out_status_register.out(pcm_out_status);
+
+    // Stop the DMA engine if we're through with the buffer and no one is waiting
+    if (is_dma_halted && m_irq_queue.is_empty()) {
+        reset_pcm_out();
+    } else {
+        m_irq_queue.wake_all();
+    }
+
+    return true;
+}
+
+UNMAP_AFTER_INIT void AC97::initialize()
+{
+    dbgln("AC97 @ {}: mixer base: {:#04x}", pci_address(), m_io_mixer_base.get());
+    dbgln("AC97 @ {}: bus base: {:#04x}", pci_address(), m_io_bus_base.get());
+
+    enable_pin_based_interrupts();
+    PCI::enable_bus_mastering(pci_address());
+
+    // Bus cold reset, enable interrupts
+    auto control = m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).in<u32>();
+    control |= GlobalControlFlag::GPIInterruptEnable;
+    control |= GlobalControlFlag::AC97ColdReset;
+    m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).out<u32>(control);
+
+    // Reset mixer
+    m_io_mixer_base.offset(NativeAudioMixerRegister::Reset).out<u16>(1);
+
+    // Verify extended capabilities
+    auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
+    VERIFY((extended_audio_id & ExtendedAudioMask::VariableRatePCMAudio) == 1);
+    VERIFY((extended_audio_id & ExtendedAudioMask::Revision) >> 10 == AC97Revision::Revision23);
+
+    // Left and right volume of 0 means attenuation of 0 dB
+    set_master_output_volume(0, 0, Muted::No);
+    set_pcm_output_volume(0, 0, Muted::No);
+
+    set_pcm_output_sample_rate(m_sample_rate);
+
+    reset_pcm_out();
+    enable_irq();
+}
+
+ErrorOr<void> AC97::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
+{
+    switch (request) {
+    case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
+        auto output = static_ptr_cast<u16*>(arg);
+        return copy_to_user(output, &m_sample_rate);
+    }
+    case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
+        auto sample_rate_value = static_cast<u16>(arg.ptr());
+        if (sample_rate_value == 0)
+            return EINVAL;
+        if (m_sample_rate != sample_rate_value)
+            set_pcm_output_sample_rate(sample_rate_value);
+        return {};
+    }
+    default:
+        return EINVAL;
+    }
+}
+
+ErrorOr<size_t> AC97::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
+{
+    return 0;
+}
+
+void AC97::reset_pcm_out()
+{
+    auto pcm_out_control_register = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutControl);
+    pcm_out_control_register.out(AudioControlRegisterFlag::ResetRegisters);
+
+    while ((pcm_out_control_register.in<u8>() & AudioControlRegisterFlag::ResetRegisters) > 0)
+        IO::delay(50);
+
+    m_output_buffer_dma_running = false;
+    m_buffer_descriptor_list_index = 0;
+
+    dbgln("AC97 @ {}: PCM out is reset", pci_address());
+}
+
+void AC97::set_master_output_volume(u8 left_channel, u8 right_channel, Muted mute)
+{
+    u16 volume_value = ((right_channel & 63) << 0)
+        | ((left_channel & 63) << 8)
+        | ((mute == Muted::Yes ? 1 : 0) << 15);
+    m_io_mixer_base.offset(NativeAudioMixerRegister::SetMasterOutputVolume).out(volume_value);
+}
+
+void AC97::set_output_buffer_dma_lvi(u8 last_valid_index)
+{
+    auto buffer_address = static_cast<u32>(m_buffer_descriptor_list->physical_page(0)->paddr().get());
+    m_io_bus_base.offset(NativeAudioBusRegister::PCMOutBufferDescriptorListBaseAddress).out(buffer_address);
+    m_io_bus_base.offset(NativeAudioBusRegister::PCMOutLastValidIndex).out<u8>(last_valid_index);
+}
+
+void AC97::set_pcm_output_sample_rate(u16 sample_rate)
+{
+    auto pcm_front_dac_rate_register = m_io_mixer_base.offset(NativeAudioMixerRegister::PCMFrontDACRate);
+    pcm_front_dac_rate_register.out(sample_rate);
+    m_sample_rate = pcm_front_dac_rate_register.in<u16>();
+    dbgln("AC97 @ {}: PCM front DAC rate set to {} Hz", pci_address(), m_sample_rate);
+}
+
+void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)
+{
+    u16 volume_value = ((right_channel & 31) << 0)
+        | ((left_channel & 31) << 8)
+        | ((mute == Muted::Yes ? 1 : 0) << 15);
+    m_io_mixer_base.offset(NativeAudioMixerRegister::SetPCMOutputVolume).out(volume_value);
+}
+
+void AC97::start_output_buffer_dma()
+{
+    dbgln("AC97 @ {}: starting DMA engine", pci_address());
+
+    auto pcm_out_control_register = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutControl);
+    auto pcm_out_control = pcm_out_control_register.in<u8>();
+    pcm_out_control |= AudioControlRegisterFlag::RunPauseBusMaster;
+    pcm_out_control |= AudioControlRegisterFlag::FIFOErrorInterruptEnable;
+    pcm_out_control |= AudioControlRegisterFlag::InterruptOnCompletionEnable;
+    pcm_out_control_register.out(pcm_out_control);
+
+    m_output_buffer_dma_running = true;
+}
+
+ErrorOr<size_t> AC97::write(OpenFileDescription&, u64, UserOrKernelBuffer const& data, size_t length)
+{
+    VERIFY(length <= PAGE_SIZE);
+
+    if (!m_output_buffer) {
+        m_output_buffer = TRY(allocate_physical_buffer(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv));
+    }
+    if (!m_buffer_descriptor_list) {
+        constexpr size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
+        m_buffer_descriptor_list = TRY(allocate_physical_buffer(buffer_descriptor_list_size, "AC97 Buffer Descriptor List"sv));
+    }
+
+    cli();
+
+    // Block until we can write into an unused buffer
+    do {
+        auto pcm_out_status = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutStatus).in<u16>();
+        auto is_dma_controller_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
+        auto current_index = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutCurrentIndex).in<u8>();
+        auto last_valid_index = m_io_bus_base.offset(NativeAudioBusRegister::PCMOutLastValidIndex).in<u8>();
+
+        auto head_distance = static_cast<int>(last_valid_index) - current_index;
+        if (head_distance < 0)
+            head_distance += buffer_descriptor_list_max_entries;
+        if (!is_dma_controller_halted)
+            ++head_distance;
+
+        if (head_distance < m_output_buffer_page_count)
+            break;
+
+        m_irq_queue.wait_forever("AC97"sv);
+    } while (m_output_buffer_dma_running);
+
+    sti();
+
+    // Copy data from userspace into one of our buffers
+    TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), length));
+
+    if (!m_output_buffer_dma_running) {
+        reset_pcm_out();
+    }
+
+    // Write the next entry to the buffer descriptor list
+    u16 number_of_samples = length / sizeof(u16);
+    auto list_entries = reinterpret_cast<BufferDescriptorListEntry*>(m_buffer_descriptor_list->vaddr().get());
+    auto list_entry = &list_entries[m_buffer_descriptor_list_index];
+    list_entry->buffer_pointer = static_cast<u32>(m_output_buffer->physical_page(m_output_buffer_page_index)->paddr().get());
+    list_entry->control_and_length = number_of_samples | BufferDescriptorListEntryFlags::InterruptOnCompletion;
+    set_output_buffer_dma_lvi(m_buffer_descriptor_list_index);
+
+    if (!m_output_buffer_dma_running) {
+        start_output_buffer_dma();
+    }
+
+    m_output_buffer_page_index = (m_output_buffer_page_index + 1) % m_output_buffer_page_count;
+    m_buffer_descriptor_list_index = (m_buffer_descriptor_list_index + 1) % buffer_descriptor_list_max_entries;
+
+    return length;
+}
+
+}
