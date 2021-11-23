@@ -8,21 +8,17 @@
 #include <Clipboard/Storage.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio recvfd sendfd accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd accept", nullptr));
     Core::EventLoop event_loop;
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
 
