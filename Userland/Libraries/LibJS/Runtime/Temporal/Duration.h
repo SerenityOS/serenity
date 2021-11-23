@@ -146,6 +146,7 @@ ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject&, Value item);
 ThrowCompletionOr<TemporalDuration> to_temporal_duration_record(GlobalObject&, Object const& temporal_duration_like);
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
+StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds);
 ThrowCompletionOr<PartialDuration> to_partial_duration(GlobalObject&, Value temporal_duration_like);
 ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject const* new_target = nullptr);
 Duration* create_negated_temporal_duration(GlobalObject& global_object, Duration const& duration);
