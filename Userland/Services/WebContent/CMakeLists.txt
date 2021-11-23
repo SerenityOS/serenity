@@ -17,4 +17,4 @@ set(SOURCES
 )
 
 serenity_bin(WebContent)
-target_link_libraries(WebContent LibCore LibIPC LibGfx LibWeb)
+target_link_libraries(WebContent LibCore LibIPC LibGfx LibWeb LibMain)
