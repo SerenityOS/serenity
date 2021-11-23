@@ -84,7 +84,9 @@ UNMAP_AFTER_INIT RefPtr<SB16> SB16::try_detect_and_create()
     auto device_or_error = DeviceManagement::try_create_device<SB16>();
     if (device_or_error.is_error())
         return {};
-    return device_or_error.release_value();
+    auto device = device_or_error.release_value();
+    DeviceManagement::the().attach_audio_device(device);
+    return device;
 }
 
 UNMAP_AFTER_INIT void SB16::initialize()
