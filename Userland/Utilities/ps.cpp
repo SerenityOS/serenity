@@ -7,34 +7,19 @@
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio rpath tty", nullptr));
     String this_tty = ttyname(STDIN_FILENO);
 
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     enum class Alignment {
         Left,
@@ -56,7 +41,7 @@ int main(int argc, char** argv)
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
     args_parser.add_option(pid_list, "A comma-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Vector<Column> columns;
 
@@ -124,12 +109,12 @@ int main(int argc, char** argv)
     }
 
     Vector<Vector<String>> rows;
-    rows.ensure_capacity(1 + processes.size());
+    TRY(rows.try_ensure_capacity(1 + processes.size()));
 
     Vector<String> header;
-    header.ensure_capacity(columns.size());
+    TRY(header.try_ensure_capacity(columns.size()));
     for (auto& column : columns)
-        header.append(column.title);
+        header.unchecked_append(column.title);
     rows.append(move(header));
 
     for (auto const& process : processes) {
@@ -146,7 +131,7 @@ int main(int argc, char** argv)
         auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
 
         Vector<String> row;
-        row.resize(columns.size());
+        TRY(row.try_resize(columns.size()));
 
         if (uid_column != -1)
             row[uid_column] = process.username;
@@ -165,7 +150,7 @@ int main(int argc, char** argv)
         if (cmd_column != -1)
             row[cmd_column] = process.name;
 
-        rows.append(move(row));
+        TRY(rows.try_append(move(row)));
     }
 
     for (size_t i = 0; i < columns.size(); i++) {
