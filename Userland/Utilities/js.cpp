@@ -1129,7 +1129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #endif
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     bool syntax_highlight = !disable_syntax_highlight;
 
