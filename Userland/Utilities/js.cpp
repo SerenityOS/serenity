@@ -742,6 +742,13 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_date(object, seen_objects);
         if (is<JS::Error>(object))
             return print_error(object, seen_objects);
+
+        auto prototype_or_error = object.internal_get_prototype_of();
+        if (prototype_or_error.has_value() && prototype_or_error.value() == object.global_object().error_prototype())
+            return print_error(object, seen_objects);
+        vm->clear_exception();
+        vm->stop_unwind();
+
         if (is<JS::RegExpObject>(object))
             return print_regexp_object(object, seen_objects);
         if (is<JS::Map>(object))
