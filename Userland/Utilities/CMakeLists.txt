@@ -52,6 +52,7 @@ foreach(CMD_SRC ${CMD_SOURCES})
 endforeach()
 
 target_link_libraries(aplay LibAudio)
+target_link_libraries(arp LibMain)
 target_link_libraries(asctl LibAudio)
 target_link_libraries(bt LibSymbolication)
 target_link_libraries(checksum LibCrypto)
