@@ -25,8 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    VERIFY(socket);
-    IPC::new_client_connection<WebSocket::ClientConnection>(socket.release_nonnull(), 1);
+    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
+    IPC::new_client_connection<WebSocket::ClientConnection>(move(socket), 1);
     return event_loop.exec();
 }
