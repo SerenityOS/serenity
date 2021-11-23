@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(ImageViewer ICON filetype-image)
-target_link_libraries(ImageViewer LibDesktop LibGUI LibGfx LibImageDecoderClient)
+target_link_libraries(ImageViewer LibDesktop LibGUI LibGfx LibImageDecoderClient LibMain)

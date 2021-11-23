@@ -8,6 +8,7 @@
 #include "ViewWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -25,20 +26,17 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
-#include <stdio.h>
 #include <string.h>
 
 using namespace ImageViewer;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix thread", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer")) {
         warnln("Failed to set up allowed launch URLs");
@@ -61,9 +59,9 @@ int main(int argc, char** argv)
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(true);
     window->resize(300, 200);
     window->set_icon(app_icon.bitmap_for_size(16));
