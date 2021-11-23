@@ -24,6 +24,7 @@
 #include <LibJS/Runtime/AsyncFunctionPrototype.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionPrototype.h>
+#include <LibJS/Runtime/AsyncIteratorPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
