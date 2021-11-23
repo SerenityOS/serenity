@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     }
 
     auto window = DesktopStatusWindow::construct();
-    window->set_title("DesktopPicker");
+    window->set_title("WorkspacePicker");
     window->resize(28, 16);
     window->show();
     window->make_window_manager(WindowServer::WMEventMask::WorkspaceChanges);
