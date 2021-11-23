@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 namespace Core::System {
 
@@ -17,5 +18,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
+ErrorOr<struct stat> fstat(int fd);
+ErrorOr<int> fcntl(int fd, int command, ...);
 
 }
