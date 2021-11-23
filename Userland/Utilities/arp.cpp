@@ -13,6 +13,8 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <net/if_arp.h>
 #include <net/route.h>
 #include <netinet/in.h>
@@ -21,22 +23,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc/net/arp", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty", nullptr));
+    TRY(Core::System::unveil("/proc/net/arp", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     static bool flag_set;
     static bool flag_delete;
@@ -49,7 +40,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_delete, "Delete an ARP table entry", "delete", 'd');
     args_parser.add_positional_argument(value_ipv4_address, "IPv4 protocol address", "address", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     enum class Alignment {
         Left,
