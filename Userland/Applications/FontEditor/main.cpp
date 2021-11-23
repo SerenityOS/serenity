@@ -7,6 +7,7 @@
 #include "FontEditor.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -15,22 +16,13 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/FontDatabase.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd thread rpath unix cpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix cpath wpath", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd thread rpath unix cpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
             "/bin/Help",
@@ -40,15 +32,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio recvfd sendfd thread rpath cpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath", nullptr));
 
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     RefPtr<Gfx::BitmapFont> edited_font;
     if (path == nullptr) {
@@ -71,7 +60,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-font-editor");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(440, 470);
 
