@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(WorkspacePicker.Applet)
-target_link_libraries(WorkspacePicker.Applet LibGUI LibCore LibGfx)
+target_link_libraries(WorkspacePicker.Applet LibGUI LibCore LibGfx LibMain)
