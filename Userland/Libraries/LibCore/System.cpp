@@ -85,4 +85,11 @@ ErrorOr<void*> mmap(void* address, size_t size, int protection, int flags, int f
 #endif
 }
 
+ErrorOr<void> munmap(void* address, size_t size)
+{
+    if (::munmap(address, size) < 0)
+        return Error::from_syscall("munmap"sv, -errno);
+    return {};
+}
+
 }
