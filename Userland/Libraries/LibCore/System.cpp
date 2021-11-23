@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
+#include <cstring>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
@@ -113,6 +114,18 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     if (::sigaction(signal, action, old_action) < 0)
         return Error::from_syscall("sigaction"sv, -errno);
     return {};
+}
+
+#ifdef __APPLE__
+ErrorOr<sig_t> signal(int signal, sig_t handler)
+#else
+ErrorOr<sighandler_t> signal(int signal, sighandler_t handler)
+#endif
+{
+    auto old_handler = ::signal(signal, handler);
+    if (old_handler == SIG_ERR)
+        return Error::from_syscall("signal"sv, -errno);
+    return old_handler;
 }
 
 ErrorOr<struct stat> fstat(int fd)
