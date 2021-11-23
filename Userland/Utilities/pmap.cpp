@@ -4,28 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     const char* pid;
     static bool extended = false;
@@ -33,13 +24,9 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(extended, "Extended output", nullptr, 'x');
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto file = Core::File::construct(String::formatted("/proc/{}/vm", pid));
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", file->name(), file->error_string());
-        return 1;
-    }
+    auto file = TRY(Core::File::open(String::formatted("/proc/{}/vm", pid), Core::OpenMode::ReadOnly));
 
     outln("{}:", pid);
 
@@ -56,7 +43,7 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+    auto json = TRY(JsonValue::from_string(file_contents));
 
     Vector<JsonValue> sorted_regions = json.as_array().values();
     quick_sort(sorted_regions, [](auto& a, auto& b) {
