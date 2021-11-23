@@ -50,44 +50,36 @@ static LaunchServerConnection& connection()
     return connection;
 }
 
-bool Launcher::add_allowed_url(const URL& url)
+ErrorOr<void> Launcher::add_allowed_url(URL const& url)
 {
     auto response_or_error = connection().try_add_allowed_url(url);
-    if (response_or_error.is_error()) {
-        dbgln("Launcher::add_allowed_url: Failed");
-        return false;
-    }
-    return true;
+    if (response_or_error.is_error())
+        return Error::from_string_literal("Launcher::add_allowed_url: Failed"sv);
+    return {};
 }
 
-bool Launcher::add_allowed_handler_with_any_url(const String& handler)
+ErrorOr<void> Launcher::add_allowed_handler_with_any_url(String const& handler)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_any_url(handler);
-    if (response_or_error.is_error()) {
-        dbgln("Launcher::add_allowed_handler_with_any_url: Failed");
-        return false;
-    }
-    return true;
+    if (response_or_error.is_error())
+        return Error::from_string_literal("Launcher::add_allowed_handler_with_any_url: Failed"sv);
+    return {};
 }
 
-bool Launcher::add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>& urls)
+ErrorOr<void> Launcher::add_allowed_handler_with_only_specific_urls(String const& handler, Vector<URL> const& urls)
 {
     auto response_or_error = connection().try_add_allowed_handler_with_only_specific_urls(handler, urls);
-    if (response_or_error.is_error()) {
-        dbgln("Launcher::add_allowed_handler_with_only_specific_urls: Failed");
-        return false;
-    }
-    return true;
+    if (response_or_error.is_error())
+        return Error::from_string_literal("Launcher::add_allowed_handler_with_only_specific_urls: Failed"sv);
+    return {};
 }
 
-bool Launcher::seal_allowlist()
+ErrorOr<void> Launcher::seal_allowlist()
 {
     auto response_or_error = connection().try_seal_allowlist();
-    if (response_or_error.is_error()) {
-        dbgln("Launcher::seal_allowlist: Failed");
-        return false;
-    }
-    return true;
+    if (response_or_error.is_error())
+        return Error::from_string_literal("Launcher::seal_allowlist: Failed"sv);
+    return {};
 }
 
 bool Launcher::open(const URL& url, const String& handler_name)
