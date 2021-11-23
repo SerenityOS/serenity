@@ -318,9 +318,7 @@ void init_stage2(void*)
     (void)RandomDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
 
-    // FIXME: Once we have a singleton for managing many sound cards, remove this from here
-    if (auto device = SB16::try_detect_and_create(); !!device)
-        DeviceManagement::the().attach_sb16_device(*device);
+    SB16::try_detect_and_create();
 
     StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
     if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
