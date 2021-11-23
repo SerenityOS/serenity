@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -28,6 +29,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <libgen.h>
@@ -35,47 +37,26 @@
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    auto app = GUI::Application::construct(argc, argv);
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/usr/share/man", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/usr/share/man", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     const char* start_page = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(start_page, "Page to open at launch", "page", Core::ArgsParser::Required::No);
-
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto app_icon = GUI::Icon::default_icon("app-help");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Help");
     window->resize(570, 500);
@@ -274,7 +255,7 @@ int main(int argc, char* argv[])
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
 
-    auto context_menu = GUI::Menu::construct();
+    auto context_menu = TRY(GUI::Menu::try_create());
     context_menu->add_action(*go_back_action);
     context_menu->add_action(*go_forward_action);
     context_menu->add_action(*go_home_action);
