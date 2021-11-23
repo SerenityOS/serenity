@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_bin(ConfigServer)
-target_link_libraries(ConfigServer LibIPC)
+target_link_libraries(ConfigServer LibIPC LibMain)
