@@ -75,7 +75,6 @@ int vsprintf(char* buffer, const char* fmt, va_list) __attribute__((format(print
 int vsnprintf(char* buffer, size_t, const char* fmt, va_list) __attribute__((format(printf, 3, 0)));
 int fprintf(FILE*, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 int printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
-void dbgputch(char);
 void dbgputstr(const char*, size_t);
 int sprintf(char* buffer, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 int asprintf(char** strp, const char* fmt, ...) __attribute__((format(printf, 2, 3)));

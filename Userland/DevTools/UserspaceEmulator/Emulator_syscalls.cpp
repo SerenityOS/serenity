@@ -169,8 +169,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$set_process_name(arg1, arg2);
     case SC_dbgputstr:
         return virt$dbgputstr(arg1, arg2);
-    case SC_dbgputch:
-        return virt$dbgputch(arg1);
     case SC_chmod:
         return virt$chmod(arg1, arg2, arg3);
     case SC_fchmod:
@@ -536,12 +534,6 @@ int Emulator::virt$connect(int sockfd, FlatPtr address, socklen_t address_size)
 int Emulator::virt$shutdown(int sockfd, int how)
 {
     return syscall(SC_shutdown, sockfd, how);
-}
-
-int Emulator::virt$dbgputch(char ch)
-{
-    dbgputch(ch);
-    return 0;
 }
 
 int Emulator::virt$listen(int fd, int backlog)
