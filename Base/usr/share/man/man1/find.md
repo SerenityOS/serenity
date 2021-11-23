@@ -5,13 +5,13 @@ find - recursively search for files
 ## Synopsis
 
 ```**sh
-$ find [-L] [root-path] [commands...]
+$ find [-L] [root-paths...] [commands...]
 ```
 
 ## Description
 
-`find` recursively traverses the file hierarchy starting at the given root path
-(or at the current working directory if the root path is not specified), and
+`find` recursively traverses the file hierarchy starting at the given root paths
+(or at the current working directory if no root paths have been specified), and
 evaluates the given commands for each found file. The commands can be used to
 both filter the set of files and to perform actions on them.
 
