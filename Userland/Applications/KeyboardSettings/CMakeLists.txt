@@ -13,4 +13,4 @@ set(SOURCES
 )
 
 serenity_app(KeyboardSettings ICON app-keyboard-settings)
-target_link_libraries(KeyboardSettings LibGUI LibKeyboard LibConfig)
+target_link_libraries(KeyboardSettings LibGUI LibKeyboard LibConfig LibMain)
