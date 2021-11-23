@@ -11,6 +11,8 @@
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -25,22 +27,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio wpath rpath cpath fattr proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/etc/", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/rm", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec", nullptr));
+    TRY(Core::System::unveil("/etc/", "rwc"));
+    TRY(Core::System::unveil("/bin/rm", "x"));
 
     const char* username = nullptr;
     bool remove_home = false;
@@ -48,7 +39,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(remove_home, "Remove home directory", "remove", 'r');
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto account_or_error = Core::Account::from_name(username);
 
@@ -60,18 +51,11 @@ int main(int argc, char** argv)
     auto& target_account = account_or_error.value();
 
     if (remove_home) {
-        if (unveil(target_account.home_directory().characters(), "c") < 0) {
-            perror("unveil");
-            return 1;
-        }
+        TRY(Core::System::unveil(target_account.home_directory().characters(), "c"));
     } else {
-        if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
+        TRY(Core::System::pledge("stdio wpath rpath cpath fattr", nullptr));
     }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     char temp_passwd[] = "/etc/passwd.XXXXXX";
     char temp_shadow[] = "/etc/shadow.XXXXXX";
