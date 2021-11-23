@@ -445,45 +445,35 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
 
 static ErrorOr<void> parse_all_locales(String numbers_path, String units_path, UnicodeLocaleData& locale_data)
 {
-    auto numbers_iterator = path_to_dir_iterator(move(numbers_path));
-    auto units_iterator = path_to_dir_iterator(move(units_path));
+    auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
+    auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
 
-    auto remove_variants_from_path = [&](String path) -> Optional<String> {
-        auto parsed_locale = CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path));
-        if (!parsed_locale.has_value())
-            return {};
+    auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
+        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(locale_data.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
-        builder.append(locale_data.unique_strings.get(parsed_locale->language));
-        if (auto script = locale_data.unique_strings.get(parsed_locale->script); !script.is_empty())
+        builder.append(locale_data.unique_strings.get(parsed_locale.language));
+        if (auto script = locale_data.unique_strings.get(parsed_locale.script); !script.is_empty())
             builder.appendff("-{}", script);
-        if (auto region = locale_data.unique_strings.get(parsed_locale->region); !region.is_empty())
+        if (auto region = locale_data.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
         return builder.build();
     };
 
     while (numbers_iterator.has_next()) {
-        auto numbers_path = numbers_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(numbers_path));
+        auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
+        auto language = TRY(remove_variants_from_path(numbers_path));
 
-        auto language = remove_variants_from_path(numbers_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_number_systems(numbers_path, locale_data, locale));
     }
 
     while (units_iterator.has_next()) {
-        auto units_path = units_iterator.next_full_path();
-        VERIFY(Core::File::is_directory(units_path));
+        auto units_path = TRY(next_path_from_dir_iterator(units_iterator));
+        auto language = TRY(remove_variants_from_path(units_path));
 
-        auto language = remove_variants_from_path(units_path);
-        if (!language.has_value())
-            continue;
-
-        auto& locale = locale_data.locales.ensure(*language);
+        auto& locale = locale_data.locales.ensure(language);
         TRY(parse_units(units_path, locale_data, locale));
     }
 
