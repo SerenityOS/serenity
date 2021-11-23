@@ -99,6 +99,7 @@ public:
     String const& title() const { return m_title; }
     void set_title(String);
 
+    void resize(Gfx::IntSize const& size);
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);

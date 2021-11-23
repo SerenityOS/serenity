@@ -481,6 +481,12 @@ void Image::set_path(String path)
     set_title(LexicalPath::basename(m_path));
 }
 
+void Image::resize(Gfx::IntSize const& size)
+{
+    m_size = size;
+    did_change_rect();
+}
+
 void Image::flip(Gfx::Orientation orientation)
 {
     for (auto& layer : m_layers) {
