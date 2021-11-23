@@ -85,13 +85,23 @@ void Game::keydown_event(GUI::KeyEvent& event)
         GUI::Application::the()->quit();
         break;
     default:
-        if (ready_to_start()) {
-            m_active = true;
-        }
-        if (m_active) {
-            m_bug.flap();
-        }
+        player_input();
         break;
+    }
+}
+
+void Game::mousedown_event(GUI::MouseEvent&)
+{
+    player_input();
+}
+
+void Game::player_input()
+{
+    if (ready_to_start()) {
+        m_active = true;
+    }
+    if (m_active) {
+        m_bug.flap();
     }
 }
 

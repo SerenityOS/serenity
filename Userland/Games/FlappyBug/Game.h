@@ -32,12 +32,14 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
     void tick();
     void reset();
     void game_over();
     bool ready_to_start() const;
+    void player_input();
 
     struct Bug {
         const float x { 50 };
