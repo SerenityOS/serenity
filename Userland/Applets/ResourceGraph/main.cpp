@@ -196,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
     args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     if (!cpu && !memory) {
         printf("At least one of --cpu or --memory must be used");

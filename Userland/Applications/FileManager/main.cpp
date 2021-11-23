@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's');
     args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
     args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments.argc, arguments.argv);
+    args_parser.parse(arguments);
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
