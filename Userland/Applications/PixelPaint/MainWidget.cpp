@@ -11,6 +11,7 @@
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
 #include "FilterParams.h"
+#include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -418,6 +419,16 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     auto& image_menu = window.add_menu("&Image");
+    image_menu.add_action(GUI::Action::create(
+        "&Resize", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
+            if (dialog->exec() == GUI::Dialog::ExecOK)
+                editor->image().resize(dialog->image_size());
+        }));
+    image_menu.add_separator();
     image_menu.add_action(GUI::Action::create(
         "Flip &Vertically", [&](auto&) {
             auto* editor = current_image_editor();

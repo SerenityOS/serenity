@@ -23,6 +23,7 @@ set(SOURCES
     PaletteWidget.cpp
     PixelPaintWindowGML.h
     ProjectLoader.cpp
+    ResizeImageDialog.cpp
     Selection.cpp
     ToolPropertiesWidget.cpp
     ToolboxWidget.cpp
