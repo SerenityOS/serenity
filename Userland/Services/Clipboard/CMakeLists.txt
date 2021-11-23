@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_bin(Clipboard)
-target_link_libraries(Clipboard LibCore LibIPC)
+target_link_libraries(Clipboard LibCore LibIPC LibMain)
