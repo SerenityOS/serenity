@@ -5,17 +5,15 @@
  */
 
 #include <FileSystemAccessServer/ClientConnection.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibGUI/Application.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibMain/Main.h>
+#include <LibSystem/Wrappers.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath cpath wpath unix thread", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread", nullptr));
 
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);
