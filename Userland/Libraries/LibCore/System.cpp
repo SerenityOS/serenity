@@ -107,7 +107,7 @@ ErrorOr<int> open(StringView path, int options, ...)
     HANDLE_SYSCALL_RETURN_VALUE("open"sv, rc, rc);
 #else
     // NOTE: We have to ensure that the path is null-terminated.
-    String path_string;
+    String path_string = path;
     int rc = ::open(path_string.characters(), options, mode);
     if (rc < 0)
         return Error::from_syscall("open"sv, -errno);
