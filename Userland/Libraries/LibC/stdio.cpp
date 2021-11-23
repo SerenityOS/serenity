@@ -1149,11 +1149,6 @@ int rename(const char* oldpath, const char* newpath)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void dbgputch(char ch)
-{
-    syscall(SC_dbgputch, ch);
-}
-
 void dbgputstr(const char* characters, size_t length)
 {
     syscall(SC_dbgputstr, characters, length);

@@ -18,13 +18,6 @@ ErrorOr<FlatPtr> Process::sys$dump_backtrace()
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$dbgputch(u8 ch)
-{
-    VERIFY_NO_PROCESS_BIG_LOCK(this);
-    dbgputch(ch);
-    return 0;
-}
-
 ErrorOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, size_t size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);

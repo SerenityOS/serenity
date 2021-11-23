@@ -152,12 +152,6 @@ static inline void internal_dbgputch(char ch)
     IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 }
 
-extern "C" void dbgputch(char ch)
-{
-    SpinlockLocker lock(s_log_lock);
-    internal_dbgputch(ch);
-}
-
 extern "C" void dbgputstr(const char* characters, size_t length)
 {
     if (!characters)
