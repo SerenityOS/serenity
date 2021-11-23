@@ -7,12 +7,14 @@
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (geteuid() != 0) {
         warnln("Not running as root :^(");
@@ -24,15 +26,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio wpath rpath cpath fattr tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/etc", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty", nullptr));
+    TRY(Core::System::unveil("/etc", "rwc"));
 
     int uid = 0;
     int gid = 0;
@@ -56,7 +51,7 @@ int main(int argc, char** argv)
     args_parser.add_option(gecos, "Change the GECOS field of the user", "gecos", 'n', "general-info");
     args_parser.add_positional_argument(username, "Username of the account to modify", "username");
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto account_or_error = Core::Account::from_name(username);
 
@@ -69,15 +64,8 @@ int main(int argc, char** argv)
     auto& target_account = account_or_error.value();
 
     if (move_home) {
-        if (unveil(target_account.home_directory().characters(), "c") < 0) {
-            perror("unveil");
-            return 1;
-        }
-
-        if (unveil(new_home_directory, "wc") < 0) {
-            perror("unveil");
-            return 1;
-        }
+        TRY(Core::System::unveil(target_account.home_directory().characters(), "c"));
+        TRY(Core::System::unveil(new_home_directory, "wc"));
     }
 
     unveil(nullptr, nullptr);
@@ -148,11 +136,7 @@ int main(int argc, char** argv)
         target_account.set_gecos(gecos);
     }
 
-    if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr", nullptr));
     if (!target_account.sync()) {
         perror("Core::Account::Sync");
         return 1;
