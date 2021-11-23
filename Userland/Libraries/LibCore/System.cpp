@@ -8,6 +8,7 @@
 #include <LibSystem/syscall.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/mman.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
@@ -64,6 +65,24 @@ ErrorOr<int> fcntl(int fd, int command, ...)
     if (rc < 0)
         return Error::from_syscall("fcntl"sv, -errno);
     return rc;
+}
+
+ErrorOr<void*> mmap(void* address, size_t size, int protection, int flags, int fd, off_t offset, [[maybe_unused]] size_t alignment, [[maybe_unused]] StringView name)
+{
+#ifdef __serenity__
+    Syscall::SC_mmap_params params { (uintptr_t)address, size, alignment, protection, flags, fd, offset, { name.characters_without_null_termination(), name.length() } };
+    ptrdiff_t rc = syscall(SC_mmap, &params);
+    if (rc < 0 && rc > -EMAXERRNO)
+        return Error::from_syscall("mmap"sv, rc);
+    return reinterpret_cast<void*>(rc);
+#else
+    // NOTE: Regular POSIX mmap() doesn't support custom alignment requests.
+    VERIFY(!alignment);
+    auto* ptr = ::mmap(address, size, protection, flags, fd, offset);
+    if (ptr == MAP_FAILED)
+        return Error::from_syscall("mmap"sv, -errno);
+    return ptr;
+#endif
 }
 
 }
