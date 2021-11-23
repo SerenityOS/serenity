@@ -5,31 +5,25 @@
  */
 
 #include "DesktopStatusWindow.h"
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowManagerServerConnection.h>
+#include <LibMain/Main.h>
 #include <WindowServer/Window.h>
-#include <serenity.h>
-#include <stdio.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::WindowManagerServerConnection::the();
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
-    auto window = DesktopStatusWindow::construct();
+    auto window = TRY(DesktopStatusWindow::try_create());
     window->set_title("WorkspacePicker");
     window->resize(28, 16);
     window->show();
