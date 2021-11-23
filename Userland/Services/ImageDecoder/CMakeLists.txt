@@ -14,4 +14,4 @@ set(SOURCES
 )
 
 serenity_bin(ImageDecoder)
-target_link_libraries(ImageDecoder LibGfx LibIPC)
+target_link_libraries(ImageDecoder LibGfx LibIPC LibMain)
