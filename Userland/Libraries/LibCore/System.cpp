@@ -6,6 +6,8 @@
 
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
+#include <fcntl.h>
+#include <stdarg.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
@@ -42,6 +44,26 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     if (::sigaction(signal, action, old_action) < 0)
         return Error::from_syscall("sigaction"sv, -errno);
     return {};
+}
+
+ErrorOr<struct stat> fstat(int fd)
+{
+    struct stat st = {};
+    if (::fstat(fd, &st) < 0)
+        return Error::from_syscall("fstat"sv, -errno);
+    return st;
+}
+
+ErrorOr<int> fcntl(int fd, int command, ...)
+{
+    va_list ap;
+    va_start(ap, command);
+    u32 extra_arg = va_arg(ap, u32);
+    int rc = ::fcntl(fd, command, extra_arg);
+    va_end(ap);
+    if (rc < 0)
+        return Error::from_syscall("fcntl"sv, -errno);
+    return rc;
 }
 
 }
