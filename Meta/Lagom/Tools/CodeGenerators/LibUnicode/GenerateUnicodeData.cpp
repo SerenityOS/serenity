@@ -588,7 +588,7 @@ Optional<Script> script_from_string(StringView script);
 }
 )~~~");
 
-    file.write(generator.as_string_view());
+    VERIFY(file.write(generator.as_string_view()));
 }
 
 static void generate_unicode_data_implementation(Core::File& file, UnicodeData const& unicode_data)
@@ -904,7 +904,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 }
 )~~~");
 
-    file.write(generator.as_string_view());
+    VERIFY(file.write(generator.as_string_view()));
 }
 
 static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
@@ -1032,23 +1032,23 @@ static void normalize_script_extensions(PropList& script_extensions, PropList co
     script_extensions.set("Inherited"sv, form_code_point_ranges(inherited_code_points));
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* generated_header_path = nullptr;
-    char const* generated_implementation_path = nullptr;
-    char const* unicode_data_path = nullptr;
-    char const* special_casing_path = nullptr;
-    char const* derived_general_category_path = nullptr;
-    char const* prop_list_path = nullptr;
-    char const* derived_core_prop_path = nullptr;
-    char const* derived_binary_prop_path = nullptr;
-    char const* prop_alias_path = nullptr;
-    char const* prop_value_alias_path = nullptr;
-    char const* name_alias_path = nullptr;
-    char const* scripts_path = nullptr;
-    char const* script_extensions_path = nullptr;
-    char const* emoji_data_path = nullptr;
-    char const* normalization_path = nullptr;
+    StringView generated_header_path;
+    StringView generated_implementation_path;
+    StringView unicode_data_path;
+    StringView special_casing_path;
+    StringView derived_general_category_path;
+    StringView prop_list_path;
+    StringView derived_core_prop_path;
+    StringView derived_binary_prop_path;
+    StringView prop_alias_path;
+    StringView prop_value_alias_path;
+    StringView name_alias_path;
+    StringView scripts_path;
+    StringView script_extensions_path;
+    StringView emoji_data_path;
+    StringView normalization_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
@@ -1066,39 +1066,32 @@ int main(int argc, char** argv)
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
     args_parser.add_option(normalization_path, "Path to DerivedNormalizationProps.txt file", "normalization-path", 'n', "normalization-path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
+    auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadOnly) -> ErrorOr<NonnullRefPtr<Core::File>> {
         if (path.is_empty()) {
-            warnln("{} is required", flags);
-            args_parser.print_usage(stderr, argv[0]);
-            exit(1);
+            args_parser.print_usage(stderr, arguments.argv[0]);
+            return Error::from_string_literal("Must provide all command line options"sv);
         }
 
-        auto file_or_error = Core::File::open(path, mode);
-        if (file_or_error.is_error()) {
-            warnln("Failed to open {}: {}", path, file_or_error.release_error());
-            exit(1);
-        }
-
-        return file_or_error.release_value();
+        return Core::File::open(path, mode);
     };
 
-    auto generated_header_file = open_file(generated_header_path, "-h/--generated-header-path", Core::OpenMode::ReadWrite);
-    auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
-    auto unicode_data_file = open_file(unicode_data_path, "-u/--unicode-data-path");
-    auto derived_general_category_file = open_file(derived_general_category_path, "-g/--derived-general-category-path");
-    auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
-    auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
-    auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
-    auto derived_binary_prop_file = open_file(derived_binary_prop_path, "-b/--derived-binary-prop-path");
-    auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
-    auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
-    auto name_alias_file = open_file(name_alias_path, "-m/--name-alias-path");
-    auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
-    auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
-    auto emoji_data_file = open_file(emoji_data_path, "-e/--emoji-data-path");
-    auto normalization_file = open_file(normalization_path, "-n/--normalization-path");
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::OpenMode::ReadWrite));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::OpenMode::ReadWrite));
+    auto unicode_data_file = TRY(open_file(unicode_data_path));
+    auto derived_general_category_file = TRY(open_file(derived_general_category_path));
+    auto special_casing_file = TRY(open_file(special_casing_path));
+    auto prop_list_file = TRY(open_file(prop_list_path));
+    auto derived_core_prop_file = TRY(open_file(derived_core_prop_path));
+    auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path));
+    auto prop_alias_file = TRY(open_file(prop_alias_path));
+    auto prop_value_alias_file = TRY(open_file(prop_value_alias_path));
+    auto name_alias_file = TRY(open_file(name_alias_path));
+    auto scripts_file = TRY(open_file(scripts_path));
+    auto script_extensions_file = TRY(open_file(script_extensions_path));
+    auto emoji_data_file = TRY(open_file(emoji_data_path));
+    auto normalization_file = TRY(open_file(normalization_path));
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
