@@ -124,6 +124,7 @@ Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject&, Object&);
 String format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double sign(double);
+double sign(Crypto::SignedBigInteger const&);
 double constrain_to_range(double x, double minimum, double maximum);
 i64 round_number_to_increment(double, u64 increment, StringView rounding_mode);
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, StringView rounding_mode);

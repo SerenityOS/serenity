@@ -952,6 +952,20 @@ double sign(double n)
     return 1;
 }
 
+double sign(Crypto::SignedBigInteger const& n)
+{
+    // 1. If n is NaN, n is +0𝔽, or n is −0𝔽, return n.
+    if (n == Crypto::SignedBigInteger { 0 })
+        return n.is_negative() ? -0 : 0;
+
+    // 2. If n < +0𝔽, return −1𝔽.
+    if (n.is_negative())
+        return -1;
+
+    // 3. Return 1𝔽.
+    return 1;
+}
+
 // 13.29 ConstrainToRange ( x, minimum, maximum ), https://tc39.es/proposal-temporal/#sec-temporal-constraintorange
 double constrain_to_range(double x, double minimum, double maximum)
 {
