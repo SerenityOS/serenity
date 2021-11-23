@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
-
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -17,7 +18,7 @@ enum TruncateOperation {
     OP_Shrink,
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* resize = nullptr;
     const char* reference = nullptr;
@@ -27,15 +28,15 @@ int main(int argc, char** argv)
     args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");
     args_parser.add_option(reference, "Resize the target file to match the size of this one", "reference", 'r', "file");
     args_parser.add_positional_argument(file, "File path", "file");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!resize && !reference) {
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
     if (resize && reference) {
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
@@ -58,55 +59,33 @@ int main(int argc, char** argv)
 
         auto size_opt = str.to_int<off_t>();
         if (!size_opt.has_value()) {
-            args_parser.print_usage(stderr, argv[0]);
+            args_parser.print_usage(stderr, arguments.argv[0]);
             return 1;
         }
         size = size_opt.value();
     }
 
     if (reference) {
-        struct stat st;
-        int rc = stat(reference, &st);
-        if (rc < 0) {
-            perror("stat");
-            return 1;
-        }
-
-        size = st.st_size;
+        auto stat = TRY(Core::System::stat(reference));
+        size = stat.st_size;
     }
 
-    int fd = open(file, O_RDWR | O_CREAT, 0666);
-    if (fd < 0) {
-        perror("open");
-        return 1;
-    }
-
-    struct stat st;
-    if (fstat(fd, &st) < 0) {
-        perror("fstat");
-        return 1;
-    }
+    auto fd = TRY(Core::System::open(file, O_RDWR | O_CREAT, 0666));
+    auto stat = TRY(Core::System::fstat(fd));
 
     switch (op) {
     case OP_Set:
         break;
     case OP_Grow:
-        size = st.st_size + size;
+        size = stat.st_size + size;
         break;
     case OP_Shrink:
-        size = st.st_size - size;
+        size = stat.st_size - size;
         break;
     }
 
-    if (ftruncate(fd, size) < 0) {
-        perror("ftruncate");
-        return 1;
-    }
-
-    if (close(fd) < 0) {
-        perror("close");
-        return 1;
-    }
+    TRY(Core::System::ftruncate(fd, size));
+    TRY(Core::System::close(fd));
 
     return 0;
 }
