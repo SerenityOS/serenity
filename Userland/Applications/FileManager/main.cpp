@@ -19,6 +19,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -43,7 +44,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -64,12 +64,12 @@ static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, Director
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr));
 
     struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
-    TRY(System::sigaction(SIGCHLD, &act, nullptr));
+    TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
 
     Core::ArgsParser args_parser;
     bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };
@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr));
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
     Config::monitor_domain("FileManager");

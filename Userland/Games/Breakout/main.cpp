@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -12,18 +13,17 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);

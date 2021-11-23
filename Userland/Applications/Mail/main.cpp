@@ -6,27 +6,27 @@
 
 #include "MailWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd rpath unix inet", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix inet", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domains("Mail");
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/etc", "r"));
-    TRY(System::unveil("/tmp/portal/webcontent", "rw"));
-    TRY(System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/etc", "r"));
+    TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
 

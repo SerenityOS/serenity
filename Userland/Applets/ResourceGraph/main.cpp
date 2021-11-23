@@ -9,13 +9,13 @@
 #include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -185,11 +185,11 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd proc exec rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix", nullptr));
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
 
     const char* cpu = nullptr;
     const char* memory = nullptr;
@@ -231,11 +231,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (memory)
         create_applet(GraphType::Memory, memory);
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/proc/stat", "r"));
-    TRY(System::unveil("/proc/memstat", "r"));
-    TRY(System::unveil("/bin/SystemMonitor", "x"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/proc/stat", "r"));
+    TRY(Core::System::unveil("/proc/memstat", "r"));
+    TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     return app->exec();
 }

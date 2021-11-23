@@ -7,18 +7,18 @@
 #include <ImageDecoder/ClientConnection.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(System::pledge("stdio recvfd sendfd unix", nullptr));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix", nullptr));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     IPC::new_client_connection<ImageDecoder::ClientConnection>(socket.release_nonnull(), 1);
-    TRY(System::pledge("stdio recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd", nullptr));
     return event_loop.exec();
 }

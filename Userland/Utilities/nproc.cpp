@@ -6,12 +6,12 @@
 
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath", nullptr));
     auto file = TRY(Core::File::open("/proc/cpuinfo", Core::OpenMode::ReadOnly));
 
     auto buffer = file->read_all();

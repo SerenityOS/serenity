@@ -6,6 +6,7 @@
  */
 
 #include "PDFViewerWidget.h"
+#include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -13,7 +14,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -24,9 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 
-    TRY(System::unveil("/res", "r"));
-    TRY(System::unveil("/tmp/portal/filesystemaccess", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto& pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
 

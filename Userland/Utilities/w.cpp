@@ -9,20 +9,20 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <pwd.h>
 #include <sys/stat.h>
 #include <time.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(System::pledge("stdio rpath", nullptr));
-    TRY(System::unveil("/dev", "r"));
-    TRY(System::unveil("/etc/passwd", "r"));
-    TRY(System::unveil("/var/run/utmp", "r"));
-    TRY(System::unveil("/proc", "r"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/var/run/utmp", "r"));
+    TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto file = TRY(Core::File::open("/var/run/utmp", Core::OpenMode::ReadOnly));
     auto json = TRY(JsonValue::from_string(file->read_all()));

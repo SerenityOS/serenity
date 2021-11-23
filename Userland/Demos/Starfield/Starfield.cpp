@@ -6,6 +6,7 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
@@ -14,7 +15,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -149,7 +149,7 @@ void Starfield::draw()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
     unsigned star_count = 1000;
     unsigned refresh_rate = 16;
@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
     auto window = GUI::Window::construct();

@@ -7,9 +7,9 @@
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibMain/Main.h>
-#include <LibSystem/Wrappers.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/GeminiProtocol.h>
@@ -19,7 +19,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr));
+    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr));
 
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
 
@@ -28,9 +28,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(System::pledge("stdio inet accept unix sendfd recvfd", nullptr));
-    TRY(System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd", nullptr));
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
     [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
