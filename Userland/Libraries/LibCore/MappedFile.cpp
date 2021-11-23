@@ -8,20 +8,15 @@
 #include <AK/String.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Core {
 
 ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(String const& path)
 {
-    int fd = open(path.characters(), O_RDONLY | O_CLOEXEC, 0);
-    if (fd < 0)
-        return Error::from_errno(errno);
-
+    auto fd = TRY(Core::System::open(path, O_RDONLY | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path);
 }
 
