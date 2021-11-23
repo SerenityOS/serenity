@@ -38,26 +38,6 @@ static ThrowCompletionOr<Value> get_promise_resolve(GlobalObject& global_object,
     return promise_resolve;
 }
 
-// 27.2.1.1.1 IfAbruptRejectPromise ( value, capability ), https://tc39.es/ecma262/#sec-ifabruptrejectpromise
-#define TRY_OR_REJECT(vm, capability, expression)                                                         \
-    ({                                                                                                    \
-        auto _temporary_result = (expression);                                                            \
-        /* 1. If value is an abrupt completion, then */                                                   \
-        if (_temporary_result.is_error()) {                                                               \
-            vm.clear_exception();                                                                         \
-            vm.stop_unwind();                                                                             \
-                                                                                                          \
-            /* a. Perform ? Call(capability.[[Reject]], undefined, « value.[[Value]] »). */             \
-            (void)vm.call(*capability.reject, js_undefined(), _temporary_result.release_error().value()); \
-                                                                                                          \
-            /* b. Return capability.[[Promise]]. */                                                       \
-            return capability.promise;                                                                    \
-        }                                                                                                 \
-                                                                                                          \
-        /* 2. Else if value is a Completion Record, set value to value.[[Value]]. */                      \
-        _temporary_result.release_value();                                                                \
-    })
-
 static bool iterator_record_is_complete(GlobalObject& global_object, Object& iterator_record)
 {
     auto& vm = global_object.vm();
