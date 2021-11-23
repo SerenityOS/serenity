@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
     auto app_icon = GUI::Icon::default_icon("app-spider");
 
     Config::pledge_domains("Spider");
