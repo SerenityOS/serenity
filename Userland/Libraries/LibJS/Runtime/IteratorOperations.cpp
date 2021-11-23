@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/AsyncFromSyncIteratorPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -18,10 +19,17 @@ ThrowCompletionOr<Object*> get_iterator(GlobalObject& global_object, Value value
 {
     auto& vm = global_object.vm();
     if (method.is_empty()) {
-        if (hint == IteratorHint::Async)
-            TODO();
-
-        method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
+        if (hint == IteratorHint::Async) {
+            auto* async_method = TRY(value.get_method(global_object, *vm.well_known_symbol_async_iterator()));
+            if (async_method == nullptr) {
+                auto* sync_method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
+                auto* sync_iterator_record = TRY(get_iterator(global_object, value, IteratorHint::Sync, sync_method));
+                return TRY(create_async_from_sync_iterator(global_object, *sync_iterator_record));
+            }
+            method = Value(async_method);
+        } else {
+            method = TRY(value.get_method(global_object, *vm.well_known_symbol_iterator()));
+        }
     }
 
     if (!method.is_function())
@@ -88,7 +96,9 @@ ThrowCompletionOr<Object*> iterator_step(GlobalObject& global_object, Object& it
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
-Completion iterator_close(Object& iterator, Completion completion)
+// 7.4.8 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
+// NOTE: These only differ in that async awaits the inner value after the call.
+static Completion iterator_close_(Object& iterator, Completion completion, IteratorHint iterator_hint)
 {
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
@@ -114,10 +124,16 @@ Completion iterator_close(Object& iterator, Completion completion)
 
         // c. Set innerResult to Call(return, iterator).
         auto result_or_error = vm.call(*return_method, &iterator);
-        if (result_or_error.is_error())
+        if (result_or_error.is_error()) {
             inner_result_or_error = result_or_error.release_error();
-        else
+        } else {
             inner_result = result_or_error.release_value();
+            // Note: If this is AsyncIteratorClose perform one extra step.
+            if (iterator_hint == IteratorHint::Async) {
+                // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
+                inner_result = TRY(await(global_object, inner_result));
+            }
+        }
     }
 
     // 5. If completion.[[Type]] is throw, return Completion(completion).
@@ -136,7 +152,19 @@ Completion iterator_close(Object& iterator, Completion completion)
     return completion;
 }
 
-// 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
+// 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
+Completion iterator_close(Object& iterator, Completion completion)
+{
+    return iterator_close_(iterator, move(completion), IteratorHint::Sync);
+}
+
+// 7.4.8 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
+Completion async_iterator_close(Object& iterator, Completion completion)
+{
+    return iterator_close_(iterator, move(completion), IteratorHint::Async);
+}
+
+// 7.4.9 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
 Object* create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();
@@ -146,7 +174,7 @@ Object* create_iterator_result_object(GlobalObject& global_object, Value value, 
     return object;
 }
 
-// 7.4.10 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
+// 7.4.11 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
 ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
 {
     auto& vm = global_object.vm();
