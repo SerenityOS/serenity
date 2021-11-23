@@ -894,6 +894,112 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     return last_value;
 }
 
+Value ForAwaitOfStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+
+    // 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
+    // Note: Performs only steps 1 through 5.
+    auto for_of_head_state = TRY_OR_DISCARD(for_in_of_head_execute(interpreter, global_object, m_lhs, m_rhs));
+
+    auto rhs_result = for_of_head_state.rhs_value;
+
+    // NOTE: Perform step 7 from ForIn/OfHeadEvaluation. And since this is always async we only have to do step 7.d.
+    // d. Return ? GetIterator(exprValue, iteratorHint).
+    auto* iterator = TRY_OR_DISCARD(get_iterator(global_object, rhs_result, IteratorHint::Async));
+    VERIFY(iterator);
+
+    auto& vm = interpreter.vm();
+
+    // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
+    // NOTE: Here iteratorKind is always async.
+    // 2. Let oldEnv be the running execution context's LexicalEnvironment.
+    Environment* old_environment = interpreter.lexical_environment();
+    auto restore_scope = ScopeGuard([&] {
+        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+    });
+    // 3. Let V be undefined.
+    auto last_value = js_undefined();
+
+    // NOTE: Step 4 and 5 are just extracting properties from the head which is done already in for_in_of_head_execute.
+    //       And these are only used in step 6.g through 6.k which is done with for_of_head_state.execute_head.
+
+    // 6. Repeat,
+    while (true) {
+        // NOTE: Since we don't have iterator records yet we have to extract the function first.
+        auto next_method = TRY_OR_DISCARD(iterator->get(vm.names.next));
+        if (!next_method.is_function()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
+            return {};
+        }
+
+        // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+        auto next_result = TRY_OR_DISCARD(call(global_object, next_method, iterator));
+        // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
+        next_result = TRY_OR_DISCARD(await(global_object, next_result));
+        // c. If Type(nextResult) is not Object, throw a TypeError exception.
+        if (!next_result.is_object()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::IterableNextBadReturn);
+            return {};
+        }
+
+        // d. Let done be ? IteratorComplete(nextResult).
+        auto done = TRY_OR_DISCARD(iterator_complete(global_object, next_result.as_object()));
+
+        // e. If done is true, return NormalCompletion(V).
+        if (done)
+            return last_value;
+
+        // f. Let nextValue be ? IteratorValue(nextResult).
+        auto next_value = TRY_OR_DISCARD(iterator_value(global_object, next_result.as_object()));
+
+        // NOTE: This performs steps g. through to k.
+        TRY_OR_DISCARD(for_of_head_state.execute_head(interpreter, global_object, next_value));
+
+        // l. Let result be the result of evaluating stmt.
+        auto result = m_body->execute(interpreter, global_object);
+
+        // m. Set the running execution context's LexicalEnvironment to oldEnv.
+        interpreter.vm().running_execution_context().lexical_environment = old_environment;
+
+        // NOTE: Since execute does not return a completion we have to have a number of checks here.
+        // n. If LoopContinues(result, labelSet) is false, then
+        if (auto* exception = vm.exception()) {
+            // FIXME: We should return the result of AsyncIteratorClose but cannot return completions yet.
+            // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+            TRY_OR_DISCARD(async_iterator_close(*iterator, throw_completion(exception->value())));
+            return {};
+        }
+
+        if (interpreter.vm().should_unwind()) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_labels)) {
+                // NOTE: In this case LoopContinues is not actually false so we don't perform step 6.n.ii.3.
+                interpreter.vm().stop_unwind();
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_labels)) {
+                interpreter.vm().stop_unwind();
+                // 2. Set status to UpdateEmpty(result, V).
+                if (!result.is_empty())
+                    last_value = result;
+                // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+                TRY_OR_DISCARD(async_iterator_close(*iterator, normal_completion(last_value)));
+                return last_value;
+            } else {
+                // 2. Set status to UpdateEmpty(result, V).
+                if (!result.is_empty())
+                    last_value = result;
+                // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+                TRY_OR_DISCARD(async_iterator_close(*iterator, normal_completion(last_value)));
+                return last_value;
+            }
+        }
+        // o. If result.[[Value]] is not empty, set V to result.[[Value]].
+        if (!result.is_empty())
+            last_value = result;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -2087,6 +2193,17 @@ void ForOfStatement::dump(int indent) const
     lhs().visit([&](auto& lhs) { lhs->dump(indent + 1); });
     rhs().dump(indent + 1);
     body().dump(indent + 1);
+}
+
+void ForAwaitOfStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    outln("ForAwaitOf");
+    m_lhs.visit([&](auto& lhs) { lhs->dump(indent + 1); });
+    m_rhs->dump(indent + 1);
+    m_body->dump(indent + 1);
 }
 
 Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object) const

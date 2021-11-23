@@ -753,6 +753,25 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
+class ForAwaitOfStatement final : public IterationStatement {
+public:
+    ForAwaitOfStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+        : IterationStatement(source_range)
+        , m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+        , m_body(move(body))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> m_lhs;
+    NonnullRefPtr<Expression> m_rhs;
+    NonnullRefPtr<Statement> m_body;
+};
+
 enum class BinaryOp {
     Addition,
     Subtraction,
