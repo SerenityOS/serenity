@@ -10,6 +10,8 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -563,17 +565,13 @@ static void walk_tree(FileData& root_data, Command& command)
     closedir(dir);
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    LexicalPath root_path(parse_options(argc, argv));
+    LexicalPath root_path(parse_options(arguments.argc, arguments.argv));
     String dirname = root_path.dirname();
     String basename = root_path.basename();
 
-    int dirfd = open(dirname.characters(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-    if (dirfd < 0) {
-        perror(dirname.characters());
-        return 1;
-    }
+    int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
 
     FileData file_data {
         root_path,
@@ -583,7 +581,7 @@ int main(int argc, char* argv[])
         false,
         DT_UNKNOWN,
     };
-    auto command = parse_all_commands(argv);
+    auto command = parse_all_commands(arguments.argv);
     walk_tree(file_data, *command);
     close(dirfd);
     return g_there_was_an_error ? 1 : 0;
