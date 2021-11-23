@@ -117,6 +117,14 @@ struct UnbalancedDuration {
     double days;
 };
 
+// Used by BalanceDurationRelative to temporarily hold values
+struct RelativeBalancedDuration {
+    double years;
+    double months;
+    double weeks;
+    double days;
+};
+
 // Table 7: Properties of a TemporalDurationLike, https://tc39.es/proposal-temporal/#table-temporal-temporaldurationlike-properties
 
 template<typename StructT, typename ValueT>
@@ -154,6 +162,7 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject&, Value relative_t
 BigInt* total_duration_nanoseconds(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift);
 ThrowCompletionOr<BalancedDuration> balance_duration(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to = nullptr);
 ThrowCompletionOr<UnbalancedDuration> unbalance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
+ThrowCompletionOr<RelativeBalancedDuration> balance_duration_relative(GlobalObject&, double years, double months, double weeks, double days, String const& largest_unit, Value relative_to);
 ThrowCompletionOr<TemporalDuration> add_duration(GlobalObject&, double years1, double months1, double weeks1, double days1, double hours1, double minutes1, double seconds1, double milliseconds1, double microseconds1, double nanoseconds1, double years2, double months2, double weeks2, double days2, double hours2, double minutes2, double seconds2, double milliseconds2, double microseconds2, double nanoseconds2, Value relative_to_value);
 ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject&, Object& calendar, PlainDate& relative_to, Duration& duration);
 ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(GlobalObject&, ZonedDateTime&, double years, double months, double weeks, double days);
