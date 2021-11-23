@@ -5,6 +5,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -20,22 +22,11 @@ static void fetch_ioctl(int fd, int request)
     outln("{}", value);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (unveil("/dev", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     const char* device = nullptr;
 
@@ -47,7 +38,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_get_disk_size, "Get size in bytes", "size", 's');
     args_parser.add_option(flag_get_block_size, "Get block size in bytes", "block-size", 'b');
     args_parser.add_positional_argument(device, "Device to query", "device");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     int fd = open(device, O_RDONLY);
     if (fd < 0) {
