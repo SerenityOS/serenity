@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     srand(time(nullptr));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
     auto app_icon = GUI::Icon::default_icon("app-2048");
 
     auto window = GUI::Window::construct();

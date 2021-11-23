@@ -284,7 +284,7 @@ bool GLContextWidget::load_file(Core::File& file, String const& filename)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
 
     TRY(System::pledge("stdio thread recvfd sendfd rpath unix", nullptr));
 

@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = GUI::Application::construct(arguments);
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
 
     auto window = GUI::Window::construct();
