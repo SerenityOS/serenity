@@ -541,7 +541,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args.append(arguments.argv + 1, arguments.argc - 1);
 
     OwnPtr<Command> command;
-    LexicalPath root_path = LexicalPath(".");
+    Vector<LexicalPath> paths;
 
     while (!args.is_empty()) {
         char* raw_arg = args.take_first();
@@ -549,7 +549,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (arg == "-L") {
             g_follow_symlinks = true;
         } else if (!arg.starts_with('-')) {
-            root_path = LexicalPath(arg);
+            paths.append(LexicalPath(arg));
         } else {
             // No special case, so add back the argument and try to parse a command.
             args.prepend(raw_arg);
@@ -560,21 +560,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!command)
         command = make<PrintCommand>();
 
-    String dirname = root_path.dirname();
-    String basename = root_path.basename();
+    if (paths.is_empty())
+        paths.append(LexicalPath("."));
 
-    int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    for (auto& path : paths) {
+        String dirname = path.dirname();
+        String basename = path.basename();
 
-    FileData file_data {
-        root_path,
-        dirfd,
-        basename.characters(),
-        (struct stat) {},
-        false,
-        DT_UNKNOWN,
-    };
-    walk_tree(file_data, *command);
-    close(dirfd);
+        int dirfd = TRY(Core::System::open(dirname, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+
+        FileData file_data {
+            path,
+            dirfd,
+            basename.characters(),
+            (struct stat) {},
+            false,
+            DT_UNKNOWN,
+        };
+        walk_tree(file_data, *command);
+        close(dirfd);
+    }
 
     return g_there_was_an_error ? 1 : 0;
 }
