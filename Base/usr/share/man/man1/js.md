@@ -28,6 +28,7 @@ Run `help()` in REPL mode to see its available built-in functions.
 * `-m`, `--as-module`: Treat as module
 * `-l`, `--print-last-result`: Print the result of the last statement executed.
 * `-g`, `--gc-on-every-allocation`: Run garbage collection on every allocation.
+* `-c`, `--disable-ansi-colors`: Disable ANSI colors
 * `-s`, `--no-syntax-highlight`: Disable live syntax highlighting in the REPL
 
 ## Examples
