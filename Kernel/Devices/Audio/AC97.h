@@ -57,13 +57,16 @@ private:
         Revision23 = 0b10,
     };
 
+    enum NativeAudioBusChannel : u8 {
+        PCMInChannel = 0x00,
+        PCMOutChannel = 0x10,
+        MicrophoneInChannel = 0x20,
+        Microphone2Channel = 0x40,
+        PCMIn2Channel = 0x50,
+        SPDIFChannel = 0x60,
+    };
+
     enum NativeAudioBusRegister : u8 {
-        PCMOutBufferDescriptorListBaseAddress = 0x10,
-        PCMOutCurrentIndex = 0x14,
-        PCMOutLastValidIndex = 0x15,
-        PCMOutStatus = 0x16,
-        PCMOutPrefetchedIndex = 0x1a,
-        PCMOutControl = 0x1b,
         GlobalControl = 0x2c,
     };
 
@@ -102,6 +105,39 @@ private:
         InterruptOnCompletion = 1u << 31,
     };
 
+    class AC97Channel {
+    public:
+        enum Register : u8 {
+            BufferDescriptorListBaseAddress = 0x00,
+            CurrentIndexValue = 0x04,
+            LastValidIndex = 0x05,
+            Status = 0x06,
+            PositionInCurrentBuffer = 0x08,
+            PrefetchedIndexValue = 0x0a,
+            Control = 0x0b,
+        };
+
+        AC97Channel(AC97& device, StringView name, IOAddress channel_base)
+            : m_channel_base(channel_base)
+            , m_device(device)
+            , m_name(name)
+        {
+        }
+
+        bool dma_running() const { return m_dma_running; }
+        StringView name() const { return m_name; }
+        IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
+        void reset();
+        void set_last_valid_index(u32 buffer_address, u8 last_valid_index);
+        void start_dma();
+
+    private:
+        IOAddress m_channel_base;
+        AC97& m_device;
+        bool m_dma_running = false;
+        StringView m_name;
+    };
+
     AC97(PCI::DeviceIdentifier);
 
     // ^IRQHandler
@@ -110,13 +146,12 @@ private:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "AC97"sv; }
 
+    AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
     void initialize();
     void reset_pcm_out();
     void set_master_output_volume(u8, u8, Muted);
     void set_pcm_output_sample_rate(u16);
     void set_pcm_output_volume(u8, u8, Muted);
-    void set_output_buffer_dma_lvi(u8);
-    void start_output_buffer_dma();
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index = 0;
@@ -124,9 +159,9 @@ private:
     IOAddress m_io_bus_base;
     WaitQueue m_irq_queue;
     OwnPtr<Memory::Region> m_output_buffer;
-    bool m_output_buffer_dma_running = false;
     u8 m_output_buffer_page_count = 4;
     u8 m_output_buffer_page_index = 0;
+    AC97Channel m_pcm_out_channel;
     u16 m_sample_rate = 44100;
 };
 
