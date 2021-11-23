@@ -532,10 +532,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::until)
     auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
     // 8. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, move(default_largest_unit)));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -547,7 +547,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::until)
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum.has_value() ? *maximum : Optional<double> {}, false));
 
     // 13. Let diff be ? DifferenceISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], other.[[ISOYear]], other.[[ISOMonth]], other.[[ISODay]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]], dateTime.[[Calendar]], largestUnit, options).
-    auto diff = TRY(difference_iso_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), date_time->calendar(), largest_unit, options));
+    auto diff = TRY(difference_iso_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), date_time->calendar(), *largest_unit, options));
 
     // 14. Let relativeTo be ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     auto* relative_to = MUST(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
@@ -556,7 +556,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::until)
     auto round_result = TRY(round_duration(global_object, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to));
 
     // 16. Let result be ! BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], largestUnit).
-    auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds)), largest_unit));
+    auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds)), *largest_unit));
 
     // 17. Return ? CreateTemporalDuration(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, round_result.years, round_result.months, round_result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -586,10 +586,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
     auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
     // 8. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, move(default_largest_unit)));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -604,7 +604,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, maximum.has_value() ? *maximum : Optional<double> {}, false));
 
     // 14. Let diff be ? DifferenceISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], other.[[ISOYear]], other.[[ISOMonth]], other.[[ISODay]], other.[[ISOHour]], other.[[ISOMinute]], other.[[ISOSecond]], other.[[ISOMillisecond]], other.[[ISOMicrosecond]], other.[[ISONanosecond]], dateTime.[[Calendar]], largestUnit, options).
-    auto diff = TRY(difference_iso_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), date_time->calendar(), largest_unit, options));
+    auto diff = TRY(difference_iso_date_time(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), other->iso_year(), other->iso_month(), other->iso_day(), other->iso_hour(), other->iso_minute(), other->iso_second(), other->iso_millisecond(), other->iso_microsecond(), other->iso_nanosecond(), date_time->calendar(), *largest_unit, options));
 
     // 15. Let relativeTo be ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     auto* relative_to = MUST(create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar()));
@@ -613,7 +613,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
     auto round_result = TRY(round_duration(global_object, diff.years, diff.months, diff.weeks, diff.days, diff.hours, diff.minutes, diff.seconds, diff.milliseconds, diff.microseconds, diff.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to));
 
     // 17. Let result be ! BalanceDuration(roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], largestUnit).
-    auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds)), largest_unit));
+    auto result = MUST(balance_duration(global_object, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)round_result.nanoseconds)), *largest_unit));
 
     // 18. Return ? CreateTemporalDuration(−roundResult.[[Years]], −roundResult.[[Months]], −roundResult.[[Weeks]], −result.[[Days]], −result.[[Hours]], −result.[[Minutes]], −result.[[Seconds]], −result.[[Milliseconds]], −result.[[Microseconds]], −result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, -round_result.weeks, -result.days, -result.hours, -result.minutes, -result.seconds, -result.milliseconds, -result.microseconds, -result.nanoseconds));

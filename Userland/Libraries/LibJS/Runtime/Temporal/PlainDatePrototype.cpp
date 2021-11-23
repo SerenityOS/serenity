@@ -465,7 +465,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "day"sv));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -474,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
     // 12. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(largest_unit)));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(*largest_unit)));
 
     // 13. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
@@ -529,7 +529,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "day"sv));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -541,7 +541,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(largest_unit)));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(*largest_unit)));
 
     // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));

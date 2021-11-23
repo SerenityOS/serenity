@@ -463,7 +463,7 @@ static HashMap<StringView, StringView> plural_to_singular_units = {
 };
 
 // 13.17 ToLargestTemporalUnit ( normalizedOptions, disallowedUnits, fallback [ , autoValue ] ), https://tc39.es/proposal-temporal/#sec-temporal-tolargesttemporalunit
-ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value)
+ThrowCompletionOr<Optional<String>> to_largest_temporal_unit(GlobalObject& global_object, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback, Optional<String> auto_value)
 {
     auto& vm = global_object.vm();
 
@@ -474,7 +474,12 @@ ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject& global_object, 
     // 4. Assert: autoValue is not present or disallowedUnits does not contain autoValue.
 
     // 5. Let largestUnit be ? GetOption(normalizedOptions, "largestUnit", « String », « "auto", "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
-    auto largest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, js_string(vm, fallback)));
+    auto largest_unit_value = TRY(get_option(global_object, normalized_options, vm.names.largestUnit, { OptionType::String }, { "auto"sv, "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined()));
+
+    // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
+    if (largest_unit_value.is_undefined())
+        return Optional<String> {};
+    VERIFY(largest_unit_value.is_string());
     auto largest_unit = largest_unit_value.as_string().string();
 
     // 6. If largestUnit is "auto" and autoValue is present, then

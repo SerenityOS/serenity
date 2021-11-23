@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -193,7 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto rounded_ns = difference_instant(global_object, instant->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
+    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -222,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
-    TRY(validate_temporal_unit_range(global_object, largest_unit, *smallest_unit));
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
     // 9. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
@@ -237,7 +237,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto rounded_ns = difference_instant(global_object, other->nanoseconds(), instant->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 13. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, largestUnit).
-    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, largest_unit));
+    auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *rounded_ns, *largest_unit));
 
     // 14. Return ? CreateTemporalDuration(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));

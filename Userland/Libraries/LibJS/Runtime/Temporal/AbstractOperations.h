@@ -113,7 +113,7 @@ ThrowCompletionOr<String> to_show_offset_option(GlobalObject&, Object const& nor
 ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(GlobalObject&, Object const& normalized_options, StringView smallest_unit);
 ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(GlobalObject&, Object const& normalized_options);
-ThrowCompletionOr<String> to_largest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, String const& fallback, Optional<String> auto_value);
+ThrowCompletionOr<Optional<String>> to_largest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback, Optional<String> auto_value = {});
 ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject&, Object const& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
 ThrowCompletionOr<String> to_temporal_duration_total_unit(GlobalObject& global_object, Object const& normalized_options);
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject&, Object const& options);
