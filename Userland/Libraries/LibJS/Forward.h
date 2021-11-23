@@ -185,6 +185,7 @@ class ProxyConstructor;
 
 // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
 class GeneratorObjectPrototype;
+class AsyncFromSyncIteratorPrototype;
 
 class TypedArrayConstructor;
 class TypedArrayPrototype;
