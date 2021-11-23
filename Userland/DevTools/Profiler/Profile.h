@@ -17,10 +17,10 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/MappedFile.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Variant.h>
+#include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>

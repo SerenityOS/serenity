@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
+#include <LibCore/MappedFile.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace AK {
+namespace Core {
 
 ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(String const& path)
 {

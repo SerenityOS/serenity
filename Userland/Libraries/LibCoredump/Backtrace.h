@@ -14,14 +14,14 @@
 namespace Coredump {
 
 struct ELFObjectInfo {
-    ELFObjectInfo(NonnullRefPtr<MappedFile> file, NonnullOwnPtr<Debug::DebugInfo>&& debug_info, NonnullOwnPtr<ELF::Image> image)
+    ELFObjectInfo(NonnullRefPtr<Core::MappedFile> file, NonnullOwnPtr<Debug::DebugInfo>&& debug_info, NonnullOwnPtr<ELF::Image> image)
         : file(move(file))
         , debug_info(move(debug_info))
         , image(move(image))
     {
     }
 
-    NonnullRefPtr<MappedFile> file;
+    NonnullRefPtr<Core::MappedFile> file;
     NonnullOwnPtr<Debug::DebugInfo> debug_info;
     NonnullOwnPtr<ELF::Image> image;
 };

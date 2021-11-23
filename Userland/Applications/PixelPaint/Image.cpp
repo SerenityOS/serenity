@@ -14,8 +14,8 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/MappedFile.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>

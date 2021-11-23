@@ -16,6 +16,7 @@ set(SOURCES
     LocalServer.cpp
     LocalSocket.cpp
     LockFile.cpp
+    MappedFile.cpp
     MimeData.cpp
     NetworkJob.cpp
     NetworkResponse.cpp

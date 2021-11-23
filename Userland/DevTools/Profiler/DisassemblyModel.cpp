@@ -6,7 +6,7 @@
 
 #include "DisassemblyModel.h"
 #include "Profile.h"
-#include <AK/MappedFile.h>
+#include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Painter.h>
@@ -40,7 +40,7 @@ static ELF::Image* try_load_kernel_binary()
 {
     if (s_kernel_binary.has_value())
         return &s_kernel_binary->elf;
-    auto kernel_binary_or_error = MappedFile::map("/boot/Kernel");
+    auto kernel_binary_or_error = Core::MappedFile::map("/boot/Kernel");
     if (!kernel_binary_or_error.is_error()) {
         auto kernel_binary = kernel_binary_or_error.release_value();
         s_kernel_binary = { { kernel_binary, ELF::Image(kernel_binary->bytes()) } };

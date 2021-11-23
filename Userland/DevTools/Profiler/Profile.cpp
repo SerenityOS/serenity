@@ -10,12 +10,12 @@
 #include "SamplesModel.h"
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
 #include <sys/stat.h>
@@ -226,7 +226,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     auto& object = json.value().as_object();
 
     if (!g_kernel_debuginfo_object.has_value()) {
-        auto debuginfo_file_or_error = MappedFile::map("/boot/Kernel.debug");
+        auto debuginfo_file_or_error = Core::MappedFile::map("/boot/Kernel.debug");
         if (!debuginfo_file_or_error.is_error()) {
             auto debuginfo_file = debuginfo_file_or_error.release_value();
             auto debuginfo_image = ELF::Image(debuginfo_file->bytes());

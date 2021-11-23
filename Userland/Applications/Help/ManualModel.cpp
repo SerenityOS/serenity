@@ -72,7 +72,7 @@ ErrorOr<StringView> ManualModel::page_view(String const& path) const
             return StringView { mapped_file.value()->bytes() };
     }
 
-    auto file = TRY(MappedFile::map(path));
+    auto file = TRY(Core::MappedFile::map(path));
 
     StringView view { file->bytes() };
     m_mapped_files.set(path, move(file));

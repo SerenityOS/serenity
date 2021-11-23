@@ -41,7 +41,7 @@ void Inspector::parse_loaded_libraries(Function<void(float)> on_progress)
         if (on_progress)
             on_progress(library_index / (float)number_of_libraries);
 
-        auto file_or_error = MappedFile::map(library.path);
+        auto file_or_error = Core::MappedFile::map(library.path);
         if (file_or_error.is_error())
             return;
 

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/MappedFile.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
         // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
         // TODO: automatically fallback to buffered streaming for very large files
-        auto file_or_error = MappedFile::map(input_filename);
+        auto file_or_error = Core::MappedFile::map(input_filename);
         if (file_or_error.is_error()) {
             warnln("Failed opening input file for reading: {}", file_or_error.error());
             return 1;

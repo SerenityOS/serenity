@@ -8,10 +8,10 @@
 
 #include "ViewWidget.h"
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -243,7 +243,7 @@ void ViewWidget::load_from_file(const String& path)
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
     };
 
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error()) {
         show_error();
         return;

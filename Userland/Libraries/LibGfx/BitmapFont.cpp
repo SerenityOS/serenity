@@ -202,7 +202,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
     if (Core::File::is_device(path))
         return nullptr;
 
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
 

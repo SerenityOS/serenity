@@ -5,8 +5,8 @@
  */
 
 #include "DisassemblyModel.h"
-#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/MappedFile.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
@@ -33,7 +33,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     auto maybe_kernel_base = Symbolication::kernel_base();
 
     if (maybe_kernel_base.has_value() && containing_function.value().address_low >= maybe_kernel_base.value()) {
-        auto file_or_error = MappedFile::map("/boot/Kernel.debug");
+        auto file_or_error = Core::MappedFile::map("/boot/Kernel.debug");
         if (file_or_error.is_error())
             return;
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());

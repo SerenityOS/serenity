@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/MappedFile.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
+#include <LibCore/MappedFile.h>
 #include <LibELF/Core.h>
 #include <LibELF/Image.h>
 
@@ -46,7 +46,7 @@ public:
     struct LibraryData {
         String name;
         FlatPtr base_address { 0 };
-        NonnullRefPtr<MappedFile> file;
+        NonnullRefPtr<Core::MappedFile> file;
         ELF::Image lib_elf;
     };
     const LibraryData* library_containing(FlatPtr address) const;
@@ -61,7 +61,7 @@ public:
 private:
     explicit Reader(ReadonlyBytes);
     explicit Reader(ByteBuffer);
-    explicit Reader(NonnullRefPtr<MappedFile>);
+    explicit Reader(NonnullRefPtr<Core::MappedFile>);
 
     static Optional<ByteBuffer> decompress_coredump(ReadonlyBytes);
 
@@ -86,7 +86,7 @@ private:
     const JsonObject process_info() const;
 
     // For uncompressed coredumps, we keep the MappedFile
-    RefPtr<MappedFile> m_mapped_file;
+    RefPtr<Core::MappedFile> m_mapped_file;
 
     // For compressed coredumps, we decompress them into a ByteBuffer
     ByteBuffer m_coredump_buffer;

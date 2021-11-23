@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MappedFile.h>
+#include <LibCore/MappedFile.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -73,7 +73,7 @@ void ImageWidget::animate()
 
 void ImageWidget::load_from_file(StringView path)
 {
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return;
 

@@ -5,11 +5,11 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>
 #include <LibELF/Core.h>
@@ -30,7 +30,7 @@ ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionIn
     if (!Core::File::exists(path))
         return nullptr;
 
-    auto file_or_error = MappedFile::map(path);
+    auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
 

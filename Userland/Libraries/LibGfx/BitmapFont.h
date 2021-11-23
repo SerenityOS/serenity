@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/CharacterTypes.h>
-#include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/MappedFile.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Size.h>
 
@@ -128,7 +128,7 @@ private:
 
     u8* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
-    RefPtr<MappedFile> m_mapped_file;
+    RefPtr<Core::MappedFile> m_mapped_file;
 
     u8 m_glyph_width { 0 };
     u8 m_glyph_height { 0 };

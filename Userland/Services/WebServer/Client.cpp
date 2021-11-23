@@ -8,7 +8,6 @@
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
@@ -17,6 +16,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
@@ -177,7 +177,7 @@ static String folder_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-folder.png");
+        auto file_or_error = Core::MappedFile::map("/res/icons/16x16/filetype-folder.png");
         VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
@@ -188,7 +188,7 @@ static String file_image_data()
 {
     static String cache;
     if (cache.is_empty()) {
-        auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-unknown.png");
+        auto file_or_error = Core::MappedFile::map("/res/icons/16x16/filetype-unknown.png");
         VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
