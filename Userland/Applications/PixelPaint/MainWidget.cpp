@@ -227,6 +227,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (!bitmap)
             return;
 
+        auto& image = editor->image();
+        const auto& bitmap_size = bitmap->size();
+        const auto& image_size = image.size();
+        if (bitmap_size.width() > image_size.width() || bitmap_size.height() > image_size.height()) {
+            auto expand_canvas = GUI::MessageBox::show(&window, "Do you want to expand the editor image?", "Expand image?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNoCancel);
+            if (expand_canvas == GUI::MessageBox::ExecYes)
+                image.resize(bitmap_size);
+            else if (expand_canvas == GUI::MessageBox::ExecCancel)
+                return;
+        }
+
         auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
         editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
