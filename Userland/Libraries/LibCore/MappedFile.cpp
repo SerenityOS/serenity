@@ -7,6 +7,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -26,18 +27,15 @@ ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(String const& path)
 
 ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] String const& path)
 {
-    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0)
-        return Error::from_errno(errno);
+    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 
     ScopeGuard fd_close_guard = [fd] {
         close(fd);
     };
 
-    struct stat st;
-    if (fstat(fd, &st) < 0)
-        return Error::from_errno(errno);
+    auto stat = TRY(Core::System::fstat(fd));
+    auto size = stat.st_size;
 
-    auto size = st.st_size;
     auto* ptr = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
 
     if (ptr == MAP_FAILED)
