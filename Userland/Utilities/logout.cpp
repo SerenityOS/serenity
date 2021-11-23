@@ -5,6 +5,8 @@
  */
 
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <signal.h>
 
 static Core::ProcessStatistics const& get_proc(Core::AllProcessesStatistics const& stats, pid_t pid)
@@ -16,24 +18,12 @@ static Core::ProcessStatistics const& get_proc(Core::AllProcessesStatistics cons
     VERIFY_NOT_REACHED();
 }
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio proc rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio proc rpath", nullptr));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     // logout finds the highest session up all nested sessions, and kills it.
     auto stats = Core::ProcessStatisticsReader::get_all();
@@ -53,10 +43,7 @@ int main(int, char**)
         sid = parent_sid;
     }
 
-    if (kill(-sid, SIGTERM) == -1) {
-        perror("kill(2)");
-        return 1;
-    }
+    TRY(Core::System::kill(-sid, SIGTERM));
 
     return 0;
 }
