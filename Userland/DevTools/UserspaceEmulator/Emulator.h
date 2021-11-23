@@ -180,7 +180,6 @@ private:
     int virt$clock_gettime(int, FlatPtr);
     int virt$clock_nanosleep(FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
-    int virt$dbgputch(char);
     int virt$chmod(FlatPtr, size_t, mode_t);
     int virt$fchmod(int, mode_t);
     int virt$chown(FlatPtr);

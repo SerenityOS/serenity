@@ -273,7 +273,6 @@ public:
     ErrorOr<FlatPtr> sys$create_inode_watcher(u32 flags);
     ErrorOr<FlatPtr> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
     ErrorOr<FlatPtr> sys$inode_watcher_remove_watch(int fd, int wd);
-    ErrorOr<FlatPtr> sys$dbgputch(u8);
     ErrorOr<FlatPtr> sys$dbgputstr(Userspace<const char*>, size_t);
     ErrorOr<FlatPtr> sys$dump_backtrace();
     ErrorOr<FlatPtr> sys$gettid();
