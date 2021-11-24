@@ -17,9 +17,9 @@ namespace GUI {
 class FilteringProxyModel final : public Model
     , public ModelClient {
 public:
-    static NonnullRefPtr<FilteringProxyModel> construct(Model& model)
+    static ErrorOr<NonnullRefPtr<FilteringProxyModel>> create(Model& model)
     {
-        return adopt_ref(*new FilteringProxyModel(model));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) FilteringProxyModel(model));
     }
 
     virtual ~FilteringProxyModel() override

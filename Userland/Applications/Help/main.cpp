@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             search_model.invalidate();
         }
     };
-    search_list_view->set_model(GUI::FilteringProxyModel::construct(manual_model));
+    search_list_view->set_model(TRY(GUI::FilteringProxyModel::create(manual_model)));
     search_list_view->model()->invalidate();
 
     tree_view->set_model(manual_model);
