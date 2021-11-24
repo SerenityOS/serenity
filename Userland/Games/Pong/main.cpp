@@ -18,14 +18,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->resize(Pong::Game::game_width, Pong::Game::game_height);
     auto app_icon = GUI::Icon::default_icon("app-pong");
     window->set_icon(app_icon.bitmap_for_size(16));
