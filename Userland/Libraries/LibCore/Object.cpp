@@ -73,14 +73,20 @@ void Object::event(Core::Event& event)
     }
 }
 
-void Object::add_child(Object& object)
+ErrorOr<void> Object::try_add_child(Object& object)
 {
     // FIXME: Should we support reparenting objects?
     VERIFY(!object.parent() || object.parent() == this);
+    TRY(m_children.try_append(object));
     object.m_parent = this;
-    m_children.append(object);
     Core::ChildEvent child_event(Core::Event::ChildAdded, object);
     event(child_event);
+    return {};
+}
+
+void Object::add_child(Object& object)
+{
+    MUST(try_add_child(object));
 }
 
 void Object::insert_child_before(Object& new_child, Object& before_child)
