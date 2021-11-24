@@ -231,7 +231,7 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
             terminal.set_selection(found_range);
         }
     };
-    find_forwards->on_click = [&](auto) {
+    find_forwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
         auto needle = find_textbox->text();
         if (needle.is_empty()) {
             return;
