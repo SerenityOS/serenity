@@ -15,6 +15,9 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", "about:blank"));
 
+    m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
+    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true), GUI::AllowCallback::No);
+
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", false), GUI::AllowCallback::No);
 }
@@ -27,6 +30,8 @@ void BrowserSettingsWidget::apply_settings()
 {
     // TODO: Ensure that the URL is valid, as we do in the BrowserWindow's change-homepage dialog
     Config::write_string("Browser", "Preferences", "Home", m_homepage_url_textbox->text());
+
+    Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", m_show_bookmarks_bar_checkbox->is_checked());
 
     Config::write_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", m_auto_close_download_windows_checkbox->is_checked());
 }
