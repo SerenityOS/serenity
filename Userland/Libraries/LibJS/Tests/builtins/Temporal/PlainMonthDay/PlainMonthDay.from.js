@@ -42,7 +42,7 @@ describe("correct behavior", () => {
     });
 
     test("from date time string", () => {
-        const plainMonthDay = Temporal.PlainMonthDay.from("2021-07-06T23:42:01Z");
+        const plainMonthDay = Temporal.PlainMonthDay.from("2021-07-06T23:42:01");
         expect(plainMonthDay.monthCode).toBe("M07");
         expect(plainMonthDay.day).toBe(6);
     });
@@ -65,5 +65,14 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainMonthDay.from("foo");
         }).toThrowWithMessage(RangeError, "Invalid month day string 'foo'");
+    });
+
+    test("string must not contain a UTC designator", () => {
+        expect(() => {
+            Temporal.PlainMonthDay.from("2021-07-06T23:42:01Z");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid month day string '2021-07-06T23:42:01Z': must not contain a UTC designator"
+        );
     });
 });

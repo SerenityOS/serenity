@@ -209,7 +209,9 @@
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidCalendarString, "Invalid calendar string '{}'")                                                                    \
     M(TemporalInvalidDateString, "Invalid date string '{}'")                                                                            \
+    M(TemporalInvalidDateStringUTCDesignator, "Invalid date string '{}': must not contain a UTC designator")                            \
     M(TemporalInvalidDateTimeString, "Invalid date time string '{}'")                                                                   \
+    M(TemporalInvalidDateTimeStringUTCDesignator, "Invalid date time string '{}': must not contain a UTC designator")                   \
     M(TemporalInvalidDuration, "Invalid duration")                                                                                      \
     M(TemporalInvalidDurationLikeObject, "Invalid duration-like object")                                                                \
     M(TemporalInvalidDurationPropertyValueNonIntegral, "Invalid value for duration property '{}': must be an integer, got {}")          \
@@ -219,6 +221,7 @@
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
     M(TemporalInvalidMonthCode, "Invalid month code")                                                                                   \
     M(TemporalInvalidMonthDayString, "Invalid month day string '{}'")                                                                   \
+    M(TemporalInvalidMonthDayStringUTCDesignator, "Invalid month day string '{}': must not contain a UTC designator")                   \
     M(TemporalInvalidOffsetNanosecondsValue, "Invalid offset nanoseconds value, must be in range -86400 * 10^9 to 86400 * 10^9")        \
     M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
@@ -229,10 +232,12 @@
     M(TemporalInvalidRelativeToString, "Invalid relative to string '{}'")                                                               \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
+    M(TemporalInvalidTimeStringUTCDesignator, "Invalid time string '{}': must not contain a UTC designator")                            \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(TemporalInvalidTimeZoneString, "Invalid time zone string '{}'")                                                                   \
     M(TemporalInvalidUnitRange, "Invalid unit range, {} is larger than {}")                                                             \
     M(TemporalInvalidYearMonthString, "Invalid year month string '{}'")                                                                 \
+    M(TemporalInvalidYearMonthStringUTCDesignator, "Invalid year month string '{}': must not contain a UTC designator")                 \
     M(TemporalInvalidZonedDateTimeOffset, "Invalid offset for the provided date and time in the current time zone")                     \
     M(TemporalInvalidZonedDateTimeString, "Invalid zoned date time string '{}'")                                                        \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \

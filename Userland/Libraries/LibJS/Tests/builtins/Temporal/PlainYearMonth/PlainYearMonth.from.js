@@ -63,7 +63,7 @@ describe("correct behavior", () => {
     });
 
     test("from date time string", () => {
-        const plainYearMonth = Temporal.PlainYearMonth.from("2021-07-06T23:42:01Z");
+        const plainYearMonth = Temporal.PlainYearMonth.from("2021-07-06T23:42:01");
         expect(plainYearMonth.year).toBe(2021);
         expect(plainYearMonth.month).toBe(7);
         expect(plainYearMonth.monthCode).toBe("M07");
@@ -91,5 +91,14 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainYearMonth.from("foo");
         }).toThrowWithMessage(RangeError, "Invalid year month string 'foo'");
+    });
+
+    test("string must not contain a UTC designator", () => {
+        expect(() => {
+            Temporal.PlainYearMonth.from("2021-07-06T23:42:01Z");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid year month string '2021-07-06T23:42:01Z': must not contain a UTC designator"
+        );
     });
 });

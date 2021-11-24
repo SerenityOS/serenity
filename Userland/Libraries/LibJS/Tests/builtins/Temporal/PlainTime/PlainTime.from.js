@@ -38,7 +38,7 @@ describe("correct behavior", () => {
     });
 
     test("PlainTime string argument", () => {
-        const createdPlainTime = Temporal.PlainTime.from("2021-08-27T18:44:11Z");
+        const createdPlainTime = Temporal.PlainTime.from("2021-08-27T18:44:11");
         expect(createdPlainTime.hour).toBe(18);
         expect(createdPlainTime.minute).toBe(44);
         expect(createdPlainTime.second).toBe(11);
@@ -54,5 +54,14 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainTime.from(zonedDateTime);
         }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+
+    test("string must not contain a UTC designator", () => {
+        expect(() => {
+            Temporal.PlainTime.from("2021-07-06T23:42:01Z");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid time string '2021-07-06T23:42:01Z': must not contain a UTC designator"
+        );
     });
 });
