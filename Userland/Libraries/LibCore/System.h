@@ -30,5 +30,6 @@ ErrorOr<struct stat> stat(StringView path);
 ErrorOr<ssize_t> read(int fd, void* buffer, size_t buffer_size);
 ErrorOr<ssize_t> write(int fd, void const* data, size_t data_size);
 ErrorOr<void> kill(pid_t, int signal);
+ErrorOr<int> dup2(int source_fd, int destination_fd);
 
 }
