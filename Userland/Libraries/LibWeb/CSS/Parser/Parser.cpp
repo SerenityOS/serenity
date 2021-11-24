@@ -1083,7 +1083,7 @@ Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<StyleC
     // `<general-enclosed>`
     if (auto general_enclosed = parse_general_enclosed(tokens); general_enclosed.has_value()) {
         return Supports::InParens {
-            .value = Supports::GeneralEnclosed {}
+            .value = general_enclosed.release_value()
         };
     }
 
