@@ -32,10 +32,6 @@
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
-#include <libgen.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -61,45 +57,45 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Help");
     window->resize(570, 500);
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.set_fill_with_background_color(true);
-    widget.layout()->set_spacing(2);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>());
+    widget->set_fill_with_background_color(true);
+    widget->layout()->set_spacing(2);
 
-    auto& toolbar_container = widget.add<GUI::ToolbarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
+    auto toolbar_container = TRY(widget->try_add<GUI::ToolbarContainer>());
+    auto toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
-    auto& splitter = widget.add<GUI::HorizontalSplitter>();
-    splitter.layout()->set_spacing(5);
+    auto splitter = TRY(widget->try_add<GUI::HorizontalSplitter>());
+    splitter->layout()->set_spacing(5);
 
-    auto model = ManualModel::create();
+    auto manual_model = ManualModel::create();
 
-    auto& left_tab_bar = splitter.add<GUI::TabWidget>();
-    auto& tree_view_container = left_tab_bar.add_tab<GUI::Widget>("Browse");
-    tree_view_container.set_layout<GUI::VerticalBoxLayout>();
-    tree_view_container.layout()->set_margins(4);
-    auto& tree_view = tree_view_container.add<GUI::TreeView>();
-    auto& search_view = left_tab_bar.add_tab<GUI::Widget>("Search");
-    search_view.set_layout<GUI::VerticalBoxLayout>();
-    search_view.layout()->set_margins(4);
-    auto& search_box = search_view.add<GUI::TextBox>();
-    auto& search_list_view = search_view.add<GUI::ListView>();
-    search_box.set_fixed_height(20);
-    search_box.set_placeholder("Search...");
-    search_box.on_change = [&] {
-        if (auto model = search_list_view.model()) {
+    auto left_tab_bar = TRY(splitter->try_add<GUI::TabWidget>());
+    auto tree_view_container = TRY(left_tab_bar->try_add_tab<GUI::Widget>("Browse"));
+    TRY(tree_view_container->try_set_layout<GUI::VerticalBoxLayout>());
+    tree_view_container->layout()->set_margins(4);
+    auto tree_view = TRY(tree_view_container->try_add<GUI::TreeView>());
+    auto search_view = TRY(left_tab_bar->try_add_tab<GUI::Widget>("Search"));
+    TRY(search_view->try_set_layout<GUI::VerticalBoxLayout>());
+    search_view->layout()->set_margins(4);
+    auto search_box = TRY(search_view->try_add<GUI::TextBox>());
+    auto search_list_view = TRY(search_view->try_add<GUI::ListView>());
+    search_box->set_fixed_height(20);
+    search_box->set_placeholder("Search...");
+    search_box->on_change = [&] {
+        if (auto* model = search_list_view->model()) {
             auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-            search_model.set_filter_term(search_box.text());
+            search_model.set_filter_term(search_box->text());
             search_model.invalidate();
         }
     };
-    search_list_view.set_model(GUI::FilteringProxyModel::construct(model));
-    search_list_view.model()->invalidate();
+    search_list_view->set_model(GUI::FilteringProxyModel::construct(manual_model));
+    search_list_view->model()->invalidate();
 
-    tree_view.set_model(model);
-    left_tab_bar.set_fixed_width(200);
+    tree_view->set_model(manual_model);
+    left_tab_bar->set_fixed_width(200);
 
-    auto& page_view = splitter.add<Web::OutOfProcessWebView>();
+    auto page_view = TRY(splitter->try_add<Web::OutOfProcessWebView>());
 
     History history;
 
@@ -114,11 +110,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto open_page = [&](const String& path) {
         if (path.is_null()) {
             window->set_title("Help");
-            page_view.load_empty_document();
+            page_view->load_empty_document();
             return;
         }
 
-        auto source_result = model->page_view(path);
+        auto source_result = manual_model->page_view(path);
         if (source_result.is_error()) {
             GUI::MessageBox::show(window, String::formatted("{}", source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
             return;
@@ -133,15 +129,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto url = URL::create_with_file_protocol(path);
-        page_view.load_html(html, url);
+        page_view->load_html(html, url);
 
         app->deferred_invoke([&, path] {
-            auto tree_view_index = model->index_from_path(path);
+            auto tree_view_index = manual_model->index_from_path(path);
             if (tree_view_index.has_value()) {
-                tree_view.expand_tree(tree_view_index.value().parent());
-                tree_view.selection().set(tree_view_index.value());
+                tree_view->expand_tree(tree_view_index.value().parent());
+                tree_view->selection().set(tree_view_index.value());
 
-                String page_and_section = model->page_and_section(tree_view_index.value());
+                String page_and_section = manual_model->page_and_section(tree_view_index.value());
                 window->set_title(String::formatted("{} - Help", page_and_section));
             } else {
                 window->set_title("Help");
@@ -149,8 +145,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     };
 
-    tree_view.on_selection_change = [&] {
-        String path = model->page_path(tree_view.selection().first());
+    tree_view->on_selection_change = [&] {
+        String path = manual_model->page_path(tree_view->selection().first());
         if (path.is_null())
             return;
 
@@ -159,8 +155,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         open_page(path);
     };
 
-    tree_view.on_toggle = [&](const GUI::ModelIndex& index, const bool open) {
-        model->update_section_node_on_toggle(index, open);
+    tree_view->on_toggle = [&](GUI::ModelIndex const& index, bool open) {
+        manual_model->update_section_node_on_toggle(index, open);
     };
 
     auto open_external = [&](auto& url) {
@@ -171,31 +167,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::Type::Error);
         }
     };
-    search_list_view.on_selection_change = [&] {
-        const auto& index = search_list_view.selection().first();
+    search_list_view->on_selection_change = [&] {
+        auto const& index = search_list_view->selection().first();
         if (!index.is_valid())
             return;
 
-        auto view_model = search_list_view.model();
+        auto* view_model = search_list_view->model();
         if (!view_model) {
-            page_view.load_empty_document();
+            page_view->load_empty_document();
             return;
         }
         auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
         const auto& mapped_index = search_model.map(index);
-        String path = model->page_path(mapped_index);
+        String path = manual_model->page_path(mapped_index);
         if (path.is_null()) {
-            page_view.load_empty_document();
+            page_view->load_empty_document();
             return;
         }
-        tree_view.selection().clear();
-        tree_view.selection().add(mapped_index);
+        tree_view->selection().clear();
+        tree_view->selection().add(mapped_index);
         history.push(path);
         update_actions();
         open_page(path);
     };
 
-    page_view.on_link_click = [&](auto& url, auto&, unsigned) {
+    page_view->on_link_click = [&](auto& url, auto&, unsigned) {
         if (url.protocol() != "file") {
             open_external(url);
             return;
@@ -205,10 +201,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             open_external(url);
             return;
         }
-        auto tree_view_index = model->index_from_path(path);
+        auto tree_view_index = manual_model->index_from_path(path);
         if (tree_view_index.has_value()) {
-            dbgln("Found path _{}_ in model at index {}", path, tree_view_index.value());
-            tree_view.selection().set(tree_view_index.value());
+            dbgln("Found path _{}_ in manual_model at index {}", path, tree_view_index.value());
+            tree_view->selection().set(tree_view_index.value());
             return;
         }
         history.push(path);
@@ -238,43 +234,43 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         open_page(path);
     });
 
-    toolbar.add_action(*go_back_action);
-    toolbar.add_action(*go_forward_action);
-    toolbar.add_action(*go_home_action);
+    TRY(toolbar->try_add_action(*go_back_action));
+    TRY(toolbar->try_add_action(*go_forward_action));
+    TRY(toolbar->try_add_action(*go_home_action));
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& go_menu = window->add_menu("&Go");
-    go_menu.add_action(*go_back_action);
-    go_menu.add_action(*go_forward_action);
-    go_menu.add_action(*go_home_action);
+    auto go_menu = TRY(window->try_add_menu("&Go"));
+    TRY(go_menu->try_add_action(*go_back_action));
+    TRY(go_menu->try_add_action(*go_forward_action));
+    TRY(go_menu->try_add_action(*go_home_action));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", app_icon, window)));
 
     auto context_menu = TRY(GUI::Menu::try_create());
-    context_menu->add_action(*go_back_action);
-    context_menu->add_action(*go_forward_action);
-    context_menu->add_action(*go_home_action);
-    context_menu->add_separator();
+    TRY(context_menu->try_add_action(*go_back_action));
+    TRY(context_menu->try_add_action(*go_forward_action));
+    TRY(context_menu->try_add_action(*go_home_action));
+    TRY(context_menu->try_add_separator());
 
     RefPtr<GUI::Action> copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
-        auto selected_text = page_view.selected_text();
+        auto selected_text = page_view->selected_text();
         if (!selected_text.is_empty())
             GUI::Clipboard::the().set_plain_text(selected_text);
     });
-    context_menu->add_action(*copy_action);
+    TRY(context_menu->try_add_action(*copy_action));
 
     RefPtr<GUI::Action> select_all_function = GUI::CommonActions::make_select_all_action([&](auto&) {
-        page_view.select_all();
+        page_view->select_all();
     });
-    context_menu->add_action(*select_all_function);
+    TRY(context_menu->try_add_action(*select_all_function));
 
-    page_view.on_context_menu_request = [&](auto& screen_position) {
-        copy_action->set_enabled(!page_view.selected_text().is_empty());
+    page_view->on_context_menu_request = [&](auto& screen_position) {
+        copy_action->set_enabled(!page_view->selected_text().is_empty());
         context_menu->popup(screen_position);
     };
 
@@ -285,33 +281,33 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             update_actions();
             open_page(url.path());
         } else {
-            left_tab_bar.set_active_widget(&search_view);
-            search_box.set_text(start_page);
-            if (auto model = search_list_view.model()) {
+            left_tab_bar->set_active_widget(search_view);
+            search_box->set_text(start_page);
+            if (auto* model = search_list_view->model()) {
                 auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-                search_model.set_filter_term(search_box.text());
+                search_model.set_filter_term(search_box->text());
             }
         }
     } else {
         go_home_action->activate();
     }
 
-    auto& statusbar = widget.add<GUI::Statusbar>();
+    auto statusbar = TRY(widget->try_add<GUI::Statusbar>());
     app->on_action_enter = [&statusbar](GUI::Action const& action) {
-        statusbar.set_override_text(action.status_tip());
+        statusbar->set_override_text(action.status_tip());
     };
     app->on_action_leave = [&statusbar](GUI::Action const&) {
-        statusbar.set_override_text({});
+        statusbar->set_override_text({});
     };
 
-    page_view.on_link_hover = [&](URL const& url) {
+    page_view->on_link_hover = [&](URL const& url) {
         if (url.is_valid())
-            statusbar.set_text(url.to_string());
+            statusbar->set_text(url.to_string());
         else
-            statusbar.set_text({});
+            statusbar->set_text({});
     };
 
-    window->set_focused_widget(&left_tab_bar);
+    window->set_focused_widget(left_tab_bar);
     window->show();
 
     return app->exec();
