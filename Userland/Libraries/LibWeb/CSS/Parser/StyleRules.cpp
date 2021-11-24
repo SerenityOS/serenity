@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS {
 
@@ -70,20 +71,7 @@ void append_with_to_string(StringBuilder& builder, SeparatorType& separator, Col
             first = false;
         else
             builder.append(separator);
-        builder.append(item.to_debug_string());
-    }
-}
-
-template<class SeparatorType, class CollectionType>
-void append_raw(StringBuilder& builder, SeparatorType& separator, CollectionType& collection)
-{
-    bool first = true;
-    for (auto& item : collection) {
-        if (first)
-            first = false;
-        else
-            builder.append(separator);
-        builder.append(item);
+        builder.append(item.to_string());
     }
 }
 
@@ -109,7 +97,7 @@ String StyleRule::to_string() const
 
     if (m_type == Type::At) {
         builder.append("@");
-        builder.append(m_name);
+        serialize_an_identifier(builder, m_name);
     }
 
     append_with_to_string(builder, " ", m_prelude);
@@ -127,7 +115,7 @@ String StyleBlockRule::to_string() const
     StringBuilder builder;
 
     builder.append(m_token.bracket_string());
-    append_with_to_string(builder, ", ", m_values);
+    append_with_to_string(builder, " ", m_values);
     builder.append(m_token.bracket_mirror_string());
 
     return builder.to_string();
@@ -135,21 +123,16 @@ String StyleBlockRule::to_string() const
 
 String StyleComponentValueRule::to_string() const
 {
-    StringBuilder builder;
-
     switch (m_type) {
     case StyleComponentValueRule::ComponentType::Token:
-        builder.append(m_token.to_string());
-        break;
+        return m_token.to_string();
     case StyleComponentValueRule::ComponentType::Function:
-        builder.append(m_function->to_string());
-        break;
+        return m_function->to_string();
     case StyleComponentValueRule::ComponentType::Block:
-        builder.append(m_block->to_string());
-        break;
+        return m_block->to_string();
+    default:
+        VERIFY_NOT_REACHED();
     }
-
-    return builder.to_string();
 }
 
 String StyleComponentValueRule::to_debug_string() const
@@ -178,7 +161,7 @@ String StyleDeclarationRule::to_string() const
 {
     StringBuilder builder;
 
-    builder.append(m_name);
+    serialize_an_identifier(builder, m_name);
     builder.append(": ");
     append_with_to_string(builder, " ", m_values);
 
@@ -192,9 +175,9 @@ String StyleFunctionRule::to_string() const
 {
     StringBuilder builder;
 
-    builder.append(m_name);
+    serialize_an_identifier(builder, m_name);
     builder.append("(");
-    append_with_to_string(builder, ", ", m_values);
+    append_with_to_string(builder, " ", m_values);
     builder.append(")");
 
     return builder.to_string();
