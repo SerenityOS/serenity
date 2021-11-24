@@ -48,7 +48,7 @@ MatchResult Supports::InParens::evaluate() const
 
 MatchResult Supports::Feature::evaluate() const
 {
-    auto style_property = Parser({}, "").convert_to_style_property(declaration);
+    auto style_property = Parser({}, declaration).parse_as_declaration();
     if (style_property.has_value())
         return MatchResult::True;
     return MatchResult::False;
