@@ -40,6 +40,36 @@
     }
 
     @GUI::GroupBox {
+        title: "Appearance"
+        fixed_height: 64
+
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                fixed_width: 32
+            }
+
+            @GUI::Label {
+                text: "Show bookmarks:"
+                text_alignment: "CenterLeft"
+                fixed_width: 110
+            }
+
+            @GUI::CheckBox {
+                name: "show_bookmarks_bar_checkbox"
+            }
+        }
+    }
+
+    @GUI::GroupBox {
         title: "Downloads"
         fixed_height: 70
 
