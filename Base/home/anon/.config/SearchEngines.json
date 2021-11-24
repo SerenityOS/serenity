@@ -1,0 +1,26 @@
+[
+    {
+        "title": "Bing",
+        "url_format": "https://www.bing.com/search?q={}"
+    },
+    {
+        "title": "DuckDuckGo",
+        "url_format": "https://duckduckgo.com/?q={}"
+    },
+    {
+        "title": "FrogFind",
+        "url_format": "https://frogfind.com/?q={}"
+    },
+    {
+        "title": "GitHub",
+        "url_format": "https://github.com/search?q={}"
+    },
+    {
+        "title": "Google",
+        "url_format": "https://google.com/search?q={}"
+    },
+    {
+        "title": "Yandex",
+        "url_format": "https://yandex.com/search/?text={}"
+    }
+]
