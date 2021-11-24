@@ -119,8 +119,8 @@ public:
     bool is_muted() const { return m_muted; }
     void set_muted(bool);
 
-    int audiodevice_set_sample_rate(u16 sample_rate);
-    u16 audiodevice_get_sample_rate() const;
+    int audiodevice_set_sample_rate(u32 sample_rate);
+    u32 audiodevice_get_sample_rate() const;
 
 private:
     Mixer(NonnullRefPtr<Core::ConfigFile> config);
