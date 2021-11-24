@@ -99,7 +99,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> u
     auto user_address = FlatPtr(params.userspace_address);
     auto user_address2 = FlatPtr(params.userspace_address2);
 
-    auto do_wait = [&](u32 bitset) -> int {
+    auto do_wait = [&](u32 bitset) -> ErrorOr<FlatPtr> {
         bool did_create;
         RefPtr<FutexQueue> futex_queue;
         do {
@@ -136,7 +136,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> u
         return 0;
     };
 
-    auto do_requeue = [&](Optional<u32> val3) -> int {
+    auto do_requeue = [&](Optional<u32> val3) -> ErrorOr<FlatPtr> {
         auto user_value = user_atomic_load_relaxed(params.userspace_address);
         if (!user_value.has_value())
             return EFAULT;
@@ -204,7 +204,7 @@ ErrorOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> u
         if (!oldval.has_value())
             return EFAULT;
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
-        int result = do_wake(user_address, params.val, {});
+        auto result = do_wake(user_address, params.val, {});
         if (params.val2 > 0) {
             bool compare_result;
             switch (_FUTEX_CMP(params.val3)) {
