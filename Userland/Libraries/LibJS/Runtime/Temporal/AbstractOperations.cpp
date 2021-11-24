@@ -1272,10 +1272,16 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateString, iso_string);
     }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 3. If isoString contains a UTCDesignator, then
+    if (parse_result->utc_designator.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateStringUTCDesignator, iso_string);
+    }
+
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalDate { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
@@ -1293,10 +1299,16 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
     }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 3. If isoString contains a UTCDesignator, then
+    if (parse_result->utc_designator.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeStringUTCDesignator, iso_string);
+    }
+
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Return result.
+    // 5. Return result.
     return result;
 }
 
@@ -1322,19 +1334,25 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayString, iso_string);
     }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 3. If isoString contains a UTCDesignator, then
+    if (parse_result->utc_designator.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthDayStringUTCDesignator, iso_string);
+    }
+
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Let year be result.[[Year]].
+    // 5. Let year be result.[[Year]].
     Optional<i32> year = result.year;
 
-    // 5. If no part of isoString is produced by the DateYear production, then
+    // 6. If no part of isoString is produced by the DateYear production, then
     if (!parse_result->date_year.has_value()) {
         // a. Set year to undefined.
         year = {};
     }
 
-    // 6. Return the Record { [[Year]]: year, [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    // 7. Return the Record { [[Year]]: year, [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalMonthDay { .year = year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 
@@ -1401,10 +1419,16 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeString, iso_string);
     }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 3. If isoString contains a UTCDesignator, then
+    if (parse_result->utc_designator.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTimeStringUTCDesignator, iso_string);
+    }
+
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
+    // 5. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
@@ -1518,10 +1542,16 @@ ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(GlobalObje
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthString, iso_string);
     }
 
-    // 3. Let result be ? ParseISODateTime(isoString).
+    // 3. If isoString contains a UTCDesignator, then
+    if (parse_result->utc_designator.has_value()) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidYearMonthStringUTCDesignator, iso_string);
+    }
+
+    // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 4. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    // 5. Return the Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalYearMonth { .year = result.year, .month = result.month, .day = result.day, .calendar = move(result.calendar) };
 }
 

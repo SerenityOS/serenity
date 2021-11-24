@@ -96,7 +96,7 @@ describe("correct behavior", () => {
     });
 
     test("PlainDateTime string argument", () => {
-        const plainDateTime = Temporal.PlainDateTime.from("2021-07-06T23:42:01Z");
+        const plainDateTime = Temporal.PlainDateTime.from("2021-07-06T23:42:01");
         expect(plainDateTime.year).toBe(2021);
         expect(plainDateTime.month).toBe(7);
         expect(plainDateTime.day).toBe(6);
@@ -176,5 +176,14 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainDateTime.from(zonedDateTime);
         }).toThrowWithMessage(TypeError, "null is not a function");
+    });
+
+    test("string must not contain a UTC designator", () => {
+        expect(() => {
+            Temporal.PlainDateTime.from("2021-07-06T23:42:01Z");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid date time string '2021-07-06T23:42:01Z': must not contain a UTC designator"
+        );
     });
 });
