@@ -1113,7 +1113,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComp
         TokenStream block_tokens { first_token.block().values() };
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             return Supports::Feature {
-                .declaration = declaration.release_value()
+                .declaration = declaration->to_string()
             };
         }
     }
