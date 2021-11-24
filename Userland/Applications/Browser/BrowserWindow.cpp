@@ -110,9 +110,12 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
     m_window_actions.on_show_bookmarks_bar = [](auto& action) {
         Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
+        Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", action.is_checked());
     };
 
-    m_window_actions.show_bookmarks_bar_action().set_checked(true);
+    bool show_bookmarks_bar = Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true);
+    m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
+    Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
     build_menus();
 
