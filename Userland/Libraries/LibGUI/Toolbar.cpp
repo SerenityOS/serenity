@@ -88,17 +88,27 @@ private:
     }
 };
 
-GUI::Button& Toolbar::add_action(Action& action)
+ErrorOr<NonnullRefPtr<GUI::Button>> Toolbar::try_add_action(Action& action)
 {
-    auto item = make<Item>();
+    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
     item->type = Item::Type::Action;
     item->action = action;
 
-    auto& button = add<ToolbarButton>(action);
-    button.set_fixed_size(m_button_size + 8, m_button_size + 8);
+    // NOTE: Grow the m_items capacity before potentially adding a child widget.
+    //       This avoids having to untangle the child widget in case of allocation failure.
+    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
-    m_items.append(move(item));
+    auto button = TRY(try_add<ToolbarButton>(action));
+    button->set_fixed_size(m_button_size + 8, m_button_size + 8);
+
+    m_items.unchecked_append(move(item));
     return button;
+}
+
+GUI::Button& Toolbar::add_action(Action& action)
+{
+    auto button = MUST(try_add_action(action));
+    return *button;
 }
 
 void Toolbar::add_separator()
