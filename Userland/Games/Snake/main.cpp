@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("Snake");
 
@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-snake");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(false);
     window->set_title("Snake");
