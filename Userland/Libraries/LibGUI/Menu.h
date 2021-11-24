@@ -34,10 +34,11 @@ public:
 
     ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
     ErrorOr<void> try_add_separator();
+    ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(String name);
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
-    Menu& add_submenu(const String& name);
+    Menu& add_submenu(String name);
 
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();
