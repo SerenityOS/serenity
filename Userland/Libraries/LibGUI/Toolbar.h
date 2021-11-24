@@ -18,6 +18,8 @@ public:
     virtual ~Toolbar() override;
 
     ErrorOr<NonnullRefPtr<GUI::Button>> try_add_action(GUI::Action&);
+    ErrorOr<void> try_add_separator();
+
     GUI::Button& add_action(GUI::Action&);
     void add_separator();
 

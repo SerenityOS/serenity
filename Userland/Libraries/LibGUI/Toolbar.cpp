@@ -111,12 +111,21 @@ GUI::Button& Toolbar::add_action(Action& action)
     return *button;
 }
 
+ErrorOr<void> Toolbar::try_add_separator()
+{
+    // NOTE: Grow the m_items capacity before potentially adding a child widget.
+    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
+
+    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
+    item->type = Item::Type::Separator;
+    TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
+    m_items.unchecked_append(move(item));
+    return {};
+}
+
 void Toolbar::add_separator()
 {
-    auto item = make<Item>();
-    item->type = Item::Type::Separator;
-    add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal);
-    m_items.append(move(item));
+    MUST(try_add_separator());
 }
 
 void Toolbar::paint_event(PaintEvent& event)
