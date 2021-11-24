@@ -9,6 +9,8 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <fcntl.h>
 #include <spawn.h>
@@ -43,7 +45,7 @@ static pid_t pipe_to_pager(String const& command)
     return pid;
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int view_width = 0;
     if (isatty(STDOUT_FILENO)) {
@@ -55,22 +57,10 @@ int main(int argc, char* argv[])
     if (view_width == 0)
         view_width = 80;
 
-    if (pledge("stdio rpath exec proc", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/usr/share/man", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio rpath exec proc", nullptr));
+    TRY(Core::System::unveil("/usr/share/man", "r"));
+    TRY(Core::System::unveil("/bin", "x"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     const char* section = nullptr;
     const char* name = nullptr;
@@ -81,8 +71,7 @@ int main(int argc, char* argv[])
     args_parser.add_positional_argument(section, "Section of the man page", "section", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(name, "Name of the man page", "name");
     args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager");
-
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto make_path = [name](const char* section) {
         return String::formatted("/usr/share/man/man{}/{}.md", section, name);
@@ -111,8 +100,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    auto file = Core::File::construct();
-    file->set_filename(make_path(section));
+    auto filename = make_path(section);
 
     String pager_command;
     if (pager)
@@ -121,15 +109,9 @@ int main(int argc, char* argv[])
         pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''"), StringView(section).replace("'", "'\\''"));
     pid_t pager_pid = pipe_to_pager(pager_command);
 
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        perror("Failed to open man page file");
-        exit(1);
-    }
+    auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
 
-    if (pledge("stdio proc", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio proc", nullptr));
 
     dbgln("Loading man page from {}", file->filename());
     auto buffer = file->read_all();
@@ -148,4 +130,5 @@ int main(int argc, char* argv[])
     fclose(stdout);
     int wstatus;
     waitpid(pager_pid, &wstatus, 0);
+    return 0;
 }
