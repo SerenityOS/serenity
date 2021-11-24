@@ -30,10 +30,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     srand(time(nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-2048");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
 
     Config::pledge_domains("2048");
 
