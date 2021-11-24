@@ -29,6 +29,14 @@ public:
 
 protected:
     RefPtr<BrowsingContext> m_nested_browsing_context;
+
+private:
+    virtual bool is_browsing_context_container() const override { return true; }
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::BrowsingContextContainer>() const { return is_browsing_context_container(); }
 }
