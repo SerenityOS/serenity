@@ -19,15 +19,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static pid_t pipe_to_pager(String const& command)
+static ErrorOr<pid_t> pipe_to_pager(String const& command)
 {
     char const* argv[] = { "sh", "-c", command.characters(), nullptr };
 
-    int stdout_pipe[2] = {};
-    if (pipe2(stdout_pipe, O_CLOEXEC)) {
-        perror("pipe2");
-        exit(1);
-    }
+    auto stdout_pipe = TRY(Core::System::pipe2(O_CLOEXEC));
+
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);
     posix_spawn_file_actions_adddup2(&action, stdout_pipe[0], STDIN_FILENO);
@@ -39,9 +36,9 @@ static pid_t pipe_to_pager(String const& command)
     }
     posix_spawn_file_actions_destroy(&action);
 
-    dup2(stdout_pipe[1], STDOUT_FILENO);
-    close(stdout_pipe[1]);
-    close(stdout_pipe[0]);
+    TRY(Core::System::dup2(stdout_pipe[1], STDOUT_FILENO));
+    TRY(Core::System::close(stdout_pipe[1]));
+    TRY(Core::System::close(stdout_pipe[0]));
     return pid;
 }
 
@@ -107,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         pager_command = pager;
     else
         pager_command = String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'", StringView(name).replace("'", "'\\''"), StringView(section).replace("'", "'\\''"));
-    pid_t pager_pid = pipe_to_pager(pager_command);
+    pid_t pager_pid = TRY(pipe_to_pager(pager_command));
 
     auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
 
