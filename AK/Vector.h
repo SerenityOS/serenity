@@ -253,6 +253,15 @@ public:
         ++m_size;
     }
 
+    ALWAYS_INLINE void unchecked_append(StorageType const* values, size_t count)
+    {
+        if (count == 0)
+            return;
+        VERIFY((size() + count) <= capacity());
+        TypedTransfer<StorageType>::copy(slot(m_size), values, count);
+        m_size += count;
+    }
+
     template<class... Args>
     void empend(Args&&... args) requires(!contains_reference)
     {
