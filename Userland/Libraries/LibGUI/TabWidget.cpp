@@ -44,13 +44,19 @@ TabWidget::~TabWidget()
 {
 }
 
-void TabWidget::add_widget(StringView title, Widget& widget)
+ErrorOr<void> TabWidget::try_add_widget(StringView title, Widget& widget)
 {
     m_tabs.append({ title, nullptr, &widget });
     add_child(widget);
     update_focus_policy();
     if (on_tab_count_change)
         on_tab_count_change(m_tabs.size());
+    return {};
+}
+
+void TabWidget::add_widget(StringView title, Widget& widget)
+{
+    MUST(try_add_widget(title, widget));
 }
 
 void TabWidget::remove_widget(Widget& widget)

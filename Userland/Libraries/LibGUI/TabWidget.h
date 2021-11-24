@@ -36,8 +36,18 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
+    ErrorOr<void> try_add_widget(StringView, Widget&);
+
     void add_widget(StringView, Widget&);
     void remove_widget(Widget&);
+
+    template<class T, class... Args>
+    ErrorOr<NonnullRefPtr<T>> try_add_tab(StringView title, Args&&... args)
+    {
+        auto t = TRY(T::try_create(forward<Args>(args)...));
+        TRY(try_add_widget(title, *t));
+        return *t;
+    }
 
     template<class T, class... Args>
     T& add_tab(StringView title, Args&&... args)
