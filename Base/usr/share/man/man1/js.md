@@ -22,6 +22,10 @@ Run `help()` in REPL mode to see its available built-in functions.
 ## Options
 
 * `-A`, `--dump-ast`: Dump the Abstract Syntax Tree after parsing the program.
+* `-d`, `--dump-bytecode`: Dump the bytecode
+* `-b`, `--run-bytecode`: Run the bytecode
+* `-p`, `--optimize-bytecode`: Optimize the bytecode
+* `-m`, `--as-module`: Treat as module
 * `-l`, `--print-last-result`: Print the result of the last statement executed.
 * `-g`, `--gc-on-every-allocation`: Run garbage collection on every allocation.
 * `-s`, `--no-syntax-highlight`: Disable live syntax highlighting in the REPL
