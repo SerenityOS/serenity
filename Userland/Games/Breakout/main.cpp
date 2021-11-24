@@ -18,14 +18,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);
     window->set_resizable(false);
     window->set_double_buffering_enabled(false);
