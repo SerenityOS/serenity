@@ -47,10 +47,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static void utmp_update(const char* tty, pid_t pid, bool create)
+static void utmp_update(String const& tty, pid_t pid, bool create)
 {
-    if (!tty)
-        return;
     int utmpupdate_pid = fork();
     if (utmpupdate_pid < 0) {
         perror("fork");
@@ -62,7 +60,7 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
         // including the heap! So resort to low-level APIs
         char pid_str[32];
         snprintf(pid_str, sizeof(pid_str), "%d", pid);
-        execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", pid_str, (create ? "-c" : "-d"), tty, nullptr);
+        execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", pid_str, (create ? "-c" : "-d"), tty.characters(), nullptr);
     } else {
     wait_again:
         int status = 0;
@@ -296,8 +294,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         VERIFY_NOT_REACHED();
     }
 
-    auto* pts_name = ptsname(ptm_fd);
-    utmp_update(pts_name, shell_pid, true);
+    auto ptsname = TRY(Core::System::ptsname(ptm_fd));
+    utmp_update(ptsname, shell_pid, true);
 
     auto app_icon = GUI::Icon::default_icon("app-terminal");
 
@@ -431,6 +429,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
-    utmp_update(pts_name, 0, false);
+    utmp_update(ptsname, 0, false);
     return result;
 }
