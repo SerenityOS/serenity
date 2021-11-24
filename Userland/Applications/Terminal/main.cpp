@@ -178,68 +178,68 @@ static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
     return window;
 }
 
-static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
+static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget& terminal)
 {
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Find in Terminal");
     window->set_resizable(false);
     window->resize(300, 90);
 
-    auto& search = window->set_main_widget<GUI::Widget>();
-    search.set_fill_with_background_color(true);
-    search.set_background_role(ColorRole::Button);
-    search.set_layout<GUI::VerticalBoxLayout>();
-    search.layout()->set_margins(4);
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_background_role(ColorRole::Button);
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    main_widget->layout()->set_margins(4);
 
-    auto& find = search.add<GUI::Widget>();
-    find.set_layout<GUI::HorizontalBoxLayout>();
-    find.layout()->set_margins(4);
-    find.set_fixed_height(30);
+    auto find = TRY(main_widget->try_add<GUI::Widget>());
+    TRY(find->try_set_layout<GUI::HorizontalBoxLayout>());
+    find->layout()->set_margins(4);
+    find->set_fixed_height(30);
 
-    auto& find_textbox = find.add<GUI::TextBox>();
-    find_textbox.set_fixed_width(230);
-    find_textbox.set_focus(true);
+    auto find_textbox = TRY(find->try_add<GUI::TextBox>());
+    find_textbox->set_fixed_width(230);
+    find_textbox->set_focus(true);
     if (terminal.has_selection())
-        find_textbox.set_text(terminal.selected_text().replace("\n", " ", true));
-    auto& find_backwards = find.add<GUI::Button>();
-    find_backwards.set_fixed_width(25);
-    find_backwards.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors());
-    auto& find_forwards = find.add<GUI::Button>();
-    find_forwards.set_fixed_width(25);
-    find_forwards.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors());
+        find_textbox->set_text(terminal.selected_text().replace("\n", " ", true));
+    auto find_backwards = TRY(find->try_add<GUI::Button>());
+    find_backwards->set_fixed_width(25);
+    find_backwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").release_value_but_fixme_should_propagate_errors());
+    auto find_forwards = TRY(find->try_add<GUI::Button>());
+    find_forwards->set_fixed_width(25);
+    find_forwards->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").release_value_but_fixme_should_propagate_errors());
 
-    find_textbox.on_return_pressed = [&]() {
-        find_backwards.click();
+    find_textbox->on_return_pressed = [find_backwards]() mutable {
+        find_backwards->click();
     };
 
-    find_textbox.on_shift_return_pressed = [&]() {
-        find_forwards.click();
+    find_textbox->on_shift_return_pressed = [find_forwards]() mutable {
+        find_forwards->click();
     };
 
-    auto& match_case = search.add<GUI::CheckBox>("Case sensitive");
-    auto& wrap_around = search.add<GUI::CheckBox>("Wrap around");
+    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"));
+    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"));
 
-    find_backwards.on_click = [&](auto) {
-        auto needle = find_textbox.text();
+    find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) mutable {
+        auto needle = find_textbox->text();
         if (needle.is_empty()) {
             return;
         }
 
-        auto found_range = terminal.find_previous(needle, terminal.normalized_selection().start(), match_case.is_checked(), wrap_around.is_checked());
+        auto found_range = terminal.find_previous(needle, terminal.normalized_selection().start(), match_case->is_checked(), wrap_around->is_checked());
 
         if (found_range.is_valid()) {
             terminal.scroll_to_row(found_range.start().row());
             terminal.set_selection(found_range);
         }
     };
-    find_forwards.on_click = [&](auto) {
-        auto needle = find_textbox.text();
+    find_forwards->on_click = [&](auto) {
+        auto needle = find_textbox->text();
         if (needle.is_empty()) {
             return;
         }
 
-        auto found_range = terminal.find_next(needle, terminal.normalized_selection().end(), match_case.is_checked(), wrap_around.is_checked());
+        auto found_range = terminal.find_next(needle, terminal.normalized_selection().end(), match_case->is_checked(), wrap_around->is_checked());
 
         if (found_range.is_valid()) {
             terminal.scroll_to_row(found_range.start().row());
@@ -329,7 +329,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     RefPtr<GUI::Window> settings_window;
-    RefPtr<GUI::Window> find_window;
+
+    auto find_window = TRY(create_find_window(terminal));
 
     auto new_opacity = Config::read_i32("Terminal", "Window", "Opacity", 255);
     terminal->set_opacity(new_opacity);
@@ -394,8 +395,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
-            if (!find_window)
-                find_window = create_find_window(terminal);
             find_window->show();
             find_window->move_to_front();
         })));
@@ -415,8 +414,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window)));
 
     window->on_close = [&]() {
-        if (find_window)
-            find_window->close();
+        find_window->close();
         if (settings_window)
             settings_window->close();
     };
