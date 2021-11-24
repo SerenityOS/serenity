@@ -619,12 +619,12 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
     // 5. If type is "boolean", then
     if (type == Value::Type::Boolean) {
-        // a. Let value be ! ToBoolean(value).
+        // a. Set value to ! ToBoolean(value).
         value = Value(value.to_boolean());
     }
     // 6. If type is "string", then
     else {
-        // a. Let value be ? ToString(value).
+        // a. Set value to ? ToString(value).
         value = TRY(value.to_primitive_string(global_object));
     }
 
@@ -649,7 +649,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(GlobalObject& global_obje
     if (value.is_undefined())
         return fallback;
 
-    // 2. Let value be ? ToNumber(value).
+    // 2. Set value to ? ToNumber(value).
     value = TRY(value.to_number(global_object));
 
     // 3. If value is NaN or less than minimum or greater than maximum, throw a RangeError exception.
