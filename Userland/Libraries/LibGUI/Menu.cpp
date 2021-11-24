@@ -49,12 +49,21 @@ void Menu::set_icon(const Gfx::Bitmap* icon)
     m_icon = icon;
 }
 
-void Menu::add_action(NonnullRefPtr<Action> action)
+ErrorOr<void> Menu::try_add_action(NonnullRefPtr<Action> action)
 {
-    auto item = make<MenuItem>(m_menu_id, move(action));
+    // NOTE: We grow the vector first, to get allocation failure handled immediately.
+    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
+
+    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, move(action))));
     if (m_menu_id != -1)
         realize_menu_item(*item, m_items.size());
-    m_items.append(move(item));
+    m_items.unchecked_append(move(item));
+    return {};
+}
+
+void Menu::add_action(NonnullRefPtr<Action> action)
+{
+    MUST(try_add_action(move(action)));
 }
 
 Menu& Menu::add_submenu(const String& name)
@@ -69,12 +78,21 @@ Menu& Menu::add_submenu(const String& name)
     return submenu;
 }
 
-void Menu::add_separator()
+ErrorOr<void> Menu::try_add_separator()
 {
-    auto item = make<MenuItem>(m_menu_id, MenuItem::Type::Separator);
+    // NOTE: We grow the vector first, to get allocation failure handled immediately.
+    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
+
+    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, MenuItem::Type::Separator)));
     if (m_menu_id != -1)
         realize_menu_item(*item, m_items.size());
-    m_items.append(move(item));
+    m_items.unchecked_append(move(item));
+    return {};
+}
+
+void Menu::add_separator()
+{
+    MUST(try_add_separator());
 }
 
 void Menu::realize_if_needed(const RefPtr<Action>& default_action)
