@@ -66,16 +66,25 @@ void Menu::add_action(NonnullRefPtr<Action> action)
     MUST(try_add_action(move(action)));
 }
 
-Menu& Menu::add_submenu(const String& name)
+ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(String name)
 {
-    auto submenu = Menu::construct(name);
+    // NOTE: We grow the vector first, to get allocation failure handled immediately.
+    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
-    auto item = make<MenuItem>(m_menu_id, submenu);
+    auto submenu = TRY(Menu::try_create(name));
+
+    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, submenu)));
     if (m_menu_id != -1)
         realize_menu_item(*item, m_items.size());
-    m_items.append(move(item));
 
+    m_items.unchecked_append(move(item));
     return submenu;
+}
+
+Menu& Menu::add_submenu(String name)
+{
+    auto menu = MUST(try_add_submenu(move(name)));
+    return menu;
 }
 
 ErrorOr<void> Menu::try_add_separator()
