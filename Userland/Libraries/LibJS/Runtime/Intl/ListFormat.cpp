@@ -209,7 +209,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
     return parts;
 }
 
-// 13.1.3 FormatList ( listFormat, list )
+// 13.1.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
 String format_list(ListFormat const& list_format, Vector<String> const& list)
 {
     // 1. Let parts be CreatePartsFromList(listFormat, list).
