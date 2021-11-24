@@ -40,6 +40,14 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
     int rc = syscall(SC_unveil, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc, {});
 }
+
+ErrorOr<Array<int, 2>> pipe2(int flags)
+{
+    Array<int, 2> fds;
+    if (::pipe2(fds.data(), flags) < 0)
+        return Error::from_syscall("pipe2"sv, -errno);
+    return fds;
+}
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
