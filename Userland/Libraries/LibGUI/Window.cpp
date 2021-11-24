@@ -1188,14 +1188,20 @@ Gfx::Bitmap* Window::back_bitmap()
     return m_back_store ? &m_back_store->bitmap() : nullptr;
 }
 
-Menu& Window::add_menu(String name)
+ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
 {
-    Menu& menu = m_menubar->add_menu({}, move(name));
+    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
     if (m_window_id) {
-        menu.realize_menu_if_needed();
-        WindowServerConnection::the().async_add_menu(m_window_id, menu.menu_id());
+        menu->realize_menu_if_needed();
+        WindowServerConnection::the().async_add_menu(m_window_id, menu->menu_id());
     }
     return menu;
+}
+
+Menu& Window::add_menu(String name)
+{
+    auto menu = MUST(try_add_menu(move(name)));
+    return *menu;
 }
 
 bool Window::is_modified() const

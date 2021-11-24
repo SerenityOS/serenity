@@ -202,6 +202,7 @@ public:
     void did_disable_focused_widget(Badge<Widget>);
 
     Menu& add_menu(String name);
+    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
 
     void flush_pending_paints_immediately();
 
