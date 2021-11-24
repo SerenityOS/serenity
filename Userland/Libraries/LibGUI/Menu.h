@@ -32,6 +32,9 @@ public:
 
     Action* action_at(size_t);
 
+    ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
+    ErrorOr<void> try_add_separator();
+
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
     Menu& add_submenu(const String& name);
