@@ -12,6 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
+#include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
@@ -70,7 +71,7 @@ public:
         MediaFeature feature;
         NonnullOwnPtrVector<MediaCondition> conditions;
 
-        bool evaluate(DOM::Window const&) const;
+        MatchResult evaluate(DOM::Window const&) const;
         String to_string() const;
     };
 
