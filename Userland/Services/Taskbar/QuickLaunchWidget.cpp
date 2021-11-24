@@ -8,6 +8,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
 #include <serenity.h>
 
 namespace Taskbar {
@@ -22,6 +23,16 @@ QuickLaunchWidget::QuickLaunchWidget()
     layout()->set_spacing(0);
     set_frame_thickness(0);
     set_fixed_height(24);
+
+    m_context_menu = GUI::Menu::construct();
+    m_context_menu_default_action = GUI::Action::create("&Remove", [this](auto&) {
+        Config::remove_key("Taskbar", quick_launch, m_context_menu_app_name);
+        auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
+        if (button) {
+            remove_child(*button);
+        }
+    });
+    m_context_menu->add_action(*m_context_menu_default_action);
 
     auto keys = Config::list_keys("Taskbar", quick_launch);
     for (auto& name : keys) {
@@ -70,6 +81,10 @@ void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullR
             if (disown(pid) < 0)
                 perror("disown");
         }
+    };
+    button->on_context_menu_request = [this, button_name](auto& context_menu_event) {
+        m_context_menu_app_name = button_name;
+        m_context_menu->popup(context_menu_event.screen_position(), m_context_menu_default_action);
     };
 }
 
