@@ -48,7 +48,7 @@ int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
 {
     cond->mutex = nullptr;
     cond->value = 0;
-    cond->clockid = attr ? attr->clockid : CLOCK_MONOTONIC_COARSE;
+    cond->clockid = attr ? attr->clockid : CLOCK_REALTIME_COARSE;
     return 0;
 }
 
