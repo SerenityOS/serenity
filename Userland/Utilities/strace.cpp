@@ -355,13 +355,16 @@ public:
         add_argument("{}", forward<T>(arg));
     }
 
-    void add_string_argument(Syscall::StringArgument const& string_argument)
+    void add_string_argument(Syscall::StringArgument const& string_argument, StringView trim_by = {})
     {
         if (string_argument.characters == nullptr)
             add_argument("null");
         else {
-            auto string = copy_from_process(string_argument.characters, string_argument.length);
-            add_argument("\"{}\"", StringView(string.data(), string.size()));
+            auto string_buffer = copy_from_process(string_argument.characters, string_argument.length);
+            auto view = StringView(string_buffer);
+            if (!trim_by.is_empty())
+                view = view.trim(trim_by);
+            add_argument("\"{}\"", view);
         }
     }
 
@@ -659,6 +662,11 @@ static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clo
     builder.add_arguments(clockid_name(clockid), copy_from_process(time));
 }
 
+static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters, size_t size)
+{
+    builder.add_string_argument({ characters, size }, "\0\n"sv);
+}
+
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -735,6 +743,9 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_clock_gettime:
         format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
+        break;
+    case SC_dbgputstr:
+        format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
         break;
     case SC_getuid:
     case SC_geteuid:
