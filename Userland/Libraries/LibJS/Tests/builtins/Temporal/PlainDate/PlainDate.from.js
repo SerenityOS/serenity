@@ -43,4 +43,10 @@ describe("errors", () => {
             Temporal.PlainDate.from(zonedDateTime);
         }).toThrowWithMessage(TypeError, "null is not a function");
     });
+
+    test("invalid date string", () => {
+        expect(() => {
+            Temporal.PlainDate.from("foo");
+        }).toThrowWithMessage(RangeError, "Invalid date string 'foo'");
+    });
 });
