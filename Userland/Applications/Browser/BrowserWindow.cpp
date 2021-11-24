@@ -46,6 +46,14 @@ static String bookmarks_file_path()
     return builder.to_string();
 }
 
+static String search_engines_file_path()
+{
+    StringBuilder builder;
+    builder.append(Core::StandardPaths::config_directory());
+    builder.append("/SearchEngines.json");
+    return builder.to_string();
+}
+
 BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
@@ -243,22 +251,6 @@ void BrowserWindow::build_menus()
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
     search_engine_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors());
     bool search_engine_set = false;
-    auto add_search_engine = [&](auto& name, auto& url_format) {
-        auto action = GUI::Action::create_checkable(
-            name, [&](auto&) {
-                g_search_engine = url_format;
-                Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
-            },
-            this);
-        search_engine_menu.add_action(action);
-        m_search_engine_actions.add_action(action);
-
-        if (g_search_engine == url_format) {
-            action->set_checked(true);
-            search_engine_set = true;
-        }
-        action->set_status_tip(url_format);
-    };
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [](auto&) {
@@ -270,12 +262,34 @@ void BrowserWindow::build_menus()
     m_search_engine_actions.add_action(*m_disable_search_engine_action);
     m_disable_search_engine_action->set_checked(true);
 
-    add_search_engine("Bing", "https://www.bing.com/search?q={}");
-    add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
-    add_search_engine("FrogFind", "https://frogfind.com/?q={}");
-    add_search_engine("GitHub", "https://github.com/search?q={}");
-    add_search_engine("Google", "https://google.com/search?q={}");
-    add_search_engine("Yandex", "https://yandex.com/search/?text={}");
+    auto search_engines_file = Core::File::construct(Browser::search_engines_file_path());
+    if (search_engines_file->open(Core::OpenMode::ReadOnly)) {
+        if (auto maybe_json = JsonValue::from_string(search_engines_file->read_all()); !maybe_json.is_error() && maybe_json.value().is_array()) {
+            auto json = maybe_json.release_value().as_array();
+            for (auto& json_item : json.values()) {
+                if (!json_item.is_object())
+                    continue;
+                auto search_engine = json_item.as_object();
+                auto name = search_engine.get("title").to_string();
+                auto url_format = search_engine.get("url_format").to_string();
+
+                auto action = GUI::Action::create_checkable(
+                    name, [&, url_format](auto&) {
+                        g_search_engine = url_format;
+                        Config::write_string("Browser", "Preferences", "SearchEngine", g_search_engine);
+                    },
+                    this);
+                search_engine_menu.add_action(action);
+                m_search_engine_actions.add_action(action);
+
+                if (g_search_engine == url_format) {
+                    action->set_checked(true);
+                    search_engine_set = true;
+                }
+                action->set_status_tip(url_format);
+            }
+        }
+    }
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
         String search_engine;
