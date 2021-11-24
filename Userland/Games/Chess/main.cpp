@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("Chess");
 
@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-chess");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     auto& widget = window->set_main_widget<ChessWidget>();
 
     TRY(Core::System::unveil("/res", "r"));
