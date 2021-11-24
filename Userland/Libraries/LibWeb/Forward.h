@@ -116,6 +116,7 @@ class DOMRectReadOnly;
 
 namespace Web::HTML {
 class BrowsingContext;
+class BrowsingContextContainer;
 class CanvasRenderingContext2D;
 class CloseEvent;
 class DOMParser;

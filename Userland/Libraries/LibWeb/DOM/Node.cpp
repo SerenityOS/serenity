@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -702,12 +703,21 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     } else if (is_element()) {
         object.add("type", "element");
 
-        auto element = static_cast<DOM::Element const*>(this);
+        auto const* element = static_cast<DOM::Element const*>(this);
         if (element->has_attributes()) {
             auto attributes = object.add_object("attributes");
             element->for_each_attribute([&attributes](auto& name, auto& value) {
                 attributes.add(name, value);
             });
+        }
+
+        if (element->is_browsing_context_container()) {
+            auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
+            if (auto const* content_document = container->content_document()) {
+                auto children = object.add_array("children");
+                JsonObjectSerializer<StringBuilder> content_document_object = children.add_object();
+                content_document->serialize_tree_as_json(content_document_object);
+            }
         }
     } else if (is_text()) {
         object.add("type", "text");
