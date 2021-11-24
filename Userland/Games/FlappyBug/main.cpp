@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("FlappyBug");
 
@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     u32 high_score = Config::read_i32("FlappyBug", "Game", "HighScore", 0);
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
     auto app_icon = GUI::Icon::default_icon("app-flappybug");
     window->set_icon(app_icon.bitmap_for_size(16));
