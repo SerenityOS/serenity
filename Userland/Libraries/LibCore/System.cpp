@@ -187,4 +187,12 @@ ErrorOr<int> dup2(int source_fd, int destination_fd)
     return fd;
 }
 
+ErrorOr<String> ptsname(int fd)
+{
+    auto* name = ::ptsname(fd);
+    if (!name)
+        return Error::from_syscall("ptsname"sv, -errno);
+    return String(name);
+}
+
 }
