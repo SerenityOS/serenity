@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -20,26 +20,15 @@ class Menubar : public Core::Object {
     C_OBJECT(Menubar);
 
 public:
-    ~Menubar() { }
+    virtual ~Menubar() override;
 
-    Menu& add_menu(Badge<Window>, String name)
-    {
-        auto& menu = add<Menu>(move(name));
-        m_menus.append(menu);
-        return menu;
-    }
+    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(Badge<Window>, String name);
+    Menu& add_menu(Badge<Window>, String name);
 
-    void for_each_menu(Function<IterationDecision(Menu&)> callback)
-    {
-        for (auto& menu : m_menus) {
-            if (callback(menu) == IterationDecision::Break) {
-                return;
-            }
-        }
-    }
+    void for_each_menu(Function<IterationDecision(Menu&)>);
 
 private:
-    Menubar() { }
+    Menubar();
 
     NonnullRefPtrVector<Menu> m_menus;
 };
