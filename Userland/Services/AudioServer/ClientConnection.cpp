@@ -73,7 +73,7 @@ Messages::AudioServer::GetSampleRateResponse ClientConnection::get_sample_rate()
     return { m_mixer.audiodevice_get_sample_rate() };
 }
 
-void ClientConnection::set_sample_rate(u16 sample_rate)
+void ClientConnection::set_sample_rate(u32 sample_rate)
 {
     m_mixer.audiodevice_set_sample_rate(sample_rate);
 }

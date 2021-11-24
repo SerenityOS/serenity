@@ -81,7 +81,7 @@ int main(int argc, char** argv)
                 break;
             }
             case AudioVariable::SampleRate: {
-                u16 sample_rate = audio_client->get_sample_rate();
+                u32 sample_rate = audio_client->get_sample_rate();
                 if (human_mode)
                     outln("Sample rate: {:5d} Hz", sample_rate);
                 else
