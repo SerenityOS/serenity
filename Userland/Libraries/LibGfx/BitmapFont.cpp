@@ -76,7 +76,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::unmasked_character_set() const
         auto index = glyph_index(code_point);
         if (index.has_value()) {
             memcpy(&new_widths[code_point], &m_glyph_widths[index.value()], 1);
-            memcpy(&new_rows[code_point * glyph_height()], &m_rows[index.value() * glyph_height()], bytes_per_glyph);
+            memcpy(&new_rows[code_point * bytes_per_glyph], &m_rows[index.value() * bytes_per_glyph], bytes_per_glyph);
         }
     }
     return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, s_max_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
@@ -107,7 +107,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
             continue;
         }
         memcpy(&new_widths[i - j * 256], &m_glyph_widths[i], 1);
-        memcpy(&new_rows[(i - j * 256) * glyph_height()], &m_rows[i * glyph_height()], bytes_per_glyph);
+        memcpy(&new_rows[(i - j * 256) * bytes_per_glyph], &m_rows[i * bytes_per_glyph], bytes_per_glyph);
     }
     return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
