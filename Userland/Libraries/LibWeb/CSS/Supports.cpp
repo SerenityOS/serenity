@@ -19,42 +19,20 @@ Supports::Supports(NonnullOwnPtr<Condition>&& condition)
     m_matches = result == MatchResult::True;
 }
 
-Supports::MatchResult Supports::Condition::evaluate() const
+MatchResult Supports::Condition::evaluate() const
 {
     switch (type) {
     case Type::Not:
         return negate(children.first().evaluate());
-    case Type::And: {
-        size_t true_results = 0;
-        for (auto& child : children) {
-            auto child_match = child.evaluate();
-            if (child_match == MatchResult::False)
-                return MatchResult::False;
-            if (child_match == MatchResult::True)
-                true_results++;
-        }
-        if (true_results == children.size())
-            return MatchResult::True;
-        return MatchResult::Unknown;
-    }
-    case Type::Or: {
-        size_t false_results = 0;
-        for (auto& child : children) {
-            auto child_match = child.evaluate();
-            if (child_match == MatchResult::True)
-                return MatchResult::True;
-            if (child_match == MatchResult::False)
-                false_results++;
-        }
-        if (false_results == children.size())
-            return MatchResult::False;
-        return MatchResult::Unknown;
-    }
+    case Type::And:
+        return evaluate_and(children, [](auto& child) { return child.evaluate(); });
+    case Type::Or:
+        return evaluate_or(children, [](auto& child) { return child.evaluate(); });
     }
     VERIFY_NOT_REACHED();
 }
 
-Supports::MatchResult Supports::InParens::evaluate() const
+MatchResult Supports::InParens::evaluate() const
 {
     return value.visit(
         [&](NonnullOwnPtr<Condition>& condition) {
@@ -63,12 +41,12 @@ Supports::MatchResult Supports::InParens::evaluate() const
         [&](Feature& feature) {
             return feature.evaluate();
         },
-        [&](GeneralEnclosed&) {
-            return MatchResult::Unknown;
+        [&](GeneralEnclosed& general_enclosed) {
+            return general_enclosed.evaluate();
         });
 }
 
-Supports::MatchResult Supports::Feature::evaluate() const
+MatchResult Supports::Feature::evaluate() const
 {
     auto style_property = Parser({}, "").convert_to_style_property(declaration);
     if (style_property.has_value())
