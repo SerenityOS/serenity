@@ -80,7 +80,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     // 23.1.3.35 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-    // With proposal, https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype-@@unscopables
+    // With proposal, https://tc39.es/proposal-array-find-from-last/#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
@@ -1174,7 +1174,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
     return Value(-1);
 }
 
-// 1 Array.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlast
+// 1 Array.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/#sec-array.prototype.findlast
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
 {
     auto predicate = vm.argument(0);
@@ -1213,7 +1213,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
     return js_undefined();
 }
 
-// 2 Array.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlastindex
+// 2 Array.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/#sec-array.prototype.findlastindex
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 {
     auto predicate = vm.argument(0);
@@ -1342,7 +1342,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::every)
     return Value(true);
 }
 
-// 23.1.3.29 Array.prototype.splice ( start, deleteCount, ...items ), https://tc39.es/ecma262#sec-array.prototype.splice
+// 23.1.3.29 Array.prototype.splice ( start, deleteCount, ...items ), https://tc39.es/ecma262/#sec-array.prototype.splice
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
     auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
