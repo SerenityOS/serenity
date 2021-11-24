@@ -62,6 +62,7 @@ set(SOURCES
     ListView.cpp
     Menu.cpp
     MenuItem.cpp
+    Menubar.cpp
     MessageBox.cpp
     Model.cpp
     ModelIndex.cpp
