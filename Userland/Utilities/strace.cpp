@@ -667,6 +667,11 @@ static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters,
     builder.add_string_argument({ characters, size }, "\0\n"sv);
 }
 
+static void format_get_process_name(FormattedSyscallBuilder& builder, char* buffer, size_t buffer_size)
+{
+    builder.add_string_argument({ buffer, buffer_size });
+}
+
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -747,12 +752,16 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
     case SC_dbgputstr:
         format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
         break;
+    case SC_get_process_name:
+        format_get_process_name(builder, (char*)arg1, (size_t)arg2);
+        break;
     case SC_getuid:
     case SC_geteuid:
     case SC_getgid:
     case SC_getegid:
     case SC_getpid:
     case SC_getppid:
+    case SC_gettid:
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
