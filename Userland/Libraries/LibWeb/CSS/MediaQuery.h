@@ -65,11 +65,13 @@ public:
             And,
             Or,
             Not,
+            GeneralEnclosed,
         };
 
         Type type;
         MediaFeature feature;
         NonnullOwnPtrVector<MediaCondition> conditions;
+        Optional<GeneralEnclosed> general_enclosed;
 
         MatchResult evaluate(DOM::Window const&) const;
         String to_string() const;
