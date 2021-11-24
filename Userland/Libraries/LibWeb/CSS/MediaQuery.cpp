@@ -106,6 +106,9 @@ String MediaQuery::MediaCondition::to_string() const
     case Type::Or:
         builder.join(" or ", conditions);
         break;
+    case Type::GeneralEnclosed:
+        builder.append(general_enclosed->to_string());
+        break;
     }
     builder.append(')');
     return builder.to_string();
@@ -122,6 +125,8 @@ MatchResult MediaQuery::MediaCondition::evaluate(DOM::Window const& window) cons
         return evaluate_and(conditions, [&](auto& child) { return child.evaluate(window); });
     case Type::Or:
         return evaluate_or(conditions, [&](auto& child) { return child.evaluate(window); });
+    case Type::GeneralEnclosed:
+        return general_enclosed->evaluate();
     }
     VERIFY_NOT_REACHED();
 }
