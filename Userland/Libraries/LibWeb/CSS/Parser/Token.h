@@ -157,6 +157,7 @@ public:
     String bracket_string() const;
     String bracket_mirror_string() const;
 
+    String to_string() const;
     String to_debug_string() const;
 
     Position const& start_position() const { return m_start_position; }
