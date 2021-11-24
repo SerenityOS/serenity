@@ -12,6 +12,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -105,13 +107,10 @@ static int run_command(Vector<char const*> const& command)
     }
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    signal(SIGINT, handle_signal);
-    if (pledge("stdio proc exec rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::signal(SIGINT, handle_signal));
+    TRY(Core::System::pledge("stdio proc exec rpath", nullptr));
 
     Vector<String> files_to_watch;
     Vector<char const*> command;
@@ -134,7 +133,7 @@ int main(int argc, char** argv)
     };
     args_parser.add_option(move(file_arg));
     args_parser.add_positional_argument(command, "Command to run", "command");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     command.append(nullptr);
 
@@ -169,8 +168,8 @@ int main(int argc, char** argv)
                 return 1;
             }
             if (!file_watcher.is_watching(file)) {
-                auto success_or_error = file_watcher.add_watch(file, Core::FileWatcherEvent::Type::MetadataModified);
-                if (success_or_error.is_error() && !success_or_error.value()) {
+                auto could_add_to_watch = TRY(file_watcher.add_watch(file, Core::FileWatcherEvent::Type::MetadataModified));
+                if (!could_add_to_watch) {
                     warnln("Could not add '{}' to watch list.", file);
                     return 1;
                 }
@@ -185,10 +184,7 @@ int main(int argc, char** argv)
             }
         }
     } else {
-        if (pledge("stdio proc exec", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
+        TRY(Core::System::pledge("stdio proc exec", nullptr));
 
         struct timeval interval;
         if (opt_interval <= 0) {
