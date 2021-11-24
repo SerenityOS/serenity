@@ -1269,7 +1269,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject& global_
     auto parse_result = parse_iso8601(Production::TemporalDateString, iso_string);
     if (!parse_result.has_value()) {
         // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeString, iso_string);
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateString, iso_string);
     }
 
     // 3. Let result be ? ParseISODateTime(isoString).
