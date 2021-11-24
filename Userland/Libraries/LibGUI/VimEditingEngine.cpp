@@ -971,13 +971,20 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_up(event);
                 switch_to_insert_mode();
                 return true;
-            // FIXME: Integrate these into vim motions too.
-            case (KeyCode::Key_LeftBrace):
-                move_to_previous_empty_lines_block();
+            case (KeyCode::Key_LeftBrace): {
+                auto amount = m_motion.amount() > 0 ? m_motion.amount() : 1;
+                m_motion.reset();
+                for (int i = 0; i < amount; i++)
+                    move_to_previous_empty_lines_block();
                 return true;
-            case (KeyCode::Key_RightBrace):
-                move_to_next_empty_lines_block();
+            }
+            case (KeyCode::Key_RightBrace): {
+                auto amount = m_motion.amount() > 0 ? m_motion.amount() : 1;
+                m_motion.reset();
+                for (int i = 0; i < amount; i++)
+                    move_to_next_empty_lines_block();
                 return true;
+            }
             case (KeyCode::Key_J): {
                 // Looks a bit strange, but join without a repeat, with 1 as the repeat or 2 as the repeat all join the current and next lines
                 auto amount = (m_motion.amount() > 2) ? (m_motion.amount() - 1) : 1;
