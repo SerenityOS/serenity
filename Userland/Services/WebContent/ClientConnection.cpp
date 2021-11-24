@@ -235,36 +235,42 @@ void ClientConnection::inspect_dom_tree()
 
 Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom_node(i32 node_id)
 {
-    if (auto* doc = page().top_level_browsing_context().active_document()) {
-        Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
-        if (!node || (&node->document() != doc)) {
-            doc->set_inspected_node(nullptr);
+    auto& top_context = page().top_level_browsing_context();
+
+    top_context.for_each_in_inclusive_subtree([&](auto& ctx) {
+        if (ctx.active_document() != nullptr) {
+            ctx.active_document()->set_inspected_node(nullptr);
+        }
+        return IterationDecision::Continue;
+    });
+
+    Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
+    if (!node) {
+        return { false, "", "" };
+    }
+
+    node->document().set_inspected_node(node);
+
+    if (node->is_element()) {
+        auto& element = verify_cast<Web::DOM::Element>(*node);
+        if (!element.specified_css_values())
             return { false, "", "" };
-        }
 
-        doc->set_inspected_node(node);
+        auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
+            StringBuilder builder;
 
-        if (node->is_element()) {
-            auto& element = verify_cast<Web::DOM::Element>(*node);
-            if (!element.specified_css_values())
-                return { false, "", "" };
+            JsonObjectSerializer serializer(builder);
+            properties.for_each_property([&](auto property_id, auto& value) {
+                serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string());
+            });
+            serializer.finish();
 
-            auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
-                StringBuilder builder;
+            return builder.to_string();
+        };
 
-                JsonObjectSerializer serializer(builder);
-                properties.for_each_property([&](auto property_id, auto& value) {
-                    serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string());
-                });
-                serializer.finish();
-
-                return builder.to_string();
-            };
-
-            String specified_values_json = serialize_json(*element.specified_css_values());
-            String computed_values_json = serialize_json(element.computed_style());
-            return { true, specified_values_json, computed_values_json };
-        }
+        String specified_values_json = serialize_json(*element.specified_css_values());
+        String computed_values_json = serialize_json(element.computed_style());
+        return { true, specified_values_json, computed_values_json };
     }
 
     return { false, "", "" };
