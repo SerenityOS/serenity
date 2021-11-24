@@ -33,6 +33,17 @@ SECTIONS
         *(.bss)
 	end_of_bss = .;
     } :bss
+
+    /*
+        FIXME: 8MB is enough space for all of the tables required to identity map 
+               physical memory. 8M is wasteful, so this should be properly calculated.
+    */
+    
+    . = ALIGN(4K);
+    page_tables_phys_start = .;
+    
+    . += 8M;
+    page_tables_phys_end = .;
 }
 
 size_of_bss_divided_by_8 = (end_of_bss - start_of_bss) / 8;
