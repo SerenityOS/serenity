@@ -47,6 +47,8 @@ public:
 
     virtual void close() override;
 
+    Function<bool()> on_return_pressed;
+
 protected:
     explicit Dialog(Window* parent_window, ScreenPosition screen_position = CenterWithinParent);
 

@@ -110,6 +110,11 @@ void Dialog::event(Core::Event& event)
             done(ExecCancel);
             event.accept();
             return;
+        } else if (key_event.key() == KeyCode::Key_Return) {
+            if (on_return_pressed && on_return_pressed()) {
+                event.accept();
+                return;
+            }
         }
     }
 
