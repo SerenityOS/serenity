@@ -204,7 +204,7 @@ String Token::string_value(StringValueStatus& status) const
     return builder.to_string();
 }
 
-// 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#sec-static-semantics-trv
+// 12.8.6.2 Static Semantics: TRV, https://tc39.es/ecma262/#sec-static-semantics-trv
 String Token::raw_template_value() const
 {
     return value().replace("\r\n", "\n", true).replace("\r", "\n", true);
