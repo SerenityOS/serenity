@@ -129,6 +129,8 @@ public:
     void stop_timer();
     bool has_timer() const { return m_timer_id; }
 
+    ErrorOr<void> try_add_child(Object&);
+
     void add_child(Object&);
     void insert_child_before(Object& new_child, Object& before_child);
     void remove_child(Object&);
@@ -161,6 +163,14 @@ public:
     {
         auto child = T::construct(forward<Args>(args)...);
         add_child(*child);
+        return child;
+    }
+
+    template<class T, class... Args>
+    inline ErrorOr<NonnullRefPtr<T>> try_add(Args&&... args)
+    {
+        auto child = TRY(T::try_create(forward<Args>(args)...));
+        TRY(try_add_child(*child));
         return child;
     }
 
