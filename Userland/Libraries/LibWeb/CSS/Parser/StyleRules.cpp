@@ -133,6 +133,25 @@ String StyleBlockRule::to_string() const
     return builder.to_string();
 }
 
+String StyleComponentValueRule::to_string() const
+{
+    StringBuilder builder;
+
+    switch (m_type) {
+    case StyleComponentValueRule::ComponentType::Token:
+        builder.append(m_token.to_string());
+        break;
+    case StyleComponentValueRule::ComponentType::Function:
+        builder.append(m_function->to_string());
+        break;
+    case StyleComponentValueRule::ComponentType::Block:
+        builder.append(m_block->to_string());
+        break;
+    }
+
+    return builder.to_string();
+}
+
 String StyleComponentValueRule::to_debug_string() const
 {
     StringBuilder builder;
