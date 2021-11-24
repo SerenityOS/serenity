@@ -6,6 +6,7 @@
  */
 
 #include <AK/Types.h>
+#include <Kernel/Arch/aarch64/Aarch64Registers.h>
 #include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Prekernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Prekernel/Arch/aarch64/Framebuffer.h>
@@ -140,8 +141,7 @@ static void set_up_el1_mode()
     // Enable memory access alignment check
     system_control_register_el1.A = 1;
 
-    // Set the register
-    asm("msr sctlr_el1, %[value]" ::[value] "r"(system_control_register_el1));
+    Kernel::Aarch64_SCTLR_EL1::write(system_control_register_el1);
 }
 
 static void set_up_el2_mode()
@@ -151,8 +151,7 @@ static void set_up_el2_mode()
     // EL1 to use 64-bit mode
     hypervisor_configuration_register_el2.RW = 1;
 
-    // Set the register
-    asm("msr hcr_el2, %[value]" ::[value] "r"(hypervisor_configuration_register_el2));
+    Kernel::Aarch64_HCR_EL2::write(hypervisor_configuration_register_el2);
 }
 
 static void set_up_el3_mode()
@@ -168,8 +167,7 @@ static void set_up_el3_mode()
     // Enable Hypervisor instructions at all levels
     secure_configuration_register_el3.HCE = 1;
 
-    // Set the register
-    asm("msr scr_el3, %[value]" ::[value] "r"(secure_configuration_register_el3));
+    Kernel::Aarch64_SCR_EL3::write(secure_configuration_register_el3);
 }
 
 [[noreturn]] static void jump_to_os_start_from_el2()
@@ -185,8 +183,7 @@ static void set_up_el3_mode()
     // Indicate EL1 as exception origin mode (so we go back there)
     saved_program_status_register_el2.M = Kernel::Aarch64_SPSR_EL2::Mode::EL1h;
 
-    // Set the register
-    asm("msr spsr_el2, %[value]" ::[value] "r"(saved_program_status_register_el2));
+    Kernel::Aarch64_SPSR_EL2::write(saved_program_status_register_el2);
 
     // This will jump into os_start()
     return_from_el2();
@@ -205,8 +202,7 @@ static void set_up_el3_mode()
     // Indicate EL1 as exception origin mode (so we go back there)
     saved_program_status_register_el3.M = Kernel::Aarch64_SPSR_EL3::Mode::EL1h;
 
-    // Set the register
-    asm("msr spsr_el3, %[value]" ::[value] "r"(saved_program_status_register_el3));
+    Kernel::Aarch64_SPSR_EL3::write(saved_program_status_register_el3);
 
     // This will jump into os_start() below
     return_from_el3();
