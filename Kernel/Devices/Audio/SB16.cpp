@@ -123,9 +123,10 @@ ErrorOr<void> SB16::ioctl(OpenFileDescription&, unsigned request, Userspace<void
         return copy_to_user(output, &m_sample_rate);
     }
     case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
-        auto sample_rate_value = static_cast<u16>(arg.ptr());
-        if (sample_rate_value == 0)
-            return EINVAL;
+        auto sample_rate_input = static_cast<u32>(arg.ptr());
+        if (sample_rate_input == 0 || sample_rate_input > 44100)
+            return ENOTSUP;
+        auto sample_rate_value = static_cast<u16>(sample_rate_input);
         if (m_sample_rate != sample_rate_value)
             set_sample_rate(sample_rate_value);
         return {};

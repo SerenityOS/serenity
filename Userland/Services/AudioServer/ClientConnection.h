@@ -51,7 +51,7 @@ private:
     virtual void set_main_mix_muted(bool) override;
     virtual Messages::AudioServer::IsSelfMutedResponse is_self_muted() override;
     virtual void set_self_muted(bool) override;
-    virtual void set_sample_rate(u16 sample_rate) override;
+    virtual void set_sample_rate(u32 sample_rate) override;
     virtual Messages::AudioServer::GetSampleRateResponse get_sample_rate() override;
 
     Mixer& m_mixer;

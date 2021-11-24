@@ -13,6 +13,10 @@ namespace Kernel {
 
 static constexpr int buffer_descriptor_list_max_entries = 32;
 
+// Valid output range - with double-rate enabled, sample rate can go up to 96kHZ
+static constexpr u16 pcm_sample_rate_minimum = 8000;
+static constexpr u16 pcm_sample_rate_maximum = 48000;
+
 static ErrorOr<OwnPtr<Memory::Region>> allocate_physical_buffer(size_t size, StringView name)
 {
     auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(Memory::page_round_up(size)));
@@ -92,21 +96,30 @@ UNMAP_AFTER_INIT void AC97::initialize()
     auto control = m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).in<u32>();
     control |= GlobalControlFlag::GPIInterruptEnable;
     control |= GlobalControlFlag::AC97ColdReset;
-    m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).out<u32>(control);
+    m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).out(control);
 
     // Reset mixer
     m_io_mixer_base.offset(NativeAudioMixerRegister::Reset).out<u16>(1);
 
     // Verify extended capabilities
     auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
-    VERIFY((extended_audio_id & ExtendedAudioMask::VariableRatePCMAudio) == 1);
+    VERIFY((extended_audio_id & ExtendedAudioMask::VariableRatePCMAudio) > 0);
     VERIFY((extended_audio_id & ExtendedAudioMask::Revision) >> 10 == AC97Revision::Revision23);
+
+    // Enable double rate PCM audio if supported
+    if ((extended_audio_id & ExtendedAudioMask::DoubleRatePCMAudio) > 0) {
+        auto extended_audio_status_control_register = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioStatusControl);
+        auto extended_audio_status = extended_audio_status_control_register.in<u16>();
+        extended_audio_status |= ExtendedAudioStatusControlFlag::DoubleRateAudio;
+        extended_audio_status_control_register.out(extended_audio_status);
+        m_double_rate_pcm_enabled = true;
+    }
+
+    MUST(set_pcm_output_sample_rate(m_sample_rate));
 
     // Left and right volume of 0 means attenuation of 0 dB
     set_master_output_volume(0, 0, Muted::No);
     set_pcm_output_volume(0, 0, Muted::No);
-
-    set_pcm_output_sample_rate(m_sample_rate);
 
     reset_pcm_out();
     enable_irq();
@@ -116,15 +129,14 @@ ErrorOr<void> AC97::ioctl(OpenFileDescription&, unsigned request, Userspace<void
 {
     switch (request) {
     case SOUNDCARD_IOCTL_GET_SAMPLE_RATE: {
-        auto output = static_ptr_cast<u16*>(arg);
+        auto output = static_ptr_cast<u32*>(arg);
         return copy_to_user(output, &m_sample_rate);
     }
     case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
-        auto sample_rate_value = static_cast<u16>(arg.ptr());
-        if (sample_rate_value == 0)
-            return EINVAL;
-        if (m_sample_rate != sample_rate_value)
-            set_pcm_output_sample_rate(sample_rate_value);
+        auto sample_rate = static_cast<u32>(arg.ptr());
+        if (sample_rate == m_sample_rate)
+            return {};
+        TRY(set_pcm_output_sample_rate(sample_rate));
         return {};
     }
     default:
@@ -151,12 +163,20 @@ void AC97::set_master_output_volume(u8 left_channel, u8 right_channel, Muted mut
     m_io_mixer_base.offset(NativeAudioMixerRegister::SetMasterOutputVolume).out(volume_value);
 }
 
-void AC97::set_pcm_output_sample_rate(u16 sample_rate)
+ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
 {
+    auto const double_rate_shift = m_double_rate_pcm_enabled ? 1 : 0;
+    auto shifted_sample_rate = sample_rate >> double_rate_shift;
+    if (shifted_sample_rate < pcm_sample_rate_minimum || shifted_sample_rate > pcm_sample_rate_maximum)
+        return ENOTSUP;
+
     auto pcm_front_dac_rate_register = m_io_mixer_base.offset(NativeAudioMixerRegister::PCMFrontDACRate);
-    pcm_front_dac_rate_register.out(sample_rate);
-    m_sample_rate = pcm_front_dac_rate_register.in<u16>();
+    pcm_front_dac_rate_register.out<u16>(shifted_sample_rate);
+    m_sample_rate = static_cast<u32>(pcm_front_dac_rate_register.in<u16>()) << double_rate_shift;
+
     dbgln("AC97 @ {}: PCM front DAC rate set to {} Hz", pci_address(), m_sample_rate);
+
+    return {};
 }
 
 void AC97::set_pcm_output_volume(u8 left_channel, u8 right_channel, Muted mute)

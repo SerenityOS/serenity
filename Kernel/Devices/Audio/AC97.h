@@ -43,12 +43,18 @@ private:
         SetMasterOutputVolume = 0x02,
         SetPCMOutputVolume = 0x18,
         ExtendedAudioID = 0x28,
+        ExtendedAudioStatusControl = 0x2a,
         PCMFrontDACRate = 0x2c,
     };
 
     enum ExtendedAudioMask : u16 {
         VariableRatePCMAudio = 1 << 0,
+        DoubleRatePCMAudio = 1 << 1,
         Revision = 3 << 10,
+    };
+
+    enum ExtendedAudioStatusControlFlag : u16 {
+        DoubleRateAudio = 1 << 1,
     };
 
     enum AC97Revision : u8 {
@@ -150,12 +156,13 @@ private:
     void initialize();
     void reset_pcm_out();
     void set_master_output_volume(u8, u8, Muted);
-    void set_pcm_output_sample_rate(u16);
+    ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
     ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index = 0;
+    bool m_double_rate_pcm_enabled = false;
     IOAddress m_io_mixer_base;
     IOAddress m_io_bus_base;
     WaitQueue m_irq_queue;
@@ -163,7 +170,7 @@ private:
     u8 m_output_buffer_page_count = 4;
     u8 m_output_buffer_page_index = 0;
     AC97Channel m_pcm_out_channel;
-    u16 m_sample_rate = 44100;
+    u32 m_sample_rate = 44100;
 };
 
 }
