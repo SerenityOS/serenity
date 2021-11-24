@@ -23,11 +23,14 @@ public:
     virtual void config_key_was_removed(String const&, String const&, String const&) override;
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
-    virtual void drop_event(GUI::DropEvent&);
+    virtual void drop_event(GUI::DropEvent&) override;
 
 private:
     QuickLaunchWidget();
     void add_or_adjust_button(String const&, NonnullRefPtr<Desktop::AppFile>);
+    RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<GUI::Action> m_context_menu_default_action;
+    String m_context_menu_app_name;
 };
 
 }
