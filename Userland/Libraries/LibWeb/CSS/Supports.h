@@ -21,8 +21,7 @@ class Supports final : public RefCounted<Supports> {
 
 public:
     struct Feature {
-        // FIXME: Using this internal parser class is a bit of a hack.
-        StyleDeclarationRule declaration;
+        String declaration;
         MatchResult evaluate() const;
     };
 
