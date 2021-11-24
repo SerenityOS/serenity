@@ -11,8 +11,8 @@ endpoint AudioServer
     set_self_volume(double volume) => ()
 
     // Audio device
-    set_sample_rate(u16 sample_rate) => ()
-    get_sample_rate() => (u16 sample_rate)
+    set_sample_rate(u32 sample_rate) => ()
+    get_sample_rate() => (u32 sample_rate)
 
     // Buffer playback
     enqueue_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count) => (bool success)
