@@ -111,30 +111,18 @@ String MediaQuery::MediaCondition::to_string() const
     return builder.to_string();
 }
 
-bool MediaQuery::MediaCondition::evaluate(DOM::Window const& window) const
+MatchResult MediaQuery::MediaCondition::evaluate(DOM::Window const& window) const
 {
     switch (type) {
     case Type::Single:
-        return feature.evaluate(window);
-
+        return as_match_result(feature.evaluate(window));
     case Type::Not:
-        return !conditions.first().evaluate(window);
-
+        return negate(conditions.first().evaluate(window));
     case Type::And:
-        for (auto& child : conditions) {
-            if (!child.evaluate(window))
-                return false;
-        }
-        return true;
-
+        return evaluate_and(conditions, [&](auto& child) { return child.evaluate(window); });
     case Type::Or:
-        for (auto& child : conditions) {
-            if (child.evaluate(window))
-                return true;
-        }
-        return false;
+        return evaluate_or(conditions, [&](auto& child) { return child.evaluate(window); });
     }
-
     VERIFY_NOT_REACHED();
 }
 
@@ -194,16 +182,16 @@ String MediaQuery::to_string() const
 
 bool MediaQuery::evaluate(DOM::Window const& window)
 {
-    auto matches_media = [](MediaType media) -> bool {
+    auto matches_media = [](MediaType media) -> MatchResult {
         switch (media) {
         case MediaType::All:
-            return true;
+            return MatchResult::True;
         case MediaType::Print:
             // FIXME: Enable for printing, when we have printing!
-            return false;
+            return MatchResult::False;
         case MediaType::Screen:
             // FIXME: Disable for printing, when we have printing!
-            return true;
+            return MatchResult::True;
         // Deprecated, must never match:
         case MediaType::TTY:
         case MediaType::TV:
@@ -213,17 +201,20 @@ bool MediaQuery::evaluate(DOM::Window const& window)
         case MediaType::Embossed:
         case MediaType::Aural:
         case MediaType::Speech:
-            return false;
+            return MatchResult::False;
         }
         VERIFY_NOT_REACHED();
     };
 
-    bool result = matches_media(m_media_type);
+    MatchResult result = matches_media(m_media_type);
 
-    if (result && m_media_condition)
+    if ((result == MatchResult::True) && m_media_condition)
         result = m_media_condition->evaluate(window);
 
-    m_matches = m_negated ? !result : result;
+    if (m_negated)
+        result = negate(result);
+
+    m_matches = result == MatchResult::True;
     return m_matches;
 }
 
