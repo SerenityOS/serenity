@@ -289,38 +289,54 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(intlObj) is Object.
-    // 2. Assert: Type(options) is Object.
-    // 3. Assert: Type(mnfdDefault) is Number.
-    // 4. Assert: Type(mxfdDefault) is Number.
-
-    // 5. Let mnid be ? GetNumberOption(options, "minimumIntegerDigits,", 1, 21, 1).
+    // 1. Let mnid be ? GetNumberOption(options, "minimumIntegerDigits,", 1, 21, 1).
     auto min_integer_digits = TRY(get_number_option(global_object, options, vm.names.minimumIntegerDigits, 1, 21, 1));
 
-    // 6. Let mnfd be ? Get(options, "minimumFractionDigits").
+    // 2. Let mnfd be ? Get(options, "minimumFractionDigits").
     auto min_fraction_digits = TRY(options.get(vm.names.minimumFractionDigits));
 
-    // 7. Let mxfd be ? Get(options, "maximumFractionDigits").
+    // 3. Let mxfd be ? Get(options, "maximumFractionDigits").
     auto max_fraction_digits = TRY(options.get(vm.names.maximumFractionDigits));
 
-    // 8. Let mnsd be ? Get(options, "minimumSignificantDigits").
+    // 4. Let mnsd be ? Get(options, "minimumSignificantDigits").
     auto min_significant_digits = TRY(options.get(vm.names.minimumSignificantDigits));
 
-    // 9. Let mxsd be ? Get(options, "maximumSignificantDigits").
+    // 5. Let mxsd be ? Get(options, "maximumSignificantDigits").
     auto max_significant_digits = TRY(options.get(vm.names.maximumSignificantDigits));
 
-    // 10. Set intlObj.[[MinimumIntegerDigits]] to mnid.
+    // 6. Set intlObj.[[MinimumIntegerDigits]] to mnid.
     intl_object.set_min_integer_digits(*min_integer_digits);
 
-    // 11. If mnsd is not undefined or mxsd is not undefined, then
-    if (!min_significant_digits.is_undefined() || !max_significant_digits.is_undefined()) {
-        // a. Set intlObj.[[RoundingType]] to significantDigits.
-        intl_object.set_rounding_type(NumberFormat::RoundingType::SignificantDigits);
+    // 7. If mnsd is not undefined or mxsd is not undefined, then
+    //     a. Let hasSd be true.
+    // 8. Else,
+    //     a. Let hasSd be false.
+    bool has_significant_digits = !min_significant_digits.is_undefined() || !max_significant_digits.is_undefined();
 
-        // b. Let mnsd be ? DefaultNumberOption(mnsd, 1, 21, 1).
+    // 9. If mnfd is not undefined or mxfd is not undefined, then
+    //     a. Let hasFd be true.
+    // 10. Else,
+    //     a. Let hasFd be false.
+    bool has_fraction_digits = !min_fraction_digits.is_undefined() || !max_fraction_digits.is_undefined();
+
+    // 11. Let needSd be hasSd.
+    bool need_significant_digits = has_significant_digits;
+
+    // 12. If hasSd is true, or hasFd is false and notation is "compact", then
+    //     a. Let needFd be false.
+    // 13. Else,
+    //     a. Let needFd be true.
+    bool need_fraction_digits = !has_significant_digits && (has_fraction_digits || (notation != NumberFormat::Notation::Compact));
+
+    // 14. If needSd is true, then
+    if (need_significant_digits) {
+        // a. Assert: hasSd is true.
+        VERIFY(has_significant_digits);
+
+        // b. Set mnsd to ? DefaultNumberOption(mnsd, 1, 21, 1).
         auto min_digits = TRY(default_number_option(global_object, min_significant_digits, 1, 21, 1));
 
-        // c. Let mxsd be ? DefaultNumberOption(mxsd, mnsd, 21, 21).
+        // c. Set mxsd to ? DefaultNumberOption(mxsd, mnsd, 21, 21).
         auto max_digits = TRY(default_number_option(global_object, max_significant_digits, *min_digits, 21, 21));
 
         // d. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
@@ -329,50 +345,59 @@ ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_obj
         // e. Set intlObj.[[MaximumSignificantDigits]] to mxsd.
         intl_object.set_max_significant_digits(*max_digits);
     }
-    // 12. Else if mnfd is not undefined or mxfd is not undefined, then
-    else if (!min_fraction_digits.is_undefined() || !max_fraction_digits.is_undefined()) {
-        // a. Set intlObj.[[RoundingType]] to fractionDigits.
-        intl_object.set_rounding_type(NumberFormat::RoundingType::FractionDigits);
 
-        // b. Let mnfd be ? DefaultNumberOption(mnfd, 0, 20, undefined).
-        auto min_digits = TRY(default_number_option(global_object, min_fraction_digits, 0, 20, {}));
+    // 15. If needFd is true, then
+    if (need_fraction_digits) {
+        // a. If hasFd is true, then
+        if (has_fraction_digits) {
+            // i. Set mnfd to ? DefaultNumberOption(mnfd, 0, 20, undefined).
+            auto min_digits = TRY(default_number_option(global_object, min_fraction_digits, 0, 20, {}));
 
-        // c. Let mxfd be ? DefaultNumberOption(mxfd, 0, 20, undefined).
-        auto max_digits = TRY(default_number_option(global_object, max_fraction_digits, 0, 20, {}));
+            // ii. Set mxfd to ? DefaultNumberOption(mxfd, 0, 20, undefined).
+            auto max_digits = TRY(default_number_option(global_object, max_fraction_digits, 0, 20, {}));
 
-        // d. If mnfd is undefined, set mnfd to min(mnfdDefault, mxfd).
-        if (!min_digits.has_value())
-            min_digits = min(default_min_fraction_digits, *max_digits);
-        // e. Else if mxfd is undefined, set mxfd to max(mxfdDefault, mnfd).
-        else if (!max_digits.has_value())
-            max_digits = max(default_max_fraction_digits, *min_digits);
-        // f. Else if mnfd is greater than mxfd, throw a RangeError exception.
-        else if (*min_digits > *max_digits)
-            return vm.throw_completion<RangeError>(global_object, ErrorType::IntlMinimumExceedsMaximum, *min_digits, *max_digits);
+            // iii. If mnfd is undefined, set mnfd to min(mnfdDefault, mxfd).
+            if (!min_digits.has_value())
+                min_digits = min(default_min_fraction_digits, *max_digits);
+            // iv. Else if mxfd is undefined, set mxfd to max(mxfdDefault, mnfd).
+            else if (!max_digits.has_value())
+                max_digits = max(default_max_fraction_digits, *min_digits);
+            // v. Else if mnfd is greater than mxfd, throw a RangeError exception.
+            else if (*min_digits > *max_digits)
+                return vm.throw_completion<RangeError>(global_object, ErrorType::IntlMinimumExceedsMaximum, *min_digits, *max_digits);
 
-        // g. Set intlObj.[[MinimumFractionDigits]] to mnfd.
-        intl_object.set_min_fraction_digits(*min_digits);
+            // vi. Set intlObj.[[MinimumFractionDigits]] to mnfd.
+            intl_object.set_min_fraction_digits(*min_digits);
 
-        // h. Set intlObj.[[MaximumFractionDigits]] to mxfd.
-        intl_object.set_max_fraction_digits(*max_digits);
+            // vii. Set intlObj.[[MaximumFractionDigits]] to mxfd.
+            intl_object.set_max_fraction_digits(*max_digits);
+        }
+        // b. Else,
+        else {
+            // i. Set intlObj.[[MinimumFractionDigits]] to mnfdDefault.
+            intl_object.set_min_fraction_digits(default_min_fraction_digits);
+
+            // ii. Set intlObj.[[MaximumFractionDigits]] to mxfdDefault.
+            intl_object.set_max_fraction_digits(default_max_fraction_digits);
+        }
     }
-    // 13. Else if notation is "compact", then
-    else if (notation == NumberFormat::Notation::Compact) {
+
+    // 16. If needSd is false and needFd is false, then
+    if (!need_significant_digits && !need_fraction_digits) {
         // a. Set intlObj.[[RoundingType]] to compactRounding.
         intl_object.set_rounding_type(NumberFormat::RoundingType::CompactRounding);
-
     }
-    // 14. Else,
+    // 17. Else if hasSd is true, then
+    else if (has_significant_digits) {
+        // a. Set intlObj.[[RoundingType]] to significantDigits.
+        intl_object.set_rounding_type(NumberFormat::RoundingType::SignificantDigits);
+    }
+    // 18. Else,
     else {
         // a. Set intlObj.[[RoundingType]] to fractionDigits.
         intl_object.set_rounding_type(NumberFormat::RoundingType::FractionDigits);
-
-        // b. Set intlObj.[[MinimumFractionDigits]] to mnfdDefault.
-        intl_object.set_min_fraction_digits(default_min_fraction_digits);
-
-        // c. Set intlObj.[[MaximumFractionDigits]] to mxfdDefault.
-        intl_object.set_max_fraction_digits(default_max_fraction_digits);
     }
+
     return {};
 }
 
