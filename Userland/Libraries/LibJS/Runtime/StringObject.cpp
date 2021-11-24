@@ -43,7 +43,7 @@ void StringObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_string);
 }
 
-// 10.4.3.5 StringGetOwnProperty ( S, P ),https://tc39.es/ecma262/#sec-stringgetownproperty
+// 10.4.3.5 StringGetOwnProperty ( S, P ), https://tc39.es/ecma262/#sec-stringgetownproperty
 static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global_object, StringObject const& string, PropertyKey const& property_name)
 {
     // 1. Assert: S is an Object that has a [[StringData]] internal slot.

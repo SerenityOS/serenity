@@ -1119,7 +1119,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     return RoundedDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds, .remainder = remainder };
 }
 
-// 7.5.20 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ),https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
+// 7.5.20 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ), https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
 ThrowCompletionOr<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
 {
     auto& vm = global_object.vm();
