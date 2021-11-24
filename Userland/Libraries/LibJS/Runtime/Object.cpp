@@ -88,7 +88,7 @@ ThrowCompletionOr<Value> Object::get(PropertyKey const& property_name) const
     return TRY(internal_get(property_name, this));
 }
 
-// 7.3.3 GetV ( V, P ) is defined as Value::get().
+// NOTE: 7.3.3 GetV ( V, P ) is implemented as Value::get().
 
 // 7.3.4 Set ( O, P, V, Throw ), https://tc39.es/ecma262/#sec-set-o-p-v-throw
 ThrowCompletionOr<bool> Object::set(PropertyKey const& property_name, Value value, ShouldThrowExceptions throw_exceptions)

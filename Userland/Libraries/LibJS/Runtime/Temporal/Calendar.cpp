@@ -75,7 +75,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
     return static_cast<Calendar*>(TRY(construct(global_object, *global_object.temporal_calendar_constructor(), move(arguments))));
 }
 
-// 12.1.4 GetISO8601Calendar ( )
+// 12.1.4 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
 Calendar* get_iso8601_calendar(GlobalObject& global_object)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
