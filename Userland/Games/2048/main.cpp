@@ -59,31 +59,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("2048");
     window->resize(315, 336);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    main_widget->set_fill_with_background_color(true);
 
     Game game { board_size, target_tile, evil_ai };
 
-    auto& board_view = main_widget.add<BoardView>(&game.board());
-    board_view.set_focus(true);
-    auto& statusbar = main_widget.add<GUI::Statusbar>();
+    auto board_view = TRY(main_widget->try_add<BoardView>(&game.board()));
+    board_view->set_focus(true);
+    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
         if (text.is_empty())
             text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        statusbar->set_override_text(move(text));
     };
 
     app->on_action_leave = [&](GUI::Action&) {
-        statusbar.set_override_text({});
+        statusbar->set_override_text({});
     };
 
     auto update = [&]() {
-        board_view.set_board(&game.board());
-        board_view.update();
-        statusbar.set_text(String::formatted("Score: {}", game.score()));
+        board_view->set_board(&game.board());
+        board_view->update();
+        statusbar->set_text(String::formatted("Score: {}", game.score()));
     };
 
     update();
@@ -120,14 +120,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         game = Game(board_size, target_tile, evil_ai);
 
         // This ensures that the sizes are correct.
-        board_view.set_board(nullptr);
-        board_view.set_board(&game.board());
+        board_view->set_board(nullptr);
+        board_view->set_board(&game.board());
 
         update();
         window->update();
     };
 
-    board_view.on_move = [&](Game::Direction direction) {
+    board_view->on_move = [&](Game::Direction direction) {
         undo_stack.append(game);
         auto outcome = game.attempt_move(direction);
         switch (outcome) {
@@ -167,37 +167,40 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    auto& game_menu = window->add_menu("&Game");
+    auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         start_a_new_game();
-    }));
+    })));
 
-    game_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_undo_action([&](auto&) {
         if (undo_stack.is_empty())
             return;
         redo_stack.append(game);
         game = undo_stack.take_last();
         update();
-    }));
-    game_menu.add_action(GUI::CommonActions::make_redo_action([&](auto&) {
+    })));
+
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_redo_action([&](auto&) {
         if (redo_stack.is_empty())
             return;
         undo_stack.append(game);
         game = redo_stack.take_last();
         update();
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(GUI::Action::create("&Settings...", [&](auto&) {
-        change_settings();
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("2048", app_icon, window));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings...", [&](auto&) {
+        change_settings();
+    })));
+
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    })));
+
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("2048", app_icon, window)));
 
     window->show();
 
