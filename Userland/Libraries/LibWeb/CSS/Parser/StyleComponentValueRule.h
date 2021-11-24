@@ -52,6 +52,7 @@ public:
     Token const& token() const { return m_token; }
     operator Token() const { return m_token; }
 
+    String to_string() const;
     String to_debug_string() const;
 
 private:
