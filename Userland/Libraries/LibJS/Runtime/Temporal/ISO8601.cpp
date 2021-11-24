@@ -887,9 +887,7 @@ bool ISO8601Parser::parse_temporal_relative_to_string()
 {
     // TemporalRelativeToString :
     //     TemporalDateTimeString
-    //     TemporalZonedDateTimeString
-    return parse_temporal_date_time_string()
-        || parse_temporal_zoned_date_time_string();
+    return parse_temporal_date_time_string();
 }
 
 }
