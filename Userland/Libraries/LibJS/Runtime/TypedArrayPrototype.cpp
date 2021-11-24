@@ -282,7 +282,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
     return Value(result_index);
 }
 
-// 4 %TypedArray%.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-%typedarray%.prototype.findlast
+// 4 %TypedArray%.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/#sec-%typedarray%.prototype.findlast
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
 {
     auto result = js_undefined();
@@ -296,7 +296,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last)
     return result;
 }
 
-// 5 %TypedArray%.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-%typedarray%.prototype.findlastindex
+// 5 %TypedArray%.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/#sec-%typedarray%.prototype.findlastindex
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_last_index)
 {
     auto result_index = -1;
