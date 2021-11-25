@@ -7,6 +7,8 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -95,12 +97,9 @@ static String interpret_backslash_escapes(StringView string, bool& no_trailing_n
     return builder.build();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio", nullptr));
 
     Vector<const char*> text;
     bool no_trailing_newline = false;
@@ -111,7 +110,7 @@ int main(int argc, char** argv)
     args_parser.add_option(should_interpret_backslash_escapes, "Interpret backslash escapes", nullptr, 'e');
     args_parser.add_positional_argument(text, "Text to print out", "text", Core::ArgsParser::Required::No);
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (text.is_empty()) {
         if (!no_trailing_newline)
