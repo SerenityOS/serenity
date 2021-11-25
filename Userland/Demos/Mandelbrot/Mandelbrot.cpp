@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -17,6 +18,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 class MandelbrotSet {
@@ -371,68 +373,58 @@ void Mandelbrot::export_image(String const& export_path)
     GUI::MessageBox::show(window(), "Image was successfully exported.", "Mandelbrot", GUI::MessageBox::Type::Information);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio thread recvfd sendfd rpath wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath wpath cpath", nullptr));
 
 #if 0
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(unveil(nullptr, nullptr));
 #endif
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
     window->set_title("Mandelbrot");
     window->set_minimum_size(320, 240);
     window->resize(window->minimum_size() * 2);
-    auto& mandelbrot = window->set_main_widget<Mandelbrot>();
+    auto mandelbrot = TRY(window->try_set_main_widget<Mandelbrot>());
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors(),
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png").release_value_but_fixme_should_propagate_errors(),
         [&](GUI::Action&) {
             Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
                 return;
-            mandelbrot.export_image(export_path.value());
-        }));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+            mandelbrot->export_image(export_path.value());
+        })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
-            mandelbrot.zoom(Mandelbrot::Zoom::In, mandelbrot.relative_rect().center());
+            mandelbrot->zoom(Mandelbrot::Zoom::In, mandelbrot->relative_rect().center());
         },
         window);
 
     auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
             // FIXME: Ideally, this would only reset zoom. Currently, it resets pan too.
-            mandelbrot.reset();
+            mandelbrot->reset();
         },
         window);
 
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
-            mandelbrot.zoom(Mandelbrot::Zoom::Out, mandelbrot.relative_rect().center());
+            mandelbrot->zoom(Mandelbrot::Zoom::Out, mandelbrot->relative_rect().center());
         },
         window);
 
-    auto& view_menu = window->add_menu("&View");
-    view_menu.add_action(zoom_in_action);
-    view_menu.add_action(reset_zoom_action);
-    view_menu.add_action(zoom_out_action);
+    auto view_menu = TRY(window->try_add_menu("&View"));
+    TRY(view_menu->try_add_action(zoom_in_action));
+    TRY(view_menu->try_add_action(reset_zoom_action));
+    TRY(view_menu->try_add_action(zoom_out_action));
 
     window->show();
 
