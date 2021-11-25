@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
-    Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
+    Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
 
     auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::OpenMode::ReadOnly);
