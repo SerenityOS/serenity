@@ -30,23 +30,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->set_double_buffering_enabled(false);
     window->set_title("Breakout");
+
     auto app_icon = GUI::Icon::default_icon("app-breakout");
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto& game = window->set_main_widget<Breakout::Game>();
 
-    auto& game_menu = window->add_menu("&Game");
-    game_menu.add_action(GUI::Action::create_checkable("&Pause", { {}, Key_P }, [&](auto& action) {
-        game.set_paused(action.is_checked());
-    }));
+    auto game = TRY(window->try_set_main_widget<Breakout::Game>());
 
-    game_menu.add_separator();
+    auto game_menu = TRY(window->try_add_menu("&Game"));
+    TRY(game_menu->try_add_action(GUI::Action::create_checkable("&Pause", { {}, Key_P }, [&](auto& action) {
+        game->set_paused(action.is_checked());
+    })));
 
-    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Breakout", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Breakout", app_icon, window)));
 
     window->show();
 
