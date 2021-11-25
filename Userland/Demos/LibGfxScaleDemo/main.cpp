@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -19,6 +20,7 @@
 #include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibGfx/WindowTheme.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 const int WIDTH = 300;
@@ -102,36 +104,25 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.blit_disabled({ 192, 122 }, *buggie, { 2, 30, 62, 20 }, palette());
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("LibGfx Scale Demo");
     window->set_resizable(false);
     window->resize(WIDTH * 2, HEIGHT * 3);
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto app_icon = GUI::Icon::default_icon("app-libgfx-demo");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_main_widget<Canvas>();
+    TRY(window->try_set_main_widget<Canvas>());
     window->show();
 
     return app->exec();
