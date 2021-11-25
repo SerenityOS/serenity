@@ -40,16 +40,17 @@ namespace Browser {
 
 URL url_from_user_input(const String& input)
 {
-    if (input.starts_with("?") && !g_search_engine.is_null())
-        return URL(g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1))));
+    String url_string = input;
+    if (input.starts_with("?") && !g_search_engine.is_empty())
+        url_string = g_search_engine.replace("{}", URL::percent_encode(input.substring_view(1)));
 
-    auto url = URL(input);
+    URL url = URL(url_string);
     if (url.is_valid())
         return url;
 
     StringBuilder builder;
     builder.append("http://");
-    builder.append(input);
+    builder.append(url_string);
     return URL(builder.build());
 }
 
