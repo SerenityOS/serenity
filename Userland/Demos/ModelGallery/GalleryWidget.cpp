@@ -13,23 +13,23 @@ GalleryWidget::GalleryWidget()
     set_layout<GUI::VerticalBoxLayout>();
 
     auto& inner_widget = add<GUI::Widget>();
-    auto& inner_layout = inner_widget.set_layout<GUI::VerticalBoxLayout>();
-    inner_layout.set_margins({ 4 });
+    auto inner_layout = inner_widget.try_set_layout<GUI::VerticalBoxLayout>().release_value_but_fixme_should_propagate_errors();
+    inner_layout->set_margins({ 4 });
 
-    m_tab_widget = inner_widget.add<GUI::TabWidget>();
+    m_tab_widget = inner_widget.try_add<GUI::TabWidget>().release_value_but_fixme_should_propagate_errors();
     m_statusbar = add<GUI::Statusbar>();
 
-    load_basic_model_tab();
+    (void)load_basic_model_tab();
     load_sorting_filtering_tab();
 }
 
-void GalleryWidget::load_basic_model_tab()
+ErrorOr<void> GalleryWidget::load_basic_model_tab()
 {
-    auto& tab = m_tab_widget->add_tab<GUI::Widget>("Basic Model");
-    tab.load_from_gml(basic_model_tab_gml);
+    auto tab = TRY(m_tab_widget->try_add_tab<GUI::Widget>("Basic Model"));
+    tab->load_from_gml(basic_model_tab_gml);
 
     m_basic_model = BasicModel::create();
-    m_basic_model_table = *tab.find_descendant_of_type_named<GUI::TableView>("model_table");
+    m_basic_model_table = *tab->find_descendant_of_type_named<GUI::TableView>("model_table");
     m_basic_model_table->set_model(m_basic_model);
 
     m_basic_model->on_invalidate = [&] {
@@ -43,9 +43,9 @@ void GalleryWidget::load_basic_model_tab()
     m_basic_model->add_item("...hello...");
     m_basic_model->add_item("...friends! :^)");
 
-    m_new_item_name = *tab.find_descendant_of_type_named<GUI::TextBox>("new_item_name");
-    m_add_new_item = *tab.find_descendant_of_type_named<GUI::Button>("add_new_item");
-    m_remove_selected_item = *tab.find_descendant_of_type_named<GUI::Button>("remove_selected_item");
+    m_new_item_name = *tab->find_descendant_of_type_named<GUI::TextBox>("new_item_name");
+    m_add_new_item = *tab->find_descendant_of_type_named<GUI::Button>("add_new_item");
+    m_remove_selected_item = *tab->find_descendant_of_type_named<GUI::Button>("remove_selected_item");
 
     m_add_new_item->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_value_but_fixme_should_propagate_errors());
     m_remove_selected_item->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png").release_value_but_fixme_should_propagate_errors());
@@ -59,6 +59,8 @@ void GalleryWidget::load_basic_model_tab()
             m_basic_model->remove_item(index);
         }
     };
+
+    return {};
 }
 
 void GalleryWidget::load_sorting_filtering_tab()
