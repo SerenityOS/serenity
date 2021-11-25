@@ -458,6 +458,10 @@ struct SC_stat_params {
     int follow_symlinks;
 };
 
+struct SC_ptrace_buf_params {
+    MutableBufferArgument<u8, size_t> buf;
+};
+
 struct SC_ptrace_params {
     int request;
     pid_t tid;
