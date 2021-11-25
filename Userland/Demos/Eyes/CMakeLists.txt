@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(Eyes ICON app-eyes)
-target_link_libraries(Eyes LibGUI LibGfx)
+target_link_libraries(Eyes LibGUI LibGfx LibMain)
