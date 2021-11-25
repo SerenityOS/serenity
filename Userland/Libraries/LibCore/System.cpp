@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/ptrace.h>
 #include <sys/socket.h>
 #include <termios.h>
 #include <unistd.h>
@@ -66,6 +67,21 @@ ErrorOr<int> recvfd(int sockfd, int options)
     if (fd < 0)
         return Error::from_syscall("recvfd"sv, -errno);
     return fd;
+}
+
+ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf)
+{
+    Syscall::SC_ptrace_buf_params buf_params {
+        { destination_buf.data(), destination_buf.size() }
+    };
+    Syscall::SC_ptrace_params params {
+        PT_PEEKBUF,
+        tid,
+        const_cast<void*>(tracee_addr),
+        (FlatPtr)&buf_params,
+    };
+    int rc = syscall(SC_ptrace, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 #endif
 

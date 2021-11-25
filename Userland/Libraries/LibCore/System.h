@@ -19,6 +19,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
+ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
