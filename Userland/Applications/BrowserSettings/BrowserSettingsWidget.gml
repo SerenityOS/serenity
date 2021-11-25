@@ -70,6 +70,78 @@
     }
 
     @GUI::GroupBox {
+        title: "Search Engine"
+        fixed_height: 140
+
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                fixed_width: 32
+                fixed_height: 32
+                name: "search_engine_image_label"
+            }
+
+            @GUI::CheckBox {
+                text: "Search using '?' in the URL box"
+                name: "enable_search_engine_checkbox"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            name: "search_engine_combobox_group"
+
+            @GUI::Widget {
+                fixed_width: 32
+            }
+
+            @GUI::Label {
+                text: "Search engine:"
+                text_alignment: "CenterLeft"
+                fixed_width: 110
+            }
+
+            @GUI::ComboBox {
+                name: "search_engine_combobox"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            name: "custom_search_engine_group"
+
+            @GUI::Widget {
+                fixed_width: 32
+            }
+
+            @GUI::Label {
+                text: "Enter URL template:"
+                text_alignment: "CenterLeft"
+                fixed_width: 110
+            }
+
+            @GUI::TextBox {
+                name: "custom_search_engine_textbox"
+                placeholder: "https://host/search?q={}"
+            }
+        }
+    }
+
+    @GUI::GroupBox {
         title: "Downloads"
         fixed_height: 70
 
