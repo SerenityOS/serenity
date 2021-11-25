@@ -33,7 +33,7 @@ class Starfield final : public GUI::Widget {
     C_OBJECT(Starfield)
 public:
     virtual ~Starfield() override;
-    void create_stars(int, int, int);
+    ErrorOr<void> create_stars(int, int, int);
 
     void set_speed(unsigned speed) { m_speed = speed; }
 
@@ -60,9 +60,9 @@ Starfield::Starfield(int interval)
     start_timer(interval);
 }
 
-void Starfield::create_stars(int width, int height, int stars)
+ErrorOr<void> Starfield::create_stars(int width, int height, int stars)
 {
-    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }).release_value_but_fixme_should_propagate_errors();
+    m_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
 
     m_stars.grow_capacity(stars);
     for (int i = 0; i < stars; i++) {
@@ -71,6 +71,7 @@ void Starfield::create_stars(int width, int height, int stars)
             rand() % 1999 + 1 });
     }
     draw();
+    return {};
 }
 
 Starfield::~Starfield()
@@ -162,12 +163,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
     args_parser.parse(arguments);
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(true);
     window->set_title("Starfield");
@@ -177,15 +178,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& starfield_window = window->set_main_widget<Starfield>(refresh_rate);
-    starfield_window.set_fill_with_background_color(false);
-    starfield_window.set_override_cursor(Gfx::StandardCursor::Hidden);
-    starfield_window.update();
+    auto starfield_window = TRY(window->try_set_main_widget<Starfield>(refresh_rate));
+    starfield_window->set_fill_with_background_color(false);
+    starfield_window->set_override_cursor(Gfx::StandardCursor::Hidden);
+    starfield_window->update();
     window->show();
 
-    starfield_window.create_stars(window->width(), window->height(), star_count);
-    starfield_window.set_speed(speed);
-    starfield_window.update();
+    TRY(starfield_window->create_stars(window->width(), window->height(), star_count));
+    starfield_window->set_speed(speed);
+    starfield_window->update();
 
     window->move_to_front();
     window->set_cursor(Gfx::StandardCursor::Hidden);
