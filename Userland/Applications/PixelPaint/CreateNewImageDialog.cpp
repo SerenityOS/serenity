@@ -65,8 +65,9 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         m_image_size.set_height(value);
     };
 
-    m_name_textbox->on_return_pressed = [this] {
-        done(ExecOK);
+    on_return_pressed = [this] {
+        done(ExecResult::ExecOK);
+        return true;
     };
 
     width_spinbox.set_range(1, 16384);
