@@ -5,34 +5,30 @@
  */
 
 #include "GalleryWidget.h"
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/MessageBox.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-model-gallery");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("Model Gallery");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(430, 480);
-    window->set_main_widget<GalleryWidget>();
+    TRY(window->try_set_main_widget<GalleryWidget>());
 
     window->show();
     return app->exec();
