@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
@@ -11,6 +12,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -110,32 +112,18 @@ void Screensaver::draw()
         colors[end_color_index]);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
     window->set_title("Screensaver");
     window->set_resizable(false);
@@ -144,10 +132,10 @@ int main(int argc, char** argv)
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& screensaver_window = window->set_main_widget<Screensaver>(64, 48, 10000);
-    screensaver_window.set_fill_with_background_color(false);
-    screensaver_window.set_override_cursor(Gfx::StandardCursor::Hidden);
-    screensaver_window.update();
+    auto screensaver_window = TRY(window->try_set_main_widget<Screensaver>(64, 48, 10000));
+    screensaver_window->set_fill_with_background_color(false);
+    screensaver_window->set_override_cursor(Gfx::StandardCursor::Hidden);
+    screensaver_window->update();
 
     window->show();
     window->move_to_front();
