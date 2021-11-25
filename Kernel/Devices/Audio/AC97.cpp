@@ -13,6 +13,9 @@ namespace Kernel {
 
 static constexpr int buffer_descriptor_list_max_entries = 32;
 
+static constexpr u16 pcm_default_sample_rate = 44100;
+static constexpr u16 pcm_fixed_sample_rate = 48000;
+
 // Valid output range - with double-rate enabled, sample rate can go up to 96kHZ
 static constexpr u16 pcm_sample_rate_minimum = 8000;
 static constexpr u16 pcm_sample_rate_maximum = 48000;
@@ -101,21 +104,25 @@ UNMAP_AFTER_INIT void AC97::initialize()
     // Reset mixer
     m_io_mixer_base.offset(NativeAudioMixerRegister::Reset).out<u16>(1);
 
-    // Verify extended capabilities
     auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
-    VERIFY((extended_audio_id & ExtendedAudioMask::VariableRatePCMAudio) > 0);
     VERIFY((extended_audio_id & ExtendedAudioMask::Revision) >> 10 == AC97Revision::Revision23);
 
-    // Enable double rate PCM audio if supported
-    if ((extended_audio_id & ExtendedAudioMask::DoubleRatePCMAudio) > 0) {
-        auto extended_audio_status_control_register = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioStatusControl);
-        auto extended_audio_status = extended_audio_status_control_register.in<u16>();
+    // Enable variable and double rate PCM audio if supported
+    auto extended_audio_status_control_register = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioStatusControl);
+    auto extended_audio_status = extended_audio_status_control_register.in<u16>();
+    if ((extended_audio_id & ExtendedAudioMask::VariableRatePCMAudio) > 0) {
+        extended_audio_status |= ExtendedAudioStatusControlFlag::VariableRateAudio;
+        m_variable_rate_pcm_supported = true;
+    }
+    if (!m_variable_rate_pcm_supported) {
+        extended_audio_status &= ~ExtendedAudioStatusControlFlag::DoubleRateAudio;
+    } else if ((extended_audio_id & ExtendedAudioMask::DoubleRatePCMAudio) > 0) {
         extended_audio_status |= ExtendedAudioStatusControlFlag::DoubleRateAudio;
-        extended_audio_status_control_register.out(extended_audio_status);
         m_double_rate_pcm_enabled = true;
     }
+    extended_audio_status_control_register.out(extended_audio_status);
 
-    MUST(set_pcm_output_sample_rate(m_sample_rate));
+    MUST(set_pcm_output_sample_rate(m_variable_rate_pcm_supported ? pcm_default_sample_rate : pcm_fixed_sample_rate));
 
     // Left and right volume of 0 means attenuation of 0 dB
     set_master_output_volume(0, 0, Muted::No);
@@ -134,8 +141,6 @@ ErrorOr<void> AC97::ioctl(OpenFileDescription&, unsigned request, Userspace<void
     }
     case SOUNDCARD_IOCTL_SET_SAMPLE_RATE: {
         auto sample_rate = static_cast<u32>(arg.ptr());
-        if (sample_rate == m_sample_rate)
-            return {};
         TRY(set_pcm_output_sample_rate(sample_rate));
         return {};
     }
@@ -165,8 +170,13 @@ void AC97::set_master_output_volume(u8 left_channel, u8 right_channel, Muted mut
 
 ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
 {
+    if (m_sample_rate == sample_rate)
+        return {};
+
     auto const double_rate_shift = m_double_rate_pcm_enabled ? 1 : 0;
     auto shifted_sample_rate = sample_rate >> double_rate_shift;
+    if (!m_variable_rate_pcm_supported && shifted_sample_rate != pcm_fixed_sample_rate)
+        return ENOTSUP;
     if (shifted_sample_rate < pcm_sample_rate_minimum || shifted_sample_rate > pcm_sample_rate_maximum)
         return ENOTSUP;
 
