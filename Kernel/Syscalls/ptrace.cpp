@@ -123,6 +123,24 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
         TRY(peer->process().poke_user_data(Userspace<FlatPtr*> { (FlatPtr)params.addr }, params.data));
         return 0;
 
+    case PT_PEEKBUF: {
+        Kernel::Syscall::SC_ptrace_buf_params buf_params {};
+        TRY(copy_from_user(&buf_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_buf_params*>(params.data)));
+        // This is a comparatively large allocation on the Kernel stack.
+        // However, we know that we're close to the root of the call stack, and the following calls shouldn't go too deep.
+        Array<u8, PAGE_SIZE> buf;
+        FlatPtr tracee_ptr = (FlatPtr)params.addr;
+        while (buf_params.buf.size > 0) {
+            size_t copy_this_iteration = min(buf.size(), buf_params.buf.size);
+            TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<const u8*> { tracee_ptr }));
+            TRY(copy_to_user((void*)buf_params.buf.data, buf.data(), copy_this_iteration));
+            tracee_ptr += copy_this_iteration;
+            buf_params.buf.data += copy_this_iteration;
+            buf_params.buf.size -= copy_this_iteration;
+        }
+        break;
+    }
+
     case PT_PEEKDEBUG: {
         auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(params.addr)));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
@@ -166,6 +184,15 @@ ErrorOr<FlatPtr> Process::peek_user_data(Userspace<const FlatPtr*> address)
     FlatPtr data;
     TRY(copy_from_user(&data, address));
     return data;
+}
+
+ErrorOr<void> Process::peek_user_data(Span<u8> destination, Userspace<const u8*> address)
+{
+    // This function can be called from the context of another
+    // process that called PT_PEEKBUF
+    ScopedAddressSpaceSwitcher switcher(*this);
+    TRY(copy_from_user(destination.data(), address, destination.size()));
+    return {};
 }
 
 ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
