@@ -465,11 +465,6 @@ struct SC_ptrace_params {
     FlatPtr data;
 };
 
-struct SC_ptrace_peek_params {
-    const void* address;
-    FlatPtr* out_data;
-};
-
 struct SC_set_coredump_metadata_params {
     StringArgument key;
     StringArgument value;

@@ -18,12 +18,9 @@ long ptrace(int request, pid_t tid, void* addr, void* data)
     // by looking at errno rather than the return value.
 
     FlatPtr out_data;
-    Syscall::SC_ptrace_peek_params peek_params;
     auto is_peek_type = request == PT_PEEK || request == PT_PEEKDEBUG;
     if (is_peek_type) {
-        peek_params.address = reinterpret_cast<FlatPtr*>(addr);
-        peek_params.out_data = &out_data;
-        addr = &peek_params;
+        data = &out_data;
     }
 
     Syscall::SC_ptrace_params params {

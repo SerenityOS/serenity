@@ -114,26 +114,18 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
     }
 
     case PT_PEEK: {
-        Kernel::Syscall::SC_ptrace_peek_params peek_params {};
-        TRY(copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)));
-        if (!Memory::is_user_address(VirtualAddress { peek_params.address }))
-            return EFAULT;
-        auto data = TRY(peer->process().peek_user_data(Userspace<const FlatPtr*> { (FlatPtr)peek_params.address }));
-        TRY(copy_to_user(peek_params.out_data, &data));
+        auto data = TRY(peer->process().peek_user_data(Userspace<const FlatPtr*> { (FlatPtr)params.addr }));
+        TRY(copy_to_user((FlatPtr*)params.data, &data));
         break;
     }
 
     case PT_POKE:
-        if (!Memory::is_user_address(VirtualAddress { params.addr }))
-            return EFAULT;
         TRY(peer->process().poke_user_data(Userspace<FlatPtr*> { (FlatPtr)params.addr }, params.data));
         return 0;
 
     case PT_PEEKDEBUG: {
-        Kernel::Syscall::SC_ptrace_peek_params peek_params {};
-        TRY(copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)));
-        auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(peek_params.address)));
-        TRY(copy_to_user(peek_params.out_data, &data));
+        auto data = TRY(peer->peek_debug_register(reinterpret_cast<uintptr_t>(params.addr)));
+        TRY(copy_to_user((FlatPtr*)params.data, &data));
         break;
     }
     case PT_POKEDEBUG:
