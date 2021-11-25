@@ -55,14 +55,13 @@ private:
         m_title_textbox->set_text(title);
         m_title_textbox->set_focus(true);
         m_title_textbox->select_all();
-        m_title_textbox->on_return_pressed = [this] {
-            done(Dialog::ExecOK);
-        };
 
         m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
         m_url_textbox->set_text(url);
-        m_url_textbox->on_return_pressed = [this] {
+
+        on_return_pressed = [this] {
             done(Dialog::ExecOK);
+            return true;
         };
 
         auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
