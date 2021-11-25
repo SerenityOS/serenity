@@ -22,6 +22,7 @@ private:
     BrowserSettingsWidget();
 
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
+    RefPtr<GUI::ComboBox> m_color_scheme_combobox;
     RefPtr<GUI::CheckBox> m_show_bookmarks_bar_checkbox;
     RefPtr<GUI::CheckBox> m_auto_close_download_windows_checkbox;
 
