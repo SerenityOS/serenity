@@ -124,7 +124,7 @@ GoToOffsetDialog::GoToOffsetDialog()
     };
 
     m_go_button->on_click = [this](auto) {
-        done(ExecResult::ExecOK);
+        done(Dialog::ExecOK);
     };
 
     m_text_editor->on_change = [this]() {
@@ -142,6 +142,11 @@ GoToOffsetDialog::GoToOffsetDialog()
 
     m_offset_from_box->on_change = [this](auto&, auto&) {
         update_statusbar();
+    };
+
+    on_return_pressed = [this] {
+        done(Dialog::ExecOK);
+        return true;
     };
 
     update_statusbar();

@@ -132,11 +132,12 @@ FindDialog::FindDialog()
     };
 
     m_find_button->on_click = [this](auto) {
-        auto text = m_text_editor->text();
-        if (!text.is_empty()) {
-            m_text_value = text;
-            done(ExecResult::ExecOK);
-        }
+        on_find();
+    };
+
+    on_return_pressed = [this] {
+        on_find();
+        return true;
     };
 
     m_find_all_button->on_click = [this](auto) {
@@ -151,4 +152,13 @@ FindDialog::FindDialog()
 
 FindDialog::~FindDialog()
 {
+}
+
+void FindDialog::on_find()
+{
+    auto text = m_text_editor->text();
+    if (!text.is_empty()) {
+        m_text_value = text;
+        done(ExecResult::ExecOK);
+    }
 }

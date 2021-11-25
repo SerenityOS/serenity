@@ -32,6 +32,8 @@ private:
     FindDialog();
     virtual ~FindDialog() override;
 
+    void on_find();
+
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<GUI::Button> m_find_button;
     RefPtr<GUI::Button> m_find_all_button;
