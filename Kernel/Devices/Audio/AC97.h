@@ -54,6 +54,7 @@ private:
     };
 
     enum ExtendedAudioStatusControlFlag : u16 {
+        VariableRateAudio = 1 << 0,
         DoubleRateAudio = 1 << 1,
     };
 
@@ -170,7 +171,8 @@ private:
     u8 m_output_buffer_page_count = 4;
     u8 m_output_buffer_page_index = 0;
     AC97Channel m_pcm_out_channel;
-    u32 m_sample_rate = 44100;
+    u32 m_sample_rate = 0;
+    bool m_variable_rate_pcm_supported = false;
 };
 
 }
