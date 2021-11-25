@@ -51,6 +51,7 @@ foreach(CMD_SRC ${CMD_SOURCES})
     endif()
 endforeach()
 
+target_link_libraries(allocate LibMain)
 target_link_libraries(aplay LibAudio)
 target_link_libraries(arp LibMain)
 target_link_libraries(asctl LibAudio)
