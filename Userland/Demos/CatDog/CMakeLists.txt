@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(CatDog ICON app-catdog)
-target_link_libraries(CatDog LibGUI LibGfx)
+target_link_libraries(CatDog LibGUI LibGfx LibCore LibMain)
