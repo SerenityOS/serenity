@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Mouse ICON app-mouse)
-target_link_libraries(Mouse LibGUI LibGfx)
+target_link_libraries(Mouse LibGUI LibGfx LibMain)
