@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/TextBox.h>
 
@@ -23,4 +24,11 @@ private:
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
     RefPtr<GUI::CheckBox> m_show_bookmarks_bar_checkbox;
     RefPtr<GUI::CheckBox> m_auto_close_download_windows_checkbox;
+
+    bool m_is_custom_search_engine { false };
+    RefPtr<GUI::CheckBox> m_enable_search_engine_checkbox;
+    RefPtr<GUI::Widget> m_search_engine_combobox_group;
+    RefPtr<GUI::ComboBox> m_search_engine_combobox;
+    RefPtr<GUI::Widget> m_custom_search_engine_group;
+    RefPtr<GUI::TextBox> m_custom_search_engine_textbox;
 };
