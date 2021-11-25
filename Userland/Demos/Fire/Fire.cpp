@@ -23,6 +23,7 @@
 */
 
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
@@ -33,6 +34,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -195,40 +197,29 @@ void Fire::mouseup_event(GUI::MouseEvent& event)
     return GUI::Widget::mouseup_event(event);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);
     window->resize(FIRE_WIDTH * 2 + 4, FIRE_HEIGHT * 2 + 4);
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& fire = window->set_main_widget<Fire>();
+    auto fire = TRY(window->try_set_main_widget<Fire>());
 
-    auto& time = fire.add<GUI::Label>();
-    time.set_relative_rect({ 0, 4, 40, 10 });
-    time.move_by({ window->width() - time.width(), 0 });
-    fire.set_stat_label(time);
+    auto time = TRY(fire->try_add<GUI::Label>());
+    time->set_relative_rect({ 0, 4, 40, 10 });
+    time->move_by({ window->width() - time->width(), 0 });
+    fire->set_stat_label(time);
 
     window->show();
 
