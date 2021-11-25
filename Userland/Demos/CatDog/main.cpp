@@ -6,6 +6,7 @@
 
 #include "CatDog.h"
 #include "SpeechBubble.h"
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -14,33 +15,20 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-catdog");
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("CatDog Demo");
     window->resize(32, 32);
     window->set_frameless(true);
@@ -49,20 +37,20 @@ int main(int argc, char** argv)
     window->set_alpha_hit_threshold(1.0f);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& catdog_widget = window->set_main_widget<CatDog>();
-    catdog_widget.set_layout<GUI::VerticalBoxLayout>();
-    catdog_widget.layout()->set_spacing(0);
+    auto catdog_widget = TRY(window->try_set_main_widget<CatDog>());
+    TRY(catdog_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    catdog_widget->layout()->set_spacing(0);
 
-    auto context_menu = GUI::Menu::construct();
-    context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
-    context_menu->add_separator();
-    context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto context_menu = TRY(GUI::Menu::try_create());
+    TRY(context_menu->try_add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window)));
+    TRY(context_menu->try_add_separator());
+    TRY(context_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     window->show();
-    catdog_widget.start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
-    catdog_widget.start_the_timer(); // timer for "mouse sleep detection"
+    catdog_widget->start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
+    catdog_widget->start_the_timer(); // timer for "mouse sleep detection"
 
-    auto advice_window = GUI::Window::construct();
+    auto advice_window = TRY(GUI::Window::try_create());
     advice_window->set_title("CatDog Advice");
     advice_window->resize(225, 50);
     advice_window->set_frameless(true);
@@ -70,38 +58,38 @@ int main(int argc, char** argv)
     advice_window->set_has_alpha_channel(true);
     advice_window->set_alpha_hit_threshold(1.0f);
 
-    auto& advice_widget = advice_window->set_main_widget<SpeechBubble>();
-    advice_widget.set_layout<GUI::VerticalBoxLayout>();
-    advice_widget.layout()->set_spacing(0);
+    auto advice_widget = TRY(advice_window->try_set_main_widget<SpeechBubble>());
+    TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    advice_widget->layout()->set_spacing(0);
 
-    auto advice_timer = Core::Timer::construct();
+    auto advice_timer = TRY(Core::Timer::try_create());
     advice_timer->set_interval(15000);
     advice_timer->set_single_shot(true);
     advice_timer->on_timeout = [&] {
         window->move_to_front();
         advice_window->move_to_front();
-        catdog_widget.set_roaming(false);
+        catdog_widget->set_roaming(false);
         advice_window->move_to(window->x() - advice_window->width() / 2, window->y() - advice_window->height());
         advice_window->show();
     };
     advice_timer->start();
 
-    advice_widget.on_dismiss = [&] {
-        catdog_widget.set_roaming(true);
+    advice_widget->on_dismiss = [&] {
+        catdog_widget->set_roaming(true);
         advice_window->hide();
         advice_timer->start();
     };
 
     // Let users toggle the advice functionality by clicking on catdog.
-    catdog_widget.on_click = [&] {
+    catdog_widget->on_click = [&] {
         if (advice_timer->is_active())
             advice_timer->stop();
         else
             advice_timer->start();
     };
 
-    catdog_widget.on_context_menu_request = [&](GUI::ContextMenuEvent& event) {
-        if (catdog_widget.rect().contains(event.position()))
+    catdog_widget->on_context_menu_request = [&](GUI::ContextMenuEvent& event) {
+        if (catdog_widget->rect().contains(event.position()))
             context_menu->popup(event.screen_position());
     };
 
