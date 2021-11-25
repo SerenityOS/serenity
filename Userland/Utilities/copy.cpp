@@ -10,8 +10,10 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 struct Options {
@@ -20,7 +22,7 @@ struct Options {
     bool clear;
 };
 
-static Options parse_options(int argc, char* argv[])
+static Options parse_options(Main::Arguments arguments)
 {
     const char* type = "text/plain";
     Vector<const char*> text;
@@ -31,7 +33,7 @@ static Options parse_options(int argc, char* argv[])
     args_parser.add_option(type, "Pick a type", "type", 't', "type");
     args_parser.add_option(clear, "Instead of copying, clear the clipboard", "clear", 'c');
     args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Options options;
     options.type = type;
@@ -60,11 +62,11 @@ static Options parse_options(int argc, char* argv[])
     return options;
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
-    Options options = parse_options(argc, argv);
+    Options options = parse_options(arguments);
 
     auto& clipboard = GUI::Clipboard::the();
     if (options.clear)
