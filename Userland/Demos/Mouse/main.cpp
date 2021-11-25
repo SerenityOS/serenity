@@ -6,6 +6,7 @@
  */
 
 #include <AK/Math.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -19,6 +20,7 @@
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Path.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 class MainFrame final : public GUI::Frame {
@@ -155,39 +157,28 @@ private:
     }
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("Mouse demo");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(160, 155);
 
-    auto& main_widget = window->set_main_widget<MainFrame>();
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = TRY(window->try_set_main_widget<MainFrame>());
+    main_widget->set_fill_with_background_color(true);
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Mouse Demo", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Mouse Demo", app_icon, window)));
 
     window->set_resizable(false);
     window->show();
