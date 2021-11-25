@@ -19,6 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domains("Browser");
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/home", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
