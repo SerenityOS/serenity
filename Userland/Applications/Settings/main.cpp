@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Application.h>
@@ -27,6 +28,7 @@ public:
                 return;
             m_apps.append(app_file);
         });
+        quick_sort(m_apps, [](auto& a, auto& b) { return a->name() < b->name(); });
     }
     virtual int row_count(GUI::ModelIndex const&) const override { return m_apps.size(); }
     virtual int column_count(GUI::ModelIndex const&) const override { return 1; }
@@ -42,25 +44,26 @@ public:
     {
         auto& app = m_apps[index.row()];
         if (role == GUI::ModelRole::Icon) {
-            return app.icon();
+            return app->icon();
         }
         if (role == GUI::ModelRole::Display) {
             String name;
-            if (app.name().ends_with(" Settings"sv)) {
-                name = app.name().substring(0, app.name().length() - " Settings"sv.length());
+            if (app->name().ends_with(" Settings"sv)) {
+                name = app->name().substring(0, app->name().length() - " Settings"sv.length());
             } else {
-                name = app.name();
+                name = app->name();
             }
             return name;
         }
         if (role == GUI::ModelRole::Custom) {
-            return app.executable();
+            return app->executable();
         }
         return {};
     }
 
 private:
-    NonnullRefPtrVector<Desktop::AppFile> m_apps;
+    // NonnullRefPtrVector doesn't allow us to quick_sort() it, because its operator[] returns T&.
+    Vector<NonnullRefPtr<Desktop::AppFile>> m_apps;
 };
 
 int main(int argc, char** argv)
@@ -118,8 +121,8 @@ int main(int argc, char** argv)
             return;
         }
 
-        auto& app = *(Desktop::AppFile*)index.internal_data();
-        statusbar.set_text(app.description());
+        auto& app = *(NonnullRefPtr<Desktop::AppFile>*)index.internal_data();
+        statusbar.set_text(app->description());
     };
 
     window->set_icon(app_icon.bitmap_for_size(16));
