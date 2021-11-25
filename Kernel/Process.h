@@ -481,6 +481,7 @@ public:
         m_wait_for_tracer_at_next_execve = val;
     }
 
+    ErrorOr<void> peek_user_data(Span<u8> destination, Userspace<const u8*> address);
     ErrorOr<FlatPtr> peek_user_data(Userspace<const FlatPtr*> address);
     ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
