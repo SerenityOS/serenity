@@ -8,9 +8,10 @@
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* path = nullptr;
     bool should_loop = false;
@@ -18,7 +19,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to audio file", "path");
     args_parser.add_option(should_loop, "Loop playback", "loop", 'l');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Core::EventLoop loop;
 
