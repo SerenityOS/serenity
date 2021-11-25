@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Screensaver ICON app-screensaver)
-target_link_libraries(Screensaver LibGUI LibCore LibGfx)
+target_link_libraries(Screensaver LibGUI LibCore LibGfx LibMain)
