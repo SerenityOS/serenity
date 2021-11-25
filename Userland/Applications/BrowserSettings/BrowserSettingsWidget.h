@@ -17,15 +17,18 @@ public:
     virtual ~BrowserSettingsWidget() override;
 
     virtual void apply_settings() override;
+    virtual void reset_default_values() override;
 
 private:
     BrowserSettingsWidget();
 
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
+    void set_color_scheme(StringView);
     RefPtr<GUI::ComboBox> m_color_scheme_combobox;
     RefPtr<GUI::CheckBox> m_show_bookmarks_bar_checkbox;
     RefPtr<GUI::CheckBox> m_auto_close_download_windows_checkbox;
 
+    void set_search_engine_url(StringView);
     bool m_is_custom_search_engine { false };
     RefPtr<GUI::CheckBox> m_enable_search_engine_checkbox;
     RefPtr<GUI::Widget> m_search_engine_combobox_group;
