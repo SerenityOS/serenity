@@ -6,6 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
@@ -17,6 +18,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Vector3.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -198,31 +200,20 @@ void Cube::set_show_window_frame(bool show)
     w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser parser;
     parser.set_general_help("Create a window with a spinning cube.");
     parser.add_option(flag_hide_window_frame, "Hide window frame", "hide-window", 'h');
-    parser.parse(argc, argv);
+    parser.parse(arguments);
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(true);
     window->set_title("Cube");
     window->set_resizable(false);
@@ -230,31 +221,31 @@ int main(int argc, char** argv)
     window->set_has_alpha_channel(true);
     window->set_alpha_hit_threshold(1);
 
-    auto& cube = window->set_main_widget<Cube>();
+    auto cube = TRY(window->try_set_main_widget<Cube>());
 
-    auto& time = cube.add<GUI::Label>();
-    time.set_relative_rect({ 0, 4, 40, 10 });
-    time.move_by({ window->width() - time.width(), 0 });
-    cube.set_stat_label(time);
+    auto time = TRY(cube->try_add<GUI::Label>());
+    time->set_relative_rect({ 0, 4, 40, 10 });
+    time->move_by({ window->width() - time->width(), 0 });
+    cube->set_stat_label(time);
 
     auto app_icon = GUI::Icon::default_icon("app-cube");
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& file_menu = window->add_menu("&File");
+    auto file_menu = TRY(window->try_add_menu("&File"));
     auto show_window_frame_action = GUI::Action::create_checkable("Show Window &Frame", [&](auto& action) {
-        cube.set_show_window_frame(action.is_checked());
+        cube->set_show_window_frame(action.is_checked());
     });
 
-    cube.set_show_window_frame(!flag_hide_window_frame);
-    show_window_frame_action->set_checked(cube.show_window_frame());
-    file_menu.add_action(move(show_window_frame_action));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window));
+    cube->set_show_window_frame(!flag_hide_window_frame);
+    show_window_frame_action->set_checked(cube->show_window_frame());
+    TRY(file_menu->try_add_action(move(show_window_frame_action)));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window)));
 
-    cube.on_context_menu_request = [&](auto& event) {
-        file_menu.popup(event.screen_position());
+    cube->on_context_menu_request = [&](auto& event) {
+        file_menu->popup(event.screen_position());
     };
 
     window->show();
