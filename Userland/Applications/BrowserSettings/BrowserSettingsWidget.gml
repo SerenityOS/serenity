@@ -41,11 +41,33 @@
 
     @GUI::GroupBox {
         title: "Appearance"
-        fixed_height: 64
+        fixed_height: 104
 
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                fixed_width: 32
+                fixed_height: 32
+                name: "appearance_image_label"
+            }
+
+            @GUI::Label {
+                text: "Color scheme:"
+                text_alignment: "CenterLeft"
+                fixed_width: 110
+            }
+
+            @GUI::ComboBox {
+                name: "color_scheme_combobox"
+            }
         }
 
         @GUI::Widget {

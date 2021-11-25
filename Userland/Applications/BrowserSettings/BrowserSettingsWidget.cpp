@@ -8,6 +8,45 @@
 #include <Applications/BrowserSettings/BrowserSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/Model.h>
+
+struct ColorScheme {
+    String title;
+    String setting_value;
+};
+
+class ColorSchemeModel final : public GUI::Model {
+
+public:
+    ColorSchemeModel()
+    {
+        m_color_schemes.empend("Follow system theme", "auto");
+        m_color_schemes.empend("Dark", "dark");
+        m_color_schemes.empend("Light", "light");
+    }
+
+    virtual ~ColorSchemeModel() = default;
+
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 3; }
+    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 2; }
+
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
+    {
+        if (role == GUI::ModelRole::TextAlignment)
+            return Gfx::TextAlignment::CenterLeft;
+        if (role == GUI::ModelRole::Display) {
+            if (index.column() == 0)
+                return m_color_schemes[index.row()].title;
+            else
+                return m_color_schemes[index.row()].setting_value;
+        }
+
+        return {};
+    }
+
+private:
+    Vector<ColorScheme> m_color_schemes;
+};
 
 BrowserSettingsWidget::BrowserSettingsWidget()
 {
@@ -15,6 +54,19 @@ BrowserSettingsWidget::BrowserSettingsWidget()
 
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", "about:blank"));
+
+    m_color_scheme_combobox = find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combobox");
+    m_color_scheme_combobox->set_only_allow_values_from_model(true);
+    m_color_scheme_combobox->set_model(adopt_ref(*new ColorSchemeModel()));
+    m_color_scheme_combobox->set_selected_index(0);
+    auto selected_color_scheme = Config::read_string("Browser", "Preferences", "ColorScheme", "auto");
+    for (int item_index = 0; item_index < m_color_scheme_combobox->model()->row_count(); ++item_index) {
+        auto scheme = m_color_scheme_combobox->model()->index(item_index, 1).data().to_string();
+        if (scheme == selected_color_scheme) {
+            m_color_scheme_combobox->set_selected_index(item_index);
+            break;
+        }
+    }
 
     m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
     m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true), GUI::AllowCallback::No);
@@ -93,6 +145,10 @@ void BrowserSettingsWidget::apply_settings()
     Config::write_string("Browser", "Preferences", "Home", m_homepage_url_textbox->text());
 
     Config::write_bool("Browser", "Preferences", "ShowBookmarksBar", m_show_bookmarks_bar_checkbox->is_checked());
+
+    auto color_scheme_index = m_color_scheme_combobox->selected_index();
+    auto color_scheme = m_color_scheme_combobox->model()->index(color_scheme_index, 1).data().to_string();
+    Config::write_string("Browser", "Preferences", "ColorScheme", color_scheme);
 
     if (!m_enable_search_engine_checkbox->is_checked()) {
         Config::write_string("Browser", "Preferences", "SearchEngine", {});
