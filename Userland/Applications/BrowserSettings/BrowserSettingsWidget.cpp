@@ -10,6 +10,12 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Model.h>
 
+static String default_homepage_url = "file:///res/html/misc/welcome.html";
+static String default_search_engine = "";
+static String default_color_scheme = "auto";
+static bool default_show_bookmarks_bar = true;
+static bool default_auto_close_download_windows = false;
+
 struct ColorScheme {
     String title;
     String setting_value;
@@ -53,23 +59,16 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     load_from_gml(browser_settings_widget_gml);
 
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
-    m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", "about:blank"));
+    m_homepage_url_textbox->set_text(Config::read_string("Browser", "Preferences", "Home", default_homepage_url));
 
     m_color_scheme_combobox = find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combobox");
     m_color_scheme_combobox->set_only_allow_values_from_model(true);
     m_color_scheme_combobox->set_model(adopt_ref(*new ColorSchemeModel()));
     m_color_scheme_combobox->set_selected_index(0);
-    auto selected_color_scheme = Config::read_string("Browser", "Preferences", "ColorScheme", "auto");
-    for (int item_index = 0; item_index < m_color_scheme_combobox->model()->row_count(); ++item_index) {
-        auto scheme = m_color_scheme_combobox->model()->index(item_index, 1).data().to_string();
-        if (scheme == selected_color_scheme) {
-            m_color_scheme_combobox->set_selected_index(item_index);
-            break;
-        }
-    }
+    set_color_scheme(Config::read_string("Browser", "Preferences", "ColorScheme", default_color_scheme));
 
     m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
-    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", true), GUI::AllowCallback::No);
+    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "ShowBookmarksBar", default_show_bookmarks_bar), GUI::AllowCallback::No);
 
     m_enable_search_engine_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_search_engine_checkbox");
     m_search_engine_combobox_group = find_descendant_of_type_named<GUI::Widget>("search_engine_combobox_group");
@@ -99,9 +98,34 @@ BrowserSettingsWidget::BrowserSettingsWidget()
         m_is_custom_search_engine = url_format.is_empty();
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
     };
+    set_search_engine_url(Config::read_string("Browser", "Preferences", "SearchEngine", default_search_engine));
 
-    auto current_search_engine_url = Config::read_string("Browser", "Preferences", "SearchEngine", {});
-    if (current_search_engine_url.is_empty()) {
+    m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
+    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", default_auto_close_download_windows), GUI::AllowCallback::No);
+}
+
+BrowserSettingsWidget::~BrowserSettingsWidget()
+{
+}
+
+void BrowserSettingsWidget::set_color_scheme(StringView color_scheme)
+{
+    bool found_color_scheme = false;
+    for (int item_index = 0; item_index < m_color_scheme_combobox->model()->row_count(); ++item_index) {
+        auto scheme = m_color_scheme_combobox->model()->index(item_index, 1).data().to_string();
+        if (scheme == color_scheme) {
+            m_color_scheme_combobox->set_selected_index(item_index);
+            found_color_scheme = true;
+            break;
+        }
+    }
+    if (!found_color_scheme)
+        m_color_scheme_combobox->set_selected_index(0);
+}
+
+void BrowserSettingsWidget::set_search_engine_url(StringView url)
+{
+    if (url.is_empty()) {
         m_enable_search_engine_checkbox->set_checked(false);
         m_search_engine_combobox_group->set_enabled(false);
         m_custom_search_engine_group->set_enabled(false);
@@ -113,7 +137,7 @@ BrowserSettingsWidget::BrowserSettingsWidget()
         bool found_url = false;
         for (int item_index = 0; item_index < m_search_engine_combobox->model()->row_count(); ++item_index) {
             auto url_format = m_search_engine_combobox->model()->index(item_index, 1).data().to_string();
-            if (url_format == current_search_engine_url) {
+            if (url_format == url) {
                 m_search_engine_combobox->set_selected_index(item_index);
                 found_url = true;
                 break;
@@ -122,7 +146,7 @@ BrowserSettingsWidget::BrowserSettingsWidget()
 
         if (!found_url) {
             m_is_custom_search_engine = true;
-            m_custom_search_engine_textbox->set_text(current_search_engine_url);
+            m_custom_search_engine_textbox->set_text(url);
             // We assume that "Custom" is the last item
             m_search_engine_combobox->set_selected_index(m_search_engine_combobox->model()->row_count() - 1);
             m_custom_search_engine_group->set_enabled(true);
@@ -130,13 +154,6 @@ BrowserSettingsWidget::BrowserSettingsWidget()
             m_custom_search_engine_group->set_enabled(false);
         }
     }
-
-    m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
-    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", false), GUI::AllowCallback::No);
-}
-
-BrowserSettingsWidget::~BrowserSettingsWidget()
-{
 }
 
 void BrowserSettingsWidget::apply_settings()
@@ -161,4 +178,13 @@ void BrowserSettingsWidget::apply_settings()
     }
 
     Config::write_bool("Browser", "Preferences", "CloseDownloadWidgetOnFinish", m_auto_close_download_windows_checkbox->is_checked());
+}
+
+void BrowserSettingsWidget::reset_default_values()
+{
+    m_homepage_url_textbox->set_text(default_homepage_url);
+    m_show_bookmarks_bar_checkbox->set_checked(default_show_bookmarks_bar);
+    set_color_scheme(default_color_scheme);
+    m_auto_close_download_windows_checkbox->set_checked(default_auto_close_download_windows);
+    set_search_engine_url(default_search_engine);
 }
