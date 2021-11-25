@@ -14,4 +14,4 @@ set(SOURCES
 
 serenity_app(ModelGallery ICON app-model-gallery)
 
-target_link_libraries(ModelGallery LibGUI LibGfx)
+target_link_libraries(ModelGallery LibGUI LibGfx LibMain)

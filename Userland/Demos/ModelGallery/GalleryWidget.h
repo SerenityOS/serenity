@@ -21,7 +21,7 @@ class GalleryWidget final : public GUI::Widget {
 private:
     GalleryWidget();
 
-    void load_basic_model_tab();
+    ErrorOr<void> load_basic_model_tab();
     void load_sorting_filtering_tab();
 
     void add_textbox_contents_to_basic_model();
