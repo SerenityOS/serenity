@@ -1,0 +1,11 @@
+--- zsh-zsh-5.8/original-config.sub	2021-06-04 22:59:03.710400955 -0300
++++ zsh-zsh-5.8/config.sub	2021-06-04 23:01:41.573688625 -0300
+@@ -1516,6 +1516,8 @@
+ 		;;
+ 	*-eabi)
+ 		;;
++	serenity*)
++		;;
+ 	*)
+ 		echo Invalid configuration \`"$1"\': system \`"$os"\' not recognized 1>&2
+ 		exit 1

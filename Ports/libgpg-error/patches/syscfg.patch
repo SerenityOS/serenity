@@ -1,0 +1,21 @@
+diff -Naur libgpg-error-1.42/src/syscfg/lock-obj-pub.i686-pc-serenity.h libgpg-error-1.42.serenity/src/syscfg/lock-obj-pub.i686-pc-serenity.h
+--- libgpg-error-1.42/src/syscfg/lock-obj-pub.i686-pc-serenity.h	1970-01-01 01:00:00.000000000 +0100
++++ libgpg-error-1.42.serenity/src/syscfg/lock-obj-pub.i686-pc-serenity.h	2021-04-14 01:24:29.444700685 +0200
+@@ -0,0 +1,17 @@
++## lock-obj-pub.i686-pc-serenity.h - NO LOCK SUPPORT
++## File created by gen-posix-lock-obj - DO NOT EDIT
++## To be included by mkheader into gpg-error.h
++
++/* Dummy object - no locking available.  */
++typedef struct
++{
++  long _vers;
++} gpgrt_lock_t;
++
++#define GPGRT_LOCK_INITIALIZER {-1}
++##
++## Local Variables:
++## mode: c
++## buffer-read-only: t
++## End:
++##

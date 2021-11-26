@@ -1,0 +1,10 @@
+--- mandoc-1.14.5/soelim.c.orig	Mon Jan 20 00:18:44 2020
++++ mandoc-1.14.5/soelim.c	Mon Jan 20 00:18:55 2020
+@@ -42,6 +42,7 @@
+ #include "compat_stringlist.h"
+ #endif
+ #include <unistd.h>
++#include "getopt.h"
+ 
+ #define C_OPTION 0x1
+ 

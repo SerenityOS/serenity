@@ -1,0 +1,12 @@
+#include <AK/URL.h>
+#include <LibCore/IODevice.h>
+
+endpoint FileSystemAccessServer
+{
+    request_file_read_only_approved(i32 window_server_client_id, i32 window_id, String path) =|
+    request_file(i32 window_server_client_id, i32 window_id, String path, Core::OpenMode requested_access) =|
+    prompt_open_file(i32 window_server_client_id, i32 window_id, String window_title, String path_to_view, Core::OpenMode requested_access) =|
+    prompt_save_file(i32 window_server_client_id, i32 window_id,String title, String ext, String path_to_view, Core::OpenMode requested_access) =|
+
+    expose_window_server_client_id() => (i32 client_id)
+}

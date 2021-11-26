@@ -1,0 +1,4 @@
+[App]
+Name=Terminal
+Executable=/bin/Terminal
+Category=Utilities

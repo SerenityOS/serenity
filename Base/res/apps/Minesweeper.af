@@ -1,0 +1,4 @@
+[App]
+Name=Minesweeper
+Executable=/bin/Minesweeper
+Category=Games

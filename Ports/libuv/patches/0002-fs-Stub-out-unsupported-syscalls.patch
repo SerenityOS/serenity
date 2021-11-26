@@ -1,0 +1,115 @@
+From ef46efb9fb0a1faa306fb1e74a0b44faf6c6d41f Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 9 Jul 2021 04:56:55 +0430
+Subject: [PATCH 2/7] fs: Stub out unsupported syscalls
+
+---
+ src/unix/fs.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/src/unix/fs.c b/src/unix/fs.c
+index eb17fb4..93b457b 100644
+--- a/src/unix/fs.c
++++ b/src/unix/fs.c
+@@ -90,6 +90,8 @@
+       defined(__HAIKU__)  || \
+       defined(__QNX__)
+ # include <sys/statvfs.h>
++#elif defined(__serenity__)
++// No statfs
+ #else
+ # include <sys/statfs.h>
+ #endif
+@@ -659,13 +661,16 @@ static int uv__fs_statfs(uv_fs_t* req) {
+   struct statvfs buf;
+ 
+   if (0 != statvfs(req->path, &buf))
++#elif defined(__serenity__)
++  char buf = 0;
++  if (1)
+ #else
+   struct statfs buf;
+ 
+   if (0 != statfs(req->path, &buf))
+ #endif /* defined(__sun) */
+     return -1;
+-
++#if !defined(__serenity__)
+   stat_fs = uv__malloc(sizeof(*stat_fs));
+   if (stat_fs == NULL) {
+     errno = ENOMEM;
+@@ -689,6 +694,7 @@ static int uv__fs_statfs(uv_fs_t* req) {
+   stat_fs->f_files = buf.f_files;
+   stat_fs->f_ffree = buf.f_ffree;
+   req->ptr = stat_fs;
++#endif // !defined(__serenity__)
+   return 0;
+ }
+ 
+@@ -1167,7 +1173,11 @@ static ssize_t uv__fs_write(uv_fs_t* req) {
+       r = writev(req->file, (struct iovec*) req->bufs, req->nbufs);
+   } else {
+     if (req->nbufs == 1) {
++#ifdef __serenity__
++      r = 0;
++#else
+       r = pwrite(req->file, req->bufs[0].base, req->bufs[0].len, req->off);
++#endif
+       goto done;
+     }
+ #if HAVE_PREADV
+@@ -1177,7 +1187,11 @@ static ssize_t uv__fs_write(uv_fs_t* req) {
+     if (no_pwritev) retry:
+ # endif
+     {
++#ifdef __serenity__
++      r = 0;
++#else
+       r = pwrite(req->file, req->bufs[0].base, req->bufs[0].len, req->off);
++#endif
+     }
+ # if defined(__linux__)
+     else {
+@@ -1666,7 +1680,9 @@ static void uv__fs_work(struct uv__work* w) {
+     X(COPYFILE, uv__fs_copyfile(req));
+     X(FCHMOD, fchmod(req->file, req->mode));
+     X(FCHOWN, fchown(req->file, req->uid, req->gid));
++#ifndef __serenity__
+     X(LCHOWN, lchown(req->path, req->uid, req->gid));
++#endif
+     X(FDATASYNC, uv__fs_fdatasync(req));
+     X(FSTAT, uv__fs_fstat(req->file, &req->statbuf));
+     X(FSYNC, uv__fs_fsync(req));
+@@ -1690,7 +1706,9 @@ static void uv__fs_work(struct uv__work* w) {
+     X(RMDIR, rmdir(req->path));
+     X(SENDFILE, uv__fs_sendfile(req));
+     X(STAT, uv__fs_stat(req->path, &req->statbuf));
++#ifndef __serenity__
+     X(STATFS, uv__fs_statfs(req));
++#endif
+     X(SYMLINK, symlink(req->path, req->new_path));
+     X(UNLINK, unlink(req->path));
+     X(UTIME, uv__fs_utime(req));
+@@ -1805,7 +1823,9 @@ int uv_fs_lchown(uv_loop_t* loop,
+                  uv_uid_t uid,
+                  uv_gid_t gid,
+                  uv_fs_cb cb) {
++#ifndef __serenity__
+   INIT(LCHOWN);
++#endif
+   PATH;
+   req->uid = uid;
+   req->gid = gid;
+@@ -2196,7 +2216,9 @@ int uv_fs_statfs(uv_loop_t* loop,
+                  uv_fs_t* req,
+                  const char* path,
+                  uv_fs_cb cb) {
++#ifndef __serenity__
+   INIT(STATFS);
++#endif
+   PATH;
+   POST;
+ }
+-- 
+2.32.0
+

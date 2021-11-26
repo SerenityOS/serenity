@@ -1,0 +1,8 @@
+endpoint InspectorServer
+{
+    get_all_objects(i32 pid) => (String json)
+    set_inspected_object(i32 pid, u64 object_id) => (bool success)
+    set_object_property(i32 pid, u64 object_id, String name, String value) => (bool success)
+    identify(i32 pid) => (String json)
+    is_inspectable(i32 pid) => (bool inspectable)
+}

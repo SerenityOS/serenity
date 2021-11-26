@@ -1,0 +1,76 @@
+function(add_simple_fuzzer name)
+  add_executable(${name} "${name}.cpp")
+
+  if (ENABLE_OSS_FUZZ)
+      target_link_libraries(${name}
+          PUBLIC ${ARGN} LagomCore)
+  else()
+    target_compile_options(${name}
+      PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
+      )
+    target_link_libraries(${name}
+      PUBLIC ${ARGN} LagomCore
+      PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize=fuzzer>
+      )
+  endif()
+endfunction()
+
+add_simple_fuzzer(FuzzBMPLoader LagomGfx)
+add_simple_fuzzer(FuzzCyrillicDecoder LagomTextCodec)
+add_simple_fuzzer(FuzzDeflateCompression LagomCompress)
+add_simple_fuzzer(FuzzDeflateDecompression LagomCompress)
+add_simple_fuzzer(FuzzELF LagomELF)
+add_simple_fuzzer(FuzzFlacLoader LagomAudio)
+add_simple_fuzzer(FuzzGemini LagomGemini)
+add_simple_fuzzer(FuzzGIFLoader LagomGfx)
+add_simple_fuzzer(FuzzGzipCompression LagomCompress)
+add_simple_fuzzer(FuzzGzipDecompression LagomCompress)
+add_simple_fuzzer(FuzzICOLoader LagomGfx)
+add_simple_fuzzer(FuzzJPGLoader LagomGfx)
+add_simple_fuzzer(FuzzMD5 LagomCrypto)
+add_simple_fuzzer(FuzzPEM LagomCrypto)
+add_simple_fuzzer(FuzzPNGLoader LagomGfx)
+add_simple_fuzzer(FuzzPBMLoader LagomGfx)
+add_simple_fuzzer(FuzzPGMLoader LagomGfx)
+add_simple_fuzzer(FuzzPPMLoader LagomGfx)
+add_simple_fuzzer(FuzzPDF LagomPDF)
+add_simple_fuzzer(FuzzQuotedPrintableParser LagomIMAP)
+add_simple_fuzzer(FuzzHebrewDecoder LagomTextCodec)
+add_simple_fuzzer(FuzzHttpRequest LagomHTTP)
+add_simple_fuzzer(FuzzIMAPParser LagomIMAP)
+add_simple_fuzzer(FuzzJs LagomJS)
+add_simple_fuzzer(FuzzLatin1Decoder LagomTextCodec)
+add_simple_fuzzer(FuzzLatin2Decoder LagomTextCodec)
+add_simple_fuzzer(FuzzMarkdown LagomMarkdown)
+add_simple_fuzzer(FuzzRegexECMA262 LagomRegex)
+add_simple_fuzzer(FuzzRegexPosixBasic LagomRegex)
+add_simple_fuzzer(FuzzRegexPosixExtended LagomRegex)
+add_simple_fuzzer(FuzzASN1 LagomCrypto LagomTLS)
+add_simple_fuzzer(FuzzSHA1 LagomCrypto)
+add_simple_fuzzer(FuzzSHA256 LagomCrypto)
+add_simple_fuzzer(FuzzSHA384 LagomCrypto)
+add_simple_fuzzer(FuzzSHA512 LagomCrypto)
+add_simple_fuzzer(FuzzShell LagomShell)
+add_simple_fuzzer(FuzzSQLParser LagomSQL)
+add_simple_fuzzer(FuzzTTF LagomGfx)
+add_simple_fuzzer(FuzzURL)
+add_simple_fuzzer(FuzzUTF16BEDecoder LagomTextCodec)
+add_simple_fuzzer(FuzzRSAKeyParsing LagomCrypto)
+add_simple_fuzzer(FuzzWAVLoader LagomAudio)
+add_simple_fuzzer(FuzzWasmParser LagomWasm)
+add_simple_fuzzer(FuzzZip LagomArchive)
+add_simple_fuzzer(FuzzZlibDecompression LagomCompress)
+
+if (NOT ENABLE_OSS_FUZZ)
+set(CMAKE_EXE_LINKER_FLAGS "${ORIGINAL_CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_SHARED_LINKER_FLAGS "${ORIGINAL_CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_MODULE_LINKER_FLAGS "${ORIGINAL_CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
+add_executable(FuzzilliJs FuzzilliJs.cpp)
+target_compile_options(FuzzilliJs
+    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
+    )
+target_link_libraries(FuzzilliJs
+    PUBLIC LagomCore LagomJS
+    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize-coverage=trace-pc-guard>
+    )
+endif()

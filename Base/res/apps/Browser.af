@@ -1,0 +1,8 @@
+[App]
+Name=Browser
+Executable=/bin/Browser
+Category=Internet
+
+[Launcher]
+FileTypes=html,htm
+Protocols=gemini,http,https

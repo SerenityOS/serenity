@@ -1,0 +1,99 @@
+81548c85897681d42968dd7ca228c6b128ac39f1 Reimplement read_passphrase as a C version of Core::get_password
+diff --git a/readpass.c b/readpass.c
+index 974d67f0..3496eebe 100644
+--- a/readpass.c
++++ b/readpass.c
+@@ -47,6 +47,10 @@
+ #include "ssh.h"
+ #include "uidswap.h"
+ 
++#ifdef __serenity__
++#include <termios.h>
++#endif
++
+ static char *
+ ssh_askpass(char *askpass, const char *msg, const char *env_hint)
+ {
+@@ -122,62 +126,33 @@ ssh_askpass(char *askpass, const char *msg, const char *env_hint)
+ char *
+ read_passphrase(const char *prompt, int flags)
+ {
+-	char cr = '\r', *askpass = NULL, *ret, buf[1024];
+-	int rppflags, use_askpass = 0, ttyfd;
+-	const char *askpass_hint = NULL;
++	// Reimplementation of Core::get_password
++	fwrite(prompt, sizeof(char), strlen(prompt), stdout);
++	fflush(stdout);
++
++	struct termios original;
++	tcgetattr(STDIN_FILENO, &original);
+ 
+-	rppflags = (flags & RP_ECHO) ? RPP_ECHO_ON : RPP_ECHO_OFF;
+-	if (flags & RP_USE_ASKPASS)
+-		use_askpass = 1;
+-	else if (flags & RP_ALLOW_STDIN) {
+-		if (!isatty(STDIN_FILENO)) {
+-			debug("read_passphrase: stdin is not a tty");
+-			use_askpass = 1;
+-		}
+-	} else {
+-		rppflags |= RPP_REQUIRE_TTY;
+-		ttyfd = open(_PATH_TTY, O_RDWR);
+-		if (ttyfd >= 0) {
+-			/*
+-			 * If we're on a tty, ensure that show the prompt at
+-			 * the beginning of the line. This will hopefully
+-			 * clobber any password characters the user has
+-			 * optimistically typed before echo is disabled.
+-			 */
+-			(void)write(ttyfd, &cr, 1);
+-			close(ttyfd);
+-		} else {
+-			debug("read_passphrase: can't open %s: %s", _PATH_TTY,
+-			    strerror(errno));
+-			use_askpass = 1;
+-		}
++	struct termios no_echo = original;
++	no_echo.c_lflag &= ~ECHO;
++	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &no_echo) < 0) {
++		return errno;
+ 	}
+ 
+-	if ((flags & RP_USE_ASKPASS) && getenv("DISPLAY") == NULL)
+-		return (flags & RP_ALLOW_EOF) ? NULL : xstrdup("");
++	char* password = NULL;
++	size_t n = 0;
+ 
+-	if (use_askpass && getenv("DISPLAY")) {
+-		if (getenv(SSH_ASKPASS_ENV))
+-			askpass = getenv(SSH_ASKPASS_ENV);
+-		else
+-			askpass = _PATH_SSH_ASKPASS_DEFAULT;
+-		if ((flags & RP_ASK_PERMISSION) != 0)
+-			askpass_hint = "confirm";
+-		if ((ret = ssh_askpass(askpass, prompt, askpass_hint)) == NULL)
+-			if (!(flags & RP_ALLOW_EOF))
+-				return xstrdup("");
+-		return ret;
++	int ret = getline(&password, &n, stdin);
++	tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
++	putchar('\n');
++	if (ret < 0) {
++		return errno;
+ 	}
+ 
+-	if (readpassphrase(prompt, buf, sizeof buf, rppflags) == NULL) {
+-		if (flags & RP_ALLOW_EOF)
+-			return NULL;
+-		return xstrdup("");
+-	}
++	// Bit of a dirty way of removing the newline in password
++	password[strcspn(password, "\n")] = '\0';
+ 
+-	ret = xstrdup(buf);
+-	explicit_bzero(buf, sizeof(buf));
+-	return ret;
++	return password;
+ }
+ 
+ int

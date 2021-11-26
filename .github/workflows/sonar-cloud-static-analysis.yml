@@ -1,0 +1,131 @@
+name: Sonar Cloud Static Analysis
+on:
+  # Automatically run at the end of every day.
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+    env:
+      # Latest scanner version is tracked on: https://sonarcloud.io/documentation/analysis/scan/sonarscanner/
+      SONAR_SCANNER_VERSION: 4.6.2.2472
+      SONAR_SERVER_URL: "https://sonarcloud.io"
+      SONAR_ANALYSIS_ARCH: i686
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+        # Install JDK for sonar-scanner
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Download and set up sonar-scanner
+        env:
+          SONAR_SCANNER_DOWNLOAD_URL: https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
+        if: steps.sonarcloud-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $HOME/.sonar
+          curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }}
+          unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+          rm $HOME/.sonar/sonar-scanner.zip
+
+      - name: Configure sonar-scanner
+        run: |
+          echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
+          echo "sonar.projectKey=SerenityOS_serenity" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.projectVersion=${{ github.sha }}" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.organization=serenityos" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.cfamily.compile-commands=${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/compile_commands.json" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.cfamily.threads=2" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.cfamily.cache.enabled=false" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.exclusions=Userland/Libraries/LibWasm/Parser/Parser.cpp" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.host.url=${{ env.SONAR_SERVER_URL }}" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.sources=AK,Build,Userland,Kernel,Meta" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.tests=Tests" >> ${{ github.workspace }}/sonar-project.properties
+          echo "sonar.python.version=3.7, 3.8, 3.9" >> ${{ github.workspace }}/sonar-project.properties
+
+      # === OS SETUP ===
+      # TODO: Is there someway to share these steps with the cmake.yml?
+
+      - name: "Install Ubuntu dependencies"
+        # These packages are already part of the ubuntu-20.04 image:
+        # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+        # Packages below aren't.
+        #
+        # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
+        #    yet another cache in github actions
+        run: |
+          sudo add-apt-repository ppa:canonical-server/server-backports
+          sudo apt-get update
+          sudo apt-get install libmpfr-dev libmpc-dev ninja-build unzip
+
+      - name: Check versions
+        run: set +e; g++ --version; g++-10 --version; ninja --version;
+
+      - name: Prepare useful stamps
+        id: stamps
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+          # Output everything twice to make it visible both in the logs
+          # *and* as actual output variable, in this order.
+          message("  set-output name=time::${current_date}")
+          message("::set-output name=time::${current_date}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+
+      - name: Toolchain cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        env:
+          # This job should always read the cache, never populate it.
+          CACHE_SKIP_SAVE: true
+
+        with:
+          path: ${{ github.workspace }}/Toolchain/Cache/
+          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+          # This is wrong, and causes more Toolchain rebuilds than necessary.
+          # However, we want to avoid false cache hits at all costs.
+          key: ${{ runner.os }}-toolchain-${{ env.SONAR_ANALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
+
+      - name: Restore or regenerate Toolchain
+        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ env.SONAR_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/UCD
+          mkdir -p ${{ github.workspace }}/Build/${{ env.SONAR_ANALYSIS_ARCH }}/CLDR
+
+      - name: Create build environment
+        working-directory: ${{ github.workspace }}
+        run: |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=${{ env.SONAR_ANALYSIS_ARCH }} \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
+
+      - name: Build generated sources so they are available for analysis.
+        working-directory: ${{ github.workspace }}
+        # Note: The superbuild will create the Build/arch directory when doing the
+        #       configure step for the serenity ExternalProject, as that's the configured
+        #       binary directory for that project.
+        run: |
+          ninja -C Build/superbuild serenity-configure
+          cmake -B Build/${{ env.SONAR_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          ninja -C Build/${{ env.SONAR_ANALYSIS_ARCH }} all_generated
+
+      - name: Run sonar-scanner, upload results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner

@@ -1,0 +1,12 @@
+diff -Naur openttd-1.11.0/src/cpu.cpp openttd-1.11.0.serenity/src/cpu.cpp
+--- openttd-1.11.0/src/cpu.cpp	2021-04-22 01:14:21.038920133 +0200
++++ openttd-1.11.0.serenity/src/cpu.cpp	2021-04-22 01:13:56.638440518 +0200
+@@ -40,7 +40,7 @@
+ #endif
+ 
+ /* rdtsc for all other *nix-en (hopefully). Use GCC syntax */
+-#if (defined(__i386__) || defined(__x86_64__)) && !defined(RDTSC_AVAILABLE)
++#if (defined(__i386__) || defined(__x86_64__)) && !defined(__serenity__) && !defined(RDTSC_AVAILABLE)
+ uint64 ottd_rdtsc()
+ {
+ 	uint32 high, low;

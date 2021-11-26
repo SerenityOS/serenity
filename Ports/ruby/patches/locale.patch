@@ -1,0 +1,18 @@
+--- ruby-3.0.2/ext/nkf/nkf-utf8/nkf.h   2021-07-07 03:08:35.000000000 -0700
++++ ruby-3.0.2/ext/nkf/nkf-utf8/nkf.h   2021-09-16 11:43:53.021002630 -0700
+@@ -152,14 +152,6 @@
+ # ifndef HAVE_LOCALE_H
+ #  define HAVE_LOCALE_H
+ # endif
+-#elif defined(__BIONIC__) /* bionic doesn't have locale */
+-#else
+-# ifndef HAVE_LANGINFO_H
+-#  define HAVE_LANGINFO_H
+-# endif
+-# ifndef HAVE_LOCALE_H
+-#  define HAVE_LOCALE_H
+-# endif
+ #endif
+
+ #ifdef HAVE_LANGINFO_H
+

@@ -1,0 +1,16 @@
+[binaries]
+c = 'x86_64-pc-serenity-gcc'
+cpp = 'x86_64-pc-serenity-g++'
+ar = 'x86_64-pc-serenity-ar'
+ranlib = 'x86_64-pc-serenity-ranlib'
+pkgconfig = 'pkg-config'
+
+[properties]
+sys_root = '../../../../Build/x86_64/Root'
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'serenity'
+cpu_family = 'x86'
+cpu = 'x86_64'
+endian = 'little'

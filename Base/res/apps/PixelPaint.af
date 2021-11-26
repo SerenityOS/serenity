@@ -1,0 +1,7 @@
+[App]
+Name=Pixel Paint
+Executable=/bin/PixelPaint
+Category=Graphics
+
+[Launcher]
+FileTypes=pp

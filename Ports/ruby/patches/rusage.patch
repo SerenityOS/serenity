@@ -1,0 +1,113 @@
+--- ruby-3.2.0/process.c	2021-09-16 13:10:16.001908642 -0700
++++ ruby-3.2.0/process.c	2021-09-16 14:21:00.080586664 -0700
+@@ -324,9 +324,6 @@
+ static ID id_TIMES_BASED_CLOCK_MONOTONIC;
+ static ID id_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID;
+ #endif
+-#ifdef RUSAGE_SELF
+-static ID id_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID;
+-#endif
+ static ID id_CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID;
+ #ifdef __APPLE__
+ static ID id_MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC;
+@@ -7878,16 +7875,6 @@
+ rb_proc_times(VALUE obj)
+ {
+     VALUE utime, stime, cutime, cstime, ret;
+-#if defined(RUSAGE_SELF) && defined(RUSAGE_CHILDREN)
+-    struct rusage usage_s, usage_c;
+-
+-    if (getrusage(RUSAGE_SELF, &usage_s) != 0 || getrusage(RUSAGE_CHILDREN, &usage_c) != 0)
+-	rb_sys_fail("getrusage");
+-    utime = DBL2NUM((double)usage_s.ru_utime.tv_sec + (double)usage_s.ru_utime.tv_usec/1e6);
+-    stime = DBL2NUM((double)usage_s.ru_stime.tv_sec + (double)usage_s.ru_stime.tv_usec/1e6);
+-    cutime = DBL2NUM((double)usage_c.ru_utime.tv_sec + (double)usage_c.ru_utime.tv_usec/1e6);
+-    cstime = DBL2NUM((double)usage_c.ru_stime.tv_sec + (double)usage_c.ru_stime.tv_usec/1e6);
+-#else
+     const double hertz = (double)get_clk_tck();
+     struct tms buf;
+ 
+@@ -7896,7 +7883,6 @@
+     stime = DBL2NUM(buf.tms_stime / hertz);
+     cutime = DBL2NUM(buf.tms_cutime / hertz);
+     cstime = DBL2NUM(buf.tms_cstime / hertz);
+-#endif
+     ret = rb_struct_new(rb_cProcessTms, utime, stime, cutime, cstime);
+     RB_GC_GUARD(utime);
+     RB_GC_GUARD(stime);
+@@ -8312,26 +8298,6 @@
+         }
+ #endif
+ 
+-#ifdef RUSAGE_SELF
+-#define RUBY_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID \
+-        ID2SYM(id_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID)
+-        if (clk_id == RUBY_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID) {
+-            struct rusage usage;
+-            int32_t usec;
+-            ret = getrusage(RUSAGE_SELF, &usage);
+-            if (ret != 0)
+-                rb_sys_fail("getrusage");
+-            tt.giga_count = usage.ru_utime.tv_sec + usage.ru_stime.tv_sec;
+-            usec = (int32_t)(usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+-            if (1000000 <= usec) {
+-                tt.giga_count++;
+-                usec -= 1000000;
+-            }
+-            tt.count = usec * 1000;
+-            denominators[num_denominators++] = 1000000000;
+-            goto success;
+-        }
+-#endif
+ 
+ #ifdef HAVE_TIMES
+ #define RUBY_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID \
+@@ -9082,9 +9048,6 @@
+     id_TIMES_BASED_CLOCK_MONOTONIC = rb_intern_const("TIMES_BASED_CLOCK_MONOTONIC");
+     id_TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("TIMES_BASED_CLOCK_PROCESS_CPUTIME_ID");
+ #endif
+-#ifdef RUSAGE_SELF
+-    id_GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("GETRUSAGE_BASED_CLOCK_PROCESS_CPUTIME_ID");
+-#endif
+     id_CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID = rb_intern_const("CLOCK_BASED_CLOCK_PROCESS_CPUTIME_ID");
+ #ifdef __APPLE__
+     id_MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC = rb_intern_const("MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC");
+--- ruby-3.2.0/gc.c	2021-09-16 13:10:15.953909370 -0700
++++ ruby-3.2.0/gc.c	2021-09-16 14:21:52.135786845 -0700
+@@ -11530,17 +11530,6 @@
+     }
+ #endif
+ 
+-#ifdef RUSAGE_SELF
+-    {
+-        struct rusage usage;
+-        struct timeval time;
+-        if (getrusage(RUSAGE_SELF, &usage) == 0) {
+-            time = usage.ru_utime;
+-            return time.tv_sec + time.tv_usec * 1e-6;
+-        }
+-    }
+-#endif
+-
+ #ifdef _WIN32
+     {
+ 	FILETIME creation_time, exit_time, kernel_time, user_time;
+@@ -11600,18 +11589,6 @@
+ #if MALLOC_ALLOCATED_SIZE
+ 	record->allocated_size = malloc_allocated_size;
+ #endif
+-#if GC_PROFILE_MORE_DETAIL && GC_PROFILE_DETAIL_MEMORY
+-#ifdef RUSAGE_SELF
+-	{
+-	    struct rusage usage;
+-	    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+-		record->maxrss = usage.ru_maxrss;
+-		record->minflt = usage.ru_minflt;
+-		record->majflt = usage.ru_majflt;
+-	    }
+-	}
+-#endif
+-#endif
+     }
+ }
+ 

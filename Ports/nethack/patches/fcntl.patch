@@ -1,0 +1,14 @@
+diff -Naur NetHack-NetHack-3.6.6_Released/include/unixconf.h NetHack-NetHack-3.6.6_Released.serenity/include/unixconf.h
+--- NetHack-NetHack-3.6.6_Released/include/unixconf.h	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/include/unixconf.h	2021-04-11 21:54:47.295254864 +0200
+@@ -246,8 +246,10 @@
+  * Comment out the USE_FCNTL if for some reason you have a strange
+  * OS/filesystem combination for which fcntl(2) does not work. */
+ #ifdef POSIX_TYPES
++#ifndef __serenity__
+ #define USE_FCNTL
+ #endif
++#endif
+ 
+ /*
+  * The remainder of the file should not need to be changed.

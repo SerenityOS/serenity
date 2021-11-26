@@ -1,0 +1,24 @@
+diff --git a/src/subprocess-posix.cc b/src/subprocess-posix.cc
+index 1de22c3..02b1b7e 100644
+--- a/src/subprocess-posix.cc
++++ b/src/subprocess-posix.cc
+@@ -17,13 +17,18 @@
+ #include <assert.h>
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <poll.h>
+ #include <unistd.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/wait.h>
+ #include <spawn.h>
+ 
++#if defined(USE_PPOLL)
++#include <poll.h>
++#else
++#include <sys/select.h>
++#endif
++
+ extern char** environ;
+ 
+ #include "util.h"

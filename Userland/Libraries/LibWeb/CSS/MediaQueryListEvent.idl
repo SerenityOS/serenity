@@ -1,0 +1,13 @@
+#import <DOM/Event.idl>
+
+interface MediaQueryListEvent : Event {
+    constructor(CSSOMString type, optional MediaQueryListEventInit eventInitDict = {});
+
+    readonly attribute CSSOMString media;
+    readonly attribute boolean matches;
+};
+
+dictionary MediaQueryListEventInit : EventInit {
+    CSSOMString media = "";
+    boolean matches = false;
+};

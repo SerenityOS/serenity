@@ -1,0 +1,17 @@
+[Exposed=(Window)]
+interface ResizeObserver {
+
+    // FIXME: This should be a ResizeObserverCallback.
+    constructor(any callback);
+    undefined observe(Element target, optional ResizeObserverOptions options = {});
+    undefined unobserve(Element target);
+    undefined disconnect();
+
+};
+
+dictionary ResizeObserverOptions {
+
+    // FIXME: This should be an enum.
+    DOMString box = "content-box";
+
+};

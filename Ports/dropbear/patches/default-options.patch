@@ -1,0 +1,22 @@
+--- a/default_options.h.orig
++++ b/default_options.h
+@@ -59,8 +59,8 @@
+ #define DROPBEAR_SVR_REMOTETCPFWD 1
+ 
+ /* Enable Authentication Agent Forwarding */
+-#define DROPBEAR_SVR_AGENTFWD 1
+-#define DROPBEAR_CLI_AGENTFWD 1
++#define DROPBEAR_SVR_AGENTFWD 0
++#define DROPBEAR_CLI_AGENTFWD 0
+ 
+ /* Note: Both DROPBEAR_CLI_PROXYCMD and DROPBEAR_CLI_NETCAT must be set to
+  * allow multihop dbclient connections */
+@@ -179,7 +179,7 @@
+ 
+ /* Authentication Types - at least one required.
+    RFC Draft requires pubkey auth, and recommends password */
+-#define DROPBEAR_SVR_PASSWORD_AUTH 1
++#define DROPBEAR_SVR_PASSWORD_AUTH 0
+ 
+ /* Note: PAM auth is quite simple and only works for PAM modules which just do
+  * a simple "Login: " "Password: " (you can edit the strings in svr-authpam.c).

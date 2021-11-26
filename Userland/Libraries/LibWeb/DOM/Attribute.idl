@@ -1,0 +1,12 @@
+[Exposed=Window]
+interface Attribute : Node {
+    readonly attribute DOMString? namespaceURI;
+    readonly attribute DOMString? prefix;
+    readonly attribute DOMString localName;
+    readonly attribute DOMString name;
+    [CEReactions] attribute DOMString value;
+
+    readonly attribute Element? ownerElement;
+
+    readonly attribute boolean specified;
+};

@@ -1,0 +1,25 @@
+diff --color -rupN e15/ion/src/simulator/linux/platform_files.cpp serenityEpsilon/ion/src/simulator/linux/platform_files.cpp
+--- e15/ion/src/simulator/linux/platform_files.cpp	2021-07-13 17:28:39.633302855 +0200
++++ serenityEpsilon/ion/src/simulator/linux/platform_files.cpp	2021-07-13 13:07:28.239451000 +0200
+@@ -1,4 +1,5 @@
+ #include "../shared/platform.h"
++#include <cstdio>
+ 
+ namespace Ion {
+ namespace Simulator {
+diff --color -rupN e15/ion/src/simulator/linux/platform_images.cpp serenityEpsilon/ion/src/simulator/linux/platform_images.cpp
+--- e15/ion/src/simulator/linux/platform_images.cpp	2021-07-13 17:28:39.633302855 +0200
++++ serenityEpsilon/ion/src/simulator/linux/platform_images.cpp	2021-07-13 21:10:37.889389316 +0200
+@@ -1,10 +1,12 @@
+ #include "../shared/platform.h"
+ 
+ #include <assert.h>
++#include <stdio.h>
+ #include <jpeglib.h>
+ #include <png.h>
+ #include <SDL.h>
+ #include <stdlib.h>
++#include <cstring>
+ 
+ #include <ion/src/simulator/linux/platform_images.h>
+ 

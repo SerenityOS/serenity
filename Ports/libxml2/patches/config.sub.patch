@@ -1,0 +1,11 @@
+--- libxml2-2.9.12/config.sub	2021-05-13 20:54:55.000000000 +0200
++++ libxml2-2.9.12-patched/config.sub	2021-06-04 14:55:35.184278060 +0200
+@@ -1360,7 +1360,7 @@
+ 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+-	     | midnightbsd*)
++	     | midnightbsd* | serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	qnx*)

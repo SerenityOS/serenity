@@ -1,0 +1,23 @@
+diff --git a/config.mak.uname b/config.mak.uname
+index d204c20..d49e3ba 100644
+--- a/config.mak.uname
++++ b/config.mak.uname
+@@ -4,12 +4,12 @@
+ # Microsoft's Safe Exception Handling in libraries (such as zlib).
+ # Typically required for VS2013+/32-bit compilation on Vista+ versions.
+ 
+-uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+-uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
+-uname_O := $(shell sh -c 'uname -o 2>/dev/null || echo not')
+-uname_R := $(shell sh -c 'uname -r 2>/dev/null || echo not')
+-uname_P := $(shell sh -c 'uname -p 2>/dev/null || echo not')
+-uname_V := $(shell sh -c 'uname -v 2>/dev/null || echo not')
++# uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
++# uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
++# uname_O := $(shell sh -c 'uname -o 2>/dev/null || echo not')
++# uname_R := $(shell sh -c 'uname -r 2>/dev/null || echo not')
++# uname_P := $(shell sh -c 'uname -p 2>/dev/null || echo not')
++# uname_V := $(shell sh -c 'uname -v 2>/dev/null || echo not')
+ 
+ ifdef MSVC
+ 	# avoid the MingW and Cygwin configuration sections

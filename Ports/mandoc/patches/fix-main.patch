@@ -1,0 +1,43 @@
+--- mandoc-1.14.5/main.c.orig	Sat Jan 25 20:29:18 2020
++++ mandoc-1.14.5/main.c	Sat Jan 25 20:30:06 2020
+@@ -30,7 +30,6 @@
+ #endif
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <glob.h>
+ #if HAVE_SANDBOX_INIT
+ #include <sandbox.h>
+ #endif
+@@ -42,6 +41,7 @@
+ #include <termios.h>
+ #include <time.h>
+ #include <unistd.h>
++#include <getopt.h>
+ 
+ #include "mandoc_aux.h"
+ #include "mandoc.h"
+@@ -54,6 +54,7 @@
+ #include "main.h"
+ #include "manconf.h"
+ #include "mansearch.h"
++#include "glob.h"
+ 
+ enum	outmode {
+ 	OUTMODE_DEF = 0,
+@@ -660,6 +661,7 @@
+ 			if (!WIFSTOPPED(status))
+ 				break;
+ 
++#define WSTOPSIG(x) 0
+ 			signum = WSTOPSIG(status);
+ 		}
+ 		tag_unlink();
+@@ -1239,7 +1241,7 @@
+ 	/* Do not start the pager before controlling the terminal. */
+ 
+ 	while (tcgetpgrp(STDOUT_FILENO) != getpid())
+-		nanosleep(&timeout, NULL);
++		sleep(1);
+ 
+ 	execvp(argv[0], argv);
+ 	err((int)MANDOCLEVEL_SYSERR, "exec %s", argv[0]);

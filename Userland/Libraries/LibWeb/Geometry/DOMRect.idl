@@ -1,0 +1,10 @@
+interface DOMRect : DOMRectReadOnly {
+
+    constructor(optional double x = 0, optional double y = 0, optional double width = 0, optional double height = 0);
+
+    attribute double x;
+    attribute double y;
+    attribute double width;
+    attribute double height;
+
+};

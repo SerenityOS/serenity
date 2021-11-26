@@ -1,0 +1,34 @@
+diff -Naur dosbox-staging-0.76.0/src/misc/fs_utils_posix.cpp dosbox-staging-0.76.0.serenity/src/misc/fs_utils_posix.cpp
+--- dosbox-staging-0.76.0/src/misc/fs_utils_posix.cpp	2021-06-18 15:09:39.038730252 +0200
++++ dosbox-staging-0.76.0.serenity/src/misc/fs_utils_posix.cpp	2021-06-18 15:08:17.603767140 +0200
+@@ -24,7 +24,9 @@
+ 
+ #include <cerrno>
+ #include <cctype>
++#ifndef __serenity__
+ #include <glob.h>
++#endif
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+diff -Naur dosbox-staging-0.76.0/src/misc/fs_utils_posix.cpp dosbox-staging-0.76.0.serenity/src/misc/fs_utils_posix.cpp
+--- dosbox-staging-0.76.0/src/misc/fs_utils_posix.cpp	2020-12-03 19:36:19.000000000 +0100
++++ dosbox-staging-0.76.0.serenity/src/misc/fs_utils_posix.cpp	2021-06-18 14:41:19.022036547 +0200
+@@ -75,6 +75,7 @@
+ 	// glob(3) sorts by default, so if more than one path will match
+ 	// the pattern, return the first one (in alphabetic order) that matches.
+ 	const std::string pattern = translate_to_glob_pattern(path);
++#ifndef __serenity__
+ 	glob_t pglob;
+ 	const int err = glob(pattern.c_str(), GLOB_TILDE, nullptr, &pglob);
+ 	if (err == GLOB_NOMATCH) {
+@@ -96,6 +97,9 @@
+ 	const std::string ret = pglob.gl_pathv[0];
+ 	globfree(&pglob);
+ 	return ret;
++#else
++    return path;
++#endif
+ }
+ 
+ int create_dir(const char *path, uint32_t mode, uint32_t flags) noexcept

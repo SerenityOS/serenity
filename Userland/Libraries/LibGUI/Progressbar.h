@@ -1,0 +1,81 @@
+/*
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibGUI/Frame.h>
+
+namespace GUI {
+
+class Progressbar : public Frame {
+    C_OBJECT(Progressbar)
+public:
+    virtual ~Progressbar() override;
+
+    void set_range(int min, int max);
+    void set_min(int min) { set_range(min, max()); }
+    void set_max(int max) { set_range(min(), max); }
+    void set_value(int);
+
+    int value() const { return m_value; }
+    int min() const { return m_min; }
+    int max() const { return m_max; }
+
+    void set_orientation(Orientation value);
+    Orientation orientation() const { return m_orientation; }
+
+    String text() const { return m_text; }
+    void set_text(String text) { m_text = move(text); }
+
+    enum Format {
+        NoText,
+        Percentage,
+        ValueSlashMax
+    };
+    Format format() const { return m_format; }
+    void set_format(Format format) { m_format = format; }
+
+protected:
+    Progressbar(Orientation = Orientation::Horizontal);
+
+    virtual void paint_event(PaintEvent&) override;
+
+private:
+    Format m_format { Percentage };
+    int m_min { 0 };
+    int m_max { 100 };
+    int m_value { 0 };
+    String m_text;
+    Orientation m_orientation { Orientation::Horizontal };
+};
+
+class VerticalProgressbar final : public Progressbar {
+    C_OBJECT(VerticalProgressbar);
+
+public:
+    virtual ~VerticalProgressbar() override { }
+
+private:
+    VerticalProgressbar()
+        : Progressbar(Orientation::Vertical)
+    {
+    }
+};
+
+class HorizontalProgressbar final : public Progressbar {
+    C_OBJECT(HorizontalProgressbar);
+
+public:
+    virtual ~HorizontalProgressbar() override { }
+
+private:
+    HorizontalProgressbar()
+        : Progressbar(Orientation::Horizontal)
+    {
+    }
+};
+
+}

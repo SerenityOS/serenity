@@ -1,0 +1,70 @@
+parameters:
+  os: 'Linux'
+  arch: 'i686'
+  toolchain: 'gcc'
+  build_directory: ''
+  ccache_version: 1 # Increment this number if CI has trouble with ccache.
+  serenity_ccache_path: ''
+  toolchain_ccache_path: ''
+  toolchain_ccache_size: $(CCACHE_MAXSIZE)
+  with_unicode_caches: true
+
+steps:
+  - script: |
+      echo "##vso[task.setvariable variable=timestamp]$(date -u +"%Y%m%d%H%M_%S")"
+    displayName: 'Stamps'
+
+  - ${{ if ne(parameters.arch, 'Lagom') }}:
+    - ${{ if eq(parameters.toolchain, 'clang') }}:
+      - task: Cache@2
+        inputs:
+          key: '"toolchain" | "x86_64" | Toolchain/BuildClang.sh | Toolchain/Patches/*[!gcc].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          path: $(Build.SourcesDirectory)/Toolchain/Cache
+        displayName: 'Toolchain Prebuilt Cache'
+    - ${{ if eq(parameters.toolchain, 'gcc') }}:
+      - task: Cache@2
+        inputs:
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/*[!llvm].patch | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          path: $(Build.SourcesDirectory)/Toolchain/Cache
+        displayName: 'Toolchain Prebuilt Cache'
+
+    - ${{ if ne(parameters.toolchain_ccache_path, '') }}:
+      - task: Cache@2
+        inputs:
+          key: '"toolchain ccache" | "x86_64" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
+          restoreKeys: |
+            "toolchain ccache" | "x86_64" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
+          path: ${{ parameters.toolchain_ccache_path }}
+        displayName: 'Toolchain Compiler Cache'
+
+      - script: |
+          CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -M ${{ parameters.toolchain_ccache_size }}
+          CCACHE_DIR=${{ parameters.toolchain_ccache_path }} ccache -s
+        displayName: 'Configure Toolchain ccache'
+
+  - ${{ if ne(parameters.serenity_ccache_path, '') }}:
+    - task: Cache@2
+      inputs:
+        key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
+        restoreKeys: |
+          "ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
+        path: ${{ parameters.serenity_ccache_path }}
+      displayName: 'Serenity Compiler Cache'
+
+    - script: |
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -M 5G
+        CCACHE_DIR=${{ parameters.serenity_ccache_path }} ccache -s
+      displayName: 'Configure Serenity ccache'
+
+  - ${{ if eq(parameters.with_unicode_caches, true) }}:
+    - task: Cache@2
+      inputs:
+        key: '"unicode_data" | Meta/CMake/unicode_data.cmake'
+        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
+      displayName: 'UnicodeData Cache'
+
+    - task: Cache@2
+      inputs:
+        key: '"unicode_locale" | Meta/CMake/unicode_data.cmake'
+        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
+      displayName: 'UnicodeLocale Cache'

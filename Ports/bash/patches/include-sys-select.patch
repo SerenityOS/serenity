@@ -1,0 +1,10 @@
+--- bash-5.1.8.serenity/examples/loadables/accept.c	2020-03-18 12:58:36.000000000 +0000
++++ bash-5.1.8/examples/loadables/accept.c	2021-07-29 17:11:26.258287156 +0100
+@@ -35,6 +35,7 @@
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
+ #include <netinet/in.h>
++#include <sys/select.h>
+ 
+ #include "loadables.h"
+ 

@@ -1,0 +1,14 @@
+[Exposed=Window, LegacyUnenumerableNamedProperties]
+interface NamedNodeMap {
+    readonly attribute unsigned long length;
+
+    getter Attribute? item(unsigned long index);
+    getter Attribute? getNamedItem(DOMString qualifiedName);
+    // Attribute? getNamedItemNS(DOMString? namespace, DOMString localName);
+
+    [CEReactions] Attribute? setNamedItem(Attribute attr);
+    // [CEReactions] Attribute? setNamedItemNS(Attribute attr);
+
+    [CEReactions] Attribute removeNamedItem(DOMString qualifiedName);
+    // [CEReactions] Attribute removeNamedItemNS(DOMString? namespace, DOMString localName);
+};

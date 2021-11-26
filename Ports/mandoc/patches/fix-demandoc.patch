@@ -1,0 +1,10 @@
+--- mandoc-1.14.5/demandoc.c.orig	Mon Jan 20 00:18:29 2020
++++ mandoc-1.14.5/demandoc.c	Mon Jan 20 00:18:39 2020
+@@ -30,6 +30,7 @@
+ #include "man.h"
+ #include "mdoc.h"
+ #include "mandoc_parse.h"
++#include "getopt.h"
+ 
+ static	void	 pline(int, int *, int *, int);
+ static	void	 pman(const struct roff_node *, int *, int *, int);

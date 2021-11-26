@@ -1,0 +1,16 @@
+diff -Naur dosbox-staging-0.76.0/configure.ac dosbox-staging-0.76.0.serenity/configure.ac
+--- dosbox-staging-0.76.0/configure.ac	2020-12-03 19:36:19.000000000 +0100
++++ dosbox-staging-0.76.0.serenity/configure.ac	2021-06-18 14:26:25.057372241 +0200
+@@ -45,10 +45,8 @@
+ 
+ dnl Check for SDL
+ SDL_VERSION=2.0.2
+-AM_PATH_SDL($SDL_VERSION,
+-            :,
+-	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+-)
++SDL_LIBS="-lSDL2"
++SDL_CFLAGS=""
+ PRESDL_LIBS="$LIBS"
+ LIBS="$LIBS $SDL_LIBS"
+ CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"

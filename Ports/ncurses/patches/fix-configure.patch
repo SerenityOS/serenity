@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 06f344f3e..240cd098b 100755
+--- a/configure
++++ b/configure
+@@ -5943,7 +5943,7 @@ echo "${ECHO_T}$cf_cv_ldflags_search_paths_first" >&6
+ 		fi
+ 		cf_cv_rm_so_locs=yes
+ 		;;
+-	(linux*|gnu*|k*bsd*-gnu)
++	(linux*|gnu*|k*bsd*-gnu|*serenity*)
+ 		if test "$DFT_LWR_MODEL" = "shared" && test -n "$LD_RPATH_OPT" ; then
+ 			LOCAL_LDFLAGS="${LD_RPATH_OPT}\$(LOCAL_LIBDIR)"
+ 			LOCAL_LDFLAGS2="$LOCAL_LDFLAGS"

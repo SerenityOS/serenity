@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .box {
+            width: 50px;
+            height: 50px;
+        }
+
+        .box-1 {
+            border: 1px solid black;
+            border-radius: 10px;
+        }
+
+        .box-1-1 {
+            border: 1px solid black;
+            border-radius: 5px 10px 15px 20px;
+        }
+
+        .box-1-5 {
+            border: 1px solid black;
+            border-radius: 20px;
+        }
+
+        .box-1-6 {
+            border: 1px solid black;
+            border-top-width: 1px;
+            border-right-width: 5px;
+            border-bottom-width: 10px;
+            border-left-width: 12px;
+            border-radius: 20px;
+        }
+
+        .box-2 {
+            border: 1px solid black;
+            border-top-left-radius: 10px;
+        }
+
+        .box-1-7 {
+            border: 5px solid black;
+            border-radius: 15px;
+        }
+
+        .box-1-8 {
+            border: 20px solid black;
+            border-radius: 10px;
+        }
+
+        .box-1-9 {
+            border: 20px inset black;
+            border-radius: 10px;
+        }
+
+        .box-1-10 {
+            border: 20px outset black;
+            border-radius: 10px;
+        }
+
+        .box-3 {
+            border: 1px solid black;
+            border-top-right-radius: 10px;
+        }
+
+        .box-4 {
+            border: 1px solid black;
+            border-bottom-right-radius: 10px;
+        }
+
+        .box-5 {
+            border: 1px solid black;
+            border-bottom-left-radius: 10px;
+        }
+
+        .box-6 {
+            width: 200px;
+            height: 200px;
+            border: 1px solid black;
+            border-radius: 75px;
+        }
+
+        .box-7 {
+            background-color: magenta;
+            border-radius: 10px;
+        }
+
+        .box-7-1 {
+            width: 200px;
+            height: 200px;
+            background-color: magenta;
+            border-radius: 25px 50px 75px 100px;
+        }
+
+        .box-7-2 {
+            width: 200px;
+            height: 200px;
+            background-color: magenta;
+            border-radius: 100px 75px 50px 25px;
+        }
+
+        .box-8 {
+            background-color: magenta;
+            border-radius: 20px;
+        }
+
+        .box-9 {
+            background-color: magenta;
+            border-radius: 15px;
+        }
+
+        .box-10 {
+            background-color: magenta;
+            border-top-left-radius: 10px;
+        }
+
+        .box-11 {
+            background-color: magenta;
+            border-top-right-radius: 10px;
+        }
+
+        .box-12 {
+            background-color: magenta;
+            border-bottom-right-radius: 10px;
+        }
+
+        .box-13 {
+            background-color: magenta;
+            border-bottom-left-radius: 10px;
+        }
+
+        .box-14 {
+            background-color: lime;
+            border: 1px solid black;
+            border-radius: 500px;
+        }
+
+        .box-15 {
+            background-color: red;
+            border: 1px solid black;
+            border-radius: 500px;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>Border-radius</h3>
+    <p>The boxes are 50x50px and have a background-color</p>
+    <em>All round 10px</em>
+    <div class="box box-7"></div>
+    <br>
+    <em>All round 25,50,75,100px</em>
+    <div class="box box-7-1"></div>
+    <br>
+    <em>All round 100,75,50,25px</em>
+    <div class="box box-7-2"></div>
+    <br>
+    <em>All round 20px</em>
+    <div class="box box-8"></div>
+    <br>
+    <em>All round 15px 5px thick</em>
+    <div class="box box-9"></div>
+    <br>
+    <em>top-left 10px</em>
+    <div class="box box-10"></div>
+    <br>
+    <em>top-right 10px</em>
+    <div class="box box-11"></div>
+    <br>
+    <em>bottom-right 10px</em>
+    <div class="box box-12"></div>
+    <br>
+    <em>bottom-left 10px</em>
+    <div class="box box-13"></div>
+    <br>
+    <br>
+
+    <p>The boxes are 50x50px</p>
+    <em>All round 10px</em>
+    <div class="box box-1"></div>
+    <br>
+    <em>All round 5,10,15,20px</em>
+    <div class="box box-1-1"></div>
+    <br>
+    <em>All round 20px</em>
+    <div class="box box-1-5"></div>
+    <br>
+    <em>All round 20px, border widths 1px 5px 10px 12px</em>
+    <div class="box box-1-6"></div>
+    <br>
+    <em>All round 15px 5px thick</em>
+    <div class="box box-1-7"></div>
+    <br>
+    <em>All round 10px 20px thick</em>
+    <div class="box box-1-8"></div>
+    <br>
+    <em>All round 10px 20px thick inset</em>
+    <div class="box box-1-9"></div>
+    <br>
+    <em>All round 10px 20px thick outset</em>
+    <div class="box box-1-10"></div>
+    <br>
+    <em>top-left 10px</em>
+    <div class="box box-2"></div>
+    <br>
+    <em>top-right 10px</em>
+    <div class="box box-3"></div>
+    <br>
+    <em>bottom-right 10px</em>
+    <div class="box box-4"></div>
+    <br>
+    <em>bottom-left 10px</em>
+    <div class="box box-5"></div>
+    <br>
+    <br>
+
+    <p>200px box, 75px radius</p>
+    <div class="box box-6"></div>
+    <br>
+    <br>
+
+    <p>Test truncation:</p>
+    <em>Box is 50x50, border-radius is 500px</em>
+    <div class="box box-14"></div>
+    <div class="box box-15"></div>
+    <br>
+    <br>
+
+</body>
+
+</html>

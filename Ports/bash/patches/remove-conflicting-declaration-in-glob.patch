@@ -1,0 +1,11 @@
+--- bash-5.1.8.serenity/lib/glob/glob.c	2020-10-30 18:49:00.000000000 +0000
++++ bash-5.1.8/lib/glob/glob.c	2021-07-29 17:11:22.146328629 +0100
+@@ -122,7 +122,7 @@
+ #else
+ #  define dequote_pathname udequote_pathname
+ #endif
+-static void dequote_pathname PARAMS((char *));
++//static void dequote_pathname PARAMS((char *));
+ static int glob_testdir PARAMS((char *, int));
+ static char **glob_dir_to_array PARAMS((char *, char **, int));
+ 

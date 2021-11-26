@@ -1,0 +1,18 @@
+--- a/builtin/ulimit.c	2020-02-03 17:43:24.961064732 +0300
++++ b/builtin/ulimit.c	2020-02-03 17:46:08.082450486 +0300
+@@ -14,6 +14,9 @@
+ static const char ulimit_usage[] = "usage: ulimit [-f] [blocks]\n";
+ 
+ int builtin_ulimit(struct mrsh_state *state, int argc, char *argv[]) {
++	fprintf(stderr, "unimplemented\n");
++	return 1;
++/*
+ 	mrsh_optind = 0;
+ 	int opt;
+ 	while ((opt = mrsh_getopt(argc, argv, ":f")) != -1) {
+@@ -58,4 +61,5 @@
+ 	}
+ 
+ 	return 0;
++*/
+ }

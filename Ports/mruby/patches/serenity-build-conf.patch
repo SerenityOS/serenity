@@ -1,0 +1,19 @@
+--- /dev/null	2021-08-20 13:32:02.136545596 -0400
++++ mruby-3.0.0/build_config/serenity.rb	2021-08-20 14:18:09.673875364 -0400
+@@ -0,0 +1,16 @@
++MRuby::CrossBuild.new('serenity') do |conf|
++  conf.toolchain :gcc
++
++  conf.archiver.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-ar"
++  conf.linker.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-g++"
++
++  conf.cxx.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-g++"
++  conf.cxx.defines << (ENV['SERENITY_ARCH'].include?('64') ? 'MRB_64BIT' : 'MRB_32BIT')
++
++  conf.cc.command = "#{ENV['SERENITY_ARCH']}-pc-serenity-gcc"
++  conf.cc.defines << (ENV['SERENITY_ARCH'].include?('64') ? 'MRB_64BIT' : 'MRB_32BIT')
++
++  conf.gembox 'full-core'
++
++  conf.test_runner.command = 'env'
++end

@@ -1,0 +1,18 @@
+--- mandoc-1.14.5/Makefile.orig	Sat Jan 25 20:14:41 2020
++++ mandoc-1.14.5/Makefile	Sat Jan 25 20:15:10 2020
+@@ -63,6 +63,7 @@
+ 		   compat_fts.c \
+ 		   compat_getline.c \
+ 		   compat_getsubopt.c \
++		   compat_glob.c \
+ 		   compat_isblank.c \
+ 		   compat_mkdtemp.c \
+ 		   compat_ohash.c \
+@@ -251,6 +252,7 @@
+ 		   compat_fts.o \
+ 		   compat_getline.o \
+ 		   compat_getsubopt.o \
++		   compat_glob.o \
+ 		   compat_isblank.o \
+ 		   compat_mkdtemp.o \
+ 		   compat_ohash.o \

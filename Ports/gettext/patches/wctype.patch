@@ -1,0 +1,22 @@
+diff -Naur gettext-0.21/gettext-tools/gnulib-lib/fnmatch.c gettext-0.21.serenity/gettext-tools/gnulib-lib/fnmatch.c
+--- gettext-0.21/gettext-tools/gnulib-lib/fnmatch.c	2020-06-26 21:52:53.000000000 +0200
++++ gettext-0.21.serenity/gettext-tools/gnulib-lib/fnmatch.c	2021-05-08 05:14:25.420192898 +0200
+@@ -106,6 +106,18 @@
+ # define CHAR_CLASS_MAX_LENGTH 256
+ #endif
+ 
++#ifdef __serenity__
++wctype_t wctype(const char*)
++{
++    asm("int3");
++}
++
++int iswctype(wint_t, wctype_t)
++{
++    asm("int3");
++}
++#endif
++
+ #define IS_CHAR_CLASS(string) wctype (string)
+ 
+ /* Avoid depending on library functions or files

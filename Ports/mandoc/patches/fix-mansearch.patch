@@ -1,0 +1,14 @@
+--- mandoc-1.14.5/mansearch.c.orig	Sat Jan 25 20:17:03 2020
++++ mandoc-1.14.5/mansearch.c	Sat Jan 25 20:17:11 2020
+@@ -26,9 +26,9 @@
+ #endif
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <glob.h>
++#include "glob.h"
+ #include <limits.h>
+-#include <regex.h>
++#include <pcre2posix.h>
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <stddef.h>

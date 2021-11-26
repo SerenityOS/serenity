@@ -1,0 +1,32 @@
+interface HTMLInputElement : HTMLElement {
+
+    readonly attribute HTMLFormElement? form;
+
+    [Reflect] attribute DOMString accept;
+    [Reflect] attribute DOMString alt;
+    [Reflect] attribute DOMString max;
+    [Reflect] attribute DOMString min;
+    [Reflect] attribute DOMString pattern;
+    [Reflect] attribute DOMString placeholder;
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString step;
+    [Reflect] attribute DOMString name;
+    [Reflect=dirname] attribute DOMString dirName;
+    [Reflect=value] attribute DOMString defaultValue;
+
+    [LegacyNullToEmptyString] attribute DOMString value;
+
+    attribute boolean checked;
+
+    [Reflect] attribute boolean disabled;
+    [Reflect=checked] attribute boolean defaultChecked;
+    [Reflect=formnovalidate] attribute boolean formNoValidate;
+    [Reflect=formtarget] attribute DOMString formTarget;
+    [Reflect] attribute boolean multiple;
+    [Reflect=readonly] attribute boolean readOnly;
+    [Reflect] attribute boolean required;
+
+    [Reflect] attribute DOMString align;
+    [Reflect=usemap] attribute DOMString useMap;
+
+};

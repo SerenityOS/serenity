@@ -1,0 +1,20 @@
+--- flex-2.6.4/src/Makefile.in.orig	Thu Jan 23 23:27:22 2020
++++ flex-2.6.4/src/Makefile.in	Thu Jan 23 23:27:51 2020
+@@ -350,7 +350,7 @@
+ LTLIBINTL = @LTLIBINTL@
+ LTLIBOBJS = @LTLIBOBJS@
+ LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
+-M4 = @M4@
++M4 = /usr/local/bin/m4
+ MAKEINFO = @MAKEINFO@
+ MANIFEST_TOOL = @MANIFEST_TOOL@
+ MKDIR_P = @MKDIR_P@
+@@ -444,7 +444,7 @@
+ top_srcdir = @top_srcdir@
+ AM_YFLAGS = -d
+ AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
+-m4 = @M4@
++m4 = /usr/local/bin/m4
+ @ENABLE_LIBFL_TRUE@lib_LTLIBRARIES = libfl.la
+ libfl_la_SOURCES = \
+ 	libmain.c \

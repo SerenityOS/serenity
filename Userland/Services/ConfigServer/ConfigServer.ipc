@@ -1,0 +1,18 @@
+endpoint ConfigServer
+{
+    pledge_domains(Vector<String> domains) =|
+
+    monitor_domain(String domain) =|
+
+    list_config_groups(String domain) => (Vector<String> groups)
+    list_config_keys(String domain, String group) => (Vector<String> keys)
+
+    read_string_value(String domain, String group, String key) => (Optional<String> value)
+    read_i32_value(String domain, String group, String key) => (Optional<i32> value)
+    read_bool_value(String domain, String group, String key) => (Optional<bool> value)
+
+    write_string_value(String domain, String group, String key, String value) =|
+    write_i32_value(String domain, String group, String key, i32 value) =|
+    write_bool_value(String domain, String group, String key, bool value)  =|
+    remove_key(String domain, String group, String key) =|
+}

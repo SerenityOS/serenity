@@ -1,0 +1,7 @@
+endpoint SQLServer
+{
+    connect(String name) => (int connection_id)
+    sql_statement(int connection_id, String statement) => (int statement_id)
+    statement_execute(int statement_id) =|
+    disconnect(int connection_id) =|
+}

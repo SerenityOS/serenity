@@ -1,0 +1,25 @@
+diff -Naur dash-0.5.10.2/configure.ac dash-0.5.10.2.serenity/configure.ac
+--- dash-0.5.10.2/configure.ac	2021-04-12 09:02:46.066529775 +0200
++++ dash-0.5.10.2.serenity/configure.ac	2021-04-12 09:01:46.232094315 +0200
+@@ -181,5 +181,8 @@
+ if test "$enable_lineno" != "no"; then
+ 	AC_DEFINE([WITH_LINENO], 1, [Define if you build with -DWITH_LINENO])
+ fi
++AC_ARG_ENABLE(helpers, AS_HELP_STRING(--enable-helpers, \
++				     [Build helpers]))
++AM_CONDITIONAL([BUILD_HELPERS], [test x$enable_helpers = xyes])
+ AC_CONFIG_FILES([Makefile src/Makefile])
+ AC_OUTPUT
+diff -Naur dash-0.5.10.2/src/Makefile.am dash-0.5.10.2.serenity/src/Makefile.am
+--- dash-0.5.10.2/src/Makefile.am	2021-04-12 09:14:04.178912517 +0200
++++ dash-0.5.10.2.serenity/src/Makefile.am	2021-04-12 09:13:28.768298013 +0200
+@@ -66,7 +66,9 @@
+ signames.c: mksignames
+ 	./$^
+ 
++if BUILD_HELPERS
+ mksyntax: token.h
+ 
+ $(HELPERS): %: %.c
+ 	$(COMPILE_FOR_BUILD) -o $@ $<
++endif

@@ -1,0 +1,55 @@
+interface Element : Node {
+    readonly attribute DOMString? namespaceURI;
+    readonly attribute DOMString? prefix;
+    readonly attribute DOMString localName;
+    readonly attribute DOMString tagName;
+
+    DOMString? getAttribute(DOMString qualifiedName);
+    undefined setAttribute(DOMString qualifiedName, DOMString value);
+    undefined removeAttribute(DOMString qualifiedName);
+    boolean hasAttribute(DOMString qualifiedName);
+    boolean hasAttributes();
+    [SameObject] readonly attribute NamedNodeMap attributes;
+
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+    HTMLCollection getElementsByClassName(DOMString className);
+
+    // FIXME: This should come from a InnerHTML mixin.
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString innerHTML;
+
+    [Reflect] attribute DOMString id;
+    [Reflect=class] attribute DOMString className;
+    [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+
+    boolean matches(DOMString selectors);
+
+    // legacy alias of .matches
+    [ImplementedAs=matches] boolean webkitMatchesSelector(DOMString selectors);
+
+    readonly attribute Element? nextElementSibling;
+    readonly attribute Element? previousElementSibling;
+
+    [ImplementedAs=style_for_bindings] readonly attribute CSSStyleDeclaration style;
+
+    // FIXME: These should all come from a ParentNode mixin
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+    readonly attribute unsigned long childElementCount;
+
+    Element? querySelector(DOMString selectors);
+    [NewObject] NodeList querySelectorAll(DOMString selectors);
+
+    [SameObject] readonly attribute HTMLCollection children;
+
+    DOMRect getBoundingClientRect();
+
+    readonly attribute long clientTop;
+    readonly attribute long clientLeft;
+    readonly attribute long clientWidth;
+    readonly attribute long clientHeight;
+
+    // FIXME: This should come from a ChildNode mixin
+    [CEReactions, Unscopable, ImplementedAs=remove_binding] undefined remove();
+
+};

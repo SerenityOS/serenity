@@ -1,0 +1,44 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+
+stages:
+  - stage: Lagom
+    dependsOn: []
+
+    jobs:
+      - template: Meta/Azure/Lagom.yml
+        parameters:
+          os: 'Linux'
+          lagom_lints: true
+
+      - template: Meta/Azure/Lagom.yml
+        parameters:
+          os: 'Linux'
+          fuzzer: 'Fuzz'
+
+      - template: Meta/Azure/Lagom.yml
+        parameters:
+          os: 'macOS'
+          allow_test_failures: true
+
+
+  - stage: Toolchain
+    dependsOn: []
+
+    jobs:
+      - template: Meta/Azure/Toolchain.yml
+
+  - stage: SerenityOS
+    dependsOn: Toolchain
+
+    jobs:
+      - template: Meta/Azure/Serenity.yml
+        parameters:
+          arch: 'i686'
+
+      - template: Meta/Azure/Serenity.yml
+        parameters:
+          arch: 'x86_64'

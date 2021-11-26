@@ -1,0 +1,12 @@
+diff -Naur DungeonRush-1.1-beta/src/main.c DungeonRush-1.1-beta.serenity/src/main.c
+--- DungeonRush-1.1-beta/src/main.c	2020-11-21 14:22:39.000000000 +0100
++++ DungeonRush-1.1-beta.serenity/src/main.c	2021-06-16 11:02:22.409585466 +0200
+@@ -12,6 +12,8 @@
+ #endif
+ 
+ int main(int argc, char** args) {
++  // The game tries to open its resource files using relative paths
++  chdir("/opt/DungeonRush");
+   prngSrand(time(NULL));
+   // Start up SDL and create window
+   if (!init()) {

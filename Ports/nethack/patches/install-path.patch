@@ -1,0 +1,33 @@
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/nethack.sh NetHack-NetHack-3.6.6_Released.serenity/sys/unix/nethack.sh
+--- NetHack-NetHack-3.6.6_Released/sys/unix/nethack.sh	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/nethack.sh	2021-04-11 21:58:43.846512264 +0200
+@@ -1,11 +1,11 @@
+-#!/bin/sh
++#!/bin/bash
+ # NetHack 3.6  nethack.sh	$NHDT-Date: 1552425075 2019/03/12 21:11:15 $  $NHDT-Branch: NetHack-3.6.2-beta01 $:$NHDT-Revision: 1.20 $
+ # Copyright (c) 2015 by Kenneth Lorber, Kensington, Maryland
+ # NetHack may be freely redistributed.  See license for details.
+ 
+-HACKDIR=/usr/games/lib/nethackdir
++HACKDIR=/var/games/nethack/
+ export HACKDIR
+-HACK=$HACKDIR/nethack
++HACK=/usr/local/lib/nethack/nethack
+ 
+ # Since Nethack.ad is installed in HACKDIR, add it to XUSERFILESEARCHPATH
+ case "x$XUSERFILESEARCHPATH" in
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.top NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.top
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.top	2021-04-11 22:16:46.240897370 +0200
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.top	2021-04-11 22:19:45.264521466 +0200
+@@ -223,9 +223,9 @@
+ 		chmod $(EXEPERM) $(SHELLDIR)/$(GAME); fi
+ 
+ dofiles-dlb: check-dlb
+-	( cd dat ; cp nhdat $(DATNODLB) $(INSTDIR) )
++	( cd dat ; cp nhdat $(DATNODLB) $(VARDIR) )
+ # set up their permissions
+-	-( cd $(INSTDIR) ; $(CHOWN) $(GAMEUID) nhdat $(DATNODLB) ; \
++	-( cd $(VARDIR) ; $(CHOWN) $(GAMEUID) nhdat $(DATNODLB) ; \
+ 			$(CHGRP) $(GAMEGRP) nhdat $(DATNODLB) ; \
+ 			chmod $(FILEPERM) nhdat $(DATNODLB) )
+ 

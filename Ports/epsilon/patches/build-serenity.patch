@@ -1,0 +1,65 @@
+diff --color -rupN e15/build/platform.simulator.serenity.mak serenityEpsilon/build/platform.simulator.serenity.mak
+--- e15/build/platform.simulator.serenity.mak	1970-01-01 01:00:00.000000000 +0100
++++ serenityEpsilon/build/platform.simulator.serenity.mak	2021-07-13 13:01:36.779439000 +0200
+@@ -0,0 +1,6 @@
++TOOLCHAIN = i686-pc-serenity
++EXE = elf
++
++EPSILON_TELEMETRY ?= 0
++
++SHOULD_USE_DYNAMIC_SDL = 1
+diff --color -rupN e15/build/toolchain.i686-pc-serenity.mak serenityEpsilon/build/toolchain.i686-pc-serenity.mak
+--- e15/build/toolchain.i686-pc-serenity.mak	1970-01-01 01:00:00.000000000 +0100
++++ serenityEpsilon/build/toolchain.i686-pc-serenity.mak	2021-07-13 12:57:58.796099000 +0200
+@@ -0,0 +1,4 @@
++TOOLCHAIN_PREFIX = i686-pc-serenity
++CC = $(TOOLCHAIN_PREFIX)-gcc
++CXX = $(TOOLCHAIN_PREFIX)-g++
++LD = $(TOOLCHAIN_PREFIX)-g++
+diff --color -rupN e15/ion/src/simulator/serenity/Makefile serenityEpsilon/ion/src/simulator/serenity/Makefile
+--- e15/ion/src/simulator/serenity/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ serenityEpsilon/ion/src/simulator/serenity/Makefile	2021-07-13 16:22:50.849650000 +0200
+@@ -0,0 +1,43 @@
++ION_SIMULATOR_FILES = 1
++
++
++ion_src += $(addprefix ion/src/simulator/linux/, \
++  assets.s \
++  platform_files.cpp \
++  platform_images.cpp \
++  platform_language.cpp \
++)
++
++SFLAGS += -I$(SERENITY_INSTALL_ROOT)/usr/local/include/SDL2 -I$(SERENITY_INSTALL_ROOT)/usr/local/include
++LDFLAGS += -lpng -lz -ljpeg -lSDL2
++
++ion_src += $(addprefix ion/src/simulator/shared/, \
++  dummy/haptics_enabled.cpp \
++  dummy/keyboard_callback.cpp \
++  dummy/window_callback.cpp \
++  actions.cpp \
++  clipboard_helper.cpp \
++  haptics.cpp \
++  journal.cpp \
++  state_file.cpp \
++)
++
++ion_src += ion/src/shared/collect_registers.cpp
++
++ifeq ($(EPSILON_TELEMETRY),1)
++ion_src += ion/src/simulator/shared/dummy/telemetry_init.cpp
++ion_src += ion/src/shared/telemetry_console.cpp
++endif
++
++$(eval $(call rule_for, \
++  INCBIN, \
++  ion/src/simulator/linux/assets.s ion/src/simulator/linux/platform_images.h, \
++  $(ion_simulator_assets_paths), \
++  $$(PYTHON) ion/src/simulator/linux/incbin.py $(ion_simulator_assets) -o $$@, \
++  global \
++))
++
++$(call object_for,ion/src/simulator/linux/platform_images.cpp): $(BUILD_DIR)/ion/src/simulator/linux/platform_images.h
++
++# The header is refered to as <ion/src/simulator/linux/platform_images.h> so make sure it's findable this way
++$(call object_for,ion/src/simulator/linux/platform_images.cpp): SFLAGS += -I$(BUILD_DIR)

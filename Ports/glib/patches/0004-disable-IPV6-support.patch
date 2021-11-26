@@ -1,0 +1,26 @@
+From 3bc52eef1086032e2c0379b3f86ce19760db818e Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Thu, 12 Aug 2021 20:33:11 +0200
+Subject: [PATCH 04/12] meson.build: Disable IPV6 support
+
+Serenity does not ahve IPV6 support so disable it
+---
+ meson.build | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index f4025d8..d1745de 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1789,6 +1789,8 @@ endforeach
+ 
+ if host_system == 'windows'
+   have_ipv6 = true
++elif host_system == 'serenity'
++  have_ipv6 = false
+ else
+   have_ipv6 = cc.has_type('struct in6_addr', prefix: '#include <netinet/in.h>')
+ endif
+-- 
+2.25.1
+

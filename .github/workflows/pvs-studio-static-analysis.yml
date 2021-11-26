@@ -1,0 +1,128 @@
+name: PVS-Studio Static Analysis
+on:
+  # Automatically run at the end of every day.
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    env:
+      PVS_STUDIO_ANALYSIS_ARCH: i686
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Configure PVS-Studio Repository"
+        run: |
+          wget -q -O - https://files.pvs-studio.com/beta/etc/pubkey.txt | sudo apt-key add -
+          sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/beta/etc/viva64.list
+
+      - name: "Install Ubuntu dependencies"
+        # These packages are already part of the ubuntu-20.04 image:
+        # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+        # Packages below aren't.
+        #
+        run: |
+          sudo apt-get update
+          sudo apt-get install libmpfr-dev libmpc-dev ninja-build unzip pvs-studio
+
+      - name: Check versions
+        run: set +e; g++ --version; g++-10 --version; ninja --version;
+
+      - name: Prepare useful stamps
+        id: stamps
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+          # Output everything twice to make it visible both in the logs
+          # *and* as actual output variable, in this order.
+          message("  set-output name=time::${current_date}")
+          message("::set-output name=time::${current_date}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*[!llvm].patch', 'Toolchain/BuildIt.sh') }}")
+
+      - name: Toolchain cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        env:
+          # This job should always read the cache, never populate it.
+          CACHE_SKIP_SAVE: true
+
+        with:
+          path: ${{ github.workspace }}/Toolchain/Cache/
+          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+          # This is wrong, and causes more Toolchain rebuilds than necessary.
+          # However, we want to avoid false cache hits at all costs.
+          key: ${{ runner.os }}-toolchain-${{ env.PVS_STUDIO_NALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
+
+      - name: Restore or regenerate Toolchain
+        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ env.PVS_STUDIO_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/UCD
+          mkdir -p ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/CLDR
+
+      - name: Create build environment
+        working-directory: ${{ github.workspace }}
+        run: |
+          cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
+            -DSERENITY_ARCH=${{ env.PVS_STUDIO_ANALYSIS_ARCH }} \
+            -DSERENITY_TOOLCHAIN=GNU \
+            -DCMAKE_C_COMPILER=gcc-10 \
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+            -DENABLE_USB_IDS_DOWNLOAD=OFF
+
+      - name: Build generated sources so they are available for analysis.
+        working-directory: ${{ github.workspace }}
+        # Note: The superbuild will create the Build/arch directory when doing the
+        #       configure step for the serenity ExternalProject, as that's the configured
+        #       binary directory for that project.
+        run: |
+          ninja -C Build/superbuild serenity-configure
+          cmake -B Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          ninja -C Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }} all_generated
+
+      - name: Configure PVS-Studio License
+        env:
+          MAIL: ${{ secrets.PVS_STUDIO_MAIL }}
+          KEY: ${{ secrets.PVS_STUDIO_KEY }}
+        run: pvs-studio-analyzer credentials $MAIL $KEY
+
+      - name: Run PVS-Studio Analyzer
+        working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
+        run: pvs-studio-analyzer analyze -o project.plog --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-g++ --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-gcc -j2
+
+      # Suppress Rules: 
+      # - We are the system headers: V677 Custom declaration of a standard '<example>' type. The declaration from system header files should be used instead.
+      # - We have no choice: V1061 Extending the 'std' namespace may result in undefined behavior.
+      # - TRY(..) macro breaks this rule: V530 The return value of function 'release_value' is required to be utilized.
+      # - False positives: V1047 Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
+      - name: Filter PVS Log
+        working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
+        run: |
+          pvs-studio-analyzer suppress -v677 -v1061 -v530 -v1047 project.plog
+          pvs-studio-analyzer filter-suppressed project.plog
+
+      - name: Print PVS Log
+        run: plog-converter -a 'GA:1,2;64:1;OP:1,2,3' -t errorfile ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog | GREP_COLOR='01;31' grep -E --color=always 'error:|$' | GREP_COLOR='01;33' grep -E --color=always 'warning:|$'
+
+      - name: Convert PVS Log to SARIF
+        run: plog-converter -a 'GA:1,2;64:1;OP:1,2,3' -o project.sarif -t sarif ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ${{ github.workspace }}/project.sarif
+
+      - name: Upload SARIF results file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: project.sarif

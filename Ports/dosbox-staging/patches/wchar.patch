@@ -1,0 +1,35 @@
+diff -Naur dosbox-staging-0.76.0/src/libs/decoders/dr_mp3.h dosbox-staging-0.76.0.serenity/src/libs/decoders/dr_mp3.h
+--- dosbox-staging-0.76.0/src/libs/decoders/dr_mp3.h	2020-12-03 19:36:19.000000000 +0100
++++ dosbox-staging-0.76.0.serenity/src/libs/decoders/dr_mp3.h	2021-06-18 14:15:49.491277178 +0200
+@@ -3378,6 +3378,7 @@
+     #endif
+ #endif
+ 
++#ifndef __serenity__
+ static drmp3_result drmp3_wfopen(FILE** ppFile, const wchar_t* pFilePath, const wchar_t* pOpenMode, const drmp3_allocation_callbacks* pAllocationCallbacks)
+ {
+     if (ppFile != NULL) {
+@@ -3459,6 +3460,7 @@
+ 
+     return DRMP3_SUCCESS;
+ }
++#endif
+ 
+ 
+ 
+@@ -3482,6 +3484,7 @@
+     return drmp3_init(pMP3, drmp3__on_read_stdio, drmp3__on_seek_stdio, (void*)pFile, pAllocationCallbacks);
+ }
+ 
++#ifndef __serenity__
+ DRMP3_API drmp3_bool32 drmp3_init_file_w(drmp3* pMP3, const wchar_t* pFilePath, const drmp3_allocation_callbacks* pAllocationCallbacks)
+ {
+     FILE* pFile;
+@@ -3492,6 +3495,7 @@
+     return drmp3_init(pMP3, drmp3__on_read_stdio, drmp3__on_seek_stdio, (void*)pFile, pAllocationCallbacks);
+ }
+ #endif
++#endif
+ 
+ DRMP3_API void drmp3_uninit(drmp3* pMP3)
+ {

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo > $2/Makefile <<-EOF
+PROGRAM = $1
+OBJS = main.o
+CXXFLAGS = -g -std=c++2a
+LDFLAGS = -lgui
+
+all: \$(PROGRAM)
+
+\$(PROGRAM): \$(OBJS)
+	\$(CXX) \$(LDFLAGS) -o \$@ \$(OBJS)
+
+%.o: %.cpp
+	\$(CXX) \$(CXXFLAGS) -o \$@ -c \$<
+
+clean:
+	rm \$(OBJS) \$(PROGRAM)
+
+run:
+	./\$(PROGRAM)
+EOF

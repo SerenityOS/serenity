@@ -1,0 +1,76 @@
+set(AK_TEST_SOURCES
+    TestFixedPoint.cpp
+    TestAllOf.cpp
+    TestAnyOf.cpp
+    TestArray.cpp
+    TestAtomic.cpp
+    TestBadge.cpp
+    TestBase64.cpp
+    TestBinaryHeap.cpp
+    TestBinarySearch.cpp
+    TestBitCast.cpp
+    TestBitmap.cpp
+    TestByteBuffer.cpp
+    TestCharacterTypes.cpp
+    TestChecked.cpp
+    TestCircularDeque.cpp
+    TestCircularDuplexStream.cpp
+    TestCircularQueue.cpp
+    TestComplex.cpp
+    TestDisjointChunks.cpp
+    TestDistinctNumeric.cpp
+    TestDoublyLinkedList.cpp
+    TestEndian.cpp
+    TestEnumBits.cpp
+    TestFind.cpp
+    TestFixedArray.cpp
+    TestFormat.cpp
+    TestGenericLexer.cpp
+    TestHashFunctions.cpp
+    TestHashMap.cpp
+    TestHashTable.cpp
+    TestHex.cpp
+    TestIPv4Address.cpp
+    TestIndexSequence.cpp
+    TestIntrusiveList.cpp
+    TestIntrusiveRedBlackTree.cpp
+    TestJSON.cpp
+    TestLEB128.cpp
+    TestLexicalPath.cpp
+    TestMACAddress.cpp
+    TestMemMem.cpp
+    TestMemoryStream.cpp
+    TestNeverDestroyed.cpp
+    TestNonnullRefPtr.cpp
+    TestNumberFormat.cpp
+    TestOptional.cpp
+    TestQueue.cpp
+    TestQuickSort.cpp
+    TestRedBlackTree.cpp
+    TestRefPtr.cpp
+    TestSinglyLinkedList.cpp
+    TestSourceGenerator.cpp
+    TestSourceLocation.cpp
+    TestSpan.cpp
+    TestStack.cpp
+    TestStdLibExtras.cpp
+    TestString.cpp
+    TestStringUtils.cpp
+    TestStringView.cpp
+    TestTime.cpp
+    TestTrie.cpp
+    TestTuple.cpp
+    TestTypeTraits.cpp
+    TestTypedTransfer.cpp
+    TestUFixedBigInt.cpp
+    TestURL.cpp
+    TestUtf16.cpp
+    TestUtf8.cpp
+    TestVariant.cpp
+    TestVector.cpp
+    TestWeakPtr.cpp
+)
+
+foreach(source IN LISTS AK_TEST_SOURCES)
+    serenity_test("${source}" AK)
+endforeach()

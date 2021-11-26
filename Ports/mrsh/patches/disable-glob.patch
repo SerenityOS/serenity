@@ -1,0 +1,34 @@
+--- a/shell/word.c	2020-02-04 15:23:40.077301321 +0300
++++ b/shell/word.c	2020-02-04 15:24:09.428550187 +0300
+@@ -1,7 +1,7 @@
+ #define _POSIX_C_SOURCE 200809L
+ #include <assert.h>
+ #include <ctype.h>
+-#include <glob.h>
++// #include <glob.h>
+ #include <mrsh/buffer.h>
+ #include <pwd.h>
+ #include <stdbool.h>
+@@ -338,11 +338,13 @@
+ 		const struct mrsh_array *fields) {
+ 	for (size_t i = 0; i < fields->len; ++i) {
+ 		const struct mrsh_word *field = fields->data[i];
+-
++/*
+ 		char *pattern = word_to_pattern(field);
+ 		if (pattern == NULL) {
++*/
+ 			mrsh_array_add(expanded, mrsh_word_str(field));
+ 			continue;
++/*
+ 		}
+ 
+ 		glob_t glob_buf;
+@@ -361,6 +363,7 @@
+ 		}
+ 
+ 		free(pattern);
++*/
+ 	}
+ 
+ 	return true;

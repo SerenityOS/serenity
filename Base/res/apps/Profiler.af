@@ -1,0 +1,7 @@
+[App]
+Name=Profiler
+Executable=/bin/Profiler
+Category=Development
+
+[Launcher]
+FileTypes=profile

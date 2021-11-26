@@ -1,0 +1,12 @@
+diff -ur a/build-aux/config.sub b/build-aux/config.sub
+--- a/build-aux/config.sub	2021-01-09 10:57:19.000000000 +0100
++++ b/build-aux/config.sub	2021-04-19 14:45:56.132333538 +0200
+@@ -1691,7 +1691,7 @@
+ 	# Now accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \

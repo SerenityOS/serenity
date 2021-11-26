@@ -1,0 +1,5 @@
+[Exposed=Window]
+interface History {
+    undefined pushState(any data, DOMString unused, optional USVString? url = null);
+    undefined replaceState(any data, DOMString unused, optional USVString? url = null);
+};

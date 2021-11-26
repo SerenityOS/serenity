@@ -1,0 +1,11 @@
+--- ed-1.15/regex.c.orig	Sat Feb  1 14:17:22 2020
++++ ed-1.15/regex.c	Sat Feb  1 14:17:34 2020
+@@ -19,7 +19,7 @@
+ 
+ #include <stddef.h>
+ #include <errno.h>
+-#include <regex.h>
++#include <pcre2posix.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>

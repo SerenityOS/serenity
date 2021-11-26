@@ -1,0 +1,4 @@
+[App]
+Name=Breakout
+Executable=/bin/Breakout
+Category=Games

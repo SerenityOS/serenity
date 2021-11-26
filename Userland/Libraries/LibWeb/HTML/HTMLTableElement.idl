@@ -1,0 +1,33 @@
+interface HTMLTableElement : HTMLElement {
+
+    attribute HTMLTableCaptionElement? caption;
+    HTMLTableCaptionElement createCaption();
+    undefined deleteCaption();
+
+    attribute HTMLTableSectionElement? tHead;
+    HTMLTableSectionElement createTHead();
+    undefined deleteTHead();
+
+    attribute HTMLTableSectionElement? tFoot;
+    HTMLTableSectionElement createTFoot();
+    undefined deleteTFoot();
+
+    readonly attribute HTMLCollection tBodies;
+    HTMLTableSectionElement createTBody();
+
+    readonly attribute HTMLCollection rows;
+    HTMLTableRowElement insertRow(optional long index = -1);
+    undefined deleteRow(long index);
+
+    [Reflect] attribute DOMString align;
+    [Reflect] attribute DOMString border;
+    [Reflect] attribute DOMString frame;
+    [Reflect] attribute DOMString rules;
+    [Reflect] attribute DOMString summary;
+    [Reflect] attribute DOMString width;
+
+    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+    [LegacyNullToEmptyString, Reflect=cellpadding] attribute DOMString cellPadding;
+    [LegacyNullToEmptyString, Reflect=cellspacing] attribute DOMString cellSpacing;
+
+};

@@ -1,0 +1,4 @@
+[App]
+Name=Hex Editor
+Executable=/bin/HexEditor
+Category=Development

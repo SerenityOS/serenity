@@ -1,0 +1,7 @@
+[App]
+Name=3D File Viewer
+Executable=/bin/3DFileViewer
+Category=Graphics
+
+[Launcher]
+FileTypes=obj

@@ -1,0 +1,5 @@
+interface HTMLParagraphElement : HTMLElement {
+
+    [Reflect] attribute DOMString align;
+
+};

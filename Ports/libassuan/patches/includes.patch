@@ -1,0 +1,11 @@
+diff -Naur libassuan-2.5.5/src/assuan-socket.c libassuan-2.5.5.serenity/src/assuan-socket.c
+--- libassuan-2.5.5/src/assuan-socket.c	2021-04-14 02:38:16.911542870 +0200
++++ libassuan-2.5.5.serenity/src/assuan-socket.c	2021-04-14 02:37:37.497571703 +0200
+@@ -34,6 +34,7 @@
+ #endif
+ #else
+ # include <sys/types.h>
++# include <sys/time.h>
+ # include <sys/socket.h>
+ # include <netinet/in.h>
+ # include <arpa/inet.h>

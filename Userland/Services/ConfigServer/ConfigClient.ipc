@@ -1,0 +1,7 @@
+endpoint ConfigClient
+{
+    notify_changed_string_value(String domain, String group, String key, String value) =|
+    notify_changed_i32_value(String domain, String group, String key, i32 value) =|
+    notify_changed_bool_value(String domain, String group, String key, bool value) =|
+    notify_removed_key(String domain, String group, String key) =|
+}

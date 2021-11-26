@@ -1,0 +1,42 @@
+--- b/netio.c.orig
++++ b/netio.c
+@@ -294,7 +294,7 @@
+ 	buffer *writebuf;
+ 
+ 	#ifndef IOV_MAX
+-		#if defined(__CYGWIN__) && !defined(UIO_MAXIOV)
++		#if !defined(UIO_MAXIOV)
+ 		#define IOV_MAX 1024
+ 		#else
+ 		#define IOV_MAX UIO_MAXIOV
+@@ -334,11 +334,7 @@
+ }
+ 
+ void set_sock_nodelay(int sock) {
+-	int val;
+-
+-	/* disable nagle */
+-	val = 1;
+-	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
++	(void)sock;
+ }
+ 
+ #if DROPBEAR_SERVER_TCP_FAST_OPEN
+@@ -448,7 +444,6 @@
+ 	struct addrinfo hints, *res = NULL, *res0 = NULL;
+ 	int err;
+ 	unsigned int nsock;
+-	struct linger linger;
+ 	int val;
+ 	int sock;
+ 
+@@ -527,9 +522,6 @@
+ 		val = 1;
+ 		/* set to reuse, quick timeout */
+ 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*) &val, sizeof(val));
+-		linger.l_onoff = 1;
+-		linger.l_linger = 5;
+-		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
+ 
+ #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
+ 		if (res->ai_family == AF_INET6) {

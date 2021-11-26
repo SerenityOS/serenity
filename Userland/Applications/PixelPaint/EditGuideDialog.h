@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include "Guide.h"
+#include "ImageEditor.h"
+#include <LibGUI/Dialog.h>
+
+namespace PixelPaint {
+
+class EditGuideDialog final : public GUI::Dialog {
+    C_OBJECT(EditGuideDialog);
+
+public:
+    String const offset() const { return m_offset; }
+    Guide::Orientation orientation() const { return m_orientation; }
+
+    Optional<float> offset_as_pixel(ImageEditor const&);
+
+private:
+    EditGuideDialog(GUI::Window* parent_window, String const& offset = {}, Guide::Orientation orientation = Guide::Orientation::Unset);
+
+    String m_offset;
+    Guide::Orientation m_orientation;
+
+    bool m_is_horizontal_checked { false };
+    bool m_is_vertical_checked { false };
+};
+
+}

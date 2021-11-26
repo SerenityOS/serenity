@@ -1,0 +1,10 @@
+endpoint SQLClient
+{
+    connected(int connection_id, String connected_to_database) =|
+    connection_error(int connection_id, int code, String message) =|
+    execution_success(int statement_id, bool has_results, int created, int updated, int deleted) =|
+    next_result(int statement_id, Vector<String> row) =|
+    results_exhausted(int statement_id, int total_rows) =|
+    execution_error(int statement_id, int code, String message) =|
+    disconnected(int connection_id) =|
+}

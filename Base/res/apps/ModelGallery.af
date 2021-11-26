@@ -1,0 +1,4 @@
+[App]
+Name=Model Gallery
+Executable=/bin/ModelGallery
+Category=Demos

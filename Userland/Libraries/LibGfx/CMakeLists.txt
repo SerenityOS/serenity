@@ -1,0 +1,47 @@
+set(SOURCES
+    AffineTransform.cpp
+    AntiAliasingPainter.cpp
+    Bitmap.cpp
+    BitmapFont.cpp
+    BMPLoader.cpp
+    BMPWriter.cpp
+    CharacterBitmap.cpp
+    ClassicStylePainter.cpp
+    ClassicWindowTheme.cpp
+    Color.cpp
+    CursorParams.cpp
+    DDSLoader.cpp
+    DisjointRectSet.cpp
+    Emoji.cpp
+    Filters/FastBoxBlurFilter.cpp
+    FontDatabase.cpp
+    GIFLoader.cpp
+    ICOLoader.cpp
+    ImageDecoder.cpp
+    JPGLoader.cpp
+    Painter.cpp
+    Palette.cpp
+    Path.cpp
+    PBMLoader.cpp
+    PGMLoader.cpp
+    PNGLoader.cpp
+    PNGWriter.cpp
+    PPMLoader.cpp
+    Point.cpp
+    Rect.cpp
+    ShareableBitmap.cpp
+    Size.cpp
+    StylePainter.cpp
+    SystemTheme.cpp
+    TextDirection.cpp
+    TextLayout.cpp
+    Triangle.cpp
+    TrueTypeFont/Font.cpp
+    TrueTypeFont/Glyf.cpp
+    TrueTypeFont/Cmap.cpp
+    Typeface.cpp
+    WindowTheme.cpp
+)
+
+serenity_lib(LibGfx gfx)
+target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec)

@@ -1,0 +1,5 @@
+interface CSSRule {
+
+    attribute CSSOMString cssText;
+
+};

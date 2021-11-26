@@ -1,0 +1,12 @@
+diff -Naur openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/platform-tracing.c openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/platform-tracing.c
+--- openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/platform-tracing.c	2020-05-27 02:38:00.000000000 +0200
++++ openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/platform-tracing.c	2021-04-12 13:45:38.662816561 +0200
+@@ -35,7 +35,7 @@
+ {
+ #if defined(HAVE_PRCTL) && defined(PR_SET_DUMPABLE)
+ 	/* Disable ptrace on Linux without sgid bit */
+-	if (prctl(PR_SET_DUMPABLE, 0) != 0 && strict)
++	if (prctl(PR_SET_DUMPABLE, 0, 0) != 0 && strict)
+ 		fatal("unable to make the process undumpable");
+ #endif
+ #if defined(HAVE_SETPFLAGS) && defined(__PROC_PROTECT)

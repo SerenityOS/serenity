@@ -1,0 +1,21 @@
+diff -Naur Super-Mario-Clone-Cpp-master/src/main.cpp Super-Mario-Clone-Cpp-master.serenity/src/main.cpp
+--- Super-Mario-Clone-Cpp-master/src/main.cpp	2019-08-01 15:39:15.000000000 +0200
++++ Super-Mario-Clone-Cpp-master.serenity/src/main.cpp	2021-06-03 23:54:26.881221759 +0200
+@@ -1,10 +1,15 @@
+ #include "header.h"
+ #include "Core.h"
++#include <unistd.h>
+ 
+ int main(int argc, const char* argv[]) {
+-    CCore oCore;
++    chdir("/opt/Super_Mario");
+ 
+-    oCore.mainLoop();
++    {
++        CCore oCore;
++
++        oCore.mainLoop();
++    }
+     
+     return 0;
+ }

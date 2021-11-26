@@ -1,0 +1,44 @@
+--- a/configure	2021-06-01 22:31:12.000000000 +0800
++++ b/configure	2021-09-08 00:04:20.540891640 +0800
+@@ -6166,6 +6166,10 @@
+   lt_cv_file_magic_test_file=/shlib/libc.so
+   ;;
+ 
++*serenity*)
++  lt_cv_deplibs_check_method=pass_all
++  ;;
++
+ cygwin*)
+   # func_win32_libid is a shell function defined in ltmain.sh
+   lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
+--- a/config.sub	2017-07-23 22:03:39.000000000 +0800
++++ b/config.sub	2021-09-08 00:02:45.724734622 +0800
+@@ -117,7 +117,7 @@
+ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc | linux-newlib* | \
+   linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
+-  knetbsd*-gnu* | netbsd*-gnu* | \
++  knetbsd*-gnu* | netbsd*-gnu* | *serenity* | \
+   kopensolaris*-gnu* | \
+   storm-chaos* | os2-emx* | rtmk-nova*)
+     os=-$maybe_os
+@@ -1277,6 +1277,9 @@
+ 	we32k)
+ 		basic_machine=we32k-att
+ 		;;
++	*serenity*)
++		basic_machine="${SERENITY_ARCH}-pc"
++		;;
+ 	sh[1234] | sh[24]a | sh[24]aeb | sh[34]eb | sh[1234]le | sh[23]ele)
+ 		basic_machine=sh-unknown
+ 		;;
+@@ -1404,6 +1407,9 @@
+ 	-linux*)
+ 		os=`echo $os | sed -e 's|linux|linux-gnu|'`
+ 		;;
++	*-serenity*)
++		os=-serenity
++		;;
+ 	-sunos5*)
+ 		os=`echo $os | sed -e 's|sunos5|solaris2|'`
+ 		;;
