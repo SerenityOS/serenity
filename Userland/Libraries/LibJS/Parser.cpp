@@ -597,7 +597,7 @@ bool Parser::match_invalid_escaped_keyword() const
         return false;
     auto token_value = m_state.current_token.value();
     if (token_value == "await"sv)
-        return m_program_type == Program::Type::Module || m_state.in_async_function_context;
+        return m_program_type == Program::Type::Module || m_state.await_expression_is_valid;
     if (token_value == "async"sv)
         return false;
     if (token_value == "yield"sv)
@@ -673,7 +673,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         // check if it's about a wrong token (something like duplicate parameter name must
         // not abort), know parsing failed and rollback the parser state.
         auto previous_syntax_errors = m_state.errors.size();
-        TemporaryChange in_async_context(m_state.in_async_function_context, is_async || m_state.in_async_function_context);
+        TemporaryChange in_async_context(m_state.await_expression_is_valid, is_async || m_state.await_expression_is_valid);
 
         parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction | (is_async ? FunctionNodeParseOptions::IsAsyncFunction : 0));
         if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"))
@@ -712,7 +712,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     auto function_body_result = [&]() -> RefPtr<FunctionBody> {
         TemporaryChange change(m_state.in_arrow_function_context, true);
-        TemporaryChange async_context_change(m_state.in_async_function_context, is_async);
+        TemporaryChange async_context_change(m_state.await_expression_is_valid, is_async);
         TemporaryChange in_class_static_init_block_change(m_state.in_class_static_init_block, false);
 
         if (match(TokenType::CurlyOpen)) {
@@ -780,7 +780,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         return {};
     }
 
-    if (m_state.current_token.value() == "await"sv && (m_program_type == Program::Type::Module || m_state.in_async_function_context || m_state.in_class_static_init_block)) {
+    if (m_state.current_token.value() == "await"sv && (m_program_type == Program::Type::Module || m_state.await_expression_is_valid || m_state.in_class_static_init_block)) {
         return {};
     }
 
@@ -1137,7 +1137,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
                 TemporaryChange function_context_rollback(m_state.in_function_context, false);
                 TemporaryChange generator_function_context_rollback(m_state.in_generator_function_context, false);
-                TemporaryChange async_function_context_rollback(m_state.in_async_function_context, false);
+                TemporaryChange async_function_context_rollback(m_state.await_expression_is_valid, false);
                 TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, true);
                 TemporaryChange class_static_init_block_rollback(m_state.in_class_static_init_block, true);
 
@@ -1380,7 +1380,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             goto read_as_identifier;
         return { parse_yield_expression(), false };
     case TokenType::Await:
-        if (!m_state.in_async_function_context)
+        if (!m_state.await_expression_is_valid)
             goto read_as_identifier;
         return { parse_await_expression() };
     case TokenType::PrivateIdentifier:
@@ -2073,7 +2073,7 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
     parser.m_state.in_function_context = m_state.in_function_context;
     parser.m_state.in_formal_parameter_context = m_state.in_formal_parameter_context;
     parser.m_state.in_generator_function_context = m_state.in_generator_function_context;
-    parser.m_state.in_async_function_context = m_state.in_async_function_context;
+    parser.m_state.await_expression_is_valid = m_state.await_expression_is_valid;
     parser.m_state.in_arrow_function_context = m_state.in_arrow_function_context;
     parser.m_state.in_break_context = m_state.in_break_context;
     parser.m_state.in_continue_context = m_state.in_continue_context;
@@ -2416,7 +2416,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     }
     TemporaryChange class_static_initializer_rollback(m_state.in_class_static_init_block, false);
     TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator || function_kind == FunctionKind::AsyncGenerator);
-    TemporaryChange async_change(m_state.in_async_function_context, function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator);
+    TemporaryChange async_change(m_state.await_expression_is_valid, function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator);
 
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
@@ -2786,7 +2786,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 consume().value());
-        } else if (!m_state.in_async_function_context && match(TokenType::Async)) {
+        } else if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
             if (m_program_type == Program::Type::Module)
                 syntax_error("Identifier must not be a reserved word in modules ('async')");
 
@@ -3148,7 +3148,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
         consume();
         if (match_identifier_name()
             && (!match(TokenType::Yield) || !m_state.in_generator_function_context)
-            && (!match(TokenType::Async) || !m_state.in_async_function_context)
+            && (!match(TokenType::Async) || !m_state.await_expression_is_valid)
             && (!match(TokenType::Await) || !m_state.in_class_static_init_block))
             parameter = consume().value();
         else
@@ -3256,7 +3256,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
         if (is_await_loop == IsForAwaitLoop::Yes) {
             if (!is_of)
                 syntax_error("for await loop is only valid with 'of'");
-            else if (!m_state.in_async_function_context)
+            else if (!m_state.await_expression_is_valid)
                 syntax_error("for await loop is only valid in async function or generator");
             return true;
         }
@@ -3268,7 +3268,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 
     if (match(TokenType::Await)) {
         consume();
-        if (!m_state.in_async_function_context)
+        if (!m_state.await_expression_is_valid)
             syntax_error("for-await-of is only allowed in async function context");
         is_await_loop = IsForAwaitLoop::Yes;
     }
@@ -3603,14 +3603,14 @@ bool Parser::match_identifier() const
         if (m_state.current_token.value() == "yield"sv)
             return !m_state.strict_mode && !m_state.in_generator_function_context;
         if (m_state.current_token.value() == "await"sv)
-            return m_program_type != Program::Type::Module && !m_state.in_async_function_context && !m_state.in_class_static_init_block;
+            return m_program_type != Program::Type::Module && !m_state.await_expression_is_valid && !m_state.in_class_static_init_block;
         return true;
     }
 
     return m_state.current_token.type() == TokenType::Identifier
         || m_state.current_token.type() == TokenType::Async
         || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
-        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.in_async_function_context && !m_state.in_class_static_init_block)
+        || (m_state.current_token.type() == TokenType::Await && m_program_type != Program::Type::Module && !m_state.await_expression_is_valid && !m_state.in_class_static_init_block)
         || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
@@ -3692,7 +3692,7 @@ Token Parser::consume_identifier()
     }
 
     if (match(TokenType::Await)) {
-        if (m_program_type == Program::Type::Module || m_state.in_async_function_context || m_state.in_class_static_init_block)
+        if (m_program_type == Program::Type::Module || m_state.await_expression_is_valid || m_state.in_class_static_init_block)
             syntax_error("Identifier must not be a reserved word in modules ('await')");
         return consume();
     }
