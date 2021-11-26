@@ -260,8 +260,8 @@ public:
 
         ExportEntry(String export_name, String local_name)
             : kind(LocalExport)
-            , export_name(export_name)
-            , local_or_import_name(local_name)
+            , export_name(move(export_name))
+            , local_or_import_name(move(local_name))
         {
         }
     };
@@ -278,6 +278,9 @@ public:
     virtual void dump(int indent) const override;
 
     bool has_export(StringView export_name) const;
+
+    bool has_statement() const { return m_statement; }
+    Vector<ExportEntry> const& entries() const { return m_entries; }
 
 private:
     RefPtr<ASTNode> m_statement;
@@ -1217,6 +1220,8 @@ public:
     void for_each_bound_name(IteratorOrVoidFunction<FlyString const&> callback) const override;
 
     virtual bool is_lexical_declaration() const override { return true; }
+
+    StringView name() const { return m_class_expression->name(); }
 
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;

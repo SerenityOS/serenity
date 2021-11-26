@@ -143,7 +143,7 @@ public:
             VERIFY(m_top_level_scope);
             m_top_level_scope->m_node->add_var_scoped_declaration(move(declaration));
         } else {
-            if (m_is_top_level) {
+            if (m_is_top_level && m_parser.m_program_type == Program::Type::Script) {
                 declaration->for_each_bound_name([&](auto const& name) {
                     m_var_names.set(name);
                 });
@@ -468,16 +468,44 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
     auto rule_start = push_start();
     auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }, m_program_type));
     ScopePusher program_scope = ScopePusher::program_scope(*this, *program);
-    if (starts_in_strict_mode || m_program_type == Program::Type::Module)
+
+    if (m_program_type == Program::Type::Script)
+        parse_script(program, starts_in_strict_mode);
+    else
+        parse_module(program);
+
+    program->source_range().end = position();
+    return program;
+}
+
+void Parser::parse_script(Program& program, bool starts_in_strict_mode)
+{
+    bool strict_before = m_state.strict_mode;
+    if (starts_in_strict_mode)
         m_state.strict_mode = true;
 
     bool has_use_strict = parse_directive(program);
 
     if (m_state.strict_mode || has_use_strict) {
-        program->set_strict_mode();
+        program.set_strict_mode();
         m_state.strict_mode = true;
     }
 
+    parse_statement_list(program, AllowLabelledFunction::Yes);
+    if (!done()) {
+        expected("statement or declaration");
+        consume();
+    }
+
+    m_state.strict_mode = strict_before;
+}
+
+void Parser::parse_module(Program& program)
+{
+    TemporaryChange strict_mode_rollback(m_state.strict_mode, true);
+    TemporaryChange await_expression_valid_rollback(m_state.await_expression_is_valid, true);
+
+    // Since strict mode is already enabled we skip any directive parsing.
     while (!done()) {
         parse_statement_list(program, AllowLabelledFunction::Yes);
 
@@ -487,9 +515,9 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
         if (match_export_or_import()) {
             VERIFY(m_state.current_token.type() == TokenType::Export || m_state.current_token.type() == TokenType::Import);
             if (m_state.current_token.type() == TokenType::Export)
-                program->append_export(parse_export_statement(*program));
+                program.append_export(parse_export_statement(program));
             else
-                program->append_import(parse_import_statement(*program));
+                program.append_import(parse_import_statement(program));
 
         } else {
             expected("statement or declaration");
@@ -497,8 +525,35 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
         }
     }
 
-    program->source_range().end = position();
-    return program;
+    for (auto& export_statement : program.exports()) {
+        if (export_statement.has_statement())
+            continue;
+        for (auto& entry : export_statement.entries()) {
+            if (entry.kind == ExportStatement::ExportEntry::ModuleRequest)
+                return;
+
+            auto const& exported_name = entry.local_or_import_name;
+            bool found = false;
+            program.for_each_lexically_declared_name([&](auto const& name) {
+                if (name == exported_name) {
+                    found = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+            if (found)
+                continue;
+            program.for_each_var_declared_name([&](auto const& name) {
+                if (name == exported_name) {
+                    found = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+            if (!found)
+                syntax_error(String::formatted("'{}' is not declared", exported_name));
+        }
+    }
 }
 
 NonnullRefPtr<Declaration> Parser::parse_declaration()
@@ -4051,12 +4106,13 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         } else if (match_declaration()) {
             auto decl_position = position();
             auto declaration = parse_declaration();
+            m_state.current_scope_pusher->add_declaration(declaration);
             if (is<FunctionDeclaration>(*declaration)) {
                 auto& func = static_cast<FunctionDeclaration&>(*declaration);
                 entries_with_location.append({ { func.name(), func.name() }, func.source_range().start });
             } else if (is<ClassDeclaration>(*declaration)) {
                 auto& class_declaration = static_cast<ClassDeclaration&>(*declaration);
-                entries_with_location.append({ { class_declaration.class_name(), class_declaration.class_name() }, class_declaration.source_range().start });
+                entries_with_location.append({ { class_declaration.name(), class_declaration.name() }, class_declaration.source_range().start });
             } else {
                 VERIFY(is<VariableDeclaration>(*declaration));
                 auto& variables = static_cast<VariableDeclaration&>(*declaration);
