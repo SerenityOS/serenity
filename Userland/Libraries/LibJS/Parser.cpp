@@ -874,6 +874,63 @@ RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
     return create_ast_node<MetaProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, MetaProperty::Type::NewTarget);
 }
 
+RefPtr<MetaProperty> Parser::try_parse_import_meta_expression()
+{
+    // Optimization which skips the save/load state.
+    if (next_token().type() != TokenType::Period)
+        return {};
+
+    save_state();
+    auto rule_start = push_start();
+    ArmedScopeGuard state_rollback_guard = [&] {
+        load_state();
+    };
+
+    consume(TokenType::Import);
+    consume(TokenType::Period);
+    if (!match(TokenType::Identifier))
+        return {};
+    // The string 'meta' cannot have escapes so we check original value.
+    if (consume().original_value() != "meta"sv)
+        return {};
+
+    state_rollback_guard.disarm();
+    discard_saved_state();
+    return create_ast_node<MetaProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, MetaProperty::Type::ImportMeta);
+}
+
+NonnullRefPtr<ImportCall> Parser::parse_import_call()
+{
+    auto rule_start = push_start();
+
+    // We use the extended definition:
+    //  ImportCall[Yield, Await]:
+    //      import(AssignmentExpression[+In, ?Yield, ?Await] ,opt)
+    //      import(AssignmentExpression[+In, ?Yield, ?Await] ,AssignmentExpression[+In, ?Yield, ?Await] ,opt)
+    // From https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+
+    consume(TokenType::Import);
+    consume(TokenType::ParenOpen);
+    auto argument = parse_expression(2);
+
+    RefPtr<Expression> options;
+    if (match(TokenType::Comma)) {
+        consume(TokenType::Comma);
+
+        if (!match(TokenType::ParenClose)) {
+            options = parse_expression(2);
+
+            // Second optional comma
+            if (match(TokenType::Comma))
+                consume(TokenType::Comma);
+        }
+    }
+
+    consume(TokenType::ParenClose);
+
+    return create_ast_node<ImportCall>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument), move(options));
+}
+
 NonnullRefPtr<ClassDeclaration> Parser::parse_class_declaration()
 {
     auto rule_start = push_start();
@@ -1305,6 +1362,19 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         }
         return { parse_new_expression() };
     }
+    case TokenType::Import: {
+        auto lookahead_token = next_token();
+        VERIFY(lookahead_token.type() == TokenType::Period || lookahead_token.type() == TokenType::ParenOpen);
+        if (lookahead_token.type() == TokenType::ParenOpen)
+            return { parse_import_call() };
+
+        if (auto import_meta = try_parse_import_meta_expression()) {
+            if (m_program_type != Program::Type::Module)
+                syntax_error("import.meta is only allowed in modules");
+            return { import_meta.release_nonnull() };
+        }
+        break;
+    }
     case TokenType::Yield:
         if (!m_state.in_generator_function_context)
             goto read_as_identifier;
@@ -1321,10 +1391,11 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
     default:
         if (match_identifier_name())
             goto read_as_identifier;
-        expected("primary expression");
-        consume();
-        return { create_ast_node<ErrorExpression>({ m_state.current_token.filename(), rule_start.position(), position() }) };
+        break;
     }
+    expected("primary expression");
+    consume();
+    return { create_ast_node<ErrorExpression>({ m_state.current_token.filename(), rule_start.position(), position() }) };
 }
 
 NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
@@ -2115,6 +2186,8 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
     consume(TokenType::New);
 
     auto callee = parse_expression(g_operator_precedence.get(TokenType::New), Associativity::Right, { TokenType::ParenOpen, TokenType::QuestionMarkPeriod });
+    if (is<ImportCall>(*callee))
+        syntax_error("Cannot call new on dynamic import", callee->source_range().start);
 
     Vector<CallExpression::Argument> arguments;
 
@@ -3343,6 +3416,11 @@ bool Parser::match(TokenType type) const
 bool Parser::match_expression() const
 {
     auto type = m_state.current_token.type();
+    if (type == TokenType::Import) {
+        auto lookahead_token = next_token();
+        return lookahead_token.type() == TokenType::Period || lookahead_token.type() == TokenType::ParenOpen;
+    }
+
     return type == TokenType::BoolLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::BigIntLiteral

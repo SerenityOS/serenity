@@ -2880,15 +2880,37 @@ void MetaProperty::dump(int indent) const
     outln("{} {}", class_name(), name);
 }
 
-Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
+Value MetaProperty::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
     if (m_type == MetaProperty::Type::NewTarget)
         return interpreter.vm().get_new_target().value_or(js_undefined());
-    if (m_type == MetaProperty::Type::ImportMeta)
-        TODO();
+    if (m_type == MetaProperty::Type::ImportMeta) {
+        interpreter.vm().throw_exception<InternalError>(global_object, ErrorType::NotImplemented, "'import.meta' in modules");
+        return {};
+    }
+
     VERIFY_NOT_REACHED();
+}
+
+void ImportCall::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    outln("(Specifier)");
+    m_specifier->dump(indent + 1);
+    if (m_options) {
+        outln("(Options)");
+        m_options->dump(indent + 1);
+    }
+}
+
+Value ImportCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    interpreter.vm().throw_exception<InternalError>(global_object, ErrorType::NotImplemented, "'import(...)' in modules");
+    return {};
 }
 
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
