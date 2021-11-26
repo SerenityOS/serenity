@@ -2383,7 +2383,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
     Vector<FunctionNode::Parameter> parameters;
 
     auto consume_identifier_or_binding_pattern = [&]() -> Variant<FlyString, NonnullRefPtr<BindingPattern>> {
-        if (auto pattern = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::Yes))
+        if (auto pattern = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::No))
             return pattern.release_nonnull();
 
         auto token = consume_identifier();
@@ -2635,6 +2635,8 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern(Parser::AllowDuplicates all
                 return {};
             }
             consume();
+        } else if (is_object && !match(TokenType::CurlyClose)) {
+            consume(TokenType::Comma);
         }
     }
 
