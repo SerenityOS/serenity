@@ -1989,6 +1989,7 @@ RefPtr<BindingPattern> Parser::synthesize_binding_pattern(Expression const& expr
     parser.m_state.string_legacy_octal_escape_sequence_in_scope = m_state.string_legacy_octal_escape_sequence_in_scope;
     parser.m_state.in_class_field_initializer = m_state.in_class_field_initializer;
     parser.m_state.in_class_static_init_block = m_state.in_class_static_init_block;
+    parser.m_state.referenced_private_names = m_state.referenced_private_names;
 
     auto result = parser.parse_binding_pattern(AllowDuplicates::Yes, AllowMemberExpressions::Yes);
     if (parser.has_errors())
