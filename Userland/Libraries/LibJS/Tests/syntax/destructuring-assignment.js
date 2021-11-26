@@ -46,6 +46,20 @@ describe("parsing", () => {
         expect(`const [ a, [ ...{length} ] ] = [];`).toEval();
         expect(`let [ a, [ ...{length} ] ] = [];`).toEval();
     });
+
+    test("function parameters cannot use member expresssions", () => {
+        expect("function f([a.b]) {}").not.toEval();
+        expect("function f([b[0]]) {}").not.toEval();
+
+        expect("function f({c:a.b}) {}").not.toEval();
+        expect("function f({a:b[0]}) {}").not.toEval();
+
+        expect("([a.b]) => 1").not.toEval();
+        expect("([b[0]]) => 2").not.toEval();
+
+        expect("({c:a.b}) => 3").not.toEval();
+        expect("({a:b[0]}) => 4").not.toEval();
+    });
 });
 
 describe("evaluating", () => {
