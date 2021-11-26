@@ -122,6 +122,8 @@ public:
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens, bool is_async = false);
     RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
+    RefPtr<MetaProperty> try_parse_import_meta_expression();
+    NonnullRefPtr<ImportCall> parse_import_call();
 
     Vector<CallExpression::Argument> parse_arguments();
 
