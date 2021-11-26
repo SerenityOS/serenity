@@ -1497,6 +1497,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             auto lookahead_token = next_token();
 
             if (lookahead_token.type() != TokenType::ParenOpen && lookahead_token.type() != TokenType::Colon
+                && lookahead_token.type() != TokenType::Comma && lookahead_token.type() != TokenType::CurlyClose
+                && lookahead_token.type() != TokenType::Async
                 && !lookahead_token.trivia_contains_line_terminator()) {
                 consume(TokenType::Async);
                 function_kind = FunctionKind::Async;
@@ -1567,6 +1569,12 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             }
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, parse_expression(2), property_type, false));
         } else if (property_name && property_value) {
+            if (m_state.strict_mode && is<StringLiteral>(*property_name)) {
+                auto& string_literal = static_cast<StringLiteral const&>(*property_name);
+                if (is_strict_reserved_word(string_literal.value()))
+                    syntax_error(String::formatted("'{}' is a reserved keyword", string_literal.value()));
+            }
+
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, *property_value, property_type, false));
         } else {
             expected("a property");
