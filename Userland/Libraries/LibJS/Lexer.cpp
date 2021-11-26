@@ -498,6 +498,7 @@ bool Lexer::slash_means_division() const
         || type == TokenType::NumericLiteral
         || type == TokenType::ParenClose
         || type == TokenType::PlusPlus
+        || type == TokenType::PrivateIdentifier
         || type == TokenType::RegexLiteral
         || type == TokenType::StringLiteral
         || type == TokenType::TemplateLiteralEnd
