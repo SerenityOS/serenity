@@ -103,7 +103,7 @@ public:
         VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
-            return throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
+            return throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
         m_execution_context_stack.append(&context);
         return {};
     }

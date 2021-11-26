@@ -487,7 +487,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_n
     //
     // In JS code: `h = {}; p = new Proxy({}, h); h.__proto__ = p; p.foo // or h.foo`
     if (vm.did_reach_stack_space_limit())
-        return vm.throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
+        return vm.throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
 
     // 6. Let trap be ? GetMethod(handler, "get").
     auto trap = TRY(Value(&m_handler).get_method(global_object, vm.names.get));
