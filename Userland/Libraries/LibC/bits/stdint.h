@@ -49,6 +49,32 @@ typedef __INT_LEAST64_TYPE__ int_least64_t;
 #define __int64_t_defined 1
 #define __uint64_t_defined 1
 
+#define INT8_C(x) x
+#define UINT8_C(x) x
+
+#define INT16_C(x) x
+#define UINT16_C(x) x
+
+#define INT32_C(x) x
+#define UINT32_C(x) x##U
+
+#ifdef __clang__
+#    define __int_c_concat(a, b) a##b
+#    define __int_c(var, suffix) __int_c_concat(var, suffix)
+
+#    define INT64_C(x) __int_c(x, __INT64_C_SUFFIX__)
+#    define UINT64_C(x) __int_c(x, __UINT64_C_SUFFIX__)
+
+#    define INTMAX_C(c) __int_c(c, __INTMAX_C_SUFFIX__)
+#    define UINTMAX_C(c) __int_c(x, __UINTMAX_C_SUFFIX__)
+#else
+#    define INT64_C(x) __INT64_C(x)
+#    define UINT64_C(x) __UINT64_C(x)
+
+#    define INTMAX_C(c) __INTMAX_C(x)
+#    define UINTMAX_C(c) __UINTMAX_C(x)
+#endif
+
 typedef __UINTPTR_TYPE__ uintptr_t;
 typedef __INTPTR_TYPE__ intptr_t;
 
@@ -62,19 +88,19 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define INT8_MIN (-128)
 #define INT16_MIN (-32767 - 1)
 #define INT32_MIN (-2147483647 - 1)
-#define INT64_MIN (-9223372036854775807LL - 1LL)
+#define INT64_MIN (-INT64_C(9223372036854775807) - 1)
 #define INT8_MAX (127)
 #define INT16_MAX (32767)
 #define INT32_MAX (2147483647)
-#define INT64_MAX (9223372036854775807LL)
+#define INT64_MAX (INT64_C(9223372036854775807))
 #define UINT8_MAX (255)
 #define UINT16_MAX (65535)
 #define UINT32_MAX (4294967295U)
-#define UINT64_MAX (18446744073709551615ULL)
+#define UINT64_MAX (UINT64_C(18446744073709551615))
 
-#define INTPTR_MAX INT32_MAX
-#define INTPTR_MIN INT32_MIN
-#define UINTPTR_MAX UINT32_MAX
+#define INTPTR_MAX __INTPTR_MAX__
+#define INTPTR_MIN (-INTPTR_MAX - 1)
+#define UINTPTR_MAX __UINTPTR_MAX__
 
 #define INT_FAST8_MIN INT8_MIN
 #define INT_FAST16_MIN INT16_MIN
@@ -105,21 +131,6 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define UINT_LEAST16_MAX UINT16_MAX
 #define UINT_LEAST32_MAX UINT32_MAX
 #define UINT_LEAST64_MAX UINT64_MAX
-
-#define INT8_C(x) x
-#define UINT8_C(x) x
-
-#define INT16_C(x) x
-#define UINT16_C(x) x
-
-#define INT32_C(x) x
-#define UINT32_C(x) x
-
-#define INT64_C(x) x##LL
-#define UINT64_C(x) x##ULL
-
-#define INTMAX_C(c) c##LL
-#define UINTMAX_C(c) c##ULL
 
 #define SIZE_MAX ((size_t)-1)
 
