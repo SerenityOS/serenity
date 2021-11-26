@@ -198,6 +198,12 @@ String Token::string_value(StringValueStatus& status) const
             continue;
         }
 
+        if (lexer.next_is('8') || lexer.next_is('9')) {
+            status = StringValueStatus::LegacyOctalEscapeSequence;
+            builder.append(lexer.consume());
+            continue;
+        }
+
         lexer.retreat();
         builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"));
     }
