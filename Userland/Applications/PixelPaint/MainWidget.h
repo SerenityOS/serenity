@@ -43,6 +43,7 @@ private:
 
     ImageEditor* current_image_editor();
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
+    void create_image_from_clipboard();
 
     virtual void drop_event(GUI::DropEvent&) override;
 

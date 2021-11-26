@@ -119,20 +119,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_new_image_from_clipboard_action = GUI::Action::create(
         "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-            auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
-            if (!bitmap) {
-                GUI::MessageBox::show(&window, "There is no image in a clipboard to paste.", "PixelPaint", GUI::MessageBox::Type::Warning);
-                return;
-            }
-
-            auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
-            auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
-            image->add_layer(*layer);
-            image->set_title("Untitled");
-
-            create_new_editor(*image);
-            m_layer_list_widget->set_image(image);
-            m_layer_list_widget->set_selected_layer(layer);
+            create_image_from_clipboard();
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
@@ -241,8 +228,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         auto* editor = current_image_editor();
-        if (!editor)
+        if (!editor) {
+            create_image_from_clipboard();
             return;
+        }
+
         auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
         if (!bitmap)
             return;
@@ -714,6 +704,24 @@ void MainWidget::create_default_image()
 
     auto& editor = create_new_editor(*image);
     editor.set_active_layer(bg_layer);
+}
+
+void MainWidget::create_image_from_clipboard()
+{
+    auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
+    if (!bitmap) {
+        GUI::MessageBox::show(window(), "There is no image in a clipboard to paste.", "PixelPaint", GUI::MessageBox::Type::Warning);
+        return;
+    }
+
+    auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
+    auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+    image->add_layer(*layer);
+    image->set_title("Untitled");
+
+    create_new_editor(*image);
+    m_layer_list_widget->set_image(image);
+    m_layer_list_widget->set_selected_layer(layer);
 }
 
 bool MainWidget::request_close()
