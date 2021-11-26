@@ -1671,6 +1671,23 @@ private:
     Type m_type;
 };
 
+class ImportCall final : public Expression {
+public:
+    ImportCall(SourceRange source_range, NonnullRefPtr<Expression> specifier, RefPtr<Expression> options)
+        : Expression(source_range)
+        , m_specifier(move(specifier))
+        , m_options(move(options))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+private:
+    NonnullRefPtr<Expression> m_specifier;
+    RefPtr<Expression> m_options;
+};
+
 class ConditionalExpression final : public Expression {
 public:
     ConditionalExpression(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Expression> consequent, NonnullRefPtr<Expression> alternate)
