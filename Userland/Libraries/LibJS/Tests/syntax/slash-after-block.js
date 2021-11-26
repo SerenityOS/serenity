@@ -17,6 +17,7 @@ test("slash token resolution in lexer", () => {
     expect("+a-- / 1").toEval();
     expect("a.in / b").toEval();
     expect("a.instanceof / b").toEval();
+    expect("class A { #name; d = a.#name / b; }").toEval();
 
     // FIXME: Even more 'reserved' words are valid however the cases below do still need to pass.
     //expect("a.void / b").toEval();
