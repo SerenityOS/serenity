@@ -93,7 +93,9 @@ public:
     ErrorOr& operator=(ErrorOr const& other) = default;
 
     T& value() { return m_value.value(); }
-    Error& error() { return m_error.value(); }
+    T const& value() const { return m_value.value(); }
+    ErrorType& error() { return m_error.value(); }
+    ErrorType const& error() const { return m_error.value(); }
 
     bool is_error() const { return m_error.has_value(); }
 
