@@ -176,6 +176,9 @@ public:
 private:
     friend class ScopePusher;
 
+    void parse_script(Program& program, bool starts_in_strict_mode);
+    void parse_module(Program& program);
+
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;
