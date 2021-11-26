@@ -2153,7 +2153,7 @@ NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
         }
 
         if (yield_from || match_expression() || match(TokenType::Class))
-            argument = parse_expression(0);
+            argument = parse_expression(2);
     }
 
     return create_ast_node<YieldExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(argument), yield_from);
