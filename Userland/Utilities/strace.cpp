@@ -333,8 +333,45 @@ struct Formatter<PointerArgument> : StandardFormatter {
 };
 }
 
-class FormattedSyscallBuilder {
+struct StringArgument {
+    Syscall::StringArgument argument;
+    StringView trim_by {};
+};
 
+namespace AK {
+template<>
+struct Formatter<StringArgument> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    ErrorOr<void> format(FormatBuilder& format_builder, StringArgument const& string_argument)
+    {
+        auto& builder = format_builder.builder();
+        if (string_argument.argument.characters == nullptr) {
+            builder.append("null");
+            return {};
+        }
+
+        // TODO: Avoid trying to copy excessively long strings.
+        auto string_buffer = copy_from_process(string_argument.argument.characters, string_argument.argument.length);
+        if (string_buffer.is_error()) {
+            builder.appendff("{}{{{:p}, {}b}}", string_buffer.error(), (void const*)string_argument.argument.characters, string_argument.argument.length);
+        } else {
+            auto view = StringView(string_buffer.value());
+            if (!string_argument.trim_by.is_empty())
+                view = view.trim(string_argument.trim_by);
+            builder.appendff("\"{}\"", view);
+        }
+
+        return {};
+    }
+};
+}
+
+class FormattedSyscallBuilder {
 public:
     FormattedSyscallBuilder(StringView syscall_name)
     {
@@ -353,19 +390,6 @@ public:
     void add_argument(T&& arg)
     {
         add_argument("{}", forward<T>(arg));
-    }
-
-    void add_string_argument(Syscall::StringArgument const& string_argument, StringView trim_by = {})
-    {
-        if (string_argument.characters == nullptr)
-            add_argument("null");
-        else {
-            auto string_buffer = copy_from_process(string_argument.characters, string_argument.length).release_value_but_fixme_should_propagate_errors();
-            auto view = StringView(string_buffer);
-            if (!trim_by.is_empty())
-                view = view.trim(trim_by);
-            add_argument("\"{}\"", view);
-        }
     }
 
     template<typename... Ts>
@@ -431,13 +455,7 @@ static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, siz
 static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p)
 {
     auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
-    builder.add_string_argument(params.path);
-    if (params.buffer.size == 0)
-        builder.add_argument("null");
-    else {
-        auto buffer = copy_from_process(params.buffer.data, params.buffer.size).release_value_but_fixme_should_propagate_errors();
-        builder.add_argument("\"{}\"", StringView { (const char*)buffer.data() });
-    }
+    builder.add_arguments(StringArgument { params.path }, StringArgument { { params.buffer.data, params.buffer.size } });
 }
 
 static void format_exit(FormattedSyscallBuilder& builder, int status)
@@ -463,9 +481,7 @@ static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_param
     else
         builder.add_argument(params.dirfd);
 
-    builder.add_string_argument(params.path);
-
-    builder.add_argument(OpenOptions { params.options });
+    builder.add_arguments(StringArgument { params.path }, OpenOptions { params.options });
 
     if (params.options & O_CREAT)
         builder.add_argument("{:04o}", params.mode);
@@ -530,8 +546,7 @@ static void format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_param
         builder.add_argument("AT_FDCWD");
     else
         builder.add_argument(params.dirfd);
-    builder.add_string_argument(params.path);
-    builder.add_arguments(copy_from_process(params.statbuf), params.follow_symlinks);
+    builder.add_arguments(StringArgument { params.path }, copy_from_process(params.statbuf), params.follow_symlinks);
 }
 
 static void format_lseek(FormattedSyscallBuilder& builder, int fd, off_t offset, int whence)
@@ -636,8 +651,7 @@ struct MemoryProtectionFlags : BitflagBase {
 static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
     auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
-    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment);
-    builder.add_string_argument(params.name);
+    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment, StringArgument { params.name });
 }
 
 static void format_munmap(FormattedSyscallBuilder& builder, void* addr, size_t size)
@@ -653,8 +667,7 @@ static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t
 static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
 {
     auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
-    builder.add_arguments(params.addr, params.size);
-    builder.add_string_argument(params.name);
+    builder.add_arguments(params.addr, params.size, StringArgument { params.name });
 }
 
 static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clockid, struct timespec* time)
@@ -664,12 +677,12 @@ static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clo
 
 static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters, size_t size)
 {
-    builder.add_string_argument({ characters, size }, "\0\n"sv);
+    builder.add_argument(StringArgument { { characters, size }, "\0\n"sv });
 }
 
 static void format_get_process_name(FormattedSyscallBuilder& builder, char* buffer, size_t buffer_size)
 {
-    builder.add_string_argument({ buffer, buffer_size });
+    builder.add_argument(StringArgument { { buffer, buffer_size }, "\0"sv });
 }
 
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
