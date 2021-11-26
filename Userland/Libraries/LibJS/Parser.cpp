@@ -851,6 +851,10 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
 
 RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
 {
+    // Optimization which skips the save/load state.
+    if (next_token().type() != TokenType::Period)
+        return {};
+
     save_state();
     auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
@@ -858,9 +862,7 @@ RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
     };
 
     consume(TokenType::New);
-    if (!match(TokenType::Period))
-        return {};
-    consume();
+    consume(TokenType::Period);
     if (!match(TokenType::Identifier))
         return {};
     // The string 'target' cannot have escapes so we check original value.
