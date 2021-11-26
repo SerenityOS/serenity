@@ -85,3 +85,45 @@ test("with super class", () => {
     b.arrow_ref_super();
     expect(b.super_field).toBe(4);
 });
+
+describe("class fields with a 'special' name", () => {
+    test("static", () => {
+        class A {
+            static;
+        }
+        expect("static" in new A()).toBeTrue();
+
+        class B {
+            static;
+        }
+        expect("static" in new B()).toBeTrue();
+
+        class C {
+            static a;
+        }
+        expect("static" in new C()).toBeFalse();
+        expect("a" in new C()).toBeFalse();
+
+        expect("a" in C).toBeTrue();
+        expect("static" in C).toBeFalse();
+    });
+
+    test("async", () => {
+        class A {
+            async;
+        }
+        expect("async" in new A()).toBeTrue();
+
+        class B {
+            async;
+        }
+        expect("async" in new B()).toBeTrue();
+
+        class C {
+            async;
+            a;
+        }
+        expect("async" in new C()).toBeTrue();
+        expect("a" in new C()).toBeTrue();
+    });
+});
