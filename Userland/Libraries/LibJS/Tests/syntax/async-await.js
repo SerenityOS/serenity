@@ -168,3 +168,19 @@ describe("non async function declaration usage of async still works", () => {
         expect(evalResult).toBeTrue();
     });
 });
+
+describe("await cannot be used in class static init blocks", () => {
+    test("directly", () => {
+        expect("class A{ static { await; } }").not.toEval();
+        expect("class A{ static { let await = 3; } }").not.toEval();
+        expect("class A{ static { call(await); } }").not.toEval();
+        expect("class A{ static { for(const await = 1; false ;) {} } }").not.toEval();
+    });
+
+    test("via declaration", () => {
+        expect("class A{ static { class await {} } }").not.toEval();
+        expect("class A{ static { function await() {} } }").not.toEval();
+        expect("class A{ static { function* await() {} } }").not.toEval();
+        expect("class A{ static { async function* await() {} } }").not.toEval();
+    });
+});

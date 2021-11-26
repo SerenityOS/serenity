@@ -713,6 +713,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     auto function_body_result = [&]() -> RefPtr<FunctionBody> {
         TemporaryChange change(m_state.in_arrow_function_context, true);
         TemporaryChange async_context_change(m_state.in_async_function_context, is_async);
+        TemporaryChange in_class_static_init_block_change(m_state.in_class_static_init_block, false);
 
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
@@ -779,7 +780,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction all
         return {};
     }
 
-    if (m_state.current_token.value() == "await"sv && (m_program_type == Program::Type::Module || m_state.in_async_function_context)) {
+    if (m_state.current_token.value() == "await"sv && (m_program_type == Program::Type::Module || m_state.in_async_function_context || m_state.in_class_static_init_block)) {
         return {};
     }
 
@@ -895,6 +896,9 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         : "";
 
     check_identifier_name_for_assignment_validity(class_name, true);
+    if (m_state.in_class_static_init_block && class_name == "await"sv)
+        syntax_error("Identifier must not be a reserved word in modules ('await')");
+
     if (match(TokenType::Extends)) {
         consume();
         auto [expression, should_continue_parsing] = parse_primary_expression();
@@ -2287,7 +2291,6 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange break_context_rollback(m_state.in_break_context, false);
     TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
     TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, false);
-    TemporaryChange class_static_initializer_rollback(m_state.in_class_static_init_block, false);
     TemporaryChange might_need_arguments_object_rollback(m_state.function_might_need_arguments_object, false);
 
     constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
@@ -2320,7 +2323,11 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
             name = consume().value();
 
         check_identifier_name_for_assignment_validity(name);
+
+        if (m_state.in_class_static_init_block && name == "await"sv)
+            syntax_error("'await' is a reserved word");
     }
+    TemporaryChange class_static_initializer_rollback(m_state.in_class_static_init_block, false);
     TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator || function_kind == FunctionKind::AsyncGenerator);
     TemporaryChange async_change(m_state.in_async_function_context, function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator);
 
@@ -3050,7 +3057,10 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
     if (match(TokenType::ParenOpen)) {
         should_expect_parameter = true;
         consume();
-        if (match_identifier_name() && (!match(TokenType::Yield) || !m_state.in_generator_function_context) && (!match(TokenType::Async) || !m_state.in_async_function_context))
+        if (match_identifier_name()
+            && (!match(TokenType::Yield) || !m_state.in_generator_function_context)
+            && (!match(TokenType::Async) || !m_state.in_async_function_context)
+            && (!match(TokenType::Await) || !m_state.in_class_static_init_block))
             parameter = consume().value();
         else
             pattern_parameter = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::No);
