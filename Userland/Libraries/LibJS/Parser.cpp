@@ -945,8 +945,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
 
         if (match(TokenType::Async)) {
-            consume();
-            is_async = true;
+            auto lookahead_token = next_token();
+            if (lookahead_token.type() != TokenType::Semicolon && lookahead_token.type() != TokenType::CurlyClose
+                && !lookahead_token.trivia_contains_line_terminator()) {
+                consume();
+                is_async = true;
+            }
         }
 
         if (match(TokenType::Asterisk)) {
@@ -1042,7 +1046,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
                 if (is_static && name == "prototype"sv)
                     syntax_error("Classes may not have a static property named 'prototype'");
-            } else if ((match(TokenType::ParenOpen) || match(TokenType::Equals)) && (is_static || is_async || method_kind != ClassMethod::Kind::Method)) {
+            } else if ((match(TokenType::ParenOpen) || match(TokenType::Equals) || match(TokenType::Semicolon) || match(TokenType::CurlyClose)) && (is_static || is_async || method_kind != ClassMethod::Kind::Method)) {
                 switch (method_kind) {
                 case ClassMethod::Kind::Method:
                     if (is_async) {
