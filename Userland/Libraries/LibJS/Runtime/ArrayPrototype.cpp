@@ -1517,7 +1517,7 @@ static ThrowCompletionOr<size_t> flatten_into_array(GlobalObject& global_object,
 
         if (depth > 0 && TRY(value.is_array(global_object))) {
             if (vm.did_reach_stack_space_limit())
-                return vm.throw_completion<Error>(global_object, ErrorType::CallStackSizeExceeded);
+                return vm.throw_completion<InternalError>(global_object, ErrorType::CallStackSizeExceeded);
 
             auto length = TRY(length_of_array_like(global_object, value.as_object()));
             target_index = TRY(flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1));
