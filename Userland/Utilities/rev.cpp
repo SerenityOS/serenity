@@ -16,7 +16,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<String> paths;
+    Vector<StringView> paths;
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Concatente files to stdout with each line in reverse.");
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
     if (!paths.is_empty()) {
         for (auto const& path : paths) {
-            FILE* stream = fopen(path.characters(), "r");
+            FILE* stream = fopen(String(path).characters(), "r");
             if (!stream) {
                 warnln("Failed to open {}: {}", path, strerror(errno));
                 continue;

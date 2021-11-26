@@ -147,7 +147,7 @@ TEST_CASE(positional_string_argument)
 TEST_CASE(positional_vector_string_argument)
 {
     // Zero or more positional arguments, zero given
-    Vector<String> values = {};
+    Vector<StringView> values;
     auto parser_result = run_parser({ "app" }, [&](auto& parser) {
         parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No);
     });
@@ -213,7 +213,7 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     // Expected: all arguments fill as given
     bool bool_opt1 = false;
     bool bool_opt2 = false;
-    Vector<String> positionals = {};
+    Vector<StringView> positionals;
     auto parser_result = run_parser({ "app", "-b", "-c", "one", "two" }, [&](auto& parser) {
         parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
         parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
@@ -318,7 +318,7 @@ TEST_CASE(stop_on_first_non_option)
     // Expected: bool options are set and one positional argument is filled
     bool bool_opt1 = false;
     bool bool_opt2 = false;
-    Vector<String> positionals = {};
+    Vector<StringView> positionals;
     auto parser_result = run_parser({ "app", "-b", "-c", "one" }, [&](auto& parser) {
         parser.set_stop_on_first_non_option(false);
         parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');

@@ -98,7 +98,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<String> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List files in a directory.");
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
         FileMetadata metadata;
         metadata.name = path;
 
-        int rc = lstat(path.characters(), &metadata.stat);
+        int rc = lstat(String(path).characters(), &metadata.stat);
         if (rc < 0)
             perror("lstat");
 

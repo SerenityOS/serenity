@@ -580,21 +580,6 @@ void ArgsParser::add_positional_argument(Vector<const char*>& values, const char
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<String>& values, const char* help_string, const char* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        INT_MAX,
-        [&values](const char* s) {
-            values.append(s);
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
 void ArgsParser::add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {

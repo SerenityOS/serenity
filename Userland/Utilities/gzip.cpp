@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv)
 {
-    Vector<String> filenames;
+    Vector<StringView> filenames;
     bool keep_input_files { false };
     bool write_to_stdout { false };
     bool decompress { false };
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
                 warnln("unknown suffix for: {}, skipping", input_filename);
                 continue;
             }
-            output_filename = input_filename.substring(0, input_filename.length() - ".gz"sv.length());
+            output_filename = input_filename.substring_view(0, input_filename.length() - ".gz"sv.length());
         } else {
             output_filename = String::formatted("{}.gz", input_filename);
         }
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         }
 
         if (!keep_input_files) {
-            const auto retval = unlink(input_filename.characters());
+            const auto retval = unlink(String(input_filename).characters());
             if (retval != 0) {
                 warnln("Failed removing input file");
                 return 1;

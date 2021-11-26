@@ -16,7 +16,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<String> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout, last line first.");
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
             if (path == "-"sv) {
                 stream = stdin;
             } else {
-                stream = fopen(path.characters(), "r");
+                stream = fopen(String(path).characters(), "r");
                 if (!stream) {
                     warnln("Failed to open {}: {}", path, strerror(errno));
                     continue;
