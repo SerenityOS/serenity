@@ -18,6 +18,14 @@ describe("parsing object literal async functions", () => {
         expect(`x = { async
                 foo() { } }`).not.toEval();
     });
+
+    test("property on object called async", () => {
+        expect(`x = { async() { } }`).toEval();
+        expect(`x = { async() { await 4; } }`).not.toEval();
+        expect(`x = { async: 3 }`).toEval();
+        expect(`x = { async: await 3, }`).not.toEval();
+    });
+
     test("await expression", () => {
         expect(`x = { foo() { await bar(); } }`).not.toEval();
         expect(`x = { foo() { await; } }`).toEval();
