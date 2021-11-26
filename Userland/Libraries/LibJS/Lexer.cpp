@@ -654,7 +654,7 @@ Token Lexer::next()
             if (m_current_char == '.') {
                 // decimal
                 consume();
-                while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit))
+                while (is_ascii_digit(m_current_char))
                     consume();
                 if (m_current_char == 'e' || m_current_char == 'E')
                     is_invalid_numeric_literal = !consume_exponent();
@@ -688,7 +688,7 @@ Token Lexer::next()
                 // octal without '0o' prefix. Forbidden in 'strict mode'
                 do {
                     consume();
-                } while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit));
+                } while (is_ascii_digit(m_current_char));
             }
         } else {
             // 1...9 or period
@@ -700,11 +700,15 @@ Token Lexer::next()
             } else {
                 if (m_current_char == '.') {
                     consume();
-                    while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit))
+                    if (m_current_char == '_')
+                        is_invalid_numeric_literal = true;
+
+                    while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit)) {
                         consume();
+                    }
                 }
                 if (m_current_char == 'e' || m_current_char == 'E')
-                    is_invalid_numeric_literal = !consume_exponent();
+                    is_invalid_numeric_literal = is_invalid_numeric_literal || !consume_exponent();
             }
         }
         if (is_invalid_numeric_literal) {
