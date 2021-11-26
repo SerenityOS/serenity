@@ -54,7 +54,7 @@ static bool write_variable(StringView name, StringView value)
     return true;
 }
 
-static int handle_variables(Vector<String> const& variables)
+static int handle_variables(Vector<StringView> const& variables)
 {
     bool success = false;
     for (auto const& variable : variables) {
@@ -95,7 +95,7 @@ static int handle_show_all()
 int main(int argc, char** argv)
 {
     bool show_all = false;
-    Vector<String> variables;
+    Vector<StringView> variables;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show or modify system-internal values. This requires root, and can crash your system.");

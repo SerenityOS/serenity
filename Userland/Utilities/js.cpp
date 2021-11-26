@@ -1163,7 +1163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
-    Vector<String> script_paths;
+    Vector<StringView> script_paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");

@@ -25,7 +25,7 @@ static bool decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffe
 
 int main(int argc, char** argv)
 {
-    Vector<String> filenames;
+    Vector<StringView> filenames;
     bool keep_input_files { false };
     bool write_to_stdout { false };
 

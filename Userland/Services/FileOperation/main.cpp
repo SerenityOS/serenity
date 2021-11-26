@@ -28,9 +28,9 @@ struct WorkItem {
     off_t size;
 };
 
-static int perform_copy(Vector<String> const& sources, String const& destination);
-static int perform_move(Vector<String> const& sources, String const& destination);
-static int perform_delete(Vector<String> const& sources);
+static int perform_copy(Vector<StringView> const& sources, String const& destination);
+static int perform_move(Vector<StringView> const& sources, String const& destination);
+static int perform_delete(Vector<StringView> const& sources);
 static int execute_work_items(Vector<WorkItem> const& items);
 static void report_error(String message);
 static void report_warning(String message);
@@ -40,7 +40,7 @@ static String deduplicate_destination_file_name(String const& destination);
 int main(int argc, char** argv)
 {
     String operation;
-    Vector<String> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(operation, "Operation: either 'Copy', 'Move' or 'Delete'", "operation", Core::ArgsParser::Required::Yes);
@@ -117,7 +117,7 @@ static bool collect_copy_work_items(String const& source, String const& destinat
     return true;
 }
 
-int perform_copy(Vector<String> const& sources, String const& destination)
+int perform_copy(Vector<StringView> const& sources, String const& destination)
 {
     Vector<WorkItem> items;
 
@@ -178,7 +178,7 @@ static bool collect_move_work_items(String const& source, String const& destinat
     return true;
 }
 
-int perform_move(Vector<String> const& sources, String const& destination)
+int perform_move(Vector<StringView> const& sources, String const& destination)
 {
     Vector<WorkItem> items;
 
@@ -228,7 +228,7 @@ static bool collect_delete_work_items(String const& source, Vector<WorkItem>& it
     return true;
 }
 
-int perform_delete(Vector<String> const& sources)
+int perform_delete(Vector<StringView> const& sources)
 {
     Vector<WorkItem> items;
 
