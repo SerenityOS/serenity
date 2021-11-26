@@ -261,7 +261,7 @@ private:
         bool in_function_context { false };
         bool in_formal_parameter_context { false };
         bool in_generator_function_context { false };
-        bool in_async_function_context { false };
+        bool await_expression_is_valid { false };
         bool in_arrow_function_context { false };
         bool in_break_context { false };
         bool in_continue_context { false };
