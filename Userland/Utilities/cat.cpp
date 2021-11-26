@@ -20,7 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath", nullptr));
 
-    Vector<String> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout.");

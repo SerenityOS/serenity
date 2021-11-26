@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     bool preserve = false;
     bool recursion_allowed = false;
     bool verbose = false;
-    Vector<String> sources;
+    Vector<StringView> sources;
     String destination;
 
     Core::ArgsParser args_parser;

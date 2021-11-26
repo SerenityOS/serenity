@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     String fields_list = "";
     String delimiter = "\t";
 
-    Vector<String> files;
+    Vector<StringView> files;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(files, "file(s) to cut", "file", Core::ArgsParser::Required::No);
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
     for (auto& file : files) {
         FILE* fp = stdin;
         if (!file.is_null()) {
-            fp = fopen(file.characters(), "r");
+            fp = fopen(String(file).characters(), "r");
             if (!fp) {
                 warnln("cut: Could not open file '{}'", file);
                 continue;

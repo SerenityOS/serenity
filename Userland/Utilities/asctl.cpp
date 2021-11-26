@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     auto audio_client = Audio::ClientConnection::construct();
 
     String command = String::empty();
-    Vector<String> arguments;
+    Vector<StringView> arguments;
     bool human_mode = false;
 
     Core::ArgsParser args_parser;
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
                 }
                 values_to_set.set(AudioVariable::Volume, volume.value());
             } else if (variable.is_one_of("m"sv, "mute"sv)) {
-                String& mute_text = arguments[++i];
+                auto& mute_text = arguments[++i];
                 bool mute;
                 if (mute_text.equals_ignoring_case("true") || mute_text == "1") {
                     mute = true;
