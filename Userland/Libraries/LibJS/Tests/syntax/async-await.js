@@ -9,6 +9,10 @@ describe("parsing freestanding async functions", () => {
         expect(`async function foo() { await; }`).not.toEval();
         expect(`function foo() { await bar(); }`).not.toEval();
         expect(`function foo() { await; }`).toEval();
+
+        expect(`\\u0061sync function foo() { await bar(); }`).not.toEval();
+        expect(`\\u0061sync function foo() { \\u0061wait bar(); }`).not.toEval();
+        expect(`async function foo() { \\u0061wait bar(); }`).not.toEval();
     });
 });
 
@@ -82,11 +86,15 @@ describe("async arrow functions", () => {
         expect("async (b = await) => await b;").not.toEval();
         expect("async (b = await 3) => await b;").not.toEval();
 
-        // Cannot escape the async keyword.
+        // Cannot escape the async keyword and get an async arrow function.
         expect("\\u0061sync () => await 3").not.toEval();
 
-        expect("for (async of => {};;) {}").toEval();
+        expect("for (async of => {};false;) {}").toEval();
         expect("for (async of []) {}").not.toEval();
+
+        expect("for (\\u0061sync of []) {}").toEval();
+        expect("for (\\u0061sync of => {};false;) {}").not.toEval();
+        expect("for (\\u0061sync => {};false;) {}").toEval();
     });
 
     test("async within a for-loop", () => {
