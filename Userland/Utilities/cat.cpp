@@ -12,10 +12,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define IFTRY(binding, expression)                                              \
-    if (auto _temporary_result = (expression); !_temporary_result.is_error()) { \
-        auto binding = _temporary_result.release_value();
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath", nullptr));
