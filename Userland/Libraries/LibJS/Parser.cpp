@@ -1486,7 +1486,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         if (match(TokenType::Async)) {
             auto lookahead_token = next_token();
 
-            if (lookahead_token.type() != TokenType::ParenOpen && !lookahead_token.trivia_contains_line_terminator()) {
+            if (lookahead_token.type() != TokenType::ParenOpen && lookahead_token.type() != TokenType::Colon
+                && !lookahead_token.trivia_contains_line_terminator()) {
                 consume(TokenType::Async);
                 function_kind = FunctionKind::Async;
             }
