@@ -25,44 +25,41 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, io_group, type));
+    auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
+    return adopt_ref(*new IDEChannel(controller, io_group, type, move(ata_identify_data_buffer)));
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt_ref(*new IDEChannel(controller, irq, io_group, type));
+    auto ata_identify_data_buffer = KBuffer::try_create_with_size("ATA Identify Page"sv, 4096, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
+    return adopt_ref(*new IDEChannel(controller, irq, io_group, type, move(ata_identify_data_buffer)));
 }
 
-RefPtr<StorageDevice> IDEChannel::master_device() const
+StringView IDEChannel::channel_type_string() const
 {
-    return m_master;
+    if (m_channel_type == ChannelType::Primary)
+        return "Primary"sv;
+    return "Secondary"sv;
 }
 
-RefPtr<StorageDevice> IDEChannel::slave_device() const
+bool IDEChannel::select_device_and_wait_until_not_busy(DeviceType device_type, size_t milliseconds_timeout)
 {
-    return m_slave;
+    IO::delay(20);
+    u8 slave = device_type == DeviceType::Slave;
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4)); // First, we need to select the drive itself
+    IO::delay(20);
+    size_t time_elapsed = 0;
+    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
+        IO::delay(1000);
+        time_elapsed++;
+    }
+    return time_elapsed <= milliseconds_timeout;
 }
 
-UNMAP_AFTER_INIT void IDEChannel::initialize_with_isa_controller(Badge<ISAIDEController>, bool force_pio)
+ErrorOr<void> IDEChannel::port_phy_reset()
 {
-    initialize(force_pio);
-}
-
-UNMAP_AFTER_INIT void IDEChannel::initialize_with_pci_controller(Badge<PCIIDEController>, bool force_pio)
-{
-    initialize(force_pio);
-}
-
-UNMAP_AFTER_INIT void IDEChannel::initialize(bool force_pio)
-{
-    disable_irq();
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
-    if (m_io_group.bus_master_base().has_value())
-        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
-    else
-        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
-
+    MutexLocker locker(m_lock);
+    SpinlockLocker hard_locker(m_hard_lock);
     // reset the channel
     u8 device_control = m_io_group.control_base().in<u8>();
     // Wait 30 milliseconds
@@ -74,700 +71,263 @@ UNMAP_AFTER_INIT void IDEChannel::initialize(bool force_pio)
     // Wait up to 30 seconds before failing
     if (!select_device_and_wait_until_not_busy(DeviceType::Master, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on master stuck");
-        return;
+        return Error::from_errno(EBUSY);
     }
     // Wait up to 30 seconds before failing
     if (!select_device_and_wait_until_not_busy(DeviceType::Slave, 30000)) {
         dbgln("IDEChannel: reset failed, busy flag on slave stuck");
-        return;
+        return Error::from_errno(EBUSY);
     }
+    return {};
+}
 
-    detect_disks();
+ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PCIIDEController>, bool force_pio)
+{
+    return allocate_resources(force_pio);
+}
+ErrorOr<void> IDEChannel::allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>)
+{
+    return allocate_resources(false);
+}
 
-    // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
-    clear_pending_interrupts();
+UNMAP_AFTER_INIT ErrorOr<void> IDEChannel::allocate_resources(bool force_pio)
+{
+    dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
+    dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
+    if (m_io_group.bus_master_base().has_value())
+        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
+    else
+        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
 
     if (!force_pio) {
         m_dma_enabled = true;
         VERIFY(m_io_group.bus_master_base().has_value());
         // Let's try to set up DMA transfers.
-        {
-            auto region_or_error = MM.allocate_dma_buffer_page("IDE PRDT"sv, Memory::Region::Access::ReadWrite, m_prdt_page);
-            if (region_or_error.is_error())
-                TODO();
-            m_prdt_region = region_or_error.release_value();
-            VERIFY(!m_prdt_page.is_null());
-        }
-        {
-            auto region_or_error = MM.allocate_dma_buffer_page("IDE DMA region"sv, Memory::Region::Access::ReadWrite, m_dma_buffer_page);
-            if (region_or_error.is_error())
-                TODO();
-            m_dma_buffer_region = region_or_error.release_value();
-            VERIFY(!m_dma_buffer_page.is_null());
-        }
+
+        m_prdt_region = TRY(MM.allocate_dma_buffer_page("IDE PRDT"sv, Memory::Region::Access::ReadWrite, m_prdt_page));
+        VERIFY(!m_prdt_page.is_null());
+        m_dma_buffer_region = TRY(MM.allocate_dma_buffer_page("IDE DMA region"sv, Memory::Region::Access::ReadWrite, m_dma_buffer_page));
+        VERIFY(!m_dma_buffer_page.is_null());
 
         prdt().end_of_table = 0x8000;
 
         // clear bus master interrupt status
         m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
     }
+    return {};
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
-    : IRQHandler(irq)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
+    : ATAPort(controller, (type == ChannelType::Primary ? 0 : 1), move(ata_identify_data_buffer))
+    , IRQHandler(irq)
     , m_channel_type(type)
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
-    : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOAddressGroup io_group, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer)
+    : ATAPort(controller, (type == ChannelType::Primary ? 0 : 1), move(ata_identify_data_buffer))
+    , IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
-}
-
-void IDEChannel::clear_pending_interrupts() const
-{
-    m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 }
 
 UNMAP_AFTER_INIT IDEChannel::~IDEChannel() = default;
 
-void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
-{
-    MutexLocker locker(m_lock);
-    VERIFY(m_current_request.is_null());
-
-    dbgln_if(PATA_DEBUG, "IDEChannel::start_request");
-
-    m_current_request = request;
-    m_current_request_block_index = 0;
-    m_current_request_flushing_cache = false;
-
-    if (m_dma_enabled) {
-        if (request.request_type() == AsyncBlockDeviceRequest::Read)
-            ata_read_sectors_with_dma(is_slave, capabilities);
-        else
-            ata_write_sectors_with_dma(is_slave, capabilities);
-        return;
-    }
-    if (request.request_type() == AsyncBlockDeviceRequest::Read)
-        ata_read_sectors_with_pio(is_slave, capabilities);
-    else
-        ata_write_sectors_with_pio(is_slave, capabilities);
-}
-
-void IDEChannel::complete_dma_transaction(AsyncDeviceRequest::RequestResult result)
-{
-    // NOTE: this may be called from the interrupt handler!
-    VERIFY(m_current_request);
-    VERIFY(m_request_lock.is_locked());
-
-    // Now schedule reading back the buffer as soon as we leave the irq handler.
-    // This is important so that we can safely write the buffer back,
-    // which could cause page faults. Note that this may be called immediately
-    // before Processor::deferred_call_queue returns!
-    auto work_item_creation_result = g_io_work->try_queue([this, result]() {
-        dbgln_if(PATA_DEBUG, "IDEChannel::complete_dma_transaction result: {}", (int)result);
-        SpinlockLocker lock(m_request_lock);
-        VERIFY(m_current_request);
-        auto current_request = m_current_request;
-        m_current_request.clear();
-
-        if (result == AsyncDeviceRequest::Success) {
-            if (current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-                if (auto result = current_request->write_to_buffer(current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), current_request->buffer_size()); result.is_error()) {
-                    lock.unlock();
-                    current_request->complete(AsyncDeviceRequest::MemoryFault);
-                    return;
-                }
-            }
-
-            // I read somewhere that this may trigger a cache flush so let's do it.
-            VERIFY(m_io_group.bus_master_base().has_value());
-            m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
-        }
-
-        lock.unlock();
-        current_request->complete(result);
-    });
-    if (work_item_creation_result.is_error()) {
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        current_request->complete(AsyncDeviceRequest::OutOfMemory);
-    }
-}
-
-void IDEChannel::complete_pio_transaction(AsyncDeviceRequest::RequestResult result)
-{
-    // NOTE: this may be called from the interrupt handler!
-    VERIFY(m_current_request);
-    VERIFY(m_request_lock.is_locked());
-
-    // Now schedule reading back the buffer as soon as we leave the irq handler.
-    // This is important so that we can safely write the buffer back,
-    // which could cause page faults. Note that this may be called immediately
-    // before Processor::deferred_call_queue returns!
-    auto work_item_creation_result = g_io_work->try_queue([this, result]() {
-        dbgln_if(PATA_DEBUG, "IDEChannel::complete_pio_transaction result: {}", (int)result);
-        MutexLocker locker(m_lock);
-        VERIFY(m_current_request);
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        current_request->complete(result);
-    });
-    if (work_item_creation_result.is_error()) {
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        current_request->complete(AsyncDeviceRequest::OutOfMemory);
-    }
-}
-
-static void print_ide_status(u8 status)
-{
-    dbgln("IDEChannel: print_ide_status: DRQ={} BSY={}, DRDY={}, DSC={}, DF={}, CORR={}, IDX={}, ERR={}",
-        (status & ATA_SR_DRQ) != 0,
-        (status & ATA_SR_BSY) != 0,
-        (status & ATA_SR_DRDY) != 0,
-        (status & ATA_SR_DSC) != 0,
-        (status & ATA_SR_DF) != 0,
-        (status & ATA_SR_CORR) != 0,
-        (status & ATA_SR_IDX) != 0,
-        (status & ATA_SR_ERR) != 0);
-}
-
-void IDEChannel::try_disambiguate_error()
-{
-    VERIFY(m_request_lock.is_locked());
-    dbgln("IDEChannel: Error cause:");
-
-    switch (m_device_error) {
-    case ATA_ER_BBK:
-        dbgln("IDEChannel: - Bad block");
-        break;
-    case ATA_ER_UNC:
-        dbgln("IDEChannel: - Uncorrectable data");
-        break;
-    case ATA_ER_MC:
-        dbgln("IDEChannel: - Media changed");
-        break;
-    case ATA_ER_IDNF:
-        dbgln("IDEChannel: - ID mark not found");
-        break;
-    case ATA_ER_MCR:
-        dbgln("IDEChannel: - Media change request");
-        break;
-    case ATA_ER_ABRT:
-        dbgln("IDEChannel: - Command aborted");
-        break;
-    case ATA_ER_TK0NF:
-        dbgln("IDEChannel: - Track 0 not found");
-        break;
-    case ATA_ER_AMNF:
-        dbgln("IDEChannel: - No address mark");
-        break;
-    default:
-        dbgln("IDEChannel: - No one knows");
-        break;
-    }
-}
-
-bool IDEChannel::handle_irq_for_dma_transaction()
-{
-    u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
-
-    m_entropy_source.add_random_event(status);
-
-    VERIFY(m_io_group.bus_master_base().has_value());
-    u8 bstatus = m_io_group.bus_master_base().value().offset(2).in<u8>();
-    if (!(bstatus & 0x4)) {
-        // interrupt not from this device, ignore
-        dbgln_if(PATA_DEBUG, "IDEChannel: ignore interrupt");
-        return false;
-    }
-    // clear bus master interrupt status
-    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
-
-    SpinlockLocker lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
-        (status & ATA_SR_DRQ) != 0,
-        (status & ATA_SR_BSY) != 0,
-        (status & ATA_SR_DRDY) != 0);
-
-    if (!m_current_request) {
-        dbgln("IDEChannel: IRQ but no pending request!");
-        return false;
-    }
-
-    if (status & ATA_SR_ERR) {
-        print_ide_status(status);
-        m_device_error = m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
-        dbgln("IDEChannel: Error {:#02x}!", (u8)m_device_error);
-        try_disambiguate_error();
-        complete_dma_transaction(AsyncDeviceRequest::Failure);
-        return true;
-    }
-    m_device_error = 0;
-    complete_dma_transaction(AsyncDeviceRequest::Success);
-    return true;
-}
-
-bool IDEChannel::handle_irq_for_pio_transaction()
-{
-    u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
-
-    m_entropy_source.add_random_event(status);
-
-    SpinlockLocker lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
-        (status & ATA_SR_DRQ) != 0,
-        (status & ATA_SR_BSY) != 0,
-        (status & ATA_SR_DRDY) != 0);
-
-    if (!m_current_request) {
-        dbgln("IDEChannel: IRQ but no pending request!");
-        return false;
-    }
-
-    if (status & ATA_SR_ERR) {
-        print_ide_status(status);
-        m_device_error = m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
-        dbgln("IDEChannel: Error {:#02x}!", (u8)m_device_error);
-        try_disambiguate_error();
-        complete_pio_transaction(AsyncDeviceRequest::Failure);
-        return true;
-    }
-    m_device_error = 0;
-
-    // Now schedule reading/writing the buffer as soon as we leave the irq handler.
-    // This is important so that we can safely access the buffers, which could
-    // trigger page faults
-    auto work_item_creation_result = g_io_work->try_queue([this]() {
-        MutexLocker locker(m_lock);
-        SpinlockLocker lock(m_request_lock);
-        if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
-
-            if (ata_do_pio_read_sector()) {
-                if (++m_current_request_block_index >= m_current_request->block_count()) {
-                    complete_pio_transaction(AsyncDeviceRequest::Success);
-                    return;
-                }
-                // Wait for the next block
-                enable_irq();
-            }
-        } else {
-            if (!m_current_request_flushing_cache) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
-                if (++m_current_request_block_index >= m_current_request->block_count()) {
-                    // We read the last block, flush cache
-                    VERIFY(!m_current_request_flushing_cache);
-                    m_current_request_flushing_cache = true;
-                    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
-                } else {
-                    // Read next block
-                    ata_do_pio_write_sector();
-                }
-            } else {
-                complete_pio_transaction(AsyncDeviceRequest::Success);
-            }
-        }
-    });
-    if (work_item_creation_result.is_error()) {
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        current_request->complete(AsyncDeviceRequest::OutOfMemory);
-    }
-    return true;
-}
-
 bool IDEChannel::handle_irq(RegisterState const&)
 {
-    if (!m_dma_enabled)
-        return handle_irq_for_pio_transaction();
-    return handle_irq_for_dma_transaction();
+    auto result = handle_interrupt_after_dma_transaction();
+    // FIXME: Propagate errors properly
+    VERIFY(!result.is_error());
+    return result.release_value();
 }
 
-static void io_delay()
-{
-    for (int i = 0; i < 4; ++i)
-        IO::in8(0x3f6);
-}
-
-bool IDEChannel::select_device_and_wait_until_not_busy(DeviceType device_type, size_t milliseconds_timeout)
-{
-    IO::delay(20);
-    u8 slave = device_type == DeviceType::Slave;
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4));
-    IO::delay(20);
-    size_t time_elapsed = 0;
-    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
-        IO::delay(1000);
-        time_elapsed++;
-    }
-    return time_elapsed <= milliseconds_timeout;
-}
-
-bool IDEChannel::wait_until_not_busy(size_t milliseconds_timeout)
-{
-    size_t time_elapsed = 0;
-    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
-        IO::delay(1000);
-        time_elapsed++;
-    }
-    return time_elapsed <= milliseconds_timeout;
-}
-
-StringView IDEChannel::channel_type_string() const
-{
-    if (m_channel_type == ChannelType::Primary)
-        return "Primary"sv;
-
-    return "Secondary"sv;
-}
-
-UNMAP_AFTER_INIT void IDEChannel::detect_disks()
-{
-    auto channel_string = [](u8 i) -> StringView {
-        if (i == 0)
-            return "master"sv;
-
-        return "slave"sv;
-    };
-
-    // There are only two possible disks connected to a channel
-    for (auto i = 0; i < 2; i++) {
-
-        if (!select_device_and_wait_until_not_busy(i == 0 ? DeviceType::Master : DeviceType::Slave, 32000)) {
-            dbgln("IDEChannel: Timeout waiting for busy flag to clear during {} {} detection", channel_type_string(), channel_string(i));
-            continue;
-        }
-
-        auto status = m_io_group.control_base().in<u8>();
-        if (status == 0x0) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string(), channel_string(i));
-            continue;
-        }
-
-        m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
-
-        // Wait 10 second for the BSY flag to clear
-        if (!wait_until_not_busy(2000)) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string(), channel_string(i));
-            continue;
-        }
-
-        bool check_for_atapi = false;
-        bool device_presence = true;
-        bool command_set_is_atapi = false;
-
-        size_t milliseconds_elapsed = 0;
-        for (;;) {
-            // Wait about 10 seconds
-            if (milliseconds_elapsed > 2000)
-                break;
-            u8 status = m_io_group.control_base().in<u8>();
-            if (status & ATA_SR_ERR) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
-                check_for_atapi = true;
-                break;
-            }
-
-            if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
-                break;
-            }
-
-            if (status == 0 || status == 0xFF) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
-                device_presence = false;
-                break;
-            }
-
-            IO::delay(1000);
-            milliseconds_elapsed++;
-        }
-        if (!device_presence) {
-            continue;
-        }
-        if (milliseconds_elapsed > 10000) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device state unknown. Timeout exceeded.", channel_type_string(), channel_string(i));
-            continue;
-        }
-
-        if (check_for_atapi) {
-            u8 cl = m_io_group.io_base().offset(ATA_REG_LBA1).in<u8>();
-            u8 ch = m_io_group.io_base().offset(ATA_REG_LBA2).in<u8>();
-
-            if ((cl == 0x14 && ch == 0xEB) || (cl == 0x69 && ch == 0x96)) {
-                command_set_is_atapi = true;
-                dbgln("IDEChannel: {} {} device appears to be ATAPI. We're going to ignore it for now as we don't support it.", channel_type_string(), channel_string(i));
-                continue;
-            } else {
-                dbgln("IDEChannel: {} {} device doesn't appear to be ATA or ATAPI. Ignoring it.", channel_type_string(), channel_string(i));
-                continue;
-            }
-        }
-
-        // FIXME: Handle possible OOM situation here.
-        ByteBuffer wbuf = ByteBuffer::create_uninitialized(m_logical_sector_size).release_value_but_fixme_should_propagate_errors();
-        ByteBuffer bbuf = ByteBuffer::create_uninitialized(m_logical_sector_size).release_value_but_fixme_should_propagate_errors();
-        u8* b = bbuf.data();
-        u16* w = (u16*)wbuf.data();
-
-        for (u32 i = 0; i < 256; ++i) {
-            u16 data = m_io_group.io_base().offset(ATA_REG_DATA).in<u16>();
-            *(w++) = data;
-            *(b++) = MSB(data);
-            *(b++) = LSB(data);
-        }
-
-        // "Unpad" the device name string.
-        for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
-            bbuf[i] = 0;
-
-        ATAIdentifyBlock volatile& identify_block = (ATAIdentifyBlock volatile&)(*wbuf.data());
-
-        u16 capabilities = identify_block.capabilities[0];
-
-        // If the drive is so old that it doesn't support LBA, ignore it.
-        if (!(capabilities & ATA_CAP_LBA))
-            continue;
-        u64 max_addressable_block = identify_block.max_28_bit_addressable_logical_sector;
-
-        // if we support 48-bit LBA, use that value instead.
-        if (identify_block.commands_and_feature_sets_supported[1] & (1 << 10))
-            max_addressable_block = identify_block.user_addressable_logical_sectors_count;
-
-        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities={:#04x}", channel_type_string(), channel_string(i), !command_set_is_atapi ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * m_logical_sector_size, capabilities);
-        ATADevice::Address address = { m_channel_type == ChannelType::Primary ? static_cast<u8>(0) : static_cast<u8>(1), static_cast<u8>(i) };
-        if (i == 0) {
-            m_master = ATADiskDevice::create(m_parent_controller, address, capabilities, m_logical_sector_size, max_addressable_block);
-        } else {
-            m_slave = ATADiskDevice::create(m_parent_controller, address, capabilities, m_logical_sector_size, max_addressable_block);
-        }
-    }
-}
-
-void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities)
+ErrorOr<void> IDEChannel::stop_busmastering()
 {
     VERIFY(m_lock.is_locked());
-    VERIFY(m_request_lock.is_locked());
-    LBAMode lba_mode;
-    u8 head = 0;
+    VERIFY(m_io_group.bus_master_base().has_value());
+    m_io_group.bus_master_base().value().out<u8>(0);
+    return {};
+}
+ErrorOr<void> IDEChannel::start_busmastering(TransactionDirection direction)
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_io_group.bus_master_base().has_value());
+    m_io_group.bus_master_base().value().out<u8>(direction != TransactionDirection::Write ? 0x9 : 0x1);
+    return {};
+}
+ErrorOr<void> IDEChannel::force_busmastering_status_clean()
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_io_group.bus_master_base().has_value());
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
+    return {};
+}
+ErrorOr<u8> IDEChannel::busmastering_status()
+{
+    VERIFY(m_io_group.bus_master_base().has_value());
+    return m_io_group.bus_master_base().value().offset(2).in<u8>();
+}
+ErrorOr<void> IDEChannel::prepare_transaction_with_busmastering(TransactionDirection direction, PhysicalAddress prdt_buffer)
+{
+    VERIFY(m_lock.is_locked());
+    m_io_group.bus_master_base().value().offset(4).out<u32>(prdt_buffer.get());
+    m_io_group.bus_master_base().value().out<u8>(direction != TransactionDirection::Write ? 0x8 : 0);
+    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
+    return {};
+}
+ErrorOr<void> IDEChannel::initiate_transaction(TransactionDirection)
+{
+    VERIFY(m_lock.is_locked());
+    return {};
+}
 
-    VERIFY(capabilities & ATA_CAP_LBA);
-    if (lba >= 0x10000000) {
-        lba_mode = LBAMode::FortyEightBit;
+ErrorOr<u8> IDEChannel::task_file_status()
+{
+    VERIFY(m_lock.is_locked());
+    return m_io_group.control_base().in<u8>();
+}
+
+ErrorOr<u8> IDEChannel::task_file_error()
+{
+    VERIFY(m_lock.is_locked());
+    return m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
+}
+
+ErrorOr<bool> IDEChannel::detect_presence_on_selected_device()
+{
+    VERIFY(m_lock.is_locked());
+    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0x55);
+    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0xAA);
+
+    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0xAA);
+    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0x55);
+
+    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0x55);
+    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0xAA);
+
+    auto nsectors_value = m_io_group.io_base().offset(ATA_REG_SECCOUNT0).in<u8>();
+    auto lba0 = m_io_group.io_base().offset(ATA_REG_LBA0).in<u8>();
+
+    if (lba0 == 0xAA && nsectors_value == 0x55)
+        return true;
+    return false;
+}
+
+ErrorOr<void> IDEChannel::wait_if_busy_until_timeout(size_t timeout_in_milliseconds)
+{
+    size_t time_elapsed = 0;
+    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= timeout_in_milliseconds) {
+        IO::delay(1000);
+        time_elapsed++;
+    }
+    if (time_elapsed <= timeout_in_milliseconds)
+        return {};
+    return Error::from_errno(EBUSY);
+}
+
+ErrorOr<void> IDEChannel::force_clear_interrupts()
+{
+    VERIFY(m_lock.is_locked());
+    m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+    return {};
+}
+
+ErrorOr<void> IDEChannel::load_taskfile_into_registers(ATAPort::TaskFile const& task_file, LBAMode lba_mode, size_t completion_timeout_in_milliseconds)
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
+    u8 head = 0;
+    if (lba_mode == LBAMode::FortyEightBit) {
         head = 0;
-    } else {
-        lba_mode = LBAMode::TwentyEightBit;
-        head = (lba & 0xF000000) >> 24;
+    } else if (lba_mode == LBAMode::TwentyEightBit) {
+        head = (task_file.lba_high[0] & 0x0F);
     }
 
-    // Wait 1 second
-    wait_until_not_busy(1000);
-
-    // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);
-    IO::delay(20);
+    // Note: Preserve the selected drive, always use LBA addressing
+    auto driver_register = ((m_io_group.io_base().offset(ATA_REG_HDDEVSEL).in<u8>() & (1 << 4)) | (head | (1 << 5) | (1 << 6)));
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(driver_register);
+    IO::delay(50);
 
     if (lba_mode == LBAMode::FortyEightBit) {
-        m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_LBA3).out<u8>((lba & 0xFF000000) >> 24);
-        m_io_group.io_base().offset(ATA_REG_LBA4).out<u8>((lba & 0xFF00000000ull) >> 32);
-        m_io_group.io_base().offset(ATA_REG_LBA5).out<u8>((lba & 0xFF0000000000ull) >> 40);
+        m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>((task_file.count >> 8) & 0xFF);
+        m_io_group.io_base().offset(ATA_REG_LBA3).out<u8>(task_file.lba_high[0]);
+        m_io_group.io_base().offset(ATA_REG_LBA4).out<u8>(task_file.lba_high[1]);
+        m_io_group.io_base().offset(ATA_REG_LBA5).out<u8>(task_file.lba_high[2]);
     }
 
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(block_count);
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000FF) >> 0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000FF00) >> 8);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00FF0000) >> 16);
+    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(task_file.count & 0xFF);
+    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(task_file.lba_low[0]);
+    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(task_file.lba_low[1]);
+    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(task_file.lba_low[2]);
 
+    // FIXME: Set a timeout here?
+    size_t time_elapsed = 0;
     for (;;) {
+        if (time_elapsed > completion_timeout_in_milliseconds)
+            return Error::from_errno(EBUSY);
+        // FIXME: Use task_file_status method
         auto status = m_io_group.control_base().in<u8>();
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
             break;
+        IO::delay(1000);
+        time_elapsed++;
     }
-    if (m_dma_enabled)
-        send_ata_dma_command(lba_mode, direction);
-    else
-        send_ata_pio_command(lba_mode, direction);
-    enable_irq();
+    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(task_file.command);
+    return {};
 }
 
-void IDEChannel::send_ata_pio_command(LBAMode lba_mode, Direction direction) const
+ErrorOr<void> IDEChannel::device_select(size_t device_index)
 {
-    if (lba_mode != LBAMode::FortyEightBit) {
-        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO : ATA_CMD_WRITE_PIO);
-    } else {
-        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO_EXT : ATA_CMD_WRITE_PIO_EXT);
+    VERIFY(m_lock.is_locked());
+    if (device_index > 1)
+        return Error::from_errno(EINVAL);
+    IO::delay(20);
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((device_index) << 4));
+    IO::delay(20);
+    return {};
+}
+
+ErrorOr<void> IDEChannel::enable_interrupts()
+{
+    VERIFY(m_lock.is_locked());
+    m_io_group.control_base().out<u8>(0);
+    m_interrupts_enabled = true;
+    return {};
+}
+ErrorOr<void> IDEChannel::disable_interrupts()
+{
+    VERIFY(m_lock.is_locked());
+    m_io_group.control_base().out<u8>(1 << 1);
+    m_interrupts_enabled = false;
+    return {};
+}
+
+ErrorOr<void> IDEChannel::read_pio_data_to_buffer(UserOrKernelBuffer& buffer, size_t block_offset, size_t words_count)
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(words_count == 256);
+    for (u32 i = 0; i < 256; ++i) {
+        u16 data = m_io_group.io_base().offset(ATA_REG_DATA).in<u16>();
+        // FIXME: Don't assume 512 bytes sector
+        TRY(buffer.write(&data, block_offset * 512 + (i * 2), 2));
     }
+    return {};
 }
-
-bool IDEChannel::ata_do_pio_read_sector()
+ErrorOr<void> IDEChannel::write_pio_data_from_buffer(UserOrKernelBuffer const& buffer, size_t block_offset, size_t words_count)
 {
     VERIFY(m_lock.is_locked());
-    VERIFY(m_request_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_do_pio_read_sector");
-    auto& request = *m_current_request;
-    auto block_size = m_current_request->block_size();
-    auto out_buffer = request.buffer().offset(m_current_request_block_index * block_size);
-    auto result = request.write_to_buffer_buffered<m_logical_sector_size>(out_buffer, block_size, [&](Bytes bytes) {
-        for (size_t i = 0; i < bytes.size(); i += sizeof(u16))
-            *(u16*)bytes.offset_pointer(i) = IO::in16(m_io_group.io_base().offset(ATA_REG_DATA).get());
-        return bytes.size();
-    });
-    if (result.is_error()) {
-        // TODO: Do we need to abort the PATA read if this wasn't the last block?
-        complete_pio_transaction(AsyncDeviceRequest::MemoryFault);
-        return false;
+    VERIFY(words_count == 256);
+    for (u32 i = 0; i < 256; ++i) {
+        u16 buf;
+        // FIXME: Don't assume 512 bytes sector
+        TRY(buffer.read(&buf, block_offset * 512 + (i * 2), 2));
+        IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), buf);
     }
-    return true;
-}
-
-void IDEChannel::ata_read_sectors_with_pio(bool slave_request, u16 capabilities)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    VERIFY(m_current_request->block_count() <= 256);
-
-    SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors_with_pio");
-    dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
-    ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
-}
-
-void IDEChannel::ata_do_pio_write_sector()
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(m_request_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    auto& request = *m_current_request;
-
-    io_delay();
-    while ((m_io_group.control_base().in<u8>() & ATA_SR_BSY) || !(m_io_group.control_base().in<u8>() & ATA_SR_DRQ))
-        ;
-
-    u8 status = m_io_group.control_base().in<u8>();
-    VERIFY(status & ATA_SR_DRQ);
-
-    auto block_size = m_current_request->block_size();
-    auto in_buffer = request.buffer().offset(m_current_request_block_index * block_size);
-    dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} bytes (part {}) (status={:#02x})...", block_size, m_current_request_block_index, status);
-    auto result = request.read_from_buffer_buffered<m_logical_sector_size>(in_buffer, block_size, [&](ReadonlyBytes readonly_bytes) {
-        for (size_t i = 0; i < readonly_bytes.size(); i += sizeof(u16))
-            IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), *(const u16*)readonly_bytes.offset(i));
-        return readonly_bytes.size();
-    });
-    if (result.is_error())
-        complete_pio_transaction(AsyncDeviceRequest::MemoryFault);
-}
-
-// FIXME: I'm assuming this doesn't work based on the fact PIO read doesn't work.
-void IDEChannel::ata_write_sectors_with_pio(bool slave_request, u16 capabilities)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    VERIFY(m_current_request->block_count() <= 256);
-
-    SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
-    ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
-    ata_do_pio_write_sector();
-}
-
-void IDEChannel::send_ata_dma_command(LBAMode lba_mode, Direction direction) const
-{
-    if (lba_mode != LBAMode::FortyEightBit) {
-        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA : ATA_CMD_WRITE_DMA);
-    } else {
-        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA_EXT : ATA_CMD_WRITE_DMA_EXT);
-    }
-}
-
-void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    VERIFY(m_current_request->block_count() <= 256);
-
-    SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
-
-    // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.
-    // We need to select the drive and then we wait 10 microseconds... and it doesn't hurt anything
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((slave_request ? 1 : 0) << 4));
-    IO::delay(10);
-
-    prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * m_current_request->block_count();
-
-    VERIFY(prdt().size <= PAGE_SIZE);
-
-    VERIFY(m_io_group.bus_master_base().has_value());
-    // Stop bus master
-    m_io_group.bus_master_base().value().out<u8>(0);
-
-    // Write the PRDT location
-    m_io_group.bus_master_base().value().offset(4).out<u32>(m_prdt_page->paddr().get());
-
-    // Set transfer direction
-    m_io_group.bus_master_base().value().out<u8>(0x8);
-
-    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
-
-    ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
-
-    // Start bus master
-    m_io_group.bus_master_base().value().out<u8>(0x9);
-}
-
-void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!m_current_request.is_null());
-    VERIFY(m_current_request->block_count() <= 256);
-
-    SpinlockLocker m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_write_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
-
-    prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * m_current_request->block_count();
-
-    if (auto result = m_current_request->read_from_buffer(m_current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * m_current_request->block_count()); result.is_error()) {
-        complete_dma_transaction(AsyncDeviceRequest::MemoryFault);
-        return;
-    }
-
-    // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.
-    // We need to select the drive and then we wait 10 microseconds... and it doesn't hurt anything
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((slave_request ? 1 : 0) << 4));
-    IO::delay(10);
-
-    VERIFY(prdt().size <= PAGE_SIZE);
-    VERIFY(m_io_group.bus_master_base().has_value());
-    // Stop bus master
-    m_io_group.bus_master_base().value().out<u8>(0);
-
-    // Write the PRDT location
-    m_io_group.bus_master_base().value().offset(4).out<u32>(m_prdt_page->paddr().get());
-
-    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
-
-    ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
-
-    // Start bus master
-    m_io_group.bus_master_base().value().out<u8>(0x1);
+    return {};
 }
 }

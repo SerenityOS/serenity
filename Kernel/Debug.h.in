@@ -31,6 +31,10 @@
 #cmakedefine01 ARP_DEBUG
 #endif
 
+#ifndef ATA_DEBUG
+#cmakedefine01 ATA_DEBUG
+#endif
+
 #ifndef BBFS_DEBUG
 #cmakedefine01 BBFS_DEBUG
 #endif

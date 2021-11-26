@@ -102,6 +102,7 @@ set(KERNEL_SOURCES
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
+    Storage/ATA/ATAPort.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp

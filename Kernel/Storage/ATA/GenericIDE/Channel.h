@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <AK/Badge.h>
+#include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
@@ -27,7 +27,7 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Storage/ATA/ATADevice.h>
-#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
+#include <Kernel/Storage/ATA/ATAPort.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/WaitQueue.h>
 
@@ -35,9 +35,11 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
+class IDEController;
 class PCIIDEController;
 class ISAIDEController;
-class IDEChannel : public RefCounted<IDEChannel>
+class IDEChannel
+    : public ATAPort
     , public IRQHandler {
     friend class IDEController;
 
@@ -104,92 +106,65 @@ public:
     static NonnullRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
     static NonnullRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
 
-    void initialize_with_pci_controller(Badge<PCIIDEController>, bool force_pio);
-    void initialize_with_isa_controller(Badge<ISAIDEController>, bool force_pio);
     virtual ~IDEChannel() override;
-
-    RefPtr<StorageDevice> master_device() const;
-    RefPtr<StorageDevice> slave_device() const;
 
     virtual StringView purpose() const override { return "PATA Channel"sv; }
 
+    ErrorOr<void> allocate_resources_for_pci_ide_controller(Badge<PCIIDEController>, bool force_pio);
+    ErrorOr<void> allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>);
+
 private:
     static constexpr size_t m_logical_sector_size = 512;
-    void initialize(bool force_pio);
-    struct [[gnu::packed]] PhysicalRegionDescriptor {
-        u32 offset;
-        u16 size { 0 };
-        u16 end_of_table { 0 };
-    };
-
-    enum class LBAMode : u8 {
-        None, // CHS
-        TwentyEightBit,
-        FortyEightBit,
-    };
-
-    enum class Direction : u8 {
-        Read,
-        Write,
-    };
-
-    IDEChannel(IDEController const&, IOAddressGroup, ChannelType type);
-    IDEChannel(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
-    //^ IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
-    bool handle_irq_for_dma_transaction();
-    void complete_dma_transaction(AsyncDeviceRequest::RequestResult);
-    bool handle_irq_for_pio_transaction();
-    void complete_pio_transaction(AsyncDeviceRequest::RequestResult);
-
-    void send_ata_pio_command(LBAMode lba_mode, Direction direction) const;
-    void ata_read_sectors_with_pio(bool, u16);
-    void ata_write_sectors_with_pio(bool, u16);
-
-    void send_ata_dma_command(LBAMode lba_mode, Direction direction) const;
-    void ata_read_sectors_with_dma(bool, u16);
-    void ata_write_sectors_with_dma(bool, u16);
-
-    void detect_disks();
+    ErrorOr<void> allocate_resources(bool force_pio);
     StringView channel_type_string() const;
 
-    void try_disambiguate_error();
+    virtual ErrorOr<void> disable() override { TODO(); }
+    virtual ErrorOr<void> power_on() override { TODO(); }
+
+    virtual ErrorOr<void> port_phy_reset() override;
     bool select_device_and_wait_until_not_busy(DeviceType, size_t milliseconds_timeout);
-    bool wait_until_not_busy(size_t milliseconds_timeout);
 
-    void start_request(AsyncBlockDeviceRequest&, bool, u16);
+    virtual bool pio_capable() const override { return true; }
+    virtual bool dma_capable() const override { return m_dma_enabled; }
 
-    void clear_pending_interrupts() const;
+    virtual size_t max_possible_devices_connected() const override { return 2; }
 
-    void ata_access(Direction, bool, u64, u8, u16);
+    virtual ErrorOr<void> stop_busmastering() override;
+    virtual ErrorOr<void> start_busmastering(TransactionDirection) override;
+    virtual ErrorOr<void> force_busmastering_status_clean() override;
+    virtual ErrorOr<u8> busmastering_status() override;
+    virtual ErrorOr<void> prepare_transaction_with_busmastering(TransactionDirection, PhysicalAddress prdt_buffer) override;
+    virtual ErrorOr<void> initiate_transaction(TransactionDirection) override;
 
-    bool ata_do_pio_read_sector();
-    void ata_do_pio_write_sector();
+    virtual ErrorOr<u8> task_file_status() override;
+    virtual ErrorOr<u8> task_file_error() override;
 
-    PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_region->vaddr().as_ptr()); }
+    virtual ErrorOr<void> wait_if_busy_until_timeout(size_t timeout_in_milliseconds) override;
+
+    virtual ErrorOr<void> device_select(size_t device_index) override;
+    virtual ErrorOr<bool> detect_presence_on_selected_device() override;
+
+    virtual ErrorOr<void> enable_interrupts() override;
+    virtual ErrorOr<void> disable_interrupts() override;
+
+    virtual ErrorOr<void> force_clear_interrupts() override;
+    virtual ErrorOr<void> load_taskfile_into_registers(TaskFile const&, LBAMode lba_mode, size_t completion_timeout_in_milliseconds) override;
+
+    virtual ErrorOr<void> read_pio_data_to_buffer(UserOrKernelBuffer&, size_t block_offset, size_t words_count) override;
+    virtual ErrorOr<void> write_pio_data_from_buffer(UserOrKernelBuffer const&, size_t block_offset, size_t words_count) override;
+
+    IDEChannel(IDEController const&, IOAddressGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
+    IDEChannel(IDEController const&, u8 irq, IOAddressGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
+    //^ IRQHandler
+    virtual bool handle_irq(RegisterState const&) override;
 
     // Data members
     ChannelType m_channel_type { ChannelType::Primary };
 
-    volatile u8 m_device_error { 0 };
-    EntropySource m_entropy_source;
-
-    RefPtr<ATADevice> m_master;
-    RefPtr<ATADevice> m_slave;
-
-    RefPtr<AsyncBlockDeviceRequest> m_current_request;
-    u64 m_current_request_block_index { 0 };
-    bool m_current_request_flushing_cache { false };
-    Spinlock m_request_lock;
-    Mutex m_lock { "IDEChannel"sv };
-
     bool m_dma_enabled { false };
+    bool m_interrupts_enabled { true };
 
     IOAddressGroup m_io_group;
-    OwnPtr<Memory::Region> m_prdt_region;
-    OwnPtr<Memory::Region> m_dma_buffer_region;
-    RefPtr<Memory::PhysicalPage> m_prdt_page;
-    RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
     NonnullRefPtr<IDEController> m_parent_controller;
 };
 }
