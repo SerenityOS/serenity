@@ -12,6 +12,7 @@
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -224,32 +225,27 @@ static void handle_sigint(int)
     }
 }
 
-static void copy_from_process(const void* source_p, Bytes target)
+static ErrorOr<void> copy_from_process(const void* source, Bytes target)
 {
-    auto source = static_cast<const char*>(source_p);
-    size_t offset = 0;
-    size_t left = target.size();
-    while (left) {
-        int value = ptrace(PT_PEEK, g_pid, const_cast<char*>(source) + offset, 0);
-        size_t to_copy = min(sizeof(int), left);
-        target.overwrite(offset, &value, to_copy);
-        left -= to_copy;
-        offset += to_copy;
-    }
+    return Core::System::ptrace_peekbuf(g_pid, const_cast<void*>(source), target);
 }
 
-static ByteBuffer copy_from_process(const void* source, size_t length)
+static ErrorOr<ByteBuffer> copy_from_process(const void* source, size_t length)
 {
-    auto buffer = ByteBuffer::create_uninitialized(length).value();
-    copy_from_process(source, buffer.bytes());
-    return buffer;
+    auto buffer = ByteBuffer::create_uninitialized(length);
+    if (!buffer.has_value()) {
+        // Allocation failed. Inject an error:
+        return Error::from_errno(ENOMEM);
+    }
+    TRY(copy_from_process(source, buffer->bytes()));
+    return buffer.release_value();
 }
 
 template<typename T>
-static T copy_from_process(const T* source)
+static ErrorOr<T> copy_from_process(const T* source)
 {
     T value {};
-    copy_from_process(source, Bytes { &value, sizeof(T) });
+    TRY(copy_from_process(source, Bytes { &value, sizeof(T) }));
     return value;
 }
 
@@ -364,7 +360,7 @@ public:
         if (string_argument.characters == nullptr)
             add_argument("null");
         else {
-            auto string_buffer = copy_from_process(string_argument.characters, string_argument.length);
+            auto string_buffer = copy_from_process(string_argument.characters, string_argument.length).release_value_but_fixme_should_propagate_errors();
             auto view = StringView(string_buffer);
             if (!trim_by.is_empty())
                 view = view.trim(trim_by);
@@ -434,12 +430,12 @@ static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, siz
 
 static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     builder.add_string_argument(params.path);
     if (params.buffer.size == 0)
         builder.add_argument("null");
     else {
-        auto buffer = copy_from_process(params.buffer.data, params.buffer.size);
+        auto buffer = copy_from_process(params.buffer.data, params.buffer.size).release_value_but_fixme_should_propagate_errors();
         builder.add_argument("\"{}\"", StringView { (const char*)buffer.data() });
     }
 }
@@ -460,7 +456,7 @@ struct OpenOptions : BitflagBase {
 
 static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
 
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
@@ -529,7 +525,7 @@ static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* 
 
 static void format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
     else
@@ -561,7 +557,7 @@ static void format_close(FormattedSyscallBuilder& builder, int fd)
 static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_params* params_p)
 {
     // TODO: format fds and sigmask properly
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     builder.add_arguments(
         params.nfds,
         PointerArgument { params.readfds },
@@ -639,7 +635,7 @@ struct MemoryProtectionFlags : BitflagBase {
 
 static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment);
     builder.add_string_argument(params.name);
 }
@@ -656,7 +652,7 @@ static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t
 
 static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     builder.add_arguments(params.addr, params.size);
     builder.add_string_argument(params.name);
 }
