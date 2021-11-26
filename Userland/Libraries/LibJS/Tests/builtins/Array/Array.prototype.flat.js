@@ -8,7 +8,7 @@ describe("error", () => {
         a[0] = a;
         expect(() => {
             a.flat(3893232121);
-        }).toThrowWithMessage(Error, "Call stack size limit exceeded");
+        }).toThrowWithMessage(InternalError, "Call stack size limit exceeded");
     });
 });
 
