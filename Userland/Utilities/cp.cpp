@@ -7,15 +7,14 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath wpath cpath fattr chown", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown", nullptr));
 
     bool link = false;
     bool preserve = false;
@@ -32,15 +31,12 @@ int main(int argc, char** argv)
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(sources, "Source file paths", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (preserve) {
         umask(0);
     } else {
-        if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
-            perror("pledge");
-            return 1;
-        }
+        TRY(Core::System::pledge("stdio rpath wpath cpath fattr", nullptr));
     }
 
     bool destination_is_existing_dir = Core::File::is_directory(destination);
