@@ -96,6 +96,18 @@ test("slash after private identifier is treated as division", () => {
     expect(A.getDivided()).toBe(2);
 });
 
+test("private identifier not followed by 'in' throws", () => {
+    expect(`class A { #field = 2; method() { return #field instanceof 1; }}`).not.toEval();
+    expect(`class A { #field = 2; method() { return #field < 1; }}`).not.toEval();
+    expect(`class A { #field = 2; method() { return #field + 1; }}`).not.toEval();
+    expect(`class A { #field = 2; method() { return #field ** 1; }}`).not.toEval();
+    expect(`class A { #field = 2; method() { return !#field; } }`).not.toEval();
+    expect(`class A { #field = 2; method() { return ~#field; } }`).not.toEval();
+    expect(`class A { #field = 2; method() { return ++#field; } }`).not.toEval();
+
+    expect(`class A { #field = 2; method() { return #field in 1; }}`).toEval();
+});
+
 test("cannot have static and non static field with the same description", () => {
     expect("class A { static #simple; #simple; }").not.toEval();
 });
