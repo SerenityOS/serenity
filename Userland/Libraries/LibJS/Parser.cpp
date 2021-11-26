@@ -596,13 +596,15 @@ bool Parser::match_invalid_escaped_keyword() const
     if (m_state.current_token.type() != TokenType::EscapedKeyword)
         return false;
     auto token_value = m_state.current_token.value();
-    if (token_value == "await"sv) {
-        return m_program_type == Program::Type::Module;
-    }
-    if (m_state.strict_mode) {
+    if (token_value == "await"sv)
+        return m_program_type == Program::Type::Module || m_state.in_async_function_context;
+    if (token_value == "async"sv)
+        return false;
+    if (token_value == "yield"sv)
+        return m_state.in_generator_function_context;
+    if (m_state.strict_mode)
         return true;
-    }
-    return token_value != "yield"sv && token_value != "let"sv;
+    return token_value != "let"sv;
 }
 
 static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
@@ -1230,7 +1232,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             syntax_error("'super' keyword unexpected here");
         return { create_ast_node<SuperExpression>({ m_state.current_token.filename(), rule_start.position(), position() }) };
     case TokenType::EscapedKeyword:
-        if (m_state.strict_mode || (m_state.current_token.value() != "let"sv && (m_state.in_generator_function_context || m_state.current_token.value() != "yield"sv) && (m_state.in_async_function_context || m_state.current_token.value() != "await"sv)))
+        if (match_invalid_escaped_keyword())
             syntax_error("Keyword must not contain escaped characters");
         [[fallthrough]];
     case TokenType::Identifier: {
