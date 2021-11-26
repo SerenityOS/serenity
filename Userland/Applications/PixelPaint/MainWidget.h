@@ -58,6 +58,7 @@ private:
     RefPtr<GUI::ComboBox> m_zoom_combobox;
 
     RefPtr<GUI::Action> m_new_image_action;
+    RefPtr<GUI::Action> m_new_image_from_clipboard_action;
     RefPtr<GUI::Action> m_open_image_action;
     RefPtr<GUI::Action> m_save_image_as_action;
 

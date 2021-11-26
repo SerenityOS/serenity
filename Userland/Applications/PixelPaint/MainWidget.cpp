@@ -117,6 +117,24 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             }
         });
 
+    m_new_image_from_clipboard_action = GUI::Action::create(
+        "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            auto bitmap = GUI::Clipboard::the().fetch_data_and_type().as_bitmap();
+            if (!bitmap) {
+                GUI::MessageBox::show(&window, "There is no image in a clipboard to paste.", "PixelPaint", GUI::MessageBox::Type::Warning);
+                return;
+            }
+
+            auto image = PixelPaint::Image::try_create_with_size(bitmap->size()).release_value_but_fixme_should_propagate_errors();
+            auto layer = PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer").release_value_but_fixme_should_propagate_errors();
+            image->add_layer(*layer);
+            image->set_title("Untitled");
+
+            create_new_editor(*image);
+            m_layer_list_widget->set_image(image);
+            m_layer_list_widget->set_selected_layer(layer);
+        });
+
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
         auto result = FileSystemAccessClient::Client::the().open_file(window.window_id());
         if (result.error != 0)
@@ -141,6 +159,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     file_menu.add_action(*m_new_image_action);
+    file_menu.add_action(*m_new_image_from_clipboard_action);
     file_menu.add_action(*m_open_image_action);
     file_menu.add_action(*m_save_image_as_action);
 
