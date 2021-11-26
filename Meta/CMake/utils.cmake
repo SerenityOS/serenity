@@ -75,6 +75,7 @@ function(serenity_libc_static target_name fs_name)
 endfunction()
 
 function(serenity_bin target_name)
+    serenity_install_sources()
     add_executable(${target_name} ${SOURCES})
     set_target_properties(${target_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
     install(TARGETS ${target_name} RUNTIME DESTINATION bin OPTIONAL)
