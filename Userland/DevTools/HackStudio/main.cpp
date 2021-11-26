@@ -12,10 +12,12 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Notification.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -31,14 +33,11 @@ static bool make_is_available();
 static void notify_make_not_available();
 static void update_path_environment_variable();
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     Config::pledge_domains({ "HackStudio", "Terminal" });
 
     auto window = GUI::Window::construct();
@@ -56,7 +55,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.add_option(mode_coredump, "Inspect a coredump in HackStudio", "coredump", 'c');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
 
