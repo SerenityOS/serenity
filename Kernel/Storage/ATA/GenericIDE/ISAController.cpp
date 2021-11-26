@@ -33,12 +33,25 @@ UNMAP_AFTER_INIT void ISAIDEController::initialize_channels()
     auto secondary_base_io = IOAddress(0x170);
     auto secondary_control_io = IOAddress(0x376);
 
+    auto initialize_and_enumerate = [](IDEChannel& channel) -> void {
+        {
+            auto result = channel.allocate_resources_for_isa_ide_controller({});
+            // FIXME: Propagate errors properly
+            VERIFY(!result.is_error());
+        }
+        {
+            auto result = channel.detect_connected_devices();
+            // FIXME: Propagate errors properly
+            VERIFY(!result.is_error());
+        }
+    };
+
     m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
-    m_channels[0].initialize_with_isa_controller({}, true);
+    initialize_and_enumerate(m_channels[0]);
     m_channels[0].enable_irq();
 
     m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
-    m_channels[1].initialize_with_isa_controller({}, true);
+    initialize_and_enumerate(m_channels[1]);
     m_channels[1].enable_irq();
     dbgln("ISA IDE controller detected and initialized");
 }

@@ -46,12 +46,18 @@ void IDEController::start_request(ATADevice const& device, AsyncBlockDeviceReque
     auto& address = device.ata_address();
     VERIFY(address.subport < 2);
     switch (address.port) {
-    case 0:
-        m_channels[0].start_request(request, address.subport == 0 ? false : true, device.ata_capabilites());
+    case 0: {
+        auto result = m_channels[0].start_request(device, request);
+        // FIXME: Propagate errors properly
+        VERIFY(!result.is_error());
         return;
-    case 1:
-        m_channels[1].start_request(request, address.subport == 0 ? false : true, device.ata_capabilites());
+    }
+    case 1: {
+        auto result = m_channels[1].start_request(device, request);
+        // FIXME: Propagate errors properly
+        VERIFY(!result.is_error());
         return;
+    }
     }
     VERIFY_NOT_REACHED();
 }
@@ -61,23 +67,20 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT IDEController::IDEController()
-{
-}
-
+UNMAP_AFTER_INIT IDEController::IDEController() = default;
 UNMAP_AFTER_INIT IDEController::~IDEController() = default;
 
 RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
 {
     switch (index) {
     case 0:
-        return m_channels[0].master_device();
+        return m_channels[0].connected_device(0);
     case 1:
-        return m_channels[0].slave_device();
+        return m_channels[0].connected_device(1);
     case 2:
-        return m_channels[1].master_device();
+        return m_channels[1].connected_device(0);
     case 3:
-        return m_channels[1].slave_device();
+        return m_channels[1].connected_device(1);
     }
     VERIFY_NOT_REACHED();
 }
