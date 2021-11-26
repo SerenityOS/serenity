@@ -132,7 +132,7 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define UINT_LEAST32_MAX UINT32_MAX
 #define UINT_LEAST64_MAX UINT64_MAX
 
-#define SIZE_MAX ((size_t)-1)
+#define SIZE_MAX __SIZE_MAX__
 
 #define PTRDIFF_MAX __PTRDIFF_MAX__
 #define PTRDIFF_MIN (-__PTRDIFF_MAX__ - 1)
