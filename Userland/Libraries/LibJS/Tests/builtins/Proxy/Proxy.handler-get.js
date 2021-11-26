@@ -114,5 +114,5 @@ test("Proxy handler that has the Proxy itself as its prototype", () => {
     handler.__proto__ = proxy;
     expect(() => {
         proxy.foo;
-    }).toThrowWithMessage(Error, "Call stack size limit exceeded");
+    }).toThrowWithMessage(InternalError, "Call stack size limit exceeded");
 });
