@@ -14,4 +14,4 @@ set(SOURCES
 )
 
 serenity_app(Run ICON app-run)
-target_link_libraries(Run LibCore LibDesktop LibGUI)
+target_link_libraries(Run LibCore LibDesktop LibGUI LibMain)
