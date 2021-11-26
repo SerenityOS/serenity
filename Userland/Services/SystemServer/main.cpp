@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -117,11 +118,6 @@ static void chown_all_matching_device_nodes(group* group, unsigned major_number)
     }
 }
 
-constexpr unsigned encoded_device(unsigned major, unsigned minor)
-{
-    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
-
 inline char offset_character_with_number(char base_char, u8 offset)
 {
     char offsetted_char = base_char;
@@ -132,7 +128,7 @@ inline char offset_character_with_number(char base_char, u8 offset)
 
 static void create_devfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
-    if (auto rc = mknod(name.characters(), mode | S_IFBLK, encoded_device(major, minor)); rc < 0)
+    if (auto rc = mknod(name.characters(), mode | S_IFBLK, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
@@ -170,7 +166,7 @@ static void populate_devfs_block_devices()
 
 static void create_devfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
-    if (auto rc = mknod(name.characters(), mode | S_IFCHR, encoded_device(major, minor)); rc < 0)
+    if (auto rc = mknod(name.characters(), mode | S_IFCHR, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 

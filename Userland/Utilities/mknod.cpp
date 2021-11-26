@@ -8,12 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <unistd.h>
-
-constexpr unsigned encoded_device(unsigned major, unsigned minor)
-{
-    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
 
 static int usage()
 {
@@ -63,7 +59,7 @@ int main(int argc, char** argv)
         minor = atoi(argv[4]);
     }
 
-    int rc = mknod(name, mode, encoded_device(major, minor));
+    int rc = mknod(name, mode, makedev(major, minor));
     if (rc < 0) {
         perror("mknod");
         return 1;

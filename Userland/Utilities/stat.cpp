@@ -12,6 +12,7 @@
 #include <LibMain/Main.h>
 #include <grp.h>
 #include <pwd.h>
+#include <sys/sysmacros.h>
 #include <time.h>
 
 static ErrorOr<int> stat(StringView file, bool should_follow_links)
