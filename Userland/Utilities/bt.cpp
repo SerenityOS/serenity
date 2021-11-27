@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,26 +10,20 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibSymbolication/Symbolication.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-    char hostname[256];
-    if (gethostname(hostname, sizeof(hostname)) < 0) {
-        perror("gethostname");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
+    auto hostname = TRY(Core::System::gethostname());
 
     Core::ArgsParser args_parser;
     pid_t pid = 0;
     args_parser.add_positional_argument(pid, "PID", "pid");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
     Core::EventLoop loop;
 
     Core::DirIterator iterator(String::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
