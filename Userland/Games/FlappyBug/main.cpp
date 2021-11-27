@@ -37,9 +37,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Flappy Bug");
     window->set_double_buffering_enabled(false);
     window->set_resizable(false);
-    auto& widget = window->set_main_widget<FlappyBug::Game>();
+    auto widget = TRY(window->try_set_main_widget<FlappyBug::Game>());
 
-    widget.on_game_end = [&](u32 score) {
+    widget->on_game_end = [&](u32 score) {
         if (score <= high_score)
             return high_score;
 
@@ -49,13 +49,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return high_score;
     };
 
-    auto& game_menu = window->add_menu("&Game");
-    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto game_menu = TRY(window->try_add_menu("&Game"));
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Flappy Bug", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Flappy Bug", app_icon, window)));
 
     window->show();
 
