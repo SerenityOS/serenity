@@ -8,9 +8,10 @@
 #include <LibCore/File.h>
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibMain/Main.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<const char*> paths;
     const char* opt_algorithm = nullptr;
@@ -18,7 +19,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
     args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto algorithm = (opt_algorithm == nullptr) ? "crc32" : String(opt_algorithm).to_lowercase();
 
@@ -33,7 +34,7 @@ int main(int argc, char** argv)
     }
 
     if (!available_algorithms.contains_slow(algorithm)) {
-        warnln("{}: Unknown checksum algorithm: {}", argv[0], algorithm);
+        warnln("{}: Unknown checksum algorithm: {}", arguments.strings[0], algorithm);
         exit(1);
     }
 
@@ -45,13 +46,13 @@ int main(int argc, char** argv)
         auto filepath = (StringView(path) == "-") ? "/dev/stdin" : path;
         auto file = Core::File::construct(filepath);
         if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("{}: {}: {}", argv[0], path, file->error_string());
+            warnln("{}: {}: {}", arguments.strings[0], path, file->error_string());
             fail = true;
             continue;
         }
         struct stat st;
         if (fstat(file->fd(), &st) < 0) {
-            warnln("{}: Failed to fstat {}: {}", argv[0], filepath, strerror(errno));
+            warnln("{}: Failed to fstat {}: {}", arguments.strings[0], filepath, strerror(errno));
             fail = true;
             continue;
         }
@@ -60,7 +61,7 @@ int main(int argc, char** argv)
             while (!file->eof() && !file->has_error())
                 crc32.update(file->read(PAGE_SIZE));
             if (file->has_error()) {
-                warnln("{}: Failed to read {}: {}", argv[0], filepath, file->error_string());
+                warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, file->error_string());
                 fail = true;
                 continue;
             }
@@ -70,13 +71,13 @@ int main(int argc, char** argv)
             while (!file->eof() && !file->has_error())
                 adler32.update(file->read(PAGE_SIZE));
             if (file->has_error()) {
-                warnln("{}: Failed to read {}: {}", argv[0], filepath, file->error_string());
+                warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, file->error_string());
                 fail = true;
                 continue;
             }
             outln("{:08x} {} {}", adler32.digest(), st.st_size, path);
         } else {
-            warnln("{}: Unknown checksum algorithm: {}", argv[0], algorithm);
+            warnln("{}: Unknown checksum algorithm: {}", arguments.strings[0], algorithm);
             exit(1);
         }
     }
