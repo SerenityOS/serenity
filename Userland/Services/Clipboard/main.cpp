@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd accept", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept"));
     Core::EventLoop event_loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 

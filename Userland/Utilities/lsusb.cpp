@@ -20,7 +20,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/sys/bus/usb", "r"));
     TRY(Core::System::unveil("/res/usb.ids", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

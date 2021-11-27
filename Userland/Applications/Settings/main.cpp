@@ -70,11 +70,11 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix proc exec", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix proc exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath proc exec", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath proc exec"));
 
     auto app_icon = GUI::Icon::default_icon("app-settings");
 

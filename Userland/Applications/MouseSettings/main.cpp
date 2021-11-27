@@ -17,11 +17,11 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd"));
 
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 

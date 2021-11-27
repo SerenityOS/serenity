@@ -24,14 +24,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-solitaire");
 
     Config::pledge_domains("Solitaire");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

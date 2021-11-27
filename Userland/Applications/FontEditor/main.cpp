@@ -20,14 +20,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix cpath wpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix cpath wpath"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
     const char* path = nullptr;
     Core::ArgsParser args_parser;

@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto server = TRY(Core::LocalServer::try_create());
@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath"));
 
     return app->exec();
 }

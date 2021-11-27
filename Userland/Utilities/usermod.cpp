@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty", nullptr));
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
     TRY(Core::System::unveil("/etc", "rwc"));
 
     int uid = 0;
@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_gecos(gecos);
     }
 
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr", nullptr));
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
     if (!target_account.sync()) {
         perror("Core::Account::Sync");
         return 1;

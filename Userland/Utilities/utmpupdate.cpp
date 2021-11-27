@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio wpath cpath"));
     TRY(Core::System::unveil("/var/run/utmp", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

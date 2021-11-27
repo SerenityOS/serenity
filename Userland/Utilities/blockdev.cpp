@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
 
     const char* device = nullptr;
 

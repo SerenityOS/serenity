@@ -223,7 +223,7 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr));
+    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction"));
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
@@ -234,7 +234,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix"));
 
     Config::pledge_domains("Terminal");
 

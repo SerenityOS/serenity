@@ -34,12 +34,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 ErrorOr<int> mode_server()
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio unix recvfd rpath ", nullptr));
+    TRY(Core::System::pledge("stdio unix recvfd rpath"));
 
     auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
     IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(move(socket), 1);
 
-    TRY(Core::System::pledge("stdio recvfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd rpath"));
     TRY(Core::System::unveil("/usr/include", "r"));
 
     // unveil will be sealed later, when we know the project's root path.
