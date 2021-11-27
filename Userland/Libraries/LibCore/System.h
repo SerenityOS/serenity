@@ -41,5 +41,6 @@ ErrorOr<String> gethostname();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
+ErrorOr<void> chmod(StringView pathname, mode_t mode);
 
 }

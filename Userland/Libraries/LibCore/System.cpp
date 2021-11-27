@@ -275,4 +275,20 @@ ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const& ios)
     return {};
 }
 
+ErrorOr<void> chmod(StringView pathname, mode_t mode)
+{
+    if (!pathname.characters_without_null_termination())
+        return Error::from_syscall("chmod"sv, -EFAULT);
+
+#ifdef __serenity__
+    int rc = syscall(SC_chmod, pathname.characters_without_null_termination(), pathname.length(), mode);
+    HANDLE_SYSCALL_RETURN_VALUE("chmod"sv, rc, {});
+#else
+    String path = pathname;
+    if (::chmod(path.characters(), mode) < 0)
+        return Error::from_syscall("chmod"sv, -errno);
+    return {};
+#endif
+}
+
 }
