@@ -15,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("SystemServer");

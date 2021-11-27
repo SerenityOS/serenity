@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread"));
 
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);

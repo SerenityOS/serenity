@@ -53,7 +53,7 @@ static void launch_crash_reporter(const String& coredump_path, bool unlink_on_ex
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec"));
 
     Core::BlockingFileWatcher watcher;
     TRY(watcher.add_watch("/tmp/coredump", Core::FileWatcherEvent::Type::ChildCreated));

@@ -21,13 +21,13 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("Chess");
 
-    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec"));
 
     auto app_icon = GUI::Icon::default_icon("app-chess");
 

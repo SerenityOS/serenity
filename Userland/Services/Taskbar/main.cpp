@@ -36,7 +36,7 @@ static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction"));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("Taskbar");
     Config::monitor_domain("Taskbar");
@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::WindowManagerServerConnection::the();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();

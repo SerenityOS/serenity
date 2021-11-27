@@ -14,14 +14,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio inet unix rpath sendfd recvfd", nullptr));
+    TRY(Core::System::pledge("stdio inet unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(Core::System::pledge("stdio inet unix sendfd recvfd", nullptr));
+    TRY(Core::System::pledge("stdio inet unix sendfd recvfd"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

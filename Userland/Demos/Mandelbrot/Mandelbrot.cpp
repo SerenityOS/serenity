@@ -377,7 +377,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath wpath cpath"));
 
 #if 0
     TRY(Core::System::unveil("/res", "r"));

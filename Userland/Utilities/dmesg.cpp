@@ -10,7 +10,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/proc/dmesg", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
