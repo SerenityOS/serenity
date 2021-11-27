@@ -46,7 +46,7 @@ public:
     // FIXME: Remove this method after figuring out another scheme for naming.
     StringView early_storage_name() const;
 
-    NonnullRefPtrVector<DiskPartition> partitions() const { return m_partitions; }
+    NonnullRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
 
     virtual CommandSet command_set() const = 0;
 
