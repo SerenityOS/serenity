@@ -230,8 +230,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         [tss_rsp0h] "=m" (m_tss.rsp0h),
         "=d" (from_thread), // needed so that from_thread retains the correct value
         "=a" (to_thread) // needed so that to_thread retains the correct value
-        : [to_rsp] "g" (to_thread->regs().rsp),
-        [to_rsp0] "g" (to_thread->regs().rsp0),
+        : [to_rsp] "r" (to_thread->regs().rsp),
+        [to_rsp0] "r" (to_thread->regs().rsp0),
         [to_rip] "c" (to_thread->regs().rip),
         [from_thread] "d" (from_thread),
         [to_thread] "a" (to_thread)
