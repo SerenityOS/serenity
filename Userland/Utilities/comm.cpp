@@ -6,6 +6,8 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -14,12 +16,9 @@
 #define COL2_COLOR "\x1B[34m{}\x1B[0m"
 #define COL3_COLOR "\x1B[31m{}\x1B[0m"
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     String file1_path, file2_path;
     bool suppress_col1 { false };
@@ -41,7 +40,7 @@ int main(int argc, char** argv)
     args_parser.add_option(print_total, "Print a summary", "total", 't');
     args_parser.add_positional_argument(file1_path, "First file to compare", "file1");
     args_parser.add_positional_argument(file2_path, "Second file to compare", "file2");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (color && no_color) {
         warnln("Cannot specify 'color' and 'no-color' together");
