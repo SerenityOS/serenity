@@ -26,7 +26,7 @@ struct LocaleAndKeys {
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Vector<StringView> const& values = {})
+static ThrowCompletionOr<Optional<String>> get_string_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
 {
     auto& vm = global_object.vm();
 
@@ -305,11 +305,11 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
 
     // 19. Let hc be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
     // 20. Set opt.[[hc]] to hc.
-    opt.hc = TRY(get_string_option(global_object, *options, vm.names.hourCycle, nullptr, { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
+    opt.hc = TRY(get_string_option(global_object, *options, vm.names.hourCycle, nullptr, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }));
 
     // 21. Let kf be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
     // 22. Set opt.[[kf]] to kf.
-    opt.kf = TRY(get_string_option(global_object, *options, vm.names.caseFirst, nullptr, { "upper"sv, "lower"sv, "false"sv }));
+    opt.kf = TRY(get_string_option(global_object, *options, vm.names.caseFirst, nullptr, AK::Array { "upper"sv, "lower"sv, "false"sv }));
 
     // 23. Let kn be ? GetOption(options, "numeric", "boolean", undefined, undefined).
     auto kn = TRY(get_option(global_object, *options, vm.names.numeric, Value::Type::Boolean, {}, Empty {}));
