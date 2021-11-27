@@ -9,9 +9,9 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 struct Range {
     size_t m_from { 1 };
@@ -147,7 +147,7 @@ static void process_line_fields(char* line, size_t length, const Vector<Range>& 
     outln("{}", String::join(delimiter, output_fields));
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String byte_list = "";
     String fields_list = "";
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
     args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
     args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list");
     args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     bool selected_bytes = (byte_list != "");
     bool selected_fields = (fields_list != "");
@@ -169,19 +169,19 @@ int main(int argc, char** argv)
 
     if (selected_options_count == 0) {
         warnln("cut: you must specify a list of bytes, or fields");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
         return 1;
     }
 
     if (selected_options_count > 1) {
         warnln("cut: you must specify only one of bytes, or fields");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
         return 1;
     }
 
     if (delimiter.length() != 1) {
         warnln("cut: the delimiter must be a single character");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
         return 1;
     }
 
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
     auto expansion_successful = expand_list(ranges_list, ranges_vector);
 
     if (!expansion_successful) {
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
         return 1;
     }
 
