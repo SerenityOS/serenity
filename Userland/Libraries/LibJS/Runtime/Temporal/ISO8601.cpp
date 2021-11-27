@@ -875,7 +875,7 @@ bool ISO8601Parser::parse_temporal_calendar_string()
     //     DateSpecYearMonth
     //     DateSpecMonthDay
     return parse_calendar_name()
-        // TODO: || parse_temporal_instant_string()
+        || parse_temporal_instant_string()
         || parse_calendar_date_time()
         || parse_date_spec_year_month()
         || parse_date_spec_month_day()
