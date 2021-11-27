@@ -114,13 +114,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (statistic_display >= StatisticDisplay::__Count)
         update_statistic_display(StatisticDisplay::HighScore);
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.load_from_gml(spider_gml);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->load_from_gml(spider_gml);
 
-    auto& game = *widget.find_descendant_of_type_named<Spider::Game>("game");
+    auto& game = *widget->find_descendant_of_type_named<Spider::Game>("game");
     game.set_focus(true);
 
-    auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     auto reset_statistic_status = [&]() {
         switch (statistic_display) {
         case StatisticDisplay::HighScore:
@@ -232,17 +232,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     two_suit_action->set_checked(mode == Spider::Mode::TwoSuit);
     suit_actions.add_action(two_suit_action);
 
-    auto& game_menu = window->add_menu("&Game");
-    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    auto game_menu = TRY(window->try_add_menu("&Game"));
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.setup(mode);
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(single_suit_action);
-    game_menu.add_action(two_suit_action);
-    game_menu.add_separator();
-    game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    })));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(single_suit_action));
+    TRY(game_menu->try_add_action(two_suit_action));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& view_menu = window->add_menu("&View");
+    auto view_menu = TRY(window->try_add_menu("&View"));
 
     GUI::ActionGroup statistic_display_actions;
     statistic_display_actions.set_exclusive(true);
@@ -261,11 +261,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     best_time_actions->set_checked(statistic_display == StatisticDisplay::BestTime);
     statistic_display_actions.add_action(best_time_actions);
 
-    view_menu.add_action(high_score_action);
-    view_menu.add_action(best_time_actions);
+    TRY(view_menu->try_add_action(high_score_action));
+    TRY(view_menu->try_add_action(best_time_actions));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
 
     window->set_resizable(false);
     window->resize(Spider::Game::width, Spider::Game::height + statusbar.max_height());
