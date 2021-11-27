@@ -45,15 +45,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio", nullptr));
 
+    Array<u8, 32768> buffer;
     for (auto& fd : fds) {
         for (;;) {
-            char buffer[32768];
-            auto nread = TRY(Core::System::read(fd, buffer, sizeof(buffer)));
+            auto buffer_span = buffer.span();
+            auto nread = TRY(Core::System::read(fd, buffer_span));
             if (nread == 0)
                 break;
-            ssize_t already_written = 0;
-            while (already_written < nread)
-                already_written += TRY(Core::System::write(STDOUT_FILENO, buffer + already_written, nread - already_written));
+            buffer_span = buffer_span.trim(nread);
+            while (!buffer_span.is_empty()) {
+                auto already_written = TRY(Core::System::write(STDOUT_FILENO, buffer_span));
+                buffer_span = buffer_span.slice(already_written);
+            }
         }
         TRY(Core::System::close(fd));
     }
