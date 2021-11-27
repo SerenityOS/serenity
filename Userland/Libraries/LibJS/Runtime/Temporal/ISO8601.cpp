@@ -11,6 +11,21 @@ namespace JS::Temporal {
 
 namespace Detail {
 
+// https://tc39.es/proposal-temporal/#prod-DecimalDigits
+bool ISO8601Parser::parse_decimal_digits()
+{
+    // DecimalDigits[Sep] ::
+    //     DecimalDigit
+    //     DecimalDigits[?Sep] DecimalDigit
+    //     [+Sep] DecimalDigits[+Sep] NumericLiteralSeparator DecimalDigit
+    // NOTE: Temporal exclusively uses the variant without a separator ([~Sep])
+    if (!parse_decimal_digit())
+        return false;
+    while (parse_decimal_digit())
+        ;
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-DecimalDigit
 bool ISO8601Parser::parse_decimal_digit()
 {
@@ -120,6 +135,60 @@ bool ISO8601Parser::parse_decimal_separator()
         || m_state.lexer.consume_specific(',');
 }
 
+// https://tc39.es/proposal-temporal/#prod-DaysDesignator
+bool ISO8601Parser::parse_days_designator()
+{
+    // DaysDesignator : one of
+    //     D d
+    return m_state.lexer.consume_specific('D')
+        || m_state.lexer.consume_specific('d');
+}
+
+// https://tc39.es/proposal-temporal/#prod-HoursDesignator
+bool ISO8601Parser::parse_hours_designator()
+{
+    // HoursDesignator : one of
+    //     H h
+    return m_state.lexer.consume_specific('H')
+        || m_state.lexer.consume_specific('h');
+}
+
+// https://tc39.es/proposal-temporal/#prod-MinutesDesignator
+bool ISO8601Parser::parse_minutes_designator()
+{
+    // MinutesDesignator : one of
+    //     M m
+    return m_state.lexer.consume_specific('M')
+        || m_state.lexer.consume_specific('m');
+}
+
+// https://tc39.es/proposal-temporal/#prod-MonthsDesignator
+bool ISO8601Parser::parse_months_designator()
+{
+    // MonthsDesignator : one of
+    //     M m
+    return m_state.lexer.consume_specific('M')
+        || m_state.lexer.consume_specific('m');
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationDesignator
+bool ISO8601Parser::parse_duration_designator()
+{
+    // DurationDesignator : one of
+    //     P p
+    return m_state.lexer.consume_specific('P')
+        || m_state.lexer.consume_specific('p');
+}
+
+// https://tc39.es/proposal-temporal/#prod-SecondsDesignator
+bool ISO8601Parser::parse_seconds_designator()
+{
+    // SecondsDesignator : one of
+    //     S s
+    return m_state.lexer.consume_specific('S')
+        || m_state.lexer.consume_specific('s');
+}
+
 // https://tc39.es/proposal-temporal/#prod-DateTimeSeparator
 bool ISO8601Parser::parse_date_time_separator()
 {
@@ -130,6 +199,33 @@ bool ISO8601Parser::parse_date_time_separator()
     return m_state.lexer.consume_specific(' ')
         || m_state.lexer.consume_specific('T')
         || m_state.lexer.consume_specific('t');
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationTimeDesignator
+bool ISO8601Parser::parse_duration_time_designator()
+{
+    // DurationTimeDesignator : one of
+    //     T t
+    return m_state.lexer.consume_specific('T')
+        || m_state.lexer.consume_specific('t');
+}
+
+// https://tc39.es/proposal-temporal/#prod-WeeksDesignator
+bool ISO8601Parser::parse_weeks_designator()
+{
+    // WeeksDesignator : one of
+    //     W w
+    return m_state.lexer.consume_specific('W')
+        || m_state.lexer.consume_specific('w');
+}
+
+// https://tc39.es/proposal-temporal/#prod-YearsDesignator
+bool ISO8601Parser::parse_years_designator()
+{
+    // YearsDesignator : one of
+    //     Y y
+    return m_state.lexer.consume_specific('Y')
+        || m_state.lexer.consume_specific('y');
 }
 
 // https://tc39.es/proposal-temporal/#prod-UTCDesignator
@@ -746,6 +842,305 @@ bool ISO8601Parser::parse_calendar_date_time()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-DurationWholeSeconds
+bool ISO8601Parser::parse_duration_whole_seconds()
+{
+    // DurationWholeSeconds :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_whole_seconds = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationSecondsFraction
+bool ISO8601Parser::parse_duration_seconds_fraction()
+{
+    // DurationSecondsFraction :
+    //     TimeFraction
+    StateTransaction transaction { *this };
+    if (!parse_time_fraction())
+        return false;
+    m_state.parse_result.duration_seconds_fraction = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationSecondsPart
+bool ISO8601Parser::parse_duration_seconds_part()
+{
+    // DurationSecondsPart :
+    //     DurationWholeSeconds DurationSecondsFraction[opt] SecondsDesignator
+    StateTransaction transaction { *this };
+    if (!parse_duration_whole_seconds())
+        return false;
+    (void)parse_duration_seconds_fraction();
+    if (!parse_seconds_designator())
+        return false;
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationWholeMinutes
+bool ISO8601Parser::parse_duration_whole_minutes()
+{
+    // DurationWholeMinutes :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_whole_minutes = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationMinutesFraction
+bool ISO8601Parser::parse_duration_minutes_fraction()
+{
+    // DurationMinutesFraction :
+    //     TimeFraction
+    StateTransaction transaction { *this };
+    if (!parse_time_fraction())
+        return false;
+    m_state.parse_result.duration_minutes_fraction = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationMinutesPart
+bool ISO8601Parser::parse_duration_minutes_part()
+{
+    // DurationMinutesPart :
+    //     DurationWholeMinutes DurationMinutesFraction[opt] MinutesDesignator DurationSecondsPart[opt]
+    StateTransaction transaction { *this };
+    if (!parse_duration_whole_minutes())
+        return false;
+    (void)parse_duration_minutes_fraction();
+    if (!parse_minutes_designator())
+        return false;
+    (void)parse_duration_seconds_part();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationWholeHours
+bool ISO8601Parser::parse_duration_whole_hours()
+{
+    // DurationWholeHours :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_whole_hours = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationHoursFraction
+bool ISO8601Parser::parse_duration_hours_fraction()
+{
+    // DurationHoursFraction :
+    //     TimeFraction
+    StateTransaction transaction { *this };
+    if (!parse_time_fraction())
+        return false;
+    m_state.parse_result.duration_hours_fraction = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationHoursPart
+bool ISO8601Parser::parse_duration_hours_part()
+{
+    // DurationHoursPart :
+    //     DurationWholeHours DurationHoursFraction[opt] HoursDesignator DurationMinutesPart
+    //     DurationWholeHours DurationHoursFraction[opt] HoursDesignator DurationSecondsPart[opt]
+    StateTransaction transaction { *this };
+    if (!parse_duration_whole_hours())
+        return false;
+    (void)parse_duration_hours_fraction();
+    if (!parse_hours_designator())
+        return false;
+    (void)(parse_duration_minutes_part()
+        || parse_duration_seconds_part());
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationTime
+bool ISO8601Parser::parse_duration_time()
+{
+    // DurationTime :
+    //     DurationTimeDesignator DurationHoursPart
+    //     DurationTimeDesignator DurationMinutesPart
+    //     DurationTimeDesignator DurationSecondsPart
+    StateTransaction transaction { *this };
+    if (!parse_duration_time_designator())
+        return false;
+    auto success = parse_duration_hours_part()
+        || parse_duration_minutes_part()
+        || parse_duration_seconds_part();
+    if (!success)
+        return false;
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationDays
+bool ISO8601Parser::parse_duration_days()
+{
+    // DurationDays :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_days = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationDaysPart
+bool ISO8601Parser::parse_duration_days_part()
+{
+    // DurationDaysPart :
+    //     DurationDays DaysDesignator
+    StateTransaction transaction { *this };
+    if (!parse_duration_days())
+        return false;
+    if (!parse_days_designator())
+        return false;
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationWeeks
+bool ISO8601Parser::parse_duration_weeks()
+{
+    // DurationWeeks :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_weeks = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationWeeksPart
+bool ISO8601Parser::parse_duration_weeks_part()
+{
+    // DurationWeeksPart :
+    //     DurationWeeks WeeksDesignator DurationDaysPart[opt]
+    StateTransaction transaction { *this };
+    if (!parse_duration_weeks())
+        return false;
+    if (!parse_weeks_designator())
+        return false;
+    (void)parse_duration_days_part();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationMonths
+bool ISO8601Parser::parse_duration_months()
+{
+    // DurationMonths :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_months = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationMonthsPart
+bool ISO8601Parser::parse_duration_months_part()
+{
+    // DurationMonthsPart :
+    //     DurationMonths MonthsDesignator DurationWeeksPart
+    //     DurationMonths MonthsDesignator DurationDaysPart[opt]
+    StateTransaction transaction { *this };
+    if (!parse_duration_months())
+        return false;
+    if (!parse_months_designator())
+        return false;
+    (void)(parse_duration_weeks_part()
+        || parse_duration_days_part());
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationYears
+bool ISO8601Parser::parse_duration_years()
+{
+    // DurationYears :
+    //     DecimalDigits[~Sep]
+    StateTransaction transaction { *this };
+    if (!parse_decimal_digits())
+        return false;
+    m_state.parse_result.duration_years = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationYearsPart
+bool ISO8601Parser::parse_duration_years_part()
+{
+    // DurationYearsPart :
+    //     DurationYears YearsDesignator DurationMonthsPart
+    //     DurationYears YearsDesignator DurationWeeksPart
+    //     DurationYears YearsDesignator DurationDaysPart[opt]
+    StateTransaction transaction { *this };
+    if (!parse_duration_years())
+        return false;
+    if (!parse_years_designator())
+        return false;
+    (void)(parse_duration_months_part()
+        || parse_duration_weeks_part()
+        || parse_duration_days_part());
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-DurationDate
+bool ISO8601Parser::parse_duration_date()
+{
+    // DurationDate :
+    //     DurationYearsPart DurationTime[opt]
+    //     DurationMonthsPart DurationTime[opt]
+    //     DurationWeeksPart DurationTime[opt]
+    //     DurationDaysPart DurationTime[opt]
+    auto success = parse_duration_years_part()
+        || parse_duration_months_part()
+        || parse_duration_weeks_part()
+        || parse_duration_days_part();
+    if (!success)
+        return false;
+    (void)parse_duration_time();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-Duration
+bool ISO8601Parser::parse_duration()
+{
+    // Duration :
+    //     Sign[opt] DurationDesignator DurationDate
+    //     Sign[opt] DurationDesignator DurationTime
+    StateTransaction transaction { *this };
+    (void)parse_sign();
+    if (!parse_duration_designator())
+        return false;
+    auto success = parse_duration_date()
+        || parse_duration_time();
+    if (!success)
+        return false;
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-TemporalInstantString
 bool ISO8601Parser::parse_temporal_instant_string()
 {
@@ -781,6 +1176,14 @@ bool ISO8601Parser::parse_temporal_date_time_string()
     // TemporalDateTimeString :
     //     CalendarDateTime
     return parse_calendar_date_time();
+}
+
+// https://tc39.es/proposal-temporal/#prod-TemporalDurationString
+bool ISO8601Parser::parse_temporal_duration_string()
+{
+    // TemporalDurationString :
+    //     Duration
+    return parse_duration();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalMonthDayString
@@ -896,6 +1299,7 @@ bool ISO8601Parser::parse_temporal_relative_to_string()
     __JS_ENUMERATE(TemporalInstantString, parse_temporal_instant_string)               \
     __JS_ENUMERATE(TemporalDateString, parse_temporal_date_string)                     \
     __JS_ENUMERATE(TemporalDateTimeString, parse_temporal_date_time_string)            \
+    __JS_ENUMERATE(TemporalDurationString, parse_temporal_duration_string)             \
     __JS_ENUMERATE(TemporalMonthDayString, parse_temporal_month_day_string)            \
     __JS_ENUMERATE(TemporalTimeString, parse_temporal_time_string)                     \
     __JS_ENUMERATE(TemporalTimeZoneString, parse_temporal_time_zone_string)            \
