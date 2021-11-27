@@ -5,6 +5,7 @@ SET(SOURCES
     CharacterTypes.cpp
     CurrencyCode.cpp
     Locale.cpp
+    NumberFormat.cpp
 )
 
 serenity_lib(LibUnicode unicode)
