@@ -6,17 +6,16 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibCrypto/Hash/HashManager.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
-    auto program_name = StringView { argv[0] };
+    auto program_name = arguments.strings[0];
     auto hash_kind = Crypto::Hash::HashKind::None;
 
     if (program_name == "md5sum")
@@ -29,7 +28,7 @@ int main(int argc, char** argv)
         hash_kind = Crypto::Hash::HashKind::SHA512;
 
     if (hash_kind == Crypto::Hash::HashKind::None) {
-        warnln("Error: program must be executed as 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '{}'", argv[0]);
+        warnln("Error: program must be executed as 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '{}'", program_name);
         exit(1);
     }
 
@@ -40,7 +39,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, paths_help_string.characters(), "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (paths.is_empty())
         paths.append("-");
@@ -55,7 +54,7 @@ int main(int argc, char** argv)
         if (path != "-"sv) {
             auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
             if (file_or_error.is_error()) {
-                warnln("{}: {}: {}", argv[0], path, file->error_string());
+                warnln("{}: {}: {}", program_name, path, file->error_string());
                 has_error = true;
                 continue;
             }
