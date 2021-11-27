@@ -8,15 +8,16 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCpp/Preprocessor.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     const char* path = nullptr;
     bool print_definitions = false;
     args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::Yes);
     args_parser.add_option(print_definitions, "Print preprocessor definitions", "definitions", 'D');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
     auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open {}: {}", path, file->error_string());
@@ -41,4 +42,6 @@ int main(int argc, char** argv)
     for (auto& token : tokens) {
         outln("{}", token.to_string());
     }
+
+    return 0;
 }
