@@ -64,7 +64,7 @@ Signal Classic::process_impl(Signal const& input_signal)
 }
 
 // Linear ADSR envelope with no peak adjustment.
-double Classic::volume_from_envelope(Envelope envelope)
+double Classic::volume_from_envelope(Envelope const& envelope)
 {
     switch (static_cast<EnvelopeState>(envelope)) {
     case EnvelopeState::Off:

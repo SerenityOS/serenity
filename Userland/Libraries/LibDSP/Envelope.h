@@ -50,7 +50,7 @@ struct Envelope {
 
     constexpr void reset() { envelope = -1; }
 
-    constexpr operator EnvelopeState()
+    constexpr operator EnvelopeState() const
     {
         if (!is_active())
             return EnvelopeState::Off;
