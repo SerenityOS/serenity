@@ -122,13 +122,13 @@ static double read_norm_sample_8(InputMemoryStream& stream)
     return double(sample) / NumericLimits<u8>::max();
 }
 
-NonnullRefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format)
+ErrorOr<NonnullRefPtr<Buffer>> Buffer::from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format)
 {
     InputMemoryStream stream { data };
     return from_pcm_stream(stream, num_channels, sample_format, data.size() / (pcm_bits_per_sample(sample_format) / 8));
 }
 
-NonnullRefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples)
+ErrorOr<NonnullRefPtr<Buffer>> Buffer::from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples)
 {
     Vector<Sample> fdata;
     fdata.ensure_capacity(num_samples);
@@ -189,7 +189,7 @@ Vector<SampleType> ResampleHelper<SampleType>::resample(Vector<SampleType> to_re
 template Vector<i32> ResampleHelper<i32>::resample(Vector<i32>);
 template Vector<double> ResampleHelper<double>::resample(Vector<double>);
 
-NonnullRefPtr<Buffer> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample)
+ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample)
 {
     Vector<Sample> resampled;
     resampled.ensure_capacity(to_resample.sample_count() * ceil_div(resampler.source(), resampler.target()));

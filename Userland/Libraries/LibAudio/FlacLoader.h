@@ -11,6 +11,7 @@
 #include "Loader.h"
 #include <AK/BitStream.h>
 #include <AK/Buffered.h>
+#include <AK/Error.h>
 #include <AK/Stream.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
@@ -81,15 +82,12 @@ public:
             m_stream->handle_any_error();
     }
 
-    virtual bool sniff() override;
+    virtual MaybeLoaderError initialize() override;
 
-    virtual bool has_error() override { return !m_error_string.is_null(); }
-    virtual const String& error_string() override { return m_error_string; }
+    virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
-    virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
-
-    virtual void reset() override;
-    virtual void seek(const int position) override;
+    virtual MaybeLoaderError reset() override;
+    virtual MaybeLoaderError seek(const int position) override;
 
     virtual int loaded_samples() override { return static_cast<int>(m_loaded_samples); }
     virtual int total_samples() override { return static_cast<int>(m_total_samples); }
@@ -102,32 +100,31 @@ public:
     bool sample_count_unknown() const { return m_total_samples == 0; }
 
 private:
-    bool parse_header();
+    MaybeLoaderError parse_header();
     // Either returns the metadata block or sets error message.
     // Additionally, increments m_data_start_location past the read meta block.
-    FlacRawMetadataBlock next_meta_block(InputBitStream& bit_input);
+    ErrorOr<FlacRawMetadataBlock, LoaderError> next_meta_block(InputBitStream& bit_input);
     // Fetches and sets the next FLAC frame
-    void next_frame();
+    MaybeLoaderError next_frame();
     // Helper of next_frame that fetches a sub frame's header
-    FlacSubframeHeader next_subframe_header(InputBitStream& bit_input, u8 channel_index);
+    ErrorOr<FlacSubframeHeader, LoaderError> next_subframe_header(InputBitStream& bit_input, u8 channel_index);
     // Helper of next_frame that decompresses a subframe
-    Vector<i32> parse_subframe(FlacSubframeHeader& subframe_header, InputBitStream& bit_input);
+    ErrorOr<Vector<i32>, LoaderError> parse_subframe(FlacSubframeHeader& subframe_header, InputBitStream& bit_input);
     // Subframe-internal data decoders (heavy lifting)
-    Vector<i32> decode_fixed_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
-    Vector<i32> decode_verbatim(FlacSubframeHeader& subframe, InputBitStream& bit_input);
-    Vector<i32> decode_custom_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
-    Vector<i32> decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input);
+    ErrorOr<Vector<i32>, LoaderError> decode_fixed_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
+    ErrorOr<Vector<i32>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, InputBitStream& bit_input);
+    ErrorOr<Vector<i32>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
+    ErrorOr<Vector<i32>, LoaderError> decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
     ALWAYS_INLINE Vector<i32> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, InputBitStream& bit_input);
 
     // Converters for special coding used in frame headers
-    ALWAYS_INLINE u32 convert_sample_count_code(u8 sample_count_code);
-    ALWAYS_INLINE u32 convert_sample_rate_code(u8 sample_rate_code);
-    ALWAYS_INLINE PcmSampleFormat convert_bit_depth_code(u8 bit_depth_code);
+    ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);
+    ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
+    ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
-    bool m_valid { false };
     RefPtr<Core::File> m_file;
-    String m_error_string;
+    Optional<LoaderError> m_error {};
 
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
     u32 m_sample_rate { 0 };         // 20 bit
