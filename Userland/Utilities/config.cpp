@@ -7,8 +7,9 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
     String domain;
@@ -24,7 +25,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(group, "Group name", "group");
     args_parser.add_positional_argument(key, "Key name", "key");
     args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (remove_key) {
         Config::remove_key(domain, group, key);
