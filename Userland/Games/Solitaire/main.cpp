@@ -73,13 +73,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (mode >= Solitaire::Mode::__Count)
         update_mode(Solitaire::Mode::SingleCardDraw);
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.load_from_gml(solitaire_gml);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->load_from_gml(solitaire_gml);
 
-    auto& game = *widget.find_descendant_of_type_named<Solitaire::Game>("game");
+    auto& game = *widget->find_descendant_of_type_named<Solitaire::Game>("game");
     game.set_focus(true);
 
-    auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
     statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
     statusbar.set_text(2, "Time: 00:00:00");
@@ -183,27 +183,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     toggle_auto_collect_action->set_checked(game.is_auto_collecting());
     toggle_auto_collect_action->set_status_tip("Auto-collect to foundation piles");
 
-    auto& game_menu = window->add_menu("&Game");
+    auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.setup(mode);
-    }));
-    game_menu.add_separator();
+    })));
+    TRY(game_menu->try_add_separator());
     auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         game.perform_undo();
     });
     undo_action->set_enabled(false);
-    game_menu.add_action(undo_action);
-    game_menu.add_separator();
-    game_menu.add_action(single_card_draw_action);
-    game_menu.add_action(three_card_draw_action);
-    game_menu.add_separator();
-    game_menu.add_action(toggle_auto_collect_action);
-    game_menu.add_separator();
-    game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    TRY(game_menu->try_add_action(undo_action));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(single_card_draw_action));
+    TRY(game_menu->try_add_action(three_card_draw_action));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(toggle_auto_collect_action));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window)));
 
     window->set_resizable(false);
     window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height());
