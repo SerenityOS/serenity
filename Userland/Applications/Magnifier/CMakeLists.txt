@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(Magnifier ICON app-magnifier)
-target_link_libraries(Magnifier LibGUI)
+target_link_libraries(Magnifier LibGUI LibMain)
