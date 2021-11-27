@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
@@ -56,5 +57,6 @@ struct CalendarFormat {
 CalendarPatternStyle calendar_pattern_style_from_string(StringView style);
 StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
+Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
 
 }
