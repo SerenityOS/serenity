@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 
 namespace GL {
@@ -18,6 +19,7 @@ public:
     float* scanline(int y);
 
     void clear(float depth);
+    void clear(Gfx::IntRect bounds, float depth);
 
 private:
     Gfx::IntSize m_size;
