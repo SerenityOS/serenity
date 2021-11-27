@@ -13,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <math.h>
 #include <stdio.h>
@@ -40,6 +41,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(command, "Command, either (g)et or (s)et\n\n\tThe get command accepts a list of variables to print.\n\tThey are printed in the given order.\n\tIf no value is specified, all are printed.\n\n\tThe set command accepts a any number of variables\n\tfollowed by the value they should be set to.\n\n\tPossible variables are (v)olume, (m)ute, sample(r)ate.\n", "command");
     args_parser.add_positional_argument(command_arguments, "Arguments for the command", "args", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath recvfd", nullptr));
 
     if (command.equals_ignoring_case("get") || command == "g") {
         // Get variables
