@@ -36,24 +36,24 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
-    ErrorOr<void> try_add_widget(StringView, Widget&);
+    ErrorOr<void> try_add_widget(String, Widget&);
 
-    void add_widget(StringView, Widget&);
+    void add_widget(String, Widget&);
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> try_add_tab(StringView title, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> try_add_tab(String title, Args&&... args)
     {
         auto t = TRY(T::try_create(forward<Args>(args)...));
-        TRY(try_add_widget(title, *t));
+        TRY(try_add_widget(move(title), *t));
         return *t;
     }
 
     template<class T, class... Args>
-    T& add_tab(StringView title, Args&&... args)
+    T& add_tab(String title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
-        add_widget(title, *t);
+        add_widget(move(title), *t);
         return *t;
     }
 
