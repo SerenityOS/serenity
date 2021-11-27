@@ -21,7 +21,7 @@ bool g_report_to_debug = false;
 
 int main(int argc, char** argv, char** env)
 {
-    Vector<String> arguments;
+    Vector<StringView> arguments;
     bool pause_on_startup { false };
     String profile_dump_path;
     FILE* profile_output_file { nullptr };
