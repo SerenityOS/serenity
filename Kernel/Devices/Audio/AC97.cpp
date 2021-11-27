@@ -63,6 +63,7 @@ bool AC97::handle_irq(RegisterState const&)
 {
     auto pcm_out_status_register = m_pcm_out_channel.reg(AC97Channel::Register::Status);
     auto pcm_out_status = pcm_out_status_register.in<u16>();
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - stat: {:#b}", pci_address(), pcm_out_status);
 
     bool is_dma_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
     bool is_completion_interrupt = (pcm_out_status & AudioStatusRegisterFlag::BufferCompletionInterruptStatus) > 0;
@@ -89,8 +90,8 @@ bool AC97::handle_irq(RegisterState const&)
 
 UNMAP_AFTER_INIT void AC97::initialize()
 {
-    dbgln("AC97 @ {}: mixer base: {:#04x}", pci_address(), m_io_mixer_base.get());
-    dbgln("AC97 @ {}: bus base: {:#04x}", pci_address(), m_io_bus_base.get());
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", pci_address(), m_io_mixer_base.get());
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", pci_address(), m_io_bus_base.get());
 
     enable_pin_based_interrupts();
     PCI::enable_bus_mastering(pci_address());
@@ -239,6 +240,7 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
         if (head_distance < m_output_buffer_page_count)
             break;
 
+        dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - stat: {:#b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
         m_irq_queue.wait_forever("AC97"sv);
     } while (m_pcm_out_channel.dma_running());
     sti();
@@ -285,6 +287,8 @@ void AC97::AC97Channel::reset()
 
 void AC97::AC97Channel::set_last_valid_index(u32 buffer_address, u8 last_valid_index)
 {
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: setting LVI - address: {:#x} LVI: {}", m_device.pci_address(), buffer_address, last_valid_index);
+
     reg(Register::BufferDescriptorListBaseAddress).out(buffer_address);
     reg(Register::LastValidIndex).out(last_valid_index);
 }

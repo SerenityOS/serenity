@@ -1,3 +1,4 @@
+set(AC97_DEBUG ON)
 set(ACPI_DEBUG ON)
 set(AHCI_DEBUG ON)
 set(APIC_DEBUG ON)
