@@ -7,8 +7,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int screen = 0;
     int width = -1;
@@ -21,10 +22,10 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(width, "Width", "width");
     args_parser.add_positional_argument(height, "Height", "height");
     args_parser.add_positional_argument(scale, "Scale Factor", "scale", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     // A Core::EventLoop is all we need, but WindowServerConnection needs a full Application object.
-    char* dummy_argv[] = { argv[0] };
+    char* dummy_argv[] = { arguments.argv[0] };
     auto app = GUI::Application::construct(1, dummy_argv);
     auto screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
     if (screen < 0 || (size_t)screen >= screen_layout.screens.size()) {
@@ -40,4 +41,6 @@ int main(int argc, char** argv)
         warnln("failed to set resolution: {}", set_result.error_msg());
         return 1;
     }
+
+    return 0;
 }
