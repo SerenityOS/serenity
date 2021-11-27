@@ -24,6 +24,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/NumberFormat.h>
 #include <math.h>
 
 using StringIndexType = u16;
@@ -541,6 +542,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
 #include <AK/BinarySearch.h>
 #include <AK/Span.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/NumberFormat.h>
 #include <LibUnicode/UnicodeNumberFormat.h>
 
 namespace Unicode::Detail {
