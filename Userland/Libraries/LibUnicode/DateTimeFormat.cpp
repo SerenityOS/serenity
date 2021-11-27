@@ -63,4 +63,13 @@ Optional<CalendarFormat> get_calendar_format([[maybe_unused]] StringView locale,
 #endif
 }
 
+Vector<CalendarPattern> get_calendar_available_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_available_formats(locale, calendar);
+#else
+    return {};
+#endif
+}
+
 }
