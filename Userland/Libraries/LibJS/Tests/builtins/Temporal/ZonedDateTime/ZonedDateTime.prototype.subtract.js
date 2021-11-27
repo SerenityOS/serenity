@@ -31,8 +31,7 @@ describe("correct behavior", () => {
         expect(result.epochNanoseconds).toBe(1636590150100200300n);
     });
 
-    // FIXME: Unskip when ParseTemporalDurationString is implemented.
-    test.skip("duration string", () => {
+    test("duration string", () => {
         const plainDateTime = new Temporal.PlainDateTime(2021, 11, 12, 0, 22, 30, 100, 200, 300);
         const timeZone = new Temporal.TimeZone("UTC");
         const zonedDateTime = plainDateTime.toZonedDateTime(timeZone);
