@@ -49,7 +49,7 @@ public:
 private:
     virtual Signal process_impl(Signal const&) override;
 
-    double volume_from_envelope(Envelope);
+    double volume_from_envelope(Envelope const&);
     double wave_position(u8 note);
     double samples_per_cycle(u8 note);
     double sin_position(u8 note);
