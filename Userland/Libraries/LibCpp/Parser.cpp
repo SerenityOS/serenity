@@ -377,7 +377,7 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::PercentEquals
         || type == Token::Type::Equals
         || type == Token::Type::Greater
-        || type == Token::Type::Greater
+        || type == Token::Type::GreaterEquals
         || type == Token::Type::Less
         || type == Token::Type::LessEquals
         || type == Token::Type::Dot
