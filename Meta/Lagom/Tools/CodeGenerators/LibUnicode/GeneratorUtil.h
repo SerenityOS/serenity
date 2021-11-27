@@ -137,10 +137,11 @@ struct CanonicalLanguageID {
     Vector<StringIndexType> variants {};
 };
 
-inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path)
+inline ErrorOr<Core::DirIterator> path_to_dir_iterator(String path, StringView subpath = "main"sv)
 {
     LexicalPath lexical_path(move(path));
-    lexical_path = lexical_path.append("main"sv);
+    if (!subpath.is_empty())
+        lexical_path = lexical_path.append(subpath);
 
     Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
     if (iterator.has_error())
