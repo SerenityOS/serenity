@@ -268,7 +268,7 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
         "movq 24(%%rsp), %%rdi \n" // move pointer to TrapFrame into place
         "call enter_trap_no_irq \n"
         "retq \n"
-        :: [new_rsp] "g" (regs.rsp),
+        :: [new_rsp] "r" (regs.rsp),
         [new_rip] "a" (regs.rip),
         [from_to_thread] "b" (&initial_thread),
         [cpu] "c" ((u64)id())
