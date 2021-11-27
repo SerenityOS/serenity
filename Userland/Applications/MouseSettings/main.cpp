@@ -26,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 
     auto window = TRY(GUI::SettingsWindow::try_create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    window->add_tab<MouseWidget>("Mouse");
-    window->add_tab<ThemeWidget>("Cursor Theme");
+    TRY(window->add_tab<MouseWidget>("Mouse"));
+    TRY(window->add_tab<ThemeWidget>("Cursor Theme"));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

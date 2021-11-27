@@ -32,11 +32,11 @@ public:
     virtual ~SettingsWindow() override;
 
     template<class T, class... Args>
-    T& add_tab(StringView const& title, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> add_tab(String title, Args&&... args)
     {
-        auto& t = m_tab_widget->add_tab<T>(title, forward<Args>(args)...);
-        m_tabs.append(t);
-        return t;
+        auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
+        TRY(m_tabs.try_append(tab));
+        return tab;
     }
 
 private:
