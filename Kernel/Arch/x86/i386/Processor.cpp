@@ -264,7 +264,7 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
         "call enter_trap_no_irq \n"
         "addl $4, %%esp \n"
         "lret \n"
-        :: [new_esp] "g" (regs.esp),
+        :: [new_esp] "r" (regs.esp),
            [new_eip] "a" (regs.eip),
            [from_to_thread] "b" (&initial_thread),
            [cpu] "c" (Processor::current_id())
