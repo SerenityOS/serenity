@@ -39,13 +39,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Hearts");
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.load_from_gml(hearts_gml);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->load_from_gml(hearts_gml);
 
-    auto& game = *widget.find_descendant_of_type_named<Hearts::Game>("game");
+    auto& game = *widget->find_descendant_of_type_named<Hearts::Game>("game");
     game.set_focus(true);
 
-    auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
 
     String player_name = Config::read_string("Hearts", "", "player_name", "Gunnar");
@@ -77,20 +77,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::MessageBox::show(window, "Settings have been successfully saved and will take effect in the next game.", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
     };
 
-    auto& game_menu = window->add_menu("&Game");
+    auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.setup(player_name);
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(GUI::Action::create("&Settings...", [&](auto&) {
+    })));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings...", [&](auto&) {
         change_settings();
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    })));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hearts", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Hearts", app_icon, window)));
 
     window->set_resizable(false);
     window->resize(Hearts::Game::width, Hearts::Game::height + statusbar.max_height());
