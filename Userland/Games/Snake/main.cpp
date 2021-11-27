@@ -39,20 +39,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Snake");
     window->resize(324, 344);
 
-    auto& game = window->set_main_widget<SnakeGame>();
+    auto game = TRY(window->try_set_main_widget<SnakeGame>());
 
-    auto& game_menu = window->add_menu("&Game");
+    auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
-        game.reset();
-    }));
-    game_menu.add_separator();
-    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+        game->reset();
+    })));
+    TRY(game_menu->try_add_separator());
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window)));
 
     window->show();
 
