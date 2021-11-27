@@ -11,25 +11,22 @@
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/SettingsWindow.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix"));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("WindowManager");
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
-    auto window = GUI::SettingsWindow::construct("Display Settings");
+    auto window = TRY(GUI::SettingsWindow::try_create("Display Settings"));
     window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background");
     window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts");
     window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor");
