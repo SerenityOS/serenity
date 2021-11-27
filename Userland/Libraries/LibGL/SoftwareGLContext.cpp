@@ -549,6 +549,10 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.fog_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_SCISSOR_TEST:
+        rasterizer_options.scissor_enabled = true;
+        update_rasterizer_options = true;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -589,6 +593,10 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         rasterizer_options.fog_enabled = false;
         update_rasterizer_options = true;
         break;
+    case GL_SCISSOR_TEST:
+        rasterizer_options.scissor_enabled = false;
+        update_rasterizer_options = true;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -614,6 +622,8 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
         return m_alpha_test_enabled;
     case GL_FOG:
         return rasterizer_options.fog_enabled;
+    case GL_SCISSOR_TEST:
+        return rasterizer_options.scissor_enabled;
     }
 
     RETURN_VALUE_WITH_ERROR_IF(true, GL_INVALID_ENUM, 0);
@@ -1472,6 +1482,14 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
     case GL_MAX_TEXTURE_SIZE:
         *data = 4096;
         break;
+    case GL_SCISSOR_BOX: {
+        auto scissor_box = m_rasterizer.options().scissor_box;
+        *(data + 0) = scissor_box.x();
+        *(data + 1) = scissor_box.y();
+        *(data + 2) = scissor_box.width();
+        *(data + 3) = scissor_box.height();
+        break;
+    }
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
         // for `pname`
@@ -1964,6 +1982,16 @@ void SoftwareGLContext::gl_pixel_store(GLenum pname, GLfloat param)
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
         break;
     }
+}
+
+void SoftwareGLContext::gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_scissor, x, y, width, height);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
+
+    auto options = m_rasterizer.options();
+    options.scissor_box = { x, y, width, height };
+    m_rasterizer.set_options(options);
 }
 
 void SoftwareGLContext::present()

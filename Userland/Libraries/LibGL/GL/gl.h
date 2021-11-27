@@ -290,6 +290,10 @@ extern "C" {
 #define GL_FOG_COLOR 0x0B66
 #define GL_FOG_DENSITY 0x0B62
 
+// Scissor enums
+#define GL_SCISSOR_BOX 0x0C10
+#define GL_SCISSOR_TEST 0x0C11
+
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6
 
@@ -416,6 +420,7 @@ GLAPI void glFogfv(GLenum mode, GLfloat* params);
 GLAPI void glFogf(GLenum pname, GLfloat param);
 GLAPI void glFogi(GLenum pname, GLint param);
 GLAPI void glPixelStorei(GLenum pname, GLint param);
+GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
 #ifdef __cplusplus
 }

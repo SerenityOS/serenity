@@ -86,6 +86,7 @@ public:
     virtual void gl_fogf(GLenum pname, GLfloat params) = 0;
     virtual void gl_fogi(GLenum pname, GLint param) = 0;
     virtual void gl_pixel_store(GLenum pname, GLfloat param) = 0;
+    virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
 
     virtual void present() = 0;
 };

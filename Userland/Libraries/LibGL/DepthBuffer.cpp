@@ -33,4 +33,12 @@ void DepthBuffer::clear(float depth)
     }
 }
 
+void DepthBuffer::clear(Gfx::IntRect bounds, float depth)
+{
+    bounds.intersect({ 0, 0, m_size.width(), m_size.height() });
+    for (int y = bounds.top(); y <= bounds.bottom(); ++y)
+        for (int x = bounds.left(); x <= bounds.right(); ++x)
+            m_data[y * m_size.width() + x] = depth;
+}
+
 }

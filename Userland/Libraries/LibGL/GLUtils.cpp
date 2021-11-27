@@ -154,3 +154,8 @@ void glPixelStorei(GLenum pname, GLint param)
 {
     g_gl_context->gl_pixel_store(pname, param);
 }
+
+void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    g_gl_context->gl_scissor(x, y, width, height);
+}
