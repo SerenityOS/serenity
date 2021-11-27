@@ -183,11 +183,15 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     };
 
     // Calculate block-based bounds
+    auto render_bounds = render_target.rect();
+    if (options.scissor_enabled)
+        render_bounds.intersect(options.scissor_box);
+    int const block_padding = RASTERIZER_BLOCK_SIZE - 1;
     // clang-format off
-    const int bx0 = max(0,                      min(min(v0.x(), v1.x()), v2.x())                            ) / RASTERIZER_BLOCK_SIZE;
-    const int bx1 = min(render_target.width(),  max(max(v0.x(), v1.x()), v2.x()) + RASTERIZER_BLOCK_SIZE - 1) / RASTERIZER_BLOCK_SIZE;
-    const int by0 = max(0,                      min(min(v0.y(), v1.y()), v2.y())                            ) / RASTERIZER_BLOCK_SIZE;
-    const int by1 = min(render_target.height(), max(max(v0.y(), v1.y()), v2.y()) + RASTERIZER_BLOCK_SIZE - 1) / RASTERIZER_BLOCK_SIZE;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()))                  / RASTERIZER_BLOCK_SIZE;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x())) + block_padding) / RASTERIZER_BLOCK_SIZE;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()))                  / RASTERIZER_BLOCK_SIZE;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) + block_padding) / RASTERIZER_BLOCK_SIZE;
     // clang-format on
 
     static_assert(RASTERIZER_BLOCK_SIZE < sizeof(int) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
@@ -229,11 +233,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             int y0 = by * RASTERIZER_BLOCK_SIZE;
 
             // Generate the coverage mask
-            if (test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
+            if (!options.scissor_enabled && test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
                 // The block is fully contained within the triangle. Fill the mask with all 1s
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++)
                     pixel_mask[y] = -1;
-                }
             } else {
                 // The block overlaps at least one triangle edge.
                 // We need to test coverage of every pixel within the block.
@@ -242,7 +245,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     pixel_mask[y] = 0;
 
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx) {
-                        if (test_point(coords))
+                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y)))
                             pixel_mask[y] |= 1 << x;
                     }
                 }
@@ -481,6 +484,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
     : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors() }
     , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, RASTERIZER_BLOCK_SIZE))) }
 {
+    m_options.scissor_box = m_render_target->rect();
 }
 
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units)
@@ -559,13 +563,27 @@ void SoftwareRasterizer::clear_color(const FloatVector4& color)
     uint8_t g = static_cast<uint8_t>(clamp(color.y(), 0.0f, 1.0f) * 255);
     uint8_t b = static_cast<uint8_t>(clamp(color.z(), 0.0f, 1.0f) * 255);
     uint8_t a = static_cast<uint8_t>(clamp(color.w(), 0.0f, 1.0f) * 255);
+    auto const fill_color = Gfx::Color(r, g, b, a);
 
-    m_render_target->fill(Gfx::Color(r, g, b, a));
+    if (m_options.scissor_enabled) {
+        auto fill_rect = m_render_target->rect();
+        fill_rect.intersect(m_options.scissor_box);
+        Gfx::Painter painter { *m_render_target };
+        painter.fill_rect(fill_rect, fill_color);
+        return;
+    }
+
+    m_render_target->fill(fill_color);
 }
 
 void SoftwareRasterizer::clear_depth(float depth)
 {
     wait_for_all_threads();
+
+    if (m_options.scissor_enabled) {
+        m_depth_buffer->clear(m_options.scissor_box, depth);
+        return;
+    }
 
     m_depth_buffer->clear(depth);
 }

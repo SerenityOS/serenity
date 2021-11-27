@@ -14,6 +14,7 @@
 #include <AK/Array.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
 
 namespace GL {
@@ -44,6 +45,8 @@ struct RasterizerOptions {
     GLboolean fog_enabled { false };
     GLfloat fog_start { 0.0f };
     GLfloat fog_end { 1.0f };
+    bool scissor_enabled { false };
+    Gfx::IntRect scissor_box {};
     GLenum draw_buffer { GL_BACK };
     GLfloat depth_offset_factor { 0 };
     GLfloat depth_offset_constant { 0 };
