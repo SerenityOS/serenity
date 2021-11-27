@@ -10,6 +10,7 @@
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -25,6 +26,7 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
@@ -99,20 +101,17 @@ public:
     }
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd thread rpath cpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix", nullptr));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = GUI::Application::construct(arguments);
 
     char const* file_to_edit = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
-    parser.parse(argc, argv);
+    parser.parse(arguments);
 
     Optional<String> path = {};
 
@@ -127,25 +126,10 @@ int main(int argc, char** argv)
         }
     }
 
-    if (pledge("stdio recvfd sendfd thread rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix", nullptr));
+    TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-theme-editor");
 
@@ -173,20 +157,20 @@ int main(int argc, char** argv)
     ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.load_from_gml(theme_editor_gml);
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->load_from_gml(theme_editor_gml);
 
-    auto& preview_widget = main_widget.find_descendant_of_type_named<GUI::Frame>("preview_frame")
+    auto& preview_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame")
                                ->add<ThemeEditor::PreviewWidget>(startup_preview_palette);
-    auto& color_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
-    auto& color_input = *main_widget.find_descendant_of_type_named<GUI::ColorInput>("color_input");
-    auto& flag_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("flag_combo_box");
-    auto& flag_input = *main_widget.find_descendant_of_type_named<GUI::CheckBox>("flag_input");
-    auto& metric_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
-    auto& metric_input = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("metric_input");
-    auto& path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path_combo_box");
-    auto& path_input = *main_widget.find_descendant_of_type_named<GUI::TextBox>("path_input");
-    auto& path_picker_button = *main_widget.find_descendant_of_type_named<GUI::Button>("path_picker_button");
+    auto& color_combo_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("color_combo_box");
+    auto& color_input = *main_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
+    auto& flag_combo_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("flag_combo_box");
+    auto& flag_input = *main_widget->find_descendant_of_type_named<GUI::CheckBox>("flag_input");
+    auto& metric_combo_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("metric_combo_box");
+    auto& metric_input = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("metric_input");
+    auto& path_combo_box = *main_widget->find_descendant_of_type_named<GUI::ComboBox>("path_combo_box");
+    auto& path_input = *main_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
+    auto& path_picker_button = *main_widget->find_descendant_of_type_named<GUI::Button>("path_picker_button");
 
     color_combo_box.set_model(adopt_ref(*new ColorRoleModel(color_roles)));
     color_combo_box.on_change = [&](auto&, auto& index) {
@@ -259,7 +243,7 @@ int main(int argc, char** argv)
         path_input.set_text(*result);
     };
 
-    auto& file_menu = window->add_menu("&File");
+    auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto update_window_title = [&] {
         window->set_title(String::formatted("{} - Theme Editor", path.value_or("Untitled")));
@@ -309,31 +293,31 @@ int main(int argc, char** argv)
         theme->sync();
     };
 
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         auto result = FileSystemAccessClient::Client::the().open_file(window->window_id(), "Select theme file", "/res/themes");
         if (result.error != 0)
             return;
 
         preview_widget.set_theme_from_file(*result.chosen_file, *result.fd);
-    }));
+    })));
 
-    file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
             save_to_result(FileSystemAccessClient::Client::the().request_file(window->window_id(), *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
         } else {
             save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
         }
-    }));
+    })));
 
-    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         save_to_result(FileSystemAccessClient::Client::the().save_file(window->window_id(), "Theme", "ini"));
-    }));
+    })));
 
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window)));
 
     update_window_title();
 
