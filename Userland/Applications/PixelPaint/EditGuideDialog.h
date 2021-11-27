@@ -26,7 +26,7 @@ private:
 
     String m_offset;
     Guide::Orientation m_orientation;
-
+    RefPtr<GUI::TextBox> m_offset_text_box;
     bool m_is_horizontal_checked { false };
     bool m_is_vertical_checked { false };
 };

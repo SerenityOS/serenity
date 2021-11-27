@@ -29,12 +29,13 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
 
     auto horizontal_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("orientation_horizontal_radio");
     auto vertical_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("orientation_vertical_radio");
-    auto offset_text_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("offset_text_box");
     auto ok_button = main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
     auto cancel_button = main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_offset_text_box = main_widget.find_descendant_of_type_named<GUI::TextBox>("offset_text_box");
+
     VERIFY(horizontal_radio);
     VERIFY(ok_button);
-    VERIFY(offset_text_box);
+    VERIFY(!m_offset_text_box.is_null());
     VERIFY(vertical_radio);
     VERIFY(cancel_button);
 
@@ -47,12 +48,12 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
     }
 
     if (!offset.is_empty())
-        offset_text_box->set_text(offset);
+        m_offset_text_box->set_text(offset);
 
     horizontal_radio->on_checked = [this](bool checked) { m_is_horizontal_checked = checked; };
     vertical_radio->on_checked = [this](bool checked) { m_is_vertical_checked = checked; };
 
-    ok_button->on_click = [this, &offset_text_box](auto) {
+    ok_button->on_click = [this](auto) {
         if (m_is_vertical_checked) {
             m_orientation = Guide::Orientation::Vertical;
         } else if (m_is_horizontal_checked) {
@@ -62,10 +63,10 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, String const& offse
             return;
         }
 
-        if (offset_text_box->text().is_empty())
+        if (m_offset_text_box->text().is_empty())
             done(ExecResult::ExecAborted);
 
-        m_offset = offset_text_box->text();
+        m_offset = m_offset_text_box->text();
 
         done(ExecResult::ExecOK);
     };
