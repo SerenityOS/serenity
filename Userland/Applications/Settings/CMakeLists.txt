@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(Settings ICON app-settings)
-target_link_libraries(Settings LibGUI LibDesktop)
+target_link_libraries(Settings LibGUI LibDesktop LibMain)
