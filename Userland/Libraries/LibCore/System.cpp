@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -193,6 +194,15 @@ ErrorOr<String> ptsname(int fd)
     if (!name)
         return Error::from_syscall("ptsname"sv, -errno);
     return String(name);
+}
+
+ErrorOr<String> gethostname()
+{
+    char hostname[256];
+    int rc = ::gethostname(hostname, sizeof(hostname));
+    if (rc < 0)
+        return Error::from_syscall("gethostname"sv, -errno);
+    return String(&hostname[0]);
 }
 
 }
