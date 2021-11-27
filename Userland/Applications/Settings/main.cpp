@@ -104,8 +104,7 @@ int main(int argc, char** argv)
     icon_view.set_model(*model);
 
     icon_view.on_activation = [&](GUI::ModelIndex const& index) {
-        auto& app = *(Desktop::AppFile*)index.internal_data();
-        auto executable = app.executable();
+        auto executable = model->data(index, GUI::ModelRole::Custom).as_string();
 
         auto launch_origin_rect = icon_view.to_widget_rect(icon_view.content_rect(index)).translated(icon_view.screen_relative_rect().location());
         setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
