@@ -41,7 +41,7 @@ Emulator& Emulator::the()
     return *s_the;
 }
 
-Emulator::Emulator(String const& executable_path, Vector<String> const& arguments, Vector<String> const& environment)
+Emulator::Emulator(String const& executable_path, Vector<StringView> const& arguments, Vector<String> const& environment)
     : m_executable_path(executable_path)
     , m_arguments(arguments)
     , m_environment(environment)
@@ -103,7 +103,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     Vector<u32> argv_entries;
 
     for (auto& argument : m_arguments) {
-        m_cpu.push_string(argument.characters());
+        m_cpu.push_string(argument);
         argv_entries.append(m_cpu.esp().value());
     }
 
