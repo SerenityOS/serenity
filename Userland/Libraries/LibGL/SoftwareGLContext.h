@@ -20,6 +20,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
+#include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
 
 namespace GL {
@@ -96,6 +97,7 @@ public:
     virtual void gl_fogf(GLenum pname, GLfloat param) override;
     virtual void gl_fogi(GLenum pname, GLint param) override;
     virtual void gl_pixel_store(GLenum pname, GLfloat param) override;
+    virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height);
     virtual void present() override;
 
 private:
@@ -231,7 +233,8 @@ private:
             decltype(&SoftwareGLContext::gl_draw_arrays),
             decltype(&SoftwareGLContext::gl_draw_elements),
             decltype(&SoftwareGLContext::gl_depth_range),
-            decltype(&SoftwareGLContext::gl_polygon_offset)>;
+            decltype(&SoftwareGLContext::gl_polygon_offset),
+            decltype(&SoftwareGLContext::gl_scissor)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
