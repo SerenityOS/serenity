@@ -7,7 +7,7 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w wc which whoami xargs yes less
 )
 list(APPEND RECOMMENDED_TARGETS
-    adjtime aplay asctl bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
+    adjtime aplay abench asctl bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
     modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
@@ -54,6 +54,7 @@ endforeach()
 target_link_libraries(allocate LibMain)
 target_link_libraries(aplay LibAudio LibMain)
 target_link_libraries(arp LibMain)
+target_link_libraries(abench LibAudio LibMain LibCore)
 target_link_libraries(asctl LibAudio LibMain)
 target_link_libraries(base64 LibMain)
 target_link_libraries(basename LibMain)
