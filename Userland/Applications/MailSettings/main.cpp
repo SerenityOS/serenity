@@ -7,36 +7,23 @@
 
 #include "MailSettingsWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/SettingsWindow.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath recvfd sendfd unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("Mail");
 
-    if (pledge("stdio rpath recvfd sendfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr)) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-mail");
 
