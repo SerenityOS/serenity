@@ -44,9 +44,9 @@ TabWidget::~TabWidget()
 {
 }
 
-ErrorOr<void> TabWidget::try_add_widget(StringView title, Widget& widget)
+ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)
 {
-    m_tabs.append({ title, nullptr, &widget });
+    m_tabs.append({ move(title), nullptr, &widget });
     add_child(widget);
     update_focus_policy();
     if (on_tab_count_change)
@@ -54,9 +54,9 @@ ErrorOr<void> TabWidget::try_add_widget(StringView title, Widget& widget)
     return {};
 }
 
-void TabWidget::add_widget(StringView title, Widget& widget)
+void TabWidget::add_widget(String title, Widget& widget)
 {
-    MUST(try_add_widget(title, widget));
+    MUST(try_add_widget(move(title), widget));
 }
 
 void TabWidget::remove_widget(Widget& widget)
