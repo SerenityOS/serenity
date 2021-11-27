@@ -185,11 +185,11 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
     const char* cpu = nullptr;
     const char* memory = nullptr;

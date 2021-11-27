@@ -19,7 +19,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction", nullptr));
+    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
 
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
 
@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd", nullptr));
+    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

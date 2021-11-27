@@ -26,7 +26,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
 
     srand(time(nullptr));
 
@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains("2048");
 
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

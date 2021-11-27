@@ -12,7 +12,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread cpath rpath wpath unix proc exec", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread cpath rpath wpath unix proc exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(RunWindow::try_create());

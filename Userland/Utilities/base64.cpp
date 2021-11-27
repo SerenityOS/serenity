@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
 
     bool decode = false;
     const char* filepath = nullptr;
@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         buffer = file->read_all();
     }
 
-    TRY(Core::System::pledge("stdio", nullptr));
+    TRY(Core::System::pledge("stdio"));
 
     if (decode) {
         auto decoded = decode_base64(StringView(buffer));
