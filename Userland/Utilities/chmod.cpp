@@ -1,15 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 /* the new mode will be computed using the boolean function(for each bit):
 
@@ -48,17 +52,14 @@ public:
     mode_t& get_applying_mask() { return applying_mask; }
 };
 
-Optional<Mask> string_to_mode(char access_scope, const char*& access_string);
+Optional<Mask> string_to_mode(char access_scope, StringView access_string);
 Optional<Mask> apply_permission(char access_scope, char permission, char operation);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath fattr", nullptr));
 
-    if (argc < 3) {
+    if (arguments.strings.size() < 3) {
         warnln("usage: chmod <octal-mode> <path...>");
         warnln("       chmod [[ugoa][+-=][rwx...],...] <path...>");
         return 1;
@@ -67,41 +68,38 @@ int main(int argc, char** argv)
     Mask mask;
 
     /* compute a mask */
-    if (argv[1][0] >= '0' && argv[1][0] <= '7') {
-        if (sscanf(argv[1], "%ho", &mask.get_applying_mask()) != 1) {
+
+    if (arguments.strings[1][0] >= '0' && arguments.strings[1][0] <= '7') {
+        if (sscanf(arguments.strings[1].to_string().characters(), "%ho", &mask.get_applying_mask()) != 1) {
             perror("sscanf");
             return 1;
         }
         mask.get_removal_mask() = ~mask.get_applying_mask();
     } else {
-        const char* access_string = argv[1];
-
-        while (*access_string != '\0') {
+        auto access_strings = arguments.strings[1].split_view(',');
+        for (auto access_string : access_strings) {
             Optional<Mask> tmp_mask;
-            switch (*access_string) {
+            switch (access_string[0]) {
             case 'u':
-                tmp_mask = string_to_mode('u', ++access_string);
+                tmp_mask = string_to_mode('u', access_string);
                 break;
             case 'g':
-                tmp_mask = string_to_mode('g', ++access_string);
+                tmp_mask = string_to_mode('g', access_string);
                 break;
             case 'o':
-                tmp_mask = string_to_mode('o', ++access_string);
+                tmp_mask = string_to_mode('o', access_string);
                 break;
             case 'a':
-                tmp_mask = string_to_mode('a', ++access_string);
+                tmp_mask = string_to_mode('a', access_string);
                 break;
             case '=':
             case '+':
             case '-':
                 tmp_mask = string_to_mode('a', access_string);
                 break;
-            case ',':
-                ++access_string;
-                continue;
             }
             if (!tmp_mask.has_value()) {
-                warnln("chmod: invalid mode: {}", argv[1]);
+                warnln("chmod: invalid mode: {}", arguments.strings[1]);
                 return 1;
             }
             mask |= tmp_mask.value();
@@ -109,29 +107,30 @@ int main(int argc, char** argv)
     }
 
     /* set the mask for each file's permissions */
-    struct stat current_access;
-    int i = 2;
-    while (i < argc) {
-        if (stat(argv[i], &current_access) != 0) {
-            perror("stat");
-            return 1;
-        }
+    size_t i = 2;
+    while (i < arguments.strings.size()) {
+        auto current_access = TRY(Core::System::stat(arguments.strings[i]));
         /* found the minimal CNF by The Quine–McCluskey algorithm and use it */
         mode_t mode = mask.get_applying_mask()
             | (current_access.st_mode & ~mask.get_removal_mask());
-        if (chmod(argv[i++], mode) != 0) {
-            perror("chmod");
-        }
+        TRY(Core::System::chmod(arguments.strings[i++], mode));
     }
 
     return 0;
 }
 
-Optional<Mask> string_to_mode(char access_scope, const char*& access_string)
+Optional<Mask> string_to_mode(char access_scope, StringView access_string)
 {
-    char operation = *access_string;
+    auto get_operation = [](StringView s) {
+        for (auto c : s) {
+            if (c == '+' || c == '-' || c == '=')
+                return c;
+        }
+        return ' ';
+    };
 
-    if (operation != '+' && operation != '-' && operation != '=') {
+    auto operation = get_operation(access_string);
+    if (operation == ' ') {
         return {};
     }
 
@@ -156,15 +155,17 @@ Optional<Mask> string_to_mode(char access_scope, const char*& access_string)
         operation = '+';
     }
 
-    access_string++;
-    while (*access_string != '\0' && *access_string != ',') {
+    for (size_t i = 1; i < access_string.length(); i++) {
+        char permission = access_string[i];
+        if (permission == '+' || permission == '-' || permission == '=')
+            continue;
+
         Optional<Mask> tmp_mask;
-        tmp_mask = apply_permission(access_scope, *access_string, operation);
+        tmp_mask = apply_permission(access_scope, permission, operation);
         if (!tmp_mask.has_value()) {
             return {};
         }
         mask |= tmp_mask.value();
-        access_string++;
     }
 
     return mask;
