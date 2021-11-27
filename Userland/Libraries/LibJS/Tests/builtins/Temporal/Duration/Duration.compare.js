@@ -22,8 +22,7 @@ describe("correct behavior", () => {
         checkCommonResults(duration1, duration2);
     });
 
-    // FIXME: Un-skip once ParseTemporalDurationString is implemented
-    test.skip("duration strings", () => {
+    test("duration strings", () => {
         const duration1 = "P1D";
         const duration2 = "P2D";
         checkCommonResults(duration1, duration2);

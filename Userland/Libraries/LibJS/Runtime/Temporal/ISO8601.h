@@ -30,12 +30,23 @@ struct ParseResult {
     Optional<StringView> time_zone_utc_offset_second;
     Optional<StringView> time_zone_utc_offset_fractional_part;
     Optional<StringView> time_zone_iana_name;
+    Optional<StringView> duration_years;
+    Optional<StringView> duration_months;
+    Optional<StringView> duration_weeks;
+    Optional<StringView> duration_days;
+    Optional<StringView> duration_whole_hours;
+    Optional<StringView> duration_hours_fraction;
+    Optional<StringView> duration_whole_minutes;
+    Optional<StringView> duration_minutes_fraction;
+    Optional<StringView> duration_whole_seconds;
+    Optional<StringView> duration_seconds_fraction;
 };
 
 enum class Production {
     TemporalInstantString,
     TemporalDateString,
     TemporalDateTimeString,
+    TemporalDurationString,
     TemporalMonthDayString,
     TemporalTimeString,
     TemporalTimeZoneString,
@@ -49,6 +60,7 @@ Optional<ParseResult> parse_iso8601(Production, StringView);
 
 namespace Detail {
 
+// 13.33 ISO 8601 grammar, https://tc39.es/proposal-temporal/#sec-temporal-iso8601grammar
 class ISO8601Parser {
 public:
     explicit ISO8601Parser(StringView input)
@@ -63,6 +75,7 @@ public:
     [[nodiscard]] GenericLexer const& lexer() const { return m_state.lexer; }
     [[nodiscard]] ParseResult const& parse_result() const { return m_state.parse_result; }
 
+    [[nodiscard]] bool parse_decimal_digits();
     [[nodiscard]] bool parse_decimal_digit();
     [[nodiscard]] bool parse_non_zero_digit();
     [[nodiscard]] bool parse_ascii_sign();
@@ -70,7 +83,16 @@ public:
     [[nodiscard]] bool parse_hour();
     [[nodiscard]] bool parse_minute_second();
     [[nodiscard]] bool parse_decimal_separator();
+    [[nodiscard]] bool parse_days_designator();
+    [[nodiscard]] bool parse_hours_designator();
+    [[nodiscard]] bool parse_minutes_designator();
+    [[nodiscard]] bool parse_months_designator();
+    [[nodiscard]] bool parse_duration_designator();
+    [[nodiscard]] bool parse_seconds_designator();
     [[nodiscard]] bool parse_date_time_separator();
+    [[nodiscard]] bool parse_duration_time_designator();
+    [[nodiscard]] bool parse_weeks_designator();
+    [[nodiscard]] bool parse_years_designator();
     [[nodiscard]] bool parse_utc_designator();
     [[nodiscard]] bool parse_date_year();
     [[nodiscard]] bool parse_date_month();
@@ -107,9 +129,30 @@ public:
     [[nodiscard]] bool parse_time_spec_separator();
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_calendar_date_time();
+    [[nodiscard]] bool parse_duration_whole_seconds();
+    [[nodiscard]] bool parse_duration_seconds_fraction();
+    [[nodiscard]] bool parse_duration_seconds_part();
+    [[nodiscard]] bool parse_duration_whole_minutes();
+    [[nodiscard]] bool parse_duration_minutes_fraction();
+    [[nodiscard]] bool parse_duration_minutes_part();
+    [[nodiscard]] bool parse_duration_whole_hours();
+    [[nodiscard]] bool parse_duration_hours_fraction();
+    [[nodiscard]] bool parse_duration_hours_part();
+    [[nodiscard]] bool parse_duration_time();
+    [[nodiscard]] bool parse_duration_days();
+    [[nodiscard]] bool parse_duration_days_part();
+    [[nodiscard]] bool parse_duration_weeks();
+    [[nodiscard]] bool parse_duration_weeks_part();
+    [[nodiscard]] bool parse_duration_months();
+    [[nodiscard]] bool parse_duration_months_part();
+    [[nodiscard]] bool parse_duration_years();
+    [[nodiscard]] bool parse_duration_years_part();
+    [[nodiscard]] bool parse_duration_date();
+    [[nodiscard]] bool parse_duration();
     [[nodiscard]] bool parse_temporal_instant_string();
     [[nodiscard]] bool parse_temporal_date_string();
     [[nodiscard]] bool parse_temporal_date_time_string();
+    [[nodiscard]] bool parse_temporal_duration_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
     [[nodiscard]] bool parse_temporal_time_string();
     [[nodiscard]] bool parse_temporal_time_zone_identifier();

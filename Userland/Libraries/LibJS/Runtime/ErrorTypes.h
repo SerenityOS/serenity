@@ -217,6 +217,8 @@
     M(TemporalInvalidDurationLikeObject, "Invalid duration-like object")                                                                \
     M(TemporalInvalidDurationPropertyValueNonIntegral, "Invalid value for duration property '{}': must be an integer, got {}")          \
     M(TemporalInvalidDurationPropertyValueNonZero, "Invalid value for duration property '{}': must be zero, got {}")                    \
+    M(TemporalInvalidDurationString, "Invalid duration string '{}'")                                                                    \
+    M(TemporalInvalidDurationStringFractionNotLast, "Invalid duration string '{}': fractional {} must not be proceeded by {}")          \
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
     M(TemporalInvalidInstantString, "Invalid instant string '{}'")                                                                      \
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \

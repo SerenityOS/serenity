@@ -22,6 +22,7 @@
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
+#include <stdlib.h>
 
 namespace JS::Temporal {
 
@@ -1329,9 +1330,149 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
 ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
-    (void)iso_string;
+    // NOTE: The steps here are the ones from the following PR and not the ones in the spec at the
+    // time of implementing this - it is already accepted, but hasn't been merged yet.
+    // Due to removal of the DurationHandleFractions AO every section number gets shifted by one,
+    // i.e. this becomes 13.39 - I'll do that once the PR is actually merged.
+    // Normative: Simplify Duration parsing, https://github.com/tc39/proposal-temporal/pull/1907
+
     auto& vm = global_object.vm();
-    return vm.throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "ParseTemporalDurationString");
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. Let duration be ParseText(! StringToCodePoints(isoString), TemporalDurationString).
+    auto parse_result = parse_iso8601(Production::TemporalDurationString, iso_string);
+
+    // 3. If duration is a List of errors, throw a RangeError exception.
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationString, iso_string);
+
+    // 4. Let each of sign, years, months, weeks, days, hours, fHours, minutes, fMinutes, seconds, and fSeconds be the source text matched by the respective Sign, DurationYears, DurationMonths, DurationWeeks, DurationDays, DurationWholeHours, DurationHoursFraction, DurationWholeMinutes, DurationMinutesFraction, DurationWholeSeconds, and DurationSecondsFraction Parse Node enclosed by duration, or an empty sequence of code points if not present.
+    auto sign_part = parse_result->sign;
+    auto years_part = parse_result->duration_years;
+    auto months_part = parse_result->duration_months;
+    auto weeks_part = parse_result->duration_weeks;
+    auto days_part = parse_result->duration_days;
+    auto hours_part = parse_result->duration_whole_hours;
+    auto f_hours_part = parse_result->duration_hours_fraction;
+    auto minutes_part = parse_result->duration_whole_minutes;
+    auto f_minutes_part = parse_result->duration_minutes_fraction;
+    auto seconds_part = parse_result->duration_whole_seconds;
+    auto f_seconds_part = parse_result->duration_seconds_fraction;
+
+    // FIXME: I can has StringView::to<double>()?
+
+    // 5. Let yearsMV be ! ToIntegerOrInfinity(CodePointsToString(years)).
+    auto years = strtod(String { years_part.value_or("0"sv) }.characters(), nullptr);
+
+    // 6. Let monthsMV be ! ToIntegerOrInfinity(CodePointsToString(months)).
+    auto months = strtod(String { months_part.value_or("0"sv) }.characters(), nullptr);
+
+    // 7. Let weeksMV be ! ToIntegerOrInfinity(CodePointsToString(weeks)).
+    auto weeks = strtod(String { weeks_part.value_or("0"sv) }.characters(), nullptr);
+
+    // 8. Let daysMV be ! ToIntegerOrInfinity(CodePointsToString(days)).
+    auto days = strtod(String { days_part.value_or("0"sv) }.characters(), nullptr);
+
+    // 9. Let hoursMV be ! ToIntegerOrInfinity(CodePointsToString(hours)).
+    auto hours = strtod(String { hours_part.value_or("0"sv) }.characters(), nullptr);
+
+    double minutes;
+
+    // 10. If fHours is not empty, then
+    if (f_hours_part.has_value()) {
+        // a. If any of minutes, fMinutes, seconds, fSeconds is not empty, throw a RangeError exception.
+        if (minutes_part.has_value() || f_minutes_part.has_value() || seconds_part.has_value() || f_seconds_part.has_value())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "hours"sv, "minutes or seconds"sv);
+
+        // b. Let fHoursDigits be the substring of ! CodePointsToString(fHours) from 1.
+        auto f_hours_digits = f_hours_part->substring_view(1);
+
+        // c. Let fHoursScale be the length of fHoursDigits.
+        auto f_hours_scale = (double)f_hours_digits.length();
+
+        // d. Let minutesMV be ! ToIntegerOrInfinity(fHoursDigits) / 10^fHoursScale × 60.
+        minutes = strtod(String { f_hours_digits }.characters(), nullptr) / pow(10, f_hours_scale) * 60;
+    }
+    // 11. Else,
+    else {
+        // a. Let minutesMV be ! ToIntegerOrInfinity(CodePointsToString(minutes)).
+        minutes = strtod(String { minutes_part.value_or("0"sv) }.characters(), nullptr);
+    }
+
+    double seconds;
+
+    // 12. If fMinutes is not empty, then
+    if (f_minutes_part.has_value()) {
+        // a. If any of seconds, fSeconds is not empty, throw a RangeError exception.
+        if (seconds_part.has_value() || f_seconds_part.has_value())
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "minutes"sv, "seconds"sv);
+
+        // b. Let fMinutesDigits be the substring of ! CodePointsToString(fMinutes) from 1.
+        auto f_minutes_digits = f_minutes_part->substring_view(1);
+
+        // c. Let fMinutesScale be the length of fMinutesDigits.
+        auto f_minutes_scale = (double)f_minutes_digits.length();
+
+        // d. Let secondsMV be ! ToIntegerOrInfinity(fMinutesDigits) / 10^fMinutesScale × 60.
+        seconds = strtod(String { f_minutes_digits }.characters(), nullptr) / pow(10, f_minutes_scale) * 60;
+    }
+    // 13. Else if seconds is not empty, then
+    else if (seconds_part.has_value()) {
+        // a. Let secondsMV be ! ToIntegerOrInfinity(CodePointsToString(seconds)).
+        seconds = strtod(String { *seconds_part }.characters(), nullptr);
+    }
+    // 14. Else,
+    else {
+        // a. Let secondsMV be remainder(minutesMV, 1) × 60.
+        seconds = fmod(minutes, 1) * 60;
+    }
+
+    double milliseconds;
+
+    // 15. If fSeconds is not empty, then
+    if (f_seconds_part.has_value()) {
+        // a. Let fSecondsDigits be the substring of ! CodePointsToString(fSeconds) from 1.
+        auto f_seconds_digits = f_seconds_part->substring_view(1);
+
+        // b. Let fSecondsScale be the length of fSecondsDigits.
+        auto f_seconds_scale = (double)f_seconds_digits.length();
+
+        // c. Let millisecondsMV be ! ToIntegerOrInfinity(fSecondsDigits) / 10^fSecondsScale × 1000.
+        milliseconds = strtod(String { f_seconds_digits }.characters(), nullptr) / pow(10, f_seconds_scale) * 1000;
+    }
+    // 16. Else,
+    else {
+        // a. Let millisecondsMV be remainder(secondsMV, 1) × 1000.
+        milliseconds = fmod(seconds, 1) * 1000;
+    }
+
+    // FIXME: This suffers from floating point (im)precision issues - e.g. "PT0.0000001S" ends up
+    //        getting parsed as 99.999999 nanoseconds, which is floor()'d to 99 instead of the
+    //        expected 100. Oof. This is the reason all of these are suffixed with "MV" in the spec:
+    //        mathematical values are not supposed to have this issue.
+
+    // 17. Let microsecondsMV be remainder(millisecondsMV, 1) × 1000.
+    auto microseconds = fmod(milliseconds, 1) * 1000;
+
+    // 18. Let nanosecondsMV be remainder(microsecondsMV, 1) × 1000.
+    auto nanoseconds = fmod(microseconds, 1) * 1000;
+
+    i8 factor;
+
+    // 19. If sign contains the code point 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
+    if (sign_part.has_value() && sign_part->is_one_of("-", "\u2212")) {
+        // a. Let factor be −1.
+        factor = -1;
+    }
+    // 20. Else,
+    else {
+        // a. Let factor be 1.
+        factor = 1;
+    }
+
+    // 21. Return the Record { [[Years]]: yearsMV × factor, [[Months]]: monthsMV × factor, [[Weeks]]: weeksMV × factor, [[Days]]: daysMV × factor, [[Hours]]: hoursMV × factor, [[Minutes]]: floor(minutesMV) × factor, [[Seconds]]: floor(secondsMV) × factor, [[Milliseconds]]: floor(millisecondsMV) × factor, [[Microseconds]]: floor(microsecondsMV) × factor, [[Nanoseconds]]: floor(nanosecondsMV) × factor }.
+    return TemporalDuration { .years = years * factor, .months = months * factor, .weeks = weeks * factor, .days = days * factor, .hours = hours * factor, .minutes = floor(minutes) * factor, .seconds = floor(seconds) * factor, .milliseconds = floor(milliseconds) * factor, .microseconds = floor(microseconds) * factor, .nanoseconds = floor(nanoseconds) * factor };
 }
 
 // 13.41 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
