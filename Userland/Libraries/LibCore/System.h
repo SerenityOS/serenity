@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <termios.h>
+#include <time.h>
 
 namespace Core::System {
 
@@ -49,5 +50,6 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode);
 ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<struct passwd> getpwnam(StringView name);
 ErrorOr<struct group> getgrnam(StringView name);
+ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
 
 }
