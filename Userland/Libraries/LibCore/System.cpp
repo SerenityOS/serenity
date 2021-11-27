@@ -307,4 +307,21 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
 #endif
 }
 
+ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
+{
+    if (!pathname.characters_without_null_termination())
+        return Error::from_syscall("chown"sv, -EFAULT);
+
+#ifdef __serenity__
+    Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid };
+    int rc = syscall(SC_chown, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("chown"sv, rc, {});
+#else
+    String path = pathname;
+    if (::chown(path.characters(), uid, gid) < 0)
+        return Error::from_syscall("chown"sv, -errno);
+    return {};
+#endif
+}
+
 }
