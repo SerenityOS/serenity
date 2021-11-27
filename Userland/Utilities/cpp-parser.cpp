@@ -7,15 +7,16 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCpp/Parser.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     const char* path = nullptr;
     bool tokens_mode = false;
     args_parser.add_option(tokens_mode, "Print Tokens", "tokens", 'T');
     args_parser.add_positional_argument(path, "Cpp File", "cpp-file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!path)
         path = "Source/little/main.cpp";
@@ -43,4 +44,6 @@ int main(int argc, char** argv)
     }
 
     root->dump();
+
+    return 0;
 }
