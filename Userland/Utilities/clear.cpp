@@ -4,15 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
-#include <unistd.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio", nullptr));
     printf("\033[3J\033[H\033[2J");
     fflush(stdout);
     return 0;
