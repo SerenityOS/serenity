@@ -12,4 +12,4 @@ set(SOURCES
 )
 
 serenity_app(ThemeEditor ICON app-theme-editor)
-target_link_libraries(ThemeEditor LibGUI LibFileSystemAccessClient)
+target_link_libraries(ThemeEditor LibGUI LibFileSystemAccessClient LibMain)
