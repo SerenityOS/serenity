@@ -162,8 +162,7 @@ ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>
     REQUIRE_PROMISE(ptrace);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto result = handle_ptrace(params, *this);
-    return result.is_error() ? result.error().code() : result.value();
+    return handle_ptrace(params, *this);
 }
 
 /**
