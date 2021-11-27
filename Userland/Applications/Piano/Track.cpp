@@ -7,7 +7,7 @@
  */
 
 #include "Track.h"
-#include "Music.h"
+#include <AK/Forward.h>
 #include <AK/Math.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NumericLimits.h>

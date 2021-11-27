@@ -18,7 +18,8 @@ static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample
         Audio::Sample frame = { sample.left / (double)NumericLimits<i16>::max(), sample.right / (double)NumericLimits<i16>::max() };
         frames.unchecked_append(frame);
     }
-    return Audio::Buffer::create_with_samples(frames);
+    // FIXME: Handle OOM better.
+    return MUST(Audio::Buffer::create_with_samples(frames));
 }
 
 AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer)
@@ -42,7 +43,8 @@ void AudioPlayerLoop::enqueue_audio()
 {
     m_track_manager.fill_buffer(m_buffer);
     NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
-    audio_buffer = Audio::resample_buffer(m_resampler.value(), *audio_buffer);
+    // FIXME: Handle OOM better.
+    audio_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *audio_buffer));
     m_audio_client->async_enqueue(audio_buffer);
 
     // FIXME: This should be done somewhere else.

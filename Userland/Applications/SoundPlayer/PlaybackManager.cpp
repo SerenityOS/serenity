@@ -46,7 +46,7 @@ void PlaybackManager::stop()
     m_current_buffer = nullptr;
 
     if (m_loader)
-        m_loader->reset();
+        (void)m_loader->reset();
 }
 
 void PlaybackManager::play()
@@ -70,7 +70,8 @@ void PlaybackManager::seek(const int position)
 
     m_connection->clear_buffer(true);
     m_current_buffer = nullptr;
-    m_loader->seek(position);
+
+    [[maybe_unused]] auto result = m_loader->seek(position);
 
     if (!paused_state)
         set_paused(false);
@@ -117,11 +118,13 @@ void PlaybackManager::next_buffer()
     }
 
     if (audio_server_remaining_samples < m_device_samples_per_buffer) {
-        m_current_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
-        if (m_current_buffer) {
+        auto maybe_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
+        if (!maybe_buffer.is_error()) {
+            m_current_buffer = maybe_buffer.release_value();
             VERIFY(m_resampler.has_value());
             m_resampler->reset();
-            m_current_buffer = Audio::resample_buffer(m_resampler.value(), *m_current_buffer);
+            // FIXME: Handle OOM better.
+            m_current_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *m_current_buffer));
             m_connection->enqueue(*m_current_buffer);
         }
     }

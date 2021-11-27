@@ -8,10 +8,14 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Error.h>
 #include <AK/MemoryStream.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <AK/kmalloc.h>
 #include <LibAudio/Sample.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <string.h>
@@ -67,19 +71,20 @@ private:
 // A buffer of audio samples.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static NonnullRefPtr<Buffer> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
-    static NonnullRefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
-    static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
+    static ErrorOr<NonnullRefPtr<Buffer>> from_pcm_data(ReadonlyBytes data, int num_channels, PcmSampleFormat sample_format);
+    static ErrorOr<NonnullRefPtr<Buffer>> from_pcm_stream(InputMemoryStream& stream, int num_channels, PcmSampleFormat sample_format, int num_samples);
+    static ErrorOr<NonnullRefPtr<Buffer>> create_with_samples(Vector<Sample>&& samples)
     {
-        return adopt_ref(*new Buffer(move(samples)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(samples)));
     }
-    static NonnullRefPtr<Buffer> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
+    static ErrorOr<NonnullRefPtr<Buffer>> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
     {
-        return adopt_ref(*new Buffer(move(buffer), buffer_id, sample_count));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(buffer), buffer_id, sample_count));
     }
     static NonnullRefPtr<Buffer> create_empty()
     {
-        return adopt_ref(*new Buffer({}));
+        // If we can't allocate an empty buffer, things are in a very bad state.
+        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer({})));
     }
 
     const Sample* samples() const { return (const Sample*)data(); }
@@ -115,6 +120,6 @@ private:
 };
 
 // This only works for double resamplers, and therefore cannot be part of the class
-NonnullRefPtr<Buffer> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample);
+ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample);
 
 }
