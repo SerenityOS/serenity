@@ -16,14 +16,12 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath cpath wpath recvfd sendfd unix proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("Terminal");
 
-    TRY(Core::System::pledge("stdio rpath cpath wpath recvfd sendfd proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/bin/keymap", "x"));
-    TRY(Core::System::unveil("/proc/keymap", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-terminal");
