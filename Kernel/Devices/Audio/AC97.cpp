@@ -69,8 +69,11 @@ bool AC97::handle_irq(RegisterState const&)
     bool is_completion_interrupt = (pcm_out_status & AudioStatusRegisterFlag::BufferCompletionInterruptStatus) > 0;
     bool is_fifo_error = (pcm_out_status & AudioStatusRegisterFlag::FIFOError) > 0;
 
-    VERIFY(is_completion_interrupt);
     VERIFY(!is_fifo_error);
+
+    // If there is no buffer completion, we're not going to do anything
+    if (!is_completion_interrupt)
+        return false;
 
     // On interrupt, we need to reset PCM interrupt flags by setting their bits
     pcm_out_status = AudioStatusRegisterFlag::LastValidBufferCompletionInterrupt
@@ -84,7 +87,6 @@ bool AC97::handle_irq(RegisterState const&)
     } else {
         m_irq_queue.wake_all();
     }
-
     return true;
 }
 
