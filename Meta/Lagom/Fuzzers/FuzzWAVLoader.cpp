@@ -13,11 +13,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     auto wav_data = ByteBuffer::copy(data, size).release_value();
     auto wav = make<Audio::WavLoaderPlugin>(wav_data);
 
-    if (!wav->sniff())
-        return 1;
-
-    while (wav->get_more_samples())
-        ;
+    for (;;) {
+        auto samples = wav->get_more_samples();
+        if (samples.is_error())
+            return 2;
+        if (samples.value()->sample_count() > 0)
+            break;
+    }
 
     return 0;
 }

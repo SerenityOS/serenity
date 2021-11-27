@@ -5,32 +5,40 @@
  */
 
 #include <LibAudio/FlacLoader.h>
+#include <LibAudio/Loader.h>
 #include <LibAudio/WavLoader.h>
 
 namespace Audio {
 
-Loader::Loader(StringView path)
+Loader::Loader(NonnullOwnPtr<LoaderPlugin> plugin)
+    : m_plugin(move(plugin))
 {
-    m_plugin = make<WavLoaderPlugin>(path);
-    if (m_plugin->sniff())
-        return;
-    m_plugin = make<FlacLoaderPlugin>(path);
-    if (m_plugin->sniff())
-        return;
-    m_plugin = nullptr;
 }
 
-Loader::Loader(const ByteBuffer& buffer)
+Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView path)
 {
-    m_plugin = make<WavLoaderPlugin>(buffer);
-    if (m_plugin->sniff())
-        return;
-    m_plugin = make<FlacLoaderPlugin>(buffer);
-    if (m_plugin->sniff()) {
-        dbgln("FLAC sniff successful");
-        return;
-    }
-    m_plugin = nullptr;
+    NonnullOwnPtr<LoaderPlugin> plugin = adopt_own(*new WavLoaderPlugin(path));
+    auto initstate0 = plugin->initialize();
+    if (!initstate0.is_error())
+        return plugin;
+
+    plugin = adopt_own(*new FlacLoaderPlugin(path));
+    auto initstate1 = plugin->initialize();
+    if (!initstate1.is_error())
+        return plugin;
+
+    return LoaderError { "No loader plugin available" };
+}
+
+Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(ByteBuffer const& buffer)
+{
+    NonnullOwnPtr<LoaderPlugin> plugin = adopt_own(*new WavLoaderPlugin(buffer));
+    if (auto initstate = plugin->initialize(); !initstate.is_error())
+        return plugin;
+    plugin = adopt_own(*new FlacLoaderPlugin(buffer));
+    if (auto initstate = plugin->initialize(); !initstate.is_error())
+        return plugin;
+    return LoaderError { "No loader plugin available" };
 }
 
 }

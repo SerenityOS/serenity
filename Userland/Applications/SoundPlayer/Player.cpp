@@ -53,11 +53,12 @@ void Player::play_file_path(String const& path)
         return;
     }
 
-    NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
-    if (loader->has_error()) {
-        audio_load_error(path, loader->error_string());
+    auto maybe_loader = Audio::Loader::create(path);
+    if (maybe_loader.is_error()) {
+        audio_load_error(path, maybe_loader.error().description);
         return;
     }
+    auto loader = maybe_loader.value();
 
     m_loaded_filename = path;
 

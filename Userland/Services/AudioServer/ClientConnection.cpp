@@ -97,7 +97,8 @@ Messages::AudioServer::EnqueueBufferResponse ClientConnection::enqueue_buffer(Co
     if (m_queue->is_full())
         return false;
 
-    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count));
+    // There's not a big allocation to worry about here.
+    m_queue->enqueue(MUST(Audio::Buffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count)));
     return true;
 }
 
