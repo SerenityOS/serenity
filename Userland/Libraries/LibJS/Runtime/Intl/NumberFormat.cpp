@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatFunction.h>
 #include <LibUnicode/CurrencyCode.h>
+#include <LibUnicode/Locale.h>
 #include <math.h>
 #include <stdlib.h>
 
