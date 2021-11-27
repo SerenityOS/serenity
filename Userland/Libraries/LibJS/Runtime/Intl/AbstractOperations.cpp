@@ -597,7 +597,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(GlobalObject& global_object,
 }
 
 // 9.2.13 GetOption ( options, property, type, values, fallback ), https://tc39.es/ecma402/#sec-getoption
-ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Vector<StringView> const& values, Fallback fallback)
+ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& options, PropertyKey const& property, Value::Type type, Span<StringView const> values, Fallback fallback)
 {
     auto& vm = global_object.vm();
 
