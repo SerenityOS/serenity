@@ -46,6 +46,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.until, until, 1, attr);
+    define_native_function(vm.names.since, since, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -457,6 +458,89 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
 
     // 24. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return TRY(create_temporal_duration(global_object, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
+}
+
+// 9.3.15 Temporal.PlainYearMonth.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.since
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = TRY(typed_this_object(global_object));
+
+    // 3. Set other to ? ToTemporalYearMonth(other).
+    auto* other = TRY(to_temporal_year_month(global_object, vm.argument(0)));
+
+    // 4. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month->calendar();
+
+    // 5. If ? CalendarEquals(calendar, other.[[Calendar]]) is false, throw a RangeError exception.
+    if (!TRY(calendar_equals(global_object, calendar, other->calendar())))
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
+
+    // 6. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 7. Let disallowedUnits be « "week", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
+    auto disallowed_units = Vector<StringView> { "week"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
+
+    // 8. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "month").
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "month"sv));
+
+    // 9. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", "year").
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "year"));
+
+    // 10. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 11. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
+
+    // 12. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+    rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+
+    // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
+
+    // 14. Let fieldNames be ? CalendarFields(calendar, « "monthCode", "year" »).
+    auto field_names = TRY(calendar_fields(global_object, calendar, { "monthCode"sv, "year"sv }));
+
+    // 15. Let otherFields be ? PrepareTemporalFields(other, fieldNames, «»).
+    auto* other_fields = TRY(prepare_temporal_fields(global_object, *other, field_names, {}));
+
+    // 16. Perform ! CreateDataPropertyOrThrow(otherFields, "day", 1𝔽).
+    MUST(other_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 17. Let otherDate be ? DateFromFields(calendar, otherFields).
+    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
+    auto* other_date = TRY(date_from_fields(global_object, calendar, *other_fields, *options));
+
+    // 18. Let thisFields be ? PrepareTemporalFields(yearMonth, fieldNames, «»).
+    auto* this_fields = TRY(prepare_temporal_fields(global_object, *year_month, field_names, {}));
+
+    // 19. Perform ! CreateDataPropertyOrThrow(thisFields, "day", 1𝔽).
+    MUST(this_fields->create_data_property_or_throw(vm.names.day, Value(1)));
+
+    // 20. Let thisDate be ? DateFromFields(calendar, thisFields).
+    // FIXME: Spec doesn't pass required options, see https://github.com/tc39/proposal-temporal/issues/1685.
+    auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields, *options));
+
+    // 21. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
+
+    // 22. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
+    auto* result = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));
+
+    // 23. If smallestUnit is "month" and roundingIncrement = 1, then
+    if (smallest_unit == "month"sv && rounding_increment == 1) {
+        // a. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+        return TRY(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
+    }
+
+    // 24. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
+    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
+
+    // 25. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
+    return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 // 9.3.16 Temporal.PlainYearMonth.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.equals
