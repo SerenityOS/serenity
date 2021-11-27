@@ -31,7 +31,7 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(String const& executable_path, Vector<String> const& arguments, Vector<String> const& environment);
+    Emulator(String const& executable_path, Vector<StringView> const& arguments, Vector<String> const& environment);
 
     void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream, NonnullOwnPtrVector<String>* profiler_strings, Vector<int>* profiler_string_id_map)
     {
@@ -113,7 +113,7 @@ public:
 
 private:
     const String m_executable_path;
-    const Vector<String> m_arguments;
+    const Vector<StringView> m_arguments;
     const Vector<String> m_environment;
 
     SoftMMU m_mmu;
