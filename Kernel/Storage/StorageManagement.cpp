@@ -128,6 +128,21 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
         for (auto& storage_device : m_storage_devices) {
             if (storage_device.early_storage_name() == storage_name) {
                 m_boot_block_device = storage_device;
+                break;
+            }
+            auto start_storage_name = storage_name.substring_view(0, min(storage_device.early_storage_name().length(), storage_name.length()));
+
+            if (storage_device.early_storage_name().starts_with(start_storage_name)) {
+                StringView partition_sign = storage_name.substring_view(start_storage_name.length());
+                auto possible_partition_number = partition_sign.to_uint<size_t>();
+                if (!possible_partition_number.has_value())
+                    break;
+                if (possible_partition_number.value() == 0)
+                    break;
+                if (storage_device.partitions().size() < possible_partition_number.value())
+                    break;
+                m_boot_block_device = storage_device.partitions()[possible_partition_number.value() - 1];
+                break;
             }
         }
     }
