@@ -7,16 +7,13 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <time.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio settime", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio settime", nullptr));
 
     bool print_unix_date = false;
     bool print_iso_8601 = false;
@@ -30,7 +27,7 @@ int main(int argc, char** argv)
     args_parser.add_option(print_iso_8601, "Print date in ISO 8601 format", "iso-8601", 'i');
     args_parser.add_option(print_rfc_3339, "Print date in RFC 3339 format", "rfc-3339", 'r');
     args_parser.add_option(print_rfc_5322, "Print date in RFC 5322 format", "rfc-5322", 'R');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (set_date != nullptr) {
         auto number = String(set_date).to_uint();
@@ -41,10 +38,7 @@ int main(int argc, char** argv)
         }
 
         timespec ts = { number.value(), 0 };
-        if (clock_settime(CLOCK_REALTIME, &ts) < 0) {
-            perror("clock_settime");
-            return 1;
-        }
+        TRY(Core::System::clock_settime(CLOCK_REALTIME, &ts));
 
         return 0;
     }
