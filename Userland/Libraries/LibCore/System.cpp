@@ -360,4 +360,16 @@ ErrorOr<struct group> getgrnam(StringView name)
         return Error::from_string_literal("getgrnam: Unknown username"sv);
 }
 
+ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
+{
+#ifdef __serenity__
+    int rc = syscall(SC_clock_settime, clock_id, ts);
+    HANDLE_SYSCALL_RETURN_VALUE("clocksettime"sv, rc, {});
+#else
+    if (::clock_settime(clock_id, ts) < 0)
+        return Error::from_syscall("clocksettime"sv, -errno);
+    return {};
+#endif
+}
+
 }
