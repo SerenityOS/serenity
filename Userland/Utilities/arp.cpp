@@ -25,7 +25,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty", nullptr));
+    TRY(Core::System::pledge("stdio rpath tty"));
     TRY(Core::System::unveil("/proc/net/arp", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

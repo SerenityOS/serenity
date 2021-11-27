@@ -21,7 +21,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath"));
 
     auto app = GUI::Application::construct(arguments);
     Config::pledge_domains("PixelPaint");

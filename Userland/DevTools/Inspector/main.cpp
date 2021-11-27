@@ -36,7 +36,7 @@ using namespace Inspector;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/tmp", "rwc"));

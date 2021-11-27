@@ -12,7 +12,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio accept rpath wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio accept rpath wpath cpath"));
     TRY(Core::System::unveil(Core::StandardPaths::config_directory(), "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

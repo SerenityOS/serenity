@@ -212,7 +212,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("AudioApplet");
@@ -231,7 +231,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // This positioning code depends on the window actually existing.
     static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
     return app->exec();
 }

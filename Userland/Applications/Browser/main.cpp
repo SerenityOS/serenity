@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath"));
 
     const char* specified_url = nullptr;
 

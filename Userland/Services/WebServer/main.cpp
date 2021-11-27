@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio accept rpath inet unix", nullptr));
+    TRY(Core::System::pledge("stdio accept rpath inet unix"));
 
     WebServer::Configuration configuration(real_root_path);
 
@@ -89,6 +89,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(real_root_path.characters(), "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Core::System::pledge("stdio accept rpath", nullptr));
+    TRY(Core::System::pledge("stdio accept rpath"));
     return loop.exec();
 }

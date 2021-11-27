@@ -14,11 +14,11 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio unix rpath recvfd", nullptr));
+    TRY(Core::System::pledge("stdio unix rpath recvfd"));
 
     auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
     IPC::new_client_connection<LanguageServers::Shell::ClientConnection>(move(socket), 1);
-    TRY(Core::System::pledge("stdio rpath recvfd", nullptr));
+    TRY(Core::System::pledge("stdio rpath recvfd"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
 
     return event_loop.exec();

@@ -150,7 +150,7 @@ void Starfield::draw()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     unsigned star_count = 1000;
     unsigned refresh_rate = 16;
@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
     auto window = TRY(GUI::Window::try_create());

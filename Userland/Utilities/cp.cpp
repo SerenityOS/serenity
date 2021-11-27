@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown"));
 
     bool link = false;
     bool preserve = false;
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (preserve) {
         umask(0);
     } else {
-        TRY(Core::System::pledge("stdio rpath wpath cpath fattr", nullptr));
+        TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
     }
 
     bool destination_is_existing_dir = Core::File::is_directory(destination);

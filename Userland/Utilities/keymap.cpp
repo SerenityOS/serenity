@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio setkeymap getkeymap rpath wpath cpath", nullptr));
+    TRY(Core::System::pledge("stdio setkeymap getkeymap rpath wpath cpath"));
     TRY(Core::System::unveil("/res/keymaps", "r"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "rwc"));
 

@@ -11,7 +11,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio", nullptr));
+    TRY(Core::System::pledge("stdio"));
 
     StringView path;
     StringView suffix;

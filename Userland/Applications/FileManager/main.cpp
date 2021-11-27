@@ -64,7 +64,7 @@ static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, Director
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction"));
 
     struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr));
+    TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix"));
 
     Config::pledge_domains({ "FileManager", "WindowManager" });
     Config::monitor_domain("FileManager");

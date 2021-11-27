@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
 
     Vector<StringView> paths;
 
@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::pledge("stdio", nullptr));
+    TRY(Core::System::pledge("stdio"));
 
     Array<u8, 32768> buffer;
     for (auto& fd : fds) {
