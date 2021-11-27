@@ -4,6 +4,7 @@ SET(SOURCES
     ${UNICODE_DATA_SOURCES}
     CharacterTypes.cpp
     CurrencyCode.cpp
+    DateTimeFormat.cpp
     Locale.cpp
     NumberFormat.cpp
 )
