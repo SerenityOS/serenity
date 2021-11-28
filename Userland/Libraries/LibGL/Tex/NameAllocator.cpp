@@ -22,12 +22,9 @@ void TextureNameAllocator::allocate(GLsizei count, GLuint* textures)
     }
 }
 
-void TextureNameAllocator::free(GLsizei count, const GLuint* textures)
+void TextureNameAllocator::free(GLuint texture)
 {
-    size_t tex_array_index = 0;
-
-    while (count-- > 0)
-        m_free_texture_names.push(textures[tex_array_index++]);
+    m_free_texture_names.push(texture);
 }
 
 }
