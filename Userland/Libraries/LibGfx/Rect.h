@@ -736,7 +736,7 @@ struct Formatter<Gfx::Rect<T>> : Formatter<StringView> {
 
 namespace IPC {
 
-bool decode(Decoder&, Gfx::IntRect&);
 bool encode(Encoder&, const Gfx::IntRect&);
+ErrorOr<void> decode(Decoder&, Gfx::IntRect&);
 
 }

@@ -74,6 +74,6 @@ private:
 namespace IPC {
 
 bool encode(Encoder&, const Core::AnonymousBuffer&);
-bool decode(Decoder&, Core::AnonymousBuffer&);
+ErrorOr<void> decode(Decoder&, Core::AnonymousBuffer&);
 
 }

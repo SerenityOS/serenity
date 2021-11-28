@@ -383,22 +383,18 @@ bool encode(Encoder& encoder, const WindowServer::ScreenLayout::Screen& screen)
     return true;
 }
 
-bool decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& screen)
+ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& screen)
 {
     String device;
-    if (!decoder.decode(device))
-        return false;
+    TRY(decoder.decode(device));
     Gfx::IntPoint location;
-    if (!decoder.decode(location))
-        return false;
+    TRY(decoder.decode(location));
     Gfx::IntSize resolution;
-    if (!decoder.decode(resolution))
-        return false;
+    TRY(decoder.decode(resolution));
     int scale_factor = 0;
-    if (!decoder.decode(scale_factor))
-        return false;
+    TRY(decoder.decode(scale_factor));
     screen = { device, location, resolution, scale_factor };
-    return true;
+    return {};
 }
 
 bool encode(Encoder& encoder, const WindowServer::ScreenLayout& screen_layout)
@@ -407,16 +403,14 @@ bool encode(Encoder& encoder, const WindowServer::ScreenLayout& screen_layout)
     return true;
 }
 
-bool decode(Decoder& decoder, WindowServer::ScreenLayout& screen_layout)
+ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout& screen_layout)
 {
     Vector<WindowServer::ScreenLayout::Screen> screens;
-    if (!decoder.decode(screens))
-        return false;
+    TRY(decoder.decode(screens));
     unsigned main_screen_index = 0;
-    if (!decoder.decode(main_screen_index))
-        return false;
+    TRY(decoder.decode(main_screen_index));
     screen_layout = { move(screens), main_screen_index };
-    return true;
+    return {};
 }
 
 }

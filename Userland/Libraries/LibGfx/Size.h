@@ -189,6 +189,6 @@ struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
 namespace IPC {
 
 bool encode(Encoder&, Gfx::IntSize const&);
-bool decode(Decoder&, Gfx::IntSize&);
+ErrorOr<void> decode(Decoder&, Gfx::IntSize&);
 
 }

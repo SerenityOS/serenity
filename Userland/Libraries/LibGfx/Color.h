@@ -486,6 +486,6 @@ struct Formatter<Gfx::Color> : public Formatter<StringView> {
 namespace IPC {
 
 bool encode(Encoder&, Gfx::Color const&);
-bool decode(Decoder&, Gfx::Color&);
+ErrorOr<void> decode(Decoder&, Gfx::Color&);
 
 }
