@@ -311,6 +311,13 @@ if (BUILD_LAGOM)
         LIBS m LagomCompress LagomTextCodec LagomIPC
     )
 
+    # GL
+    file(GLOB LIBGL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/*.cpp")
+    file(GLOB LIBGL_TEX_SCOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
+    lagom_lib(GL gl
+        SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SCOURCES}
+        LIBS m LagomGfx)
+
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML*.cpp")
     list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLAutocompleteProvider.cpp")
