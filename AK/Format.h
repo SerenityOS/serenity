@@ -18,6 +18,7 @@
 
 #ifndef KERNEL
 #    include <stdio.h>
+#    include <string.h>
 #endif
 
 namespace AK {
@@ -618,9 +619,21 @@ template<>
 struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
+#ifndef KERNEL
+        if (error.is_syscall())
+            return Formatter<FormatString>::format(builder, "{}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
+        else if (error.is_errno())
+            return Formatter<FormatString>::format(builder, "{} (errno={})", strerror(error.code()), error.code());
+        else
+            return Formatter<FormatString>::format(builder, "{}", error.string_literal());
+#else
+        if (error.is_syscall())
+            return Formatter<FormatString>::format(builder, "Error({}: (errno={}))", error.string_literal(), error.code());
         if (error.is_errno())
             return Formatter<FormatString>::format(builder, "Error(errno={})", error.code());
-        return Formatter<FormatString>::format(builder, "Error({})", error.string_literal());
+        else
+            return Formatter<FormatString>::format(builder, "Error({})", error.string_literal());
+#endif
     }
 };
 
