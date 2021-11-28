@@ -64,7 +64,7 @@ Painter::Painter(Gfx::Bitmap& bitmap)
     VERIFY(bitmap.physical_width() % scale == 0);
     VERIFY(bitmap.physical_height() % scale == 0);
     m_state_stack.append(State());
-    state().font = &FontDatabase::default_font();
+    state().font = nullptr;
     state().clip_rect = { { 0, 0 }, bitmap.size() };
     state().scale = scale;
     m_clip_origin = state().clip_rect;
