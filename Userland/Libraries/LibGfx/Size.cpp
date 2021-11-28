@@ -33,16 +33,14 @@ bool encode(Encoder& encoder, Gfx::IntSize const& size)
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::IntSize& size)
+ErrorOr<void> decode(Decoder& decoder, Gfx::IntSize& size)
 {
     int width = 0;
     int height = 0;
-    if (!decoder.decode(width))
-        return false;
-    if (!decoder.decode(height))
-        return false;
+    TRY(decoder.decode(width));
+    TRY(decoder.decode(height));
     size = { width, height };
-    return true;
+    return {};
 }
 
 }

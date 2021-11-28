@@ -8,6 +8,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/System.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
@@ -18,196 +19,175 @@
 
 namespace IPC {
 
-bool Decoder::decode(bool& value)
+ErrorOr<void> Decoder::decode(bool& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(u8& value)
+ErrorOr<void> Decoder::decode(u8& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(u16& value)
+ErrorOr<void> Decoder::decode(u16& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(u32& value)
+ErrorOr<void> Decoder::decode(u32& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(u64& value)
+ErrorOr<void> Decoder::decode(u64& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(i8& value)
+ErrorOr<void> Decoder::decode(i8& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(i16& value)
+ErrorOr<void> Decoder::decode(i16& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(i32& value)
+ErrorOr<void> Decoder::decode(i32& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(i64& value)
+ErrorOr<void> Decoder::decode(i64& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(float& value)
+ErrorOr<void> Decoder::decode(float& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(double& value)
+ErrorOr<void> Decoder::decode(double& value)
 {
     m_stream >> value;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(String& value)
+ErrorOr<void> Decoder::decode(String& value)
 {
-    i32 length = 0;
-    m_stream >> length;
-    if (m_stream.handle_any_error())
-        return false;
+    i32 length;
+    TRY(decode(length));
+
     if (length < 0) {
         value = {};
-        return true;
+        return {};
     }
     if (length == 0) {
         value = String::empty();
-        return true;
+        return {};
     }
     char* text_buffer = nullptr;
     auto text_impl = StringImpl::create_uninitialized(static_cast<size_t>(length), text_buffer);
     m_stream >> Bytes { text_buffer, static_cast<size_t>(length) };
     value = *text_impl;
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(ByteBuffer& value)
+ErrorOr<void> Decoder::decode(ByteBuffer& value)
 {
-    i32 length = 0;
-    m_stream >> length;
-    if (m_stream.handle_any_error())
-        return false;
+    i32 length;
+    TRY(decode(length));
+
     if (length < 0) {
         value = {};
-        return true;
+        return {};
     }
     if (length == 0) {
         value = {};
-        return true;
+        return {};
     }
+
     if (auto buffer_result = ByteBuffer::create_uninitialized(length); buffer_result.has_value())
         value = buffer_result.release_value();
     else
-        return false;
+        return Error::from_errno(ENOMEM);
 
     m_stream >> value.bytes();
-    return !m_stream.handle_any_error();
+    return m_stream.try_handle_any_error();
 }
 
-bool Decoder::decode(URL& value)
+ErrorOr<void> Decoder::decode(URL& value)
 {
     String string;
-    if (!decode(string))
-        return false;
+    TRY(decode(string));
     value = URL(string);
-    return true;
+    return {};
 }
 
-bool Decoder::decode(Dictionary& dictionary)
+ErrorOr<void> Decoder::decode(Dictionary& dictionary)
 {
-    u64 size = 0;
-    m_stream >> size;
-    if (m_stream.handle_any_error())
-        return false;
-    if (size >= (size_t)NumericLimits<i32>::max()) {
+    u64 size;
+    TRY(decode(size));
+    if (size >= (size_t)NumericLimits<i32>::max())
         VERIFY_NOT_REACHED();
-    }
 
     for (size_t i = 0; i < size; ++i) {
         String key;
-        if (!decode(key))
-            return false;
+        TRY(decode(key));
         String value;
-        if (!decode(value))
-            return false;
+        TRY(decode(value));
         dictionary.add(move(key), move(value));
     }
 
-    return true;
+    return {};
 }
 
-bool Decoder::decode([[maybe_unused]] File& file)
+ErrorOr<void> Decoder::decode([[maybe_unused]] File& file)
 {
 #ifdef __serenity__
-    int fd = recvfd(m_sockfd, O_CLOEXEC);
-    if (fd < 0) {
-        dbgln("recvfd: {}", strerror(errno));
-        return false;
-    }
+    int fd = TRY(Core::System::recvfd(m_sockfd, O_CLOEXEC));
     file = File(fd, File::ConstructWithReceivedFileDescriptor);
-    return true;
+    return {};
 #else
-    [[maybe_unused]] auto fd = m_sockfd;
-    warnln("fd passing is not supported on this platform, sorry :(");
-    return false;
+    return Error::from_string_literal("File descriptor passing not supported on this platform");
 #endif
 }
 
-bool decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
+ErrorOr<void> decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
 {
-    bool valid = false;
-    if (!decoder.decode(valid))
-        return false;
+    bool valid;
+    TRY(decoder.decode(valid));
     if (!valid) {
         buffer = {};
-        return true;
+        return {};
     }
     u32 size;
-    if (!decoder.decode(size))
-        return false;
+    TRY(decoder.decode(size));
     IPC::File anon_file;
-    if (!decoder.decode(anon_file))
-        return false;
+    TRY(decoder.decode(anon_file));
 
-    auto new_buffer_or_error = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
-    if (new_buffer_or_error.is_error())
-        return false;
-    buffer = new_buffer_or_error.release_value();
-    return buffer.is_valid();
+    buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size));
+    return {};
 }
 
-bool decode(Decoder& decoder, Core::DateTime& datetime)
+ErrorOr<void> decode(Decoder& decoder, Core::DateTime& datetime)
 {
-    i64 timestamp = -1;
-    if (!decoder.decode(timestamp))
-        return false;
-
+    i64 timestamp;
+    TRY(decoder.decode(timestamp));
     datetime = Core::DateTime::from_timestamp(static_cast<time_t>(timestamp));
-    return true;
+    return {};
 }
 
 }

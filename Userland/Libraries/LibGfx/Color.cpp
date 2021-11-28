@@ -13,7 +13,6 @@
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -343,13 +342,12 @@ bool IPC::encode(IPC::Encoder& encoder, Color const& color)
     return true;
 }
 
-bool IPC::decode(IPC::Decoder& decoder, Color& color)
+ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Color& color)
 {
-    u32 rgba = 0;
-    if (!decoder.decode(rgba))
-        return false;
+    u32 rgba;
+    TRY(decoder.decode(rgba));
     color = Color::from_rgba(rgba);
-    return true;
+    return {};
 }
 
 ErrorOr<void> AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, Gfx::Color const& value)

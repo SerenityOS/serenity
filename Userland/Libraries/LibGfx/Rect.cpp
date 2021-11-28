@@ -328,16 +328,14 @@ bool encode(Encoder& encoder, Gfx::IntRect const& rect)
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::IntRect& rect)
+ErrorOr<void> decode(Decoder& decoder, Gfx::IntRect& rect)
 {
     Gfx::IntPoint point;
     Gfx::IntSize size;
-    if (!decoder.decode(point))
-        return false;
-    if (!decoder.decode(size))
-        return false;
+    TRY(decoder.decode(point));
+    TRY(decoder.decode(size));
     rect = { point, size };
-    return true;
+    return {};
 }
 
 }
