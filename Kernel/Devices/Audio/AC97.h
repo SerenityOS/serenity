@@ -145,7 +145,7 @@ private:
         StringView m_name;
     };
 
-    AC97(PCI::DeviceIdentifier);
+    explicit AC97(PCI::DeviceIdentifier const&);
 
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
