@@ -30,6 +30,9 @@ public:
     const GUI::Clipboard::DataAndType& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
 
+    // ^GUI::Model
+    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+
     // ^Config::Listener
     virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
 
@@ -41,7 +44,6 @@ private:
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
     virtual String column_name(int) const override;
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
-    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
     // ^GUI::Clipboard::ClipboardClient
     virtual void clipboard_content_did_change(const String&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
