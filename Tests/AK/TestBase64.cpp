@@ -15,7 +15,7 @@ TEST_CASE(test_decode)
     auto decode_equal = [&](const char* input, const char* expected) {
         auto decoded_option = decode_base64(StringView(input));
         EXPECT(decoded_option.has_value());
-        auto decoded = decoded_option.value();
+        auto decoded = decoded_option.release_value();
         EXPECT(String::copy(decoded) == String(expected));
         EXPECT(StringView(expected).length() <= calculate_base64_decoded_length(StringView(input).bytes()));
     };
