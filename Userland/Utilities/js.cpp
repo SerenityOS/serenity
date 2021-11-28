@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/Intl/Locale.h>
@@ -708,6 +709,52 @@ static void print_intl_number_format(JS::Object const& object, HashTable<JS::Obj
     print_value(js_string(object.vm(), number_format.sign_display_string()), seen_objects);
 }
 
+static void print_intl_date_time_format(JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& date_time_format = static_cast<JS::Intl::DateTimeFormat&>(object);
+    print_type("Intl.DateTimeFormat");
+    js_out("\n  locale: ");
+    print_value(js_string(object.vm(), date_time_format.locale()), seen_objects);
+    js_out("\n  pattern: ");
+    print_value(js_string(object.vm(), date_time_format.pattern()), seen_objects);
+    js_out("\n  calendar: ");
+    print_value(js_string(object.vm(), date_time_format.calendar()), seen_objects);
+    js_out("\n  numberingSystem: ");
+    print_value(js_string(object.vm(), date_time_format.numbering_system()), seen_objects);
+    if (date_time_format.has_hour_cycle()) {
+        js_out("\n  hourCycle: ");
+        print_value(js_string(object.vm(), date_time_format.hour_cycle_string()), seen_objects);
+    }
+    js_out("\n  timeZone: ");
+    print_value(js_string(object.vm(), date_time_format.time_zone()), seen_objects);
+    if (date_time_format.has_date_style()) {
+        js_out("\n  dateStyle: ");
+        print_value(js_string(object.vm(), date_time_format.date_style_string()), seen_objects);
+    }
+    if (date_time_format.has_time_style()) {
+        js_out("\n  timeStyle: ");
+        print_value(js_string(object.vm(), date_time_format.time_style_string()), seen_objects);
+    }
+
+    JS::Intl::for_each_calendar_field(date_time_format.global_object(), date_time_format, [&](auto& option, auto const& property, auto const&) -> JS::ThrowCompletionOr<void> {
+        using ValueType = typename RemoveReference<decltype(option)>::ValueType;
+
+        if (!option.has_value())
+            return {};
+
+        js_out("\n  {}: ", property);
+
+        if constexpr (IsIntegral<ValueType>) {
+            print_value(JS::Value(*option), seen_objects);
+        } else {
+            auto name = Unicode::calendar_pattern_style_to_string(*option);
+            print_value(js_string(object.vm(), name), seen_objects);
+        }
+
+        return {};
+    });
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -802,6 +849,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_intl_list_format(object, seen_objects);
         if (is<JS::Intl::NumberFormat>(object))
             return print_intl_number_format(object, seen_objects);
+        if (is<JS::Intl::DateTimeFormat>(object))
+            return print_intl_date_time_format(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
