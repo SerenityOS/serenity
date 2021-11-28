@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-browser");
 
-    auto window = TRY(GUI::SettingsWindow::try_create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
+    auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
     TRY(window->add_tab<BrowserSettingsWidget>("Browser"));
 
