@@ -17,11 +17,11 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath cpath wpath recvfd sendfd unix proc exec"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc exec"));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains("KeyboardSettings");
 
-    TRY(Core::System::pledge("stdio rpath cpath wpath recvfd sendfd proc exec"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/proc/keymap", "r"));
