@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -48,6 +49,21 @@ ErrorOr<Array<int, 2>> pipe2(int flags)
     if (::pipe2(fds.data(), flags) < 0)
         return Error::from_syscall("pipe2"sv, -errno);
     return fds;
+}
+
+ErrorOr<void> sendfd(int sockfd, int fd)
+{
+    if (::sendfd(sockfd, fd) < 0)
+        return Error::from_syscall("sendfd"sv, -errno);
+    return {};
+}
+
+ErrorOr<int> recvfd(int sockfd, int options)
+{
+    auto fd = ::recvfd(sockfd, options);
+    if (fd < 0)
+        return Error::from_syscall("recvfd"sv, -errno);
+    return fd;
 }
 #endif
 
