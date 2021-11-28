@@ -673,10 +673,12 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
     RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_name_allocator.free(n, textures);
-
     for (auto i = 0; i < n; i++) {
         GLuint name = textures[i];
+        if (name == 0)
+            continue;
+
+        m_name_allocator.free(name);
 
         auto texture_object = m_allocated_textures.find(name);
         if (texture_object == m_allocated_textures.end() || texture_object->value.is_null())

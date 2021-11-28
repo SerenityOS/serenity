@@ -16,7 +16,7 @@ public:
     TextureNameAllocator() = default;
 
     void allocate(GLsizei count, GLuint* textures);
-    void free(GLsizei count, const GLuint* textures);
+    void free(GLuint texture);
 
 private:
     Stack<GLuint, 512> m_free_texture_names;
