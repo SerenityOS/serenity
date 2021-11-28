@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
@@ -108,7 +109,12 @@ public:
     };
     void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
 
-    Font const& font() const { return *state().font; }
+    Font const& font() const
+    {
+        if (!state().font)
+            return FontDatabase::default_font();
+        return *state().font;
+    }
     void set_font(Font const& font) { state().font = &font; }
 
     enum class DrawOp {
