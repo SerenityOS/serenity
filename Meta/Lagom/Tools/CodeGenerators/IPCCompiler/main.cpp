@@ -553,7 +553,8 @@ public:
         auto result = m_connection.template send_sync_but_allow_failure<Messages::@endpoint.name@::@message.pascal_name@>()~~~");
                 } else {
                     message_generator.append(R"~~~(
-        m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
+        // FIXME: Handle post_message failures.
+        (void) m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
                 }
 
                 for (size_t i = 0; i < parameters.size(); ++i) {
