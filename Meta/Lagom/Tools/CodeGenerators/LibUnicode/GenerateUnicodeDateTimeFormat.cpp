@@ -49,6 +49,9 @@ struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
     HashMap<String, Locale> locales;
 
+    HashMap<String, Vector<Unicode::HourCycle>> hour_cycles;
+    Vector<String> hour_cycle_regions;
+
     Vector<String> calendars;
     Vector<Alias> calendar_aliases {
         // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
@@ -56,6 +59,50 @@ struct UnicodeLocaleData {
     };
 
     size_t max_available_formats_size { 0 };
+};
+
+static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& locale_data)
+{
+    // https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
+    LexicalPath time_data_path(move(core_path));
+    time_data_path = time_data_path.append("supplemental"sv);
+    time_data_path = time_data_path.append("timeData.json"sv);
+
+    auto time_data_file = TRY(Core::File::open(time_data_path.string(), Core::OpenMode::ReadOnly));
+    auto time_data = TRY(JsonValue::from_string(time_data_file->read_all()));
+    auto const& supplemental_object = time_data.as_object().get("supplemental"sv);
+    auto const& time_data_object = supplemental_object.as_object().get("timeData"sv);
+
+    auto parse_hour_cycle = [](StringView hour_cycle) -> Optional<Unicode::HourCycle> {
+        if (hour_cycle == "h"sv)
+            return Unicode::HourCycle::H12;
+        if (hour_cycle == "H"sv)
+            return Unicode::HourCycle::H23;
+        if (hour_cycle == "K"sv)
+            return Unicode::HourCycle::H11;
+        if (hour_cycle == "k"sv)
+            return Unicode::HourCycle::H24;
+        return {};
+    };
+
+    time_data_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        auto allowed_hour_cycles_string = value.as_object().get("_allowed"sv).as_string();
+        auto allowed_hour_cycles = allowed_hour_cycles_string.split_view(' ');
+
+        Vector<Unicode::HourCycle> hour_cycles;
+
+        for (auto allowed_hour_cycle : allowed_hour_cycles) {
+            if (auto hour_cycle = parse_hour_cycle(allowed_hour_cycle); hour_cycle.has_value())
+                hour_cycles.append(*hour_cycle);
+        }
+
+        locale_data.hour_cycles.set(key, move(hour_cycles));
+
+        if (!locale_data.hour_cycle_regions.contains_slow(key))
+            locale_data.hour_cycle_regions.append(key);
+    });
+
+    return {};
 };
 
 static void parse_date_time_pattern(CalendarPattern& format, String pattern, UnicodeLocaleData& locale_data)
@@ -131,8 +178,9 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String dates_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String core_path, String dates_path, UnicodeLocaleData& locale_data)
 {
+    TRY(parse_hour_cycles(move(core_path), locale_data));
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
@@ -164,9 +212,15 @@ static ErrorOr<void> parse_all_locales(String dates_path, UnicodeLocaleData& loc
     return {};
 }
 
-static String format_identifier(StringView, StringView identifier)
+static String format_identifier(StringView owner, String identifier)
 {
-    return identifier.to_titlecase_string();
+    identifier = identifier.replace("-"sv, "_"sv, true);
+
+    if (all_of(identifier, is_ascii_digit))
+        return String::formatted("{}_{}", owner[0], identifier);
+    if (is_ascii_lower_alpha(identifier[0]))
+        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+    return identifier;
 }
 
 static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
@@ -185,11 +239,16 @@ namespace Unicode {
 )~~~");
 
     generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
+    generate_enum(generator, format_identifier, "HourCycleRegion"sv, {}, locale_data.hour_cycle_regions);
 
     generator.append(R"~~~(
 namespace Detail {
 
 Optional<Calendar> calendar_from_string(StringView calendar);
+
+Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
+Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region);
+
 Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar);
 Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
 Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar);
@@ -313,9 +372,25 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
 )~~~");
     };
 
-    generate_mapping(generator, locale_data.locales, "CalendarData"sv, "s_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
+    auto append_hour_cycles = [&](String name, auto const& hour_cycles) {
+        generator.set("name", name);
+        generator.set("size", String::number(hour_cycles.size()));
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
+        generator.append(R"~~~(
+static constexpr Array<u8, @size@> @name@ { { )~~~");
+
+        for (auto hour_cycle : hour_cycles) {
+            generator.set("hour_cycle", String::number(static_cast<u8>(hour_cycle)));
+            generator.append("@hour_cycle@, ");
+        }
+
+        generator.append("} };");
+    };
+
+    generate_mapping(generator, locale_data.locales, "CalendarData"sv, "s_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
+    generate_mapping(generator, locale_data.hour_cycles, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
+
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
@@ -328,8 +403,27 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
     };
 
     append_from_string("Calendar"sv, "calendar"sv, locale_data.calendars, locale_data.calendar_aliases);
+    append_from_string("HourCycleRegion"sv, "hour_cycle_region"sv, locale_data.hour_cycle_regions);
 
     generator.append(R"~~~(
+Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region)
+{
+    auto region_value = hour_cycle_region_from_string(region);
+    if (!region_value.has_value())
+        return {};
+
+    auto region_index = to_underlying(*region_value);
+    auto const& regional_hour_cycles = s_hour_cycles.at(region_index);
+
+    Vector<Unicode::HourCycle> hour_cycles;
+    hour_cycles.ensure_capacity(regional_hour_cycles.size());
+
+    for (auto hour_cycle : regional_hour_cycles)
+        hour_cycles.unchecked_append(static_cast<Unicode::HourCycle>(hour_cycle));
+
+    return hour_cycles;
+}
+
 static CalendarData const* find_calendar_data(StringView locale, StringView calendar)
 {
     auto locale_value = locale_from_string(locale);
@@ -392,11 +486,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView generated_header_path;
     StringView generated_implementation_path;
+    StringView core_path;
     StringView dates_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
+    args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
     args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
     args_parser.parse(arguments);
 
@@ -413,7 +509,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_implementation_file = TRY(open_file(generated_implementation_path));
 
     UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(dates_path, locale_data));
+    TRY(parse_all_locales(core_path, dates_path, locale_data));
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);

@@ -15,6 +15,7 @@ enum class CalendarPatternStyle : u8;
 enum class CompactNumberFormatType : u8;
 enum class Condition : u8;
 enum class GeneralCategory : u8;
+enum class HourCycle : u8;
 enum class Language : u8;
 enum class ListPatternStyle : u8;
 enum class ListPatternType : u8;

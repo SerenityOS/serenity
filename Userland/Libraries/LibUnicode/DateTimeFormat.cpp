@@ -5,12 +5,42 @@
  */
 
 #include <LibUnicode/DateTimeFormat.h>
+#include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeDateTimeFormat.h>
 #endif
 
 namespace Unicode {
+
+HourCycle hour_cycle_from_string(StringView hour_cycle)
+{
+    if (hour_cycle == "h11"sv)
+        return Unicode::HourCycle::H11;
+    else if (hour_cycle == "h12"sv)
+        return Unicode::HourCycle::H12;
+    else if (hour_cycle == "h23"sv)
+        return Unicode::HourCycle::H23;
+    else if (hour_cycle == "h24"sv)
+        return Unicode::HourCycle::H24;
+    VERIFY_NOT_REACHED();
+}
+
+StringView hour_cycle_to_string(HourCycle hour_cycle)
+{
+    switch (hour_cycle) {
+    case HourCycle::H11:
+        return "h11"sv;
+    case HourCycle::H12:
+        return "h12"sv;
+    case HourCycle::H23:
+        return "h23"sv;
+    case HourCycle::H24:
+        return "h24"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
 
 CalendarPatternStyle calendar_pattern_style_from_string(StringView style)
 {
@@ -43,6 +73,44 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+// https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+Vector<Unicode::HourCycle> get_regional_hour_cycles([[maybe_unused]] StringView locale)
+{
+#if ENABLE_UNICODE_DATA
+    if (auto hour_cycles = Detail::get_regional_hour_cycles(locale); !hour_cycles.is_empty())
+        return hour_cycles;
+
+    auto return_default_hour_cycles = []() {
+        auto hour_cycles = Detail::get_regional_hour_cycles("001"sv);
+        VERIFY(!hour_cycles.is_empty());
+        return hour_cycles;
+    };
+
+    auto language = parse_unicode_language_id(locale);
+    if (!language.has_value())
+        return return_default_hour_cycles();
+
+    if (!language->region.has_value())
+        language = add_likely_subtags(*language);
+    if (!language.has_value() || !language->region.has_value())
+        return return_default_hour_cycles();
+
+    if (auto hour_cycles = Detail::get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
+        return hour_cycles;
+
+    return return_default_hour_cycles();
+#else
+    return {};
+#endif
+}
+
+Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
+{
+    if (auto hour_cycles = get_regional_hour_cycles(locale); !hour_cycles.is_empty())
+        return hour_cycles.first();
+    return {};
 }
 
 Optional<CalendarFormat> get_calendar_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarFormatType type)
