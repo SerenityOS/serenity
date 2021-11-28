@@ -41,7 +41,7 @@ void ConnectionBase::post_message(MessageBuffer buffer)
 
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {
-        auto rc = sendfd(m_socket->fd(), fd->value());
+        auto rc = sendfd(m_socket->fd(), fd.value());
         if (rc < 0) {
             perror("sendfd");
             shutdown();
