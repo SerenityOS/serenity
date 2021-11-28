@@ -1421,7 +1421,6 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
             break;
         default:
             VERIFY_NOT_REACHED();
-            break;
         }
 
         m_allocated_textures.set(texture, texture_object);
