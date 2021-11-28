@@ -5,42 +5,25 @@
  */
 
 #include "SpiceAgent.h"
-#include <AK/Format.h>
 #include <LibC/fcntl.h>
-#include <LibC/unistd.h>
+#include <LibCore/System.h>
 #include <LibIPC/ServerConnection.h>
+#include <LibMain/Main.h>
 
-static constexpr auto SPICE_DEVICE = "/dev/hvc0p1";
+static constexpr auto SPICE_DEVICE = "/dev/hvc0p1"sv;
 
-int main()
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop loop;
 
-    if (pledge("unix rpath wpath stdio sendfd recvfd", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd", nullptr));
+    TRY(Core::System::unveil(SPICE_DEVICE, "rw"));
+    TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil(SPICE_DEVICE, "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil("/tmp/portal/clipboard", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    int serial_port_fd = TRY(Core::System::open(SPICE_DEVICE, O_RDWR));
 
-    int serial_port_fd = open(SPICE_DEVICE, O_RDWR);
-    if (serial_port_fd < 0) {
-        dbgln("Couldn't open spice serial port!");
-        return 1;
-    }
-
-    auto conn = ClipboardServerConnection::construct();
+    auto conn = TRY(ClipboardServerConnection::try_create());
     auto agent = SpiceAgent(serial_port_fd, conn);
 
     return loop.exec();
