@@ -42,11 +42,11 @@ Unveiling a directory allows the process to access any files inside the
 directory.
 
 Calling `unveil()` with both `path` and `permissions` set to null locks the
-veil; no further `unveil()` calls are allowed after that. Although `unveil()`
-calls start to take effect the moment they are made, until the veil is locked,
-it remains possible to sometimes circumvent the restrictions set by unveiling
-files and directories contained inside a restricted directory with different
-permissions.
+veil; after that, only `unveil()` calls that reduce permissions on previously
+unveiled paths are permitted. Although `unveil()` calls start to take effect
+the moment they are made, until the veil is locked, it remains possible to
+sometimes circumvent the restrictions set by unveiling files and directories
+contained inside a restricted directory with different permissions.
 
 When a process calls `fork()`, the unveil state is copied to the new process.
 The veil state is reset after the program successfully performs an `execve()`

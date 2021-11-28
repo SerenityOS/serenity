@@ -73,6 +73,11 @@ TEST_CASE(test_failures)
     if (res >= 0)
         FAIL("unveil create permitted after unveil browse only");
 
+    // This one exists only to test reduction later
+    res = unveil("/home/anon/Documents", "bc");
+    if (res < 0)
+        FAIL("unveil browse & create failed");
+
     res = unveil(nullptr, nullptr);
     if (res < 0)
         FAIL("unveil state lock failed");
@@ -84,4 +89,8 @@ TEST_CASE(test_failures)
     res = access("/bin/id", F_OK);
     if (res == 0)
         FAIL("access(..., F_OK) permitted after locked veil without relevant unveil");
+
+    res = unveil("/home/anon/Documents", "b");
+    if (res < 0)
+        FAIL("unveil permission reduction after locked veil failed");
 }

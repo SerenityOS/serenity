@@ -34,9 +34,6 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
         return 0;
     }
 
-    if (m_veil_state == VeilState::Locked)
-        return EPERM;
-
     if (!params.path.characters || !params.permissions.characters)
         return EINVAL;
 
@@ -100,6 +97,8 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
         if (matching_node.was_explicitly_unveiled()) {
             if (new_permissions & ~matching_node.permissions())
                 return EPERM;
+        } else if (m_veil_state == VeilState::Locked) {
+            return EPERM;
         }
 
         // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
@@ -110,9 +109,13 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
             update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
 
         matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
-        m_veil_state = VeilState::Dropped;
+        if (m_veil_state != VeilState::Locked)
+            m_veil_state = VeilState::Dropped;
         return 0;
     }
+
+    if (m_veil_state == VeilState::Locked)
+        return EPERM;
 
     matching_node.insert(
         it,
