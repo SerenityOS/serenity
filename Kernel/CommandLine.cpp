@@ -111,6 +111,16 @@ UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled() const
     return lookup("smp"sv).value_or("off"sv) == "on"sv;
 }
 
+UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
+{
+    auto value = lookup("enable_ioapic"sv).value_or("on"sv);
+    if (value == "on"sv)
+        return true;
+    if (value == "off"sv)
+        return false;
+    PANIC("Unknown enable_ioapic setting: {}", value);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 {
     return lookup("vmmouse"sv).value_or("on"sv) == "on"sv;

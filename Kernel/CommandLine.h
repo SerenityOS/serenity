@@ -59,6 +59,7 @@ public:
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
     [[nodiscard]] bool is_ide_enabled() const;
+    [[nodiscard]] bool is_ioapic_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
     [[nodiscard]] bool is_physical_networking_disabled() const;
     [[nodiscard]] bool is_vmmouse_enabled() const;

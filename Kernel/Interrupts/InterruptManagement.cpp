@@ -41,10 +41,10 @@ UNMAP_AFTER_INIT void InterruptManagement::initialize()
     VERIFY(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
 
-    if (kernel_command_line().is_smp_enabled())
-        InterruptManagement::the().switch_to_ioapic_mode();
-    else
+    if (!kernel_command_line().is_ioapic_enabled() && !kernel_command_line().is_smp_enabled())
         InterruptManagement::the().switch_to_pic_mode();
+    else
+        InterruptManagement::the().switch_to_ioapic_mode();
 }
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)
@@ -220,7 +220,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
             dbgln("Interrupts: Overriding INT {:#x} with GSI {}, for bus {:#x}",
                 interrupt_override_entry->source,
                 global_system_interrupt,
-                flags);
+                interrupt_override_entry->bus);
         }
         madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
