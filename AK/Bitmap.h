@@ -175,8 +175,6 @@ public:
         __builtin_memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
-    static constexpr size_t max_size = 0xffffffff;
-
 private:
     bool m_is_owning { true };
 };
