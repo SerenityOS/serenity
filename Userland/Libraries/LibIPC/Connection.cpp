@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/System.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Stub.h>
 #include <sys/select.h>
@@ -23,28 +24,28 @@ ConnectionBase::~ConnectionBase()
 {
 }
 
-void ConnectionBase::post_message(Message const& message)
+ErrorOr<void> ConnectionBase::post_message(Message const& message)
 {
-    post_message(message.encode());
+    return post_message(message.encode());
 }
 
-void ConnectionBase::post_message(MessageBuffer buffer)
+ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 {
     // NOTE: If this connection is being shut down, but has not yet been destroyed,
     //       the socket will be closed. Don't try to send more messages.
     if (!m_socket->is_open())
-        return;
+        return Error::from_string_literal("Trying to post_message during IPC shutdown"sv);
 
     // Prepend the message size.
     uint32_t message_size = buffer.data.size();
-    buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
+    TRY(buffer.data.try_prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size)));
 
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {
-        auto rc = sendfd(m_socket->fd(), fd.value());
-        if (rc < 0) {
-            perror("sendfd");
+        if (auto result = Core::System::sendfd(m_socket->fd(), fd.value()); result.is_error()) {
+            dbgln("{}", result.error());
             shutdown();
+            return result;
         }
     }
 #else
@@ -58,23 +59,21 @@ void ConnectionBase::post_message(MessageBuffer buffer)
         if (nwritten < 0) {
             switch (errno) {
             case EPIPE:
-                dbgln("{}::post_message: Disconnected from peer", static_cast<Core::Object const&>(*this));
                 shutdown();
-                return;
+                return Error::from_string_literal("IPC::Connection::post_message: Disconnected from peer"sv);
             case EAGAIN:
-                dbgln("{}::post_message: Peer buffer overflowed", static_cast<Core::Object const&>(*this));
                 shutdown();
-                return;
+                return Error::from_string_literal("IPC::Connection::post_message: Peer buffer overflowed"sv);
             default:
-                perror("Connection::post_message write");
                 shutdown();
-                return;
+                return Error::from_syscall("IPC::Connection::post_message write"sv, -errno);
             }
         }
         total_nwritten += nwritten;
     }
 
     m_responsiveness_timer->start();
+    return {};
 }
 
 void ConnectionBase::shutdown()
@@ -88,9 +87,13 @@ void ConnectionBase::handle_messages()
 {
     auto messages = move(m_unprocessed_messages);
     for (auto& message : messages) {
-        if (message.endpoint_magic() == m_local_endpoint_magic)
-            if (auto response = m_local_stub.handle(message))
-                post_message(*response);
+        if (message.endpoint_magic() == m_local_endpoint_magic) {
+            if (auto response = m_local_stub.handle(message)) {
+                if (auto result = post_message(*response); result.is_error()) {
+                    dbgln("IPC::ConnectionBase::handle_messages: {}", result.error());
+                }
+            }
+        }
     }
 }
 
