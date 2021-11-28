@@ -35,8 +35,8 @@ struct Array {
     [[nodiscard]] constexpr T const& front() const { return at(0); }
     [[nodiscard]] constexpr T& front() { return at(0); }
 
-    [[nodiscard]] constexpr T const& back() const { return at(max(1, size()) - 1); }
-    [[nodiscard]] constexpr T& back() { return at(max(1, size()) - 1); }
+    [[nodiscard]] constexpr T const& back() const requires(Size > 0) { return at(Size - 1); }
+    [[nodiscard]] constexpr T& back() requires(Size > 0) { return at(Size - 1); }
 
     [[nodiscard]] constexpr bool is_empty() const { return size() == 0; }
 
