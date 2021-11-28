@@ -41,8 +41,8 @@ protected:
     virtual bool is_established() const override { return true; }
 
 private:
-    explicit HttpJob(const HttpRequest& request, OutputStream& output_stream)
-        : Job(request, output_stream)
+    explicit HttpJob(HttpRequest&& request, OutputStream& output_stream)
+        : Job(move(request), output_stream)
     {
     }
 
