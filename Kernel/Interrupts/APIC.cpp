@@ -270,37 +270,38 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         return false;
     }
 
-    auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address.value());
-    size_t entry_index = 0;
-    size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
-    auto* madt_entry = madt->entries;
-    while (entries_length > 0) {
-        size_t entry_length = madt_entry->length;
-        if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::LocalAPIC) {
-            auto* plapic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalAPIC*)madt_entry;
-            dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, xAPIC ID: {}, flags: {:#08x}", entry_index, plapic_entry->acpi_processor_id, plapic_entry->apic_id, plapic_entry->flags);
-            m_processor_cnt++;
-            if ((plapic_entry->flags & 0x1) != 0)
-                m_processor_enabled_cnt++;
-        } else if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::Local_x2APIC) {
-            // Only used for APID IDs >= 255
-            auto* plx2apic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalX2APIC*)madt_entry;
-            dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, x2APIC ID: {}, flags: {:#08x}", entry_index, plx2apic_entry->acpi_processor_id, plx2apic_entry->apic_id, plx2apic_entry->flags);
-            m_processor_cnt++;
-            if ((plx2apic_entry->flags & 0x1) != 0)
-                m_processor_enabled_cnt++;
+    if (kernel_command_line().is_smp_enabled()) {
+        auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address.value());
+        size_t entry_index = 0;
+        size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
+        auto* madt_entry = madt->entries;
+        while (entries_length > 0) {
+            size_t entry_length = madt_entry->length;
+            if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::LocalAPIC) {
+                auto* plapic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalAPIC*)madt_entry;
+                dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, xAPIC ID: {}, flags: {:#08x}", entry_index, plapic_entry->acpi_processor_id, plapic_entry->apic_id, plapic_entry->flags);
+                m_processor_cnt++;
+                if ((plapic_entry->flags & 0x1) != 0)
+                    m_processor_enabled_cnt++;
+            } else if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::Local_x2APIC) {
+                // Only used for APID IDs >= 255
+                auto* plx2apic_entry = (const ACPI::Structures::MADTEntries::ProcessorLocalX2APIC*)madt_entry;
+                dbgln_if(APIC_DEBUG, "APIC: AP found @ MADT entry {}, processor ID: {}, x2APIC ID: {}, flags: {:#08x}", entry_index, plx2apic_entry->acpi_processor_id, plx2apic_entry->apic_id, plx2apic_entry->flags);
+                m_processor_cnt++;
+                if ((plx2apic_entry->flags & 0x1) != 0)
+                    m_processor_enabled_cnt++;
+            }
+            madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
+            entries_length -= entry_length;
+            entry_index++;
         }
-        madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
-        entries_length -= entry_length;
-        entry_index++;
+        dbgln("APIC processors found: {}, enabled: {}", m_processor_cnt, m_processor_enabled_cnt);
     }
 
     if (m_processor_enabled_cnt < 1)
         m_processor_enabled_cnt = 1;
     if (m_processor_cnt < 1)
         m_processor_cnt = 1;
-
-    dbgln("APIC processors found: {}, enabled: {}", m_processor_cnt, m_processor_enabled_cnt);
 
     enable(0);
     return true;

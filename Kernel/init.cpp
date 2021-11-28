@@ -271,7 +271,7 @@ void init_stage2(void*)
 
     WorkQueue::initialize();
 
-    if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
+    if (kernel_command_line().is_smp_enabled() && APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We can't start the APs until we have a scheduler up and running.
         // We need to be able to process ICI messages, otherwise another
         // core may send too many and end up deadlocking once the pool is
