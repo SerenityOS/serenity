@@ -491,7 +491,7 @@ public:
 
     ErrorOr<void> try_extend(Vector&& other)
     {
-        if (is_empty()) {
+        if (is_empty() && capacity() <= other.capacity()) {
             *this = move(other);
             return {};
         }
