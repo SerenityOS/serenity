@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-settings");
 
-    auto window = TRY(GUI::SettingsWindow::try_create("Keyboard Settings"));
+    auto window = TRY(GUI::SettingsWindow::create("Keyboard Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
     TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard"));
 
