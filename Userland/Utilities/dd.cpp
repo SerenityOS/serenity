@@ -7,10 +7,11 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibMain/Main.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,11 +36,9 @@ enum Status {
     Noxfer
 };
 
-static String split_at_equals(const char* argument)
+static StringView split_at_equals(StringView argument)
 {
-    String string_value(argument);
-
-    auto values = string_value.split_limit('=', 2);
+    auto values = argument.split_view('=', true);
     if (values.size() < 2) {
         warnln("Unable to parse: {}", argument);
         return {};
@@ -48,14 +47,14 @@ static String split_at_equals(const char* argument)
     }
 }
 
-static int handle_io_file_arguments(int& fd, int flags, const char* argument)
+static int handle_io_file_arguments(int& fd, int flags, StringView argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {
         return -1;
     }
 
-    fd = open(value.characters(), flags, 0666);
+    fd = open(value.to_string().characters(), flags, 0666);
     if (fd == -1) {
         warnln("Unable to open: {}", value);
         return -1;
@@ -64,7 +63,7 @@ static int handle_io_file_arguments(int& fd, int flags, const char* argument)
     }
 }
 
-static int handle_size_arguments(size_t& numeric_value, const char* argument)
+static int handle_size_arguments(size_t& numeric_value, StringView argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {
@@ -72,18 +71,19 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
     }
 
     unsigned suffix_multiplier = 1;
-    switch (value.to_lowercase()[value.length() - 1]) {
+    auto suffix = value[value.length() - 1];
+    switch (tolower(suffix)) {
     case 'k':
         suffix_multiplier = KiB;
-        value = value.substring(0, value.length() - 1);
+        value = value.substring_view(0, value.length() - 1);
         break;
     case 'm':
         suffix_multiplier = MiB;
-        value = value.substring(0, value.length() - 1);
+        value = value.substring_view(0, value.length() - 1);
         break;
     case 'g':
         suffix_multiplier = GiB;
-        value = value.substring(0, value.length() - 1);
+        value = value.substring_view(0, value.length() - 1);
         break;
     }
 
@@ -102,7 +102,7 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
     }
 }
 
-static int handle_status_arguments(Status& status, const char* argument)
+static int handle_status_arguments(Status& status, StringView argument)
 {
     auto value = split_at_equals(argument);
     if (value.is_empty()) {
@@ -124,7 +124,7 @@ static int handle_status_arguments(Status& status, const char* argument)
     }
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int input_fd = 0;
     int input_flags = O_RDONLY;
@@ -142,36 +142,38 @@ int main(int argc, char** argv)
     uint8_t* buffer = nullptr;
     ssize_t nread = 0, nwritten = 0;
 
-    for (int a = 1; a < argc; a++) {
-        if (!strcmp(argv[a], "--help")) {
+    for (size_t a = 1; a < arguments.strings.size(); a++) {
+        auto argument = arguments.strings[a];
+
+        if (argument == "--help") {
             out("{}", usage);
             return 0;
-        } else if (!strncmp(argv[a], "if=", 3)) {
-            if (handle_io_file_arguments(input_fd, input_flags, argv[a]) < 0) {
+        } else if (argument.starts_with("if=")) {
+            if (handle_io_file_arguments(input_fd, input_flags, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "of=", 3)) {
-            if (handle_io_file_arguments(output_fd, output_flags, argv[a]) < 0) {
+        } else if (argument.starts_with("of=")) {
+            if (handle_io_file_arguments(output_fd, output_flags, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "bs=", 3)) {
-            if (handle_size_arguments(block_size, argv[a]) < 0) {
+        } else if (argument.starts_with("bs=")) {
+            if (handle_size_arguments(block_size, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "count=", 6)) {
-            if (handle_size_arguments(count, argv[a]) < 0) {
+        } else if (argument.starts_with("count=")) {
+            if (handle_size_arguments(count, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "seek=", 5)) {
-            if (handle_size_arguments(seek, argv[a]) < 0) {
+        } else if (argument.starts_with("seek=")) {
+            if (handle_size_arguments(seek, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "skip=", 5)) {
-            if (handle_size_arguments(skip, argv[a]) < 0) {
+        } else if (argument.starts_with("skip=")) {
+            if (handle_size_arguments(skip, argument) < 0) {
                 return 1;
             }
-        } else if (!strncmp(argv[a], "status=", 7)) {
-            if (handle_status_arguments(status, argv[a]) < 0) {
+        } else if (argument.starts_with("status=")) {
+            if (handle_status_arguments(status, argument) < 0) {
                 return 1;
             }
         } else {
