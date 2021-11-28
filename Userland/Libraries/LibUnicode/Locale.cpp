@@ -9,6 +9,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 
 #if ENABLE_UNICODE_DATA
@@ -806,6 +807,18 @@ Optional<StringView> get_locale_currency_mapping([[maybe_unused]] StringView loc
 Vector<StringView> get_locale_key_mapping([[maybe_unused]] StringView locale, [[maybe_unused]] StringView keyword)
 {
 #if ENABLE_UNICODE_DATA
+    if (keyword == "hc"sv) {
+        auto hour_cycles = get_regional_hour_cycles(locale);
+
+        Vector<StringView> values;
+        values.ensure_capacity(hour_cycles.size());
+
+        for (auto hour_cycle : hour_cycles)
+            values.unchecked_append(hour_cycle_to_string(hour_cycle));
+
+        return values;
+    }
+
     if (auto values = Detail::get_locale_key_mapping(locale, keyword); values.has_value())
         return values->split_view(',');
 #endif
