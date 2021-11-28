@@ -291,8 +291,16 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
     Vector<String> mapping_names;
 
     for (auto const& locale : locales) {
-        auto mapping_name = format_mapping_name(format, locale.key);
-        format_list(mapping_name, locale.value);
+        String mapping_name;
+
+        if constexpr (requires { locale.key; }) {
+            mapping_name = format_mapping_name(format, locale.key);
+            format_list(mapping_name, locale.value);
+        } else {
+            mapping_name = format_mapping_name(format, locale);
+            format_list(mapping_name, locale);
+        }
+
         mapping_names.append(move(mapping_name));
     }
 
