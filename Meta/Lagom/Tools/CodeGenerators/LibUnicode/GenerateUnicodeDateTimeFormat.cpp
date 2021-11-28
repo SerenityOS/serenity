@@ -372,7 +372,9 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
 )~~~");
     };
 
-    auto append_hour_cycles = [&](String name, auto const& hour_cycles) {
+    auto append_hour_cycles = [&](String name, auto const& hour_cycle_region) {
+        auto const& hour_cycles = locale_data.hour_cycles.find(hour_cycle_region)->value;
+
         generator.set("name", name);
         generator.set("size", String::number(hour_cycles.size()));
 
@@ -388,7 +390,7 @@ static constexpr Array<u8, @size@> @name@ { { )~~~");
     };
 
     generate_mapping(generator, locale_data.locales, "CalendarData"sv, "s_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
-    generate_mapping(generator, locale_data.hour_cycles, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
+    generate_mapping(generator, locale_data.hour_cycle_regions, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
