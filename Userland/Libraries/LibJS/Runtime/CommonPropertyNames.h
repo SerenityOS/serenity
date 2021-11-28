@@ -117,10 +117,12 @@ namespace JS {
     P(currencySign)                          \
     P(dateAdd)                               \
     P(dateFromFields)                        \
+    P(dateStyle)                             \
     P(dateUntil)                             \
     P(day)                                   \
     P(dayOfWeek)                             \
     P(dayOfYear)                             \
+    P(dayPeriod)                             \
     P(days)                                  \
     P(daysInMonth)                           \
     P(daysInWeek)                            \
@@ -176,6 +178,7 @@ namespace JS {
     P(fontsize)                              \
     P(forEach)                               \
     P(format)                                \
+    P(formatMatcher)                         \
     P(formatToParts)                         \
     P(fractionalSecondDigits)                \
     P(freeze)                                \
@@ -241,6 +244,7 @@ namespace JS {
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
     P(hour)                                  \
+    P(hour12)                                \
     P(hourCycle)                             \
     P(hours)                                 \
     P(hoursInDay)                            \
@@ -436,6 +440,7 @@ namespace JS {
     P(tanh)                                  \
     P(test)                                  \
     P(then)                                  \
+    P(timeStyle)                             \
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(toDateString)                          \
@@ -485,6 +490,7 @@ namespace JS {
     P(values)                                \
     P(warn)                                  \
     P(weekOfYear)                            \
+    P(weekday)                               \
     P(weeks)                                 \
     P(with)                                  \
     P(withCalendar)                          \

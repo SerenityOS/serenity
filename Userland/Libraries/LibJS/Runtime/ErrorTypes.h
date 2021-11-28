@@ -35,6 +35,7 @@
     M(IndexOutOfRange, "Index {} is out of range of array length {}")                                                                   \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
+    M(IntlInvalidDateTimeFormatOption, "Option {} cannot be set when also providing {}")                                                \
     M(IntlInvalidLanguageTag, "{} is not a structurally valid language tag")                                                            \
     M(IntlMinimumExceedsMaximum, "Minimum value {} is larger than maximum value {}")                                                    \
     M(IntlNumberIsNaNOrOutOfRange, "Value {} is NaN or is not between {} and {}")                                                       \

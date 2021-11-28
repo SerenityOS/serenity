@@ -31,6 +31,22 @@ enum class CalendarPatternStyle : u8 {
 };
 
 struct CalendarPattern {
+    template<typename Callback>
+    void for_each_calendar_field_zipped_with(CalendarPattern const& other, Callback&& callback)
+    {
+        callback(era, other.era);
+        callback(year, other.year);
+        callback(month, other.month);
+        callback(weekday, other.weekday);
+        callback(day, other.day);
+        callback(day_period, other.day_period);
+        callback(hour, other.hour);
+        callback(minute, other.minute);
+        callback(second, other.second);
+        callback(fractional_second_digits, other.fractional_second_digits);
+        callback(time_zone_name, other.time_zone_name);
+    }
+
     String pattern {};
     Optional<String> pattern12 {};
 
