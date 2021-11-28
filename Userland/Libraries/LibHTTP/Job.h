@@ -18,7 +18,7 @@ namespace HTTP {
 
 class Job : public Core::NetworkJob {
 public:
-    explicit Job(const HttpRequest&, OutputStream&);
+    explicit Job(HttpRequest&&, OutputStream&);
     virtual ~Job() override;
 
     virtual void start(NonnullRefPtr<Core::Socket>) override = 0;

@@ -40,7 +40,7 @@ static Optional<ByteBuffer> handle_content_encoding(const ByteBuffer& buf, const
             dbgln("  Output size: {}", uncompressed.value().size());
         }
 
-        return uncompressed.value();
+        return uncompressed.release_value();
     } else if (content_encoding == "deflate") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is deflate compressed!");
 
@@ -66,15 +66,15 @@ static Optional<ByteBuffer> handle_content_encoding(const ByteBuffer& buf, const
             dbgln("  Output size: {}", uncompressed.value().size());
         }
 
-        return uncompressed.value();
+        return uncompressed.release_value();
     }
 
     return buf;
 }
 
-Job::Job(const HttpRequest& request, OutputStream& output_stream)
+Job::Job(HttpRequest&& request, OutputStream& output_stream)
     : Core::NetworkJob(output_stream)
-    , m_request(request)
+    , m_request(move(request))
 {
 }
 

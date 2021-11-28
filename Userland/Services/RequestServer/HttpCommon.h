@@ -81,7 +81,7 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
 
     auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();
-    auto job = TJob::construct(request, *output_stream);
+    auto job = TJob::construct(move(request), *output_stream);
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
