@@ -722,7 +722,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
-    m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, border, format, type, data, m_unpack_row_length);
+    m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, border, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
 void SoftwareGLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data)
@@ -744,7 +744,7 @@ void SoftwareGLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xo
 
     RETURN_WITH_ERROR_IF(xoffset < 0 || yoffset < 0 || xoffset + width > texture->width_at_lod(level) || yoffset + height > texture->height_at_lod(level), GL_INVALID_VALUE);
 
-    texture->replace_sub_texture_data(level, xoffset, yoffset, width, height, format, type, data, m_unpack_row_length);
+    texture->replace_sub_texture_data(level, xoffset, yoffset, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
 void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
@@ -1167,33 +1167,53 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
         return static_cast<GLuint>(0xffffffff * min(max(f, 0.0f), 1.0f));
     };
 
+    u8 component_size = 0;
+    switch (type) {
+    case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
+        component_size = 1;
+        break;
+    case GL_SHORT:
+    case GL_UNSIGNED_SHORT:
+        component_size = 2;
+        break;
+    case GL_INT:
+    case GL_UNSIGNED_INT:
+    case GL_FLOAT:
+        component_size = 4;
+        break;
+    }
+
     if (format == GL_DEPTH_COMPONENT) {
+        auto const row_stride = (width * component_size + m_pack_alignment - 1) / m_pack_alignment * m_pack_alignment;
+
         // Read from depth buffer
         for (GLsizei i = 0; i < height; ++i) {
             for (GLsizei j = 0; j < width; ++j) {
                 float depth = m_rasterizer.get_depthbuffer_value(x + j, y + i);
+                auto char_ptr = reinterpret_cast<char*>(pixels) + i * row_stride + j * component_size;
 
                 switch (type) {
                 case GL_BYTE:
-                    reinterpret_cast<GLchar*>(pixels)[i * width + j] = float_to_i8(depth);
+                    *reinterpret_cast<GLchar*>(char_ptr) = float_to_i8(depth);
                     break;
                 case GL_SHORT:
-                    reinterpret_cast<GLshort*>(pixels)[i * width + j] = float_to_i16(depth);
+                    *reinterpret_cast<GLshort*>(char_ptr) = float_to_i16(depth);
                     break;
                 case GL_INT:
-                    reinterpret_cast<GLint*>(pixels)[i * width + j] = float_to_i32(depth);
+                    *reinterpret_cast<GLint*>(char_ptr) = float_to_i32(depth);
                     break;
                 case GL_UNSIGNED_BYTE:
-                    reinterpret_cast<GLubyte*>(pixels)[i * width + j] = float_to_u8(depth);
+                    *reinterpret_cast<GLubyte*>(char_ptr) = float_to_u8(depth);
                     break;
                 case GL_UNSIGNED_SHORT:
-                    reinterpret_cast<GLushort*>(pixels)[i * width + j] = float_to_u16(depth);
+                    *reinterpret_cast<GLushort*>(char_ptr) = float_to_u16(depth);
                     break;
                 case GL_UNSIGNED_INT:
-                    reinterpret_cast<GLuint*>(pixels)[i * width + j] = float_to_u32(depth);
+                    *reinterpret_cast<GLuint*>(char_ptr) = float_to_u32(depth);
                     break;
                 case GL_FLOAT:
-                    reinterpret_cast<GLfloat*>(pixels)[i * width + j] = min(max(depth, 0.0f), 1.0f);
+                    *reinterpret_cast<GLfloat*>(char_ptr) = min(max(depth, 0.0f), 1.0f);
                     break;
                 }
             }
@@ -1206,7 +1226,6 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
     bool write_blue = false;
     bool write_alpha = false;
     size_t component_count = 0;
-    size_t component_size = 0;
     size_t red_offset = 0;
     size_t green_offset = 0;
     size_t blue_offset = 0;
@@ -1259,21 +1278,8 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
         break;
     }
 
-    switch (type) {
-    case GL_BYTE:
-    case GL_UNSIGNED_BYTE:
-        component_size = 1;
-        break;
-    case GL_SHORT:
-    case GL_UNSIGNED_SHORT:
-        component_size = 2;
-        break;
-    case GL_INT:
-    case GL_UNSIGNED_INT:
-    case GL_FLOAT:
-        component_size = 4;
-        break;
-    }
+    auto const pixel_bytes = component_size * component_count;
+    auto const row_alignment_bytes = (m_pack_alignment - ((width * pixel_bytes) % m_pack_alignment)) % m_pack_alignment;
 
     char* out_ptr = reinterpret_cast<char*>(pixels);
     for (int i = 0; i < (int)height; ++i) {
@@ -1372,8 +1378,10 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
                 break;
             }
 
-            out_ptr += component_size * component_count;
+            out_ptr += pixel_bytes;
         }
+
+        out_ptr += row_alignment_bytes;
     }
 }
 
@@ -1518,6 +1526,9 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
     case GL_MAX_TEXTURE_SIZE:
         *data = 4096;
         break;
+    case GL_PACK_ALIGNMENT:
+        *data = m_pack_alignment;
+        break;
     case GL_SCISSOR_BOX: {
         auto scissor_box = m_rasterizer.options().scissor_box;
         *(data + 0) = scissor_box.x();
@@ -1526,6 +1537,12 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
         *(data + 3) = scissor_box.height();
         break;
     }
+    case GL_UNPACK_ALIGNMENT:
+        *data = m_unpack_alignment;
+        break;
+    case GL_UNPACK_ROW_LENGTH:
+        *data = m_unpack_row_length;
+        break;
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
         // for `pname`
@@ -2006,13 +2023,21 @@ void SoftwareGLContext::gl_fogi(GLenum pname, GLint param)
     m_rasterizer.set_options(options);
 }
 
-void SoftwareGLContext::gl_pixel_store(GLenum pname, GLfloat param)
+void SoftwareGLContext::gl_pixel_storei(GLenum pname, GLint param)
 {
     // FIXME: Implement missing parameters
     switch (pname) {
+    case GL_PACK_ALIGNMENT:
+        RETURN_WITH_ERROR_IF(param != 1 && param != 2 && param != 4 && param != 8, GL_INVALID_VALUE);
+        m_pack_alignment = param;
+        break;
     case GL_UNPACK_ROW_LENGTH:
         RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
         m_unpack_row_length = static_cast<size_t>(param);
+        break;
+    case GL_UNPACK_ALIGNMENT:
+        RETURN_WITH_ERROR_IF(param != 1 && param != 2 && param != 4 && param != 8, GL_INVALID_VALUE);
+        m_unpack_alignment = param;
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);

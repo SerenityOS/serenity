@@ -152,7 +152,7 @@ void glPolygonOffset(GLfloat factor, GLfloat units)
 
 void glPixelStorei(GLenum pname, GLint param)
 {
-    g_gl_context->gl_pixel_store(pname, param);
+    g_gl_context->gl_pixel_storei(pname, param);
 }
 
 void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)

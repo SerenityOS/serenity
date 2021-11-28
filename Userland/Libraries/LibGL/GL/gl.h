@@ -129,8 +129,10 @@ extern "C" {
 #define GL_GENERATE_MIPMAP_HINT 0x8192
 #define GL_TEXTURE_COMPRESSION_HINT 0x84EF
 
-// Read pixels
+// Reading pixels & unpacking texture patterns
 #define GL_UNPACK_ROW_LENGTH 0x0CF2
+#define GL_UNPACK_ALIGNMENT 0x0CF5
+#define GL_PACK_ALIGNMENT 0x0D05
 
 // Listing enums
 #define GL_COMPILE 0x1300
