@@ -266,7 +266,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         ScopeGuard update_after_drop { [this] { update(); } };
 
         if (event.mime_data().has_format("text/x-spreadsheet-data")) {
-            auto data = event.mime_data().data("text/x-spreadsheet-data");
+            auto const& data = event.mime_data().data("text/x-spreadsheet-data");
             StringView urls { data.data(), data.size() };
             Vector<Position> source_positions, target_positions;
 
