@@ -15,60 +15,68 @@
 
 namespace GUI {
 
-SettingsWindow::SettingsWindow(StringView title, ShowDefaultsButton show_defaults_button)
+ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, ShowDefaultsButton show_defaults_button)
 {
-    set_title(title);
-    resize(400, 480);
-    set_resizable(false);
-    set_minimizable(false);
+    auto window = TRY(SettingsWindow::try_create());
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
-    main_widget.layout()->set_margins(4);
-    main_widget.layout()->set_spacing(6);
+    window->set_title(move(title));
+    window->resize(400, 480);
+    window->set_resizable(false);
+    window->set_minimizable(false);
 
-    m_tab_widget = main_widget.add<GUI::TabWidget>();
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->set_fill_with_background_color(true);
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    main_widget->layout()->set_margins(4);
+    main_widget->layout()->set_spacing(6);
 
-    auto& button_container = main_widget.add<GUI::Widget>();
-    button_container.set_shrink_to_fit(true);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(6);
+    window->m_tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
+
+    auto button_container = TRY(main_widget->try_add<GUI::Widget>());
+    button_container->set_shrink_to_fit(true);
+    TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+    button_container->layout()->set_spacing(6);
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
-        m_reset_button = button_container.add<GUI::Button>("Defaults");
-        m_reset_button->on_click = [&](auto) {
-            for (auto& tab : m_tabs) {
+        window->m_reset_button = TRY(button_container->try_add<GUI::Button>("Defaults"));
+        window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+            for (auto& tab : window->m_tabs) {
                 tab.reset_default_values();
                 tab.apply_settings();
             }
         };
     }
 
-    button_container.layout()->add_spacer();
+    TRY(button_container->layout()->try_add_spacer());
 
-    m_ok_button = button_container.add<GUI::Button>("OK");
-    m_ok_button->set_fixed_width(75);
-    m_ok_button->on_click = [&](auto) {
-        for (auto& tab : m_tabs)
+    window->m_ok_button = TRY(button_container->try_add<GUI::Button>("OK"));
+    window->m_ok_button->set_fixed_width(75);
+    window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+        for (auto& tab : window->m_tabs)
             tab.apply_settings();
         GUI::Application::the()->quit();
     };
 
-    m_cancel_button = button_container.add<GUI::Button>("Cancel");
-    m_cancel_button->set_fixed_width(75);
-    m_cancel_button->on_click = [&](auto) {
-        for (auto& tab : m_tabs)
+    window->m_cancel_button = TRY(button_container->try_add<GUI::Button>("Cancel"));
+    window->m_cancel_button->set_fixed_width(75);
+    window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+        for (auto& tab : window->m_tabs)
             tab.cancel_settings();
         GUI::Application::the()->quit();
     };
 
-    m_apply_button = button_container.add<GUI::Button>("Apply");
-    m_apply_button->set_fixed_width(75);
-    m_apply_button->on_click = [&](auto) {
-        for (auto& tab : m_tabs)
+    window->m_apply_button = TRY(button_container->try_add<GUI::Button>("Apply"));
+    window->m_apply_button->set_fixed_width(75);
+    window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+        for (auto& tab : window->m_tabs)
             tab.apply_settings();
     };
+
+    return window;
+}
+
+SettingsWindow::SettingsWindow()
+{
 }
 
 SettingsWindow::~SettingsWindow()

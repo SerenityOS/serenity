@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
-    auto window = TRY(GUI::SettingsWindow::try_create("Display Settings"));
+    auto window = TRY(GUI::SettingsWindow::create("Display Settings"));
     TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"));
     TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"));
     TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"));

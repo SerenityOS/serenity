@@ -29,6 +29,8 @@ public:
         No,
     };
 
+    static ErrorOr<NonnullRefPtr<SettingsWindow>> create(String title, ShowDefaultsButton = ShowDefaultsButton::No);
+
     virtual ~SettingsWindow() override;
 
     template<class T, class... Args>
@@ -40,7 +42,7 @@ public:
     }
 
 private:
-    SettingsWindow(StringView title, ShowDefaultsButton = ShowDefaultsButton::No);
+    SettingsWindow();
 
     RefPtr<GUI::TabWidget> m_tab_widget;
     NonnullRefPtrVector<Tab> m_tabs;
