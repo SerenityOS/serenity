@@ -122,10 +122,9 @@ private:
 
     GLenum m_current_draw_mode;
     GLenum m_current_matrix_mode;
-    FloatMatrix4x4 m_projection_matrix;
-    FloatMatrix4x4 m_model_view_matrix;
-
-    FloatMatrix4x4 m_current_matrix;
+    FloatMatrix4x4 m_projection_matrix = FloatMatrix4x4::identity();
+    FloatMatrix4x4 m_model_view_matrix = FloatMatrix4x4::identity();
+    FloatMatrix4x4 m_current_matrix = FloatMatrix4x4::identity();
 
     Vector<FloatMatrix4x4> m_projection_matrix_stack;
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
