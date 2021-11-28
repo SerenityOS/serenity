@@ -1532,10 +1532,10 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
         break;
     case GL_SCISSOR_BOX: {
         auto scissor_box = m_rasterizer.options().scissor_box;
-        *(data + 0) = scissor_box.x();
-        *(data + 1) = scissor_box.y();
-        *(data + 2) = scissor_box.width();
-        *(data + 3) = scissor_box.height();
+        data[0] = scissor_box.x();
+        data[1] = scissor_box.y();
+        data[2] = scissor_box.width();
+        data[3] = scissor_box.height();
         break;
     }
     case GL_UNPACK_ALIGNMENT:
