@@ -72,7 +72,7 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
     }
     auto buffer_or_empty = m_write_ahead_log.get(block);
     if (buffer_or_empty.has_value())
-        return buffer_or_empty.value();
+        return buffer_or_empty.release_value();
 
     if (block >= m_next_block) {
         warnln("Heap({})::read_block({}): block # out of range (>= {})"sv, name(), block, m_next_block);
@@ -203,10 +203,7 @@ constexpr static int USER_VALUES_OFFSET = 32;
 
 ErrorOr<void> Heap::read_zero_block()
 {
-    auto bytes_or_error = read_block(0);
-    if (bytes_or_error.is_error())
-        return bytes_or_error.error();
-    auto buffer = bytes_or_error.value();
+    auto buffer = TRY(read_block(0));
     auto file_id_buffer = buffer.slice(0, FILE_ID.length());
     auto file_id = StringView(file_id_buffer);
     if (file_id != FILE_ID) {
