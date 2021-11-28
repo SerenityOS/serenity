@@ -21,13 +21,17 @@ using Fallback = Variant<Empty, bool, StringView>;
 
 struct LocaleOptions {
     Value locale_matcher;
-    Optional<String> nu;
+    Optional<String> ca; // [[Calendar]]
+    Optional<String> hc; // [[HourCycle]]
+    Optional<String> nu; // [[NumberingSystem]]
 };
 
 struct LocaleResult {
     String locale;
     String data_locale;
-    Optional<String> nu;
+    Optional<String> ca; // [[Calendar]]
+    Optional<String> hc; // [[HourCycle]]
+    Optional<String> nu; // [[NumberingSystem]]
 };
 
 struct PatternPartition {
