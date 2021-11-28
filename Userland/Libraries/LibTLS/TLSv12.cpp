@@ -341,7 +341,7 @@ bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes 
     }
 
     Crypto::PK::RSA rsa(rsa_key);
-    auto certificate = maybe_certificate.value();
+    auto certificate = maybe_certificate.release_value();
     certificate.private_key = rsa.private_key();
 
     return add_client_key(certificate);
