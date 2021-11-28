@@ -23,13 +23,7 @@ int main(int argc, char** argv)
         .strings = arguments.span(),
     });
     if (result.is_error()) {
-        auto error = result.release_error();
-        if (error.is_syscall())
-            warnln("Runtime error: {}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
-        else if (error.is_errno())
-            warnln("Runtime error: {} (errno={})", strerror(error.code()), error.code());
-        else
-            warnln("Runtime error: {}", error.string_literal());
+        warnln("Runtime error: {}", result.release_error());
         return 1;
     }
     return result.value();
