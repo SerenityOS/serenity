@@ -191,7 +191,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         Lagom::GenerateUnicodeDateTimeFormat
         "${UNICODE_DATE_TIME_FORMAT_HEADER}"
         "${UNICODE_DATE_TIME_FORMAT_IMPLEMENTATION}"
-        arguments -d "${CLDR_DATES_PATH}"
+        arguments -r "${CLDR_CORE_PATH}" -d "${CLDR_DATES_PATH}"
     )
     invoke_generator(
         "UnicodeLocale"
