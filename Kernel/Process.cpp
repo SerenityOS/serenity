@@ -608,6 +608,9 @@ void Process::finalize()
 
     dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
+    if (veil_state() == VeilState::Dropped)
+        dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", name());
+
     if (is_dumpable()) {
         if (m_should_generate_coredump)
             dump_core();
