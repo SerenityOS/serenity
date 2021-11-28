@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
+#include <AK/Weakable.h>
 #include <LibGfx/Color.h>
 #include <LibPDF/ObjectDerivatives.h>
 #include <LibPDF/Parser.h>
@@ -70,7 +71,9 @@ struct OutlineDict final : public RefCounted<OutlineDict> {
     OutlineDict() = default;
 };
 
-class Document final : public RefCounted<Document> {
+class Document final
+    : public RefCounted<Document>
+    , public Weakable<Document> {
 public:
     static RefPtr<Document> create(ReadonlyBytes bytes);
 

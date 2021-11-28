@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/WeakPtr.h>
 #include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Reader.h>
@@ -29,7 +30,7 @@ public:
     Parser(Badge<Document>, ReadonlyBytes);
 
     [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
-    void set_document(RefPtr<Document> const&);
+    void set_document(WeakPtr<Document> const&);
 
     // Parses the header and initializes the xref table and trailer
     bool initialize();
@@ -139,7 +140,7 @@ private:
     bool consume(char);
 
     Reader m_reader;
-    RefPtr<Document> m_document;
+    WeakPtr<Document> m_document;
     RefPtr<XRefTable> m_xref_table;
     RefPtr<DictObject> m_trailer;
     Optional<LinearizationDictionary> m_linearization_dictionary;

@@ -39,7 +39,7 @@ Parser::Parser(ReadonlyBytes bytes)
 {
 }
 
-void Parser::set_document(RefPtr<Document> const& document)
+void Parser::set_document(WeakPtr<Document> const& document)
 {
     m_document = document;
 }
