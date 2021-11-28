@@ -62,10 +62,18 @@ int main(int argc, char* argv[])
         model->remove_item(table_view.selection().first().row());
     });
 
+    auto debug_dump_action = GUI::Action::create("Dump to debug console", [&](const GUI::Action&) {
+        table_view.selection().for_each_index([&](GUI::ModelIndex& index) {
+            dbgln("{}", model->data(index, GUI::ModelRole::Display).as_string());
+        });
+    });
+
     auto entry_context_menu = GUI::Menu::construct();
     entry_context_menu->add_action(delete_action);
+    entry_context_menu->add_action(debug_dump_action);
     table_view.on_context_menu_request = [&](const GUI::ModelIndex&, const GUI::ContextMenuEvent& event) {
         delete_action->set_enabled(!table_view.selection().is_empty());
+        debug_dump_action->set_enabled(!table_view.selection().is_empty());
         entry_context_menu->popup(event.screen_position());
     };
 
