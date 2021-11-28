@@ -20,7 +20,7 @@ public:
     virtual ~MimeData() { }
 
     ByteBuffer data(const String& mime_type) const { return m_data.get(mime_type).value_or({}); }
-    void set_data(const String& mime_type, const ByteBuffer& data) { m_data.set(mime_type, data); }
+    void set_data(const String& mime_type, ByteBuffer&& data) { m_data.set(mime_type, move(data)); }
 
     bool has_format(const String& mime_type) const { return m_data.contains(mime_type); }
     Vector<String> formats() const;
