@@ -57,16 +57,14 @@ bool encode(Encoder& encoder, Gfx::IntPoint const& point)
     return true;
 }
 
-bool decode(Decoder& decoder, Gfx::IntPoint& point)
+ErrorOr<void> decode(Decoder& decoder, Gfx::IntPoint& point)
 {
     int x = 0;
     int y = 0;
-    if (!decoder.decode(x))
-        return false;
-    if (!decoder.decode(y))
-        return false;
+    TRY(decoder.decode(x));
+    TRY(decoder.decode(y));
     point = { x, y };
-    return true;
+    return {};
 }
 
 }

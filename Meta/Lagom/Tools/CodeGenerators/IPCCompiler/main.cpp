@@ -386,7 +386,7 @@ public:
 
                 parameter_generator.append(R"~~~(
         @parameter.type@ @parameter.name@ = @parameter.initial_value@;
-        if (!decoder.decode(@parameter.name@))
+        if (decoder.decode(@parameter.name@).is_error())
             return {};
 )~~~");
 

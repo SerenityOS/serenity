@@ -31,6 +31,6 @@ Optional<ParsedCookie> parse_cookie(const String& cookie_string);
 namespace IPC {
 
 bool encode(IPC::Encoder&, const Web::Cookie::ParsedCookie&);
-bool decode(IPC::Decoder&, Web::Cookie::ParsedCookie&);
+ErrorOr<void> decode(IPC::Decoder&, Web::Cookie::ParsedCookie&);
 
 }

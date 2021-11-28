@@ -53,8 +53,8 @@ public:
 namespace IPC {
 
 bool encode(Encoder&, const WindowServer::ScreenLayout::Screen&);
-bool decode(Decoder&, WindowServer::ScreenLayout::Screen&);
+ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout::Screen&);
 bool encode(Encoder&, const WindowServer::ScreenLayout&);
-bool decode(Decoder&, WindowServer::ScreenLayout&);
+ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout&);
 
 }

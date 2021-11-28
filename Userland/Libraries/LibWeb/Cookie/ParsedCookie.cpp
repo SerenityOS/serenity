@@ -348,24 +348,15 @@ bool IPC::encode(IPC::Encoder& encoder, const Web::Cookie::ParsedCookie& cookie)
     return true;
 }
 
-bool IPC::decode(IPC::Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
+ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
 {
-    if (!decoder.decode(cookie.name))
-        return false;
-    if (!decoder.decode(cookie.value))
-        return false;
-    if (!decoder.decode(cookie.expiry_time_from_expires_attribute))
-        return false;
-    if (!decoder.decode(cookie.expiry_time_from_max_age_attribute))
-        return false;
-    if (!decoder.decode(cookie.domain))
-        return false;
-    if (!decoder.decode(cookie.path))
-        return false;
-    if (!decoder.decode(cookie.secure_attribute_present))
-        return false;
-    if (!decoder.decode(cookie.http_only_attribute_present))
-        return false;
-
-    return true;
+    TRY(decoder.decode(cookie.name));
+    TRY(decoder.decode(cookie.value));
+    TRY(decoder.decode(cookie.expiry_time_from_expires_attribute));
+    TRY(decoder.decode(cookie.expiry_time_from_max_age_attribute));
+    TRY(decoder.decode(cookie.domain));
+    TRY(decoder.decode(cookie.path));
+    TRY(decoder.decode(cookie.secure_attribute_present));
+    TRY(decoder.decode(cookie.http_only_attribute_present));
+    return {};
 }
