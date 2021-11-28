@@ -196,6 +196,14 @@ ErrorOr<void> kill(pid_t pid, int signal)
     return {};
 }
 
+ErrorOr<int> dup(int source_fd)
+{
+    int fd = ::dup(source_fd);
+    if (fd < 0)
+        return Error::from_syscall("dup"sv, -errno);
+    return fd;
+}
+
 ErrorOr<int> dup2(int source_fd, int destination_fd)
 {
     int fd = ::dup2(source_fd, destination_fd);
