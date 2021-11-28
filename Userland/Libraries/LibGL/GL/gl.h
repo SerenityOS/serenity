@@ -32,11 +32,11 @@ extern "C" {
 #define GL_PROJECTION 0x1701
 
 // glBegin/glEnd primitive types
-#define GL_TRIANGLES 0x0100
-#define GL_QUADS 0x0101
-#define GL_TRIANGLE_FAN 0x0102
-#define GL_TRIANGLE_STRIP 0x0103
-#define GL_POLYGON 0x0104
+#define GL_TRIANGLES 0x0004
+#define GL_TRIANGLE_STRIP 0x0005
+#define GL_TRIANGLE_FAN 0x0006
+#define GL_QUADS 0x0007
+#define GL_POLYGON 0x0009
 
 // Depth buffer and alpha test compare functions
 #define GL_NEVER 0x0200
@@ -49,8 +49,8 @@ extern "C" {
 #define GL_ALWAYS 0x0207
 
 // Buffer bits
-#define GL_COLOR_BUFFER_BIT 0x0200
-#define GL_DEPTH_BUFFER_BIT 0x0400
+#define GL_DEPTH_BUFFER_BIT 0x00100
+#define GL_COLOR_BUFFER_BIT 0x04000
 
 // Enable capabilities
 #define GL_CULL_FACE 0x0B44
