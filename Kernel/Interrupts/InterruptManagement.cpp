@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/Interrupts.h>
@@ -206,16 +207,20 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
             auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;
+            u32 global_system_interrupt = 0;
+            ByteReader::load<u32>(reinterpret_cast<u8 const*>(&interrupt_override_entry->global_system_interrupt), global_system_interrupt);
+            u16 flags = 0;
+            ByteReader::load<u16>(reinterpret_cast<u8 const*>(&interrupt_override_entry->flags), flags);
             m_isa_interrupt_overrides.empend(
                 interrupt_override_entry->bus,
                 interrupt_override_entry->source,
-                interrupt_override_entry->global_system_interrupt,
-                interrupt_override_entry->flags);
+                global_system_interrupt,
+                flags);
 
             dbgln("Interrupts: Overriding INT {:#x} with GSI {}, for bus {:#x}",
                 interrupt_override_entry->source,
-                interrupt_override_entry->global_system_interrupt,
-                interrupt_override_entry->bus);
+                global_system_interrupt,
+                flags);
         }
         madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;
