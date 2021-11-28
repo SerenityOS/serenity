@@ -116,7 +116,7 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
 MipMap const& Texture2D::mipmap(unsigned lod) const
 {
     if (lod >= m_mipmaps.size())
-        return m_mipmaps.at(m_mipmaps.size() - 1);
+        return m_mipmaps.back();
 
     return m_mipmaps.at(lod);
 }
