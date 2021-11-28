@@ -54,6 +54,11 @@ static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
     };
 }
 
+static Gfx::IntRect scissor_box_to_window_coordinates(Gfx::IntRect const& scissor_box, Gfx::IntRect const& window_rect)
+{
+    return scissor_box.translated(0, window_rect.height() - 2 * scissor_box.y() - scissor_box.height());
+}
+
 static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, float& src_alpha, float& dst_alpha, float& src_color, float& dst_color)
 {
     constant = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -185,7 +190,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     // Calculate block-based bounds
     auto render_bounds = render_target.rect();
     if (options.scissor_enabled)
-        render_bounds.intersect(options.scissor_box);
+        render_bounds.intersect(scissor_box_to_window_coordinates(options.scissor_box, render_target.rect()));
     int const block_padding = RASTERIZER_BLOCK_SIZE - 1;
     // clang-format off
     int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()))                  / RASTERIZER_BLOCK_SIZE;
@@ -576,7 +581,7 @@ void SoftwareRasterizer::clear_color(const FloatVector4& color)
 
     if (m_options.scissor_enabled) {
         auto fill_rect = m_render_target->rect();
-        fill_rect.intersect(m_options.scissor_box);
+        fill_rect.intersect(scissor_box_to_window_coordinates(m_options.scissor_box, fill_rect));
         Gfx::Painter painter { *m_render_target };
         painter.fill_rect(fill_rect, fill_color);
         return;
@@ -590,7 +595,7 @@ void SoftwareRasterizer::clear_depth(float depth)
     wait_for_all_threads();
 
     if (m_options.scissor_enabled) {
-        m_depth_buffer->clear(m_options.scissor_box, depth);
+        m_depth_buffer->clear(scissor_box_to_window_coordinates(m_options.scissor_box, m_render_target->rect()), depth);
         return;
     }
 
