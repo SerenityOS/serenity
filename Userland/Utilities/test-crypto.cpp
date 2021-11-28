@@ -547,9 +547,9 @@ auto main(int argc, char** argv) -> int
         g_some_test_failed = true; \
     } while (0)
 
-static ByteBuffer operator""_b(const char* string, size_t length)
+static ReadonlyBytes operator""_b(const char* string, size_t length)
 {
-    return ByteBuffer::copy(string, length).release_value();
+    return ReadonlyBytes(string, length);
 }
 
 // tests go after here
@@ -1051,7 +1051,7 @@ static void aes_gcm_test_encrypt()
         u8 result_tag[] { 0x58, 0xe2, 0xfc, 0xce, 0xfa, 0x7e, 0x30, 0x61, 0x36, 0x7f, 0x1d, 0x57, 0xa4, 0xe7, 0x45, 0x5a };
         Bytes out;
         auto tag = ByteBuffer::create_uninitialized(16).release_value();
-        cipher.encrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
+        cipher.encrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, {}, tag);
         if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
             FAIL(Invalid auth tag);
             print_buffer(tag, -1);
@@ -1066,7 +1066,7 @@ static void aes_gcm_test_encrypt()
         auto tag = ByteBuffer::create_uninitialized(16).release_value();
         auto out = ByteBuffer::create_uninitialized(16).release_value();
         auto out_bytes = out.bytes();
-        cipher.encrypt("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
+        cipher.encrypt("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, {}, tag);
         if (memcmp(result_ct, out.data(), out.size()) != 0) {
             FAIL(Invalid ciphertext);
             print_buffer(out, -1);
@@ -1085,9 +1085,9 @@ static void aes_gcm_test_encrypt()
         auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         cipher.encrypt(
-            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
+            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b,
             out_bytes,
-            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b,
             {},
             tag);
         if (memcmp(result_ct, out.data(), out.size()) != 0) {
@@ -1108,10 +1108,10 @@ static void aes_gcm_test_encrypt()
         auto out = ByteBuffer::create_uninitialized(64).release_value();
         auto out_bytes = out.bytes();
         cipher.encrypt(
-            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
+            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b,
             out_bytes,
-            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
-            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b,
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b,
             tag);
         if (memcmp(result_ct, out.data(), out.size()) != 0) {
             FAIL(Invalid ciphertext);
@@ -1131,7 +1131,7 @@ static void aes_gcm_test_decrypt()
         Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
         u8 input_tag[] { 0x58, 0xe2, 0xfc, 0xce, 0xfa, 0x7e, 0x30, 0x61, 0x36, 0x7f, 0x1d, 0x57, 0xa4, 0xe7, 0x45, 0x5a };
         Bytes out;
-        auto consistency = cipher.decrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, { input_tag, 16 });
+        auto consistency = cipher.decrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, {}, { input_tag, 16 });
         if (consistency != Crypto::VerificationConsistency::Consistent) {
             FAIL(Verification reported inconsistent);
         } else if (out.size() != 0) {
@@ -1147,7 +1147,7 @@ static void aes_gcm_test_decrypt()
         u8 result_pt[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         auto out = ByteBuffer::create_uninitialized(16).release_value();
         auto out_bytes = out.bytes();
-        auto consistency = cipher.decrypt({ input_ct, 16 }, out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, { input_tag, 16 });
+        auto consistency = cipher.decrypt({ input_ct, 16 }, out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, {}, { input_tag, 16 });
         if (consistency != Crypto::VerificationConsistency::Consistent) {
             FAIL(Verification reported inconsistent);
         } else if (memcmp(result_pt, out.data(), out.size()) != 0) {
@@ -1168,7 +1168,7 @@ static void aes_gcm_test_decrypt()
         auto consistency = cipher.decrypt(
             { input_ct, 64 },
             out_bytes,
-            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b,
             {},
             { input_tag, 16 });
         if (memcmp(result_pt, out.data(), out.size()) != 0) {
@@ -1190,8 +1190,8 @@ static void aes_gcm_test_decrypt()
         auto consistency = cipher.decrypt(
             { input_ct, 64 },
             out_bytes,
-            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
-            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b,
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b,
             { input_tag, 16 });
         if (memcmp(result_pt, out.data(), out.size()) != 0) {
             FAIL(Invalid plaintext);
@@ -1211,8 +1211,8 @@ static void aes_gcm_test_decrypt()
         auto consistency = cipher.decrypt(
             { input_ct, 64 },
             out_bytes,
-            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
-            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b,
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b,
             { input_tag, 16 });
 
         if (consistency != Crypto::VerificationConsistency::Inconsistent)
@@ -1851,7 +1851,7 @@ static void rsa_test_encrypt()
 {
     {
         I_TEST((RSA RAW | Encryption));
-        ByteBuffer data { "hellohellohellohellohellohellohellohellohellohellohellohello123-"_b };
+        ReadonlyBytes data { "hellohellohellohellohellohellohellohellohellohellohellohello123-"_b };
         u8 result[] { 0x6f, 0x7b, 0xe2, 0xd3, 0x95, 0xf8, 0x8d, 0x87, 0x6d, 0x10, 0x5e, 0xc3, 0xcd, 0xf7, 0xbb, 0xa6, 0x62, 0x8e, 0x45, 0xa0, 0xf1, 0xe5, 0x0f, 0xdf, 0x69, 0xcb, 0xb6, 0xd5, 0x42, 0x06, 0x7d, 0x72, 0xa9, 0x5e, 0xae, 0xbf, 0xbf, 0x0f, 0xe0, 0xeb, 0x31, 0x31, 0xca, 0x8a, 0x81, 0x1e, 0xb9, 0xec, 0x6d, 0xcc, 0xb8, 0xa4, 0xac, 0xa3, 0x31, 0x05, 0xa9, 0xac, 0xc9, 0xd3, 0xe6, 0x2a, 0x18, 0xfe };
         Crypto::PK::RSA rsa(
             "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
@@ -1869,7 +1869,7 @@ static void rsa_test_encrypt()
     }
     {
         I_TEST((RSA PKCS #1 1.5 | Encryption));
-        ByteBuffer data { "hellohellohellohellohellohellohellohellohello123-"_b };
+        ReadonlyBytes data { "hellohellohellohellohellohellohellohellohello123-"_b };
         Crypto::PK::RSA_PKCS1_EME rsa(
             "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
             "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
