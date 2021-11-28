@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT void AC97::detect()
     });
 }
 
-UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier pci_device_identifier)
+UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier)
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , CharacterDevice(42, 42)
