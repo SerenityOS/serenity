@@ -47,7 +47,12 @@ struct Locale {
 struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
     HashMap<String, Locale> locales;
+
     Vector<String> calendars;
+    Vector<Alias> calendar_aliases {
+        // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
+        { "gregorian"sv, "gregory"sv },
+    };
 };
 
 static void parse_date_time_pattern(CalendarPattern& format, String pattern, UnicodeLocaleData& locale_data)
@@ -167,7 +172,7 @@ static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& 
 namespace Unicode {
 )~~~");
 
-    generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars);
+    generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
 
     generator.append(R"~~~(
 namespace Detail {
@@ -286,17 +291,19 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
 
     generate_mapping(generator, locale_data.locales, "CalendarData"sv, "s_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, auto const& aliases) {
         HashValueMap<String> hashes;
         hashes.ensure_capacity(values.size());
 
         for (auto const& value : values)
             hashes.set(value.hash(), format_identifier(enum_title, value));
+        for (auto const& alias : aliases)
+            hashes.set(alias.alias.hash(), format_identifier(enum_title, alias.alias));
 
         generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
-    append_from_string("Calendar"sv, "calendar"sv, locale_data.calendars);
+    append_from_string("Calendar"sv, "calendar"sv, locale_data.calendars, locale_data.calendar_aliases);
 
     generator.append(R"~~~(
 static CalendarData const* find_calendar_data(StringView locale, StringView calendar)
