@@ -384,6 +384,50 @@ static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeL
     return {};
 }
 
+static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+{
+    static constexpr StringView key = "ca"sv;
+
+    auto calendars_iterator = TRY(path_to_dir_iterator(locale_dates_path, {}));
+    Vector<String> keyword_values {};
+
+    while (calendars_iterator.has_next()) {
+        auto locale_calendars_path = TRY(next_path_from_dir_iterator(calendars_iterator));
+
+        LexicalPath calendars_path(move(locale_calendars_path));
+        if (!calendars_path.basename().starts_with("ca-"sv))
+            continue;
+
+        auto calendars_file = TRY(Core::File::open(calendars_path.string(), Core::OpenMode::ReadOnly));
+        auto calendars = TRY(JsonValue::from_string(calendars_file->read_all()));
+
+        auto const& main_object = calendars.as_object().get("main"sv);
+        auto const& locale_object = main_object.as_object().get(calendars_path.parent().basename());
+        auto const& dates_object = locale_object.as_object().get("dates"sv);
+        auto const& calendars_object = dates_object.as_object().get("calendars"sv);
+
+        calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const&) {
+            keyword_values.append(calendar_name);
+
+            // FIXME: Similar to the calendar aliases defined in GenerateUnicodeDateTimeFormat, this
+            //        should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
+            if (calendar_name == "gregorian"sv)
+                keyword_values.append("gregory"sv);
+        });
+    }
+
+    StringBuilder builder;
+    builder.join(',', keyword_values);
+
+    auto index = locale_data.unique_strings.ensure(builder.build());
+    locale.keywords.set(key, index);
+
+    if (!locale_data.keywords.contains_slow(key))
+        locale_data.keywords.append(key);
+
+    return {};
+}
+
 static ErrorOr<void> parse_default_content_locales(String core_path, UnicodeLocaleData& locale_data)
 {
     LexicalPath default_content_path(move(core_path));
@@ -459,12 +503,13 @@ static ErrorOr<void> define_aliases_without_scripts(UnicodeLocaleData& locale_da
     return {};
 }
 
-static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, UnicodeLocaleData& locale_data)
+static ErrorOr<void> parse_all_locales(String core_path, String locale_names_path, String misc_path, String numbers_path, String dates_path, UnicodeLocaleData& locale_data)
 {
     auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
     auto locale_names_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
     auto misc_iterator = TRY(path_to_dir_iterator(move(misc_path)));
     auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
+    auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
@@ -519,6 +564,14 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_currencies(numbers_path, locale_data, locale));
         TRY(parse_numeric_keywords(numbers_path, locale_data, locale));
+    }
+
+    while (dates_iterator.has_next()) {
+        auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
+        auto language = TRY(remove_variants_from_path(dates_path));
+
+        auto& locale = locale_data.locales.ensure(language);
+        TRY(parse_calendar_keywords(dates_path, locale_data, locale));
     }
 
     TRY(parse_default_content_locales(move(core_path), locale_data));
@@ -1093,12 +1146,13 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    StringView generated_header_path = nullptr;
-    StringView generated_implementation_path = nullptr;
-    StringView core_path = nullptr;
-    StringView locale_names_path = nullptr;
-    StringView misc_path = nullptr;
-    StringView numbers_path = nullptr;
+    StringView generated_header_path;
+    StringView generated_implementation_path;
+    StringView core_path;
+    StringView locale_names_path;
+    StringView misc_path;
+    StringView numbers_path;
+    StringView dates_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
@@ -1107,6 +1161,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path");
     args_parser.add_option(misc_path, "Path to cldr-misc directory", "misc-path", 'm', "misc-path");
     args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
+    args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
     args_parser.parse(arguments);
 
     auto open_file = [&](StringView path) -> ErrorOr<NonnullRefPtr<Core::File>> {
@@ -1122,7 +1177,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto generated_implementation_file = TRY(open_file(generated_implementation_path));
 
     UnicodeLocaleData locale_data;
-    TRY(parse_all_locales(core_path, locale_names_path, misc_path, numbers_path, locale_data));
+    TRY(parse_all_locales(core_path, locale_names_path, misc_path, numbers_path, dates_path, locale_data));
 
     generate_unicode_locale_header(generated_header_file, locale_data);
     generate_unicode_locale_implementation(generated_implementation_file, locale_data);

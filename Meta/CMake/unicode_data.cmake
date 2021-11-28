@@ -198,7 +198,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         Lagom::GenerateUnicodeLocale
         "${UNICODE_LOCALE_HEADER}"
         "${UNICODE_LOCALE_IMPLEMENTATION}"
-        arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}"
+        arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
     )
     invoke_generator(
         "UnicodeNumberFormat"
