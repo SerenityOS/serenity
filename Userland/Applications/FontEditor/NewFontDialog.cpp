@@ -93,7 +93,7 @@ private:
         if (event.buttons() & (GUI::MouseButton::Primary | GUI::MouseButton::Secondary))
             draw_at_mouse(event);
     }
-    void draw_at_mouse(const MouseEvent& event)
+    void draw_at_mouse(MouseEvent const& event)
     {
         bool set = event.buttons() & MouseButton::Primary;
         bool unset = event.buttons() & MouseButton::Secondary;
