@@ -329,4 +329,21 @@ inline bool PhysicalPage::is_lazy_committed_page() const
     return this == &MM.lazy_committed_page();
 }
 
+inline ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
+{
+    if (Memory::page_round_up_would_wrap(size))
+        return EINVAL;
+
+    if ((address + size) < address)
+        return EINVAL;
+
+    if (Memory::page_round_up_would_wrap(address + size))
+        return EINVAL;
+
+    auto base = VirtualAddress { address }.page_base();
+    auto end = Memory::page_round_up(address + size);
+
+    return Memory::VirtualRange { base, end - base.get() };
+}
+
 }
