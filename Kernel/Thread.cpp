@@ -802,6 +802,12 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
+bool Thread::is_signal_masked(u8 signal) const
+{
+    VERIFY(signal < 32);
+    return (1 << (signal - 1)) & m_signal_mask;
+}
+
 bool Thread::has_alternative_signal_stack() const
 {
     return m_alternative_signal_stack_size != 0;
