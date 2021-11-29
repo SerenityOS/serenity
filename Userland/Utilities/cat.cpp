@@ -6,6 +6,7 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -23,42 +24,30 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    Vector<int> fds;
+    Vector<NonnullRefPtr<Core::File>> files;
     if (paths.is_empty()) {
-        TRY(fds.try_append(STDIN_FILENO));
+        TRY(files.try_append(Core::File::standard_input()));
     } else {
+        TRY(files.try_ensure_capacity(paths.size()));
         for (auto const& path : paths) {
-            int fd;
             if (path == "-") {
-                fd = 0;
+                files.unchecked_append(Core::File::standard_input());
             } else {
-                auto fd_or_error = Core::System::open(path, O_RDONLY);
-                if (fd_or_error.is_error()) {
-                    warnln("Failed to open {}: {}", path, fd_or_error.error());
-                    continue;
-                }
-                fd = fd_or_error.release_value();
+                auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+                if (file_or_error.is_error())
+                    warnln("Failed to open {}: {}", path, file_or_error.error());
+                else
+                    files.unchecked_append(file_or_error.release_value());
             }
-            TRY(fds.try_append(fd));
         }
     }
 
     TRY(Core::System::pledge("stdio"));
 
-    Array<u8, 32768> buffer;
-    for (auto& fd : fds) {
-        for (;;) {
-            auto buffer_span = buffer.span();
-            auto nread = TRY(Core::System::read(fd, buffer_span));
-            if (nread == 0)
-                break;
-            buffer_span = buffer_span.trim(nread);
-            while (!buffer_span.is_empty()) {
-                auto already_written = TRY(Core::System::write(STDOUT_FILENO, buffer_span));
-                buffer_span = buffer_span.slice(already_written);
-            }
-        }
-        TRY(Core::System::close(fd));
+    for (auto& file : files) {
+        TRY(file->try_read_all_chunked([](auto chunk) {
+            out("{}", StringView(chunk));
+        }));
     }
 
     return 0;
