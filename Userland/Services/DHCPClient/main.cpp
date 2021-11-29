@@ -5,35 +5,20 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio unix inet cpath rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio unix inet cpath rpath"));
     Core::EventLoop event_loop;
 
-    if (unveil("/proc/net/", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/proc/net/", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    unveil(nullptr, nullptr);
+    auto client = TRY(DHCPv4Client::try_create());
 
-    auto client = DHCPv4Client::construct();
-
-    if (pledge("stdio inet cpath rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio inet cpath rpath"));
     return event_loop.exec();
 }
