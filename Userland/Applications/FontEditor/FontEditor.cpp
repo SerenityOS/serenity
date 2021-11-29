@@ -552,6 +552,8 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_undo_action->set_enabled(false);
     m_redo_action->set_enabled(false);
 
+    update_statusbar();
+
     if (on_initialize)
         on_initialize();
 }
