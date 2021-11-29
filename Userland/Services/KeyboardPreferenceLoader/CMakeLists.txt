@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(KeyboardPreferenceLoader)
-target_link_libraries(KeyboardPreferenceLoader LibCore)
+target_link_libraries(KeyboardPreferenceLoader LibCore LibMain)
