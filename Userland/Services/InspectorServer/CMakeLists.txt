@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_bin(InspectorServer)
-target_link_libraries(InspectorServer LibIPC)
+target_link_libraries(InspectorServer LibIPC LibMain)
