@@ -819,11 +819,10 @@ bool Thread::is_in_alternative_signal_stack() const
     return sp >= m_alternative_signal_stack && sp < m_alternative_signal_stack + m_alternative_signal_stack_size;
 }
 
-static void push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
+static ErrorOr<void> push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
     stack -= sizeof(FlatPtr);
-    auto result = copy_to_user((FlatPtr*)stack, &data);
-    VERIFY(!result.is_error());
+    return copy_to_user((FlatPtr*)stack, &data);
 }
 
 void Thread::resume_from_stopped()
@@ -942,7 +941,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && has_alternative_signal_stack() && !is_in_alternative_signal_stack();
 
-    auto setup_stack = [&](RegisterState& state) {
+    auto setup_stack = [&](RegisterState& state) -> ErrorOr<void> {
         FlatPtr old_sp = state.userspace_sp();
         FlatPtr stack;
         if (use_alternative_stack)
@@ -964,17 +963,17 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr stack_alignment = (stack - 4) % 16;
         stack -= stack_alignment;
 
-        push_value_on_user_stack(stack, ret_flags);
+        TRY(push_value_on_user_stack(stack, ret_flags));
 
-        push_value_on_user_stack(stack, ret_ip);
-        push_value_on_user_stack(stack, state.eax);
-        push_value_on_user_stack(stack, state.ecx);
-        push_value_on_user_stack(stack, state.edx);
-        push_value_on_user_stack(stack, state.ebx);
-        push_value_on_user_stack(stack, old_sp);
-        push_value_on_user_stack(stack, state.ebp);
-        push_value_on_user_stack(stack, state.esi);
-        push_value_on_user_stack(stack, state.edi);
+        TRY(push_value_on_user_stack(stack, ret_ip));
+        TRY(push_value_on_user_stack(stack, state.eax));
+        TRY(push_value_on_user_stack(stack, state.ecx));
+        TRY(push_value_on_user_stack(stack, state.edx));
+        TRY(push_value_on_user_stack(stack, state.ebx));
+        TRY(push_value_on_user_stack(stack, old_sp));
+        TRY(push_value_on_user_stack(stack, state.ebp));
+        TRY(push_value_on_user_stack(stack, state.esi));
+        TRY(push_value_on_user_stack(stack, state.edi));
 #else
         // Align the stack to 16 bytes.
         // Note that we push 168 bytes (8 * 21) on to the stack
@@ -985,40 +984,42 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr stack_alignment = (stack - 8) % 16;
         stack -= 128 + stack_alignment;
 
-        push_value_on_user_stack(stack, ret_flags);
+        TRY(push_value_on_user_stack(stack, ret_flags));
 
-        push_value_on_user_stack(stack, ret_ip);
-        push_value_on_user_stack(stack, state.r15);
-        push_value_on_user_stack(stack, state.r14);
-        push_value_on_user_stack(stack, state.r13);
-        push_value_on_user_stack(stack, state.r12);
-        push_value_on_user_stack(stack, state.r11);
-        push_value_on_user_stack(stack, state.r10);
-        push_value_on_user_stack(stack, state.r9);
-        push_value_on_user_stack(stack, state.r8);
-        push_value_on_user_stack(stack, state.rax);
-        push_value_on_user_stack(stack, state.rcx);
-        push_value_on_user_stack(stack, state.rdx);
-        push_value_on_user_stack(stack, state.rbx);
-        push_value_on_user_stack(stack, old_sp);
-        push_value_on_user_stack(stack, state.rbp);
-        push_value_on_user_stack(stack, state.rsi);
-        push_value_on_user_stack(stack, state.rdi);
+        TRY(push_value_on_user_stack(stack, ret_ip));
+        TRY(push_value_on_user_stack(stack, state.r15));
+        TRY(push_value_on_user_stack(stack, state.r14));
+        TRY(push_value_on_user_stack(stack, state.r13));
+        TRY(push_value_on_user_stack(stack, state.r12));
+        TRY(push_value_on_user_stack(stack, state.r11));
+        TRY(push_value_on_user_stack(stack, state.r10));
+        TRY(push_value_on_user_stack(stack, state.r9));
+        TRY(push_value_on_user_stack(stack, state.r8));
+        TRY(push_value_on_user_stack(stack, state.rax));
+        TRY(push_value_on_user_stack(stack, state.rcx));
+        TRY(push_value_on_user_stack(stack, state.rdx));
+        TRY(push_value_on_user_stack(stack, state.rbx));
+        TRY(push_value_on_user_stack(stack, old_sp));
+        TRY(push_value_on_user_stack(stack, state.rbp));
+        TRY(push_value_on_user_stack(stack, state.rsi));
+        TRY(push_value_on_user_stack(stack, state.rdi));
 #endif
 
         // PUSH old_signal_mask
-        push_value_on_user_stack(stack, old_signal_mask);
+        TRY(push_value_on_user_stack(stack, old_signal_mask));
 
-        push_value_on_user_stack(stack, signal);
-        push_value_on_user_stack(stack, handler_vaddr.get());
+        TRY(push_value_on_user_stack(stack, signal));
+        TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
 
         VERIFY((stack % 16) == 0);
 
-        push_value_on_user_stack(stack, 0); // push fake return address
+        TRY(push_value_on_user_stack(stack, 0)); // push fake return address
 
         // We write back the adjusted stack value into the register state.
         // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
         state.set_userspace_sp(stack);
+
+        return {};
     };
 
     // We now place the thread state on the userspace stack.
@@ -1026,7 +1027,18 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
     auto& regs = get_register_dump_from_stack();
-    setup_stack(regs);
+
+    auto result = setup_stack(regs);
+    if (result.is_error()) {
+        dbgln("Invalid stack pointer: {}", regs.userspace_sp());
+        process.set_should_generate_coredump(true);
+        process.for_each_thread([](auto& thread) {
+            thread.set_dump_backtrace_on_finalization();
+        });
+        m_process->terminate_due_to_signal(signal);
+        return DispatchSignalResult::Terminate;
+    }
+
     auto signal_trampoline_addr = process.signal_trampoline().get();
     regs.set_ip(signal_trampoline_addr);
 
