@@ -37,13 +37,19 @@ ErrorOr<void> Decoder::decode(u16& value)
     return m_stream.try_handle_any_error();
 }
 
-ErrorOr<void> Decoder::decode(u32& value)
+ErrorOr<void> Decoder::decode(unsigned& value)
 {
     m_stream >> value;
     return m_stream.try_handle_any_error();
 }
 
-ErrorOr<void> Decoder::decode(u64& value)
+ErrorOr<void> Decoder::decode(unsigned long& value)
+{
+    m_stream >> value;
+    return m_stream.try_handle_any_error();
+}
+
+ErrorOr<void> Decoder::decode(unsigned long long& value)
 {
     m_stream >> value;
     return m_stream.try_handle_any_error();

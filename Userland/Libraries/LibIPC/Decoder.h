@@ -34,8 +34,9 @@ public:
     ErrorOr<void> decode(bool&);
     ErrorOr<void> decode(u8&);
     ErrorOr<void> decode(u16&);
-    ErrorOr<void> decode(u32&);
-    ErrorOr<void> decode(u64&);
+    ErrorOr<void> decode(unsigned&);
+    ErrorOr<void> decode(unsigned long&);
+    ErrorOr<void> decode(unsigned long long&);
     ErrorOr<void> decode(i8&);
     ErrorOr<void> decode(i16&);
     ErrorOr<void> decode(i32&);
