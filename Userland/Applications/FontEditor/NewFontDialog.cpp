@@ -111,7 +111,7 @@ private:
         update();
     }
 
-    int m_scale { 20 };
+    int m_scale { 10 };
     int m_width { 20 };
     int m_height { 20 };
     int m_glyph_width { 20 };
@@ -127,7 +127,7 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 {
     set_title("New Font");
 
-    m_font_properties_page = GUI::WizardPage::construct("Font properties", "Edit details about this font.");
+    m_font_properties_page = GUI::WizardPage::construct("Typeface properties", "Edit details about this font.");
     m_font_properties_page->body_widget().load_from_gml(new_font_dialog_page_1_gml);
 
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
