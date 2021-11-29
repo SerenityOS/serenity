@@ -297,22 +297,19 @@ FontEditorWidget::FontEditorWidget()
 
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [&](auto&) {
         m_glyph_editor_widget->set_scale(5);
-        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
-        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+        did_resize_glyph_editor();
     });
     m_scale_five_action->set_checked(false);
     m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font");
     m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [&](auto&) {
         m_glyph_editor_widget->set_scale(10);
-        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
-        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+        did_resize_glyph_editor();
     });
     m_scale_ten_action->set_checked(true);
     m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font");
     m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [&](auto&) {
         m_glyph_editor_widget->set_scale(15);
-        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
-        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+        did_resize_glyph_editor();
     });
     m_scale_fifteen_action->set_checked(false);
     m_scale_fifteen_action->set_status_tip("Scale the editor in proportion to the current font");
@@ -500,9 +497,7 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
 
     m_glyph_map_widget->initialize(*m_edited_font);
     m_glyph_editor_widget->initialize(*m_edited_font);
-
-    m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
-    m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+    did_resize_glyph_editor();
 
     m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
     m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width(), GUI::AllowCallback::No);
@@ -768,4 +763,11 @@ void FontEditorWidget::drop_event(GUI::DropEvent& event)
 
         open_file(urls.first().path());
     }
+}
+
+void FontEditorWidget::did_resize_glyph_editor()
+{
+    constexpr int glyph_toolbars_width = 100;
+    m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+    m_left_column_container->set_fixed_width(max(m_glyph_editor_widget->preferred_width(), glyph_toolbars_width));
 }
