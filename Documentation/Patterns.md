@@ -1,10 +1,121 @@
-# SerenityOS patterns
+# SerenityOS Patterns
 
 ## Introduction
 
 Over time numerous reoccurring patterns have emerged from or were adopted by
-the serenity code base. This document aims to track and describe them so they
-can be propagated further and keep the code base consistent. 
+the serenity code base. This document aims to track and describe them, so they
+can be propagated further and the code base can be kept consistent. 
+
+## `TRY(...)` Error Handling
+
+The `TRY(..)` macro is used for error propagation in the serenity code base.
+The goal being to reduce the amount of boiler plate error code required to
+properly handle and propagate errors throughout the code base. 
+
+Any code surrounded by `TRY(..)` will attempt to be executed, and any error
+will immediately be returned from the function. If no error occurs then the
+result of the contents of the TRY will be the result of the macro's execution. 
+
+### Examples:
+
+Example from LibGUI: 
+
+```cpp
+#include <AK/Try.h>
+
+... snip ...
+
+ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
+{
+    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
+    if (m_window_id) {
+        menu->realize_menu_if_needed();
+        WindowServerConnection::the().async_add_menu(m_window_id, menu->menu_id());
+    }
+    return menu;
+}
+```
+
+Example from the Kernel:
+
+```cpp
+#include <AK/Try.h>
+
+... snip ...
+
+ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
+{
+    VERIFY(range.is_valid());
+    OwnPtr<KString> region_name;
+    if (!name.is_null())
+        region_name = TRY(KString::try_create(name));
+    auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
+    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
+    TRY(region->map(page_directory()));
+    return add_region(move(region));
+}
+```
+
+Note: Our `TRY(...)` macro functions similarly to the `?` [operator in rust](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator).
+
+## `MUST(...)` Error Handling
+
+The `MUST(...)` macro is similar to `TRY(...)` except the macro enforces that
+the code run inside the macro must succeed, otherwise we assert.
+
+### Example:
+
+```cpp
+#include <AK/Try.h>
+#include <AK/String.h>
+
+... snip ...
+
+void log_that_can_not_fail(StringView fmtstr, TypeErasedFormatParams& params)
+{
+    StringBuilder builder;
+    MUST(vformat(builder, fmtstr, params));
+    return builder.to_string();
+}
+```
+
+## The `serenity_main(..)` program entry point
+
+Serenity has moved to a pattern where executables do not expose a normal C
+main function. A `serenity_main(..)` is exposed instead. The main reasoning
+is that the `Main::Arguments` struct can provide arguments in a more idiomatic
+way that fits with the serenity API surface area. The ErrorOr<int> likewise
+allows the program to propagate errors seamlessly with the `TRY(...)` macro,
+avoiding a significant amount of clunky C style error handling.
+
+These executables are then linked with the `LibMain` library, which will link in
+the normal C `int main(int, char**)` function which will call into the programs
+`serenity_main(..)` on program startup.
+
+The creation of the pattern was documented in the following video:
+[OS hacking: A better main() for SerenityOS C++ programs](https://www.youtube.com/watch?v=5PciKJW1rUc)
+
+### Examples:
+
+A function `main(..)` would normally look something like:
+
+```cpp
+int main(int argc, char** argv)
+{
+   return 0;
+}
+```
+
+Instead, `serenity_main(..)` is defined like this:
+
+```cpp
+#include <LibMain/Main.h>
+
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return 0; 
+}
+```
 
 ## Intrusive Lists
 
@@ -13,7 +124,7 @@ are used in the SerenityOS userland. A data structure is said to be
 "intrusive" when each element holds the metadata that tracks the
 element's membership in the data structure. In the case of a list, this
 means that every element in an intrusive linked list has a node embedded
-inside of it. The main advantage of intrusive
+inside it. The main advantage of intrusive
 data structures is you don't need to worry about handling out of memory (OOM)
 on insertion into the data structure. This means error handling code is
 much simpler than say, using a `Vector` in environments that need to be durable
@@ -95,7 +206,7 @@ static_assert(AssertSize<Empty, 1>());
 
 This allows `AK::StringView` to be constructed from string literals with no runtime
 cost to find the string length, and the data the `AK::StringView` points to will 
-reside in the  data section of the binary.
+reside in the data section of the binary.
 
 Example Usage:
 ```cpp
