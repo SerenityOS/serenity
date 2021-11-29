@@ -182,6 +182,8 @@ public:
 
     void remap();
 
+    void clear_to_zero();
+
     [[nodiscard]] bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
