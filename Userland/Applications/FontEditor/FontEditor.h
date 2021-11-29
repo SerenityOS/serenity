@@ -20,6 +20,7 @@ class FontEditorWidget final : public GUI::Widget {
 public:
     virtual ~FontEditorWidget() override;
 
+    bool open_file(String const&);
     bool save_as(const String&);
     bool request_close();
     void update_title();
@@ -35,11 +36,10 @@ public:
     Function<void()> on_initialize;
 
 private:
-    FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    FontEditorWidget();
 
     virtual void drop_event(GUI::DropEvent&) override;
 
-    void open_file(String const&);
     void undo();
     void redo();
     void did_modify_font();
