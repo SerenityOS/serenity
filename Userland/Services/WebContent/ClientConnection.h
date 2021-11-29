@@ -32,7 +32,7 @@ public:
     void initialize_js_console(Badge<PageHost>);
 
 private:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>);
 
     Web::Page& page();
     const Web::Page& page() const;
