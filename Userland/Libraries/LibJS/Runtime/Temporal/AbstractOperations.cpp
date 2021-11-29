@@ -764,7 +764,7 @@ ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject& global_object
 }
 
 // 13.23 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
-String larger_of_two_temporal_units(StringView unit1, StringView unit2)
+StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 {
     // 1. If either u1 or u2 is "year", return "year".
     if (unit1 == "year"sv || unit2 == "year"sv)
