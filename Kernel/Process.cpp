@@ -541,16 +541,14 @@ ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::Stri
     return get_syscall_path_argument(path_characters, path.length);
 }
 
-bool Process::dump_core()
+ErrorOr<void> Process::dump_core()
 {
     VERIFY(is_dumpable());
     VERIFY(should_generate_coredump());
     dbgln("Generating coredump for pid: {}", pid().value());
-    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds());
-    auto coredump_or_error = Coredump::try_create(*this, coredump_path);
-    if (coredump_or_error.is_error())
-        return false;
-    return !coredump_or_error.value()->write().is_error();
+    auto coredump_path = TRY(KString::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds()));
+    auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
+    return coredump->write();
 }
 
 bool Process::dump_perfcore()
@@ -612,8 +610,12 @@ void Process::finalize()
         dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", name());
 
     if (is_dumpable()) {
-        if (m_should_generate_coredump)
-            dump_core();
+        if (m_should_generate_coredump) {
+            auto result = dump_core();
+            if (result.is_error()) {
+                critical_dmesgln("Failed to write coredump: {}", result.error());
+            }
+        }
         if (m_perf_event_buffer) {
             dump_perfcore();
             TimeManagement::the().disable_profile_timer();
