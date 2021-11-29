@@ -13,9 +13,6 @@
 #include <LibGfx/Palette.h>
 #include <string.h>
 
-static int x_offset;
-static int y_offset;
-
 GlyphEditorWidget::~GlyphEditorWidget()
 {
 }
@@ -190,8 +187,8 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
         for (int x = s_max_width; x < s_max_width + bitmap.width(); x++)
             for (int y = s_max_height; y < s_max_height + bitmap.height(); y++)
                 m_movable_bits[x][y] = bitmap.bit_at(x - s_max_width, y - s_max_height);
-        x_offset = (event.x() - 1) / m_scale;
-        y_offset = (event.y() - 1) / m_scale;
+        m_scaled_offset_x = (event.x() - 1) / m_scale;
+        m_scaled_offset_y = (event.y() - 1) / m_scale;
         move_at_mouse(event);
     }
 }
@@ -246,8 +243,8 @@ void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
 
 void GlyphEditorWidget::move_at_mouse(const GUI::MouseEvent& event)
 {
-    int x_delta = ((event.x() - 1) / m_scale) - x_offset;
-    int y_delta = ((event.y() - 1) / m_scale) - y_offset;
+    int x_delta = ((event.x() - 1) / m_scale) - m_scaled_offset_x;
+    int y_delta = ((event.y() - 1) / m_scale) - m_scaled_offset_y;
     auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
     if (abs(x_delta) > bitmap.width() || abs(y_delta) > bitmap.height())
         return;
