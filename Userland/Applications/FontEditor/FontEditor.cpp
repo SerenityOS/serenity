@@ -140,13 +140,7 @@ FontEditorWidget::FontEditorWidget()
         auto new_font_wizard = NewFontDialog::construct(window());
         if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
             auto metadata = new_font_wizard->new_font_metadata();
-
-            RefPtr<Gfx::BitmapFont> new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, 0x110000);
-            if (!new_font) {
-                GUI::MessageBox::show(window(), "Failed to create new font.", "Font Editor", GUI::MessageBox::Type::Error);
-                return;
-            }
-
+            auto new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, 0x110000);
             new_font->set_name(metadata.name);
             new_font->set_family(metadata.family);
             new_font->set_presentation_size(metadata.presentation_size);
