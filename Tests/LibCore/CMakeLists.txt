@@ -9,4 +9,4 @@ foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibCore)
 endforeach()
 
-install(FILES long_lines.txt DESTINATION usr/Tests/LibCore)
+install(FILES long_lines.txt 10kb.txt DESTINATION usr/Tests/LibCore)
