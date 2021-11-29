@@ -23,9 +23,6 @@
 #include <LibGfx/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 
-static constexpr int s_max_width = 32;
-static constexpr int s_max_height = 36;
-
 namespace GUI {
 
 class GlyphPreviewWidget final : public Frame {
@@ -120,7 +117,7 @@ private:
     int m_glyph_width { 20 };
     int m_mean_line { 2 };
     int m_baseline { 16 };
-    u8 m_bits[s_max_width][s_max_height] {};
+    u8 m_bits[Gfx::GlyphBitmap::max_width()][Gfx::GlyphBitmap::max_height()] {};
 };
 
 }
@@ -172,8 +169,8 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     m_glyph_height_spinbox->set_value(20);
     m_glyph_width_spinbox->set_value(20);
-    m_glyph_height_spinbox->set_max(s_max_height);
-    m_glyph_width_spinbox->set_max(s_max_width);
+    m_glyph_height_spinbox->set_max(Gfx::GlyphBitmap::max_height());
+    m_glyph_width_spinbox->set_max(Gfx::GlyphBitmap::max_width());
     m_mean_line_spinbox->set_value(2);
     m_baseline_spinbox->set_value(16);
     m_mean_line_spinbox->set_max(max(m_glyph_height_spinbox->value() - 2, 0));

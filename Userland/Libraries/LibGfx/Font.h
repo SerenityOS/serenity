@@ -38,10 +38,14 @@ public:
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
 
+    static constexpr size_t bytes_per_row() { return sizeof(u32); }
+    static constexpr int max_width() { return bytes_per_row() * 8; }
+    static constexpr int max_height() { return max_width() + bytes_per_row(); }
+
 private:
     AK::Bitmap bitmap(size_t y) const
     {
-        return { const_cast<u8*>(m_rows) + sizeof(u32) * (m_start_index + y), sizeof(u32) * 8 };
+        return { const_cast<u8*>(m_rows) + bytes_per_row() * (m_start_index + y), bytes_per_row() * 8 };
     }
 
     const u8* m_rows { nullptr };
