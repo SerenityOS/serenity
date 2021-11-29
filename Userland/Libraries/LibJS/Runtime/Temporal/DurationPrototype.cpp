@@ -46,6 +46,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.negated, negated, 0, attr);
     define_native_function(vm.names.abs, abs, 0, attr);
+    define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.total, total, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
@@ -287,6 +288,29 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
     return TRY(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
+}
+
+// 7.3.18 Temporal.Duration.prototype.add ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.add
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::add)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = TRY(typed_this_object(global_object));
+
+    // 3. Set other to ? ToLimitedTemporalDuration(other, « »).
+    auto other = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+
+    // 4. Set options to ? GetOptionsObject(options).
+    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+
+    // 5. Let relativeTo be ? ToRelativeTemporalObject(options).
+    auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
+
+    // 6. Let result be ? AddDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], other.[[Years]], other.[[Months]], other.[[Weeks]], other.[[Days]], other.[[Hours]], other.[[Minutes]], other.[[Seconds]], other.[[Milliseconds]], other.[[Microseconds]], other.[[Nanoseconds]], relativeTo).
+    auto result = TRY(add_duration(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), other.years, other.months, other.weeks, other.days, other.hours, other.minutes, other.seconds, other.milliseconds, other.microseconds, other.nanoseconds, relative_to));
+
+    // 7. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return TRY(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 7.3.20 Temporal.Duration.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round
