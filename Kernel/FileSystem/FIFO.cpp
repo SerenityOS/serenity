@@ -134,7 +134,7 @@ ErrorOr<size_t> FIFO::write(OpenFileDescription& fd, u64, const UserOrKernelBuff
 
 ErrorOr<NonnullOwnPtr<KString>> FIFO::pseudo_path(const OpenFileDescription&) const
 {
-    return KString::try_create(String::formatted("fifo:{}", m_fifo_id));
+    return KString::formatted("fifo:{}", m_fifo_id);
 }
 
 ErrorOr<void> FIFO::stat(::stat& st) const
