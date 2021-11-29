@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <termios.h>
 
 namespace Core::System {
 
@@ -37,5 +38,7 @@ ErrorOr<int> dup2(int source_fd, int destination_fd);
 ErrorOr<String> ptsname(int fd);
 ErrorOr<String> gethostname();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
+ErrorOr<struct termios> tcgetattr(int fd);
+ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
 
 }

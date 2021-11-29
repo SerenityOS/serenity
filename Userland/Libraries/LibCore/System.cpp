@@ -13,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -238,6 +239,21 @@ ErrorOr<void> ioctl(int fd, unsigned request, ...)
     va_end(ap);
     if (::ioctl(fd, request, arg) < 0)
         return Error::from_syscall("ioctl"sv, -errno);
+    return {};
+}
+
+ErrorOr<struct termios> tcgetattr(int fd)
+{
+    struct termios ios = {};
+    if (::tcgetattr(fd, &ios) < 0)
+        return Error::from_syscall("tcgetattr"sv, -errno);
+    return ios;
+}
+
+ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const& ios)
+{
+    if (::tcsetattr(fd, optional_actions, &ios) < 0)
+        return Error::from_syscall("tcsetattr"sv, -errno);
     return {};
 }
 
