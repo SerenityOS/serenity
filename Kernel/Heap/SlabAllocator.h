@@ -17,7 +17,7 @@ namespace Kernel {
 void* slab_alloc(size_t slab_size);
 void slab_dealloc(void*, size_t slab_size);
 void slab_alloc_init();
-void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)>);
+ErrorOr<void> slab_alloc_stats(Function<ErrorOr<void>(size_t slab_size, size_t allocated, size_t free)>);
 
 #define MAKE_SLAB_ALLOCATED(type)                                            \
 public:                                                                      \
