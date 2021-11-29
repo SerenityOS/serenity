@@ -29,13 +29,10 @@
 
 namespace WebContent {
 
-static HashMap<int, RefPtr<ClientConnection>> s_connections;
-
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+    : IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), 1)
     , m_page_host(PageHost::create(*this))
 {
-    s_connections.set(client_id, *this);
     m_paint_flush_timer = Core::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
 }
 
@@ -45,9 +42,7 @@ ClientConnection::~ClientConnection()
 
 void ClientConnection::die()
 {
-    s_connections.remove(client_id());
-    if (s_connections.is_empty())
-        Core::EventLoop::current().quit(0);
+    Core::EventLoop::current().quit(0);
 }
 
 Web::Page& ClientConnection::page()

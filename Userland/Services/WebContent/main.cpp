@@ -22,6 +22,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    IPC::new_client_connection<WebContent::ClientConnection>(move(socket), 1);
+    auto client = IPC::new_client_connection<WebContent::ClientConnection>(move(socket));
     return event_loop.exec();
 }
