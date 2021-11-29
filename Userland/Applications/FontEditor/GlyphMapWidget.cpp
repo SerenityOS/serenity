@@ -97,9 +97,9 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             font().glyph_height());
         if (glyph == m_selected_glyph) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
-            if (m_font->raw_glyph_width(glyph))
+            if (m_font->contains_raw_glyph(glyph))
                 painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
-        } else if (m_font->raw_glyph_width(glyph)) {
+        } else if (m_font->contains_raw_glyph(glyph)) {
             painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         }
