@@ -6,6 +6,7 @@
  */
 
 #include <LibCore/GetPassword.h>
+#include <LibCore/System.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -15,17 +16,13 @@ namespace Core {
 
 ErrorOr<SecretString> get_password(StringView prompt)
 {
-    if (write(STDOUT_FILENO, prompt.characters_without_null_termination(), prompt.length()) < 0)
-        return Error::from_errno(errno);
+    TRY(Core::System::write(STDOUT_FILENO, prompt.bytes()));
 
-    termios original {};
-    if (tcgetattr(STDIN_FILENO, &original) < 0)
-        return Error::from_errno(errno);
+    auto original = TRY(Core::System::tcgetattr(STDIN_FILENO));
 
     termios no_echo = original;
     no_echo.c_lflag &= ~ECHO;
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &no_echo) < 0)
-        return Error::from_errno(errno);
+    TRY(Core::System::tcsetattr(STDIN_FILENO, TCSAFLUSH, no_echo));
 
     char* password = nullptr;
     size_t n = 0;
