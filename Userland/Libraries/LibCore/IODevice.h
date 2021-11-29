@@ -104,6 +104,7 @@ protected:
 
 private:
     bool populate_read_buffer(size_t size = 1024) const;
+    ErrorOr<bool> try_populate_read_buffer(size_t size = 1024) const;
     bool can_read_from_fd() const;
 
     int m_fd { -1 };

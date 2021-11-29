@@ -6,6 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <LibCore/IODevice.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -219,6 +220,25 @@ bool IODevice::populate_read_buffer(size_t size) const
         return false;
     }
     m_buffered_data.append(buffer.data(), nread);
+    return true;
+}
+
+ErrorOr<bool> IODevice::try_populate_read_buffer(size_t size) const
+{
+    if (m_fd < 0)
+        return Error::from_string_literal("Invalid file descriptor");
+    if (!size)
+        return false;
+
+    auto buffer = TRY(ByteBuffer::try_create_uninitialized(size));
+
+    int nread = TRY(Core::System::read(m_fd, buffer));
+    if (nread == 0) {
+        set_eof(true);
+        return false;
+    }
+
+    TRY(m_buffered_data.try_append(buffer.data(), nread));
     return true;
 }
 
