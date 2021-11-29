@@ -34,7 +34,7 @@ void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
     if (!m_font)
         return;
 
-    int event_width = event.size().width() - this->vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
+    int event_width = event.size().width() - vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
     int event_height = event.size().height() - (frame_thickness() * 2);
     m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
     m_columns = max(event_width / (font().max_glyph_width() + m_horizontal_spacing), 1);
@@ -88,7 +88,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.set_font(font());
     painter.fill_rect(widget_inner_rect(), palette().inactive_window_title());
 
-    int scroll_steps = this->vertical_scrollbar().value() / this->vertical_scrollbar().step();
+    int scroll_steps = vertical_scrollbar().value() / vertical_scrollbar().step();
     int first_visible_glyph = scroll_steps * columns();
 
     for (int glyph = first_visible_glyph; glyph <= first_visible_glyph + m_visible_glyphs && glyph < m_glyph_count; ++glyph) {
