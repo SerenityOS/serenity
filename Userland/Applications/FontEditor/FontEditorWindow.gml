@@ -31,81 +31,31 @@
             }
 
             @GUI::Widget {
+                shrink_to_fit: true
+
                 layout: @GUI::VerticalBoxLayout {
                 }
 
-                @GUI::Widget {
-                    shrink_to_fit: true
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
-
-                    @GUI::SpinBox {
-                        name: "glyph_editor_width_spinbox"
-                    }
-
-                    @GUI::CheckBox {
-                        name: "glyph_editor_present_checkbox"
-                        text: "Present"
-                        focus_policy: "TabFocus"
-                    }
-
-                    @GUI::Button {
-                        name: "move_glyph_button"
-                        fixed_width: 22
-                        tooltip: "Move Glyph"
-                        button_style: "Coolbar"
-                        checkable: true
-                    }
+                @GUI::SpinBox {
+                    name: "glyph_editor_width_spinbox"
                 }
 
-                @GUI::Widget {
-                    shrink_to_fit: true
+                @GUI::CheckBox {
+                    name: "glyph_editor_present_checkbox"
+                    text: "Present"
+                    focus_policy: "TabFocus"
+                }
+            }
 
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
+            @GUI::ToolbarContainer {
+                name: "glyph_toolbar_container"
 
-                    @GUI::Button {
-                        name: "flip_vertical"
-                        fixed_width: 22
-                        tooltip: "Flip vertically (top to bottom)"
-                        button_style: "Coolbar"
-                        focus_policy: "TabFocus"
-                    }
-
-                    @GUI::Button {
-                        name: "flip_horizontal"
-                        fixed_width: 22
-                        tooltip: "Flip horizontally (left to right)"
-                        button_style: "Coolbar"
-                        focus_policy: "TabFocus"
-                    }
+                @GUI::Toolbar {
+                    name: "glyph_mode_toolbar"
                 }
 
-                @GUI::Widget {
-                    shrink_to_fit: true
-
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
-
-                    @GUI::Button {
-                        name: "rotate_90"
-                        fixed_width: 22
-                        tooltip: "Rotate 90° clockwise"
-                        button_style: "Coolbar"
-                        focus_policy: "TabFocus"
-                    }
-
-                    @GUI::Widget {
-                    }
-
-                    @GUI::Button {
-                        name: "copy_code_point"
-                        fixed_width: 22
-                        tooltip: "Copy this codepoint (not glyph)"
-                        button_style: "Coolbar"
-                        focus_policy: "TabFocus"
-                    }
+                @GUI::Toolbar {
+                    name: "glyph_transform_toolbar"
                 }
             }
         }

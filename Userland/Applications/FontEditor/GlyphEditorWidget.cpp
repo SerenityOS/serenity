@@ -276,7 +276,7 @@ static Vector<Vector<u8>> glyph_as_matrix(Gfx::GlyphBitmap const& bitmap)
     return result;
 }
 
-void GlyphEditorWidget::rotate_90()
+void GlyphEditorWidget::rotate_90(Direction direction)
 {
     if (on_undo_event)
         on_undo_event();
@@ -286,11 +286,11 @@ void GlyphEditorWidget::rotate_90()
 
     for (int y = 0; y < bitmap.height(); y++) {
         for (int x = 0; x < bitmap.width(); x++) {
-            int source_x = y;
-            int source_y = bitmap.width() - 1 - x;
+            int source_x = (direction == Counterclockwise) ? max(bitmap.width() - 1 - y, 0) : y;
+            int source_y = (direction == Counterclockwise) ? x : bitmap.width() - 1 - x;
             bool value = false;
             if (source_x < bitmap.width() && source_y < bitmap.height()) {
-                value = matrix[source_y][source_x];
+                value = (direction == Counterclockwise && y >= bitmap.width()) ? false : matrix[source_y][source_x];
             }
             bitmap.set_bit_at(x, y, value);
         }

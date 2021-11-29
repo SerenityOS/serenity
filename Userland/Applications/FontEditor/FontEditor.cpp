@@ -111,12 +111,10 @@ FontEditorWidget::FontEditorWidget()
     load_from_gml(font_editor_window_gml);
 
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    auto& glyph_mode_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("glyph_mode_toolbar");
+    auto& glyph_transform_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("glyph_transform_toolbar");
     auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
-    auto& move_glyph_button = *find_descendant_of_type_named<GUI::Button>("move_glyph_button");
-    auto& rotate_90_button = *find_descendant_of_type_named<GUI::Button>("rotate_90");
-    auto& flip_vertical_button = *find_descendant_of_type_named<GUI::Button>("flip_vertical");
-    auto& flip_horizontal_button = *find_descendant_of_type_named<GUI::Button>("flip_horizontal");
-    auto& copy_code_point_button = *find_descendant_of_type_named<GUI::Button>("copy_code_point");
+
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
@@ -325,35 +323,48 @@ FontEditorWidget::FontEditorWidget()
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
 
-    move_glyph_button.on_click = [&](auto) {
-        if (move_glyph_button.is_checked())
-            m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
-        else
-            m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
-    };
-    move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png").release_value_but_fixme_should_propagate_errors());
+    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/pen.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
+    });
+    m_paint_glyph_action->set_checked(true);
 
-    rotate_90_button.on_click = [&](auto) {
-        m_glyph_editor_widget->rotate_90();
-    };
-    rotate_90_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors());
+    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
+    });
 
-    flip_vertical_button.on_click = [&](auto) {
-        m_glyph_editor_widget->flip_vertically();
-    };
-    flip_vertical_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png").release_value_but_fixme_should_propagate_errors());
+    m_glyph_tool_actions.add_action(*m_move_glyph_action);
+    m_glyph_tool_actions.add_action(*m_paint_glyph_action);
+    m_glyph_tool_actions.set_exclusive(true);
 
-    flip_horizontal_button.on_click = [&](auto) {
+    glyph_mode_toolbar.add_action(*m_paint_glyph_action);
+    glyph_mode_toolbar.add_action(*m_move_glyph_action);
+
+    m_rotate_counterclockwise_action = GUI::Action::create("Rotate Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_Z }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Counterclockwise);
+    });
+
+    m_rotate_clockwise_action = GUI::Action::create("Rotate Clockwise", { Mod_Ctrl | Mod_Shift, Key_X }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_editor_widget->rotate_90(GlyphEditorWidget::Clockwise);
+    });
+
+    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_A }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_glyph_editor_widget->flip_horizontally();
-    };
-    flip_horizontal_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png").release_value_but_fixme_should_propagate_errors());
+    });
 
-    copy_code_point_button.on_click = [&](auto) {
+    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        m_glyph_editor_widget->flip_vertically();
+    });
+
+    m_copy_character_action = GUI::Action::create("Cop&y as Character", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         StringBuilder glyph_builder;
         glyph_builder.append_code_point(m_glyph_editor_widget->glyph());
         GUI::Clipboard::the().set_plain_text(glyph_builder.build());
-    };
-    copy_code_point_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors());
+    });
+
+    glyph_transform_toolbar.add_action(*m_flip_horizontal_action);
+    glyph_transform_toolbar.add_action(*m_flip_vertical_action);
+    glyph_transform_toolbar.add_action(*m_rotate_counterclockwise_action);
+    glyph_transform_toolbar.add_action(*m_rotate_clockwise_action);
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
@@ -573,6 +584,8 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
     edit_menu.add_action(*m_delete_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_copy_character_action);
     edit_menu.add_separator();
     edit_menu.add_action(*m_previous_glyph_action);
     edit_menu.add_action(*m_next_glyph_action);
