@@ -88,7 +88,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     preview_textbox.on_change = [&] {
         auto preview = String::formatted("{}\n{}",
             preview_textbox.text(),
-            preview_textbox.text().to_uppercase());
+            Unicode::to_unicode_uppercase_full(preview_textbox.text()));
         preview_label.set_text(preview);
     };
 
