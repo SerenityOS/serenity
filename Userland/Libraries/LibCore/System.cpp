@@ -10,6 +10,7 @@
 #include <LibSystem/syscall.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -227,6 +228,17 @@ ErrorOr<String> gethostname()
     if (rc < 0)
         return Error::from_syscall("gethostname"sv, -errno);
     return String(&hostname[0]);
+}
+
+ErrorOr<void> ioctl(int fd, unsigned request, ...)
+{
+    va_list ap;
+    va_start(ap, request);
+    FlatPtr arg = va_arg(ap, FlatPtr);
+    va_end(ap);
+    if (::ioctl(fd, request, arg) < 0)
+        return Error::from_syscall("ioctl"sv, -errno);
+    return {};
 }
 
 }
