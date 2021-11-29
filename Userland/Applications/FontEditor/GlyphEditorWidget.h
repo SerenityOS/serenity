@@ -10,9 +10,6 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/BitmapFont.h>
 
-static constexpr int s_max_width = 32;
-static constexpr int s_max_height = 36;
-
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)
 public:
@@ -74,7 +71,7 @@ private:
     int m_scale { 10 };
     int m_scaled_offset_x { 0 };
     int m_scaled_offset_y { 0 };
-    u8 m_movable_bits[s_max_width* 3][s_max_height * 3] = {};
+    u8 m_movable_bits[Gfx::GlyphBitmap::max_width() * 3][Gfx::GlyphBitmap::max_height() * 3] {};
     Mode m_mode { Paint };
     bool m_is_clicking_valid_cell { false };
 };

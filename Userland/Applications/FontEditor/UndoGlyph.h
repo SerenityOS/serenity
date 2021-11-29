@@ -45,7 +45,7 @@ public:
 private:
     size_t m_code_point;
     RefPtr<Gfx::BitmapFont> m_font;
-    u8 m_bits[32][36] = {};
+    u8 m_bits[Gfx::GlyphBitmap::max_width()][Gfx::GlyphBitmap::max_height()] {};
     u8 m_width { 0 };
     mutable u8 m_restored_width { 0 };
     mutable u32 m_restored_code_point { 0 };

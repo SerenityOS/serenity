@@ -184,9 +184,13 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
     } else {
         memset(m_movable_bits, 0, sizeof(m_movable_bits));
         auto bitmap = font().raw_glyph(m_glyph).glyph_bitmap();
-        for (int x = s_max_width; x < s_max_width + bitmap.width(); x++)
-            for (int y = s_max_height; y < s_max_height + bitmap.height(); y++)
-                m_movable_bits[x][y] = bitmap.bit_at(x - s_max_width, y - s_max_height);
+        for (int x = 0; x < bitmap.width(); x++) {
+            for (int y = 0; y < bitmap.height(); y++) {
+                int movable_x = Gfx::GlyphBitmap::max_width() + x;
+                int movable_y = Gfx::GlyphBitmap::max_height() + y;
+                m_movable_bits[movable_x][movable_y] = bitmap.bit_at(x, y);
+            }
+        }
         m_scaled_offset_x = (event.x() - 1) / m_scale;
         m_scaled_offset_y = (event.y() - 1) / m_scale;
         move_at_mouse(event);
@@ -250,7 +254,9 @@ void GlyphEditorWidget::move_at_mouse(const GUI::MouseEvent& event)
         return;
     for (int x = 0; x < bitmap.width(); x++) {
         for (int y = 0; y < bitmap.height(); y++) {
-            bitmap.set_bit_at(x, y, m_movable_bits[s_max_width + x - x_delta][s_max_height + y - y_delta]);
+            int movable_x = Gfx::GlyphBitmap::max_width() + x - x_delta;
+            int movable_y = Gfx::GlyphBitmap::max_height() + y - y_delta;
+            bitmap.set_bit_at(x, y, m_movable_bits[movable_x][movable_y]);
         }
     }
     if (on_glyph_altered)
