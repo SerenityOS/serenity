@@ -30,8 +30,9 @@ public:
     Encoder& operator<<(bool);
     Encoder& operator<<(u8);
     Encoder& operator<<(u16);
-    Encoder& operator<<(u32);
-    Encoder& operator<<(u64);
+    Encoder& operator<<(unsigned);
+    Encoder& operator<<(unsigned long);
+    Encoder& operator<<(unsigned long long);
     Encoder& operator<<(i8);
     Encoder& operator<<(i16);
     Encoder& operator<<(i32);
@@ -95,6 +96,9 @@ public:
     }
 
 private:
+    void encode_u32(u32);
+    void encode_u64(u64);
+
     MessageBuffer& m_buffer;
 };
 

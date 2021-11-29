@@ -36,17 +36,16 @@ Encoder& Encoder::operator<<(u16 value)
     return *this;
 }
 
-Encoder& Encoder::operator<<(u32 value)
+void Encoder::encode_u32(u32 value)
 {
     m_buffer.data.ensure_capacity(m_buffer.data.size() + 4);
     m_buffer.data.unchecked_append((u8)value);
     m_buffer.data.unchecked_append((u8)(value >> 8));
     m_buffer.data.unchecked_append((u8)(value >> 16));
     m_buffer.data.unchecked_append((u8)(value >> 24));
-    return *this;
 }
 
-Encoder& Encoder::operator<<(u64 value)
+void Encoder::encode_u64(u64 value)
 {
     m_buffer.data.ensure_capacity(m_buffer.data.size() + 8);
     m_buffer.data.unchecked_append((u8)value);
@@ -57,6 +56,29 @@ Encoder& Encoder::operator<<(u64 value)
     m_buffer.data.unchecked_append((u8)(value >> 40));
     m_buffer.data.unchecked_append((u8)(value >> 48));
     m_buffer.data.unchecked_append((u8)(value >> 56));
+}
+
+Encoder& Encoder::operator<<(unsigned value)
+{
+    encode_u32(value);
+    return *this;
+}
+
+Encoder& Encoder::operator<<(unsigned long value)
+{
+    if constexpr (sizeof(value) == 4)
+        encode_u32(value);
+    else
+        encode_u64(value);
+    return *this;
+}
+
+Encoder& Encoder::operator<<(unsigned long long value)
+{
+    if constexpr (sizeof(value) == 4)
+        encode_u32(value);
+    else
+        encode_u64(value);
     return *this;
 }
 
