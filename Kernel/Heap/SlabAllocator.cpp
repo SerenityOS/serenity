@@ -116,13 +116,14 @@ static_assert(sizeof(Memory::Region) <= s_slab_allocator_128.slab_size());
 #endif
 
 template<typename Callback>
-void for_each_allocator(Callback callback)
+ErrorOr<void> for_each_allocator(Callback callback)
 {
-    callback(s_slab_allocator_16);
-    callback(s_slab_allocator_32);
-    callback(s_slab_allocator_64);
-    callback(s_slab_allocator_128);
-    callback(s_slab_allocator_256);
+    TRY(callback(s_slab_allocator_16));
+    TRY(callback(s_slab_allocator_32));
+    TRY(callback(s_slab_allocator_64));
+    TRY(callback(s_slab_allocator_128));
+    TRY(callback(s_slab_allocator_256));
+    return {};
 }
 
 UNMAP_AFTER_INIT void slab_alloc_init()
@@ -164,13 +165,16 @@ void slab_dealloc(void* ptr, size_t slab_size)
     VERIFY_NOT_REACHED();
 }
 
-void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)> callback)
+ErrorOr<void> slab_alloc_stats(Function<ErrorOr<void>(size_t slab_size, size_t allocated, size_t free)> callback)
 {
-    for_each_allocator([&](auto& allocator) {
+    TRY(for_each_allocator([&](auto& allocator) -> ErrorOr<void> {
         auto num_allocated = allocator.num_allocated();
         auto num_free = allocator.slab_count() - num_allocated;
-        callback(allocator.slab_size(), num_allocated, num_free);
-    });
+        TRY(callback(allocator.slab_size(), num_allocated, num_free));
+        return {};
+    }));
+
+    return {};
 }
 
 }
