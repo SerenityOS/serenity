@@ -12,12 +12,9 @@
 
 namespace ImageDecoder {
 
-static HashMap<int, RefPtr<ClientConnection>> s_connections;
-
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, move(socket), client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+    : IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, move(socket), 1)
 {
-    s_connections.set(client_id, *this);
 }
 
 ClientConnection::~ClientConnection()
@@ -26,8 +23,7 @@ ClientConnection::~ClientConnection()
 
 void ClientConnection::die()
 {
-    s_connections.remove(client_id());
-    exit(0);
+    Core::EventLoop::current().quit(0);
 }
 
 Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image(Core::AnonymousBuffer const& encoded_buffer)
