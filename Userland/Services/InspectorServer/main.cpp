@@ -8,17 +8,16 @@
 #include <InspectorServer/ClientConnection.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
 
-    if (pledge("stdio unix accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio unix accept"));
 
     bool ok = server->take_over_from_system_server("/tmp/portal/inspector");
     VERIFY(ok);
@@ -28,7 +27,7 @@ int main(int, char**)
         IPC::new_client_connection<InspectorServer::ClientConnection>(move(client_socket), client_id);
     };
 
-    auto inspectables_server = Core::LocalServer::construct();
+    auto inspectables_server = TRY(Core::LocalServer::try_create());
     if (!inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"))
         VERIFY_NOT_REACHED();
 
