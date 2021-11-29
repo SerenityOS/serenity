@@ -18,15 +18,14 @@ public:
 
     int selected_glyph() const { return m_selected_glyph; }
     void set_selected_glyph(int);
-    void scroll_to_glyph(int glyph);
+    void scroll_to_glyph(int);
+    void update_glyph(int);
 
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
 
     Gfx::BitmapFont& font() { return *m_font; }
     const Gfx::BitmapFont& font() const { return *m_font; }
-
-    void update_glyph(int);
 
     Function<void(int)> on_glyph_selected;
 
@@ -41,8 +40,8 @@ private:
 
     RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph_count { 0x110000 };
-    int m_columns { 32 };
-    int m_rows { 12 };
+    int m_columns { 0 };
+    int m_rows { 0 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };
     int m_selected_glyph { 0 };
