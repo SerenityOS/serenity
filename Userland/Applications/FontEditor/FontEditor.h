@@ -78,6 +78,16 @@ private:
     RefPtr<GUI::Action> m_scale_ten_action;
     RefPtr<GUI::Action> m_scale_fifteen_action;
 
+    GUI::ActionGroup m_glyph_tool_actions;
+    RefPtr<GUI::Action> m_move_glyph_action;
+    RefPtr<GUI::Action> m_paint_glyph_action;
+
+    RefPtr<GUI::Action> m_flip_horizontal_action;
+    RefPtr<GUI::Action> m_flip_vertical_action;
+    RefPtr<GUI::Action> m_rotate_clockwise_action;
+    RefPtr<GUI::Action> m_rotate_counterclockwise_action;
+    RefPtr<GUI::Action> m_copy_character_action;
+
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Window> m_font_preview_window;
     RefPtr<GUI::Widget> m_left_column_container;
