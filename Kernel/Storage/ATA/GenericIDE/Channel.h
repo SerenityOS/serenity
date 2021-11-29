@@ -165,6 +165,5 @@ private:
     bool m_interrupts_enabled { true };
 
     IOAddressGroup m_io_group;
-    NonnullRefPtr<IDEController> m_parent_controller;
 };
 }
