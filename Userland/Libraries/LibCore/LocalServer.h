@@ -22,6 +22,7 @@ public:
 
     RefPtr<LocalSocket> accept();
 
+    Function<void(NonnullRefPtr<Core::LocalSocket>)> on_accept;
     Function<void()> on_ready_to_accept;
 
 private:

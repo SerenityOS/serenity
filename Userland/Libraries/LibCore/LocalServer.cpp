@@ -83,8 +83,10 @@ void LocalServer::setup_notifier()
 {
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
-        if (on_ready_to_accept)
-            on_ready_to_accept();
+        if (on_accept) {
+            if (auto client_socket = accept())
+                on_accept(client_socket.release_nonnull());
+        }
     };
 }
 
