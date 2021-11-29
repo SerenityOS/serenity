@@ -72,7 +72,9 @@ private:
     RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph { 0 };
     int m_scale { 10 };
-    u8 m_movable_bits[s_max_width * 3][s_max_height * 3] = {};
+    int m_scaled_offset_x { 0 };
+    int m_scaled_offset_y { 0 };
+    u8 m_movable_bits[s_max_width* 3][s_max_height * 3] = {};
     Mode m_mode { Paint };
     bool m_is_clicking_valid_cell { false };
 };
