@@ -69,6 +69,13 @@ public:
         return { move(buffer) };
     }
 
+    static ErrorOr<ByteBuffer> try_create_uninitialized(size_t size)
+    {
+        auto buffer = ByteBuffer();
+        TRY(buffer.try_resize(size));
+        return buffer;
+    }
+
     [[nodiscard]] static Optional<ByteBuffer> create_zeroed(size_t size)
     {
         auto buffer_result = create_uninitialized(size);
