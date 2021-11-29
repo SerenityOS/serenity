@@ -53,11 +53,14 @@ Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image
     Vector<u32> durations;
     for (size_t i = 0; i < decoder->frame_count(); ++i) {
         auto frame_or_error = decoder->frame(i);
-        if (frame_or_error.is_error() || !frame_or_error.value().image)
+        if (frame_or_error.is_error()) {
             bitmaps.append(Gfx::ShareableBitmap {});
-        else
-            bitmaps.append(frame_or_error.value().image->to_shareable_bitmap());
-        durations.append(frame_or_error.value().duration);
+            durations.append(0);
+        } else {
+            auto frame = frame_or_error.release_value();
+            bitmaps.append(frame.image->to_shareable_bitmap());
+            durations.append(frame.duration);
+        }
     }
 
     return { decoder->is_animated(), static_cast<u32>(decoder->loop_count()), bitmaps, durations };
