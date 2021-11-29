@@ -970,7 +970,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
     auto default_largest_unit = larger_of_two_temporal_units("hour"sv, *smallest_unit);
 
     // 8. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, move(default_largest_unit)));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
     TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
@@ -1044,7 +1044,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
     auto default_largest_unit = larger_of_two_temporal_units("hour"sv, *smallest_unit);
 
     // 8. Let largestUnit be ? ToLargestTemporalUnit(options, « », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, move(default_largest_unit)));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, {}, "auto"sv, default_largest_unit));
 
     // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
     TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));

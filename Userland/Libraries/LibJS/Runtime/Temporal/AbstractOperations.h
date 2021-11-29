@@ -118,7 +118,7 @@ ThrowCompletionOr<Optional<String>> to_smallest_temporal_unit(GlobalObject&, Obj
 ThrowCompletionOr<String> to_temporal_duration_total_unit(GlobalObject& global_object, Object const& normalized_options);
 ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject&, Object const& options);
 ThrowCompletionOr<void> validate_temporal_unit_range(GlobalObject&, StringView largest_unit, StringView smallest_unit);
-String larger_of_two_temporal_units(StringView, StringView);
+StringView larger_of_two_temporal_units(StringView, StringView);
 ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject&, Object& options, String largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(GlobalObject&, Object&);
