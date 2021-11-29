@@ -36,7 +36,6 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
 
     // FIXME: We currently only support GL_UNSIGNED_BYTE pixel data
     VERIFY(type == GL_UNSIGNED_BYTE);
-    VERIFY(lod < m_mipmaps.size());
     VERIFY(xoffset >= 0 && yoffset >= 0 && xoffset + width <= mip.width() && yoffset + height <= mip.height());
     VERIFY(pixels_per_row == 0 || pixels_per_row >= xoffset + width);
 
@@ -109,14 +108,6 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
     } else {
         VERIFY_NOT_REACHED();
     }
-}
-
-MipMap const& Texture2D::mipmap(unsigned lod) const
-{
-    if (lod >= m_mipmaps.size())
-        return m_mipmaps.back();
-
-    return m_mipmaps.at(lod);
 }
 
 }
