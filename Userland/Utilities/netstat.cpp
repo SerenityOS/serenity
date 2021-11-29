@@ -12,34 +12,17 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc/net", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/proc/net", "r"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool flag_all = false;
     bool flag_list = false;
@@ -54,7 +37,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_tcp, "Display only TCP network connections", "tcp", 't');
     args_parser.add_option(flag_udp, "Display only UDP network connections", "udp", 'u');
     args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
 
@@ -202,14 +185,9 @@ int main(int argc, char** argv)
     }
 
     if (!has_protocol_flag || flag_udp) {
-        auto file = Core::File::construct("/proc/net/udp");
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Error: {}", file->error_string());
-            return 1;
-        }
-
+        auto file = TRY(Core::File::open("/proc/net/udp", Core::OpenMode::ReadOnly));
         auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+        auto json = TRY(JsonValue::from_string(file_contents));
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
