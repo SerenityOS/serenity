@@ -36,5 +36,6 @@ ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
 ErrorOr<String> ptsname(int fd);
 ErrorOr<String> gethostname();
+ErrorOr<void> ioctl(int fd, unsigned request, ...);
 
 }
