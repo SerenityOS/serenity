@@ -207,14 +207,7 @@ static void populate_devfs_char_devices()
             break;
         }
         case 229: {
-            switch (minor_number) {
-            case 0: {
-                create_devfs_char_device("/dev/hvc0p0", 0666, 229, 0);
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
-            }
+            create_devfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
             break;
         }
         case 10: {
