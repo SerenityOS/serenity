@@ -498,8 +498,17 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
             if (!texture_unit.is_bound())
                 continue;
 
-            // FIXME: Don't assume Texture2D
-            auto texel = texture_unit.bound_texture_2d()->sampler().sample(uv);
+            // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
+            FloatVector4 texel;
+            switch (texture_unit.currently_bound_target()) {
+            case GL_TEXTURE_2D:
+                if (!texture_unit.texture_2d_enabled() || texture_unit.texture_3d_enabled() || texture_unit.texture_cube_map_enabled())
+                    continue;
+                texel = texture_unit.bound_texture_2d()->sampler().sample(uv);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
 
             // FIXME: Implement more blend modes
             switch (texture_unit.env_mode()) {
