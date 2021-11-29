@@ -36,7 +36,7 @@ inline u32 get_iopl_from_eflags(u32 eflags)
 const DescriptorTablePointer& get_gdtr();
 const DescriptorTablePointer& get_idtr();
 
-[[noreturn]] void handle_crash(RegisterState const&, char const* description, int signal, bool out_of_memory = false);
+void handle_crash(RegisterState const&, char const* description, int signal, bool out_of_memory = false);
 
 #define LSW(x) ((u32)(x)&0xFFFF)
 #define MSW(x) (((u32)(x) >> 16) & 0xFFFF)

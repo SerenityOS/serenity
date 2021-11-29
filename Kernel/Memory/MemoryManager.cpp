@@ -654,7 +654,7 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
         VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
         if (!MM.validate_user_stack_no_lock(space, userspace_sp)) {
             dbgln("Invalid stack pointer: {}", userspace_sp);
-            unlock_and_handle_crash("Bad stack on syscall entry", SIGSEGV);
+            return unlock_and_handle_crash("Bad stack on syscall entry", SIGSEGV);
         }
     }
 
@@ -663,17 +663,17 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
         auto* calling_region = MM.find_user_region_from_vaddr_no_lock(space, ip);
         if (!calling_region) {
             dbgln("Syscall from {:p} which has no associated region", ip);
-            unlock_and_handle_crash("Syscall from unknown region", SIGSEGV);
+            return unlock_and_handle_crash("Syscall from unknown region", SIGSEGV);
         }
 
         if (calling_region->is_writable()) {
             dbgln("Syscall from writable memory at {:p}", ip);
-            unlock_and_handle_crash("Syscall from writable memory", SIGSEGV);
+            return unlock_and_handle_crash("Syscall from writable memory", SIGSEGV);
         }
 
         if (space.enforces_syscall_regions() && !calling_region->is_syscall_region()) {
             dbgln("Syscall from non-syscall region");
-            unlock_and_handle_crash("Syscall from non-syscall region", SIGSEGV);
+            return unlock_and_handle_crash("Syscall from non-syscall region", SIGSEGV);
         }
     }
 }

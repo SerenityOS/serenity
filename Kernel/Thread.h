@@ -1023,6 +1023,7 @@ public:
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
+    [[nodiscard]] bool is_signal_masked(u8 signal) const;
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
