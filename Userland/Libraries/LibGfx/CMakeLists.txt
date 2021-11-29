@@ -44,4 +44,4 @@ set(SOURCES
 )
 
 serenity_lib(LibGfx gfx)
-target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec)
+target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec LibIPC)
