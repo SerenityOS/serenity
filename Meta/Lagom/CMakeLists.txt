@@ -520,6 +520,12 @@ if (BUILD_LAGOM)
             lagom_test(${source} LIBS LagomCompress)
         endforeach()
 
+        # GL
+        file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
+        foreach(source ${LIBGL_TESTS})
+            lagom_test(${source} LIBS LagomGL)
+        endforeach()
+
         # Regex
         file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
         # RegexLibC test POSIX <regex.h> and contains many Serenity extensions
