@@ -25,7 +25,7 @@ public:
     int columns() const { return m_columns; }
 
     Gfx::BitmapFont& font() { return *m_font; }
-    const Gfx::BitmapFont& font() const { return *m_font; }
+    Gfx::BitmapFont const& font() const { return *m_font; }
 
     Function<void(int)> on_glyph_selected;
 
