@@ -34,14 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     }
 
     bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
-
     auto keyboard_device = TRY(Core::File::open("/dev/keyboard0", Core::OpenMode::ReadOnly));
-
-    int rc = ioctl(keyboard_device->fd(), KEYBOARD_IOCTL_SET_NUM_LOCK, enable_num_lock);
-    if (rc < 0) {
-        perror("ioctl(KEYBOARD_IOCTL_SET_NUM_LOCK)");
-        return 1;
-    }
+    TRY(Core::System::ioctl(keyboard_device->fd(), KEYBOARD_IOCTL_SET_NUM_LOCK, enable_num_lock));
 
     return 0;
 }
