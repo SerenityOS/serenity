@@ -46,6 +46,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.negated, negated, 0, attr);
     define_native_function(vm.names.abs, abs, 0, attr);
+    define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.total, total, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
@@ -286,6 +287,130 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
     return TRY(create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds())));
+}
+
+// 7.3.20 Temporal.Duration.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.round
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = TRY(typed_this_object(global_object));
+
+    // 3. If roundTo is undefined, then
+    if (vm.argument(0).is_undefined()) {
+        // a. Throw a TypeError exception.
+        return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalMissingOptionsObject);
+    }
+
+    Object* round_to;
+
+    // 4. If Type(roundTo) is String, then
+    if (vm.argument(0).is_string()) {
+        // a. Let paramString be roundTo.
+
+        // b. Set roundTo to ! OrdinaryObjectCreate(null).
+        round_to = Object::create(global_object, nullptr);
+
+        // FIXME: "_smallestUnit_" is a spec bug, see https://github.com/tc39/proposal-temporal/pull/1931
+        // c. Perform ! CreateDataPropertyOrThrow(roundTo, "_smallestUnit_", paramString).
+        MUST(round_to->create_data_property_or_throw(vm.names.smallestUnit, vm.argument(0)));
+    }
+    // 5. Else,
+    else {
+        // a. Set roundTo to ? GetOptionsObject(roundTo).
+        round_to = TRY(get_options_object(global_object, vm.argument(0)));
+    }
+
+    // 6. Let smallestUnitPresent be true.
+    bool smallest_unit_present = true;
+
+    // 7. Let largestUnitPresent be true.
+    bool largest_unit_present = true;
+
+    // 8. Let smallestUnit be ? ToSmallestTemporalUnit(roundTo, « », undefined).
+    auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *round_to, {}, {}));
+
+    // 9. If smallestUnit is undefined, then
+    if (!smallest_unit.has_value()) {
+        // a. Set smallestUnitPresent to false.
+        smallest_unit_present = false;
+
+        // b. Set smallestUnit to "nanosecond".
+        smallest_unit = "nanosecond"sv;
+    }
+
+    // 10. Let defaultLargestUnit be ! DefaultTemporalLargestUnit(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]]).
+    auto default_largest_unit = default_temporal_largest_unit(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds());
+
+    // 11. Set defaultLargestUnit to ! LargerOfTwoTemporalUnits(defaultLargestUnit, smallestUnit).
+    default_largest_unit = larger_of_two_temporal_units(default_largest_unit, *smallest_unit);
+
+    // 12. Let largestUnit be ? ToLargestTemporalUnit(roundTo, « », undefined).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *round_to, {}, {}));
+
+    // 13. If largestUnit is undefined, then
+    if (!largest_unit.has_value()) {
+        // a. Set largestUnitPresent to false.
+        largest_unit_present = false;
+
+        // b. Set largestUnit to defaultLargestUnit.
+        largest_unit = default_largest_unit;
+    }
+    // 14. Else if largestUnit is "auto", then
+    else if (*largest_unit == "auto"sv) {
+        // a. Set largestUnit to defaultLargestUnit.
+        largest_unit = default_largest_unit;
+    }
+
+    // 15. If smallestUnitPresent is false and largestUnitPresent is false, then
+    if (!smallest_unit_present && !largest_unit_present) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalMissingUnits);
+    }
+
+    // 16. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
+
+    // 17. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
+    auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *round_to, "halfExpand"sv));
+
+    // 18. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
+    auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
+
+    // 19. Let roundingIncrement be ? ToTemporalRoundingIncrement(roundTo, maximum, false).
+    auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *round_to, maximum.has_value() ? *maximum : Optional<double> {}, false));
+
+    // 20. Let relativeTo be ? ToRelativeTemporalObject(roundTo).
+    auto relative_to = TRY(to_relative_temporal_object(global_object, *round_to));
+
+    // 21. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], largestUnit, relativeTo).
+    auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), *largest_unit, relative_to));
+
+    // 22. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration[[Seconds]], duration[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo).
+    auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+
+    // 23. Let adjustResult be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo).
+    auto adjust_result = TRY(adjust_rounded_duration_days(global_object, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+
+    // 24. Let balanceResult be ? BalanceDurationRelative(adjustResult.[[Years]], adjustResult.[[Months]], adjustResult.[[Weeks]], adjustResult.[[Days]], largestUnit, relativeTo).
+    auto balance_result = TRY(balance_duration_relative(global_object, adjust_result.years, adjust_result.months, adjust_result.weeks, adjust_result.days, *largest_unit, relative_to));
+
+    // 25. If relativeTo has an [[InitializedTemporalZonedDateTime]] internal slot, then
+    // TODO: The spec doesn't check the type of relativeTo here and relativeTo can be undefined.
+    if (relative_to.is_object() && is<ZonedDateTime>(relative_to.as_object())) {
+        auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(relative_to.as_object());
+
+        // a. Set relativeTo to ? MoveRelativeZonedDateTime(relativeTo, balanceResult.[[Years]], balanceResult.[[Months]], balanceResult.[[Weeks]], 0).
+        relative_to = TRY(move_relative_zoned_date_time(global_object, relative_to_zoned_date_time, balance_result.years, balance_result.months, balance_result.weeks, 0));
+    }
+
+    // 26. Let result be ? BalanceDuration(balanceResult.[[Days]], adjustResult.[[Hours]], adjustResult.[[Minutes]], adjustResult.[[Seconds]], adjustResult.[[Milliseconds]], adjustResult.[[Microseconds]], adjustResult.[[Nanoseconds]], largestUnit, relativeTo).
+    // FIXME: Narrowing conversion from 'double' to 'i64'
+    auto* adjust_result_nanoseconds = js_bigint(vm, Crypto::SignedBigInteger::create_from(adjust_result.nanoseconds));
+    auto result = TRY(balance_duration(global_object, balance_result.days, adjust_result.hours, adjust_result.minutes, adjust_result.seconds, adjust_result.milliseconds, adjust_result.microseconds, *adjust_result_nanoseconds, *largest_unit, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+
+    // 27. Return ? CreateTemporalDuration(balanceResult.[[Years]], balanceResult.[[Months]], balanceResult.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return TRY(create_temporal_duration(global_object, balance_result.years, balance_result.months, balance_result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 7.3.21 Temporal.Duration.prototype.total ( totalOf ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.total

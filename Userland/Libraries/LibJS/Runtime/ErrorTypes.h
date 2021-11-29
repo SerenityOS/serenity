@@ -246,6 +246,7 @@
     M(TemporalInvalidZonedDateTimeString, "Invalid zoned date time string '{}'")                                                        \
     M(TemporalMissingOptionsObject, "Required options object is missing or undefined")                                                  \
     M(TemporalMissingStartingPoint, "A starting point is required for balancing {}")                                                    \
+    M(TemporalMissingUnits, "One or both of smallestUnit or largestUnit is required")                                                   \
     M(TemporalObjectMustHaveOneOf, "Object must have at least one of the following properties: {}")                                     \
     M(TemporalObjectMustNotHave, "Object must not have a defined {} property")                                                          \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
