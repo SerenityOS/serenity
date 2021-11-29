@@ -215,10 +215,16 @@ static void dump(const RegisterState& regs)
 
 void handle_crash(RegisterState const& regs, char const* description, int signal, bool out_of_memory)
 {
-    if (!Process::has_current())
-        PANIC("{} with !current", description);
+    auto* current_thread = Thread::current();
+    if (!current_thread)
+        PANIC("{} with !Thread::current()", description);
 
-    auto& process = Process::current();
+    if (!current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
+        current_thread->send_urgent_signal_to_self(signal);
+        return;
+    }
+
+    auto& process = current_thread->process();
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
@@ -316,7 +322,7 @@ void page_fault_handler(TrapFrame* trap)
     VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process().address_space(), userspace_sp)) {
         dbgln("Invalid stack pointer: {}", userspace_sp);
-        handle_crash(regs, "Bad stack on page fault", SIGSEGV);
+        return handle_crash(regs, "Bad stack on page fault", SIGSEGV);
     }
 
     if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
@@ -417,7 +423,7 @@ void page_fault_handler(TrapFrame* trap)
             }
         }
 
-        handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
+        return handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
         dbgln_if(PAGE_FAULT_DEBUG, "Continuing after resolved page fault");
     } else {
