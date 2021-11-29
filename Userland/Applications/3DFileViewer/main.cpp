@@ -71,7 +71,9 @@ private:
         // Set projection matrix
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glFrustum(-0.5, 0.5, -0.5, 0.5, 1, 1500);
+
+        auto const half_aspect_ratio = static_cast<double>(RENDER_WIDTH) / RENDER_HEIGHT / 2;
+        glFrustum(-half_aspect_ratio, half_aspect_ratio, -0.5, 0.5, 1, 1500);
 
         m_init_list = glGenLists(1);
         glNewList(m_init_list, GL_COMPILE);
