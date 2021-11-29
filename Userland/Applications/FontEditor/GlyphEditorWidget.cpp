@@ -224,7 +224,7 @@ void GlyphEditorWidget::enter_event(Core::Event&)
         set_override_cursor(Gfx::StandardCursor::None);
 }
 
-void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
+void GlyphEditorWidget::draw_at_mouse(GUI::MouseEvent const& event)
 {
     bool set = event.buttons() & GUI::MouseButton::Primary;
     bool unset = event.buttons() & GUI::MouseButton::Secondary;
@@ -245,7 +245,7 @@ void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
     update();
 }
 
-void GlyphEditorWidget::move_at_mouse(const GUI::MouseEvent& event)
+void GlyphEditorWidget::move_at_mouse(GUI::MouseEvent const& event)
 {
     int x_delta = ((event.x() - 1) / m_scale) - m_scaled_offset_x;
     int y_delta = ((event.y() - 1) / m_scale) - m_scaled_offset_y;
