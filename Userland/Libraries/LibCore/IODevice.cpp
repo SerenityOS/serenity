@@ -63,6 +63,25 @@ ByteBuffer IODevice::read(size_t max_size)
     return buffer;
 }
 
+ErrorOr<void> IODevice::try_read_all_chunked(Function<void(ReadonlyBytes)> process_chunk, size_t chunk_size)
+{
+    if (m_fd < 0)
+        return Error::from_string_literal("Invalid file descriptor");
+    if (!chunk_size)
+        return {};
+
+    while (!m_eof) {
+        if (m_buffered_data.size() < chunk_size)
+            TRY(try_populate_read_buffer(max(chunk_size - m_buffered_data.size(), 1024)));
+
+        auto size = min(chunk_size, m_buffered_data.size());
+        process_chunk({ m_buffered_data.data(), size });
+        m_buffered_data.remove(0, size);
+    }
+
+    return {};
+}
+
 bool IODevice::can_read_from_fd() const
 {
     // FIXME: Can we somehow remove this once Core::Socket is implemented using non-blocking sockets?

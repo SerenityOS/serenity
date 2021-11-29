@@ -72,6 +72,7 @@ public:
 
     ByteBuffer read(size_t max_size);
     ByteBuffer read_all();
+    ErrorOr<void> try_read_all_chunked(Function<void(ReadonlyBytes)> process_chunk, size_t chunk_size = 16384);
     String read_line(size_t max_size = 16384);
 
     bool write(const u8*, int size);
