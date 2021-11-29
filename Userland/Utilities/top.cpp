@@ -12,6 +12,8 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,7 +135,7 @@ static Snapshot get_snapshot()
 static bool g_window_size_changed = true;
 static struct winsize g_window_size;
 
-static void parse_args(int argc, char** argv, TopOption& top_option)
+static void parse_args(Main::Arguments arguments, TopOption& top_option)
 {
     Core::ArgsParser::Option sort_by_option {
         true,
@@ -172,39 +174,23 @@ static void parse_args(int argc, char** argv, TopOption& top_option)
     args_parser.set_general_help("Display information about processes");
     args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr);
     args_parser.add_option(move(sort_by_option));
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty sigaction ", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/proc/all", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio rpath tty sigaction"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
     unveil(nullptr, nullptr);
 
     signal(SIGWINCH, [](int) {
         g_window_size_changed = true;
     });
 
-    if (pledge("stdio rpath tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio rpath tty"));
     TopOption top_option;
-    parse_args(argc, argv, top_option);
+    parse_args(arguments, top_option);
 
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();
