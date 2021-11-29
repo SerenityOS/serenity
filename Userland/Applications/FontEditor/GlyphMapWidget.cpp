@@ -31,6 +31,9 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
 
 void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
 {
+    if (!m_font)
+        return;
+
     int event_width = event.size().width() - this->vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
     int event_height = event.size().height() - (frame_thickness() * 2);
     m_visible_glyphs = (event_width * event_height) / (font().max_glyph_width() * font().glyph_height());
