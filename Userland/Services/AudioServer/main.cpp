@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -7,31 +7,22 @@
 
 #include "Mixer.h"
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio recvfd thread accept cpath rpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath unix"));
 
     auto config = Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes);
-    if (unveil(config->filename().characters(), "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil("/dev/audio", "wc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    unveil(nullptr, nullptr);
+    TRY(Core::System::unveil(config->filename(), "rwc"));
+    TRY(Core::System::unveil("/dev/audio", "wc"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop event_loop;
-    auto mixer = AudioServer::Mixer::construct(config);
-
-    auto server = Core::LocalServer::construct();
+    auto mixer = TRY(AudioServer::Mixer::try_create(config));
+    auto server = TRY(Core::LocalServer::try_create());
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
 
@@ -41,12 +32,8 @@ int main(int, char**)
         IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
     };
 
-    if (pledge("stdio recvfd thread accept cpath rpath wpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     return event_loop.exec();
 }

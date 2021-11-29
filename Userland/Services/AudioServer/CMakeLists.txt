@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_bin(AudioServer)
-target_link_libraries(AudioServer LibCore LibThreading LibIPC)
+target_link_libraries(AudioServer LibCore LibThreading LibIPC LibMain)
