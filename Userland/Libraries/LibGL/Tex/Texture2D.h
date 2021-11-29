@@ -38,7 +38,13 @@ public:
     void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment);
     void replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment);
 
-    MipMap const& mipmap(unsigned lod) const;
+    MipMap const& mipmap(unsigned lod) const
+    {
+        if (lod >= m_mipmaps.size())
+            return m_mipmaps.back();
+
+        return m_mipmaps.at(lod);
+    }
 
     GLenum internal_format() const { return m_internal_format; }
     Sampler2D const& sampler() const { return m_sampler; }
