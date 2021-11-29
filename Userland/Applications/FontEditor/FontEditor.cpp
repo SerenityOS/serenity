@@ -135,16 +135,8 @@ FontEditorWidget::FontEditorWidget()
     m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
 
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        if (window()->is_modified()) {
-            auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-            if (result == GUI::Dialog::ExecResult::ExecYes) {
-                m_save_action->activate();
-                if (window()->is_modified())
-                    return;
-            }
-            if (result == GUI::Dialog::ExecResult::ExecCancel)
-                return;
-        }
+        if (!request_close())
+            return;
         auto new_font_wizard = NewFontDialog::construct(window());
         if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
             auto metadata = new_font_wizard->new_font_metadata();
