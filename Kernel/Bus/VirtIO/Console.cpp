@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Bus/VirtIO/Console.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Sections.h>
 #include <Kernel/WorkQueue.h>
 
@@ -50,10 +51,10 @@ UNMAP_AFTER_INIT void Console::initialize()
         if (success) {
             finish_init();
 
-            if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT))
+            if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT)) {
                 setup_multiport();
-            else {
-                auto port = make_ref_counted<VirtIO::ConsolePort>(0u, *this);
+            } else {
+                auto port = MUST(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(0u, *this));
                 port->init_receive_buffer({});
                 m_ports.append(port);
             }
@@ -160,13 +161,13 @@ void Console::process_control_message(ControlMessage message)
                 return;
             }
 
-            m_ports.at(id) = make_ref_counted<VirtIO::ConsolePort>(id, *this);
+            m_ports.at(id) = MUST(DeviceManagement::the().try_create_device<VirtIO::ConsolePort>(id, *this));
+
             ControlMessage ready_event {
                 .id = static_cast<u32>(id),
                 .event = (u16)ControlEvent::PortReady,
                 .value = (u16)ControlMessage::Status::Success
             };
-
             write_control_message(ready_event);
         });
 
