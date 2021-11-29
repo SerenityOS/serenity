@@ -106,7 +106,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     return window;
 }
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+FontEditorWidget::FontEditorWidget()
 {
     load_from_gml(font_editor_window_gml);
 
@@ -475,8 +475,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
         m_statusbar->set_override_text({});
     };
-
-    initialize(path, move(edited_font));
 }
 
 FontEditorWidget::~FontEditorWidget()
@@ -619,22 +617,18 @@ void FontEditorWidget::set_show_font_metadata(bool show)
     m_font_metadata_groupbox->set_visible(m_font_metadata);
 }
 
-void FontEditorWidget::open_file(String const& path)
+bool FontEditorWidget::open_file(String const& path)
 {
     auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
     if (!bitmap_font) {
         String message = String::formatted("Couldn't load font: {}\n", path);
         GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
-        return;
+        return false;
     }
-    RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
-    if (!new_font) {
-        String message = String::formatted("Couldn't load font: {}\n", path);
-        GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
-        return;
-    }
+    auto new_font = bitmap_font->unmasked_character_set();
     window()->set_modified(false);
     initialize(path, move(new_font));
+    return true;
 }
 
 void FontEditorWidget::undo()
