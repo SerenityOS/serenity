@@ -43,6 +43,7 @@ private:
     void undo();
     void redo();
     void did_modify_font();
+    void did_resize_glyph_editor();
     void update_statusbar();
     void update_preview();
 
