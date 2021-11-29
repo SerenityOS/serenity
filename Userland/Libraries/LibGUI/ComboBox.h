@@ -32,7 +32,7 @@ public:
     void set_model(NonnullRefPtr<Model>);
 
     size_t selected_index() const;
-    void set_selected_index(size_t index);
+    void set_selected_index(size_t index, AllowCallback = AllowCallback::Yes);
 
     bool only_allow_values_from_model() const { return m_only_allow_values_from_model; }
     void set_only_allow_values_from_model(bool);
