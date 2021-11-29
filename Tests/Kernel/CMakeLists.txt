@@ -41,6 +41,7 @@ set(LIBTEST_BASED_SOURCES
     TestMunMap.cpp
     TestProcFS.cpp
     TestProcFSWrite.cpp
+    TestSigAltStack.cpp
 )
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
