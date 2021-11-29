@@ -34,7 +34,7 @@ constexpr static T mix(const T& x, const T& y, float interp)
     return x * (1 - interp) + y * interp;
 }
 
-static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
+ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 {
     auto clamped = v.clamped(0, 1);
     u8 r = clamped.x() * 255;
