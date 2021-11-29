@@ -21,6 +21,11 @@ public:
         Move
     };
 
+    enum Direction {
+        Clockwise,
+        Counterclockwise
+    };
+
     virtual ~GlyphEditorWidget() override;
 
     void initialize(Gfx::BitmapFont&);
@@ -34,7 +39,7 @@ public:
     void delete_glyph();
     bool is_glyph_empty();
 
-    void rotate_90();
+    void rotate_90(Direction);
     void flip_vertically();
     void flip_horizontally();
 
