@@ -188,7 +188,10 @@ extern "C" {
 #define GL_REPLACE 0x1E01
 
 // Texture targets
+#define GL_TEXTURE_1D 0x0DE0
 #define GL_TEXTURE_2D 0x0DE1
+#define GL_TEXTURE_3D 0x806F
+#define GL_TEXTURE_CUBE_MAP 0x8513
 
 // Texture Unit indices
 #define GL_TEXTURE0 0x84C0
