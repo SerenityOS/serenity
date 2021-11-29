@@ -250,23 +250,6 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     return region->vaddr().get();
 }
 
-static ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
-{
-    if (Memory::page_round_up_would_wrap(size))
-        return EINVAL;
-
-    if ((address + size) < address)
-        return EINVAL;
-
-    if (Memory::page_round_up_would_wrap(address + size))
-        return EINVAL;
-
-    auto base = VirtualAddress { address }.page_base();
-    auto end = Memory::page_round_up(address + size);
-
-    return Memory::VirtualRange { base, end - base.get() };
-}
-
 ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
@@ -276,7 +259,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         REQUIRE_PROMISE(prot_exec);
     }
 
-    auto range_to_mprotect = TRY(expand_range_to_page_boundaries(addr.ptr(), size));
+    auto range_to_mprotect = TRY(Memory::expand_range_to_page_boundaries(addr.ptr(), size));
     if (!range_to_mprotect.size())
         return EINVAL;
 
@@ -411,7 +394,7 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
-    auto range_to_madvise = TRY(expand_range_to_page_boundaries(address.ptr(), size));
+    auto range_to_madvise = TRY(Memory::expand_range_to_page_boundaries(address.ptr(), size));
 
     if (!range_to_madvise.size())
         return EINVAL;
@@ -447,7 +430,7 @@ ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap
         return ENAMETOOLONG;
 
     auto name = TRY(try_copy_kstring_from_user(params.name));
-    auto range = TRY(expand_range_to_page_boundaries((FlatPtr)params.addr, params.size));
+    auto range = TRY(Memory::expand_range_to_page_boundaries((FlatPtr)params.addr, params.size));
 
     auto* region = address_space().find_region_from_range(range);
     if (!region)
@@ -475,7 +458,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*>
     REQUIRE_PROMISE(stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto old_range = TRY(expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size));
+    auto old_range = TRY(Memory::expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size));
 
     auto* old_region = address_space().find_region_from_range(old_range);
     if (!old_region)
