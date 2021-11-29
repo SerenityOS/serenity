@@ -193,7 +193,11 @@ FontEditorWidget::FontEditorWidget()
     });
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         m_glyph_editor_widget->paste_glyph();
-        m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+        if (m_edited_font->is_fixed_width())
+            m_glyph_editor_present_checkbox->set_checked(true, GUI::AllowCallback::No);
+        else
+            m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph()), GUI::AllowCallback::No);
+        update_statusbar();
     });
     m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
