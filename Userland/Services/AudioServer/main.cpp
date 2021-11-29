@@ -34,15 +34,11 @@ int main(int, char**)
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbgln("AudioServer: accept failed.");
-            return;
-        }
+
+    server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, *mixer);
+        IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
     };
 
     if (pledge("stdio recvfd thread accept cpath rpath wpath", nullptr) < 0) {

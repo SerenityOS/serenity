@@ -30,26 +30,16 @@ EventLoop::EventLoop()
     ok = m_wm_server->take_over_from_system_server("/tmp/portal/wm");
     VERIFY(ok);
 
-    m_window_server->on_ready_to_accept = [this] {
-        auto client_socket = m_window_server->accept();
-        if (!client_socket) {
-            dbgln("WindowServer: accept failed.");
-            return;
-        }
+    m_window_server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ClientConnection>(client_socket.release_nonnull(), client_id);
+        IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
     };
 
-    m_wm_server->on_ready_to_accept = [this] {
-        auto client_socket = m_wm_server->accept();
-        if (!client_socket) {
-            dbgln("WindowServer: WM accept failed.");
-            return;
-        }
+    m_wm_server->on_accept = [&](auto client_socket) {
         static int s_next_wm_id = 0;
         int wm_id = ++s_next_wm_id;
-        IPC::new_client_connection<WMClientConnection>(client_socket.release_nonnull(), wm_id);
+        IPC::new_client_connection<WMClientConnection>(move(client_socket), wm_id);
     };
 
     if (m_keyboard_fd >= 0) {
