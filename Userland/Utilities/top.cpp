@@ -197,11 +197,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     usleep(10000);
     for (;;) {
         if (g_window_size_changed) {
-            int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_window_size);
-            if (rc < 0) {
-                perror("ioctl(TIOCGWINSZ)");
-                return 1;
-            }
+            TRY(Core::System::ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_window_size));
             g_window_size_changed = false;
         }
 
