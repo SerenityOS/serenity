@@ -175,7 +175,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto default_largest_unit = larger_of_two_temporal_units("second"sv, *smallest_unit);
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "year", "month", "week", "day" », "auto", defaultLargestUnit).
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, move(default_largest_unit)));
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "auto"sv, default_largest_unit));
 
     // 8. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
     TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));

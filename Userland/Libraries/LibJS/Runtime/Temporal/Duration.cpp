@@ -992,7 +992,7 @@ ThrowCompletionOr<TemporalDuration> add_duration(GlobalObject& global_object, do
         auto* difference_options = Object::create(global_object, nullptr);
 
         // k. Perform ! CreateDataPropertyOrThrow(differenceOptions, "largestUnit", dateLargestUnit).
-        MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, move(date_largest_unit))));
+        MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, date_largest_unit)));
 
         // l. Let dateDifference be ? CalendarDateUntil(calendar, relativeTo, end, differenceOptions).
         auto* date_difference = TRY(calendar_date_until(global_object, calendar, &relative_to, end, *difference_options));
