@@ -324,4 +324,22 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 #endif
 }
 
+ErrorOr<struct passwd> getpwnam(StringView name)
+{
+    ::setpwent();
+    if (errno)
+        return Error::from_syscall("getpwnam"sv, -errno);
+
+    while (auto* pw = ::getpwent()) {
+        if (errno)
+            return Error::from_syscall("getpwnam"sv, -errno);
+        if (pw->pw_name == name)
+            return *pw;
+    }
+    if (errno)
+        return Error::from_syscall("getpwnam"sv, -errno);
+    else
+        return Error::from_string_literal("getpwnam: Unknown username"sv);
+}
+
 }
