@@ -316,7 +316,7 @@ void page_fault_handler(TrapFrame* trap)
     VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process().address_space(), userspace_sp)) {
         dbgln("Invalid stack pointer: {}", userspace_sp);
-        handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
+        handle_crash(regs, "Bad stack on page fault", SIGSEGV);
     }
 
     if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
