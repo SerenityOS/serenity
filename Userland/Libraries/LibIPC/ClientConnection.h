@@ -60,7 +60,7 @@ public:
 
     int client_id() const { return m_client_id; }
 
-    virtual void die() = 0;
+    virtual void die() override = 0;
 
 private:
     int m_client_id { -1 };
