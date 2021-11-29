@@ -97,7 +97,7 @@ public:
     virtual void gl_fogf(GLenum pname, GLfloat param) override;
     virtual void gl_fogi(GLenum pname, GLint param) override;
     virtual void gl_pixel_store(GLenum pname, GLfloat param) override;
-    virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+    virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) override;
     virtual void present() override;
 
 private:
