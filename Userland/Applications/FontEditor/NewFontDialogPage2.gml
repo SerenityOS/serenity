@@ -11,7 +11,7 @@
             title: "Metadata"
             fixed_width: 200
             layout: @GUI::VerticalBoxLayout {
-                margins: [4]
+                margins: [6]
             }
 
             @GUI::Widget {
@@ -26,7 +26,7 @@
 
                 @GUI::SpinBox {
                     name: "height_spinbox"
-                    min: 0
+                    min: 1
                 }
             }
 
@@ -42,7 +42,7 @@
 
                 @GUI::SpinBox {
                     name: "width_spinbox"
-                    min: 0
+                    min: 1
                 }
             }
 
@@ -104,13 +104,14 @@
                 layout: @GUI::HorizontalBoxLayout {
                 }
 
+                @GUI::Widget {
+                    fixed_width: 80
+                }
+
                 @GUI::CheckBox {
                     name: "fixed_width_checkbox"
                     text: "Fixed width"
                     autosize: true
-                }
-
-                @GUI::Widget {
                 }
             }
         }
