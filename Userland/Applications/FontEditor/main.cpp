@@ -34,34 +34,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    RefPtr<Gfx::BitmapFont> edited_font;
-    if (path == nullptr) {
-        auto bitmap_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
-        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
-    } else {
-        auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
-        if (!bitmap_font) {
-            String message = String::formatted("Couldn't load font: {}\n", path);
-            GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
-            return 1;
-        }
-        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->unmasked_character_set());
-        if (!edited_font) {
-            String message = String::formatted("Couldn't load font: {}\n", path);
-            GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
-            return 1;
-        }
-    }
-
     auto app_icon = GUI::Icon::default_icon("app-font-editor");
 
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(440, 470);
 
-    auto& font_editor = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
-
+    auto& font_editor = window->set_main_widget<FontEditorWidget>();
     font_editor.initialize_menubar(*window);
+
+    if (path) {
+        auto success = font_editor.open_file(path);
+        if (!success)
+            return 1;
+    } else {
+        auto mutable_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone())->unmasked_character_set();
+        font_editor.initialize({}, move(mutable_font));
+    }
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (font_editor.request_close())
