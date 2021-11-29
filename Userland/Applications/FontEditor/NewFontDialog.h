@@ -60,7 +60,6 @@ private:
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
     RefPtr<GUI::CheckBox> m_fixed_width_checkbox;
 
-    Vector<String> m_font_list;
     Vector<String> m_font_weight_list;
     Vector<String> m_font_slope_list;
 };
