@@ -145,7 +145,7 @@ Device::~Device()
 
 ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(const OpenFileDescription&) const
 {
-    return KString::try_create(String::formatted("device:{},{}", major(), minor()));
+    return KString::formatted("device:{},{}", major(), minor());
 }
 
 void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)
