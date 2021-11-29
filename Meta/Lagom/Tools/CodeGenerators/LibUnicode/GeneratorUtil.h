@@ -247,8 +247,8 @@ Optional<@return_type@> @method_name@(StringView key)
 template<typename IdentifierFormatter>
 void generate_enum(SourceGenerator& generator, IdentifierFormatter&& format_identifier, StringView name, StringView default_, Vector<String>& values, Vector<Alias> aliases = {})
 {
-    quick_sort(values);
-    quick_sort(aliases, [](auto const& alias1, auto const& alias2) { return alias1.alias < alias2.alias; });
+    quick_sort(values, [](auto const& value1, auto const& value2) { return value1.to_lowercase() < value2.to_lowercase(); });
+    quick_sort(aliases, [](auto const& alias1, auto const& alias2) { return alias1.alias.to_lowercase() < alias2.alias.to_lowercase(); });
 
     generator.set("name", name);
     generator.set("underlying", ((values.size() + !default_.is_empty()) < 256) ? "u8"sv : "u16"sv);
