@@ -293,6 +293,19 @@ void Region::remap()
         TODO();
 }
 
+void Region::clear_to_zero()
+{
+    VERIFY(vmobject().is_anonymous());
+    SpinlockLocker locker(vmobject().m_lock);
+    for (auto i = 0u; i < page_count(); ++i) {
+        auto page = physical_page_slot(i);
+        VERIFY(page);
+        if (page->is_shared_zero_page())
+            continue;
+        page = MM.shared_zero_page();
+    }
+}
+
 PageFaultResponse Region::handle_fault(PageFault const& fault)
 {
     auto page_index_in_region = page_index_from_address(fault.vaddr());
