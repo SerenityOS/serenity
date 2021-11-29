@@ -44,7 +44,7 @@ public:
     int preferred_height() const;
 
     Gfx::BitmapFont& font() { return *m_font; }
-    const Gfx::BitmapFont& font() const { return *m_font; }
+    Gfx::BitmapFont const& font() const { return *m_font; }
 
     int scale() const { return m_scale; }
     void set_scale(int scale);
@@ -63,8 +63,8 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void enter_event(Core::Event&) override;
 
-    void draw_at_mouse(const GUI::MouseEvent&);
-    void move_at_mouse(const GUI::MouseEvent&);
+    void draw_at_mouse(GUI::MouseEvent const&);
+    void move_at_mouse(GUI::MouseEvent const&);
 
     RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph { 0 };

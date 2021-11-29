@@ -21,13 +21,13 @@ public:
     virtual ~FontEditorWidget() override;
 
     bool open_file(String const&);
-    bool save_as(const String&);
+    bool save_as(String const&);
     bool request_close();
     void update_title();
 
-    const String& path() { return m_path; }
-    const Gfx::BitmapFont& edited_font() { return *m_edited_font; }
-    void initialize(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    String const& path() { return m_path; }
+    Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
+    void initialize(String const& path, RefPtr<Gfx::BitmapFont>&&);
     void initialize_menubar(GUI::Window&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }

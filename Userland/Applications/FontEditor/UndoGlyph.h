@@ -12,7 +12,7 @@
 
 class UndoGlyph : public RefCounted<UndoGlyph> {
 public:
-    explicit UndoGlyph(const u32 code_point, const Gfx::BitmapFont& font)
+    explicit UndoGlyph(u32 const code_point, Gfx::BitmapFont const& font)
         : m_code_point(code_point)
         , m_font(font)
     {
@@ -27,7 +27,7 @@ public:
         state->m_width = glyph.width();
         return state;
     }
-    void restore_state(const UndoGlyph& state) const
+    void restore_state(UndoGlyph const& state) const
     {
         auto bitmap = font().glyph(state.m_code_point).glyph_bitmap();
         for (int x = 0; x < font().max_glyph_width(); x++)
@@ -38,7 +38,7 @@ public:
     }
     void set_code_point(u32 code_point) { m_code_point = code_point; }
     void set_font(Gfx::BitmapFont& font) { m_font = font; }
-    const Gfx::BitmapFont& font() const { return *m_font; }
+    Gfx::BitmapFont const& font() const { return *m_font; }
     u8 restored_width() const { return m_restored_width; }
     u32 restored_code_point() const { return m_restored_code_point; }
 
