@@ -128,7 +128,7 @@ void GLContextWidget::resize_event(GUI::ResizeEvent& event)
     GUI::Frame::resize_event(event);
 
     if (m_stats)
-        m_stats->set_x(width() - m_stats->width());
+        m_stats->set_x(width() - m_stats->width() - 6);
 };
 
 void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
@@ -182,9 +182,9 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_context->present();
 
     if ((m_cycles % 30) == 0) {
-        int render_time = m_accumulated_time / 30;
-        int frame_rate = render_time > 0 ? 1000 / render_time : 0;
-        m_stats->set_text(String::formatted("{} fps, {} ms", frame_rate, render_time));
+        auto render_time = m_accumulated_time / 30.0;
+        auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
+        m_stats->set_text(String::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
         m_accumulated_time = 0;
     }
 
@@ -307,8 +307,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& time = widget.add<GUI::Label>();
     time.set_visible(false);
     time.set_foreground_role(ColorRole::HoverHighlight);
-    time.set_relative_rect({ 0, 8, 86, 10 });
-    time.set_x(widget.width() - time.width());
+    time.set_relative_rect({ 0, 8, 100, 10 });
+    time.set_text_alignment(Gfx::TextAlignment::CenterRight);
+    time.set_x(widget.width() - time.width() - 6);
     widget.set_stat_label(time);
 
     auto& file_menu = window->add_menu("&File");
