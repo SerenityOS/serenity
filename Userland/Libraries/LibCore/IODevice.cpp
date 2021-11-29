@@ -245,6 +245,7 @@ bool IODevice::seek(i64 offset, SeekMode mode, off_t* pos)
         break;
     case SeekMode::FromCurrentPosition:
         m = SEEK_CUR;
+        offset -= m_buffered_data.size();
         break;
     case SeekMode::FromEndPosition:
         m = SEEK_END;

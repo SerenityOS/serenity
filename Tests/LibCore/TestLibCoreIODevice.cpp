@@ -44,3 +44,35 @@ TEST_CASE(file_readline)
         EXPECT_EQ(inputData[i], outputData[i]);
     }
 }
+
+TEST_CASE(file_get_read_position)
+{
+    const String path = "10kb.txt";
+    auto file = Core::File::open(path, Core::OpenMode::ReadOnly).release_value();
+
+    const size_t step_size = 98;
+    for (size_t i = 0; i < 10240 - step_size; i += step_size) {
+        auto read_buffer = file->read(step_size);
+        EXPECT_EQ(read_buffer.size(), step_size);
+
+        for (size_t j = 0; j < read_buffer.size(); j++) {
+            EXPECT_EQ(static_cast<u32>(read_buffer[j] - '0'), (i + j) % 10);
+        }
+
+        off_t offset = 0;
+        VERIFY(file->seek(0, Core::SeekMode::FromCurrentPosition, &offset));
+        EXPECT_EQ(offset, static_cast<off_t>(i + step_size));
+    }
+
+    {
+        off_t offset = 0;
+        VERIFY(file->seek(0, Core::SeekMode::FromEndPosition, &offset));
+        EXPECT_EQ(offset, 10240);
+    }
+
+    {
+        off_t offset = 0;
+        VERIFY(file->seek(0, Core::SeekMode::SetPosition, &offset));
+        EXPECT_EQ(offset, 0);
+    }
+}
