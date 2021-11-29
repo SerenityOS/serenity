@@ -177,9 +177,18 @@ FontEditorWidget::FontEditorWidget()
         save_as(save_path.value());
     });
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
+        if (!m_edited_font->contains_raw_glyph(m_glyph_map_widget->selected_glyph()))
+            return;
         m_glyph_editor_widget->cut_glyph();
+        if (m_edited_font->is_fixed_width())
+            m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
+        else
+            m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
+        update_statusbar();
     });
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
+        if (!m_edited_font->contains_raw_glyph(m_glyph_map_widget->selected_glyph()))
+            return;
         m_glyph_editor_widget->copy_glyph();
     });
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
