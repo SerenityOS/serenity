@@ -122,7 +122,6 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq,
     , IRQHandler(irq)
     , m_channel_type(type)
     , m_io_group(io_group)
-    , m_parent_controller(controller)
 {
 }
 
@@ -131,7 +130,6 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOAddre
     , IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
     , m_io_group(io_group)
-    , m_parent_controller(controller)
 {
 }
 
