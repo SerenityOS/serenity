@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -32,7 +33,12 @@ public:
         Short,
     };
 
-    static Vector<StringView> const& relevant_extension_keys(); // [[RelevantExtensionKeys]]
+    static constexpr auto relevant_extension_keys()
+    {
+        // 11.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.datetimeformat-internal-slots
+        // The value of the [[RelevantExtensionKeys]] internal slot is « "ca", "hc", "nu" ».
+        return AK::Array { "ca"sv, "hc"sv, "nu"sv };
+    }
 
     DateTimeFormat(Object& prototype);
     virtual ~DateTimeFormat() override = default;

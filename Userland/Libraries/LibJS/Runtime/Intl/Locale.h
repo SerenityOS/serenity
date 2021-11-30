@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -21,7 +22,16 @@ class Locale final : public Object {
 public:
     static Locale* create(GlobalObject&, Unicode::LocaleID const&);
 
-    static Vector<StringView> const& relevant_extension_keys(); // [[RelevantExtensionKeys]]
+    static constexpr auto relevant_extension_keys()
+    {
+        // 14.2.2 Internal slots, https://tc39.es/ecma402/#sec-intl.locale-internal-slots
+        // The value of the [[RelevantExtensionKeys]] internal slot is « "ca", "co", "hc", "kf", "kn", "nu" ».
+        // If %Collator%.[[RelevantExtensionKeys]] does not contain "kf", then remove "kf" from %Locale%.[[RelevantExtensionKeys]].
+        // If %Collator%.[[RelevantExtensionKeys]] does not contain "kn", then remove "kn" from %Locale%.[[RelevantExtensionKeys]].
+
+        // FIXME: We do not yet have an Intl.Collator object. For now, we behave as if "kf" and "kn" exist, as test262 depends on it.
+        return AK::Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
+    }
 
     Locale(Object& prototype);
     Locale(Unicode::LocaleID const&, Object& prototype);
