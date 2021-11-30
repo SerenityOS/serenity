@@ -1,8 +1,9 @@
 describe("parsing freestanding async functions", () => {
     test("simple", () => {
         expect(`async function foo() {}`).toEval();
+        // Although it does not create an async function it is valid.
         expect(`async
-        function foo() {}`).not.toEval();
+        function foo() {}`).toEval();
     });
     test("await expression", () => {
         expect(`async function foo() { await bar(); }`).toEval();
@@ -166,6 +167,18 @@ describe("non async function declaration usage of async still works", () => {
 
         const evalResult = eval("async >= 2");
         expect(evalResult).toBeTrue();
+    });
+
+    test("async with line ending does not create a function", () => {
+        expect(() => {
+            // The ignore is needed otherwise prettier puts a ';' after async.
+            // prettier-ignore
+            async
+            function f() {}
+        }).toThrowWithMessage(ReferenceError, "'async' is not defined");
+
+        expect(`async
+                function f() { await 3; }`).not.toEval();
     });
 });
 

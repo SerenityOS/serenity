@@ -631,10 +631,15 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
                 return result.release_nonnull();
         }
         if (match_expression()) {
-            if (match(TokenType::Function) || (match(TokenType::Async) && next_token().type() == TokenType::Function) || match(TokenType::Class))
+            if (match(TokenType::Async)) {
+                auto lookahead_token = next_token();
+                if (lookahead_token.type() == TokenType::Function && !lookahead_token.trivia_contains_line_terminator())
+                    syntax_error("Async function declaration not allowed in single-statement context");
+            } else if (match(TokenType::Function) || match(TokenType::Class)) {
                 syntax_error(String::formatted("{} declaration not allowed in single-statement context", m_state.current_token.name()));
-            if (match(TokenType::Let) && next_token().type() == TokenType::BracketOpen)
+            } else if (match(TokenType::Let) && next_token().type() == TokenType::BracketOpen) {
                 syntax_error(String::formatted("let followed by [ is not allowed in single-statement context"));
+            }
 
             auto expr = parse_expression(0);
             consume_or_insert_semicolon();
@@ -3608,11 +3613,15 @@ bool Parser::match_declaration() const
         return try_match_let_declaration();
     }
 
+    if (type == TokenType::Async) {
+        auto lookahead_token = next_token();
+        return lookahead_token.type() == TokenType::Function && !lookahead_token.trivia_contains_line_terminator();
+    }
+
     return type == TokenType::Function
         || type == TokenType::Class
         || type == TokenType::Const
-        || type == TokenType::Let
-        || (type == TokenType::Async && next_token().type() == TokenType::Function);
+        || type == TokenType::Let;
 }
 
 Token Parser::next_token() const
