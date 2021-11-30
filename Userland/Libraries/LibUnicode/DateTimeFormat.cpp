@@ -67,7 +67,7 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
     case CalendarPatternStyle::Long:
         return "long"sv;
     case CalendarPatternStyle::Numeric:
-        return "Numeric"sv;
+        return "numeric"sv;
     case CalendarPatternStyle::TwoDigit:
         return "2-digit"sv;
     default:
