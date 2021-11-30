@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 #define __STRINGIFY_HELPER(x) #x
 #define __STRINGIFY(x) __STRINGIFY_HELPER(x)
 
@@ -23,8 +25,13 @@ extern "C" {
 [[noreturn]] void abort();
 }
 
-#define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
-#define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
-
 static constexpr bool TODO = false;
 #define TODO() VERIFY(TODO)
+
+#if ARCH(I386) || ARCH(X86_64)
+#    define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
+#    define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
+#else
+#    define VERIFY_INTERRUPTS_DISABLED() TODO()
+#    define VERIFY_INTERRUPTS_ENABLED() TODO()
+#endif
