@@ -685,7 +685,7 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
         // Check all texture units
         for (auto& texture_unit : m_texture_units) {
             if (texture_object->value == texture_unit.bound_texture())
-                texture_unit.unbind_texture(GL_TEXTURE_2D);
+                texture_unit.bind_texture_to_target(GL_TEXTURE_2D, nullptr);
         }
 
         m_allocated_textures.remove(name);
@@ -1386,7 +1386,7 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
     if (texture == 0) {
         switch (target) {
         case GL_TEXTURE_2D:
-            m_active_texture_unit->unbind_texture(target);
+            m_active_texture_unit->bind_texture_to_target(target, nullptr);
             return;
         default:
             VERIFY_NOT_REACHED();

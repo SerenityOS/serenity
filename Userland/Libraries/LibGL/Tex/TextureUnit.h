@@ -16,7 +16,6 @@ public:
     TextureUnit() = default;
 
     void bind_texture_to_target(GLenum texture_target, const RefPtr<Texture>& texture);
-    void unbind_texture(GLenum texture_target);
 
     RefPtr<Texture2D>& bound_texture_2d() const { return m_texture_target_2d; }
     RefPtr<Texture>& bound_texture() const { return m_currently_bound_texture; }
