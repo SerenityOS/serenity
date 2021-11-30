@@ -86,6 +86,7 @@ public:
     Function<void(Widget&)> on_middle_click;
     Function<void(Widget&)> on_tab_close_click;
     Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(Widget&)> on_double_click;
 
 protected:
     TabWidget();
@@ -99,6 +100,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
 
 private:
     Gfx::IntRect child_rect_for_size(const Gfx::IntSize&) const;
