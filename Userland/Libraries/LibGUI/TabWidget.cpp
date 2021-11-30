@@ -635,6 +635,18 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
     }
 }
 
+void TabWidget::doubleclick_event(MouseEvent&)
+{
+    for (auto& tab : m_tabs) {
+        if (auto* widget = tab.widget) {
+            deferred_invoke([this, widget] {
+                if (on_double_click)
+                    on_double_click(*widget);
+            });
+        }
+    }
+}
+
 void TabWidget::set_container_margins(GUI::Margins const& margins)
 {
     m_container_margins = margins;
