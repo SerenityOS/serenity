@@ -41,6 +41,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-text-editor");
 
+    auto left = Config::read_i32("TextEditor", "Window", "Left", 150);
+    auto top = Config::read_i32("TextEditor", "Window", "Top", 75);
+    auto width = Config::read_i32("TextEditor", "Window", "Width", 640);
+    auto height = Config::read_i32("TextEditor", "Window", "Height", 400);
+    auto was_maximized = Config::read_bool("TextEditor", "Window", "Maximized", false);
+
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 400);
 
@@ -49,8 +55,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     text_widget.editor().set_focus(true);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (text_widget.request_close())
+        if (text_widget.request_close()) {
+            Config::write_bool("TextEditor", "Window", "Maximized", window->is_maximized());
+            if (!window->is_maximized()) {
+                Config::write_i32("TextEditor", "Window", "Left", window->x());
+                Config::write_i32("TextEditor", "Window", "Top", window->y());
+                Config::write_i32("TextEditor", "Window", "Width", window->width());
+                Config::write_i32("TextEditor", "Window", "Height", window->height());
+            }
             return GUI::Window::CloseRequestDecision::Close;
+        }
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
@@ -68,6 +82,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     text_widget.initialize_menubar(*window);
+
+    window->set_rect({ left, top, width, height });
+    if (was_maximized)
+        window->set_maximized(true);
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
