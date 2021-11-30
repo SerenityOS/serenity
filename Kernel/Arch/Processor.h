@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <Kernel/Arch/x86/ASM_wrapper.h>
 
 namespace Kernel {
 
