@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool mode_coredump = false;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
-    args_parser.add_option(mode_coredump, "Inspect a coredump in HackStudio", "coredump", 'c');
+    args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
     args_parser.parse(arguments);
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
