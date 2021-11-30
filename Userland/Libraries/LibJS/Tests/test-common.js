@@ -353,7 +353,12 @@ class ExpectationError extends Error {
         toEval() {
             this.__expect(typeof this.target === "string");
             const success = canParseSource(this.target);
-            this.__expect(this.inverted ? !success : success);
+            this.__expect(
+                this.inverted ? !success : success,
+                () =>
+                    `Expected _${valueToString(this.target)}_` +
+                    (this.inverted ? "not to eval but it did" : "to eval but it didn't")
+            );
         }
 
         // Must compile regardless of inverted-ness
@@ -365,11 +370,18 @@ class ExpectationError extends Error {
             try {
                 result = eval(this.target);
             } catch (e) {
-                throw new ExpectationError();
+                throw new ExpectationError(
+                    `Expected _${valueToString(this.target)}_ to eval but it failed with ${e}`
+                );
             }
 
             this.__doMatcher(() => {
-                this.__expect(deepEquals(value, result));
+                this.__expect(
+                    deepEquals(value, result),
+                    () =>
+                        `Expected _${valueToString(this.target)}_ to eval to ` +
+                        `_${valueToString(value)}_ but got _${valueToString(result)}_`
+                );
             });
         }
 
