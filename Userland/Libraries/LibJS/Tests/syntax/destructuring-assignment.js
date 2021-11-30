@@ -47,7 +47,7 @@ describe("parsing", () => {
         expect(`let [ a, [ ...{length} ] ] = [];`).toEval();
     });
 
-    test("function parameters cannot use member expresssions", () => {
+    test("function parameters cannot use member expressions", () => {
         expect("function f([a.b]) {}").not.toEval();
         expect("function f([b[0]]) {}").not.toEval();
 
