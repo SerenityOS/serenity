@@ -558,10 +558,18 @@ void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule, int 
     }
     indent(builder, indent_levels);
     builder.append("  Declarations:\n");
-    for (auto& property : verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration()).properties()) {
+    auto& style_declaration = verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration());
+    for (auto& property : style_declaration.properties()) {
         indent(builder, indent_levels);
         builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
         if (property.important)
+            builder.append(" \033[31;1m!important\033[0m");
+        builder.append('\n');
+    }
+    for (auto& property : style_declaration.custom_properties()) {
+        indent(builder, indent_levels);
+        builder.appendff("    {}: '{}'", property.key, property.value.value->to_string());
+        if (property.value.important)
             builder.append(" \033[31;1m!important\033[0m");
         builder.append('\n');
     }

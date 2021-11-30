@@ -65,6 +65,7 @@ public:
     virtual bool set_property(PropertyID, StringView css_text) override;
 
     const Vector<StyleProperty>& properties() const { return m_properties; }
+    const HashMap<String, StyleProperty>& custom_properties() const { return m_custom_properties; }
     Optional<StyleProperty> custom_property(const String& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
