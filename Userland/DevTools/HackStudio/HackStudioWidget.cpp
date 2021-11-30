@@ -561,7 +561,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                 }
             }
         }
-    });
+    },
+        m_project_tree_view);
     delete_action->set_enabled(false);
     return delete_action;
 }
