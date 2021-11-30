@@ -11,6 +11,13 @@ namespace GL {
 
 void TextureUnit::bind_texture_to_target(GLenum texture_target, const RefPtr<Texture>& texture)
 {
+    if (!texture) {
+        m_texture_target_2d = nullptr;
+        m_currently_bound_target = GL_NONE;
+        m_currently_bound_texture = nullptr;
+        return;
+    }
+
     switch (texture_target) {
     case GL_TEXTURE_2D:
         m_texture_target_2d = static_ptr_cast<Texture2D>(texture);
@@ -20,20 +27,6 @@ void TextureUnit::bind_texture_to_target(GLenum texture_target, const RefPtr<Tex
     default:
         VERIFY_NOT_REACHED();
     }
-}
-
-void TextureUnit::unbind_texture(GLenum texture_target)
-{
-    switch (texture_target) {
-    case GL_TEXTURE_2D:
-        m_texture_target_2d = nullptr;
-        m_currently_bound_target = GL_NONE;
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    m_currently_bound_texture = nullptr;
 }
 
 }
