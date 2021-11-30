@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -16,14 +15,6 @@
 #include <stdlib.h>
 
 namespace JS::Intl {
-
-Vector<StringView> const& NumberFormat::relevant_extension_keys()
-{
-    // 15.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
-    // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
-    static Vector<StringView> relevant_extension_keys { "nu"sv };
-    return relevant_extension_keys;
-}
 
 // 15 NumberFormat Objects, https://tc39.es/ecma402/#numberformat-objects
 NumberFormat::NumberFormat(Object& prototype)

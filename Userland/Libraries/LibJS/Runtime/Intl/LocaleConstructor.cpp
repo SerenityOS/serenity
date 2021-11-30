@@ -108,7 +108,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
 }
 
 // 14.1.2 ApplyUnicodeExtensionToTag ( tag, options, relevantExtensionKeys ), https://tc39.es/ecma402/#sec-apply-unicode-extension-to-tag
-static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKeys options, Vector<StringView> const& relevant_extension_keys)
+static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKeys options, Span<StringView const> relevant_extension_keys)
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.
@@ -253,7 +253,7 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
     auto options_value = vm.argument(1);
 
     // 2. Let relevantExtensionKeys be %Locale%.[[RelevantExtensionKeys]].
-    auto const& relevant_extension_keys = Locale::relevant_extension_keys();
+    auto relevant_extension_keys = Locale::relevant_extension_keys();
 
     // 3. Let internalSlotsList be « [[InitializedLocale]], [[Locale]], [[Calendar]], [[Collation]], [[HourCycle]], [[NumberingSystem]] ».
     // 4. If relevantExtensionKeys contains "kf", then
@@ -341,14 +341,14 @@ ThrowCompletionOr<Object*> LocaleConstructor::construct(FunctionObject& new_targ
         locale->set_hour_cycle(result.hc.release_value());
 
     // 34. If relevantExtensionKeys contains "kf", then
-    if (relevant_extension_keys.contains_slow("kf"sv)) {
+    if (relevant_extension_keys.span().contains_slow("kf"sv)) {
         // a. Set locale.[[CaseFirst]] to r.[[kf]].
         if (result.kf.has_value())
             locale->set_case_first(result.kf.release_value());
     }
 
     // 35. If relevantExtensionKeys contains "kn", then
-    if (relevant_extension_keys.contains_slow("kn"sv)) {
+    if (relevant_extension_keys.span().contains_slow("kn"sv)) {
         // a. If ! SameValue(r.[[kn]], "true") is true or r.[[kn]] is the empty String, then
         if (result.kn.has_value() && (same_value(js_string(vm, *result.kn), js_string(vm, "true")) || result.kn->is_empty())) {
             // i. Set locale.[[Numeric]] to true.
