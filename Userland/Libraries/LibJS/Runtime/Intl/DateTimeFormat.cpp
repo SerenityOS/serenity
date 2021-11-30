@@ -12,14 +12,6 @@
 
 namespace JS::Intl {
 
-Vector<StringView> const& DateTimeFormat::relevant_extension_keys()
-{
-    // 11.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.datetimeformat-internal-slots
-    // The value of the [[RelevantExtensionKeys]] internal slot is « "ca", "hc", "nu" ».
-    static Vector<StringView> relevant_extension_keys { "ca"sv, "hc"sv, "nu"sv };
-    return relevant_extension_keys;
-}
-
 // 11 DateTimeFormat Objects, https://tc39.es/ecma402/#datetimeformat-objects
 DateTimeFormat::DateTimeFormat(Object& prototype)
     : Object(prototype)

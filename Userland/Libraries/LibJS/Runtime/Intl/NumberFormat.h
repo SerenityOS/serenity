@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
@@ -72,7 +73,12 @@ public:
         ExceptZero,
     };
 
-    static Vector<StringView> const& relevant_extension_keys(); // [[RelevantExtensionKeys]]
+    static constexpr auto relevant_extension_keys()
+    {
+        // 15.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
+        // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
+        return AK::Array { "nu"sv };
+    }
 
     NumberFormat(Object& prototype);
     virtual ~NumberFormat() override = default;
