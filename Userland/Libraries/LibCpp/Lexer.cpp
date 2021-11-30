@@ -51,7 +51,7 @@ constexpr bool is_valid_nonfirst_character_of_identifier(char ch)
     return is_valid_first_character_of_identifier(ch) || is_ascii_digit(ch);
 }
 
-constexpr char const* s_known_keywords[] = {
+constexpr StringView s_known_keywords[] = {
     "alignas",
     "alignof",
     "and",
@@ -127,7 +127,7 @@ constexpr char const* s_known_keywords[] = {
     "xor_eq"
 };
 
-constexpr char const* s_known_types[] = {
+constexpr StringView s_known_types[] = {
     "ByteBuffer",
     "CircularDeque",
     "CircularQueue",
