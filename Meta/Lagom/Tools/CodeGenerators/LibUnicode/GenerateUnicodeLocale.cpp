@@ -407,12 +407,17 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
         auto const& calendars_object = dates_object.as_object().get("calendars"sv);
 
         calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const&) {
-            keyword_values.append(calendar_name);
+            // The generic calendar is not a supported Unicode calendar key, so skip it:
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/calendar#unicode_calendar_keys
+            if (calendar_name == "generic"sv)
+                return;
 
             // FIXME: Similar to the calendar aliases defined in GenerateUnicodeDateTimeFormat, this
             //        should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
             if (calendar_name == "gregorian"sv)
                 keyword_values.append("gregory"sv);
+            else
+                keyword_values.append(calendar_name);
         });
     }
 
