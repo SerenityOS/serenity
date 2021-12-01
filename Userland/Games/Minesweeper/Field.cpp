@@ -497,7 +497,7 @@ void Field::set_field_difficulty(Difficulty difficulty)
     case Difficulty::Expert:
         set_field_size(difficulty, 16, 30, 99);
         break;
-    case Difficulty::Madwoman:
+    case Difficulty::Madness:
         set_field_size(difficulty, 32, 60, 350);
         break;
     default:

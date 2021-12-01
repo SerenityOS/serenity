@@ -133,10 +133,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
-        field->set_field_difficulty(Field::Difficulty::Madwoman);
+    action = GUI::Action::create_checkable("&Madness", { Mod_Ctrl, Key_M }, [&](auto&) {
+        field->set_field_difficulty(Field::Difficulty::Madness);
     });
-    action->set_checked(field->difficulty() == Field::Difficulty::Madwoman);
+    action->set_checked(field->difficulty() == Field::Difficulty::Madness);
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 

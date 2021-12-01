@@ -49,7 +49,7 @@ public:
         Beginner,
         Intermediate,
         Expert,
-        Madwoman,
+        Madness,
         Custom
     };
 
@@ -62,8 +62,8 @@ public:
             return "intermediate"sv;
         case Difficulty::Expert:
             return "expert"sv;
-        case Difficulty::Madwoman:
-            return "madwoman"sv;
+        case Difficulty::Madness:
+            return "madness"sv;
         case Difficulty::Custom:
             return "custom"sv;
         default:
@@ -83,7 +83,10 @@ public:
             return Difficulty::Expert;
 
         if (difficulty_string.equals_ignoring_case("madwoman"))
-            return Difficulty::Madwoman;
+            return Difficulty::Madness;
+
+        if (difficulty_string.equals_ignoring_case("madness"))
+            return Difficulty::Madness;
 
         if (difficulty_string.equals_ignoring_case("custom"))
             return Difficulty::Custom;
