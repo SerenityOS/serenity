@@ -53,6 +53,7 @@ extern "C" {
 #define MSG_PEEK 0x4
 #define MSG_OOB 0x8
 #define MSG_DONTROUTE 0x10
+#define MSG_WAITALL 0x20
 #define MSG_DONTWAIT 0x40
 
 typedef uint16_t sa_family_t;
