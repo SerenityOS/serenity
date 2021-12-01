@@ -365,6 +365,8 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:
         return reinterpret_cast<GLubyte*>(const_cast<char*>(""));
+    case GL_SHADING_LANGUAGE_VERSION:
+        return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
     default:
         dbgln_if(GL_DEBUG, "glGetString(): Unknown enum name!");
         break;
