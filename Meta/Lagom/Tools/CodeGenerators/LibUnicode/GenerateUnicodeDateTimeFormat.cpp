@@ -57,8 +57,6 @@ struct UnicodeLocaleData {
         // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
         { "gregorian"sv, "gregory"sv },
     };
-
-    size_t max_available_formats_size { 0 };
 };
 
 static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& locale_data)
@@ -176,8 +174,6 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
             parse_date_time_pattern(format, pattern.as_string(), locale_data);
             calendar.available_formats.append(move(format));
         });
-
-        locale_data.max_available_formats_size = max(locale_data.max_available_formats_size, calendar.available_formats.size());
     });
 
     return {};
@@ -272,7 +268,6 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("string_index_type"sv, s_string_index_type);
-    generator.set("available_formats_size"sv, String::number(locale_data.max_available_formats_size));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -320,8 +315,7 @@ struct CalendarData {
     CalendarFormat date_formats {};
     CalendarFormat time_formats {};
     CalendarFormat date_time_formats {};
-    Array<CalendarPattern, @available_formats_size@> available_formats {};
-    size_t available_formats_size { 0 };
+    Span<CalendarPattern const> available_formats {};
 };
 )~~~");
 
@@ -343,6 +337,29 @@ struct CalendarData {
     };
 
     auto append_calendars = [&](String name, auto const& calendars) {
+        auto format_name = [&](StringView calendar_key) {
+            return String::formatted("{}_{}_formats", name, calendar_key);
+        };
+
+        for (auto const& calendar_key : locale_data.calendars) {
+            auto const& calendar = calendars.find(calendar_key)->value;
+
+            generator.set("name", format_name(calendar_key));
+            generator.set("size", String::number(calendar.available_formats.size()));
+
+            generator.append(R"~~~(
+static constexpr Array<CalendarPattern, @size@> @name@ { {)~~~");
+
+            for (auto const& format : calendar.available_formats) {
+                generator.append("\n    ");
+                append_calendar_pattern(format);
+            }
+
+            generator.append(R"~~~(
+} };
+)~~~");
+        }
+
         generator.set("name", name);
         generator.set("size", String::number(calendars.size()));
 
@@ -352,6 +369,7 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
         for (auto const& calendar_key : locale_data.calendars) {
             auto const& calendar = calendars.find(calendar_key)->value;
 
+            generator.set("name", format_name(calendar_key));
             generator.set("calendar"sv, String::number(calendar.calendar));
             generator.append(R"~~~(
     { @calendar@, )~~~");
@@ -361,15 +379,7 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
             append_calendar_format(calendar.time_formats);
             generator.append(" ");
             append_calendar_format(calendar.date_time_formats);
-            generator.append(" {{");
-
-            for (auto const& format : calendar.available_formats) {
-                generator.append(" ");
-                append_calendar_pattern(format);
-            }
-
-            generator.set("size", String::number(calendar.available_formats.size()));
-            generator.append(" }}, @size@ },");
+            generator.append(" @name@.span() },");
         }
 
         generator.append(R"~~~(
@@ -474,10 +484,10 @@ Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView local
     Vector<Unicode::CalendarPattern> result {};
 
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
-        result.ensure_capacity(data->available_formats_size);
+        result.ensure_capacity(data->available_formats.size());
 
-        for (size_t i = 0; i < data->available_formats_size; ++i)
-            result.unchecked_append(data->available_formats[i].to_unicode_calendar_pattern());
+        for (auto const& format : data->available_formats)
+            result.unchecked_append(format.to_unicode_calendar_pattern());
     }
 
     return result;
