@@ -325,7 +325,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 
     if (const auto& regions = address_space().find_regions_intersecting(range_to_mprotect); regions.size()) {
         size_t full_size_found = 0;
-        // first check before doing anything
+        // Check that all intersecting regions are compatible.
         for (const auto* region : regions) {
             if (!region->is_mmap())
                 return EPERM;
@@ -341,13 +341,14 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         if (full_size_found != range_to_mprotect.size())
             return ENOMEM;
 
-        // then do all the other stuff
+        // Finally, iterate over each region, either updating its access flags if the range covers it wholly,
+        // or carving out a new subregion with the appropriate access flags set.
         for (auto* old_region : regions) {
             if (old_region->access() == Memory::prot_to_region_access_flags(prot))
                 continue;
 
             const auto intersection_to_mprotect = range_to_mprotect.intersect(old_region->range());
-            // full sub region
+            // If the region is completely covered by range, simply update the access flags
             if (intersection_to_mprotect == old_region->range()) {
                 old_region->set_readable(prot & PROT_READ);
                 old_region->set_writable(prot & PROT_WRITE);
@@ -367,7 +368,8 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             // We need to allocate a new region for the range we wanted to change permission bits on.
             auto adjacent_regions = TRY(address_space().try_split_region_around_range(*old_region, intersection_to_mprotect));
 
-            // there should only be one
+            // Since the range is not contained in a single region, it can only partially cover its starting and ending region,
+            // therefore carving out a chunk from the region will always produce a single extra region, and not two.
             VERIFY(adjacent_regions.size() == 1);
 
             size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (intersection_to_mprotect.base().get() - old_region->range().base().get());
