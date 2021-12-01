@@ -101,6 +101,7 @@ public:
     virtual void gl_line_width(GLfloat width) = 0;
     virtual void gl_push_attrib(GLbitfield mask) = 0;
     virtual void gl_pop_attrib() = 0;
+    virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) = 0;
 
     virtual void present() = 0;
 };

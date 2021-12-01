@@ -2345,6 +2345,27 @@ void SoftwareGLContext::gl_pop_attrib()
     dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_pop_attrib()");
 }
 
+void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_light_model, pname, x, y, z, w);
+
+    RETURN_WITH_ERROR_IF(!(pname == GL_LIGHT_MODEL_AMBIENT
+                             || pname == GL_LIGHT_MODEL_TWO_SIDE),
+        GL_INVALID_ENUM);
+
+    switch (pname) {
+    case GL_LIGHT_MODEL_AMBIENT:
+        m_light_model_ambient = { x, y, z, w };
+        break;
+    case GL_LIGHT_MODEL_TWO_SIDE:
+        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
+        m_light_model_two_side = x;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

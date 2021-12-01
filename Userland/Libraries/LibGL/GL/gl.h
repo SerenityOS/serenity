@@ -169,6 +169,9 @@ extern "C" {
 #define GL_RGBA 0x1908
 
 // Lighting related defines
+#define GL_LIGHT_MODEL_TWO_SIDE 0x0B52
+#define GL_LIGHT_MODEL_AMBIENT 0x0B53
+
 #define GL_FLAT 0x1D00
 #define GL_SMOOTH 0x1D01
 #define GL_AMBIENT 0x1200
@@ -458,6 +461,8 @@ GLAPI void glPixelStorei(GLenum pname, GLint param);
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 GLAPI void glLightf(GLenum light, GLenum pname, GLfloat param);
 GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat* param);
+GLAPI void glLightModelf(GLenum pname, GLfloat param);
+GLAPI void glLightModelfv(GLenum pname, GLfloat const* params);
 GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);

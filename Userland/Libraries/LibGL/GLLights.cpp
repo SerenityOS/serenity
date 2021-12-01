@@ -23,6 +23,22 @@ void glLightfv(GLenum light, GLenum pname, GLfloat* param)
     dbgln_if(GL_DEBUG, "glLightfv({}, {}, {}): unimplemented", light, pname, param);
 }
 
+void glLightModelf(GLenum pname, GLfloat param)
+{
+    g_gl_context->gl_light_model(pname, param, 0.0f, 0.0f, 0.0f);
+}
+
+void glLightModelfv(GLenum pname, GLfloat const* params)
+{
+    switch (pname) {
+    case GL_LIGHT_MODEL_AMBIENT:
+        g_gl_context->gl_light_model(pname, params[0], 0.0f, 0.0f, 0.0f);
+        break;
+    default:
+        g_gl_context->gl_light_model(pname, params[0], params[1], params[2], params[3]);
+    }
+}
+
 void glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
     VERIFY(face == GL_SHININESS);

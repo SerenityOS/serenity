@@ -112,6 +112,7 @@ public:
     virtual void gl_line_width(GLfloat width) override;
     virtual void gl_push_attrib(GLbitfield mask) override;
     virtual void gl_pop_attrib() override;
+    virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void present() override;
 
 private:
@@ -284,7 +285,8 @@ private:
             decltype(&SoftwareGLContext::gl_materialv),
             decltype(&SoftwareGLContext::gl_line_width),
             decltype(&SoftwareGLContext::gl_push_attrib),
-            decltype(&SoftwareGLContext::gl_pop_attrib)>;
+            decltype(&SoftwareGLContext::gl_pop_attrib),
+            decltype(&SoftwareGLContext::gl_light_model)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -333,6 +335,9 @@ private:
     RasterPosition m_current_raster_position;
 
     float m_line_width { 1.0f };
+
+    FloatVector4 m_light_model_ambient { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat m_light_model_two_side { 0.0f };
 };
 
 }
