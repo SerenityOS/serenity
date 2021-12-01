@@ -331,8 +331,6 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
                 return EPERM;
             if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
                 return EINVAL;
-            if (region->access() == Memory::prot_to_region_access_flags(prot))
-                return 0;
             if (region->vmobject().is_inode()
                 && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared())) {
                 return EACCES;
@@ -345,6 +343,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 
         // then do all the other stuff
         for (auto* old_region : regions) {
+            if (old_region->access() == Memory::prot_to_region_access_flags(prot))
+                continue;
+
             const auto intersection_to_mprotect = range_to_mprotect.intersect(old_region->range());
             // full sub region
             if (intersection_to_mprotect == old_region->range()) {
