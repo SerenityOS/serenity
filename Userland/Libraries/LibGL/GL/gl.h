@@ -76,6 +76,7 @@ extern "C" {
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
 #define GL_EXTENSIONS 0x1F03
+#define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 
 // Get parameters
 #define GL_MAX_TEXTURE_SIZE 0x0D33
