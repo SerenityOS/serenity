@@ -29,6 +29,12 @@
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
+#if ARCH(I386) || ARCH(X86_64)
+#    define VALIDATE_IS_X86()
+#else
+#    define VALIDATE_IS_X86() static_assert(false, "Trying to include x86 only header on non x86 platform");
+#endif
+
 #if !defined(__clang__) && !defined(__CLION_IDE_)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
