@@ -6,6 +6,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
