@@ -84,6 +84,8 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
 
     if (mask & GL_DEPTH_BUFFER_BIT)
         m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
+
+    // FIXME: implement GL_STENCIL_BUFFER_BIT
 }
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -102,6 +104,17 @@ void SoftwareGLContext::gl_clear_depth(GLdouble depth)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     m_clear_depth = depth;
+}
+
+void SoftwareGLContext::gl_clear_stencil(GLint s)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear_stencil, s);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: "s is masked with 2^m - 1 , where m is the number of bits in the stencil buffer"
+
+    m_clear_stencil = s;
 }
 
 void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
