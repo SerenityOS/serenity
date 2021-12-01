@@ -61,6 +61,75 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
 {
 }
 
+Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
+{
+    switch (name) {
+    case GL_ALPHA_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_ALPHA_TEST:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_alpha_test_enabled } };
+    case GL_BLEND:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_blend_enabled } };
+    case GL_BLEND_DST_ALPHA:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_destination_factor) } };
+    case GL_BLEND_SRC_ALPHA:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_blend_source_factor) } };
+    case GL_BLUE_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_CULL_FACE:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_cull_faces } };
+    case GL_DEPTH_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_DEPTH_TEST:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_depth_test_enabled } };
+    case GL_DOUBLEBUFFER:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = true } };
+    case GL_GREEN_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_MAX_TEXTURE_SIZE:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 4096 } };
+    case GL_MAX_TEXTURE_UNITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_texture_units.size()) } };
+    case GL_PACK_ALIGNMENT:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_pack_alignment } };
+    case GL_RED_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_SCISSOR_BOX: {
+        auto scissor_box = m_rasterizer.options().scissor_box;
+        return ContextParameter {
+            .type = GL_INT,
+            .count = 4,
+            .value = {
+                .integer_list = {
+                    scissor_box.x(),
+                    scissor_box.y(),
+                    scissor_box.width(),
+                    scissor_box.height(),
+                } }
+        };
+    } break;
+    case GL_STENCIL_BITS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_STENCIL_TEST:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_stencil_test_enabled } };
+    case GL_TEXTURE_1D:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_1d_enabled() } };
+    case GL_TEXTURE_2D:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_2d_enabled() } };
+    case GL_TEXTURE_3D:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_3d_enabled() } };
+    case GL_TEXTURE_CUBE_MAP:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_cube_map_enabled() } };
+    case GL_UNPACK_ALIGNMENT:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_unpack_alignment } };
+    case GL_UNPACK_ROW_LENGTH:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = m_unpack_row_length } };
+    default:
+        dbgln_if(GL_DEBUG, "get_context_parameter({:#x}): unknown context parameter", name);
+        return {};
+    }
+}
+
 void SoftwareGLContext::gl_begin(GLenum mode)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_begin, mode);
@@ -368,7 +437,7 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
     case GL_SHADING_LANGUAGE_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("0.0"));
     default:
-        dbgln_if(GL_DEBUG, "glGetString(): Unknown enum name!");
+        dbgln_if(GL_DEBUG, "gl_get_string({:#x}): unknown name", name);
         break;
     }
 
@@ -1572,41 +1641,22 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    switch (pname) {
-    case GL_BLEND:
-        *data = m_blend_enabled ? GL_TRUE : GL_FALSE;
+    auto optional_parameter = get_context_parameter(pname);
+    RETURN_WITH_ERROR_IF(!optional_parameter.has_value(), GL_INVALID_ENUM);
+    auto parameter = optional_parameter.release_value();
+
+    switch (parameter.type) {
+    case GL_BOOL:
+        *data = parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
         break;
-    case GL_ALPHA_TEST:
-        *data = m_alpha_test_func ? GL_TRUE : GL_FALSE;
+    case GL_DOUBLE:
+        *data = (parameter.value.double_value == 0.0) ? GL_FALSE : GL_TRUE;
         break;
-    case GL_DEPTH_TEST:
-        *data = m_depth_test_enabled ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_DOUBLEBUFFER:
-        *data = GL_TRUE;
-        break;
-    case GL_CULL_FACE:
-        *data = m_cull_faces ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_STENCIL_TEST:
-        *data = m_stencil_test_enabled ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_TEXTURE_1D:
-        *data = m_active_texture_unit->texture_1d_enabled() ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_TEXTURE_2D:
-        *data = m_active_texture_unit->texture_2d_enabled() ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_TEXTURE_3D:
-        *data = m_active_texture_unit->texture_3d_enabled() ? GL_TRUE : GL_FALSE;
-        break;
-    case GL_TEXTURE_CUBE_MAP:
-        *data = m_active_texture_unit->texture_cube_map_enabled() ? GL_TRUE : GL_FALSE;
+    case GL_INT:
+        *data = (parameter.value.integer_value == 0) ? GL_FALSE : GL_TRUE;
         break;
     default:
-        // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
-        // for `pname`
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1625,30 +1675,53 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
+    // Handle special matrix cases first
     auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
         auto elements = matrix.elements();
-
-        for (size_t i = 0; i < 4; ++i) {
-            for (size_t j = 0; j < 4; ++j) {
+        for (size_t i = 0; i < 4; ++i)
+            for (size_t j = 0; j < 4; ++j)
                 params[i * 4 + j] = static_cast<T>(elements[i][j]);
-            }
-        }
     };
-
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
         if (m_current_matrix_mode == GL_MODELVIEW)
             flatten_and_assign_matrix(m_model_view_matrix);
-        else {
-            if (m_model_view_matrix_stack.is_empty())
-                flatten_and_assign_matrix(FloatMatrix4x4::identity());
-            else
-                flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        else if (m_model_view_matrix_stack.is_empty())
+            flatten_and_assign_matrix(FloatMatrix4x4::identity());
+        else
+            flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        return;
+    case GL_PROJECTION_MATRIX:
+        if (m_current_matrix_mode == GL_PROJECTION)
+            flatten_and_assign_matrix(m_projection_matrix);
+        else if (m_projection_matrix_stack.is_empty())
+            flatten_and_assign_matrix(FloatMatrix4x4::identity());
+        else
+            flatten_and_assign_matrix(m_projection_matrix_stack.last());
+        return;
+    }
+
+    // Regular parameters
+    auto optional_parameter = get_context_parameter(pname);
+    RETURN_WITH_ERROR_IF(!optional_parameter.has_value(), GL_INVALID_ENUM);
+    auto parameter = optional_parameter.release_value();
+
+    switch (parameter.type) {
+    case GL_BOOL:
+        *params = parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_DOUBLE:
+        for (size_t i = 0; i < parameter.count; ++i) {
+            params[i] = parameter.value.double_list[i];
+        }
+        break;
+    case GL_INT:
+        for (size_t i = 0; i < parameter.count; ++i) {
+            params[i] = parameter.value.integer_list[i];
         }
         break;
     default:
-        dbgln_if(GL_DEBUG, "FIXME: unimplemented floating point parameter {:#x}", pname);
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1656,48 +1729,29 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    switch (pname) {
-    case GL_BLEND_SRC_ALPHA:
-        *data = m_blend_source_factor;
+    auto optional_parameter = get_context_parameter(pname);
+    RETURN_WITH_ERROR_IF(!optional_parameter.has_value(), GL_INVALID_ENUM);
+    auto parameter = optional_parameter.release_value();
+
+    switch (parameter.type) {
+    case GL_BOOL:
+        *data = parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
         break;
-    case GL_BLEND_DST_ALPHA:
-        *data = m_blend_destination_factor;
-        break;
-    case GL_MAX_TEXTURE_UNITS:
-        *data = m_texture_units.size();
-        break;
-    case GL_MAX_TEXTURE_SIZE:
-        *data = 4096;
-        break;
-    case GL_PACK_ALIGNMENT:
-        *data = m_pack_alignment;
-        break;
-    case GL_SCISSOR_BOX: {
-        auto scissor_box = m_rasterizer.options().scissor_box;
-        data[0] = scissor_box.x();
-        data[1] = scissor_box.y();
-        data[2] = scissor_box.width();
-        data[3] = scissor_box.height();
+    case GL_DOUBLE: {
+        double const int_range = static_cast<double>(NumericLimits<GLint>::max()) - NumericLimits<GLint>::min();
+        for (size_t i = 0; i < parameter.count; ++i) {
+            double const result_factor = (clamp(parameter.value.double_list[i], -1.0, 1.0) + 1.0) / 2.0;
+            data[i] = static_cast<GLint>(NumericLimits<GLint>::min() + result_factor * int_range);
+        }
         break;
     }
-    case GL_UNPACK_ALIGNMENT:
-        *data = m_unpack_alignment;
-        break;
-    case GL_UNPACK_ROW_LENGTH:
-        *data = m_unpack_row_length;
-        break;
-    case GL_RED_BITS:
-    case GL_GREEN_BITS:
-    case GL_BLUE_BITS:
-    case GL_ALPHA_BITS:
-    case GL_DEPTH_BITS:
-    case GL_STENCIL_BITS:
-        *data = sizeof(float) * 8;
+    case GL_INT:
+        for (size_t i = 0; i < parameter.count; ++i) {
+            data[i] = parameter.value.integer_list[i];
+        }
         break;
     default:
-        // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
-        // for `pname`
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+        VERIFY_NOT_REACHED();
     }
 }
 

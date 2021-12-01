@@ -14,6 +14,7 @@
 #include "Tex/Texture.h"
 #include "Tex/TextureUnit.h"
 #include <AK/HashMap.h>
+#include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
@@ -24,6 +25,18 @@
 #include <LibGfx/Vector3.h>
 
 namespace GL {
+
+struct ContextParameter {
+    GLenum type;
+    u8 count { 1 };
+    union {
+        bool boolean_value;
+        GLint integer_value;
+        GLint integer_list[4];
+        GLdouble double_value;
+        GLdouble double_list[4];
+    } value;
+};
 
 class SoftwareGLContext : public GLContext {
 public:
@@ -134,6 +147,8 @@ private:
         VERIFY(m_current_listing_index.has_value());
         m_current_listing_index->listing.entries.empend(member, Listing::ArgumentsFor<member> { forward<Args>(args)... });
     }
+
+    Optional<ContextParameter> get_context_parameter(GLenum pname);
 
     template<typename T>
     void get_floating_point(GLenum pname, T* params);
