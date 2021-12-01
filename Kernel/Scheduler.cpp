@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
