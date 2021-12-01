@@ -204,6 +204,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
     FloatVector4 pixel_buffer[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
+    // FIXME: implement stencil testing
+
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by++) {
         for (int bx = bx0; bx < bx1; bx++) {

@@ -11,6 +11,7 @@ set(SOURCES
     GLLights.cpp
     GLLists.cpp
     GLMat.cpp
+    GLStencil.cpp
     GLTexture.cpp
     GLUtils.cpp
     GLVert.cpp
