@@ -489,6 +489,7 @@ GLAPI void glLineWidth(GLfloat width);
 GLAPI void glPushAttrib(GLbitfield mask);
 GLAPI void glPopAttrib();
 GLAPI void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap);
+GLAPI void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
 
 #ifdef __cplusplus
 }
