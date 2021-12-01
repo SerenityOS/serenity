@@ -2327,6 +2327,24 @@ void SoftwareGLContext::gl_line_width(GLfloat width)
     m_line_width = width;
 }
 
+void SoftwareGLContext::gl_push_attrib(GLbitfield mask)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_push_attrib, mask);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_push_attrib({})", mask);
+}
+
+void SoftwareGLContext::gl_pop_attrib()
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_pop_attrib);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_pop_attrib()");
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

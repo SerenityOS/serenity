@@ -110,6 +110,8 @@ public:
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void gl_line_width(GLfloat width) override;
+    virtual void gl_push_attrib(GLbitfield mask) override;
+    virtual void gl_pop_attrib() override;
     virtual void present() override;
 
 private:
@@ -280,7 +282,9 @@ private:
             decltype(&SoftwareGLContext::gl_normal),
             decltype(&SoftwareGLContext::gl_raster_pos),
             decltype(&SoftwareGLContext::gl_materialv),
-            decltype(&SoftwareGLContext::gl_line_width)>;
+            decltype(&SoftwareGLContext::gl_line_width),
+            decltype(&SoftwareGLContext::gl_push_attrib),
+            decltype(&SoftwareGLContext::gl_pop_attrib)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

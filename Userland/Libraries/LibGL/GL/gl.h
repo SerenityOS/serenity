@@ -468,6 +468,8 @@ GLAPI void glRasterPos2i(GLint x, GLint y);
 GLAPI void glMaterialf(GLenum face, GLenum pname, GLfloat param);
 GLAPI void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params);
 GLAPI void glLineWidth(GLfloat width);
+GLAPI void glPushAttrib(GLbitfield mask);
+GLAPI void glPopAttrib();
 
 #ifdef __cplusplus
 }

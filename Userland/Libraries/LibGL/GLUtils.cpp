@@ -164,3 +164,13 @@ void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     g_gl_context->gl_scissor(x, y, width, height);
 }
+
+void glPushAttrib(GLbitfield mask)
+{
+    g_gl_context->gl_push_attrib(mask);
+}
+
+void glPopAttrib()
+{
+    g_gl_context->gl_pop_attrib();
+}
