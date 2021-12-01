@@ -93,6 +93,7 @@ public:
     virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) = 0;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) = 0;
+    virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) = 0;
 
     virtual void present() = 0;
 };

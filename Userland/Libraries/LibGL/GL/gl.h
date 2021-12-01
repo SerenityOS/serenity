@@ -449,6 +449,8 @@ GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
 GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+GLAPI void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
+GLAPI void glNormal3fv(GLfloat const* v);
 
 #ifdef __cplusplus
 }

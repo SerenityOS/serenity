@@ -104,6 +104,7 @@ public:
     virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) override;
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) override;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) override;
+    virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void present() override;
 
 private:
@@ -143,6 +144,7 @@ private:
     double m_clear_depth = { 1.0 };
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
     FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 0.0f };
+    FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
     Vector<GLVertex, 96> vertex_list;
     Vector<GLTriangle, 32> triangle_list;
@@ -266,7 +268,8 @@ private:
             decltype(&SoftwareGLContext::gl_polygon_offset),
             decltype(&SoftwareGLContext::gl_scissor),
             decltype(&SoftwareGLContext::gl_stencil_func_separate),
-            decltype(&SoftwareGLContext::gl_stencil_op_separate)>;
+            decltype(&SoftwareGLContext::gl_stencil_op_separate),
+            decltype(&SoftwareGLContext::gl_normal)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
