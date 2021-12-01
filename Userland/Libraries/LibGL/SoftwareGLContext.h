@@ -164,6 +164,8 @@ private:
     GLenum m_alpha_test_func = GL_ALWAYS;
     GLclampf m_alpha_test_ref_value = 0;
 
+    bool m_stencil_test_enabled { false };
+
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
 

@@ -574,6 +574,9 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_STENCIL_TEST:
+        m_stencil_test_enabled = true;
+        break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(true);
         break;
@@ -630,6 +633,9 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         rasterizer_options.scissor_enabled = false;
         update_rasterizer_options = true;
         break;
+    case GL_STENCIL_TEST:
+        m_stencil_test_enabled = false;
+        break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(false);
         break;
@@ -669,6 +675,8 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
         return rasterizer_options.fog_enabled;
     case GL_SCISSOR_TEST:
         return rasterizer_options.scissor_enabled;
+    case GL_STENCIL_TEST:
+        return m_stencil_test_enabled;
     }
 
     RETURN_VALUE_WITH_ERROR_IF(true, GL_INVALID_ENUM, 0);
@@ -1553,6 +1561,9 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
         break;
     case GL_CULL_FACE:
         *data = m_cull_faces ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_STENCIL_TEST:
+        *data = m_stencil_test_enabled ? GL_TRUE : GL_FALSE;
         break;
     case GL_TEXTURE_1D:
         *data = m_active_texture_unit->texture_1d_enabled() ? GL_TRUE : GL_FALSE;
