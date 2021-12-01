@@ -2318,6 +2318,15 @@ void SoftwareGLContext::gl_materialv(GLenum face, GLenum pname, GLfloat const* p
     dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: gl_materialv({}, {}, {}, {}, {}, {})", face, pname, x, y, z, w);
 }
 
+void SoftwareGLContext::gl_line_width(GLfloat width)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_line_width, width);
+
+    RETURN_WITH_ERROR_IF(width <= 0, GL_INVALID_VALUE);
+
+    m_line_width = width;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

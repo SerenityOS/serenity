@@ -98,6 +98,7 @@ public:
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) = 0;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) = 0;
     virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) = 0;
+    virtual void gl_line_width(GLfloat width) = 0;
 
     virtual void present() = 0;
 };

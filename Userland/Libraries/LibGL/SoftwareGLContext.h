@@ -109,6 +109,7 @@ public:
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) override;
+    virtual void gl_line_width(GLfloat width) override;
     virtual void present() override;
 
 private:
@@ -278,7 +279,8 @@ private:
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
             decltype(&SoftwareGLContext::gl_normal),
             decltype(&SoftwareGLContext::gl_raster_pos),
-            decltype(&SoftwareGLContext::gl_materialv)>;
+            decltype(&SoftwareGLContext::gl_materialv),
+            decltype(&SoftwareGLContext::gl_line_width)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -325,6 +327,8 @@ private:
         FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
     };
     RasterPosition m_current_raster_position;
+
+    float m_line_width { 1.0f };
 };
 
 }
