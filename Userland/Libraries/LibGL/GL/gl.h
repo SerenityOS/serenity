@@ -403,6 +403,7 @@ GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum 
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 GLAPI void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
+GLAPI void glTexCoord2fv(GLfloat const* v);
 GLAPI void glTexCoord4fv(const GLfloat* v);
 GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
