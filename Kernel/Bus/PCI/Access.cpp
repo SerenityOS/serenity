@@ -102,7 +102,7 @@ UNMAP_AFTER_INIT Access::Access(AccessType access_type)
 
 Optional<PhysicalAddress> Access::determine_memory_mapped_bus_base_address(u32 domain, u8 bus) const
 {
-    auto chosen_domain = m_domains.get(domain);
+    auto chosen_domain = m_domains.get_ref(domain);
     if (!chosen_domain.has_value())
         return {};
     if (!(chosen_domain.value().start_bus() <= bus && bus <= chosen_domain.value().end_bus()))
