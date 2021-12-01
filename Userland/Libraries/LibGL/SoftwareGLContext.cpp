@@ -82,6 +82,8 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_DEPTH_TEST:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_depth_test_enabled } };
+    case GL_DITHER:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_dither_enabled } };
     case GL_DOUBLEBUFFER:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = true } };
     case GL_GREEN_BITS:
@@ -653,6 +655,9 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.enable_alpha_test = true;
         update_rasterizer_options = true;
         break;
+    case GL_DITHER:
+        m_dither_enabled = true;
+        break;
     case GL_FOG:
         rasterizer_options.fog_enabled = true;
         update_rasterizer_options = true;
@@ -715,6 +720,9 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         rasterizer_options.enable_alpha_test = false;
         update_rasterizer_options = true;
         break;
+    case GL_DITHER:
+        m_dither_enabled = false;
+        break;
     case GL_FOG:
         rasterizer_options.fog_enabled = false;
         update_rasterizer_options = true;
@@ -764,6 +772,8 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
         return m_blend_enabled;
     case GL_ALPHA_TEST:
         return m_alpha_test_enabled;
+    case GL_DITHER:
+        return m_dither_enabled;
     case GL_FOG:
         return rasterizer_options.fog_enabled;
     case GL_LIGHTING:
