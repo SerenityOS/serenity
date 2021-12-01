@@ -201,6 +201,18 @@ extern "C" {
 
 // Source pixel data format
 #define GL_UNSIGNED_BYTE 0x1401
+#define GL_UNSIGNED_BYTE_3_3_2 0x8032
+#define GL_UNSIGNED_SHORT_4_4_4_4 0x8033
+#define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
+#define GL_UNSIGNED_INT_8_8_8_8 0x8035
+#define GL_UNSIGNED_INT_10_10_10_2 0x8036
+#define GL_UNSIGNED_BYTE_2_3_3_REV 0x8362
+#define GL_UNSIGNED_SHORT_5_6_5 0x8363
+#define GL_UNSIGNED_SHORT_5_6_5_REV 0x8364
+#define GL_UNSIGNED_SHORT_4_4_4_4_REV 0x8365
+#define GL_UNSIGNED_SHORT_1_5_5_5_REV 0x8366
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
+#define GL_UNSIGNED_INT_2_10_10_10_REV 0x8368
 
 // Stencil buffer operations
 #define GL_KEEP 0x1E00
@@ -450,6 +462,7 @@ GLAPI void glColorPointer(GLint size, GLenum type, GLsizei stride, const void* p
 GLAPI void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
 GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 GLAPI void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
+GLAPI void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data);
 GLAPI void glDepthRange(GLdouble nearVal, GLdouble farVal);
 GLAPI void glDepthFunc(GLenum func);
 GLAPI void glPolygonMode(GLenum face, GLenum mode);
@@ -475,6 +488,7 @@ GLAPI void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params);
 GLAPI void glLineWidth(GLfloat width);
 GLAPI void glPushAttrib(GLbitfield mask);
 GLAPI void glPopAttrib();
+GLAPI void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap);
 
 #ifdef __cplusplus
 }

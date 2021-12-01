@@ -1926,6 +1926,106 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
     glEnd();
 }
 
+void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_pixels, width, height, format, type, data);
+
+    RETURN_WITH_ERROR_IF(!(format == GL_COLOR_INDEX
+                             || format == GL_STENCIL_INDEX
+                             || format == GL_DEPTH_COMPONENT
+                             || format == GL_RGBA
+                             || format == GL_BGRA
+                             || format == GL_RED
+                             || format == GL_GREEN
+                             || format == GL_BLUE
+                             || format == GL_ALPHA
+                             || format == GL_RGB
+                             || format == GL_BGR
+                             || format == GL_LUMINANCE
+                             || format == GL_LUMINANCE_ALPHA),
+        GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE
+                             || type == GL_BYTE
+                             || type == GL_BITMAP
+                             || type == GL_UNSIGNED_SHORT
+                             || type == GL_SHORT
+                             || type == GL_UNSIGNED_INT
+                             || type == GL_INT
+                             || type == GL_FLOAT
+                             || type == GL_UNSIGNED_BYTE_3_3_2
+                             || type == GL_UNSIGNED_BYTE_2_3_3_REV
+                             || type == GL_UNSIGNED_SHORT_5_6_5
+                             || type == GL_UNSIGNED_SHORT_5_6_5_REV
+                             || type == GL_UNSIGNED_SHORT_4_4_4_4
+                             || type == GL_UNSIGNED_SHORT_4_4_4_4_REV
+                             || type == GL_UNSIGNED_SHORT_5_5_5_1
+                             || type == GL_UNSIGNED_SHORT_1_5_5_5_REV
+                             || type == GL_UNSIGNED_INT_8_8_8_8
+                             || type == GL_UNSIGNED_INT_8_8_8_8_REV
+                             || type == GL_UNSIGNED_INT_10_10_10_2
+                             || type == GL_UNSIGNED_INT_2_10_10_10_REV),
+        GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(type == GL_BITMAP && !(format == GL_COLOR_INDEX || format == GL_STENCIL_INDEX), GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
+
+    // FIXME: GL_INVALID_OPERATION is generated if format is GL_STENCIL_INDEX and there is no stencil buffer
+    // FIXME: GL_INVALID_OPERATION is generated if format is GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_RGBA,
+    //        GL_BGR, GL_BGRA, GL_LUMINANCE, or GL_LUMINANCE_ALPHA, and the GL is in color index mode
+
+    RETURN_WITH_ERROR_IF(format != GL_RGB
+            && (type == GL_UNSIGNED_BYTE_3_3_2
+                || type == GL_UNSIGNED_BYTE_2_3_3_REV
+                || type == GL_UNSIGNED_SHORT_5_6_5
+                || type == GL_UNSIGNED_SHORT_5_6_5_REV),
+        GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(!(format == GL_RGBA || format == GL_BGRA)
+            && (type == GL_UNSIGNED_SHORT_4_4_4_4
+                || type == GL_UNSIGNED_SHORT_4_4_4_4_REV
+                || type == GL_UNSIGNED_SHORT_5_5_5_1
+                || type == GL_UNSIGNED_SHORT_1_5_5_5_REV
+                || type == GL_UNSIGNED_INT_8_8_8_8
+                || type == GL_UNSIGNED_INT_8_8_8_8_REV
+                || type == GL_UNSIGNED_INT_10_10_10_2
+                || type == GL_UNSIGNED_INT_2_10_10_10_REV),
+        GL_INVALID_OPERATION);
+
+    // FIXME: GL_INVALID_OPERATION is generated if a non-zero buffer object name is bound to the GL_PIXEL_UNPACK_BUFFER
+    //        target and the buffer object's data store is currently mapped.
+    // FIXME: GL_INVALID_OPERATION is generated if a non-zero buffer object name is bound to the GL_PIXEL_UNPACK_BUFFER
+    //        target and the data would be unpacked from the buffer object such that the memory reads required would
+    //        exceed the data store size.
+    // FIXME: GL_INVALID_OPERATION is generated if a non-zero buffer object name is bound to the GL_PIXEL_UNPACK_BUFFER
+    //        target and data is not evenly divisible into the number of bytes needed to store in memory a datum
+    //        indicated by type.
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: we only support RGBA + GL_UNSIGNED_BYTE, implement all the others!
+    if (format != GL_RGBA || type != GL_UNSIGNED_BYTE) {
+        dbgln("gl_draw_pixels: unsupported format {:#x} or type {:#x}", format, type);
+        return;
+    }
+
+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height });
+    RETURN_WITH_ERROR_IF(bitmap_or_error.is_error(), GL_OUT_OF_MEMORY);
+    auto bitmap = bitmap_or_error.release_value();
+
+    // FIXME: implement support for GL_UNPACK_ALIGNMENT and other pixel parameters
+    auto pixel_data = static_cast<u32 const*>(data);
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+
+    m_rasterizer.blit(
+        bitmap,
+        static_cast<int>(m_current_raster_position.window_coordinates.x()),
+        static_cast<int>(m_current_raster_position.window_coordinates.y()));
+}
+
 void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_range, min, max);
@@ -2364,6 +2464,15 @@ void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLflo
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+void SoftwareGLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_bitmap, width, height, xorig, yorig, xmove, ymove, bitmap);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: implement gl_bitmap({}, {}, {}, {}, {}, {}, {})", width, height, xorig, yorig, xmove, ymove, bitmap);
 }
 
 void SoftwareGLContext::present()

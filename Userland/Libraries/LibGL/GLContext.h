@@ -79,6 +79,7 @@ public:
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
     virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) = 0;
     virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) = 0;
+    virtual void gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data) = 0;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) = 0;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) = 0;
     virtual void gl_get_doublev(GLenum pname, GLdouble* params) = 0;
@@ -102,6 +103,7 @@ public:
     virtual void gl_push_attrib(GLbitfield mask) = 0;
     virtual void gl_pop_attrib() = 0;
     virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) = 0;
+    virtual void gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap) = 0;
 
     virtual void present() = 0;
 };

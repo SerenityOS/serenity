@@ -90,6 +90,7 @@ public:
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) override;
     virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) override;
+    virtual void gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data) override;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) override;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) override;
     virtual void gl_get_doublev(GLenum pname, GLdouble* params) override;
@@ -113,6 +114,7 @@ public:
     virtual void gl_push_attrib(GLbitfield mask) override;
     virtual void gl_pop_attrib() override;
     virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
+    virtual void gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap) override;
     virtual void present() override;
 
 private:
@@ -275,6 +277,7 @@ private:
             decltype(&SoftwareGLContext::gl_depth_mask),
             decltype(&SoftwareGLContext::gl_draw_arrays),
             decltype(&SoftwareGLContext::gl_draw_elements),
+            decltype(&SoftwareGLContext::gl_draw_pixels),
             decltype(&SoftwareGLContext::gl_depth_range),
             decltype(&SoftwareGLContext::gl_polygon_offset),
             decltype(&SoftwareGLContext::gl_scissor),
@@ -286,7 +289,8 @@ private:
             decltype(&SoftwareGLContext::gl_line_width),
             decltype(&SoftwareGLContext::gl_push_attrib),
             decltype(&SoftwareGLContext::gl_pop_attrib),
-            decltype(&SoftwareGLContext::gl_light_model)>;
+            decltype(&SoftwareGLContext::gl_light_model),
+            decltype(&SoftwareGLContext::gl_bitmap)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
