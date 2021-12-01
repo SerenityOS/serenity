@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Array.h"
 #include "GL/gl.h"
 #include "GLContext.h"
 
@@ -38,25 +40,46 @@ void glPopMatrix()
 /*
  * Transposes input matrices (column-major) to our Matrix (row-major).
  */
-template<typename T>
-static constexpr Matrix4x4<T> transpose_input_matrix(T const* matrix)
+template<typename I, typename O>
+static constexpr Matrix4x4<O> transpose_input_matrix(I const* matrix)
 {
+    if constexpr (IsSame<I, O>) {
+        // clang-format off
+        return {
+            matrix[0], matrix[4], matrix[8], matrix[12],
+            matrix[1], matrix[5], matrix[9], matrix[13],
+            matrix[2], matrix[6], matrix[10], matrix[14],
+            matrix[3], matrix[7], matrix[11], matrix[15],
+        };
+        // clang-format on
+    }
+
+    Array<O, 16> elements;
+    for (size_t i = 0; i < 16; ++i)
+        elements[i] = static_cast<O>(matrix[i]);
+    // clang-format off
     return {
-        matrix[0], matrix[4], matrix[8], matrix[12],
-        matrix[1], matrix[5], matrix[9], matrix[13],
-        matrix[2], matrix[6], matrix[10], matrix[14],
-        matrix[3], matrix[7], matrix[11], matrix[15],
+        elements[0], elements[4], elements[8], elements[12],
+        elements[1], elements[5], elements[9], elements[13],
+        elements[2], elements[6], elements[10], elements[14],
+        elements[3], elements[7], elements[11], elements[15],
     };
+    // clang-format on
 }
 
 void glMultMatrixf(GLfloat const* matrix)
 {
-    g_gl_context->gl_mult_matrix(transpose_input_matrix<float>(matrix));
+    g_gl_context->gl_mult_matrix(transpose_input_matrix<float, float>(matrix));
 }
 
-void glLoadMatrixf(const GLfloat* matrix)
+void glLoadMatrixd(GLdouble const* matrix)
 {
-    g_gl_context->gl_load_matrix(transpose_input_matrix<float>(matrix));
+    g_gl_context->gl_load_matrix(transpose_input_matrix<double, float>(matrix));
+}
+
+void glLoadMatrixf(GLfloat const* matrix)
+{
+    g_gl_context->gl_load_matrix(transpose_input_matrix<float, float>(matrix));
 }
 
 void glLoadIdentity()
