@@ -11,6 +11,9 @@
 #include <AK/Types.h>
 #include <Kernel/VirtualAddress.h>
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 #if ARCH(I386)
 #    define GDT_SELECTOR_CODE0 0x08
 #    define GDT_SELECTOR_DATA0 0x10
