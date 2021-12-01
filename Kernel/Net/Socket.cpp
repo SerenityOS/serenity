@@ -123,6 +123,14 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<const void*> u
             return ENOTSUP;
         }
         return {};
+    case SO_DONTROUTE: {
+        int routing_disabled;
+        if (user_value_size != sizeof(routing_disabled))
+            return EINVAL;
+        TRY(copy_from_user(&routing_disabled, static_ptr_cast<const int*>(user_value)));
+        m_routing_disabled = routing_disabled != 0;
+        return {};
+    }
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
@@ -214,6 +222,14 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
             return EINVAL;
         TRY(copy_to_user(static_ptr_cast<int*>(value), &accepting_connections));
         size = sizeof(accepting_connections);
+        return copy_to_user(value_size, &size);
+    }
+    case SO_DONTROUTE: {
+        int routing_disabled = m_routing_disabled ? 1 : 0;
+        if (size < sizeof(routing_disabled))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &routing_disabled));
+        size = sizeof(routing_disabled);
         return copy_to_user(value_size, &size);
     }
     default:

@@ -210,7 +210,7 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuffe
     if (!is_connected() && m_peer_address.is_zero())
         return set_so_error(EPIPE);
 
-    auto allow_using_gateway = (flags & MSG_DONTROUTE) ? AllowUsingGateway::No : AllowUsingGateway::Yes;
+    auto allow_using_gateway = ((flags & MSG_DONTROUTE) || m_routing_disabled) ? AllowUsingGateway::No : AllowUsingGateway::Yes;
     auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface(), allow_using_gateway);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
