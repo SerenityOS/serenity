@@ -67,6 +67,7 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 GLenum glGetError()
 {
+    VERIFY_CURRENT_CONTEXT_OR_VALUE(GL_NONE);
     return g_gl_context->gl_get_error();
 }
 
@@ -117,6 +118,7 @@ void glGetFloatv(GLenum pname, GLfloat* params)
 
 void glGetIntegerv(GLenum pname, GLint* data)
 {
+    VERIFY_CURRENT_CONTEXT();
     g_gl_context->gl_get_integerv(pname, data);
 }
 

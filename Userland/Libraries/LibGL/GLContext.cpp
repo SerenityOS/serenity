@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GLContext.h"
 #include "SoftwareGLContext.h"
 #include <LibGfx/Bitmap.h>
 
