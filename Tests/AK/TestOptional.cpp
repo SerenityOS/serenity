@@ -211,3 +211,127 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
     static_assert(!IsDestructible<Optional<NonDestructible>>);
 #endif
 }
+
+TEST_CASE(basic_optional_ref)
+{
+    Optional<int&> x;
+    EXPECT_EQ(x.has_value(), false);
+    int x_val = 3;
+    x = Optional<int&> { x_val };
+    EXPECT_EQ(x.has_value(), true);
+    EXPECT_EQ(x.value(), 3);
+    EXPECT_EQ(&(x.value()), &x_val);
+}
+
+TEST_CASE(move_optional_ref)
+{
+    Optional<int&> x;
+    EXPECT_EQ(x.has_value(), false);
+    int x_val = 3;
+    x = Optional<int&> { x_val };
+    EXPECT_EQ(x.has_value(), true);
+    EXPECT_EQ(x.value(), 3);
+
+    Optional<int&> y;
+    y = move(x);
+    EXPECT_EQ(y.has_value(), true);
+    EXPECT_EQ(y.value(), 3);
+    EXPECT_EQ(x.has_value(), false);
+}
+
+TEST_CASE(optional_ref_rvalue_ref_qualified_getters)
+{
+    int x = 42;
+
+    auto make_an_optional = [&x]() -> Optional<int&> {
+        return { x };
+    };
+
+    EXPECT_EQ(make_an_optional().value(), 42);
+    EXPECT_EQ(make_an_optional().value_or(x), 42);
+}
+
+TEST_CASE(short_notation_ref)
+{
+    int backing = 42;
+    Optional<int&> value = backing;
+
+    EXPECT_EQ(*value, 42);
+}
+
+TEST_CASE(comparison_without_values_ref)
+{
+    Optional<StringView&> opt0;
+    Optional<StringView&> opt1;
+    Optional<String&> opt2;
+    EXPECT(opt0 == opt1);
+    EXPECT(opt0 == opt2);
+}
+
+TEST_CASE(comparison_with_values_ref)
+{
+    StringView val1 = "foo"sv;
+    String val2 = "foo";
+    StringView val3 = "bar"sv;
+
+    Optional<StringView&> opt0;
+    Optional<StringView&> opt1 = val1;
+    Optional<String&> opt2 = val2;
+    Optional<StringView&> opt3 = val3;
+    EXPECT(opt0 != opt1);
+    EXPECT(opt0 != opt2);
+    EXPECT(opt0 != opt3);
+    EXPECT(opt1 == opt2);
+    EXPECT(opt1 != opt3);
+    EXPECT(opt2 != opt3);
+}
+
+TEST_CASE(comparison_with_numeric_types_ref)
+{
+    u8 val1 = 7;
+    Optional<u8&> opt0;
+    Optional<u8&> opt1 = val1;
+
+    EXPECT(opt0 != 0);
+    EXPECT(opt0 != 7);
+    EXPECT(opt1 == 7);
+    EXPECT(opt1 == 7.0);
+    EXPECT(opt1 == 7u);
+    EXPECT(opt1 != 42);
+    EXPECT(opt1 != -2);
+}
+
+TEST_CASE(method_call_ref)
+{
+    class MyFoo {
+    public:
+        int do_call() { return 42; }
+    };
+    MyFoo backing;
+    Optional<MyFoo&> optional = backing;
+
+    EXPECT_EQ(backing.do_call(), 42);
+    EXPECT_EQ(optional->do_call(), 42);
+}
+
+TEST_CASE(copy_empty_ref)
+{
+    Optional<int&> optional1 = {};
+    Optional<int> optional2 = optional1.copy();
+
+    EXPECT(!optional1.has_value());
+    EXPECT(!optional2.has_value());
+}
+
+TEST_CASE(copy_nonempty_ref)
+{
+    int backing = 42;
+    Optional<int&> optional1 = backing;
+    Optional<int> optional2 = optional1.copy();
+    EXPECT_EQ(optional1.value(), 42);
+    EXPECT_EQ(optional2.value(), 42);
+
+    backing = 1337;
+    EXPECT_EQ(optional1.value(), 1337);
+    EXPECT_EQ(optional2.value(), 42);
+}

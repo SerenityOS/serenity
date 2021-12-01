@@ -185,6 +185,119 @@ private:
     alignas(T) u8 m_storage[sizeof(T)];
     bool m_has_value { false };
 };
+
+template<typename T>
+class [[nodiscard]] Optional<T&> {
+public:
+    using ValueType = T&;
+
+    ALWAYS_INLINE Optional() = default;
+
+    ALWAYS_INLINE Optional(Optional const& other) = delete;
+    ALWAYS_INLINE Optional(Optional&& other)
+        : m_ptr(other.m_ptr)
+    {
+        other.m_ptr = nullptr;
+    }
+
+    ALWAYS_INLINE Optional(T& value)
+        : m_ptr(&value)
+    {
+    }
+
+    ALWAYS_INLINE ~Optional() = default;
+
+    // Avoid the question of deep-copy vs. shallow-copy by simply deleting copy-assign.
+    // Note that the copy-constructor does a shallow copy, just like T&.
+    ALWAYS_INLINE Optional& operator=(Optional const&) = delete;
+    ALWAYS_INLINE Optional& operator=(Optional&& other)
+    {
+        m_ptr = other.m_ptr;
+        other.m_ptr = nullptr;
+        return *this;
+    }
+
+    ALWAYS_INLINE Optional& operator=(T const&) = delete;
+    ALWAYS_INLINE Optional& operator=(T&&) = delete;
+
+    template<typename O>
+    ALWAYS_INLINE bool operator==(Optional<O> const& other) const
+    {
+        return has_value() == other.has_value() && (!has_value() || value() == other.value());
+    }
+
+    template<typename O>
+    ALWAYS_INLINE bool operator==(O const& other) const
+    {
+        return has_value() && value() == other;
+    }
+
+    ALWAYS_INLINE void clear()
+    {
+        m_ptr = nullptr;
+    }
+
+    ALWAYS_INLINE void emplace(T& parameter)
+    {
+        m_ptr = parameter;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_ptr != nullptr; }
+
+    [[nodiscard]] ALWAYS_INLINE T const& value() const
+    {
+        VERIFY(has_value());
+        return *m_ptr;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T& value()
+    {
+        VERIFY(has_value());
+        return *m_ptr;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T& release_value()
+    {
+        VERIFY(has_value());
+        return *m_ptr;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T const& value_or(T const& fallback) const
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T& value_or(T& fallback)
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE T* value_ptr()
+    {
+        return m_ptr;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE Optional<RemoveConst<T>> copy() const
+    {
+        if (!has_value())
+            return {};
+        return value();
+    }
+
+    ALWAYS_INLINE T const& operator*() const { return value(); }
+    ALWAYS_INLINE T& operator*() { return value(); }
+
+    ALWAYS_INLINE T const* operator->() const { return &value(); }
+    ALWAYS_INLINE T* operator->() { return &value(); }
+
+private:
+    T* m_ptr { nullptr };
+};
+
 }
 
 using AK::Optional;
