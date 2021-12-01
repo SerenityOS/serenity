@@ -6,8 +6,21 @@
 
 #include "GL/gl.h"
 #include "GLContext.h"
+#include <AK/Debug.h>
 
 extern GL::GLContext* g_gl_context;
+
+void glLightf(GLenum light, GLenum pname, GLfloat param)
+{
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "glLightf({}, {}, {}): unimplemented", light, pname, param);
+}
+
+void glLightfv(GLenum light, GLenum pname, GLfloat* param)
+{
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "glLightfv({}, {}, {}): unimplemented", light, pname, param);
+}
 
 void glShadeModel(GLenum mode)
 {
