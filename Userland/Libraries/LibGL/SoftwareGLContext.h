@@ -106,6 +106,7 @@ public:
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) override;
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
+    virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) override;
     virtual void present() override;
 
 private:
@@ -271,7 +272,8 @@ private:
             decltype(&SoftwareGLContext::gl_stencil_func_separate),
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
             decltype(&SoftwareGLContext::gl_normal),
-            decltype(&SoftwareGLContext::gl_raster_pos)>;
+            decltype(&SoftwareGLContext::gl_raster_pos),
+            decltype(&SoftwareGLContext::gl_materialv)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

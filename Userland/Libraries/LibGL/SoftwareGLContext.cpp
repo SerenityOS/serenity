@@ -2257,6 +2257,47 @@ void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w
     m_current_raster_position.clip_coordinate_value = w;
 }
 
+void SoftwareGLContext::gl_materialv(GLenum face, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_materialv, face, pname, params);
+
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT
+                             || pname == GL_DIFFUSE
+                             || pname == GL_SPECULAR
+                             || pname == GL_EMISSION
+                             || pname == GL_SHININESS
+                             || pname == GL_AMBIENT_AND_DIFFUSE
+                             || pname == GL_COLOR_INDEXES),
+        GL_INVALID_ENUM);
+
+    GLfloat x, y, z, w;
+
+    switch (pname) {
+    case GL_SHININESS:
+        x = params[0];
+        y = 0.0f;
+        z = 0.0f;
+        w = 0.0f;
+        break;
+    case GL_COLOR_INDEXES:
+        x = params[0];
+        y = params[1];
+        z = params[2];
+        w = 0.0f;
+        break;
+    default:
+        x = params[0];
+        y = params[1];
+        z = params[2];
+        w = params[3];
+    }
+
+    // FIXME: implement this method
+    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: gl_materialv({}, {}, {}, {}, {}, {})", face, pname, x, y, z, w);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
