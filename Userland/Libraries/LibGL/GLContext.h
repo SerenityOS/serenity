@@ -54,6 +54,7 @@ public:
     virtual void gl_list_base(GLuint base) = 0;
     virtual void gl_end_list(void) = 0;
     virtual void gl_new_list(GLuint list, GLenum mode) = 0;
+    virtual GLboolean gl_is_list(GLuint list) = 0;
     virtual void gl_flush() = 0;
     virtual void gl_finish() = 0;
     virtual void gl_blend_func(GLenum src_factor, GLenum dst_factor) = 0;

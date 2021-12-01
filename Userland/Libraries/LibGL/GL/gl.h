@@ -414,6 +414,7 @@ GLAPI void glDeleteLists(GLuint list, GLsizei range);
 GLAPI void glListBase(GLuint base);
 GLAPI void glEndList(void);
 GLAPI void glNewList(GLuint list, GLenum mode);
+GLAPI GLboolean glIsList(GLuint list);
 GLAPI void glFlush();
 GLAPI void glFinish();
 GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);

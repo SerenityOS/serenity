@@ -43,3 +43,8 @@ void glNewList(GLuint list, GLenum mode)
 {
     return g_gl_context->gl_new_list(list, mode);
 }
+
+GLboolean glIsList(GLuint list)
+{
+    return g_gl_context->gl_is_list(list);
+}
