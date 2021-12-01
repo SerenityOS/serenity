@@ -208,6 +208,14 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
         TRY(memset_user(value.unsafe_userspace_ptr(), 0, sizeof(int)));
         size = sizeof(int);
         return copy_to_user(value_size, &size);
+    case SO_ACCEPTCONN: {
+        int accepting_connections = (m_role == Role::Listener) ? 1 : 0;
+        if (size < sizeof(accepting_connections))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &accepting_connections));
+        size = sizeof(accepting_connections);
+        return copy_to_user(value_size, &size);
+    }
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
