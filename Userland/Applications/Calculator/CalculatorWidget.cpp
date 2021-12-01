@@ -144,42 +144,63 @@ void CalculatorWidget::update_display()
         m_label->set_text("E");
     else
         m_label->set_text("");
+
+    stop_timer();
+    start_timer(70);
+}
+
+void CalculatorWidget::timer_event(Core::TimerEvent&)
+{
+    m_equals_button->set_focus(true);
+    stop_timer();
 }
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    //Clear button selection when we are typing
-    m_equals_button->set_focus(true);
-    m_equals_button->set_focus(false);
-
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Equal) {
-        m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
+        m_equals_button->click();
+        m_equals_button->set_focus(true);
     } else if (event.code_point() >= '0' && event.code_point() <= '9') {
-        m_keypad.type_digit(event.code_point() - '0');
+        m_digit_button[event.code_point() - '0']->click();
+        m_digit_button[event.code_point() - '0']->set_focus(true);
     } else if (event.code_point() == '.') {
+        m_decimal_point_button->click();
+        m_decimal_point_button->set_focus(true);
         m_keypad.type_decimal_point();
     } else if (event.key() == KeyCode::Key_Escape) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
+        update_display();
     } else if (event.key() == KeyCode::Key_Backspace) {
-        m_keypad.type_backspace();
+        m_backspace_button->click();
+        m_backspace_button->set_focus(true);
     } else {
         Calculator::Operation operation;
 
         switch (event.code_point()) {
         case '+':
             operation = Calculator::Operation::Add;
+            m_add_button->click();
+            m_add_button->set_focus(true);
             break;
         case '-':
             operation = Calculator::Operation::Subtract;
+            m_subtract_button->click();
+            m_subtract_button->set_focus(true);
             break;
         case '*':
             operation = Calculator::Operation::Multiply;
+            m_multiply_button->click();
+            m_multiply_button->set_focus(true);
             break;
         case '/':
             operation = Calculator::Operation::Divide;
+            m_divide_button->click();
+            m_divide_button->set_focus(true);
             break;
         case '%':
+            m_percent_button->click();
+            m_percent_button->set_focus(true);
             operation = Calculator::Operation::Percent;
             break;
         default:
@@ -188,6 +209,4 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 
         m_keypad.set_value(m_calculator.begin_operation(operation, m_keypad.value()));
     }
-
-    update_display();
 }

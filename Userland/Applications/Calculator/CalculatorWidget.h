@@ -26,6 +26,7 @@ private:
     void add_digit_button(GUI::Button&, int digit);
 
     void update_display();
+    void timer_event(Core::TimerEvent&);
 
     virtual void keydown_event(GUI::KeyEvent&) override;
 
