@@ -61,6 +61,7 @@ public:
     virtual void gl_call_list(GLuint list) override;
     virtual void gl_call_lists(GLsizei n, GLenum type, void const* lists) override;
     virtual void gl_delete_lists(GLuint list, GLsizei range) override;
+    virtual void gl_list_base(GLuint base) override;
     virtual void gl_end_list(void) override;
     virtual void gl_new_list(GLuint list, GLenum mode) override;
     virtual void gl_flush() override;
@@ -254,6 +255,7 @@ private:
     static constexpr size_t max_allowed_gl_call_depth { 128 };
     size_t m_gl_call_depth { 0 };
     Vector<Listing> m_listings;
+    size_t m_list_base { 0 };
     struct CurrentListing {
         Listing listing;
         size_t index { 0 };
