@@ -115,6 +115,7 @@ public:
     virtual void gl_pop_attrib() override;
     virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap) override;
+    virtual void gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) override;
     virtual void present() override;
 
 private:
@@ -290,7 +291,8 @@ private:
             decltype(&SoftwareGLContext::gl_push_attrib),
             decltype(&SoftwareGLContext::gl_pop_attrib),
             decltype(&SoftwareGLContext::gl_light_model),
-            decltype(&SoftwareGLContext::gl_bitmap)>;
+            decltype(&SoftwareGLContext::gl_bitmap),
+            decltype(&SoftwareGLContext::gl_copy_tex_image_2d)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
