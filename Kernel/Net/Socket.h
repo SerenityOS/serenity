@@ -154,9 +154,9 @@ protected:
 
     void set_role(Role role) { m_role = role; }
 
-protected:
     ucred m_origin { 0, 0, 0 };
     ucred m_acceptor { 0, 0, 0 };
+    bool m_routing_disabled { false };
 
 private:
     virtual bool is_socket() const final { return true; }
