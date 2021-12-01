@@ -29,6 +29,9 @@ typedef uint32_t in_addr_t;
 #define IP_DROP_MEMBERSHIP 5
 #define IP_MULTICAST_IF 6
 #define IP_MULTICAST_TTL 7
+#define IP_BLOCK_SOURCE 8
+#define IP_UNBLOCK_SOURCE 9
+#define IP_OPTIONS 10
 
 #define IPTOS_LOWDELAY 16
 #define IPTOS_THROUGHPUT 8
