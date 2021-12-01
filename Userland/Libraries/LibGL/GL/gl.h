@@ -57,6 +57,7 @@ extern "C" {
 #define GL_CULL_FACE 0x0B44
 #define GL_FOG 0x0B60
 #define GL_DEPTH_TEST 0x0B71
+#define GL_STENCIL_TEST 0x0B90
 #define GL_POLYGON_OFFSET_FILL 0x8037
 
 // Alpha testing
