@@ -151,6 +151,11 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
     };
 
     calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const& value) {
+        // The generic calendar is not a supported Unicode calendar key, so skip it:
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/calendar#unicode_calendar_keys
+        if (calendar_name == "generic"sv)
+            return;
+
         auto& calendar = ensure_calendar(calendar_name);
 
         if (!locale_data.calendars.contains_slow(calendar_name))
