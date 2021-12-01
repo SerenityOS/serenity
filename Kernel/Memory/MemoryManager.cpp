@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
