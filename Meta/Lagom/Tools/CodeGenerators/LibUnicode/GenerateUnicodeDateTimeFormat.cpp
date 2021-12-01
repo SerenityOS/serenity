@@ -32,6 +32,16 @@ using CalendarPatternIndexType = u16;
 constexpr auto s_calendar_pattern_index_type = "u16"sv;
 
 struct CalendarPattern : public Unicode::CalendarPattern {
+    bool contains_only_date_fields() const
+    {
+        return !day_period.has_value() && !hour.has_value() && !minute.has_value() && !second.has_value() && !fractional_second_digits.has_value() && !time_zone_name.has_value();
+    }
+
+    bool contains_only_time_fields() const
+    {
+        return !weekday.has_value() && !era.has_value() && !year.has_value() && !month.has_value() && !day.has_value();
+    }
+
     unsigned hash() const
     {
         auto hash = pair_int_hash(pattern_index, pattern12_index);
@@ -451,6 +461,65 @@ static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern
     return locale_data.unique_patterns.ensure(move(format));
 }
 
+static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern> date_formats, Vector<CalendarPattern> time_formats, UnicodeLocaleData& locale_data)
+{
+    // https://unicode.org/reports/tr35/tr35-dates.html#Missing_Skeleton_Fields
+    auto replace_pattern = [&](auto format, auto time_format, auto date_format) {
+        auto pattern = locale_data.unique_strings.get(format);
+        auto time_pattern = locale_data.unique_strings.get(time_format);
+        auto date_pattern = locale_data.unique_strings.get(date_format);
+
+        auto new_pattern = pattern.replace("{0}", time_pattern).replace("{1}", date_pattern);
+        return locale_data.unique_strings.ensure(move(new_pattern));
+    };
+
+    auto append_if_unique = [&](auto format) {
+        auto format_index = locale_data.unique_patterns.ensure(move(format));
+
+        if (!calendar.available_formats.contains_slow(format_index))
+            calendar.available_formats.append(format_index);
+    };
+
+    for (auto const& format : date_formats)
+        append_if_unique(format);
+    for (auto const& format : time_formats)
+        append_if_unique(format);
+
+    for (auto const& date_format : date_formats) {
+        CalendarPatternIndexType date_time_format_index = 0;
+
+        if (date_format.month == Unicode::CalendarPatternStyle::Long) {
+            if (date_format.weekday.has_value())
+                date_time_format_index = calendar.date_time_formats.full_format;
+            else
+                date_time_format_index = calendar.date_time_formats.long_format;
+        } else if (date_format.month == Unicode::CalendarPatternStyle::Short) {
+            date_time_format_index = calendar.date_time_formats.medium_format;
+        } else {
+            date_time_format_index = calendar.date_time_formats.short_format;
+        }
+
+        for (auto const& time_format : time_formats) {
+            auto format = locale_data.unique_patterns.get(date_time_format_index);
+
+            if (time_format.pattern12_index != 0)
+                format.pattern12_index = replace_pattern(format.pattern_index, time_format.pattern12_index, date_format.pattern_index);
+            format.pattern_index = replace_pattern(format.pattern_index, time_format.pattern_index, date_format.pattern_index);
+
+            format.for_each_calendar_field_zipped_with(date_format, [](auto& field, auto const& date_field) {
+                if (date_field.has_value())
+                    field = date_field;
+            });
+            format.for_each_calendar_field_zipped_with(time_format, [](auto& field, auto const& time_field) {
+                if (time_field.has_value())
+                    field = time_field;
+            });
+
+            append_if_unique(move(format));
+        }
+    }
+}
+
 static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath calendars_path(move(locale_calendars_path));
@@ -472,18 +541,21 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         });
     };
 
-    auto parse_patterns = [&](auto& formats, auto const& patterns_object) {
-        auto full_format = patterns_object.get("full"sv);
-        formats.full_format = parse_date_time_pattern(full_format.as_string(), locale_data).value();
+    auto parse_patterns = [&](auto& formats, auto const& patterns_object, Vector<CalendarPattern>* patterns) {
+        auto parse_pattern = [&](auto name) {
+            auto format = patterns_object.get(name);
+            auto format_index = parse_date_time_pattern(format.as_string(), locale_data).value();
 
-        auto long_format = patterns_object.get("long"sv);
-        formats.long_format = parse_date_time_pattern(long_format.as_string(), locale_data).value();
+            if (patterns)
+                patterns->append(locale_data.unique_patterns.get(format_index));
 
-        auto medium_format = patterns_object.get("medium"sv);
-        formats.medium_format = parse_date_time_pattern(medium_format.as_string(), locale_data).value();
+            return format_index;
+        };
 
-        auto short_format = patterns_object.get("short"sv);
-        formats.short_format = parse_date_time_pattern(short_format.as_string(), locale_data).value();
+        formats.full_format = parse_pattern("full"sv);
+        formats.long_format = parse_pattern("long"sv);
+        formats.medium_format = parse_pattern("medium"sv);
+        formats.short_format = parse_pattern("short"sv);
     };
 
     calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const& value) {
@@ -497,20 +569,35 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         if (!locale_data.calendars.contains_slow(calendar_name))
             locale_data.calendars.append(calendar_name);
 
+        Vector<CalendarPattern> date_formats;
+        Vector<CalendarPattern> time_formats;
+
         auto const& date_formats_object = value.as_object().get("dateFormats"sv);
-        parse_patterns(calendar.date_formats, date_formats_object.as_object());
+        parse_patterns(calendar.date_formats, date_formats_object.as_object(), &date_formats);
 
         auto const& time_formats_object = value.as_object().get("timeFormats"sv);
-        parse_patterns(calendar.time_formats, time_formats_object.as_object());
+        parse_patterns(calendar.time_formats, time_formats_object.as_object(), &time_formats);
 
         auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
-        parse_patterns(calendar.date_time_formats, date_time_formats_object.as_object());
+        parse_patterns(calendar.date_time_formats, date_time_formats_object.as_object(), nullptr);
 
         auto const& available_formats = date_time_formats_object.as_object().get("availableFormats"sv);
         available_formats.as_object().for_each_member([&](auto const&, JsonValue const& pattern) {
-            if (auto pattern_index = parse_date_time_pattern(pattern.as_string(), locale_data); pattern_index.has_value())
+            auto pattern_index = parse_date_time_pattern(pattern.as_string(), locale_data);
+            if (!pattern_index.has_value())
+                return;
+
+            auto const& format = locale_data.unique_patterns.get(*pattern_index);
+            if (format.contains_only_date_fields())
+                date_formats.append(format);
+            else if (format.contains_only_time_fields())
+                time_formats.append(format);
+
+            if (!calendar.available_formats.contains_slow(*pattern_index))
                 calendar.available_formats.append(*pattern_index);
         });
+
+        generate_missing_patterns(calendar, move(date_formats), move(time_formats), locale_data);
     });
 
     return {};
