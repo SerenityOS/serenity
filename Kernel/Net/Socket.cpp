@@ -103,6 +103,9 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<const void*> u
         m_bound_interface = move(device);
         return {};
     }
+    case SO_DEBUG:
+        // NOTE: This is supposed to toggle collection of debugging information on/off, we don't have any right now, so this is a no-op.
+        return {};
     case SO_KEEPALIVE:
         // FIXME: Obviously, this is not a real keepalive.
         return {};
@@ -196,6 +199,13 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
         if (size < sizeof(int))
             return EINVAL;
         TRY(copy_to_user(static_ptr_cast<int*>(value), &m_type));
+        size = sizeof(int);
+        return copy_to_user(value_size, &size);
+    case SO_DEBUG:
+        // NOTE: This is supposed to toggle collection of debugging information on/off, we don't have any right now, so we just claim it's always off.
+        if (size < sizeof(int))
+            return EINVAL;
+        TRY(memset_user(value.unsafe_userspace_ptr(), 0, sizeof(int)));
         size = sizeof(int);
         return copy_to_user(value_size, &size);
     default:

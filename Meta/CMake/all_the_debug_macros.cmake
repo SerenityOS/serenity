@@ -231,3 +231,5 @@ set(WSSCREEN_DEBUG ON)
 # set(BOCHS_DEBUG_PORT)
 # False positive: IFF_DEBUG is an ioctl flag
 # set(IFF_DEBUG)
+# False positive: SO_DEBUG is a socket option
+# set(SO_DEBUG)
