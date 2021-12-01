@@ -99,6 +99,10 @@ private:
     uint8_t m_new_game_animation_delay { 0 };
     uint8_t m_new_game_animation_pile { 0 };
 
+    bool m_draw_animation { false };
+    uint8_t m_draw_animation_delay { 0 };
+    uint8_t m_draw_animation_pile { 0 };
+
     uint32_t m_score { 500 };
 };
 
