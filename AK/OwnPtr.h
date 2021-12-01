@@ -15,7 +15,7 @@
 namespace AK {
 
 template<typename T>
-class OwnPtr {
+class [[nodiscard]] OwnPtr {
 public:
     OwnPtr() = default;
 

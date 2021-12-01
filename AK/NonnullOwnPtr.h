@@ -25,7 +25,7 @@ template<typename T>
 class WeakPtr;
 
 template<typename T>
-class NonnullOwnPtr {
+class [[nodiscard]] NonnullOwnPtr {
 public:
     using ElementType = T;
 

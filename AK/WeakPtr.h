@@ -15,7 +15,7 @@
 namespace AK {
 
 template<typename T>
-class WeakPtr {
+class [[nodiscard]] WeakPtr {
     template<typename U>
     friend class Weakable;
 
