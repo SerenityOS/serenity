@@ -196,6 +196,8 @@ private:
     GLenum m_alpha_test_func = GL_ALWAYS;
     GLclampf m_alpha_test_ref_value = 0;
 
+    bool m_dither_enabled { true };
+
     // Stencil configuration
     bool m_stencil_test_enabled { false };
 
