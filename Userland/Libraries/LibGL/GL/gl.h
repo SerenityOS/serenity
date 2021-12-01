@@ -147,6 +147,9 @@ extern "C" {
 #define GL_INT 0x1404
 #define GL_UNSIGNED_INT 0x1405
 #define GL_FLOAT 0x1406
+#define GL_2_BYTES 0x1407
+#define GL_3_BYTES 0x1408
+#define GL_4_BYTES 0x1409
 #define GL_DOUBLE 0x140A
 
 // Format enums
@@ -388,6 +391,7 @@ GLAPI void glCullFace(GLenum mode);
 GLAPI void glFrontFace(GLenum mode);
 GLAPI GLuint glGenLists(GLsizei range);
 GLAPI void glCallList(GLuint list);
+GLAPI void glCallLists(GLsizei n, GLenum type, void const* lists);
 GLAPI void glDeleteLists(GLuint list, GLsizei range);
 GLAPI void glEndList(void);
 GLAPI void glNewList(GLuint list, GLenum mode);

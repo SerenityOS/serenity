@@ -868,19 +868,9 @@ GLuint SoftwareGLContext::gl_gen_lists(GLsizei range)
     return initial_entry + 1;
 }
 
-void SoftwareGLContext::gl_call_list(GLuint list)
+void SoftwareGLContext::invoke_list(size_t list_index)
 {
-    if (m_gl_call_depth > max_allowed_gl_call_depth)
-        return;
-
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_call_list, list);
-
-    if (m_listings.size() < list)
-        return;
-
-    TemporaryChange change { m_gl_call_depth, m_gl_call_depth + 1 };
-
-    auto& listing = m_listings[list - 1];
+    auto& listing = m_listings[list_index - 1];
     for (auto& entry : listing.entries) {
         entry.function.visit([&](auto& function) {
             entry.arguments.visit([&](auto& arguments) {
@@ -893,6 +883,81 @@ void SoftwareGLContext::gl_call_list(GLuint list)
                 arguments.apply_as_args(apply);
             });
         });
+    }
+}
+
+void SoftwareGLContext::gl_call_list(GLuint list)
+{
+    if (m_gl_call_depth > max_allowed_gl_call_depth)
+        return;
+
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_call_list, list);
+
+    if (m_listings.size() < list)
+        return;
+
+    TemporaryChange change { m_gl_call_depth, m_gl_call_depth + 1 };
+
+    invoke_list(list);
+}
+
+void SoftwareGLContext::gl_call_lists(GLsizei n, GLenum type, void const* lists)
+{
+    if (m_gl_call_depth > max_allowed_gl_call_depth)
+        return;
+
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_call_lists, n, type, lists);
+
+    RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(!(type == GL_BYTE
+                             || type == GL_UNSIGNED_BYTE
+                             || type == GL_SHORT
+                             || type == GL_UNSIGNED_SHORT
+                             || type == GL_INT
+                             || type == GL_UNSIGNED_INT
+                             || type == GL_FLOAT
+                             || type == GL_2_BYTES
+                             || type == GL_3_BYTES
+                             || type == GL_4_BYTES),
+        GL_INVALID_ENUM);
+
+    TemporaryChange change { m_gl_call_depth, m_gl_call_depth + 1 };
+
+    auto invoke_all_lists = [&]<typename T>(T const* lists) {
+        for (int i = 0; i < n; ++i) {
+            auto list = static_cast<size_t>(lists[i]);
+            invoke_list(list);
+        }
+    };
+    switch (type) {
+    case GL_BYTE:
+        invoke_all_lists(static_cast<GLbyte const*>(lists));
+        break;
+    case GL_UNSIGNED_BYTE:
+        invoke_all_lists(static_cast<GLubyte const*>(lists));
+        break;
+    case GL_SHORT:
+        invoke_all_lists(static_cast<GLshort const*>(lists));
+        break;
+    case GL_UNSIGNED_SHORT:
+        invoke_all_lists(static_cast<GLushort const*>(lists));
+        break;
+    case GL_INT:
+        invoke_all_lists(static_cast<GLint const*>(lists));
+        break;
+    case GL_UNSIGNED_INT:
+        invoke_all_lists(static_cast<GLuint const*>(lists));
+        break;
+    case GL_FLOAT:
+        invoke_all_lists(static_cast<GLfloat const*>(lists));
+        break;
+    case GL_2_BYTES:
+    case GL_3_BYTES:
+    case GL_4_BYTES:
+        dbgln("SoftwareGLContext FIXME: unimplemented glCallLists() with type {}", type);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
