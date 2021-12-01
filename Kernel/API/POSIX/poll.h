@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #define POLLIN (1u << 0)
+#define POLLRDNORM POLLIN
 #define POLLPRI (1u << 1)
 #define POLLOUT (1u << 2)
 #define POLLWRNORM POLLOUT
