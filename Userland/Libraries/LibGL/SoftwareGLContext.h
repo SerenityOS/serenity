@@ -33,6 +33,7 @@ public:
     virtual void gl_clear(GLbitfield mask) override;
     virtual void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) override;
     virtual void gl_clear_depth(GLdouble depth) override;
+    virtual void gl_clear_stencil(GLint s) override;
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) override;
     virtual void gl_delete_textures(GLsizei n, const GLuint* textures) override;
     virtual void gl_end() override;
@@ -142,8 +143,10 @@ private:
     Vector<FloatMatrix4x4> m_projection_matrix_stack;
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
 
-    FloatVector4 m_clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
-    double m_clear_depth = { 1.0 };
+    FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
+    double m_clear_depth { 1.0 };
+    GLint m_clear_stencil { 0 };
+
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
     FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 0.0f };
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
@@ -236,6 +239,7 @@ private:
             decltype(&SoftwareGLContext::gl_clear),
             decltype(&SoftwareGLContext::gl_clear_color),
             decltype(&SoftwareGLContext::gl_clear_depth),
+            decltype(&SoftwareGLContext::gl_clear_stencil),
             decltype(&SoftwareGLContext::gl_color),
             decltype(&SoftwareGLContext::gl_end),
             decltype(&SoftwareGLContext::gl_frustum),

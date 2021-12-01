@@ -9,6 +9,11 @@
 
 extern GL::GLContext* g_gl_context;
 
+void glClearStencil(GLint s)
+{
+    g_gl_context->gl_clear_stencil(s);
+}
+
 void glStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
     g_gl_context->gl_stencil_func_separate(GL_FRONT_AND_BACK, func, ref, mask);
