@@ -26,6 +26,8 @@ extern "C" {
 
 #define PT_READ_I PT_PEEK
 #define PT_READ_D PT_PEEK
+#define PT_WRITE_I PT_POKE
+#define PT_WRITE_D PT_POKE
 
 #define DEBUG_STATUS_REGISTER 6
 #define DEBUG_CONTROL_REGISTER 7
