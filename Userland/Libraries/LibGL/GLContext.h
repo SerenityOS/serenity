@@ -22,6 +22,7 @@ public:
     virtual void gl_clear(GLbitfield mask) = 0;
     virtual void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) = 0;
     virtual void gl_clear_depth(GLdouble depth) = 0;
+    virtual void gl_clear_stencil(GLint s) = 0;
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) = 0;
     virtual void gl_delete_textures(GLsizei n, const GLuint* textures) = 0;
     virtual void gl_end() = 0;

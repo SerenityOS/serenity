@@ -51,6 +51,7 @@ extern "C" {
 
 // Buffer bits
 #define GL_DEPTH_BUFFER_BIT 0x00100
+#define GL_STENCIL_BUFFER_BIT 0x00400
 #define GL_COLOR_BUFFER_BIT 0x04000
 
 // Enable capabilities
@@ -349,6 +350,7 @@ GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 GLAPI void glClearDepth(GLdouble depth);
+GLAPI void glClearStencil(GLint s);
 GLAPI void glColor3f(GLfloat r, GLfloat g, GLfloat b);
 GLAPI void glColor3fv(const GLfloat* v);
 GLAPI void glColor3ub(GLubyte r, GLubyte g, GLubyte b);
