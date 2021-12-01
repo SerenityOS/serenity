@@ -102,6 +102,8 @@ public:
     virtual void gl_fogi(GLenum pname, GLint param) override;
     virtual void gl_pixel_storei(GLenum pname, GLint param) override;
     virtual void gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height) override;
+    virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) override;
+    virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) override;
     virtual void present() override;
 
 private:
@@ -164,7 +166,24 @@ private:
     GLenum m_alpha_test_func = GL_ALWAYS;
     GLclampf m_alpha_test_ref_value = 0;
 
+    // Stencil configuration
     bool m_stencil_test_enabled { false };
+
+    struct StencilFunctionOptions {
+        GLenum func { GL_ALWAYS };
+        GLint reference_value { 0 };
+        GLuint mask { NumericLimits<GLuint>::max() };
+    };
+    StencilFunctionOptions m_stencil_backfacing_func;
+    StencilFunctionOptions m_stencil_frontfacing_func;
+
+    struct StencilOperationOptions {
+        GLenum op_fail { GL_KEEP };
+        GLenum op_depth_fail { GL_KEEP };
+        GLenum op_pass { GL_KEEP };
+    };
+    StencilOperationOptions m_stencil_backfacing_op;
+    StencilOperationOptions m_stencil_frontfacing_op;
 
     GLenum m_current_read_buffer = GL_BACK;
     GLenum m_current_draw_buffer = GL_BACK;
@@ -245,7 +264,9 @@ private:
             decltype(&SoftwareGLContext::gl_draw_elements),
             decltype(&SoftwareGLContext::gl_depth_range),
             decltype(&SoftwareGLContext::gl_polygon_offset),
-            decltype(&SoftwareGLContext::gl_scissor)>;
+            decltype(&SoftwareGLContext::gl_scissor),
+            decltype(&SoftwareGLContext::gl_stencil_func_separate),
+            decltype(&SoftwareGLContext::gl_stencil_op_separate)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

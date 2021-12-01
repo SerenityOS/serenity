@@ -2172,6 +2172,74 @@ void SoftwareGLContext::gl_scissor(GLint x, GLint y, GLsizei width, GLsizei heig
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_stencil_func_separate, face, func, ref, mask);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(!(func == GL_NEVER
+                             || func == GL_LESS
+                             || func == GL_LEQUAL
+                             || func == GL_GREATER
+                             || func == GL_GEQUAL
+                             || func == GL_EQUAL
+                             || func == GL_NOTEQUAL
+                             || func == GL_ALWAYS),
+        GL_INVALID_ENUM);
+
+    // FIXME: "ref is clamped to the range 02^n - 1 , where n is the number of bitplanes in the stencil buffer"
+
+    StencilFunctionOptions new_options = { func, ref, mask };
+    if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
+        m_stencil_frontfacing_func = new_options;
+    if (face == GL_BACK || face == GL_FRONT_AND_BACK)
+        m_stencil_backfacing_func = new_options;
+}
+
+void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_stencil_op_separate, face, sfail, dpfail, dppass);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(!(face == GL_FRONT || face == GL_BACK || face == GL_FRONT_AND_BACK), GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(!(sfail == GL_KEEP
+                             || sfail == GL_ZERO
+                             || sfail == GL_REPLACE
+                             || sfail == GL_INCR
+                             || sfail == GL_INCR_WRAP
+                             || sfail == GL_DECR
+                             || sfail == GL_DECR_WRAP
+                             || sfail == GL_INVERT),
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(dpfail == GL_KEEP
+                             || dpfail == GL_ZERO
+                             || dpfail == GL_REPLACE
+                             || dpfail == GL_INCR
+                             || dpfail == GL_INCR_WRAP
+                             || dpfail == GL_DECR
+                             || dpfail == GL_DECR_WRAP
+                             || dpfail == GL_INVERT),
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(!(dppass == GL_KEEP
+                             || dppass == GL_ZERO
+                             || dppass == GL_REPLACE
+                             || dppass == GL_INCR
+                             || dppass == GL_INCR_WRAP
+                             || dppass == GL_DECR
+                             || dppass == GL_DECR_WRAP
+                             || dppass == GL_INVERT),
+        GL_INVALID_ENUM);
+
+    StencilOperationOptions new_options = { sfail, dpfail, dppass };
+    if (face == GL_FRONT || face == GL_FRONT_AND_BACK)
+        m_stencil_frontfacing_op = new_options;
+    if (face == GL_BACK || face == GL_FRONT_AND_BACK)
+        m_stencil_backfacing_op = new_options;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
