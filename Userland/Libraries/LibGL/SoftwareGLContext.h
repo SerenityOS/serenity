@@ -65,6 +65,7 @@ public:
     virtual void gl_list_base(GLuint base) override;
     virtual void gl_end_list(void) override;
     virtual void gl_new_list(GLuint list, GLenum mode) override;
+    virtual GLboolean gl_is_list(GLuint list) override;
     virtual void gl_flush() override;
     virtual void gl_finish() override;
     virtual void gl_blend_func(GLenum src_factor, GLenum dst_factor) override;

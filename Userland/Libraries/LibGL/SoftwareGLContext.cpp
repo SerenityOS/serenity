@@ -1023,6 +1023,13 @@ void SoftwareGLContext::gl_new_list(GLuint list, GLenum mode)
     m_current_listing_index = CurrentListing { {}, static_cast<size_t>(list - 1), mode };
 }
 
+GLboolean SoftwareGLContext::gl_is_list(GLuint list)
+{
+    RETURN_VALUE_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION, GL_FALSE);
+
+    return list < m_listings.size() ? GL_TRUE : GL_FALSE;
+}
+
 void SoftwareGLContext::gl_flush()
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
