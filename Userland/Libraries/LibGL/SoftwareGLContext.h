@@ -46,6 +46,7 @@ public:
     virtual void gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
     virtual void gl_push_matrix() override;
     virtual void gl_pop_matrix() override;
+    virtual void gl_mult_matrix(FloatMatrix4x4 const& matrix) override;
     virtual void gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) override;
     virtual void gl_scale(GLdouble x, GLdouble y, GLdouble z) override;
     virtual void gl_translate(GLdouble x, GLdouble y, GLdouble z) override;
@@ -216,6 +217,7 @@ private:
             decltype(&SoftwareGLContext::gl_ortho),
             decltype(&SoftwareGLContext::gl_push_matrix),
             decltype(&SoftwareGLContext::gl_pop_matrix),
+            decltype(&SoftwareGLContext::gl_mult_matrix),
             decltype(&SoftwareGLContext::gl_rotate),
             decltype(&SoftwareGLContext::gl_scale),
             decltype(&SoftwareGLContext::gl_translate),

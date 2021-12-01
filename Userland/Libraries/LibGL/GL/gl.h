@@ -351,6 +351,7 @@ GLAPI void glMatrixMode(GLenum mode);
 GLAPI void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
 GLAPI void glPushMatrix();
 GLAPI void glPopMatrix();
+GLAPI void glMultMatrixf(GLfloat const* matrix);
 GLAPI void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glScalef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glTranslatef(GLfloat x, GLfloat y, GLfloat z);

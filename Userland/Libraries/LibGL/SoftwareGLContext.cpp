@@ -33,6 +33,14 @@ static constexpr size_t MATRIX_STACK_LIMIT = 1024;
             return;                                               \
     }
 
+#define APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(name, arg) \
+    if (should_append_to_listing()) {                                \
+        auto ptr = store_in_listing(arg);                            \
+        append_to_listing<&SoftwareGLContext::name>(*ptr);           \
+        if (!should_execute_after_appending_to_listing())            \
+            return;                                                  \
+    }
+
 #define RETURN_WITH_ERROR_IF(condition, error) \
     if (condition) {                           \
         if (m_error == GL_NO_ERROR)            \
@@ -368,12 +376,7 @@ void SoftwareGLContext::gl_load_identity()
 
 void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 {
-    if (should_append_to_listing()) {
-        auto ptr = store_in_listing(matrix);
-        append_to_listing<&SoftwareGLContext::gl_load_matrix>(*ptr);
-        if (!should_execute_after_appending_to_listing())
-            return;
-    }
+    APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_load_matrix, matrix);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
@@ -439,6 +442,24 @@ void SoftwareGLContext::gl_pop_matrix()
     default:
         dbgln_if(GL_DEBUG, "glPopMatrix(): Attempt to pop matrix with invalid matrix mode, {}", m_current_matrix_mode);
         return;
+    }
+}
+
+void SoftwareGLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
+{
+    APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_mult_matrix, matrix);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    switch (m_current_matrix_mode) {
+    case GL_PROJECTION:
+        m_projection_matrix = m_projection_matrix * matrix;
+        break;
+    case GL_MODELVIEW:
+        m_model_view_matrix = m_model_view_matrix * matrix;
+        break;
+    default:
+        dbgln_if(GL_DEBUG, "glMultMatrix(): Attempt to mult matrix with unsupported matrix mode {}", m_current_matrix_mode);
     }
 }
 

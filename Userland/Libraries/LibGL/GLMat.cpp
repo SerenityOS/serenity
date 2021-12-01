@@ -35,18 +35,28 @@ void glPopMatrix()
     g_gl_context->gl_pop_matrix();
 }
 
-void glLoadMatrixf(const GLfloat* matrix)
+/*
+ * Transposes input matrices (column-major) to our Matrix (row-major).
+ */
+template<typename T>
+static constexpr Matrix4x4<T> transpose_input_matrix(T const* matrix)
 {
-    // Transpose the matrix here because glLoadMatrix expects elements
-    // in column major order but out Matrix class stores elements in
-    // row major order.
-    FloatMatrix4x4 mat(
+    return {
         matrix[0], matrix[4], matrix[8], matrix[12],
         matrix[1], matrix[5], matrix[9], matrix[13],
         matrix[2], matrix[6], matrix[10], matrix[14],
-        matrix[3], matrix[7], matrix[11], matrix[15]);
+        matrix[3], matrix[7], matrix[11], matrix[15],
+    };
+}
 
-    g_gl_context->gl_load_matrix(mat);
+void glMultMatrixf(GLfloat const* matrix)
+{
+    g_gl_context->gl_mult_matrix(transpose_input_matrix<float>(matrix));
+}
+
+void glLoadMatrixf(const GLfloat* matrix)
+{
+    g_gl_context->gl_load_matrix(transpose_input_matrix<float>(matrix));
 }
 
 void glLoadIdentity()
