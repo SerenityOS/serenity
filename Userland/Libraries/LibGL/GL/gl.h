@@ -192,7 +192,13 @@ extern "C" {
 #define GL_UNSIGNED_BYTE 0x1401
 
 // Stencil buffer operations
+#define GL_KEEP 0x1E00
 #define GL_REPLACE 0x1E01
+#define GL_INCR 0x1E02
+#define GL_INCR_WRAP 0x8507
+#define GL_DECR 0x1E03
+#define GL_DECR_WRAP 0x8508
+#define GL_INVERT 0x150A
 
 // Texture targets
 #define GL_TEXTURE_1D 0x0DE0
@@ -439,6 +445,10 @@ GLAPI void glPixelStorei(GLenum pname, GLint param);
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 GLAPI void glLightf(GLenum light, GLenum pname, GLfloat param);
 GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat* param);
+GLAPI void glStencilFunc(GLenum func, GLint ref, GLuint mask);
+GLAPI void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+GLAPI void glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass);
+GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
 
 #ifdef __cplusplus
 }
