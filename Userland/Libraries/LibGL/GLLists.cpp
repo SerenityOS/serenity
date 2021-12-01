@@ -19,6 +19,11 @@ void glCallList(GLuint list)
     return g_gl_context->gl_call_list(list);
 }
 
+void glCallLists(GLsizei n, GLenum type, void const* lists)
+{
+    return g_gl_context->gl_call_lists(n, type, lists);
+}
+
 void glDeleteLists(GLuint list, GLsizei range)
 {
     return g_gl_context->gl_delete_lists(list, range);

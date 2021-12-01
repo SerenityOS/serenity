@@ -59,6 +59,7 @@ public:
     virtual void gl_cull_face(GLenum) override;
     virtual GLuint gl_gen_lists(GLsizei range) override;
     virtual void gl_call_list(GLuint list) override;
+    virtual void gl_call_lists(GLsizei n, GLenum type, void const* lists) override;
     virtual void gl_delete_lists(GLuint list, GLsizei range) override;
     virtual void gl_end_list(void) override;
     virtual void gl_new_list(GLuint list, GLenum mode) override;
@@ -122,6 +123,7 @@ private:
     template<typename T>
     void get_floating_point(GLenum pname, T* params);
 
+    void invoke_list(size_t list_index);
     [[nodiscard]] bool should_append_to_listing() const { return m_current_listing_index.has_value(); }
     [[nodiscard]] bool should_execute_after_appending_to_listing() const { return m_current_listing_index.has_value() && m_current_listing_index->mode == GL_COMPILE_AND_EXECUTE; }
 
@@ -228,6 +230,7 @@ private:
             decltype(&SoftwareGLContext::gl_front_face),
             decltype(&SoftwareGLContext::gl_cull_face),
             decltype(&SoftwareGLContext::gl_call_list),
+            decltype(&SoftwareGLContext::gl_call_lists),
             decltype(&SoftwareGLContext::gl_blend_func),
             decltype(&SoftwareGLContext::gl_shade_model),
             decltype(&SoftwareGLContext::gl_alpha_func),
