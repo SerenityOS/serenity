@@ -79,7 +79,14 @@ extern "C" {
 #define GL_SHADING_LANGUAGE_VERSION 0x8B8C
 
 // Get parameters
+#define GL_DOUBLEBUFFER 0x0C32
 #define GL_MAX_TEXTURE_SIZE 0x0D33
+#define GL_RED_BITS 0x0D52
+#define GL_GREEN_BITS 0x0D53
+#define GL_BLUE_BITS 0x0D54
+#define GL_ALPHA_BITS 0x0D55
+#define GL_DEPTH_BITS 0x0D56
+#define GL_STENCIL_BITS 0x0D57
 #define GL_MAX_TEXTURE_UNITS 0x84E2
 
 // Blend factors

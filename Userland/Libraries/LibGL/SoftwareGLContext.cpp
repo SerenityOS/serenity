@@ -1582,6 +1582,9 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
     case GL_DEPTH_TEST:
         *data = m_depth_test_enabled ? GL_TRUE : GL_FALSE;
         break;
+    case GL_DOUBLEBUFFER:
+        *data = GL_TRUE;
+        break;
     case GL_CULL_FACE:
         *data = m_cull_faces ? GL_TRUE : GL_FALSE;
         break;
@@ -1682,6 +1685,14 @@ void SoftwareGLContext::gl_get_integerv(GLenum pname, GLint* data)
         break;
     case GL_UNPACK_ROW_LENGTH:
         *data = m_unpack_row_length;
+        break;
+    case GL_RED_BITS:
+    case GL_GREEN_BITS:
+    case GL_BLUE_BITS:
+    case GL_ALPHA_BITS:
+    case GL_DEPTH_BITS:
+    case GL_STENCIL_BITS:
+        *data = sizeof(float) * 8;
         break;
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
