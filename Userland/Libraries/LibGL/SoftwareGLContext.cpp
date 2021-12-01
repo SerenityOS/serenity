@@ -2248,6 +2248,15 @@ void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
     m_current_vertex_normal = { nx, ny, nz };
 }
 
+void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    m_current_raster_position.window_coordinates = { x, y, z };
+    m_current_raster_position.clip_coordinate_value = w;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
