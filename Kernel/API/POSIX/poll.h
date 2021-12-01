@@ -20,6 +20,7 @@ extern "C" {
 #define POLLERR (1u << 3)
 #define POLLHUP (1u << 4)
 #define POLLNVAL (1u << 5)
+#define POLLWRBAND (1u << 12)
 #define POLLRDHUP (1u << 13)
 
 struct pollfd {

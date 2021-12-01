@@ -588,15 +588,16 @@ public:
             Read = 1 << 0,
             Write = 1 << 1,
             ReadPriority = 1 << 2,
+            WritePriority = 1 << 3,
 
-            Accept = 1 << 3,
-            Connect = 1 << 4,
+            Accept = 1 << 4,
+            Connect = 1 << 5,
             SocketFlags = Accept | Connect,
 
-            WriteNotOpen = 1 << 5,
-            WriteError = 1 << 6,
-            WriteHangUp = 1 << 7,
-            ReadHangUp = 1 << 8,
+            WriteNotOpen = 1 << 6,
+            WriteError = 1 << 7,
+            WriteHangUp = 1 << 8,
+            ReadHangUp = 1 << 9,
             Exception = WriteNotOpen | WriteError | WriteHangUp | ReadHangUp,
         };
 
