@@ -99,6 +99,11 @@ void glScalef(GLfloat x, GLfloat y, GLfloat z)
     g_gl_context->gl_scale(x, y, z);
 }
 
+void glTranslated(GLdouble x, GLdouble y, GLdouble z)
+{
+    g_gl_context->gl_translate(x, y, z);
+}
+
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_translate(x, y, z);
