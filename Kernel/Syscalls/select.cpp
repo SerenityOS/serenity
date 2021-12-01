@@ -159,6 +159,8 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
             block_flags |= BlockFlags::Write;
         if (pfd.events & POLLPRI)
             block_flags |= BlockFlags::ReadPriority;
+        if (pfd.events & POLLWRBAND)
+            block_flags |= BlockFlags::WritePriority;
         TRY(fds_info.try_append({ move(description), block_flags }));
     }
 
@@ -207,6 +209,10 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::Write)) {
                 VERIFY(pfd.events & POLLOUT);
                 pfd.revents |= POLLOUT;
+            }
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WritePriority)) {
+                VERIFY(pfd.events & POLLWRBAND);
+                pfd.revents |= POLLWRBAND;
             }
         }
         if (pfd.revents)
