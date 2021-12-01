@@ -788,8 +788,8 @@ int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char*
     const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(addr);
 
     if (host && hostlen > 0) {
-        if (flags & NI_NAMEREQD)
-            dbgln("getnameinfo flag NI_NAMEREQD not implemented");
+        if (flags != 0)
+            dbgln("getnameinfo flags are not implemented: {:#x}", flags);
 
         if (!inet_ntop(AF_INET, &sin->sin_addr, host, hostlen)) {
             if (errno == ENOSPC)
