@@ -366,6 +366,7 @@ GLAPI void glGenTextures(GLsizei n, GLuint* textures);
 GLAPI GLenum glGetError();
 GLAPI GLubyte* glGetString(GLenum name);
 GLAPI void glLoadIdentity();
+GLAPI void glLoadMatrixd(const GLdouble* matrix);
 GLAPI void glLoadMatrixf(const GLfloat* matrix);
 GLAPI void glMatrixMode(GLenum mode);
 GLAPI void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
