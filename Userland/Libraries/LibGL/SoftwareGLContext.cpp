@@ -1442,38 +1442,6 @@ void SoftwareGLContext::gl_active_texture(GLenum texture)
     m_active_texture_unit = &m_texture_units.at(texture - GL_TEXTURE0);
 }
 
-void SoftwareGLContext::gl_get_floatv(GLenum pname, GLfloat* params)
-{
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
-    auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
-        auto elements = matrix.elements();
-
-        for (size_t i = 0; i < 4; ++i) {
-            for (size_t j = 0; j < 4; ++j) {
-                params[i * 4 + j] = elements[i][j];
-            }
-        }
-    };
-
-    switch (pname) {
-    case GL_MODELVIEW_MATRIX:
-        if (m_current_matrix_mode == GL_MODELVIEW)
-            flatten_and_assign_matrix(m_model_view_matrix);
-        else {
-            if (m_model_view_matrix_stack.is_empty())
-                flatten_and_assign_matrix(FloatMatrix4x4::identity());
-            else
-                flatten_and_assign_matrix(m_model_view_matrix_stack.last());
-        }
-        break;
-    default:
-        // FIXME: Because glQuake only requires GL_MODELVIEW_MATRIX, that is the only parameter
-        // that we currently support. More parameters should be supported.
-        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
-    }
-}
-
 void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -1506,6 +1474,48 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value
         // for `pname`
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+}
+
+void SoftwareGLContext::gl_get_doublev(GLenum pname, GLdouble* params)
+{
+    get_floating_point(pname, params);
+}
+
+void SoftwareGLContext::gl_get_floatv(GLenum pname, GLfloat* params)
+{
+    get_floating_point(pname, params);
+}
+
+template<typename T>
+void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
+        auto elements = matrix.elements();
+
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                params[i * 4 + j] = static_cast<T>(elements[i][j]);
+            }
+        }
+    };
+
+    switch (pname) {
+    case GL_MODELVIEW_MATRIX:
+        if (m_current_matrix_mode == GL_MODELVIEW)
+            flatten_and_assign_matrix(m_model_view_matrix);
+        else {
+            if (m_model_view_matrix_stack.is_empty())
+                flatten_and_assign_matrix(FloatMatrix4x4::identity());
+            else
+                flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        }
+        break;
+    default:
+        dbgln_if(GL_DEBUG, "FIXME: unimplemented floating point parameter {:#x}", pname);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 }
