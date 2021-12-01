@@ -357,6 +357,8 @@ private:
 
     float m_line_width { 1.0f };
 
+    // Lighting configuration
+    bool m_lighting_enabled { false };
     FloatVector4 m_light_model_ambient { 0.2f, 0.2f, 0.2f, 1.0f };
     GLfloat m_light_model_two_side { 0.0f };
 };

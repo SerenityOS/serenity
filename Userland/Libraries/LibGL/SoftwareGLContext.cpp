@@ -86,6 +86,8 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = true } };
     case GL_GREEN_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
+    case GL_LIGHTING:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_lighting_enabled } };
     case GL_MAX_TEXTURE_SIZE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 4096 } };
     case GL_MAX_TEXTURE_UNITS:
@@ -655,6 +657,9 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.fog_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_LIGHTING:
+        m_lighting_enabled = true;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
@@ -714,6 +719,9 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         rasterizer_options.fog_enabled = false;
         update_rasterizer_options = true;
         break;
+    case GL_LIGHTING:
+        m_lighting_enabled = false;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = false;
         update_rasterizer_options = true;
@@ -758,6 +766,8 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
         return m_alpha_test_enabled;
     case GL_FOG:
         return rasterizer_options.fog_enabled;
+    case GL_LIGHTING:
+        return m_lighting_enabled;
     case GL_SCISSOR_TEST:
         return rasterizer_options.scissor_enabled;
     case GL_STENCIL_TEST:
