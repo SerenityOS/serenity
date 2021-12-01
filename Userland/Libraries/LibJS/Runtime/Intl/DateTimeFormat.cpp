@@ -322,8 +322,13 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // f. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
         if ((hour_cycle == Unicode::HourCycle::H11) || (hour_cycle == Unicode::HourCycle::H12)) {
             // i. Let pattern be bestFormat.[[pattern12]].
-            if (best_format->pattern12.has_value())
+            if (best_format->pattern12.has_value()) {
                 pattern = best_format->pattern12.release_value();
+            } else {
+                // Non-standard, LibUnicode only provides [[pattern12]] when [[pattern]] has a day
+                // period. Other implementations provide [[pattern12]] as a copy of [[pattern]].
+                pattern = move(best_format->pattern);
+            }
 
             // ii. Let rangePatterns be bestFormat.[[rangePatterns12]].
         }
