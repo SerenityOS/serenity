@@ -61,10 +61,7 @@ public:
 
     [[nodiscard]] JsonValue const* get_ptr(StringView key) const
     {
-        auto it = m_members.find(key);
-        if (it == m_members.end())
-            return nullptr;
-        return &(*it).value;
+        return m_members.get_ref(key).value_ptr();
     }
 
     [[nodiscard]] [[nodiscard]] bool has(StringView key) const
