@@ -118,6 +118,22 @@ public:
     void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
     ErrorOr<void> try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
+    Optional<V const&> get_ref(const K& key) const
+    {
+        auto it = find(key);
+        if (it == end())
+            return {};
+        return it->value;
+    }
+
+    Optional<V&> get_ref(const K& key)
+    {
+        auto it = find(key);
+        if (it == end())
+            return {};
+        return it->value;
+    }
+
     Optional<typename Traits<V>::PeekType> get(const K& key) const requires(!IsPointer<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
