@@ -14,6 +14,7 @@ REGISTER_WIDGET(Spider, Game);
 namespace Spider {
 
 static constexpr uint8_t new_game_animation_delay = 2;
+static constexpr uint8_t draw_animation_delay = 2;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
@@ -108,19 +109,8 @@ void Game::draw_cards()
 
     update_score(-1);
 
-    auto original_stock_rect = stock_pile.bounding_box();
-    for (auto pile : piles) {
-        auto& current_pile = stack(pile);
-
-        auto card = stock_pile.pop();
-        card->set_upside_down(false);
-        current_pile.push(card);
-
-        update(current_pile.bounding_box());
-    }
-    update(original_stock_rect);
-
-    detect_full_stacks();
+    m_draw_animation = true;
+    start_timer(s_timer_interval_ms);
 }
 
 void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
@@ -248,7 +238,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mousedown_event(event);
 
-    if (m_new_game_animation)
+    if (m_new_game_animation || m_draw_animation)
         return;
 
     auto click_location = event.position();
@@ -289,7 +279,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
 
-    if (!m_focused_stack || m_focused_cards.is_empty() || m_new_game_animation)
+    if (!m_focused_stack || m_focused_cards.is_empty() || m_new_game_animation || m_draw_animation)
         return;
 
     bool rebound = true;
@@ -337,7 +327,7 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mousemove_event(event);
 
-    if (!m_mouse_down || m_new_game_animation)
+    if (!m_mouse_down || m_new_game_animation || m_draw_animation)
         return;
 
     auto click_location = event.position();
@@ -391,7 +381,28 @@ void Game::timer_event(Core::TimerEvent&)
                 stop_timer();
             }
         }
+    } else if (m_draw_animation) {
+        if (m_draw_animation_delay < draw_animation_delay) {
+            ++m_draw_animation_delay;
+        } else {
+            auto& stock_pile = stack(Stock);
+            auto& current_pile = stack(piles.at(m_draw_animation_pile));
+            auto card = stock_pile.pop();
+            card->set_upside_down(false);
+            current_pile.push(card);
+            update(current_pile.bounding_box());
+            ++m_draw_animation_pile;
+
+            if (m_draw_animation_pile == piles.size()) {
+                update(stock_pile.bounding_box());
+                detect_full_stacks();
+
+                m_draw_animation = false;
+                m_draw_animation_delay = 0;
+                m_draw_animation_pile = 0;
+                stop_timer();
+            }
+        }
     }
 }
-
 }
