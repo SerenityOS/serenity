@@ -161,6 +161,7 @@ extern "C" {
 #define GL_3_BYTES 0x1408
 #define GL_4_BYTES 0x1409
 #define GL_DOUBLE 0x140A
+#define GL_BOOL 0x8B56
 
 // Format enums
 #define GL_COLOR_INDEX 0x1900
@@ -343,6 +344,7 @@ extern "C" {
 
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6
+#define GL_PROJECTION_MATRIX 0x0BA7
 
 //
 // OpenGL typedefs
