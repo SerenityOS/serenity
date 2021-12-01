@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,17 @@ void glLightfv(GLenum light, GLenum pname, GLfloat* param)
 {
     // FIXME: implement
     dbgln_if(GL_DEBUG, "glLightfv({}, {}, {}): unimplemented", light, pname, param);
+}
+
+void glMaterialf(GLenum face, GLenum pname, GLfloat param)
+{
+    VERIFY(face == GL_SHININESS);
+    g_gl_context->gl_materialv(face, pname, &param);
+}
+
+void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params)
+{
+    g_gl_context->gl_materialv(face, pname, params);
 }
 
 void glShadeModel(GLenum mode)
