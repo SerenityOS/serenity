@@ -514,6 +514,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
     vertex.tex_coord = { m_current_vertex_tex_coord.x(), m_current_vertex_tex_coord.y() };
+    vertex.normal = m_current_vertex_normal;
 
     vertex_list.append(vertex);
 }
@@ -2238,6 +2239,13 @@ void SoftwareGLContext::gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum
         m_stencil_frontfacing_op = new_options;
     if (face == GL_BACK || face == GL_FRONT_AND_BACK)
         m_stencil_backfacing_op = new_options;
+}
+
+void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_normal, nx, ny, nz);
+
+    m_current_vertex_normal = { nx, ny, nz };
 }
 
 void SoftwareGLContext::present()

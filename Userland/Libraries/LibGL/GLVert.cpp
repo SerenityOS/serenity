@@ -169,3 +169,13 @@ void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_translate(x, y, z);
 }
+
+void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
+{
+    g_gl_context->gl_normal(nx, ny, nz);
+}
+
+void glNormal3fv(GLfloat const* v)
+{
+    g_gl_context->gl_normal(v[0], v[1], v[2]);
+}

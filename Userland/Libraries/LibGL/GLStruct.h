@@ -8,6 +8,7 @@
 
 #include "GL/gl.h"
 #include <LibGfx/Vector2.h>
+#include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
 
 namespace GL {
@@ -20,6 +21,7 @@ struct GLVertex {
     FloatVector4 position;
     FloatVector4 color;
     FloatVector2 tex_coord;
+    FloatVector3 normal;
 };
 
 struct GLTriangle {
