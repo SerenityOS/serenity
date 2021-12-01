@@ -311,6 +311,7 @@ const char* const sys_errlist[] = {
     "Directory not empty",
     "Math argument out of domain",
     "Connection refused",
+    "Host is down",
     "Address not available",
     "Already connected",
     "Connection aborted",
@@ -328,7 +329,10 @@ const char* const sys_errlist[] = {
     "No message",
     "No protocol option",
     "Not connected",
+    "Transport endpoint has shutdown",
+    "Too many references",
     "Protocol not supported",
+    "Socket type not supported",
     "Resource deadlock would occur",
     "Timed out",
     "Wrong protocol type",
@@ -342,6 +346,7 @@ const char* const sys_errlist[] = {
     "State not recoverable",
     "The highest errno +1 :^)",
 };
+static_assert(array_size(sys_errlist) == (EMAXERRNO + 1));
 
 int sys_nerr = EMAXERRNO;
 
