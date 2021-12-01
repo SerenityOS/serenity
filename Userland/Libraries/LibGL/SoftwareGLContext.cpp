@@ -926,7 +926,7 @@ void SoftwareGLContext::gl_call_lists(GLsizei n, GLenum type, void const* lists)
     auto invoke_all_lists = [&]<typename T>(T const* lists) {
         for (int i = 0; i < n; ++i) {
             auto list = static_cast<size_t>(lists[i]);
-            invoke_list(list);
+            invoke_list(m_list_base + list);
         }
     };
     switch (type) {
@@ -968,6 +968,15 @@ void SoftwareGLContext::gl_delete_lists(GLuint list, GLsizei range)
 
     for (auto& entry : m_listings.span().slice(list - 1, range))
         entry.entries.clear_with_capacity();
+}
+
+void SoftwareGLContext::gl_list_base(GLuint base)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_list_base, base);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    m_list_base = base;
 }
 
 void SoftwareGLContext::gl_end_list()

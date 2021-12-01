@@ -393,6 +393,7 @@ GLAPI GLuint glGenLists(GLsizei range);
 GLAPI void glCallList(GLuint list);
 GLAPI void glCallLists(GLsizei n, GLenum type, void const* lists);
 GLAPI void glDeleteLists(GLuint list, GLsizei range);
+GLAPI void glListBase(GLuint base);
 GLAPI void glEndList(void);
 GLAPI void glNewList(GLuint list, GLenum mode);
 GLAPI void glFlush();

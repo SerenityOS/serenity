@@ -29,6 +29,11 @@ void glDeleteLists(GLuint list, GLsizei range)
     return g_gl_context->gl_delete_lists(list, range);
 }
 
+void glListBase(GLuint base)
+{
+    return g_gl_context->gl_list_base(base);
+}
+
 void glEndList(void)
 {
     return g_gl_context->gl_end_list();
