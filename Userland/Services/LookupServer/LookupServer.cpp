@@ -73,7 +73,7 @@ LookupServer::LookupServer()
     m_mdns = MulticastDNS::construct(this);
 
     m_local_server = Core::LocalServer::construct(this);
-    m_local_server->on_accept = [this](auto client_socket) {
+    m_local_server->on_accept = [](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
         IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
