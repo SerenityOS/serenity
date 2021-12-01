@@ -15,12 +15,13 @@ extern "C" {
 #    define GLAPI extern
 #endif
 
-#define GL_VERSION_1_0
-#define GL_VERSION_1_1
-#define GL_VERSION_1_2
-#define GL_VERSION_1_3
-#define GL_VERSION_1_4
-#define GL_VERSION_1_5
+#define GL_VERSION_1_0 1
+#define GL_VERSION_1_1 1
+#define GL_VERSION_1_2 1
+#define GL_VERSION_1_3 1
+#define GL_VERSION_1_4 1
+#define GL_VERSION_1_5 1
+#define GL_ES_VERSION_2_0 1
 
 // OpenGL related `defines`
 #define GL_TRUE 1
