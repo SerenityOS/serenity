@@ -170,6 +170,13 @@ extern "C" {
 // Lighting related defines
 #define GL_FLAT 0x1D00
 #define GL_SMOOTH 0x1D01
+#define GL_AMBIENT 0x1200
+#define GL_DIFFUSE 0x1201
+#define GL_SPECULAR 0x1202
+#define GL_EMISSION 0x1600
+#define GL_SHININESS 0x1601
+#define GL_AMBIENT_AND_DIFFUSE 0x1602
+#define GL_COLOR_INDEXES 0x1603
 
 // More blend factors
 #define GL_CONSTANT_COLOR 0x8001
@@ -452,6 +459,8 @@ GLAPI void glStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum 
 GLAPI void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
 GLAPI void glNormal3fv(GLfloat const* v);
 GLAPI void glRasterPos2i(GLint x, GLint y);
+GLAPI void glMaterialf(GLenum face, GLenum pname, GLfloat param);
+GLAPI void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params);
 
 #ifdef __cplusplus
 }
