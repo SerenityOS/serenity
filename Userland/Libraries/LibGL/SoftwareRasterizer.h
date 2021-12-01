@@ -57,7 +57,6 @@ public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
     void submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units);
-    void submit_triangle(const GLTriangle& triangle);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
