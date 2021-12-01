@@ -1934,12 +1934,12 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
         return;
 
     auto last = first + count;
-    glBegin(mode);
+    gl_begin(mode);
     for (int i = first; i < last; i++) {
         if (m_client_side_texture_coord_array_enabled) {
             float tex_coords[4] { 0, 0, 0, 0 };
             read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            glTexCoord4fv(tex_coords);
+            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
         }
 
         if (m_client_side_color_array_enabled) {
@@ -1952,7 +1952,7 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
         glVertex4fv(vertex);
     }
-    glEnd();
+    gl_end();
 }
 
 void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices)
@@ -1979,7 +1979,7 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
     if (!m_client_side_vertex_array_enabled)
         return;
 
-    glBegin(mode);
+    gl_begin(mode);
     for (int index = 0; index < count; index++) {
         int i = 0;
         switch (type) {
@@ -1997,7 +1997,7 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
         if (m_client_side_texture_coord_array_enabled) {
             float tex_coords[4] { 0, 0, 0, 0 };
             read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
-            glTexCoord4fv(tex_coords);
+            gl_tex_coord(tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
         }
 
         if (m_client_side_color_array_enabled) {
@@ -2010,7 +2010,7 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
         read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
         glVertex4fv(vertex);
     }
-    glEnd();
+    gl_end();
 }
 
 void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data)
