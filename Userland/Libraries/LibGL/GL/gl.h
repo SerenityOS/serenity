@@ -467,6 +467,7 @@ GLAPI void glNormal3fv(GLfloat const* v);
 GLAPI void glRasterPos2i(GLint x, GLint y);
 GLAPI void glMaterialf(GLenum face, GLenum pname, GLfloat param);
 GLAPI void glMaterialfv(GLenum face, GLenum pname, GLfloat const* params);
+GLAPI void glLineWidth(GLfloat width);
 
 #ifdef __cplusplus
 }

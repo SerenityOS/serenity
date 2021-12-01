@@ -9,6 +9,11 @@
 
 extern GL::GLContext* g_gl_context;
 
+void glLineWidth(GLfloat width)
+{
+    g_gl_context->gl_line_width(width);
+}
+
 void glRasterPos2i(GLint x, GLint y)
 {
     g_gl_context->gl_raster_pos(static_cast<float>(x), static_cast<float>(y), 0.0f, 1.0f);
