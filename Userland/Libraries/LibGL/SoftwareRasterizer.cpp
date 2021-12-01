@@ -604,6 +604,14 @@ void SoftwareRasterizer::clear_depth(float depth)
     m_depth_buffer->clear(depth);
 }
 
+void SoftwareRasterizer::blit(Gfx::Bitmap const& source, int x, int y)
+{
+    wait_for_all_threads();
+
+    Gfx::Painter painter { *m_render_target };
+    painter.blit({ x, y }, source, source.rect(), 1.0f, true);
+}
+
 void SoftwareRasterizer::blit_to(Gfx::Bitmap& target)
 {
     wait_for_all_threads();

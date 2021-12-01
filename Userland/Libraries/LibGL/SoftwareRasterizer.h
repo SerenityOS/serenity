@@ -61,6 +61,7 @@ public:
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
+    void blit(Gfx::Bitmap const&, int x, int y);
     void blit_to(Gfx::Bitmap&);
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
