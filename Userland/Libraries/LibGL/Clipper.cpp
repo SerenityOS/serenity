@@ -15,17 +15,17 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
 {
     switch (plane) {
     case ClipPlane::LEFT:
-        return vertex.x() > -vertex.w();
+        return vertex.x() >= -vertex.w();
     case ClipPlane::RIGHT:
-        return vertex.x() < vertex.w();
+        return vertex.x() <= vertex.w();
     case ClipPlane::TOP:
-        return vertex.y() < vertex.w();
+        return vertex.y() <= vertex.w();
     case ClipPlane::BOTTOM:
-        return vertex.y() > -vertex.w();
+        return vertex.y() >= -vertex.w();
     case ClipPlane::NEAR:
-        return vertex.z() > -vertex.w();
+        return vertex.z() >= -vertex.w();
     case ClipPlane::FAR:
-        return vertex.z() < vertex.w();
+        return vertex.z() <= vertex.w();
     }
 
     return false;
