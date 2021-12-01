@@ -12,6 +12,9 @@
 
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 namespace Kernel {
 
 class InterruptDisabler {
