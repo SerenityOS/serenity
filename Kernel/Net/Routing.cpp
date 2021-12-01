@@ -139,7 +139,7 @@ static MACAddress multicast_ethernet_address(IPv4Address const& address)
     return MACAddress { 0x01, 0x00, 0x5e, (u8)(address[1] & 0x7f), address[2], address[3] };
 }
 
-RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through)
+RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through, AllowUsingGateway allow_using_gateway)
 {
     auto matches = [&](auto& adapter) {
         if (!through)
@@ -206,7 +206,7 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
 
         adapter = local_adapter;
         next_hop_ip = target;
-    } else if (gateway_adapter) {
+    } else if (gateway_adapter && allow_using_gateway == AllowUsingGateway::Yes) {
         dbgln_if(ROUTING_DEBUG, "Routing: Got adapter for route (using gateway {}): {} ({}/{}) for {}",
             gateway_adapter->ipv4_gateway(),
             gateway_adapter->name(),

@@ -607,7 +607,7 @@ static void format_connect(FormattedSyscallBuilder& builder, int socket, const s
 struct MsgOptions : BitflagBase {
     static constexpr auto options = {
         BITFLAG(MSG_TRUNC), BITFLAG(MSG_CTRUNC), BITFLAG(MSG_PEEK),
-        BITFLAG(MSG_OOB), BITFLAG(MSG_DONTWAIT)
+        BITFLAG(MSG_OOB), BITFLAG(MSG_DONTROUTE), BITFLAG(MSG_DONTWAIT)
         // TODO: add MSG_WAITALL once its definition is added
     };
 };
