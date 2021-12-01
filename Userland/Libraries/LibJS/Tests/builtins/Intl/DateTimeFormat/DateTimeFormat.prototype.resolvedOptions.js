@@ -21,32 +21,27 @@ describe("correct behavior", () => {
         const en = Intl.DateTimeFormat("en", { calendar: "gregory" });
         expect(en.resolvedOptions().calendar).toBe("gregory");
 
-        const el = Intl.DateTimeFormat("el", { calendar: "generic" });
-        expect(el.resolvedOptions().calendar).toBe("generic");
+        const el = Intl.DateTimeFormat("el", { calendar: "gregory" });
+        expect(el.resolvedOptions().calendar).toBe("gregory");
     });
 
     test("calendar may be set by locale extension", () => {
         const en = Intl.DateTimeFormat("en-u-ca-gregory");
         expect(en.resolvedOptions().calendar).toBe("gregory");
 
-        const el = Intl.DateTimeFormat("el-u-ca-generic");
-        expect(el.resolvedOptions().calendar).toBe("generic");
+        const el = Intl.DateTimeFormat("el-u-ca-gregory");
+        expect(el.resolvedOptions().calendar).toBe("gregory");
     });
 
     test("calendar option overrides locale extension", () => {
-        const el = Intl.DateTimeFormat("el-u-ca-generic", { calendar: "gregory" });
+        const el = Intl.DateTimeFormat("el-u-ca-gregory", { calendar: "gregory" });
         expect(el.resolvedOptions().calendar).toBe("gregory");
     });
 
     test("calendar option limited to known 'ca' values", () => {
-        ["generic", "hello"].forEach(calendar => {
+        ["gregory", "hello"].forEach(calendar => {
             const en = Intl.DateTimeFormat("en", { calendar: calendar });
-            expect(en.resolvedOptions().calendar).toBe("generic");
-        });
-
-        ["generic", "hello"].forEach(calendar => {
-            const en = Intl.DateTimeFormat(`en-u-ca-${calendar}`);
-            expect(en.resolvedOptions().calendar).toBe("generic");
+            expect(en.resolvedOptions().calendar).toBe("gregory");
         });
     });
 
