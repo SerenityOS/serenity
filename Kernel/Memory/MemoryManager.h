@@ -11,7 +11,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>

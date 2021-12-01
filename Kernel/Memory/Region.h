@@ -9,7 +9,6 @@
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
@@ -17,6 +16,10 @@
 #include <Kernel/Memory/VirtualRangeAllocator.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
+
+namespace Kernel {
+class PageFault;
+}
 
 namespace Kernel::Memory {
 
