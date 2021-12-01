@@ -155,21 +155,6 @@ void glTexCoord4fv(const GLfloat* v)
     g_gl_context->gl_tex_coord(v[0], v[1], v[2], v[3]);
 }
 
-void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
-{
-    g_gl_context->gl_rotate(angle, x, y, z);
-}
-
-void glScalef(GLfloat x, GLfloat y, GLfloat z)
-{
-    g_gl_context->gl_scale(x, y, z);
-}
-
-void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
-{
-    g_gl_context->gl_translate(x, y, z);
-}
-
 void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 {
     g_gl_context->gl_normal(nx, ny, nz);
