@@ -25,7 +25,13 @@ enum class UpdateArp {
 };
 
 void update_arp_table(IPv4Address const&, MACAddress const&, UpdateArp update);
-RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through = nullptr);
+
+enum class AllowUsingGateway {
+    Yes,
+    No,
+};
+
+RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through = nullptr, AllowUsingGateway = AllowUsingGateway::Yes);
 
 MutexProtected<HashMap<IPv4Address, MACAddress>>& arp_table();
 
