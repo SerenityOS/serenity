@@ -429,6 +429,8 @@ GLAPI void glFogf(GLenum pname, GLfloat param);
 GLAPI void glFogi(GLenum pname, GLint param);
 GLAPI void glPixelStorei(GLenum pname, GLint param);
 GLAPI void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+GLAPI void glLightf(GLenum light, GLenum pname, GLfloat param);
+GLAPI void glLightfv(GLenum light, GLenum pname, GLfloat* param);
 
 #ifdef __cplusplus
 }
