@@ -50,6 +50,7 @@ public:
     virtual void gl_call_list(GLuint list) = 0;
     virtual void gl_call_lists(GLsizei n, GLenum type, void const* lists) = 0;
     virtual void gl_delete_lists(GLuint list, GLsizei range) = 0;
+    virtual void gl_list_base(GLuint base) = 0;
     virtual void gl_end_list(void) = 0;
     virtual void gl_new_list(GLuint list, GLenum mode) = 0;
     virtual void gl_flush() = 0;
