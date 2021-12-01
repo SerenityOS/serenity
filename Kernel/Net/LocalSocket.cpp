@@ -429,7 +429,7 @@ ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned requ
     }
     }
 
-    return ENOTTY;
+    return EINVAL;
 }
 
 ErrorOr<void> LocalSocket::chmod(OpenFileDescription&, mode_t mode)
