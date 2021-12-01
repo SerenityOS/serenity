@@ -105,6 +105,7 @@ public:
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) override;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) override;
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) override;
+    virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void present() override;
 
 private:
@@ -269,7 +270,8 @@ private:
             decltype(&SoftwareGLContext::gl_scissor),
             decltype(&SoftwareGLContext::gl_stencil_func_separate),
             decltype(&SoftwareGLContext::gl_stencil_op_separate),
-            decltype(&SoftwareGLContext::gl_normal)>;
+            decltype(&SoftwareGLContext::gl_normal),
+            decltype(&SoftwareGLContext::gl_raster_pos)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -305,6 +307,17 @@ private:
     u8 m_pack_alignment { 4 };
     GLsizei m_unpack_row_length { 0 };
     u8 m_unpack_alignment { 4 };
+
+    struct RasterPosition {
+        FloatVector3 window_coordinates { 0.0f, 0.0f, 0.0f };
+        float clip_coordinate_value { 1.0f };
+        float eye_coordinate_distance { 0.0f };
+        bool valid { true };
+        FloatVector4 color_rgba { 1.0f, 1.0f, 1.0f, 1.0f };
+        float color_index { 1.0f };
+        FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
+    };
+    RasterPosition m_current_raster_position;
 };
 
 }
