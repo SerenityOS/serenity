@@ -6,10 +6,13 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
+
+namespace Kernel {
+class PageTableEntry;
+}
 
 extern "C" PhysicalAddress start_of_prekernel_image;
 extern "C" PhysicalAddress end_of_prekernel_image;

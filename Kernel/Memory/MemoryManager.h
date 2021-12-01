@@ -21,6 +21,10 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/VMObject.h>
 
+namespace Kernel {
+class PageDirectoryEntry;
+}
+
 namespace Kernel::Memory {
 
 constexpr bool page_round_up_would_wrap(FlatPtr x)
