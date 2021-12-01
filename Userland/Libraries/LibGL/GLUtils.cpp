@@ -100,14 +100,19 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     g_gl_context->gl_read_pixels(x, y, width, height, format, type, pixels);
 }
 
-void glGetFloatv(GLenum pname, GLfloat* params)
-{
-    g_gl_context->gl_get_floatv(pname, params);
-}
-
 void glGetBooleanv(GLenum pname, GLboolean* data)
 {
     g_gl_context->gl_get_booleanv(pname, data);
+}
+
+void glGetDoublev(GLenum pname, GLdouble* params)
+{
+    g_gl_context->gl_get_doublev(pname, params);
+}
+
+void glGetFloatv(GLenum pname, GLfloat* params)
+{
+    g_gl_context->gl_get_floatv(pname, params);
 }
 
 void glGetIntegerv(GLenum pname, GLint* data)

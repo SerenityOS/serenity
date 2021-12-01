@@ -66,7 +66,6 @@ public:
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) = 0;
     virtual void gl_bind_texture(GLenum target, GLuint texture) = 0;
     virtual void gl_active_texture(GLenum texture) = 0;
-    virtual void gl_get_floatv(GLenum pname, GLfloat* params) = 0;
     virtual void gl_depth_mask(GLboolean flag) = 0;
     virtual void gl_enable_client_state(GLenum cap) = 0;
     virtual void gl_disable_client_state(GLenum cap) = 0;
@@ -77,6 +76,8 @@ public:
     virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) = 0;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) = 0;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) = 0;
+    virtual void gl_get_doublev(GLenum pname, GLdouble* params) = 0;
+    virtual void gl_get_floatv(GLenum pname, GLfloat* params) = 0;
     virtual void gl_get_integerv(GLenum pname, GLint* data) = 0;
     virtual void gl_depth_range(GLdouble min, GLdouble max) = 0;
     virtual void gl_depth_func(GLenum func) = 0;

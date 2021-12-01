@@ -77,7 +77,6 @@ public:
     virtual void gl_tex_env(GLenum target, GLenum pname, GLfloat param) override;
     virtual void gl_bind_texture(GLenum target, GLuint texture) override;
     virtual void gl_active_texture(GLenum texture) override;
-    virtual void gl_get_floatv(GLenum pname, GLfloat* params) override;
     virtual void gl_depth_mask(GLboolean flag) override;
     virtual void gl_enable_client_state(GLenum cap) override;
     virtual void gl_disable_client_state(GLenum cap) override;
@@ -88,6 +87,8 @@ public:
     virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) override;
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) override;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) override;
+    virtual void gl_get_doublev(GLenum pname, GLdouble* params) override;
+    virtual void gl_get_floatv(GLenum pname, GLfloat* params) override;
     virtual void gl_get_integerv(GLenum pname, GLint* data) override;
     virtual void gl_depth_range(GLdouble min, GLdouble max) override;
     virtual void gl_depth_func(GLenum func) override;
@@ -116,6 +117,9 @@ private:
         VERIFY(m_current_listing_index.has_value());
         m_current_listing_index->listing.entries.empend(member, Listing::ArgumentsFor<member> { forward<Args>(args)... });
     }
+
+    template<typename T>
+    void get_floating_point(GLenum pname, T* params);
 
     [[nodiscard]] bool should_append_to_listing() const { return m_current_listing_index.has_value(); }
     [[nodiscard]] bool should_execute_after_appending_to_listing() const { return m_current_listing_index.has_value() && m_current_listing_index->mode == GL_COMPILE_AND_EXECUTE; }
