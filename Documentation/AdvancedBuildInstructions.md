@@ -192,9 +192,6 @@ useful for stopping us from relying on compiler-specific behavior, and the built
 bugs.  Code compiled with both of these toolchains works identically in most cases, with the limitation that ports
 can't be built with Clang yet.
 
-Note that `Meta/serenity.sh` is not yet supported, so the appropriate `ninja` targets (`install`, `image` and `run`)
-need to be invoked manually.
-
 To build the Clang-based toolchain, run `BuildClang.sh` from the `Toolchain` directory. The script defaults to building
 the tooling needed for 32-bit SerenityOS, but the `ARCH=x86_64` environment variable can be set to build the 64-bit
 toolchain.
@@ -203,5 +200,6 @@ toolchain.
 intervals.  This generally happens if you have more CPU cores than free RAM in gigabytes. To fix this, limit the number
 of parallel compile tasks be setting the `MAKEJOBS` environment variable to a number less than your CPU core count.
 
-Once the build script finishes, you can use it to compile SerenityOS if you set the `SERENITY_TOOLCHAIN` build
-option to `Clang` as shown [above](#cmake-build-options).
+Once the build script finishes, you can use it to compile SerenityOS. Either set the `SERENITY_TOOLCHAIN` build
+option to `Clang` as shown [above](#cmake-build-options), or pass `Clang` as the TOOLCHAIN option to
+`Meta/serenity.sh`, for example: `Meta/serenity.sh run i686 Clang`.
