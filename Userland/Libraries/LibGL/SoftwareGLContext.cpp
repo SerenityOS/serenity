@@ -217,6 +217,8 @@ void SoftwareGLContext::gl_end()
     // Make sure we had a `glBegin` before this call...
     RETURN_WITH_ERROR_IF(!m_in_draw_state, GL_INVALID_OPERATION);
 
+    m_in_draw_state = false;
+
     triangle_list.clear_with_capacity();
     processed_triangles.clear_with_capacity();
 
@@ -267,6 +269,7 @@ void SoftwareGLContext::gl_end()
         }
     } else {
         vertex_list.clear_with_capacity();
+        dbgln_if(GL_DEBUG, "gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -355,8 +358,6 @@ void SoftwareGLContext::gl_end()
 
         m_rasterizer.submit_triangle(triangle, m_texture_units);
     }
-
-    m_in_draw_state = false;
 }
 
 void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
