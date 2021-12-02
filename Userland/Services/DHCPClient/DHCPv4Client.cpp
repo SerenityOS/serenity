@@ -243,7 +243,7 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     interface.current_ip_address = new_ip;
     auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
-    Core::Timer::create_single_shot(
+    (void)Core::Timer::create_single_shot(
         lease_time * 1000,
         [this, transaction, interface = InterfaceDescriptor { interface }] {
             transaction->accepted_offer = false;
@@ -267,7 +267,7 @@ void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->accepted_offer = false;
     transaction->has_ip = false;
     auto& iface = transaction->interface;
-    Core::Timer::create_single_shot(
+    (void)Core::Timer::create_single_shot(
         10000,
         [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
