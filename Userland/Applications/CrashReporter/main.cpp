@@ -14,6 +14,7 @@
 #include <LibC/spawn.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>
 #include <LibDesktop/AppFile.h>
@@ -32,6 +33,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibMain/Main.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -164,14 +166,11 @@ static void unlink_coredump(StringView const& coredump_path)
         dbgln("Failed deleting coredump file");
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio recvfd sendfd cpath rpath unix proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath unix proc exec"));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     const char* coredump_path = nullptr;
     bool unlink_on_exit = false;
@@ -180,13 +179,13 @@ int main(int argc, char** argv)
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
     args_parser.add_option(unlink_on_exit, "Delete the coredump after its parsed", "unlink", 0);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Vector<TitleAndText> thread_backtraces;
     Vector<TitleAndText> thread_cpu_registers;
 
     String executable_path;
-    Vector<String> arguments;
+    Vector<String> crashed_process_arguments;
     Vector<String> environment;
     Vector<String> memory_regions;
     int pid { 0 };
@@ -213,52 +212,27 @@ int main(int argc, char** argv)
         });
 
         executable_path = coredump->process_executable_path();
-        arguments = coredump->process_arguments();
+        crashed_process_arguments = coredump->process_arguments();
         environment = coredump->process_environment();
         pid = coredump->process_pid();
         termination_signal = coredump->process_termination_signal();
     }
 
-    if (pledge("stdio recvfd sendfd rpath unix cpath proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath proc exec"));
 
-    if (unveil(executable_path.characters(), "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil(executable_path.characters(), "r"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    if (unlink_on_exit)
+        TRY(Core::System::unveil(coredump_path, "c"));
 
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unlink_on_exit) {
-        if (unveil(coredump_path, "c") < 0) {
-            perror("unveil");
-            return 1;
-        }
-    }
-
-    if (unveil("/bin/HackStudio", "rx") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-crash-reporter");
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("Crash Reporter");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(460, 340);
@@ -268,10 +242,10 @@ int main(int argc, char** argv)
             unlink_coredump(coredump_path);
     };
 
-    auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.load_from_gml(crash_reporter_window_gml);
+    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    widget->load_from_gml(crash_reporter_window_gml);
 
-    auto& icon_image_widget = *widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
+    auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
 
     auto app_name = LexicalPath::basename(executable_path);
@@ -279,96 +253,96 @@ int main(int argc, char** argv)
     if (af->is_valid())
         app_name = af->name();
 
-    auto& description_label = *widget.find_descendant_of_type_named<GUI::Label>("description");
+    auto& description_label = *widget->find_descendant_of_type_named<GUI::Label>("description");
     description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
 
-    auto& executable_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
+    auto& executable_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
     executable_link_label.on_click = [&] {
         LexicalPath path { executable_path };
         Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
-    auto& coredump_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
+    auto& coredump_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
     coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
     coredump_link_label.on_click = [&] {
         LexicalPath path { coredump_path };
         Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
-    auto& arguments_label = *widget.find_descendant_of_type_named<GUI::Label>("arguments_label");
-    arguments_label.set_text(String::join(" ", arguments));
+    auto& arguments_label = *widget->find_descendant_of_type_named<GUI::Label>("arguments_label");
+    arguments_label.set_text(String::join(" ", crashed_process_arguments));
 
-    auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
-    auto& backtrace_tab = tab_widget.add_tab<GUI::Widget>("Backtrace");
-    backtrace_tab.set_layout<GUI::VerticalBoxLayout>();
-    backtrace_tab.layout()->set_margins(4);
+    auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Backtrace"));
+    TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    backtrace_tab->layout()->set_margins(4);
 
-    auto& backtrace_label = backtrace_tab.add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:");
-    backtrace_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    backtrace_label.set_fixed_height(16);
+    auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"));
+    backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    backtrace_label->set_fixed_height(16);
 
-    auto& backtrace_tab_widget = backtrace_tab.add<GUI::TabWidget>();
-    backtrace_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    auto backtrace_tab_widget = TRY(backtrace_tab->try_add<GUI::TabWidget>());
+    backtrace_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     for (auto& backtrace : thread_backtraces) {
-        auto& container = backtrace_tab_widget.add_tab<GUI::Widget>(backtrace.title);
-        container.set_layout<GUI::VerticalBoxLayout>();
-        container.layout()->set_margins(4);
-        auto& backtrace_text_editor = container.add<GUI::TextEditor>();
-        backtrace_text_editor.set_text(backtrace.text);
-        backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
-        backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
+        auto container = TRY(backtrace_tab_widget->try_add_tab<GUI::Widget>(backtrace.title));
+        TRY(container->try_set_layout<GUI::VerticalBoxLayout>());
+        container->layout()->set_margins(4);
+        auto backtrace_text_editor = TRY(container->try_add<GUI::TextEditor>());
+        backtrace_text_editor->set_text(backtrace.text);
+        backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+        backtrace_text_editor->set_should_hide_unnecessary_scrollbars(true);
     }
 
-    auto& cpu_registers_tab = tab_widget.add_tab<GUI::Widget>("CPU Registers");
-    cpu_registers_tab.set_layout<GUI::VerticalBoxLayout>();
-    cpu_registers_tab.layout()->set_margins(4);
+    auto cpu_registers_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("CPU Registers"));
+    cpu_registers_tab->set_layout<GUI::VerticalBoxLayout>();
+    cpu_registers_tab->layout()->set_margins(4);
 
-    auto& cpu_registers_label = cpu_registers_tab.add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:");
-    cpu_registers_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    cpu_registers_label.set_fixed_height(16);
+    auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"));
+    cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    cpu_registers_label->set_fixed_height(16);
 
-    auto& cpu_registers_tab_widget = cpu_registers_tab.add<GUI::TabWidget>();
-    cpu_registers_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    auto cpu_registers_tab_widget = TRY(cpu_registers_tab->try_add<GUI::TabWidget>());
+    cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     for (auto& cpu_registers : thread_cpu_registers) {
-        auto& container = cpu_registers_tab_widget.add_tab<GUI::Widget>(cpu_registers.title);
-        container.set_layout<GUI::VerticalBoxLayout>();
-        container.layout()->set_margins(4);
-        auto& cpu_registers_text_editor = container.add<GUI::TextEditor>();
-        cpu_registers_text_editor.set_text(cpu_registers.text);
-        cpu_registers_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
-        cpu_registers_text_editor.set_should_hide_unnecessary_scrollbars(true);
+        auto container = TRY(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(cpu_registers.title));
+        TRY(container->try_set_layout<GUI::VerticalBoxLayout>());
+        container->layout()->set_margins(4);
+        auto cpu_registers_text_editor = TRY(container->try_add<GUI::TextEditor>());
+        cpu_registers_text_editor->set_text(cpu_registers.text);
+        cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+        cpu_registers_text_editor->set_should_hide_unnecessary_scrollbars(true);
     }
 
-    auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment");
-    environment_tab.set_layout<GUI::VerticalBoxLayout>();
-    environment_tab.layout()->set_margins(4);
+    auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Environment"));
+    TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    environment_tab->layout()->set_margins(4);
 
-    auto& environment_text_editor = environment_tab.add<GUI::TextEditor>();
-    environment_text_editor.set_text(String::join("\n", environment));
-    environment_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
-    environment_text_editor.set_should_hide_unnecessary_scrollbars(true);
+    auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
+    environment_text_editor->set_text(String::join("\n", environment));
+    environment_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+    environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    auto& memory_regions_tab = tab_widget.add_tab<GUI::Widget>("Memory Regions");
-    memory_regions_tab.set_layout<GUI::VerticalBoxLayout>();
-    memory_regions_tab.layout()->set_margins(4);
+    auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"));
+    TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    memory_regions_tab->layout()->set_margins(4);
 
-    auto& memory_regions_text_editor = memory_regions_tab.add<GUI::TextEditor>();
-    memory_regions_text_editor.set_text(String::join("\n", memory_regions));
-    memory_regions_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
-    memory_regions_text_editor.set_should_hide_unnecessary_scrollbars(true);
-    memory_regions_text_editor.set_visualize_trailing_whitespace(false);
+    auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
+    memory_regions_text_editor->set_text(String::join("\n", memory_regions));
+    memory_regions_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
+    memory_regions_text_editor->set_should_hide_unnecessary_scrollbars(true);
+    memory_regions_text_editor->set_visualize_trailing_whitespace(false);
 
-    auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
+    auto& close_button = *widget->find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
         if (unlink_on_exit)
             unlink_coredump(coredump_path);
         app->quit();
     };
 
-    auto& debug_button = *widget.find_descendant_of_type_named<GUI::Button>("debug_button");
-    debug_button.set_icon(MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
+    auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
+    debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png")));
     debug_button.on_click = [&](int) {
         pid_t child;
         const char* argv[4] = { "HackStudio", "-c", coredump_path, nullptr };
