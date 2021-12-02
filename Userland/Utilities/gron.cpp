@@ -10,7 +10,8 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -25,58 +26,33 @@ static const char* color_null = "";
 static const char* color_string = "";
 static const char* color_off = "";
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio tty rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty"));
 
     if (isatty(STDOUT_FILENO))
         use_color = true;
 
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
 
     const char* path = nullptr;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
-
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     RefPtr<Core::File> file;
 
-    if (!path) {
+    if (!path)
         file = Core::File::standard_input();
-    } else {
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-        if (file_or_error.is_error()) {
-            warnln("Failed to open {}: {}", path, file_or_error.error());
-            return 1;
-        }
-        file = file_or_error.value();
-    }
+    else
+        file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     auto file_contents = file->read_all();
-    auto json = JsonValue::from_string(file_contents);
-
-    if (json.is_error()) {
-        if (path) {
-            warnln("Failed to parse '{}' as JSON", path);
-        } else {
-            warnln("Failed to parse stdin as JSON");
-        }
-        return 1;
-    }
+    auto json = TRY(JsonValue::from_string(file_contents));
 
     if (use_color) {
         color_name = "\033[33;1m";
@@ -89,7 +65,7 @@ int main(int argc, char** argv)
     }
 
     Vector<String> trail;
-    print("json", json.value(), trail);
+    print("json", json, trail);
     return 0;
 }
 
