@@ -13,6 +13,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     auto source = StringView(static_cast<const unsigned char*>(data), size);
     Shell::Parser parser(source);
-    parser.parse();
+    (void)parser.parse();
     return 0;
 }
