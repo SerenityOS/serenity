@@ -30,6 +30,7 @@ ErrorOr<int> open(StringView path, int options, ...);
 ErrorOr<void> close(int fd);
 ErrorOr<void> ftruncate(int fd, off_t length);
 ErrorOr<struct stat> stat(StringView path);
+ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer);
 ErrorOr<void> kill(pid_t, int signal);
