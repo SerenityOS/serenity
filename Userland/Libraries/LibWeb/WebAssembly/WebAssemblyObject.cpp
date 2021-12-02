@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     // Drop the module from the cache, we're never going to refer to it.
     ScopeGuard drop_from_cache {
         [&] {
-            s_compiled_modules.take_last();
+            (void)s_compiled_modules.take_last();
         }
     };
 

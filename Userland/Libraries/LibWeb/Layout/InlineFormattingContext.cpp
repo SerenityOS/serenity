@@ -215,7 +215,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         } else {
             inline_block.set_width(inline_block.computed_values().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
         }
-        layout_inside(inline_block, layout_mode);
+        (void)layout_inside(inline_block, layout_mode);
 
         if (inline_block.computed_values().height().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
