@@ -118,7 +118,7 @@ ErrorOr<void> Toolbar::try_add_separator()
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
     item->type = Item::Type::Separator;
-    TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
+    (void)TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
     m_items.unchecked_append(move(item));
     return {};
 }
