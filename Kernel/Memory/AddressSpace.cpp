@@ -197,7 +197,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
 
 void AddressSpace::deallocate_region(Region& region)
 {
-    take_region(region);
+    (void)take_region(region);
 }
 
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
