@@ -98,27 +98,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         statusbar.set_text(click_tip);
         board_widget->run_generation();
     });
-    TRY(main_toolbar.try_add_action(run_one_generation_action));
+    (void)TRY(main_toolbar.try_add_action(run_one_generation_action));
 
     auto clear_board_action = GUI::Action::create("&Clear board", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         statusbar.set_text(click_tip);
         board_widget->clear_cells();
         board_widget->update();
     });
-    TRY(main_toolbar.try_add_action(clear_board_action));
+    (void)TRY(main_toolbar.try_add_action(clear_board_action));
 
     auto randomize_cells_action = GUI::Action::create("&Randomize board", { Mod_Ctrl, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         statusbar.set_text(click_tip);
         board_widget->randomize_cells();
         board_widget->update();
     });
-    TRY(main_toolbar.try_add_action(randomize_cells_action));
+    (void)TRY(main_toolbar.try_add_action(randomize_cells_action));
 
     auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/redo.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         board_widget->selected_pattern()->rotate_clockwise();
     });
     rotate_pattern_action->set_enabled(false);
-    TRY(main_toolbar.try_add_action(rotate_pattern_action));
+    (void)TRY(main_toolbar.try_add_action(rotate_pattern_action));
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 

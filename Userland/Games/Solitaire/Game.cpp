@@ -294,7 +294,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                     for (auto& to_intersect : m_focused_cards) {
                         mark_intersecting_stacks_dirty(to_intersect);
                         stack.push(to_intersect);
-                        m_focused_stack->pop();
+                        (void)m_focused_stack->pop();
                     }
 
                     remember_move_for_undo(*m_focused_stack, stack, m_focused_cards);
@@ -629,7 +629,7 @@ void Game::perform_undo()
     for (auto& to_intersect : m_last_move.cards) {
         mark_intersecting_stacks_dirty(to_intersect);
         m_last_move.from->push(to_intersect);
-        m_last_move.to->pop();
+        (void)m_last_move.to->pop();
     }
 
     if (m_last_move.from->type() == CardStack::Type::Stock) {
