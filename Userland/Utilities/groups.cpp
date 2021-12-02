@@ -7,6 +7,8 @@
 #include <AK/Vector.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <grp.h>
 #include <unistd.h>
 
@@ -26,47 +28,24 @@ static void print_account_gids(const Core::Account& account)
     outln();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/shadow", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/group", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/shadow", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     Vector<const char*> usernames;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print group memberships for each username or, if no username is specified, for the current process.");
     args_parser.add_positional_argument(usernames, "Usernames to list group memberships for", "usernames", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (usernames.is_empty()) {
-        auto result = Core::Account::from_uid(geteuid());
-        if (result.is_error()) {
-            warnln("{}", result.error());
-            return 1;
-        }
-        print_account_gids(result.value());
+        auto account = TRY(Core::Account::from_uid(geteuid()));
+        print_account_gids(account);
     }
 
     for (auto username : usernames) {
