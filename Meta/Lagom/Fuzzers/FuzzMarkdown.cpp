@@ -13,6 +13,6 @@
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     auto markdown = StringView(static_cast<const unsigned char*>(data), size);
-    Markdown::Document::parse(markdown);
+    (void)Markdown::Document::parse(markdown);
     return 0;
 }
