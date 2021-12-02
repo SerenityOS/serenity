@@ -96,8 +96,8 @@ bool StackOfOpenElements::contains(const FlyString& tag_name) const
 void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
 {
     while (m_elements.last().local_name() != tag_name)
-        pop();
-    pop();
+        (void)pop();
+    (void)pop();
 }
 
 DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element& formatting_element)

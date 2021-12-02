@@ -229,7 +229,7 @@ void Element::recompute_style()
             return;
         // We need a new layout tree here!
         Layout::TreeBuilder tree_builder;
-        tree_builder.build(*this);
+        (void)tree_builder.build(*this);
         return;
     }
 

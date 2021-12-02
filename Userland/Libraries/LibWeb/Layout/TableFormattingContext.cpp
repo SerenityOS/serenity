@@ -76,9 +76,9 @@ void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& co
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         compute_width(cell);
         if (use_auto_layout) {
-            layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
+            (void)layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
         } else {
-            layout_inside(cell, LayoutMode::Default);
+            (void)layout_inside(cell, LayoutMode::Default);
         }
         column_widths[column_index] = max(column_widths[column_index], cell.width());
         column_index += cell.colspan();
@@ -98,9 +98,9 @@ void TableFormattingContext::layout_row(Box& row, Vector<float>& column_widths)
 
         // Layout the cell contents a second time, now that we know its final width.
         if (use_auto_layout) {
-            layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
+            (void)layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
         } else {
-            layout_inside(cell, LayoutMode::Default);
+            (void)layout_inside(cell, LayoutMode::Default);
         }
 
         size_t cell_colspan = cell.colspan();

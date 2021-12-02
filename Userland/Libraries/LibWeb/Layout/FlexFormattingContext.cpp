@@ -143,7 +143,7 @@ void FlexFormattingContext::generate_anonymous_flex_items()
     }
 
     flex_container().for_each_child_of_type<Box>([&](Box& child_box) {
-        layout_inside(child_box, LayoutMode::Default);
+        (void)layout_inside(child_box, LayoutMode::Default);
         // Skip anonymous text runs that are only whitespace.
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
             bool contains_only_white_space = true;
@@ -444,7 +444,7 @@ float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
         }
     }
     if (is_row_layout()) {
-        layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
+        (void)layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
         return box.width();
     } else {
         return BlockFormattingContext::compute_theoretical_height(box);
