@@ -95,7 +95,7 @@ void insert_and_verify(int count)
     {
         auto db = SQL::Database::construct("/tmp/test.db");
         EXPECT(!db->open().is_error());
-        setup_table(db);
+        (void)setup_table(db);
         commit(db);
     }
     {
@@ -154,7 +154,7 @@ TEST_CASE(add_schema_to_database)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto db = SQL::Database::construct("/tmp/test.db");
     EXPECT(!db->open().is_error());
-    setup_schema(db);
+    (void)setup_schema(db);
     commit(db);
 }
 
@@ -164,7 +164,7 @@ TEST_CASE(get_schema_from_database)
     {
         auto db = SQL::Database::construct("/tmp/test.db");
         EXPECT(!db->open().is_error());
-        setup_schema(db);
+        (void)setup_schema(db);
         commit(db);
     }
     {
@@ -181,7 +181,7 @@ TEST_CASE(add_table_to_database)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto db = SQL::Database::construct("/tmp/test.db");
     EXPECT(!db->open().is_error());
-    setup_table(db);
+    (void)setup_table(db);
     commit(db);
 }
 
@@ -191,7 +191,7 @@ TEST_CASE(get_table_from_database)
     {
         auto db = SQL::Database::construct("/tmp/test.db");
         EXPECT(!db->open().is_error());
-        setup_table(db);
+        (void)setup_table(db);
         commit(db);
     }
     {
