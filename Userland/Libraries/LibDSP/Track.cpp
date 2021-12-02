@@ -17,7 +17,7 @@ bool Track::add_processor(NonnullRefPtr<Processor> new_processor)
 {
     m_processor_chain.append(move(new_processor));
     if (!check_processor_chain_valid()) {
-        m_processor_chain.take_last();
+        (void)m_processor_chain.take_last();
         return false;
     }
     return true;
