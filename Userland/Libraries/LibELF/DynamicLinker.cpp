@@ -520,7 +520,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         fflush(stderr);
         _exit(1);
     }
-    result1.release_value();
+    (void)result1.release_value();
 
     auto result2 = map_dependencies(library_name);
     if (result2.is_error()) {
