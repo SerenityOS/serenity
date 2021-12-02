@@ -37,7 +37,7 @@ ErrorOr<int> mode_server()
     TRY(Core::System::pledge("stdio unix recvfd rpath"));
 
     auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(move(socket), 1);
+    (void)IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(move(socket), 1);
 
     TRY(Core::System::pledge("stdio recvfd rpath"));
     TRY(Core::System::unveil("/usr/include", "r"));

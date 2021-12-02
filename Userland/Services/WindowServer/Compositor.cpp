@@ -807,7 +807,7 @@ bool Compositor::set_wallpaper_mode(const String& mode)
 
 bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
+    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
         [path](auto&) {
             return Gfx::Bitmap::try_load_from_file(path);
         },
