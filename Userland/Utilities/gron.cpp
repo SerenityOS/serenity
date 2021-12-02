@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,19 +12,18 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <string.h>
 #include <unistd.h>
 
 static bool use_color = false;
-static void print(const String& name, const JsonValue&, Vector<String>& trail);
+static void print(StringView name, JsonValue const&, Vector<String>& trail);
 
-static const char* color_name = "";
-static const char* color_index = "";
-static const char* color_brace = "";
-static const char* color_bool = "";
-static const char* color_null = "";
-static const char* color_string = "";
-static const char* color_off = "";
+static StringView color_name = ""sv;
+static StringView color_index = ""sv;
+static StringView color_brace = ""sv;
+static StringView color_bool = ""sv;
+static StringView color_null = ""sv;
+static StringView color_string = ""sv;
+static StringView color_off = ""sv;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -38,13 +37,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
 
-    const char* path = nullptr;
+    StringView path;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     RefPtr<Core::File> file;
 
-    if (!path)
+    if (path.is_null())
         file = Core::File::standard_input();
     else
         file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
@@ -55,21 +54,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto json = TRY(JsonValue::from_string(file_contents));
 
     if (use_color) {
-        color_name = "\033[33;1m";
-        color_index = "\033[35;1m";
-        color_brace = "\033[36m";
-        color_bool = "\033[32;1m";
-        color_string = "\033[31;1m";
-        color_null = "\033[34;1m";
-        color_off = "\033[0m";
+        color_name = "\033[33;1m"sv;
+        color_index = "\033[35;1m"sv;
+        color_brace = "\033[36m"sv;
+        color_bool = "\033[32;1m"sv;
+        color_string = "\033[31;1m"sv;
+        color_null = "\033[34;1m"sv;
+        color_off = "\033[0m"sv;
     }
 
     Vector<String> trail;
-    print("json", json, trail);
+    print("json"sv, json, trail);
     return 0;
 }
 
-static void print(const String& name, const JsonValue& value, Vector<String>& trail)
+static void print(StringView name, JsonValue const& value, Vector<String>& trail)
 {
     for (size_t i = 0; i < trail.size(); ++i)
         out("{}", trail[i]);
