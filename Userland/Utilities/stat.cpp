@@ -8,61 +8,53 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <grp.h>
-#include <inttypes.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
 
-static int stat(const char* file, bool should_follow_links)
+static ErrorOr<int> stat(StringView file, bool should_follow_links)
 {
-    struct stat st;
-    int rc = should_follow_links ? stat(file, &st) : lstat(file, &st);
-    if (rc < 0) {
-        perror("lstat");
-        return 1;
-    }
-    printf("    File: %s\n", file);
-    printf("   Inode: %s\n", String::formatted("{}", st.st_ino).characters());
+    auto st = TRY(should_follow_links ? Core::System::stat(file) : Core::System::lstat(file));
+    outln("    File: {}", file);
+    outln("   Inode: {}", st.st_ino);
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-        printf("  Device: %u,%u\n", major(st.st_rdev), minor(st.st_rdev));
+        outln("  Device: {},{}", major(st.st_rdev), minor(st.st_rdev));
     else
-        printf("    Size: %" PRIi64 "\n", st.st_size);
-    printf("   Links: %u\n", st.st_nlink);
-    printf("  Blocks: %u\n", st.st_blocks);
-    printf("     UID: %u", st.st_uid);
+        outln("    Size: {}", st.st_size);
+    outln("   Links: {}", st.st_nlink);
+    outln("  Blocks: {}", st.st_blocks);
+    out("     UID: {}", st.st_uid);
     if (auto* pwd = getpwuid(st.st_uid)) {
-        printf(" (%s)", pwd->pw_name);
+        out(" ({})", pwd->pw_name);
     }
-    printf("\n");
-    printf("     GID: %u", st.st_gid);
+    outln("");
+    out("     GID: {}", st.st_gid);
     if (auto* grp = getgrgid(st.st_gid)) {
-        printf(" (%s)", grp->gr_name);
+        out(" ({})", grp->gr_name);
     }
-    printf("\n");
-    printf("    Mode: (%o/", st.st_mode);
+    outln("");
+    out("    Mode: ({:o}/", st.st_mode);
 
     if (S_ISDIR(st.st_mode))
-        printf("d");
+        out("d");
     else if (S_ISLNK(st.st_mode))
-        printf("l");
+        out("l");
     else if (S_ISBLK(st.st_mode))
-        printf("b");
+        out("b");
     else if (S_ISCHR(st.st_mode))
-        printf("c");
+        out("c");
     else if (S_ISFIFO(st.st_mode))
-        printf("f");
+        out("f");
     else if (S_ISSOCK(st.st_mode))
-        printf("s");
+        out("s");
     else if (S_ISREG(st.st_mode))
-        printf("-");
+        out("-");
     else
-        printf("?");
+        out("?");
 
-    printf("%c%c%c%c%c%c%c%c",
+    out("{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}",
         st.st_mode & S_IRUSR ? 'r' : '-',
         st.st_mode & S_IWUSR ? 'w' : '-',
         st.st_mode & S_ISUID ? 's' : (st.st_mode & S_IXUSR ? 'x' : '-'),
@@ -73,44 +65,42 @@ static int stat(const char* file, bool should_follow_links)
         st.st_mode & S_IWOTH ? 'w' : '-');
 
     if (st.st_mode & S_ISVTX)
-        printf("t");
+        out("t");
     else
-        printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
+        out("{:c}", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    printf(")\n");
+    outln(")");
 
     auto print_time = [](time_t t) {
-        printf("%s\n", Core::DateTime::from_timestamp(t).to_string().characters());
+        outln("{}", Core::DateTime::from_timestamp(t).to_string());
     };
 
-    printf("Accessed: ");
+    out("Accessed: ");
     print_time(st.st_atime);
-    printf("Modified: ");
+    out("Modified: ");
     print_time(st.st_mtime);
-    printf(" Changed: ");
+    out(" Changed: ");
     print_time(st.st_ctime);
 
     return 0;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath", nullptr));
 
     bool should_follow_links = false;
-    Vector<const char*> files;
+    Vector<StringView> files;
 
     auto args_parser = Core::ArgsParser();
     args_parser.add_option(should_follow_links, "Follow links to files", nullptr, 'L');
     args_parser.add_positional_argument(files, "File(s) to stat", "file", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    int ret = 0;
-    for (auto& file : files)
-        ret |= stat(file, should_follow_links);
+    bool had_error = false;
+    for (auto& file : files) {
+        had_error |= stat(file, should_follow_links).is_error();
+    }
 
-    return ret;
+    return had_error;
 }
