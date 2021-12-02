@@ -113,3 +113,7 @@ To enable these hooks firstly follow the installation instructions available at 
 Sometimes good PR's get abandoned by the author for one reason or another. If the PR is fundamentally good, but the author is not responding to requests, the PR may be manually integrated with minor changes to code and commit messages.
 
 To make this easier, we do appreciate it if folks enable the "Allow edits from maintainers" flag on their pull requests.
+
+## On ideologically motivated changes
+
+This is a purely technical project. As such, it is not an appropriate arena to advertise your personal politics or religious beliefs. Any changes that appear ideologically motivated will be rejected.
