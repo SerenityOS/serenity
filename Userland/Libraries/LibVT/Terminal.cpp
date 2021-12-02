@@ -1568,7 +1568,7 @@ void Terminal::set_size(u16 columns, u16 rows)
                 if (m_history.size() >= 2 && m_history[m_history.size() - 2].termination_column().has_value())
                     break;
                 --extra_lines;
-                m_history.take_last();
+                (void)m_history.take_last();
                 continue;
             }
             break;
