@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<NotificationServer::ClientConnection>(move(client_socket), client_id);
+        (void)IPC::new_client_connection<NotificationServer::ClientConnection>(move(client_socket), client_id);
     };
 
     TRY(Core::System::unveil("/res", "r"));

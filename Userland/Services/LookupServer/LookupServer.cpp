@@ -76,7 +76,7 @@ LookupServer::LookupServer()
     m_local_server->on_accept = [](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
+        (void)IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
     };
     bool ok = m_local_server->take_over_from_system_server();
     VERIFY(ok);

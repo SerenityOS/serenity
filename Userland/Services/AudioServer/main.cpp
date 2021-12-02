@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
+        (void)IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
     };
 
     TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));

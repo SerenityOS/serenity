@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<InspectorServer::ClientConnection>(move(client_socket), client_id);
+        (void)IPC::new_client_connection<InspectorServer::ClientConnection>(move(client_socket), client_id);
     };
 
     auto inspectables_server = TRY(Core::LocalServer::try_create());

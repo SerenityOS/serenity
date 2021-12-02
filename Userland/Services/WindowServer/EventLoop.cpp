@@ -33,13 +33,13 @@ EventLoop::EventLoop()
     m_window_server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
+        (void)IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
     };
 
     m_wm_server->on_accept = [&](auto client_socket) {
         static int s_next_wm_id = 0;
         int wm_id = ++s_next_wm_id;
-        IPC::new_client_connection<WMClientConnection>(move(client_socket), wm_id);
+        (void)IPC::new_client_connection<WMClientConnection>(move(client_socket), wm_id);
     };
 
     if (m_keyboard_fd >= 0) {
