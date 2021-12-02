@@ -85,7 +85,7 @@ bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
 
     // Don't show the file's trailing newline as an actual new line.
     if (line_count() > 1 && line(line_count() - 1).is_empty())
-        m_lines.take_last();
+        (void)m_lines.take_last();
 
     m_client_notifications_enabled = true;
 
