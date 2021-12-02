@@ -17,6 +17,7 @@
 #include <AK/NumberFormat.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -42,6 +43,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
 #include <serenity.h>
 #include <signal.h>
@@ -89,7 +91,7 @@ static bool can_access_pid(pid_t pid)
     return rc == 0;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     {
         // Before we do anything else, boost our process priority to the maximum allowed.
@@ -101,72 +103,33 @@ int main(int argc, char** argv)
         sched_setparam(0, &param);
     }
 
-    if (pledge("stdio thread proc recvfd sendfd rpath exec unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
 
-    auto app = GUI::Application::construct(argc, argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domains("SystemMonitor");
 
-    if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/dev", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/usr/lib", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil("/bin", "r"));
+    TRY(Core::System::unveil("/usr/lib", "r"));
 
     // This directory only exists if ports are installed
-    if (unveil("/usr/local/bin", "r") < 0 && errno != ENOENT) {
-        perror("unveil");
-        return 1;
-    }
+    if (auto result = Core::System::unveil("/usr/local/bin", "r"); result.is_error() && result.error().code() != ENOENT)
+        return result.release_error();
 
-    if (unveil("/usr/local/lib", "r") < 0 && errno != ENOENT) {
-        perror("unveil");
-        return 1;
-    }
+    if (auto result = Core::System::unveil("/usr/local/lib", "r"); result.is_error() && result.error().code() != ENOENT)
+        return result.release_error();
 
-    if (unveil("/bin/Profiler", "rx") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/bin/Profiler", "rx"));
+    TRY(Core::System::unveil("/bin/Inspector", "rx"));
 
-    if (unveil("/bin/Inspector", "rx") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
-
-    const char* args_tab = "processes";
+    StringView args_tab = "processes"sv;
     Core::ArgsParser parser;
     parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'hardware', or 'network'", "open-tab", 't', "tab");
-    parser.parse(argc, argv);
+    parser.parse(arguments);
     StringView args_tab_view = args_tab;
 
     auto app_icon = GUI::Icon::default_icon("app-system-monitor");
