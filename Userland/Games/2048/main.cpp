@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(315, 336);
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
     main_widget->set_fill_with_background_color(true);
 
     Game game { board_size, target_tile, evil_ai };

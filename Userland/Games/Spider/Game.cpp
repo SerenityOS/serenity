@@ -303,7 +303,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                     for (auto& to_intersect : m_focused_cards) {
                         mark_intersecting_stacks_dirty(to_intersect);
                         stack.push(to_intersect);
-                        m_focused_stack->pop();
+                        (void)m_focused_stack->pop();
                     }
 
                     update_score(-1);

@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Pong");
     window->set_double_buffering_enabled(false);
-    TRY(window->try_set_main_widget<Pong::Game>());
+    (void)TRY(window->try_set_main_widget<Pong::Game>());
     window->set_resizable(false);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
