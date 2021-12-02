@@ -839,7 +839,7 @@ int Shell::builtin_shift(int argc, const char** argv)
     }
 
     for (auto i = 0; i < count; ++i)
-        values.take_first();
+        (void)values.take_first();
 
     return 0;
 }
