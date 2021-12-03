@@ -267,7 +267,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
 
 bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
 {
-    if (style_value.is_builtin() || style_value.is_custom_property())
+    if (style_value.is_builtin())
         return true;
 
     switch (property_id) {

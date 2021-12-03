@@ -73,12 +73,6 @@ ColorStyleValue const& StyleValue::as_color() const
     return static_cast<ColorStyleValue const&>(*this);
 }
 
-CustomStyleValue const& StyleValue::as_custom_property() const
-{
-    VERIFY(is_custom_property());
-    return static_cast<CustomStyleValue const&>(*this);
-}
-
 FlexStyleValue const& StyleValue::as_flex() const
 {
     VERIFY(is_flex());

@@ -272,7 +272,6 @@ public:
         Calculated,
         Color,
         CombinedBorderRadius,
-        CustomProperty,
         Flex,
         FlexFlow,
         Font,
@@ -304,7 +303,6 @@ public:
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
-    bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
@@ -334,7 +332,6 @@ public:
     BoxShadowStyleValue const& as_box_shadow() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
-    CustomStyleValue const& as_custom_property() const;
     FlexFlowStyleValue const& as_flex_flow() const;
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
@@ -362,7 +359,6 @@ public:
     BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
     CalculatedStyleValue& as_calculated() { return const_cast<CalculatedStyleValue&>(const_cast<StyleValue const&>(*this).as_calculated()); }
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
-    CustomStyleValue& as_custom_property() { return const_cast<CustomStyleValue&>(const_cast<StyleValue const&>(*this).as_custom_property()); }
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
@@ -850,26 +846,6 @@ private:
     NonnullRefPtr<BorderRadiusStyleValue> m_top_right;
     NonnullRefPtr<BorderRadiusStyleValue> m_bottom_right;
     NonnullRefPtr<BorderRadiusStyleValue> m_bottom_left;
-};
-
-// FIXME: Allow for fallback
-class CustomStyleValue : public StyleValue {
-public:
-    static NonnullRefPtr<CustomStyleValue> create(String const& custom_property_name)
-    {
-        return adopt_ref(*new CustomStyleValue(custom_property_name));
-    }
-    String custom_property_name() const { return m_custom_property_name; }
-    String to_string() const override { return m_custom_property_name; }
-
-private:
-    explicit CustomStyleValue(String const& custom_property_name)
-        : StyleValue(Type::CustomProperty)
-        , m_custom_property_name(custom_property_name)
-    {
-    }
-
-    String m_custom_property_name {};
 };
 
 class FlexStyleValue final : public StyleValue {
