@@ -5,6 +5,7 @@
 /bin	/bin	bind	bind,nodev,ro
 /etc	/etc	bind	bind,nodev,nosuid
 /home	/home	bind	bind,nodev,nosuid
+/res	/res	bind	bind,nodev,nosuid
 /root	/root	bind	bind,nodev,nosuid
 /var	/var	bind	bind,nodev,nosuid
 /www	/www	bind	bind,nodev,nosuid
