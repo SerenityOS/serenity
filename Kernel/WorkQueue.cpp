@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
     auto name_kstring = KString::try_create(name);
     if (name_kstring.is_error())
         TODO();
-    Process::create_kernel_process(thread, name_kstring.release_value(), [this] {
+    (void)Process::create_kernel_process(thread, name_kstring.release_value(), [this] {
         for (;;) {
             WorkItem* item;
             bool have_more;
