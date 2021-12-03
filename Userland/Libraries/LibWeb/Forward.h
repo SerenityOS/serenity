@@ -35,7 +35,6 @@ class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
 class CSSSupportsRule;
-class CustomStyleValue;
 class Display;
 class ElementInlineCSSStyleDeclaration;
 class FlexFlowStyleValue;
