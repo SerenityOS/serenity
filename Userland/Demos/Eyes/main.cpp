@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
-    TRY(window->try_set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
+    (void)TRY(window->try_set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
