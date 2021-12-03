@@ -21,6 +21,7 @@ void open_file(const String&, size_t line, size_t column);
 Project& project();
 String currently_open_file();
 void set_current_editor_wrapper(RefPtr<EditorWrapper>);
+void for_each_open_file(Function<void(ProjectFile const&)>);
 
 class Locator;
 Locator& locator();
