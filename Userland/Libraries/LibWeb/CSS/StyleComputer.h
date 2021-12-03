@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -21,6 +23,24 @@ struct MatchingRule {
     size_t rule_index { 0 };
     size_t selector_index { 0 };
     u32 specificity { 0 };
+};
+
+class PropertyDependencyNode : public RefCounted<PropertyDependencyNode> {
+public:
+    static NonnullRefPtr<PropertyDependencyNode> create(String name)
+    {
+        return adopt_ref(*new PropertyDependencyNode(move(name)));
+    }
+
+    void add_child(NonnullRefPtr<PropertyDependencyNode>);
+    bool has_cycles();
+
+private:
+    explicit PropertyDependencyNode(String name);
+
+    String m_name;
+    NonnullRefPtrVector<PropertyDependencyNode> m_children;
+    bool m_marked { false };
 };
 
 class StyleComputer {
@@ -62,7 +82,7 @@ private:
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
 
     RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_unresolved_values(DOM::Element&, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index = 0) const;
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index = 0) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
