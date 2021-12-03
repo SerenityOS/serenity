@@ -1,6 +1,6 @@
-// NOTE: We cannot yet test the fields of ECMA-402's Table 4 (week, day, etc.) because those fields
-//       won't be copied into the Intl.DateTimeFormat object until the date-time pattern generator
-//       actually parses the CLDR patterns (see parse_date_time_pattern).
+// NOTE: We cannot yet test the fractionalSecondDigits option. There aren't any patterns in the CLDR
+//       with this field ('S' in https://unicode.org/reports/tr35/tr35-dates.html#dfst-second). We
+//       will need to figure out how this field should be generated.
 describe("correct behavior", () => {
     test("length is 0", () => {
         expect(Intl.DateTimeFormat.prototype.resolvedOptions).toHaveLength(0);
@@ -113,6 +113,76 @@ describe("correct behavior", () => {
         ["full", "long", "medium", "short"].forEach(style => {
             const el = new Intl.DateTimeFormat("el", { timeStyle: style });
             expect(el.resolvedOptions().timeStyle).toBe(style);
+        });
+    });
+
+    test("weekday", () => {
+        ["narrow", "short", "long"].forEach(weekday => {
+            const en = new Intl.DateTimeFormat("en", { weekday: weekday });
+            expect(en.resolvedOptions().weekday).toBe(weekday);
+        });
+    });
+
+    test("era", () => {
+        ["narrow", "short", "long"].forEach(era => {
+            const en = new Intl.DateTimeFormat("en", { era: era });
+            expect(en.resolvedOptions().era).toBe(era);
+        });
+    });
+
+    test("year", () => {
+        ["2-digit", "numeric"].forEach(year => {
+            const en = new Intl.DateTimeFormat("en", { year: year });
+            expect(en.resolvedOptions().year).toBe(year);
+        });
+    });
+
+    test("month", () => {
+        ["2-digit", "numeric", "narrow", "short", "long"].forEach(month => {
+            const en = new Intl.DateTimeFormat("en", { month: month });
+            expect(en.resolvedOptions().month).toBe(month);
+        });
+    });
+
+    test("day", () => {
+        ["2-digit", "numeric"].forEach(day => {
+            const en = new Intl.DateTimeFormat("en", { day: day });
+            expect(en.resolvedOptions().day).toBe(day);
+        });
+    });
+
+    test("dayPeriod", () => {
+        ["narrow", "short", "long"].forEach(dayPeriod => {
+            const en = new Intl.DateTimeFormat("en", { dayPeriod: dayPeriod });
+            expect(en.resolvedOptions().dayPeriod).toBe(dayPeriod);
+        });
+    });
+
+    test("hour", () => {
+        ["2-digit", "numeric"].forEach(hour => {
+            const en = new Intl.DateTimeFormat("en", { hour: hour });
+            expect(en.resolvedOptions().hour).toBe(hour);
+        });
+    });
+
+    test("minute", () => {
+        ["2-digit", "numeric"].forEach(minute => {
+            const en = new Intl.DateTimeFormat("en", { minute: minute });
+            expect(en.resolvedOptions().minute).toBe(minute);
+        });
+    });
+
+    test("second", () => {
+        ["2-digit", "numeric"].forEach(second => {
+            const en = new Intl.DateTimeFormat("en", { second: second });
+            expect(en.resolvedOptions().second).toBe(second);
+        });
+    });
+
+    test("timeZoneName", () => {
+        ["short", "long"].forEach(timeZoneName => {
+            const en = new Intl.DateTimeFormat("en", { timeZoneName: timeZoneName });
+            expect(en.resolvedOptions().timeZoneName).toBe(timeZoneName);
         });
     });
 });
