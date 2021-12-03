@@ -6,6 +6,7 @@
 
 #include "GeneratorUtil.h"
 #include <AK/Format.h>
+#include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -14,6 +15,7 @@
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Traits.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -22,15 +24,41 @@
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
 
+using CalendarPatternIndexType = u16;
+constexpr auto s_calendar_pattern_index_type = "u16"sv;
+
 struct CalendarPattern : public Unicode::CalendarPattern {
+    unsigned hash() const
+    {
+        return int_hash(pattern_index);
+    }
+
+    bool operator==(CalendarPattern const& other) const
+    {
+        return pattern_index == other.pattern_index;
+    }
+
     StringIndexType pattern_index { 0 };
 };
 
+template<>
+struct AK::Formatter<CalendarPattern> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, CalendarPattern const& pattern)
+    {
+        return Formatter<FormatString>::format(builder, "{{ {} }}", pattern.pattern_index);
+    }
+};
+
+template<>
+struct AK::Traits<CalendarPattern> : public GenericTraits<CalendarPattern> {
+    static unsigned hash(CalendarPattern const& c) { return c.hash(); }
+};
+
 struct CalendarFormat {
-    CalendarPattern full_format {};
-    CalendarPattern long_format {};
-    CalendarPattern medium_format {};
-    CalendarPattern short_format {};
+    CalendarPatternIndexType full_format { 0 };
+    CalendarPatternIndexType long_format { 0 };
+    CalendarPatternIndexType medium_format { 0 };
+    CalendarPatternIndexType short_format { 0 };
 };
 
 struct Calendar {
@@ -38,7 +66,7 @@ struct Calendar {
     CalendarFormat date_formats {};
     CalendarFormat time_formats {};
     CalendarFormat date_time_formats {};
-    Vector<CalendarPattern> available_formats {};
+    Vector<CalendarPatternIndexType> available_formats {};
 };
 
 struct Locale {
@@ -47,6 +75,7 @@ struct Locale {
 
 struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStorage<CalendarPattern, CalendarPatternIndexType> unique_patterns;
     HashMap<String, Locale> locales;
 
     HashMap<String, Vector<Unicode::HourCycle>> hour_cycles;
@@ -103,14 +132,18 @@ static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& loca
     return {};
 };
 
-static void parse_date_time_pattern(CalendarPattern& format, String pattern, UnicodeLocaleData& locale_data)
+static CalendarPatternIndexType parse_date_time_pattern(String pattern, UnicodeLocaleData& locale_data)
 {
+    CalendarPattern format {};
+
     // FIXME: This is very incomplete. Similar to NumberFormat, the pattern string will need to be
     //        parsed to fill in the CalendarPattern struct, and modified to be useable at runtime.
     //        For now, this is enough to implement the DateTimeFormat constructor.
     //
     // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
     format.pattern_index = locale_data.unique_strings.ensure(move(pattern));
+
+    return locale_data.unique_patterns.ensure(move(format));
 }
 
 static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocaleData& locale_data, Locale& locale)
@@ -136,16 +169,16 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
 
     auto parse_patterns = [&](auto& formats, auto const& patterns_object) {
         auto full_format = patterns_object.get("full"sv);
-        parse_date_time_pattern(formats.full_format, full_format.as_string(), locale_data);
+        formats.full_format = parse_date_time_pattern(full_format.as_string(), locale_data);
 
         auto long_format = patterns_object.get("long"sv);
-        parse_date_time_pattern(formats.long_format, long_format.as_string(), locale_data);
+        formats.long_format = parse_date_time_pattern(long_format.as_string(), locale_data);
 
         auto medium_format = patterns_object.get("medium"sv);
-        parse_date_time_pattern(formats.medium_format, medium_format.as_string(), locale_data);
+        formats.medium_format = parse_date_time_pattern(medium_format.as_string(), locale_data);
 
         auto short_format = patterns_object.get("short"sv);
-        parse_date_time_pattern(formats.short_format, short_format.as_string(), locale_data);
+        formats.short_format = parse_date_time_pattern(short_format.as_string(), locale_data);
     };
 
     calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const& value) {
@@ -170,9 +203,8 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
 
         auto const& available_formats = date_time_formats_object.as_object().get("availableFormats"sv);
         available_formats.as_object().for_each_member([&](auto const&, JsonValue const& pattern) {
-            CalendarPattern format {};
-            parse_date_time_pattern(format, pattern.as_string(), locale_data);
-            calendar.available_formats.append(move(format));
+            auto pattern_index = parse_date_time_pattern(pattern.as_string(), locale_data);
+            calendar.available_formats.append(pattern_index);
         });
     });
 
@@ -268,6 +300,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("string_index_type"sv, s_string_index_type);
+    generator.set("calendar_pattern_index_type"sv, s_calendar_pattern_index_type);
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -291,23 +324,27 @@ struct CalendarPattern {
 
     @string_index_type@ pattern { 0 };
 };
+)~~~");
 
+    locale_data.unique_patterns.generate(generator, "CalendarPattern"sv, "s_calendar_patterns"sv, 50);
+
+    generator.append(R"~~~(
 struct CalendarFormat {
     Unicode::CalendarFormat to_unicode_calendar_format() const {
         Unicode::CalendarFormat calendar_format {};
 
-        calendar_format.full_format = full_format.to_unicode_calendar_pattern();
-        calendar_format.long_format = long_format.to_unicode_calendar_pattern();
-        calendar_format.medium_format = medium_format.to_unicode_calendar_pattern();
-        calendar_format.short_format = short_format.to_unicode_calendar_pattern();
+        calendar_format.full_format = s_calendar_patterns[full_format].to_unicode_calendar_pattern();
+        calendar_format.long_format = s_calendar_patterns[long_format].to_unicode_calendar_pattern();
+        calendar_format.medium_format = s_calendar_patterns[medium_format].to_unicode_calendar_pattern();
+        calendar_format.short_format = s_calendar_patterns[short_format].to_unicode_calendar_pattern();
 
         return calendar_format;
     }
 
-    CalendarPattern full_format {};
-    CalendarPattern long_format {};
-    CalendarPattern medium_format {};
-    CalendarPattern short_format {};
+    @calendar_pattern_index_type@ full_format { 0 };
+    @calendar_pattern_index_type@ long_format { 0 };
+    @calendar_pattern_index_type@ medium_format { 0 };
+    @calendar_pattern_index_type@ short_format { 0 };
 };
 
 struct CalendarData {
@@ -315,25 +352,16 @@ struct CalendarData {
     CalendarFormat date_formats {};
     CalendarFormat time_formats {};
     CalendarFormat date_time_formats {};
-    Span<CalendarPattern const> available_formats {};
+    Span<@calendar_pattern_index_type@ const> available_formats {};
 };
 )~~~");
 
-    auto append_calendar_pattern = [&](auto const& calendar_pattern) {
-        generator.set("pattern"sv, String::number(calendar_pattern.pattern_index));
-        generator.append("{ @pattern@ },");
-    };
-
     auto append_calendar_format = [&](auto const& calendar_format) {
-        generator.append("{ ");
-        append_calendar_pattern(calendar_format.full_format);
-        generator.append(" ");
-        append_calendar_pattern(calendar_format.long_format);
-        generator.append(" ");
-        append_calendar_pattern(calendar_format.medium_format);
-        generator.append(" ");
-        append_calendar_pattern(calendar_format.short_format);
-        generator.append(" },");
+        generator.set("full_format", String::number(calendar_format.full_format));
+        generator.set("long_format", String::number(calendar_format.long_format));
+        generator.set("medium_format", String::number(calendar_format.medium_format));
+        generator.set("short_format", String::number(calendar_format.short_format));
+        generator.append("{ @full_format@, @long_format@, @medium_format@, @short_format@ },");
     };
 
     auto append_calendars = [&](String name, auto const& calendars) {
@@ -348,16 +376,16 @@ struct CalendarData {
             generator.set("size", String::number(calendar.available_formats.size()));
 
             generator.append(R"~~~(
-static constexpr Array<CalendarPattern, @size@> @name@ { {)~~~");
+static constexpr Array<@calendar_pattern_index_type@, @size@> @name@ { {)~~~");
 
-            for (auto const& format : calendar.available_formats) {
-                generator.append("\n    ");
-                append_calendar_pattern(format);
+            bool first = true;
+            for (auto format : calendar.available_formats) {
+                generator.append(first ? " " : ", ");
+                generator.append(String::number(format));
+                first = false;
             }
 
-            generator.append(R"~~~(
-} };
-)~~~");
+            generator.append(" } };");
         }
 
         generator.set("name", name);
@@ -487,7 +515,7 @@ Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView local
         result.ensure_capacity(data->available_formats.size());
 
         for (auto const& format : data->available_formats)
-            result.unchecked_append(format.to_unicode_calendar_pattern());
+            result.unchecked_append(s_calendar_patterns[format].to_unicode_calendar_pattern());
     }
 
     return result;
