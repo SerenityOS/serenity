@@ -160,11 +160,11 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_role(ColorRole::Button);
-    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins(4);
 
     auto find = TRY(main_widget->try_add<GUI::Widget>());
-    TRY(find->try_set_layout<GUI::HorizontalBoxLayout>());
+    (void)TRY(find->try_set_layout<GUI::HorizontalBoxLayout>());
     find->layout()->set_margins(4);
     find->set_fixed_height(30);
 
