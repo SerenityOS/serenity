@@ -574,6 +574,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     document_data->m_text = move(text);
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
+    document_data->preprocessor().set_ignore_invalid_statements(true);
     document_data->preprocessor().set_keep_include_statements(true);
 
     document_data->preprocessor().definitions_in_header_callback = [this](StringView include_path) -> Preprocessor::Definitions {
