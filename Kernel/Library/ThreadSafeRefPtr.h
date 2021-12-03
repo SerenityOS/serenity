@@ -117,7 +117,7 @@ struct RefPtrTraits {
 };
 
 template<typename T, typename PtrTraits>
-class RefPtr {
+class [[nodiscard]] RefPtr {
     template<typename U, typename P>
     friend class RefPtr;
     template<typename U>

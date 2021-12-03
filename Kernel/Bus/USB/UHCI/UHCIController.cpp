@@ -476,7 +476,7 @@ void UHCIController::spawn_port_proc()
     if (process_name.is_error())
         TODO();
 
-    Process::create_kernel_process(usb_hotplug_thread, process_name.release_value(), [&] {
+    (void)Process::create_kernel_process(usb_hotplug_thread, process_name.release_value(), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();

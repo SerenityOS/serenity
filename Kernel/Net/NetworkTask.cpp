@@ -46,7 +46,7 @@ void NetworkTask::spawn()
     auto name = KString::try_create("NetworkTask");
     if (name.is_error())
         TODO();
-    Process::create_kernel_process(thread, name.release_value(), NetworkTask_main, nullptr);
+    (void)Process::create_kernel_process(thread, name.release_value(), NetworkTask_main, nullptr);
     network_task = thread;
 }
 
