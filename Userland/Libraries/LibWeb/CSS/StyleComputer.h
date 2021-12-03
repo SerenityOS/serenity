@@ -62,7 +62,7 @@ private:
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
 
     RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_unresolved_values(DOM::Element&, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest) const;
+    bool expand_unresolved_values(DOM::Element&, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index = 0) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
