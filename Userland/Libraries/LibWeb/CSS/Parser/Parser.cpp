@@ -1908,15 +1908,8 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& co
             if (calc_expression)
                 return CalculatedStyleValue::create("(FIXME:calc to string)", calc_expression.release_nonnull());
         } else if (function.name().equals_ignoring_case("var")) {
-            // FIXME: Handle fallback value as second parameter
-            // https://www.w3.org/TR/css-variables-1/#using-variables
-            if (!component_value.function().values().is_empty()) {
-                auto& property_name_token = component_value.function().values().first();
-                if (property_name_token.is(Token::Type::Ident))
-                    return CustomStyleValue::create(property_name_token.token().ident());
-                else
-                    dbgln("First argument to var() function was not an ident: '{}'", property_name_token.to_debug_string());
-            }
+            // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
+            VERIFY_NOT_REACHED();
         }
     }
 

@@ -572,13 +572,6 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             if (important != property.important)
                 continue;
             auto property_value = property.value;
-            if (property.value->is_custom_property()) {
-                auto custom_property_name = property.value->as_custom_property().custom_property_name();
-                auto resolved = resolve_custom_property(element, custom_property_name);
-                if (resolved.has_value()) {
-                    property_value = resolved.value().value;
-                }
-            }
             if (property.value->is_unresolved()) {
                 if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
                     property_value = resolved.release_nonnull();
