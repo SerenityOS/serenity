@@ -40,7 +40,7 @@ ALWAYS_INLINE void unref_if_not_null(T* ptr)
 }
 
 template<typename T>
-class NonnullRefPtr {
+class [[nodiscard]] NonnullRefPtr {
     template<typename U, typename P>
     friend class RefPtr;
     template<typename U>
@@ -223,8 +223,10 @@ public:
         other.exchange(ptr);
     }
 
+    // clang-format off
 private:
     NonnullRefPtr() = delete;
+    // clang-format on
 
     ALWAYS_INLINE T* as_ptr() const
     {
