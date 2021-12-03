@@ -452,7 +452,7 @@ struct MatchingDeclarations {
     Vector<MatchingRule> author_rules;
 };
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
@@ -468,7 +468,8 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
         return nullptr;
     };
 
-    for (auto& value : source) {
+    for (size_t source_index = source_start_index; source_index < source.size(); source_index++) {
+        auto& value = source[source_index];
         if (value.is_function()) {
             if (value.function().name().equals_ignoring_case("var"sv)) {
                 auto& var_contents = value.function().values();
@@ -489,7 +490,12 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
                     continue;
                 }
 
-                // TODO: Handle fallback value
+                // Use the provided fallback value, if any.
+                if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
+                    if (!expand_unresolved_values(element, var_contents, dest, 2))
+                        return false;
+                    continue;
+                }
             }
 
             auto& source_function = value.function();
