@@ -241,9 +241,9 @@ void ServerConnectionWrapper::try_respawn_connection()
     dbgln("Respawning ServerConnection");
     create_connection();
 
-    // After respawning the language-server, we have to flush the content of the project files
+    // After respawning the language-server, we have to send the content of open project files
     // so the server's FileDB will be up-to-date.
-    project().for_each_text_file([this](const ProjectFile& file) {
+    for_each_open_file([this](const ProjectFile& file) {
         if (file.code_document().language() != m_language)
             return;
         m_connection->async_set_file_content(file.code_document().file_path(), file.document().text());
