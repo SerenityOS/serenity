@@ -169,6 +169,12 @@ TransformationStyleValue const& StyleValue::as_transformation() const
     return static_cast<TransformationStyleValue const&>(*this);
 }
 
+UnresolvedStyleValue const& StyleValue::as_unresolved() const
+{
+    VERIFY(is_unresolved());
+    return static_cast<UnresolvedStyleValue const&>(*this);
+}
+
 UnsetStyleValue const& StyleValue::as_unset() const
 {
     VERIFY(is_unset());
@@ -490,6 +496,14 @@ String PositionStyleValue::to_string() const
     };
 
     return String::formatted("{} {} {} {}", to_string(m_edge_x), m_offset_x.to_string(), to_string(m_edge_y), m_offset_y.to_string());
+}
+
+String UnresolvedStyleValue::to_string() const
+{
+    StringBuilder builder;
+    for (auto& value : m_values)
+        builder.append(value.to_string());
+    return builder.to_string();
 }
 
 }
