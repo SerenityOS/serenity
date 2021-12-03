@@ -117,6 +117,8 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
     }
 
     if (keyword == "else") {
+        if (m_options.ignore_invalid_statements && m_current_depth == 0)
+            return;
         VERIFY(m_current_depth > 0);
         if (m_depths_of_not_taken_branches.contains_slow(m_current_depth - 1)) {
             m_depths_of_not_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth - 1; });
@@ -129,6 +131,8 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
     }
 
     if (keyword == "endif") {
+        if (m_options.ignore_invalid_statements && m_current_depth == 0)
+            return;
         VERIFY(m_current_depth > 0);
         --m_current_depth;
         if (m_depths_of_not_taken_branches.contains_slow(m_current_depth)) {
@@ -198,6 +202,8 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
     }
 
     if (keyword == "elif") {
+        if (m_options.ignore_invalid_statements && m_current_depth == 0)
+            return;
         VERIFY(m_current_depth > 0);
         // FIXME: Evaluate the elif expression
         // We currently always treat the expression in #elif as true.
