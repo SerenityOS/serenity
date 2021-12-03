@@ -1484,4 +1484,11 @@ void HackStudioWidget::open_coredump(String const& coredump_path)
     }
 }
 
+void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> func)
+{
+    for (auto& open_file : m_open_files) {
+        func(*open_file.value);
+    }
+}
+
 }

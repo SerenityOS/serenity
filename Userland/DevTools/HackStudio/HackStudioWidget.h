@@ -69,6 +69,7 @@ public:
     };
 
     void open_coredump(String const& coredump_path);
+    void for_each_open_file(Function<void(ProjectFile const&)>);
 
 private:
     static String get_full_path_of_serenity_source(const String& file);
