@@ -9,6 +9,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
 
@@ -59,6 +60,9 @@ private:
     void absolutize_values(StyleProperties&, DOM::Element const*) const;
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID) const;
+
+    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
+    bool expand_unresolved_values(DOM::Element&, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;

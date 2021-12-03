@@ -20,7 +20,8 @@ class StyleFunctionRule : public RefCounted<StyleFunctionRule> {
     friend class Parser;
 
 public:
-    StyleFunctionRule(String name);
+    explicit StyleFunctionRule(String name);
+    StyleFunctionRule(String name, Vector<StyleComponentValueRule>&& values);
     ~StyleFunctionRule();
 
     String const& name() const { return m_name; }

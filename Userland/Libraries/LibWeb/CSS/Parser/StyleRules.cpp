@@ -57,7 +57,13 @@ StyleDeclarationRule::StyleDeclarationRule() { }
 StyleDeclarationRule::~StyleDeclarationRule() { }
 
 StyleFunctionRule::StyleFunctionRule(String name)
-    : m_name(name)
+    : m_name(move(name))
+{
+}
+
+StyleFunctionRule::StyleFunctionRule(String name, Vector<StyleComponentValueRule>&& values)
+    : m_name(move(name))
+    , m_values(move(values))
 {
 }
 StyleFunctionRule::~StyleFunctionRule() { }

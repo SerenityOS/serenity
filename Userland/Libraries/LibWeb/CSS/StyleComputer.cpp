@@ -452,6 +452,85 @@ struct MatchingDeclarations {
     Vector<MatchingRule> author_rules;
 };
 
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest) const
+{
+    // FIXME: Do this better!
+    // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
+    // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
+
+    // FIXME: Handle dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
+    // FIXME: Handle overly-long variables. https://www.w3.org/TR/css-variables-1/#long-variables
+
+    auto get_custom_property = [this, &element](auto& name) -> RefPtr<StyleValue> {
+        auto custom_property = resolve_custom_property(element, name);
+        if (custom_property.has_value())
+            return custom_property.value().value;
+        return nullptr;
+    };
+
+    for (auto& value : source) {
+        if (value.is_function()) {
+            if (value.function().name().equals_ignoring_case("var"sv)) {
+                auto& var_contents = value.function().values();
+                if (var_contents.is_empty())
+                    return false;
+
+                auto& custom_property_name_token = var_contents.first();
+                if (!custom_property_name_token.is(Token::Type::Ident))
+                    return false;
+                auto custom_property_name = custom_property_name_token.token().ident();
+                if (!custom_property_name.starts_with("--"))
+                    return false;
+
+                if (auto custom_property_value = get_custom_property(custom_property_name)) {
+                    VERIFY(custom_property_value->is_unresolved());
+                    if (!expand_unresolved_values(element, custom_property_value->as_unresolved().values(), dest))
+                        return false;
+                    continue;
+                }
+
+                // TODO: Handle fallback value
+            }
+
+            auto& source_function = value.function();
+            Vector<StyleComponentValueRule> function_values;
+            if (!expand_unresolved_values(element, source_function.values(), function_values))
+                return false;
+            NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
+            dest.empend(function);
+            continue;
+        }
+        if (value.is_block()) {
+            auto& source_block = value.block();
+            Vector<StyleComponentValueRule> block_values;
+            if (!expand_unresolved_values(element, source_block.values(), block_values))
+                return false;
+            NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
+            dest.empend(block);
+            continue;
+        }
+        dest.empend(value.token());
+    }
+
+    return true;
+}
+
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
+{
+    // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
+    // to produce a different StyleValue from it.
+    VERIFY(unresolved.contains_var());
+
+    Vector<StyleComponentValueRule> expanded_values;
+    if (!expand_unresolved_values(element, unresolved.values(), expanded_values))
+        return {};
+
+    if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
+        return parsed_value.release_nonnull();
+
+    return {};
+}
+
 void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, bool important) const
 {
     for (auto& match : matching_rules) {
@@ -465,6 +544,10 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 if (resolved.has_value()) {
                     property_value = resolved.value().value;
                 }
+            }
+            if (property.value->is_unresolved()) {
+                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                    property_value = resolved.release_nonnull();
             }
             set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
         }
