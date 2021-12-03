@@ -7,6 +7,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/TemporaryChange.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -452,13 +453,11 @@ struct MatchingDeclarations {
     Vector<MatchingRule> author_rules;
 };
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
     // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
-
-    // FIXME: Handle dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
 
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -473,6 +472,16 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
         if (custom_property.has_value())
             return custom_property.value().value;
         return nullptr;
+    };
+
+    auto get_dependency_node = [&](auto name) -> NonnullRefPtr<PropertyDependencyNode> {
+        if (auto existing = dependencies.get(name); existing.has_value()) {
+            return *existing.value();
+        } else {
+            auto new_node = PropertyDependencyNode::create(name);
+            dependencies.set(name, new_node);
+            return new_node;
+        }
     };
 
     for (size_t source_index = source_start_index; source_index < source.size(); source_index++) {
@@ -490,16 +499,27 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
                 if (!custom_property_name.starts_with("--"))
                     return false;
 
+                // Detect dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
+                // We do not do this by the spec, since we are not keeping a graph of var dependencies around,
+                // but rebuilding it every time.
+                if (custom_property_name == property_name)
+                    return false;
+                auto parent = get_dependency_node(property_name);
+                auto child = get_dependency_node(custom_property_name);
+                parent->add_child(child);
+                if (parent->has_cycles())
+                    return false;
+
                 if (auto custom_property_value = get_custom_property(custom_property_name)) {
                     VERIFY(custom_property_value->is_unresolved());
-                    if (!expand_unresolved_values(element, custom_property_value->as_unresolved().values(), dest))
+                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest))
                         return false;
                     continue;
                 }
 
                 // Use the provided fallback value, if any.
                 if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
-                    if (!expand_unresolved_values(element, var_contents, dest, 2))
+                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
                         return false;
                     continue;
                 }
@@ -507,7 +527,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
 
             auto& source_function = value.function();
             Vector<StyleComponentValueRule> function_values;
-            if (!expand_unresolved_values(element, source_function.values(), function_values))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values))
                 return false;
             NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
             dest.empend(function);
@@ -516,7 +536,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
         if (value.is_block()) {
             auto& source_block = value.block();
             Vector<StyleComponentValueRule> block_values;
-            if (!expand_unresolved_values(element, source_block.values(), block_values))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values))
                 return false;
             NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
             dest.empend(block);
@@ -535,7 +555,8 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     VERIFY(unresolved.contains_var());
 
     Vector<StyleComponentValueRule> expanded_values;
-    if (!expand_unresolved_values(element, unresolved.values(), expanded_values))
+    HashMap<String, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values))
         return {};
 
     if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
@@ -882,5 +903,35 @@ NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& elemen
     compute_defaulted_values(style, &element);
 
     return style;
+}
+
+PropertyDependencyNode::PropertyDependencyNode(String name)
+    : m_name(move(name))
+{
+}
+
+void PropertyDependencyNode::add_child(NonnullRefPtr<PropertyDependencyNode> new_child)
+{
+    for (auto const& child : m_children) {
+        if (child.m_name == new_child->m_name)
+            return;
+    }
+
+    // We detect self-reference already.
+    VERIFY(new_child->m_name != m_name);
+    m_children.append(move(new_child));
+}
+
+bool PropertyDependencyNode::has_cycles()
+{
+    if (m_marked)
+        return true;
+
+    TemporaryChange change { m_marked, true };
+    for (auto& child : m_children) {
+        if (child.has_cycles())
+            return true;
+    }
+    return false;
 }
 }
