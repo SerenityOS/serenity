@@ -13,6 +13,7 @@ rm -f sigpipe.sh.out
 # So the test only fails if sigpipe.sh.out exists (since then `exit 1` runs),
 # not if the `test` statement returns false.
 if test -e sigpipe.sh.out {
+    rm -f sigpipe.sh.out
     fail sigpipe did not terminate further commands
 } else {
     echo PASS
