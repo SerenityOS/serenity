@@ -647,6 +647,23 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
         }
     }
 
+    if (!best_format.has_value())
+        return {};
+
+    // Non-standard, if the user provided options that differ from the best format's options, keep
+    // the user's options. This is expected by TR-35:
+    //
+    //     It is not necessary to supply dateFormatItems with skeletons for every field length; fields
+    //     in the skeleton and pattern are expected to be expanded in parallel to handle a request.
+    //     https://unicode.org/reports/tr35/tr35-dates.html#Matching_Skeletons
+    //
+    // Rather than generating an prohibitively large amount of nearly-duplicate patterns, which only
+    // differ by field length, we expand the field lengths here.
+    best_format->for_each_calendar_field_zipped_with(options, [](auto& best_format_field, auto const& option_field) {
+        if (best_format_field.has_value() && option_field.has_value())
+            best_format_field = option_field;
+    });
+
     // 11. Return bestFormat.
     return best_format;
 }
