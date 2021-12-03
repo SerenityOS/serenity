@@ -459,7 +459,14 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, Vector<Style
     // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
 
     // FIXME: Handle dependency cycles. https://www.w3.org/TR/css-variables-1/#cycles
-    // FIXME: Handle overly-long variables. https://www.w3.org/TR/css-variables-1/#long-variables
+
+    // Arbitrary large value chosen to avoid the billion-laughs attack.
+    // https://www.w3.org/TR/css-variables-1/#long-variables
+    const size_t MAX_VALUE_COUNT = 16384;
+    if (source.size() + dest.size() > MAX_VALUE_COUNT) {
+        dbgln("Stopped expanding CSS variables: maximum length reached.");
+        return false;
+    }
 
     auto get_custom_property = [this, &element](auto& name) -> RefPtr<StyleValue> {
         auto custom_property = resolve_custom_property(element, name);
