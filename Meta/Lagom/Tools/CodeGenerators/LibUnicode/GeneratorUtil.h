@@ -19,60 +19,67 @@
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
 
-template<typename StringIndexType>
-class UniqueStringStorage {
+template<typename StorageType, typename IndexType>
+class UniqueStorage {
 public:
-    StringIndexType ensure(String string)
+    IndexType ensure(StorageType value)
     {
-        // We maintain a set of unique strings in two structures: a vector which owns the unique string,
-        // and a hash map which maps that string to its index in the vector. The vector is to ensure the
-        // strings are generated in an easily known order, and the map is to allow quickly deciding if a
-        // string is actually unique (otherwise, we'd have to linear-search the vector for each string).
+        // We maintain a set of unique values in two structures: a vector which stores the values in
+        // the order they are added, and a hash map which maps that value to its index in the vetor.
+        // The vector is to ensure the values are generated in an easily known order, and the map is
+        // to allow quickly deciding if a value is actually unique (otherwise, we'd have to linearly
+        // search the vector for each value).
         //
-        // Also note that index 0 will be reserved for the empty string, so the index returned from this
-        // method is actually the real index in the vector + 1.
-        if (auto index = m_unique_string_indices.get(string); index.has_value())
+        // Also note that index 0 will be reserved for the default-initialized value, so the index
+        // returned from this method is actually the real index in the vector + 1.
+        if (auto index = m_storage_indices.get(value); index.has_value())
             return *index;
 
-        m_unique_strings.append(move(string));
-        size_t index = m_unique_strings.size();
+        m_storage.append(move(value));
+        size_t index = m_storage.size();
 
-        VERIFY(index < NumericLimits<StringIndexType>::max());
+        VERIFY(index < NumericLimits<IndexType>::max());
 
-        auto string_index = static_cast<StringIndexType>(index);
-        m_unique_string_indices.set(m_unique_strings.last(), string_index);
+        auto storage_index = static_cast<IndexType>(index);
+        m_storage_indices.set(m_storage.last(), storage_index);
 
-        return string_index;
+        return storage_index;
     }
 
-    StringView get(StringIndexType index) const
+    StorageType const& get(IndexType index) const
     {
-        if (index == 0)
-            return {};
+        if (index == 0) {
+            static StorageType empty {};
+            return empty;
+        }
 
-        VERIFY(index <= m_unique_strings.size());
-        return m_unique_strings.at(index - 1);
+        VERIFY(index <= m_storage.size());
+        return m_storage.at(index - 1);
     }
 
-    void generate(SourceGenerator& generator)
+    void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row)
     {
-        generator.set("size"sv, String::number(m_unique_strings.size()));
+        generator.set("type"sv, type);
+        generator.set("name"sv, name);
+        generator.set("size"sv, String::number(m_storage.size()));
 
         generator.append(R"~~~(
-static constexpr Array<StringView, @size@ + 1> s_string_list { {
+static constexpr Array<@type@, @size@ + 1> @name@ { {
     {})~~~");
 
-        constexpr size_t max_strings_per_row = 40;
-        size_t strings_in_current_row = 1;
+        size_t values_in_current_row = 1;
 
-        for (auto const& string : m_unique_strings) {
-            if (strings_in_current_row++ > 0)
+        for (auto const& value : m_storage) {
+            if (values_in_current_row++ > 0)
                 generator.append(", ");
 
-            generator.append(String::formatted("\"{}\"sv", string));
+            if constexpr (IsSame<StorageType, String>)
+                generator.append(String::formatted("\"{}\"sv", value));
+            else
+                generator.append(String::formatted("{}", value));
 
-            if (strings_in_current_row == max_strings_per_row) {
-                strings_in_current_row = 0;
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
                 generator.append(",\n    ");
             }
         }
@@ -83,8 +90,19 @@ static constexpr Array<StringView, @size@ + 1> s_string_list { {
     }
 
 private:
-    Vector<String> m_unique_strings;
-    HashMap<StringView, StringIndexType> m_unique_string_indices;
+    Vector<StorageType> m_storage;
+    HashMap<StorageType, IndexType> m_storage_indices;
+};
+
+template<typename StringIndexType>
+class UniqueStringStorage : public UniqueStorage<String, StringIndexType> {
+    using Base = UniqueStorage<String, StringIndexType>;
+
+public:
+    void generate(SourceGenerator& generator)
+    {
+        Base::generate(generator, "StringView"sv, "s_string_list"sv, 40);
+    }
 };
 
 struct Alias {
