@@ -171,7 +171,7 @@ void ServerConnectionWrapper::on_crash()
     show_crash_notification();
     m_connection.clear();
 
-    static constexpr int max_crash_frequency_seconds = 3;
+    static constexpr int max_crash_frequency_seconds = 10;
     if (m_last_crash_timer.is_valid() && m_last_crash_timer.elapsed() / 1000 < max_crash_frequency_seconds) {
         dbgln("LanguageServer crash frequency is too high");
         m_respawn_allowed = false;
