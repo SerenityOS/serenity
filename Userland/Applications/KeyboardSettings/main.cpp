@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Keyboard Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard"));
+    (void)TRY(window->add_tab<KeyboardSettingsWidget>("Keyboard"));
 
     window->show();
     return app->exec();

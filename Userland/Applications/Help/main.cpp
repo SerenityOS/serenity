@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(570, 500);
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(widget->try_set_layout<GUI::VerticalBoxLayout>());
     widget->set_fill_with_background_color(true);
     widget->layout()->set_spacing(2);
 
@@ -72,11 +72,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto left_tab_bar = TRY(splitter->try_add<GUI::TabWidget>());
     auto tree_view_container = TRY(left_tab_bar->try_add_tab<GUI::Widget>("Browse"));
-    TRY(tree_view_container->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(tree_view_container->try_set_layout<GUI::VerticalBoxLayout>());
     tree_view_container->layout()->set_margins(4);
     auto tree_view = TRY(tree_view_container->try_add<GUI::TreeView>());
     auto search_view = TRY(left_tab_bar->try_add_tab<GUI::Widget>("Search"));
-    TRY(search_view->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(search_view->try_set_layout<GUI::VerticalBoxLayout>());
     search_view->layout()->set_margins(4);
     auto search_box = TRY(search_view->try_add<GUI::TextBox>());
     auto search_list_view = TRY(search_view->try_add<GUI::ListView>());
@@ -234,9 +234,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         open_page(path);
     });
 
-    TRY(toolbar->try_add_action(*go_back_action));
-    TRY(toolbar->try_add_action(*go_forward_action));
-    TRY(toolbar->try_add_action(*go_home_action));
+    (void)TRY(toolbar->try_add_action(*go_back_action));
+    (void)TRY(toolbar->try_add_action(*go_forward_action));
+    (void)TRY(toolbar->try_add_action(*go_home_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {

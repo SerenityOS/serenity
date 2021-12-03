@@ -27,10 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
     auto window = TRY(GUI::SettingsWindow::create("Display Settings"));
-    TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"));
-    TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"));
-    TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"));
-    TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"));
+    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"));
+    (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"));
+    (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"));
+    (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"));
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
