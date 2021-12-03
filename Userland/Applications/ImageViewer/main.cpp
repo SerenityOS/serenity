@@ -6,6 +6,7 @@
  */
 
 #include "ViewWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -34,7 +35,7 @@ using namespace ImageViewer;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread fattr"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -170,7 +171,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper",
         [&](auto&) {
-            GUI::Desktop::the().set_wallpaper(widget.path());
+            LexicalPath path(widget.path());
+            StringBuilder builder;
+            builder.append("/res/wallpapers/");
+            builder.append(path.basename());
+            auto new_path = builder.to_string();
+            auto result = Core::File::copy_file_or_directory(new_path, widget.path());
+            if (result.is_error()) {
+                dbgln("Error while copying wallpaper. Error code: {}", static_cast<Error const&>(result.error()));
+                return;
+            }
+            GUI::Desktop::the().set_wallpaper(new_path);
         });
 
     auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-first.png").release_value_but_fixme_should_propagate_errors(),
