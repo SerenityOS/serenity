@@ -67,6 +67,7 @@ class StyleValueList;
 class Supports;
 class TextDecorationStyleValue;
 class TransformationStyleValue;
+class UnresolvedStyleValue;
 class UnsetStyleValue;
 }
 

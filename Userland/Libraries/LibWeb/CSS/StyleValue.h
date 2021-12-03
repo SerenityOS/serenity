@@ -24,6 +24,7 @@
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
@@ -288,6 +289,7 @@ public:
         String,
         TextDecoration,
         Transformation,
+        Unresolved,
         Unset,
         ValueList,
     };
@@ -318,6 +320,7 @@ public:
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
     bool is_transformation() const { return type() == Type::Transformation; }
+    bool is_unresolved() const { return type() == Type::Unresolved; }
     bool is_unset() const { return type() == Type::Unset; }
     bool is_value_list() const { return type() == Type::ValueList; }
 
@@ -347,6 +350,7 @@ public:
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
     TransformationStyleValue const& as_transformation() const;
+    UnresolvedStyleValue const& as_unresolved() const;
     UnsetStyleValue const& as_unset() const;
     StyleValueList const& as_value_list() const;
 
@@ -374,6 +378,7 @@ public:
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
+    UnresolvedStyleValue& as_unresolved() { return const_cast<UnresolvedStyleValue&>(const_cast<StyleValue const&>(*this).as_unresolved()); }
     UnsetStyleValue& as_unset() { return const_cast<UnsetStyleValue&>(const_cast<StyleValue const&>(*this).as_unset()); }
     StyleValueList& as_value_list() { return const_cast<StyleValueList&>(const_cast<StyleValue const&>(*this).as_value_list()); }
 
@@ -1306,6 +1311,31 @@ private:
 
     CSS::TransformFunction m_transform_function;
     NonnullRefPtrVector<StyleValue> m_values;
+};
+
+class UnresolvedStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<StyleComponentValueRule>&& values, bool contains_var)
+    {
+        return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var));
+    }
+    virtual ~UnresolvedStyleValue() override { }
+
+    virtual String to_string() const override;
+
+    Vector<StyleComponentValueRule> const& values() const { return m_values; }
+    bool contains_var() const { return m_contains_var; }
+
+private:
+    UnresolvedStyleValue(Vector<StyleComponentValueRule>&& values, bool contains_var)
+        : StyleValue(Type::Unresolved)
+        , m_values(move(values))
+        , m_contains_var(contains_var)
+    {
+    }
+
+    Vector<StyleComponentValueRule> m_values;
+    bool m_contains_var { false };
 };
 
 class UnsetStyleValue final : public StyleValue {
