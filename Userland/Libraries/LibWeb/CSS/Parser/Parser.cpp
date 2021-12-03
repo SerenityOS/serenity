@@ -3435,8 +3435,19 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
+    auto block_contains_var = [](StyleBlockRule const& block, auto&& recurse) -> bool {
+        for (auto const& token : block.values()) {
+            if (token.is_function() && token.function().name().equals_ignoring_case("var"sv))
+                return true;
+            if (token.is_block() && recurse(token.block(), recurse))
+                return true;
+        }
+        return false;
+    };
+
     m_context.set_current_property_id(property_id);
     Vector<StyleComponentValueRule> component_values;
+    bool contains_var = false;
 
     while (tokens.has_next_token()) {
         auto& token = tokens.next_token();
@@ -3446,14 +3457,26 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
             break;
         }
 
-        if (token.is(Token::Type::Whitespace))
-            continue;
+        if (property_id != PropertyID::Custom) {
+            if (token.is(Token::Type::Whitespace))
+                continue;
 
-        if (token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
-            return ParsingResult::IncludesIgnoredVendorPrefix;
+            if (token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
+                return ParsingResult::IncludesIgnoredVendorPrefix;
+        }
+
+        if (!contains_var) {
+            if (token.is_function() && token.function().name().equals_ignoring_case("var"sv))
+                contains_var = true;
+            else if (token.is_block() && block_contains_var(token.block(), block_contains_var))
+                contains_var = true;
+        }
 
         component_values.append(token);
     }
+
+    if (property_id == PropertyID::Custom || contains_var)
+        return { UnresolvedStyleValue::create(move(component_values), contains_var) };
 
     if (component_values.is_empty())
         return ParsingResult::SyntaxError;
@@ -4165,6 +4188,19 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
     if (string.starts_with("-libweb-"))
         return false;
     return true;
+}
+
+RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& tokens)
+{
+    if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
+        return {};
+
+    CSS::Parser parser(context, "");
+    CSS::TokenStream<CSS::StyleComponentValueRule> token_stream { tokens };
+    auto result = parser.parse_css_value(property_id, token_stream);
+    if (result.is_error())
+        return {};
+    return result.release_value();
 }
 
 }

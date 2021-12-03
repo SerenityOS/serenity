@@ -113,6 +113,8 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
+    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<StyleComponentValueRule> const&);
+
 private:
     enum class ParsingResult {
         Done,
