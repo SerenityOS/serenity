@@ -712,7 +712,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
         case SIOCGIFHWADDR: {
             auto mac_address = adapter->mac_address();
-            ifr.ifr_hwaddr.sa_family = AF_INET;
+            ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER; // FIXME: Query the underlying network interface for it's type
             mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
             return copy_to_user(user_ifr, &ifr);
         }
