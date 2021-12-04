@@ -416,7 +416,7 @@ public:
 )~~~");
 
             message_generator.append(R"~~~(
-    virtual bool valid() const { return m_ipc_message_valid; }
+    virtual bool valid() const override { return m_ipc_message_valid; }
 
     virtual IPC::MessageBuffer encode() const override
     {

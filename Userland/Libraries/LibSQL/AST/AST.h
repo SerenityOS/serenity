@@ -943,7 +943,7 @@ public:
     bool has_selection() const { return !m_select_statement.is_null(); }
     const RefPtr<Select>& select_statement() const { return m_select_statement; }
 
-    RefPtr<SQLResult> execute(ExecutionContext&) const;
+    virtual RefPtr<SQLResult> execute(ExecutionContext&) const override;
 
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
