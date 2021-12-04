@@ -556,6 +556,8 @@ private:
 
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
+    ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
+
 public:
     NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }
     ErrorOr<void> procfs_get_fds_stats(KBufferBuilder& builder) const;
