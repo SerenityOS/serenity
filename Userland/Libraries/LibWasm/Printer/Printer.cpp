@@ -434,7 +434,13 @@ void Printer::print(Wasm::Instruction const& instruction)
             [&](TableIndex const& index) { print("(table index {})", index.value()); },
             [&](Instruction::IndirectCallArgs const& args) { print("(indirect (type index {}) (table index {}))", args.type.value(), args.table.value()); },
             [&](Instruction::MemoryArgument const& args) { print("(memory (align {}) (offset {}))", args.align, args.offset); },
-            [&](Instruction::StructuredInstructionArgs const& args) { print("(structured (else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value()); },
+            [&](Instruction::StructuredInstructionArgs const& args) {
+                print("(structured\n");
+                TemporaryChange change { m_indent, m_indent + 1 };
+                print(args.block_type);
+                print_indent();
+                print("(else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value());
+            },
             [&](Instruction::TableBranchArgs const& args) {
                 print("(table_branch");
                 for (auto& label : args.labels)
