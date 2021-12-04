@@ -34,6 +34,7 @@ TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, Ext
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, TableAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, GlobalAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, ElementAddress);
+TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, DataAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, MemoryAddress);
 
 // FIXME: These should probably be made generic/virtual if/when we decide to do something more
@@ -214,12 +215,14 @@ class ModuleInstance {
 public:
     explicit ModuleInstance(
         Vector<FunctionType> types, Vector<FunctionAddress> function_addresses, Vector<TableAddress> table_addresses,
-        Vector<MemoryAddress> memory_addresses, Vector<GlobalAddress> global_addresses, Vector<ExportInstance> exports)
+        Vector<MemoryAddress> memory_addresses, Vector<GlobalAddress> global_addresses, Vector<DataAddress> data_addresses,
+        Vector<ExportInstance> exports)
         : m_types(move(types))
         , m_functions(move(function_addresses))
         , m_tables(move(table_addresses))
         , m_memories(move(memory_addresses))
         , m_globals(move(global_addresses))
+        , m_datas(move(data_addresses))
         , m_exports(move(exports))
     {
     }
@@ -232,6 +235,7 @@ public:
     auto& memories() const { return m_memories; }
     auto& globals() const { return m_globals; }
     auto& elements() const { return m_elements; }
+    auto& datas() const { return m_datas; }
     auto& exports() const { return m_exports; }
 
     auto& types() { return m_types; }
@@ -240,6 +244,7 @@ public:
     auto& memories() { return m_memories; }
     auto& globals() { return m_globals; }
     auto& elements() { return m_elements; }
+    auto& datas() { return m_datas; }
     auto& exports() { return m_exports; }
 
 private:
@@ -249,6 +254,7 @@ private:
     Vector<MemoryAddress> m_memories;
     Vector<GlobalAddress> m_globals;
     Vector<ElementAddress> m_elements;
+    Vector<DataAddress> m_datas;
     Vector<ExportInstance> m_exports;
 };
 
@@ -385,6 +391,22 @@ private:
     Value m_value;
 };
 
+class DataInstance {
+public:
+    explicit DataInstance(Vector<u8> data)
+        : m_data(move(data))
+    {
+    }
+
+    size_t size() const { return m_data.size(); }
+
+    Vector<u8>& data() { return m_data; }
+    Vector<u8> const& data() const { return m_data; }
+
+private:
+    Vector<u8> m_data;
+};
+
 class ElementInstance {
 public:
     explicit ElementInstance(ValueType type, Vector<Reference> references)
@@ -409,6 +431,7 @@ public:
     Optional<FunctionAddress> allocate(HostFunction&&);
     Optional<TableAddress> allocate(TableType const&);
     Optional<MemoryAddress> allocate(MemoryType const&);
+    Optional<DataAddress> allocate_data(Vector<u8>);
     Optional<GlobalAddress> allocate(GlobalType const&, Value);
     Optional<ElementAddress> allocate(ValueType const&, Vector<Reference>);
 
@@ -416,6 +439,7 @@ public:
     TableInstance* get(TableAddress);
     MemoryInstance* get(MemoryAddress);
     GlobalInstance* get(GlobalAddress);
+    DataInstance* get(DataAddress);
     ElementInstance* get(ElementAddress);
 
 private:
@@ -424,6 +448,7 @@ private:
     Vector<MemoryInstance> m_memories;
     Vector<GlobalInstance> m_globals;
     Vector<ElementInstance> m_elements;
+    Vector<DataInstance> m_datas;
 };
 
 class Label {

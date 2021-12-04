@@ -103,6 +103,9 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
         for (auto& segment : section.segments())
             m_context.elements.unchecked_append(segment.type);
     });
+    module.for_each_section_of_type<DataSection>([this](DataSection const& section) {
+        m_context.datas.resize(section.data().size());
+    });
 
     // FIXME: C.refs is the set funcidx(module with funcs=ϵ with start=ϵ),
     //        i.e., the set of function indices occurring in the module, except in its functions or start function.
