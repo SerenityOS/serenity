@@ -14,6 +14,36 @@ namespace AK {
 
 struct LEB128 {
     template<typename StreamT, typename ValueType = size_t>
+    static ErrorOr<void> write_unsigned(ValueType value, StreamT& stream) requires(IsUnsigned<ValueType>)
+    {
+        do {
+            u8 byte = value & 0x7f;
+            value >>= 7;
+            if (value != 0)
+                byte |= 1 << 8;
+            stream << byte;
+            TRY(stream.try_handle_any_error());
+        } while (value != 0);
+
+        return {};
+    }
+
+    template<typename StreamT, typename ValueType = ssize_t>
+    static ErrorOr<void> write_signed(ValueType value, StreamT& stream) requires(IsSigned<ValueType>)
+    {
+        while (true) {
+            i8 byte = value & 0x7f;
+            value >>= 7;
+            if ((value == 0 && (byte & 0x40) == 0) || (value == -1 && (byte & 0x40) != 0)) {
+                stream << byte;
+                return stream.try_handle_any_error();
+            }
+            stream << (i8)(byte | 0x80);
+            TRY(stream.try_handle_any_error());
+        }
+    }
+
+    template<typename StreamT, typename ValueType = size_t>
     static bool read_unsigned(StreamT& stream, ValueType& result)
     {
         [[maybe_unused]] size_t backup_offset = 0;
