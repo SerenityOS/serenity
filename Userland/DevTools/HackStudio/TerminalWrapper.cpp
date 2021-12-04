@@ -55,11 +55,11 @@ void TerminalWrapper::run_command(const String& command)
             VERIFY_NOT_REACHED();
         }
         if (WIFEXITED(wstatus)) {
-            m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
+            m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\r\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
         } else if (WIFSTOPPED(wstatus)) {
-            m_terminal_widget->inject_string("\033[34;1m(Command stopped!)\033[0m\n");
+            m_terminal_widget->inject_string("\033[34;1m(Command stopped!)\033[0m\r\n");
         } else if (WIFSIGNALED(wstatus)) {
-            m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\n", strsignal(WTERMSIG(wstatus))));
+            m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\r\n", strsignal(WTERMSIG(wstatus))));
         }
         m_pid = -1;
 
