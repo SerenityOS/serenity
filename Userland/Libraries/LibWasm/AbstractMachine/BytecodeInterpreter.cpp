@@ -227,17 +227,17 @@ void BytecodeInterpreter::pop_and_store(Configuration& configuration, Instructio
     auto entry = configuration.stack().pop();
     auto value = ConvertToRaw<StoreT> {}(*entry.get<Value>().to<PopT>());
     dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(StoreT));
-    store_to_memory(configuration, instruction, { &value, sizeof(StoreT) });
+    auto base_entry = configuration.stack().pop();
+    auto base = base_entry.get<Value>().to<i32>();
+    store_to_memory(configuration, instruction, { &value, sizeof(StoreT) }, *base);
 }
 
-void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data)
+void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data, i32 base)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    auto entry = configuration.stack().pop();
-    auto base = entry.get<Value>().to<i32>();
-    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base)) + arg.offset;
     Checked addition { instance_address };
     addition += data.size();
     if (addition.has_overflow() || addition.value() > memory->size()) {
@@ -888,7 +888,29 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return unary_operation<double, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f64_u.value():
         return unary_operation<double, i64, Operators::SaturatingTruncate<u64>>(configuration);
-    case Instructions::memory_init.value():
+    case Instructions::memory_init.value(): {
+        auto data_index = instruction.arguments().get<DataIndex>();
+        auto& data_address = configuration.frame().module().datas()[data_index.value()];
+        auto& data = *configuration.store().get(data_address);
+        auto count = *configuration.stack().pop().get<Value>().to<i32>();
+        auto source_offset = *configuration.stack().pop().get<Value>().to<i32>();
+        auto destination_offset = *configuration.stack().pop().get<Value>().to<i32>();
+
+        TRAP_IF_NOT(count > 0);
+        TRAP_IF_NOT(source_offset + count > 0);
+        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= data.size());
+
+        Instruction synthetic_store_instruction {
+            Instructions::i32_store8,
+            Instruction::MemoryArgument { 0, 0 }
+        };
+
+        for (size_t i = 0; i < (size_t)count; ++i) {
+            auto value = data.data()[source_offset + i];
+            store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
+        }
+        return;
+    }
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
     case Instructions::memory_fill.value():
