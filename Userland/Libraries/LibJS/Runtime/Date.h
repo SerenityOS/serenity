@@ -102,5 +102,6 @@ double day(double);
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms);
 Value make_day(GlobalObject& global_object, Value year, Value month, Value date);
 Value make_date(Value day, Value time);
+Value time_clip(GlobalObject& global_object, Value time);
 
 }
