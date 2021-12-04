@@ -376,25 +376,60 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     case Instructions::block.value(): {
         size_t arity = 0;
+        size_t parameter_count = 0;
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
-        if (args.block_type.kind() != BlockType::Empty)
+        switch (args.block_type.kind()) {
+        case BlockType::Empty:
+            break;
+        case BlockType::Type:
             arity = 1;
-        configuration.stack().push(Label(arity, args.end_ip));
+            break;
+        case BlockType::Index: {
+            auto& type = configuration.frame().module().types()[args.block_type.type_index().value()];
+            arity = type.results().size();
+            parameter_count = type.parameters().size();
+        }
+        }
+
+        configuration.stack().entries().insert(configuration.stack().size() - parameter_count, Label(arity, args.end_ip));
         return;
     }
     case Instructions::loop.value(): {
         size_t arity = 0;
+        size_t parameter_count = 0;
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
-        if (args.block_type.kind() != BlockType::Empty)
+        switch (args.block_type.kind()) {
+        case BlockType::Empty:
+            break;
+        case BlockType::Type:
             arity = 1;
-        configuration.stack().push(Label(arity, ip.value() + 1));
+            break;
+        case BlockType::Index: {
+            auto& type = configuration.frame().module().types()[args.block_type.type_index().value()];
+            arity = type.results().size();
+            parameter_count = type.parameters().size();
+        }
+        }
+
+        configuration.stack().entries().insert(configuration.stack().size() - parameter_count, Label(arity, ip.value() + 1));
         return;
     }
     case Instructions::if_.value(): {
         size_t arity = 0;
+        size_t parameter_count = 0;
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
-        if (args.block_type.kind() != BlockType::Empty)
+        switch (args.block_type.kind()) {
+        case BlockType::Empty:
+            break;
+        case BlockType::Type:
             arity = 1;
+            break;
+        case BlockType::Index: {
+            auto& type = configuration.frame().module().types()[args.block_type.type_index().value()];
+            arity = type.results().size();
+            parameter_count = type.parameters().size();
+        }
+        }
 
         auto entry = configuration.stack().pop();
         auto value = entry.get<Value>().to<i32>();
@@ -402,12 +437,12 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         if (value.value() == 0) {
             if (args.else_ip.has_value()) {
                 configuration.ip() = args.else_ip.value();
-                configuration.stack().push(move(end_label));
+                configuration.stack().entries().insert(configuration.stack().size() - parameter_count, end_label);
             } else {
                 configuration.ip() = args.end_ip.value() + 1;
             }
         } else {
-            configuration.stack().push(move(end_label));
+            configuration.stack().entries().insert(configuration.stack().size() - parameter_count, end_label);
         }
         return;
     }

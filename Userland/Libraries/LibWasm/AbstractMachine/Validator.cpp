@@ -2424,10 +2424,13 @@ VALIDATE_INSTRUCTION(block)
     if (stack.size() < parameters.size())
         return Errors::invalid_stack_state();
 
-    for (size_t i = 0; i < parameters.size(); ++i) {
+    for (size_t i = 1; i <= parameters.size(); ++i) {
         if (stack.take_last() != parameters[parameters.size() - i])
             return Errors::invalid_stack_state();
     }
+
+    for (auto& parameter : parameters)
+        stack.append(parameter);
 
     m_entered_scopes.append(ChildScopeKind::Block);
     m_block_details.empend(stack.actual_size(), Empty {});
@@ -2450,6 +2453,9 @@ VALIDATE_INSTRUCTION(loop)
         if (stack.take_last() != parameters[parameters.size() - i - 1])
             return Errors::invalid_stack_state();
     }
+
+    for (auto& parameter : parameters)
+        stack.append(parameter);
 
     m_entered_scopes.append(ChildScopeKind::Block);
     m_block_details.empend(stack.actual_size(), Empty {});
@@ -2475,6 +2481,9 @@ VALIDATE_INSTRUCTION(if_)
         if (stack.take_last() != parameters[parameters.size() - i])
             return Errors::invalid_stack_state();
     }
+
+    for (auto& parameter : parameters)
+        stack.append(parameter);
 
     m_entered_scopes.append(args.else_ip.has_value() ? ChildScopeKind::IfWithElse : ChildScopeKind::IfWithoutElse);
     m_block_details.empend(stack.actual_size(), BlockDetails::IfDetails { stack, {} });
