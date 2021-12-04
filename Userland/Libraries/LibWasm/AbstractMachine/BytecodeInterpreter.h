@@ -39,7 +39,7 @@ protected:
     void load_and_push(Configuration&, Instruction const&);
     template<typename PopT, typename StoreT>
     void pop_and_store(Configuration&, Instruction const&);
-    void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data);
+    void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data, i32 base);
     void call_address(Configuration&, FunctionAddress);
 
     template<typename PopType, typename PushType, typename Operator>
