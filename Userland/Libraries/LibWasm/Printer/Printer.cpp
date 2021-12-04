@@ -13,11 +13,22 @@ namespace Wasm {
 
 struct Names {
     static HashMap<OpCode, String> instruction_names;
+    static HashMap<String, OpCode> instructions_by_name;
 };
 
 String instruction_name(OpCode const& opcode)
 {
     return Names::instruction_names.get(opcode).value_or("<unknown>");
+}
+
+Optional<OpCode> instruction_from_name(StringView name)
+{
+    if (Names::instructions_by_name.is_empty()) {
+        for (auto& entry : Names::instruction_names)
+            Names::instructions_by_name.set(entry.value, entry.key);
+    }
+
+    return Names::instructions_by_name.get(name);
 }
 
 void Printer::print_indent()
@@ -866,3 +877,4 @@ HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {
     { Instructions::structured_else, "synthetic:else" },
     { Instructions::structured_end, "synthetic:end" },
 };
+HashMap<String, Wasm::OpCode> Wasm::Names::instructions_by_name;
