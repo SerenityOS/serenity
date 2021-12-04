@@ -12,5 +12,7 @@ __BEGIN_DECLS
 
 unsigned int if_nametoindex(char const* ifname);
 char* if_indextoname(unsigned int ifindex, char* ifname);
+struct if_nameindex* if_nameindex();
+void if_freenameindex(struct if_nameindex* ptr);
 
 __END_DECLS
