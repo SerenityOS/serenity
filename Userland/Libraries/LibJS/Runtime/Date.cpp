@@ -389,4 +389,19 @@ Value make_date(Value day, Value time)
     return tv;
 }
 
+// 21.4.1.14 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
+Value time_clip(GlobalObject& global_object, Value time)
+{
+    // 1. If time is not finite, return NaN.
+    if (!time.is_finite_number())
+        return js_nan();
+
+    // 2. If abs(ℝ(time)) > 8.64 × 10^15, return NaN.
+    if (fabs(time.as_double()) > 8.64E15)
+        return js_nan();
+
+    // 3. Return 𝔽(! ToIntegerOrInfinity(time)).
+    return Value(MUST(time.to_integer_or_infinity(global_object)));
+}
+
 }
