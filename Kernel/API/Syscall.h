@@ -489,6 +489,7 @@ struct SC_statvfs_params {
 void initialize();
 int sync();
 
+#    if ARCH(I386) || ARCH(X86_64)
 inline uintptr_t invoke(Function function)
 {
     uintptr_t result;
@@ -542,6 +543,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
                  : "memory");
     return result;
 }
+#    endif
 #endif
 
 }
