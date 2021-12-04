@@ -35,17 +35,17 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     TreeNode(String name)
         : m_name(move(name)) {};
 
-    virtual String name() const { return m_name; }
-    virtual i64 area() const { return m_area; }
-    virtual size_t num_children() const
+    virtual String name() const override { return m_name; }
+    virtual i64 area() const override { return m_area; }
+    virtual size_t num_children() const override
     {
         if (m_children) {
             return m_children->size();
         }
         return 0;
     }
-    virtual const TreeNode& child_at(size_t i) const { return m_children->at(i); }
-    virtual void sort_children_by_area() const
+    virtual const TreeNode& child_at(size_t i) const override { return m_children->at(i); }
+    virtual void sort_children_by_area() const override
     {
         if (m_children) {
             Vector<TreeNode>* children = const_cast<Vector<TreeNode>*>(m_children.ptr());

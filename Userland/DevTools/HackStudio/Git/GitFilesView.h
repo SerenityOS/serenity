@@ -24,7 +24,7 @@ protected:
     GitFilesView(GitFileActionCallback, NonnullRefPtr<Gfx::Bitmap> action_icon);
 
 private:
-    virtual void paint_list_item(GUI::Painter& painter, int row_index, int painted_item_index);
+    virtual void paint_list_item(GUI::Painter& painter, int row_index, int painted_item_index) override;
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual Gfx::IntRect action_icon_rect(size_t painted_item_index);
