@@ -94,6 +94,13 @@ int mlock(const void*, size_t)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/munlock.html
+int munlock(const void*, size_t)
+{
+    dbgln("FIXME: Implement munlock()");
+    return 0;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/msync.html
 int msync(void* address, size_t size, int flags)
 {
