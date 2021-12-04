@@ -33,16 +33,6 @@ constexpr double sample_rate = 44100;
 // Headroom for the synth
 constexpr double volume_factor = 0.1;
 
-enum Switch {
-    Off,
-    On,
-};
-
-enum Direction {
-    Down,
-    Up,
-};
-
 enum KeyColor {
     White,
     Black,
@@ -150,10 +140,6 @@ const Color right_wave_colors[] = {
 constexpr int notes_per_octave = 12;
 constexpr int white_keys_per_octave = 7;
 constexpr int black_keys_per_octave = 5;
-constexpr int octave_min = 1;
-constexpr int octave_max = 7;
-
-constexpr int volume_max = 1000;
 
 constexpr double beats_per_minute = 60;
 constexpr int beats_per_bar = 4;

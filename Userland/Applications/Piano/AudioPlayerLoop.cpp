@@ -7,8 +7,6 @@
 
 #include "AudioPlayerLoop.h"
 
-#include "TrackManager.h"
-
 // Converts Piano-internal data to an Audio::Buffer that AudioServer receives
 static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
 {
@@ -22,8 +20,9 @@ static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample
     return MUST(Audio::Buffer::create_with_samples(frames));
 }
 
-AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer)
-    : m_track_manager(track_manager)
+AudioPlayerLoop::AudioPlayerLoop(NonnullRefPtr<LibDSP::TrackManager> track_manager, NonnullRefPtr<LibDSP::Transport> transport, bool& need_to_write_wav, Audio::WavWriter& wav_writer)
+    : m_track_manager(move(track_manager))
+    , m_transport(move(transport))
     , m_need_to_write_wav(need_to_write_wav)
     , m_wav_writer(wav_writer)
 {
@@ -41,7 +40,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
 
 void AudioPlayerLoop::enqueue_audio()
 {
-    m_track_manager.fill_buffer(m_buffer);
+    m_track_manager->fill_buffer();
     NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
     // FIXME: Handle OOM better.
     audio_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *audio_buffer));
@@ -50,8 +49,7 @@ void AudioPlayerLoop::enqueue_audio()
     // FIXME: This should be done somewhere else.
     if (m_need_to_write_wav) {
         m_need_to_write_wav = false;
-        m_track_manager.reset();
-        m_track_manager.set_should_loop(false);
+        m_track_manager->reset();
         do {
             m_track_manager.fill_buffer(m_buffer);
             m_wav_writer.write_samples(reinterpret_cast<u8*>(m_buffer.data()), buffer_size);

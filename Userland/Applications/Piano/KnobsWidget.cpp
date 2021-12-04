@@ -8,7 +8,7 @@
 #include "KnobsWidget.h"
 #include "MainWidget.h"
 #include "ProcessorParameterWidget/Slider.h"
-#include "TrackManager.h"
+#include <LibDSP/TrackManager.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

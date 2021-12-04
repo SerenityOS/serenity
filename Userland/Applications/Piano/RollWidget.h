@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "AK/NonnullRefPtr.h"
 #include "KeysWidget.h"
 #include "Music.h"
 #include <LibDSP/Music.h>
+#include <LibDSP/TrackManager.h>
+#include <LibDSP/Transport.h>
 #include <LibGUI/AbstractScrollableWidget.h>
+#include <typeinfo>
 
-class TrackManager;
 using LibDSP::RollNote;
 
 class RollWidget final : public GUI::AbstractScrollableWidget {
@@ -23,9 +26,16 @@ public:
 
     const KeysWidget* keys_widget() const { return m_keys_widget; }
     void set_keys_widget(const KeysWidget* widget) { m_keys_widget = widget; }
+    // FIXME: We assume the current track is a note track.
+    NonnullRefPtr<LibDSP::NoteTrack> current_track() const
+    {
+        auto const& track = m_track_manager->track_at(m_current_track);
+        VERIFY(typeid(track) == typeid(LibDSP::NoteTrack const&));
+        return dynamic_cast<LibDSP::NoteTrack const&>(track);
+    }
 
 private:
-    explicit RollWidget(TrackManager&);
+    RollWidget(NonnullRefPtr<LibDSP::TrackManager>, NonnullRefPtr<LibDSP::Transport>);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
@@ -34,7 +44,9 @@ private:
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     bool viewport_changed() const;
 
-    TrackManager& m_track_manager;
+    NonnullRefPtr<LibDSP::TrackManager> m_track_manager;
+    NonnullRefPtr<LibDSP::Transport> m_transport;
+    size_t m_current_track;
     const KeysWidget* m_keys_widget;
 
     int m_roll_width { 0 };

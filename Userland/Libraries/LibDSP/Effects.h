@@ -9,6 +9,7 @@
 #include "Processor.h"
 #include "ProcessorParameter.h"
 #include "Transport.h"
+#include <AK/FixedArray.h>
 #include <AK/Types.h>
 
 namespace LibDSP::Effects {
@@ -19,8 +20,7 @@ class Delay : public EffectProcessor {
 public:
     Delay(NonnullRefPtr<Transport>);
 
-private:
-    virtual Signal process_impl(Signal const&) override;
+    virtual void process(FixedArray<Sample>& samples) override;
     void handle_delay_time_change();
 
     ProcessorRangeParameter m_delay_decay;
@@ -37,8 +37,7 @@ class Mastering : public EffectProcessor {
 public:
     Mastering(NonnullRefPtr<Transport>);
 
-private:
-    virtual Signal process_impl(Signal const&) override;
+    virtual void process(FixedArray<Sample>& samples) override;
 };
 
 }

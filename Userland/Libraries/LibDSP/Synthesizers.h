@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "LibDSP/Music.h"
+#include <AK/FixedArray.h>
 #include <AK/SinglyLinkedList.h>
+#include <LibDSP/Music.h>
 #include <LibDSP/Processor.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Transport.h>
@@ -42,14 +43,14 @@ class Classic : public SynthesizerProcessor {
 public:
     Classic(NonnullRefPtr<Transport>);
 
+    virtual void process(RollNotes& input_notes, FixedArray<Sample>& output_samples) override;
     static Envelope compute_envelope(RollNote&);
 
     Waveform wave() const { return m_waveform.value(); }
 
 private:
-    virtual Signal process_impl(Signal const&) override;
+    double volume_from_envelope(Envelope);
 
-    double volume_from_envelope(Envelope const&);
     double wave_position(u8 note);
     double samples_per_cycle(u8 note);
     double sin_position(u8 note);

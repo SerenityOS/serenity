@@ -83,6 +83,14 @@ public:
         m_elements = nullptr;
     }
 
+    void clear_with_capacity()
+    {
+        if (!m_elements)
+            return;
+        for (size_t i = 0; i < m_size; ++i)
+            m_elements[i].~T();
+    }
+
     size_t size() const { return m_size; }
     T* data() { return m_elements; }
     T const* data() const { return m_elements; }

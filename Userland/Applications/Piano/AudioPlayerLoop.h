@@ -8,12 +8,13 @@
 #pragma once
 
 #include "Music.h"
+#include <AK/NonnullRefPtr.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/Object.h>
-
-class TrackManager;
+#include <LibDSP/TrackManager.h>
+#include <LibDSP/Transport.h>
 
 // Wrapper class accepting custom events to advance the track playing and forward audio data to the system.
 // This does not run on a separate thread, preventing IPC multithreading madness.
@@ -26,9 +27,10 @@ public:
     bool is_playing() { return m_should_play_audio; }
 
 private:
-    AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
+    AudioPlayerLoop(NonnullRefPtr<LibDSP::TrackManager> track_manager, NonnullRefPtr<LibDSP::Transport> transport, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
 
-    TrackManager& m_track_manager;
+    NonnullRefPtr<LibDSP::TrackManager> m_track_manager;
+    NonnullRefPtr<LibDSP::Transport> m_transport;
     Array<Sample, sample_count> m_buffer;
     Optional<Audio::ResampleHelper<double>> m_resampler;
     RefPtr<Audio::ClientConnection> m_audio_client;

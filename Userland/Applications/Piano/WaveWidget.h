@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include "RollWidget.h"
+#include <AK/NonnullRefPtr.h>
+#include <LibDSP/TrackManager.h>
+#include <LibDSP/Transport.h>
 #include <LibGUI/Frame.h>
-
-class TrackManager;
 
 class WaveWidget final : public GUI::Frame {
     C_OBJECT(WaveWidget)
@@ -17,11 +19,14 @@ public:
     virtual ~WaveWidget() override;
 
 private:
-    explicit WaveWidget(TrackManager&);
+    WaveWidget(NonnullRefPtr<LibDSP::TrackManager>, NonnullRefPtr<LibDSP::Transport>, NonnullRefPtr<RollWidget>);
+    size_t synth_wave_index();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
     int sample_to_y(int sample) const;
 
-    TrackManager& m_track_manager;
+    NonnullRefPtr<RollWidget> m_roll_widget;
+    NonnullRefPtr<LibDSP::TrackManager> m_track_manager;
+    NonnullRefPtr<LibDSP::Transport> m_transport;
 };

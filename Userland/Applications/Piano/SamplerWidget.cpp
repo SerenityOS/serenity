@@ -5,7 +5,7 @@
  */
 
 #include "SamplerWidget.h"
-#include "TrackManager.h"
+#include <LibDSP/TrackManager.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>

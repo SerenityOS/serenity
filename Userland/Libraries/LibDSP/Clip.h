@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Music.h"
+#include <AK/RefCounted.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <LibCore/Object.h>
@@ -14,8 +15,7 @@
 namespace LibDSP {
 
 // A clip is a self-contained snippet of notes or audio that can freely move inside and in between tracks.
-class Clip : public Core::Object {
-    C_OBJECT_ABSTRACT(Clip)
+class Clip : public RefCounted<Clip> {
 public:
     Clip(u32 start, u32 length)
         : m_start(start)
@@ -35,7 +35,8 @@ protected:
 
 class AudioClip final : public Clip {
 public:
-    Sample sample_at(u32 time);
+    Sample* sample_data_at(u32 time);
+    Sample const* sample_data_at(u32 time) const;
 
     Vector<Sample> const& samples() const { return m_samples; }
 
@@ -47,6 +48,7 @@ class NoteClip final : public Clip {
 public:
     void set_note(RollNote note);
 
+    SinglyLinkedList<RollNote> notes_at_pitch(u8 pitch) const { return m_notes[pitch]; }
     Array<SinglyLinkedList<RollNote>, note_count>& notes() { return m_notes; }
 
 private:

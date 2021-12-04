@@ -143,4 +143,14 @@ struct Sample {
     double right { 0 };
 };
 
+template<typename SampleContainer>
+void samples_accumulative_sum(SampleContainer& to_accumulate, SampleContainer const& to_add)
+{
+    VERIFY(to_accumulate.size() == to_add.size());
+
+    for (size_t i = 0; i < to_accumulate.size(); ++i) {
+        to_accumulate[i] += to_add[i];
+    }
+}
+
 }

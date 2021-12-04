@@ -11,7 +11,7 @@
 #include "PlayerWidget.h"
 #include "RollWidget.h"
 #include "SamplerWidget.h"
-#include "TrackManager.h"
+#include <LibDSP/TrackManager.h>
 #include "WaveWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>

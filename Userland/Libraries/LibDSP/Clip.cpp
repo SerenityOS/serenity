@@ -8,10 +8,15 @@
 
 namespace LibDSP {
 
-Sample AudioClip::sample_at(u32 time)
+Sample* AudioClip::sample_data_at(u32 time)
 {
-    VERIFY(time < m_length);
-    return m_samples[time];
+    VERIFY(time < m_samples.size());
+    return &m_samples[time];
+}
+Sample const* AudioClip::sample_data_at(u32 time) const
+{
+    VERIFY(time < m_samples.size());
+    return &m_samples[time];
 }
 
 void NoteClip::set_note(RollNote note)

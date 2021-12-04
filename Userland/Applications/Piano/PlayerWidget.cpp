@@ -8,7 +8,7 @@
 
 #include "AudioPlayerLoop.h"
 #include "Music.h"
-#include "TrackManager.h"
+#include <LibDSP/TrackManager.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>

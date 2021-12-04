@@ -9,7 +9,7 @@
 
 #include "AudioPlayerLoop.h"
 #include "MainWidget.h"
-#include "TrackManager.h"
+#include <LibDSP/TrackManager.h>
 #include <AK/Queue.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Effects.h"
+#include <LibDSP/Effects.h>
 #include <math.h>
 
 namespace LibDSP::Effects {
@@ -32,23 +32,22 @@ void Delay::handle_delay_time_change()
     }
 }
 
-Signal Delay::process_impl(Signal const& input_signal)
+void Delay::process(FixedArray<Sample>& samples)
 {
     handle_delay_time_change();
 
-    Sample const& in = input_signal.get<Sample>();
-    Sample out;
-    out += in.log_multiplied(static_cast<double>(m_dry_gain));
-    out += m_delay_buffer[m_delay_index].log_multiplied(m_delay_decay);
+    for (auto& out : samples) {
+        auto in = out;
+        out += in.log_multiplied(static_cast<double>(m_dry_gain));
+        out += m_delay_buffer[m_delay_index].log_multiplied(m_delay_decay);
 
-    // This is also convenient for disabling the delay effect by setting the buffer size to 0
-    if (m_delay_buffer.size() >= 1)
-        m_delay_buffer[m_delay_index++] = out;
+        // This is also convenient for disabling the delay effect by setting the buffer size to 0
+        if (m_delay_buffer.size() >= 1)
+            m_delay_buffer[m_delay_index++] = out;
 
-    if (m_delay_index >= m_delay_buffer.size())
-        m_delay_index = 0;
-
-    return Signal(out);
+        if (m_delay_index >= m_delay_buffer.size())
+            m_delay_index = 0;
+    }
 }
 
 Mastering::Mastering(NonnullRefPtr<Transport> transport)
@@ -56,7 +55,7 @@ Mastering::Mastering(NonnullRefPtr<Transport> transport)
 {
 }
 
-Signal Mastering::process_impl([[maybe_unused]] Signal const& input_signal)
+void Mastering::process([[maybe_unused]] Vector<Sample>& input_signal)
 {
     TODO();
 }

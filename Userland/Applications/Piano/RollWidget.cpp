@@ -7,8 +7,9 @@
  */
 
 #include "RollWidget.h"
-#include "TrackManager.h"
 #include <AK/Math.h>
+#include <AK/NonnullRefPtr.h>
+#include <LibDSP/Transport.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
@@ -20,8 +21,9 @@ constexpr int roll_height = note_count * note_height;
 constexpr int horizontal_scroll_sensitivity = 20;
 constexpr int max_zoom = 1 << 8;
 
-RollWidget::RollWidget(TrackManager& track_manager)
-    : m_track_manager(track_manager)
+RollWidget::RollWidget(NonnullRefPtr<LibDSP::TrackManager> track_manager, NonnullRefPtr<LibDSP::Transport> transport)
+    : m_track_manager(move(track_manager))
+    , m_transport(move(transport))
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_content_size({ 0, roll_height });
@@ -139,7 +141,8 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
 
     for (int note = note_count - (note_offset + notes_to_paint); note <= (note_count - 1) - note_offset; ++note) {
         int y = ((note_count - 1) - note) * note_height;
-        for (auto roll_note : m_track_manager.current_track().roll_notes(note)) {
+        // FIXME: As a first hack, we're just showing the notes of the current clip.
+        for (auto roll_note : current_track()->current_clip()->notes_at_pitch(note)) {
             int x = m_roll_width * (static_cast<double>(roll_note.on_sample) / roll_length);
             int width = m_roll_width * (static_cast<double>(roll_note.length()) / roll_length);
             if (x + width < x_offset || x > x_offset + widget_inner_rect().width())
@@ -163,7 +166,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
-    int x = m_roll_width * (static_cast<double>(m_track_manager.time()) / roll_length);
+    int x = m_roll_width * (static_cast<double>(m_transport->time()) / roll_length);
     if (x > x_offset && x <= x_offset + widget_inner_rect().width())
         painter.draw_line({ x, 0 }, { x, roll_height }, Gfx::Color::Black);
 
@@ -200,7 +203,8 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
 
     if (m_note_drag_location.has_value()) {
         // Clear previous note
-        m_track_manager.current_track().set_roll_note(m_drag_note, m_note_drag_location.value().on_sample, m_note_drag_location.value().off_sample);
+        // Comeback: unset the note
+        current_track()->current_clip()->set_note(m_drag_note, m_note_drag_location.value().on_sample, m_note_drag_location.value().off_sample);
     }
 
     auto get_note_x = [&](int x0) {

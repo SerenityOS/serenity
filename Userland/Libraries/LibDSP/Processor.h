@@ -6,12 +6,16 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/Noncopyable.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/ProcessorParameter.h>
+#include <LibDSP/SignalRange.h>
 #include <LibDSP/Transport.h>
 
 namespace LibDSP {
@@ -21,32 +25,30 @@ class Processor : public Core::Object {
     C_OBJECT_ABSTRACT(Processor);
 
 public:
+    enum class ProcessorType {
+        Invalid,
+        AudioEffect,
+        Synthesizer,
+    };
+
     virtual ~Processor()
     {
     }
-    Signal process(Signal const& input_signal)
-    {
-        VERIFY(input_signal.type() == m_input_type);
-        auto processed = process_impl(input_signal);
-        VERIFY(processed.type() == m_output_type);
-        return processed;
-    }
-    SignalType input_type() const { return m_input_type; }
-    SignalType output_type() const { return m_output_type; }
+
+    ProcessorType type() const { return m_type; }
+    virtual bool is_valid_input_type(SignalType) const { return false; }
+    virtual SignalType output_type() const { return SignalType::Invalid; }
     Vector<ProcessorParameter&>& parameters() { return m_parameters; }
 
 private:
-    SignalType const m_input_type;
-    SignalType const m_output_type;
+    ProcessorType const m_type;
 
 protected:
-    Processor(NonnullRefPtr<Transport> transport, SignalType input_type, SignalType output_type)
-        : m_input_type(input_type)
-        , m_output_type(output_type)
+    Processor(NonnullRefPtr<Transport> transport, ProcessorType type)
+        : m_type(type)
         , m_transport(move(transport))
     {
     }
-    virtual Signal process_impl(Signal const& input_signal) = 0;
 
     NonnullRefPtr<Transport> m_transport;
     Vector<ProcessorParameter&> m_parameters;
@@ -54,18 +56,30 @@ protected:
 
 // A common type of processor that changes audio data, i.e. applies an effect to it.
 class EffectProcessor : public Processor {
+public:
+    // The effect manipulates signals, so it can work in-place, not reallocating.
+    virtual void process(FixedArray<Sample>& signal) = 0;
+    virtual bool is_valid_input_type(SignalType type) const override { return type == SignalType::Sample; }
+    virtual SignalType output_type() const override { return SignalType::Sample; }
+
 protected:
     EffectProcessor(NonnullRefPtr<Transport> transport)
-        : Processor(transport, SignalType::Sample, SignalType::Sample)
+        : Processor(move(transport), ProcessorType::AudioEffect)
     {
     }
 };
 
 // A common type of processor that synthesizes audio from note data.
 class SynthesizerProcessor : public Processor {
+public:
+    // The synthesizer needs an output buffer, which is pre-allocated to the correct capacity.
+    virtual void process(RollNotes& input_notes, FixedArray<Sample>& output_samples) = 0;
+    virtual bool is_valid_input_type(SignalType type) const override { return type == SignalType::Note; }
+    virtual SignalType output_type() const override { return SignalType::Sample; }
+
 protected:
     SynthesizerProcessor(NonnullRefPtr<Transport> transport)
-        : Processor(transport, SignalType::Note, SignalType::Sample)
+        : Processor(move(transport), ProcessorType::Synthesizer)
     {
     }
 };

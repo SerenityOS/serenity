@@ -6,12 +6,16 @@
  */
 
 #include "WaveWidget.h"
-#include "TrackManager.h"
+#include "LibDSP/Synthesizers.h"
+#include "Music.h"
 #include <AK/NumericLimits.h>
+#include <LibDSP/TrackManager.h>
 #include <LibGUI/Painter.h>
 
-WaveWidget::WaveWidget(TrackManager& track_manager)
-    : m_track_manager(track_manager)
+WaveWidget::WaveWidget(NonnullRefPtr<LibDSP::TrackManager> track_manager, NonnullRefPtr<LibDSP::Transport> transport, NonnullRefPtr<RollWidget> roll_widget)
+    : m_roll_widget(move(roll_widget))
+    , m_track_manager(move(track_manager))
+    , m_transport(move(transport))
 {
 }
 
@@ -36,9 +40,9 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(frame_inner_rect(), Color::Black);
     painter.translate(frame_thickness(), frame_thickness());
 
-    Color left_wave_color = left_wave_colors[m_track_manager.current_track().synth()->wave()];
-    Color right_wave_color = right_wave_colors[m_track_manager.current_track().synth()->wave()];
-    auto buffer = m_track_manager.buffer();
+    Color left_wave_color = left_wave_colors[synth_wave_index()];
+    Color right_wave_color = right_wave_colors[synth_wave_index()];
+    auto buffer = m_track_manager->front_buffer();
     double width_scale = static_cast<double>(frame_inner_rect().width()) / buffer.size();
 
     int prev_x = 0;
@@ -65,4 +69,11 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     }
 
     GUI::Frame::paint_event(event);
+}
+
+size_t WaveWidget::synth_wave_index()
+{
+    // FIXME: We assume that the current track has a synth processor.
+    auto const& synth = dynamic_cast<LibDSP::Synthesizers::Classic const&>(m_roll_widget->current_track()->processor_chain()[0]);
+    return synth.wave();
 }
