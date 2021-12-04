@@ -14,6 +14,7 @@ class Reference;
 class Value;
 
 String instruction_name(OpCode const& opcode);
+Optional<OpCode> instruction_from_name(StringView name);
 
 struct Printer {
     explicit Printer(OutputStream& stream, size_t initial_indent = 0)
