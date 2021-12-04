@@ -48,7 +48,7 @@ constexpr u32 INNER_SHAREABLE = (3 << 8);
 constexpr u32 NORMAL_MEMORY = (0 << 2);
 constexpr u32 DEVICE_MEMORY = (1 << 2);
 
-constexpr u64* descriptor_to_pointer(FlatPtr descriptor)
+ALWAYS_INLINE static u64* descriptor_to_pointer(FlatPtr descriptor)
 {
     return (u64*)(descriptor & DESCRIPTOR_MASK);
 }
