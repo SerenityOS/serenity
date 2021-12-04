@@ -1626,11 +1626,11 @@ VALIDATE_INSTRUCTION(f64_reinterpret_i64)
 
 VALIDATE_INSTRUCTION(i32_reinterpret_f32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
+    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
         return Errors::invalid_stack_state();
 
     stack.take_last();
-    stack.append(ValueType(ValueType::F32));
+    stack.append(ValueType(ValueType::I32));
     return {};
 }
 
