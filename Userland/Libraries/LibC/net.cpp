@@ -21,3 +21,15 @@ char* if_indextoname([[maybe_unused]] unsigned int ifindex, [[maybe_unused]] cha
     errno = ENXIO;
     return nullptr;
 }
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/if_nameindex.html
+struct if_nameindex* if_nameindex()
+{
+    errno = ENOSYS;
+    return nullptr;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/if_freenameindex.html
+void if_freenameindex(struct if_nameindex*)
+{
+}
