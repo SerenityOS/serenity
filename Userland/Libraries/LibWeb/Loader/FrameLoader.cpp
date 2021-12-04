@@ -309,9 +309,6 @@ void FrameLoader::resource_did_load()
     else
         browsing_context().set_viewport_scroll_offset({ 0, 0 });
 
-    if (auto* container = browsing_context().container())
-        container->nested_browsing_context_did_load({});
-
     if (auto* page = browsing_context().page())
         page->client().page_did_finish_loading(url);
 }

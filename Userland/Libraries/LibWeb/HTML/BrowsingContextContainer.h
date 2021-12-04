@@ -23,8 +23,6 @@ public:
     Origin content_origin() const;
     bool may_access_from_origin(const Origin&) const;
 
-    void nested_browsing_context_did_load(Badge<FrameLoader>);
-
     virtual void inserted() override;
 
 protected:
