@@ -39,6 +39,7 @@ public:
     AsyncFromSyncIteratorPrototype* async_from_sync_iterator_prototype() { return m_async_from_sync_iterator_prototype; }
 
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
+    FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
     FunctionObject* eval_function() const { return m_eval_function; }
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
@@ -105,6 +106,7 @@ private:
     AsyncFromSyncIteratorPrototype* m_async_from_sync_iterator_prototype { nullptr };
 
     FunctionObject* m_array_prototype_values_function { nullptr };
+    FunctionObject* m_date_constructor_now_function { nullptr };
     FunctionObject* m_eval_function { nullptr };
     FunctionObject* m_throw_type_error_function { nullptr };
 
