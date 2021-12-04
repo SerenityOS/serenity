@@ -480,6 +480,10 @@ if (BUILD_LAGOM)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
         target_link_libraries(wasm_lagom LagomCore LagomWasm LagomLine)
 
+        add_executable(parse-wasm-dump_lagom ../../Userland/Utilities/parse-wasm-dump.cpp)
+        set_target_properties(parse-wasm-dump_lagom PROPERTIES OUTPUT_NAME parse-wasm-dump)
+        target_link_libraries(parse-wasm-dump_lagom LagomCore LagomWasm LagomLine LagomMain)
+
         enable_testing()
         # LibTest
         file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")

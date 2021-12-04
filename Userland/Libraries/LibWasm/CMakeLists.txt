@@ -4,6 +4,7 @@ set(SOURCES
     AbstractMachine/Configuration.cpp
     AbstractMachine/Validator.cpp
     Parser/Parser.cpp
+    Parser/TextFormat.cpp
     Printer/Printer.cpp
 )
 
