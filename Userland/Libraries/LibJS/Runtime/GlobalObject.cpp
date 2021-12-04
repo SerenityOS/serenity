@@ -287,6 +287,7 @@ void GlobalObject::initialize_global_object()
     m_async_generator_function_prototype->define_direct_property(vm.names.constructor, m_async_generator_function_constructor, Attribute::Configurable);
 
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
+    m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
 }
 
@@ -304,6 +305,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
     visitor.visit(m_array_prototype_values_function);
+    visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
     visitor.visit(m_throw_type_error_function);
 
