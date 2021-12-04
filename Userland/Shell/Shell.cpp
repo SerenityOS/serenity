@@ -1671,7 +1671,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
 bool Shell::has_history_event(StringView source)
 {
     struct : public AST::NodeVisitor {
-        virtual void visit(const AST::HistoryEvent* node)
+        virtual void visit(const AST::HistoryEvent* node) override
         {
             has_history_event = true;
             AST::NodeVisitor::visit(node);

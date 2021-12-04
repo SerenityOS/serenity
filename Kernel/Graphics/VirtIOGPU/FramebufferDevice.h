@@ -30,8 +30,8 @@ public:
 
     virtual ErrorOr<void> try_to_initialize() override { return {}; }
 
-    virtual void deactivate_writes();
-    virtual void activate_writes();
+    virtual void deactivate_writes() override;
+    virtual void activate_writes() override;
 
     size_t width() const { return display_info().rect.width; }
     size_t height() const { return display_info().rect.height; }

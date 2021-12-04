@@ -29,7 +29,7 @@ public:
     virtual ~GenericFramebufferDevice() = default;
 
     // ^File
-    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) = 0;
+    virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override = 0;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
     virtual StringView class_name() const override final { return "FramebufferDevice"sv; }
 

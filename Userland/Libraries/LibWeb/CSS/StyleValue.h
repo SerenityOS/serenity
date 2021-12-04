@@ -1345,7 +1345,7 @@ public:
         return m_values[i];
     }
 
-    virtual String to_string() const
+    virtual String to_string() const override
     {
         StringBuilder builder;
         builder.appendff("List[{}](", m_values.size());

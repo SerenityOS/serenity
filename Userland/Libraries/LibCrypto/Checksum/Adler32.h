@@ -27,8 +27,8 @@ public:
         update(data);
     }
 
-    void update(ReadonlyBytes data);
-    u32 digest();
+    virtual void update(ReadonlyBytes data) override;
+    virtual u32 digest() override;
 
 private:
     u32 m_state_a { 1 };

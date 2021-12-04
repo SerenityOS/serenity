@@ -178,7 +178,7 @@ class MarkingVisitor final : public Cell::Visitor {
 public:
     MarkingVisitor() { }
 
-    virtual void visit_impl(Cell& cell)
+    virtual void visit_impl(Cell& cell) override
     {
         if (cell.is_marked())
             return;

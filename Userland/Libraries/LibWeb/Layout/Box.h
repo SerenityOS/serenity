@@ -161,8 +161,8 @@ public:
 
     void clear_overflow_data() { m_overflow_data = nullptr; }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase);
-    virtual void after_children_paint(PaintContext&, PaintPhase);
+    virtual void before_children_paint(PaintContext&, PaintPhase) override;
+    virtual void after_children_paint(PaintContext&, PaintPhase) override;
 
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)

@@ -35,8 +35,8 @@ public:
     const RefPtr<CSSStyleSheet> loaded_style_sheet() const { return m_style_sheet; }
     void set_style_sheet(const RefPtr<CSSStyleSheet>& style_sheet) { m_style_sheet = style_sheet; }
 
-    virtual StringView class_name() const { return "CSSImportRule"; };
-    virtual Type type() const { return Type::Import; };
+    virtual StringView class_name() const override { return "CSSImportRule"; };
+    virtual Type type() const override { return Type::Import; };
 
 private:
     explicit CSSImportRule(AK::URL, DOM::Document&);
