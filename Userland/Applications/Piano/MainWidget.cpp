@@ -56,15 +56,15 @@ MainWidget::~MainWidget()
 {
 }
 
-void MainWidget::add_actions(GUI::Menu& menu)
+void MainWidget::add_track_actions(GUI::Menu& menu)
 {
     menu.add_action(GUI::Action::create("&Add Track", { Mod_Ctrl, Key_T }, [&](auto&) {
-        m_track_manager.add_track();
+        m_player_widget->add_track();
     }));
 
     menu.add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, [&](auto&) {
         turn_off_pressed_keys();
-        m_track_manager.next_track();
+        m_player_widget->next_track();
         turn_on_pressed_keys();
 
         m_knobs_widget->update_knobs();

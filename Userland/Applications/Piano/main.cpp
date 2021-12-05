@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     auto& edit_menu = window->add_menu("&Edit");
-    main_widget.add_actions(edit_menu);
+    main_widget.add_track_actions(edit_menu);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Piano", app_icon, window));
