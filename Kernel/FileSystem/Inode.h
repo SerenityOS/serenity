@@ -71,8 +71,6 @@ public:
     bool bind_socket(LocalSocket&);
     bool unbind_socket();
 
-    virtual OpenFileDescription* preopen_fd() { return nullptr; };
-
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
     virtual ErrorOr<void> set_atime(time_t);

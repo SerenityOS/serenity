@@ -248,9 +248,6 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView p
             return EACCES;
     }
 
-    if (auto preopen_fd = inode.preopen_fd())
-        return *preopen_fd;
-
     if (metadata.is_fifo()) {
         auto fifo = TRY(inode.fifo());
         if (options & O_WRONLY) {
@@ -282,8 +279,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView p
         return description;
     }
 
-    // Check for read-only FS. Do this after handling preopen FD and devices,
-    // but before modifying the inode in any way.
+    // Check for read-only FS. Do this after handling devices, but before modifying the inode in any way.
     if ((options & O_WRONLY) && custody.is_readonly())
         return EROFS;
 
