@@ -181,7 +181,7 @@ ErrorOr<void> Heap::flush()
     }
     quick_sort(blocks);
     for (auto& block : blocks) {
-        auto buffer_or_empty = m_write_ahead_log.get(block);
+        auto buffer_or_empty = m_write_ahead_log.get_ref(block);
         if (buffer_or_empty->is_empty()) {
             VERIFY_NOT_REACHED();
         }
