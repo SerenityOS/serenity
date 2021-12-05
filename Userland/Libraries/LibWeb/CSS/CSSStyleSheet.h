@@ -18,7 +18,9 @@ namespace Web::CSS {
 
 class CSSImportRule;
 
-class CSSStyleSheet final : public StyleSheet {
+class CSSStyleSheet final
+    : public StyleSheet
+    , public Weakable<CSSStyleSheet> {
 public:
     using WrapperType = Bindings::CSSStyleSheetWrapper;
 
