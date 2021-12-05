@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
 
@@ -16,6 +17,11 @@ void StyleSheet::set_owner_node(DOM::Element* element)
         m_owner_node = element->make_weak_ptr<DOM::Element>();
     else
         m_owner_node = nullptr;
+}
+
+void StyleSheet::set_parent_css_style_sheet(CSSStyleSheet* parent)
+{
+    m_parent_style_sheet = parent;
 }
 
 }

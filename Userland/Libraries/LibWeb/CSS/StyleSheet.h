@@ -41,7 +41,7 @@ public:
     void set_disabled(bool disabled) { m_disabled = disabled; }
 
     CSSStyleSheet* parent_style_sheet() { return m_parent_style_sheet; }
-    void set_parent_css_style_sheet(CSSStyleSheet* sheet) { m_parent_style_sheet = sheet; }
+    void set_parent_css_style_sheet(CSSStyleSheet*);
 
 protected:
     StyleSheet() = default;
@@ -49,8 +49,7 @@ protected:
 private:
     WeakPtr<DOM::Element> m_owner_node;
 
-    // FIXME: Use WeakPtr.
-    CSSStyleSheet* m_parent_style_sheet { nullptr };
+    WeakPtr<CSSStyleSheet> m_parent_style_sheet;
 
     String m_title;
     String m_type_string;
