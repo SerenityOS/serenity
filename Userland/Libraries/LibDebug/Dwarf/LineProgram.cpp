@@ -170,7 +170,8 @@ void LineProgram::handle_extended_opcode()
     }
     case ExtendedOpcodes::SetDiscriminator: {
         dbgln_if(DWARF_DEBUG, "SetDiscriminator");
-        m_stream.discard_or_error(1);
+        size_t discriminator;
+        m_stream.read_LEB128_unsigned(discriminator);
         break;
     }
     default:
