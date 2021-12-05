@@ -52,8 +52,7 @@ private:
 
     NonnullRefPtr<CSSRuleList> m_rules;
 
-    // FIXME: Use WeakPtr.
-    CSSRule* m_owner_css_rule { nullptr };
+    WeakPtr<CSSRule> m_owner_css_rule;
 };
 
 }

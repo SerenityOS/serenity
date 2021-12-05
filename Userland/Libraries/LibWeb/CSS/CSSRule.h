@@ -8,6 +8,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Selector.h>
@@ -16,7 +17,8 @@ namespace Web::CSS {
 
 class CSSRule
     : public RefCounted<CSSRule>
-    , public Bindings::Wrappable {
+    , public Bindings::Wrappable
+    , public Weakable<CSSRule> {
 public:
     using WrapperType = Bindings::CSSRuleWrapper;
 
