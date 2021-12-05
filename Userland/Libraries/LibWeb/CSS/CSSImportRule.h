@@ -48,7 +48,7 @@ private:
     virtual void resource_did_load() override;
 
     AK::URL m_url;
-    DOM::Document& m_document;
+    WeakPtr<DOM::Document> m_document;
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
     RefPtr<CSSStyleSheet> m_style_sheet;
 };

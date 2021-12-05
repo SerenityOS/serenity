@@ -21,7 +21,7 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-    m_document_load_event_delayer.emplace(m_document);
+    m_document_load_event_delayer.emplace(document);
 }
 
 CSSImportRule::~CSSImportRule()
@@ -62,6 +62,9 @@ void CSSImportRule::resource_did_load()
 {
     VERIFY(resource());
 
+    if (!m_document)
+        return;
+
     m_document_load_event_delayer.clear();
 
     if (!resource()->has_encoded_data()) {
@@ -70,7 +73,7 @@ void CSSImportRule::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(m_document), resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(*m_document), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Failed to parse stylesheet: {}", resource()->url());
         return;
