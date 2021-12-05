@@ -24,8 +24,8 @@ void CodeComprehensionEngine::set_declarations_of_document(const String& filenam
         return;
 
     // Optimization - Only notify callback if declarations have changed
-    if (auto previous_declarations = m_all_declarations.get(filename); previous_declarations.has_value()) {
-        if (previous_declarations.value() == declarations)
+    if (auto previous_declarations = m_all_declarations.find(filename); previous_declarations != m_all_declarations.end()) {
+        if (previous_declarations->value == declarations)
             return;
     }
     if (m_store_all_declarations)
