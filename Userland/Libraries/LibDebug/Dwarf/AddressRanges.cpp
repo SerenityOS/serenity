@@ -9,14 +9,14 @@
 
 namespace Debug::Dwarf {
 
-AddressRanges::AddressRanges(ReadonlyBytes range_lists_data, size_t offset, CompilationUnit const& compilation_unit)
+AddressRangesV5::AddressRangesV5(ReadonlyBytes range_lists_data, size_t offset, CompilationUnit const& compilation_unit)
     : m_range_lists_stream(range_lists_data)
     , m_compilation_unit(compilation_unit)
 {
     m_range_lists_stream.seek(offset);
 }
 
-void AddressRanges::for_each_range(Function<void(Range)> callback)
+void AddressRangesV5::for_each_range(Function<void(Range)> callback)
 {
     // Dwarf version 5, section 2.17.3 "Non-Contiguous Address Ranges"
 
@@ -82,6 +82,34 @@ void AddressRanges::for_each_range(Function<void(Range)> callback)
         default:
             dbgln("unsupported range list entry type: 0x{:x}", (int)entry_type);
             return;
+        }
+    }
+}
+
+AddressRangesV4::AddressRangesV4(ReadonlyBytes ranges_data, size_t offset, CompilationUnit const& compilation_unit)
+    : m_ranges_stream(ranges_data)
+    , m_compilation_unit(compilation_unit)
+{
+    m_ranges_stream.seek(offset);
+}
+
+void AddressRangesV4::for_each_range(Function<void(Range)> callback)
+{
+    // Dwarf version 4, section 2.17.3 "Non-Contiguous Address Ranges"
+
+    Optional<FlatPtr> current_base_address;
+    while (!m_ranges_stream.eof() && !m_ranges_stream.has_any_error()) {
+        FlatPtr begin, end;
+        m_ranges_stream >> begin >> end;
+
+        if (begin == 0 && end == 0) {
+            // end of list entry
+            return;
+        } else if (begin == explode_byte(0xff)) {
+            current_base_address = end;
+        } else {
+            FlatPtr base = current_base_address.value_or(m_compilation_unit.base_address().value_or(0));
+            callback({ base + begin, base + end });
         }
     }
 }
