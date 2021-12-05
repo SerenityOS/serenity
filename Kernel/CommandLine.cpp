@@ -86,9 +86,9 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
     add_arguments(args);
 }
 
-Optional<StringView> CommandLine::lookup(StringView key) const
+StringView CommandLine::lookup(StringView key, StringView fallback) const
 {
-    return m_params.get(key);
+    return m_params.get_ref(key).value_or(fallback);
 }
 
 bool CommandLine::contains(StringView key) const
@@ -108,12 +108,12 @@ UNMAP_AFTER_INIT bool CommandLine::is_ide_enabled() const
 
 UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled() const
 {
-    return lookup("smp"sv).value_or("off"sv) == "on"sv;
+    return lookup("smp"sv, "off"sv) == "on"sv;
 }
 
 UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
 {
-    auto value = lookup("enable_ioapic"sv).value_or("on"sv);
+    auto value = lookup("enable_ioapic"sv, "on"sv);
     if (value == "on"sv)
         return true;
     if (value == "off"sv)
@@ -123,12 +123,12 @@ UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
 
 UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 {
-    return lookup("vmmouse"sv).value_or("on"sv) == "on"sv;
+    return lookup("vmmouse"sv, "on"sv) == "on"sv;
 }
 
 UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
 {
-    auto value = lookup("pci_ecam"sv).value_or("on"sv);
+    auto value = lookup("pci_ecam"sv, "on"sv);
     if (value == "on"sv)
         return PCIAccessLevel::MemoryAddressing;
     if (value == "off"sv)
@@ -138,7 +138,7 @@ UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
 
 UNMAP_AFTER_INIT bool CommandLine::is_legacy_time_enabled() const
 {
-    return lookup("time"sv).value_or("modern"sv) == "legacy"sv;
+    return lookup("time"sv, "modern"sv) == "legacy"sv;
 }
 
 UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
@@ -148,12 +148,12 @@ UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
 
 UNMAP_AFTER_INIT StringView CommandLine::root_device() const
 {
-    return lookup("root"sv).value_or("/dev/hda"sv);
+    return lookup("root"sv, "/dev/hda"sv);
 }
 
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
 {
-    auto value = kernel_command_line().lookup("acpi"sv).value_or("limited"sv);
+    auto value = lookup("acpi"sv, "limited"sv);
     if (value == "limited"sv)
         return AcpiFeatureLevel::Limited;
     if (value == "off"sv)
@@ -165,7 +165,7 @@ UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
 
 UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
 {
-    auto hpet_mode = lookup("hpet"sv).value_or("periodic"sv);
+    auto hpet_mode = lookup("hpet"sv, "periodic"sv);
     if (hpet_mode == "periodic"sv)
         return HPETMode::Periodic;
     if (hpet_mode == "nonperiodic"sv)
@@ -205,7 +205,7 @@ UNMAP_AFTER_INIT bool CommandLine::disable_virtio() const
 
 UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
 {
-    const auto ahci_reset_mode = lookup("ahci_reset_mode"sv).value_or("controllers"sv);
+    const auto ahci_reset_mode = lookup("ahci_reset_mode"sv, "controllers"sv);
     if (ahci_reset_mode == "controllers"sv) {
         return AHCIResetMode::ControllerOnly;
     } else if (ahci_reset_mode == "aggressive"sv) {
@@ -216,12 +216,12 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
 
 StringView CommandLine::system_mode() const
 {
-    return lookup("system_mode"sv).value_or("graphical"sv);
+    return lookup("system_mode"sv, "graphical"sv);
 }
 
 PanicMode CommandLine::panic_mode(Validate should_validate) const
 {
-    const auto panic_mode = lookup("panic"sv).value_or("halt"sv);
+    const auto panic_mode = lookup("panic"sv, "halt"sv);
     if (panic_mode == "halt"sv) {
         return PanicMode::Halt;
     } else if (panic_mode == "shutdown"sv) {
@@ -236,19 +236,19 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
 
 UNMAP_AFTER_INIT bool CommandLine::are_framebuffer_devices_enabled() const
 {
-    return lookup("fbdev"sv).value_or("on"sv) == "on"sv;
+    return lookup("fbdev"sv, "on"sv) == "on"sv;
 }
 
 StringView CommandLine::userspace_init() const
 {
-    return lookup("init"sv).value_or("/bin/SystemServer"sv);
+    return lookup("init"sv, "/bin/SystemServer"sv);
 }
 
 NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 {
     NonnullOwnPtrVector<KString> args;
 
-    auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
+    auto init_args = lookup("init_args"sv, ""sv).split_view(';');
     if (!init_args.is_empty())
         args.prepend(KString::must_create(userspace_init()));
     for (auto& init_arg : init_args)
@@ -258,7 +258,7 @@ NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 
 UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const
 {
-    const auto default_tty = lookup("switch_to_tty"sv).value_or("1"sv);
+    const auto default_tty = lookup("switch_to_tty"sv, "1"sv);
     auto switch_tty_number = default_tty.to_uint();
     if (switch_tty_number.has_value() && switch_tty_number.value() >= 1) {
         return switch_tty_number.value() - 1;

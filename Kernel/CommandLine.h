@@ -54,7 +54,7 @@ public:
     };
 
     [[nodiscard]] const String& string() const { return m_string; }
-    Optional<StringView> lookup(StringView key) const;
+    StringView lookup(StringView key, StringView fallback) const;
     [[nodiscard]] bool contains(StringView key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
