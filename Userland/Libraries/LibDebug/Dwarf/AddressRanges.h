@@ -14,21 +14,36 @@
 
 namespace Debug::Dwarf {
 
-class AddressRanges {
-    AK_MAKE_NONCOPYABLE(AddressRanges);
-    AK_MAKE_NONMOVABLE(AddressRanges);
+struct Range {
+    FlatPtr start { 0 };
+    FlatPtr end { 0 };
+};
+
+class AddressRangesV5 {
+    AK_MAKE_NONCOPYABLE(AddressRangesV5);
+    AK_MAKE_NONMOVABLE(AddressRangesV5);
 
 public:
-    AddressRanges(ReadonlyBytes range_lists_data, size_t offset, CompilationUnit const& compilation_unit);
+    AddressRangesV5(ReadonlyBytes range_lists_data, size_t offset, CompilationUnit const& compilation_unit);
 
-    struct Range {
-        FlatPtr start { 0 };
-        FlatPtr end { 0 };
-    };
     void for_each_range(Function<void(Range)>);
 
 private:
     InputMemoryStream m_range_lists_stream;
+    CompilationUnit const& m_compilation_unit;
+};
+
+class AddressRangesV4 {
+    AK_MAKE_NONCOPYABLE(AddressRangesV4);
+    AK_MAKE_NONMOVABLE(AddressRangesV4);
+
+public:
+    AddressRangesV4(ReadonlyBytes ranges_data, size_t offset, CompilationUnit const&);
+
+    void for_each_range(Function<void(Range)>);
+
+private:
+    InputMemoryStream m_ranges_stream;
     CompilationUnit const& m_compilation_unit;
 };
 
