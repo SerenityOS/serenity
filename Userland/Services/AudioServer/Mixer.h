@@ -92,6 +92,8 @@ public:
     FadingProperty<double>& volume() { return m_volume; }
     double volume() const { return m_volume; }
     void set_volume(double const volume) { m_volume = volume; }
+    bool is_muted() const { return m_muted; }
+    void set_muted(bool muted) { m_muted = muted; }
 
 private:
     RefPtr<Audio::Buffer> m_current;
@@ -100,6 +102,7 @@ private:
     int m_remaining_samples { 0 };
     int m_played_samples { 0 };
     bool m_paused { false };
+    bool m_muted { false };
 
     WeakPtr<ClientConnection> m_client;
     FadingProperty<double> m_volume { 1 };
