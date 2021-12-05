@@ -181,12 +181,10 @@ ErrorOr<void> Heap::flush()
     }
     quick_sort(blocks);
     for (auto& block : blocks) {
-        auto buffer_or_empty = m_write_ahead_log.get(block);
-        if (buffer_or_empty->is_empty()) {
-            VERIFY_NOT_REACHED();
-        }
+        auto buffer_it = m_write_ahead_log.find(block);
+        VERIFY(buffer_it != m_write_ahead_log.end());
         dbgln_if(SQL_DEBUG, "Flushing block {} to {}", block, name());
-        TRY(write_block(block, buffer_or_empty.value()));
+        TRY(write_block(block, buffer_it->value));
     }
     m_write_ahead_log.clear();
     dbgln_if(SQL_DEBUG, "WAL flushed. Heap size = {}", size());
