@@ -8,6 +8,7 @@ set(LIBC_SOURCES
     fcntl.cpp
     fenv.cpp
     fnmatch.cpp
+    ifaddrs.cpp
     getopt.cpp
     grp.cpp
     inttypes.cpp
