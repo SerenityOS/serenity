@@ -25,6 +25,7 @@ DwarfInfo::DwarfInfo(ELF::Image const& elf)
     m_debug_range_lists_data = section_data(".debug_rnglists"sv);
     m_debug_str_offsets_data = section_data(".debug_str_offsets"sv);
     m_debug_addr_data = section_data(".debug_addr"sv);
+    m_debug_ranges_data = section_data(".debug_ranges"sv);
 
     populate_compilation_units();
 }
@@ -346,11 +347,19 @@ void DwarfInfo::build_cached_dies() const
                 auto offsets = reinterpret_cast<u32 const*>(debug_range_lists_data().offset(base));
                 offset = offsets[index] + base;
             }
-            AddressRanges address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
+
             Vector<DIERange> entries;
-            address_ranges.for_each_range([&entries](auto range) {
-                entries.empend(range.start, range.end);
-            });
+            if (die.compilation_unit().dwarf_version() == 5) {
+                AddressRangesV5 address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
+                address_ranges.for_each_range([&entries](auto range) {
+                    entries.empend(range.start, range.end);
+                });
+            } else {
+                AddressRangesV4 address_ranges(debug_ranges_data(), offset, die.compilation_unit());
+                address_ranges.for_each_range([&entries](auto range) {
+                    entries.empend(range.start, range.end);
+                });
+            }
             return entries;
         }
 

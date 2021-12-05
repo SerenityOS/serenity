@@ -34,6 +34,8 @@ public:
     FlatPtr get_address(size_t index) const;
     char const* get_string(size_t index) const;
 
+    u8 dwarf_version() const { return m_header.version(); }
+
     DwarfInfo const& dwarf_info() const { return m_dwarf_info; }
     AbbreviationsMap const& abbreviations_map() const { return m_abbreviations; }
     LineProgram const& line_program() const { return *m_line_program; }
