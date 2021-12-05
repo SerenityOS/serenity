@@ -45,10 +45,7 @@ DeviceManagement& DeviceManagement::the()
 Device* DeviceManagement::get_device(unsigned major, unsigned minor)
 {
     return m_devices.with_exclusive([&](auto& map) -> Device* {
-        auto it = map.find(encoded_device(major, minor));
-        if (it == map.end())
-            return nullptr;
-        return it->value;
+        return map.get_ref(encoded_device(major, minor)).value_or(nullptr);
     });
 }
 
