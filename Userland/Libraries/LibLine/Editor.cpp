@@ -474,22 +474,15 @@ void Editor::stylize(Span const& span, Style const& style)
     auto& spans_starting = style.is_anchored() ? m_current_spans.m_anchored_spans_starting : m_current_spans.m_spans_starting;
     auto& spans_ending = style.is_anchored() ? m_current_spans.m_anchored_spans_ending : m_current_spans.m_spans_ending;
 
-    auto starting_map = spans_starting.get(start).value_or({});
-
+    auto& starting_map = spans_starting.ensure(start);
     if (!starting_map.contains(end))
         m_refresh_needed = true;
-
     starting_map.set(end, style);
 
-    spans_starting.set(start, starting_map);
-
-    auto ending_map = spans_ending.get(end).value_or({});
-
+    auto& ending_map = spans_ending.ensure(end);
     if (!ending_map.contains(start))
         m_refresh_needed = true;
     ending_map.set(start, style);
-
-    spans_ending.set(end, ending_map);
 }
 
 void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode offset_mode) const
@@ -2032,12 +2025,13 @@ bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) con
             if (entry.key > offset + 1)
                 continue;
 
-            auto left_map = left.get(entry.key);
-            if (!left_map.has_value())
+            auto left_map_it = left.find(entry.key);
+            if (left_map_it == left.end())
                 return false;
 
-            for (auto& left_entry : left_map.value()) {
-                if (auto value = entry.value.get(left_entry.key); !value.has_value()) {
+            for (auto& left_entry : left_map_it->value) {
+                auto value_it = entry.value.find(left_entry.key);
+                if (value_it == entry.value.end()) {
                     // Might have the same thing with a longer span
                     bool found = false;
                     for (auto& possibly_longer_span_entry : entry.value) {
@@ -2054,8 +2048,8 @@ bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) con
                             dbgln("Have: {}-{} = {}", entry.key, x.key, x.value.to_string());
                     }
                     return false;
-                } else if (value.value() != left_entry.value) {
-                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value.value().to_string(), left_entry.value.to_string());
+                } else if (value_it->value != left_entry.value) {
+                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value_it->value.to_string(), left_entry.value.to_string());
                     return false;
                 }
             }
