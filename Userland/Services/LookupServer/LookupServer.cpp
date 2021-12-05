@@ -149,7 +149,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
     };
 
     // First, try /etc/hosts.
-    if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
+    if (auto local_answers = m_etc_hosts.get_ref(name); local_answers.has_value()) {
         for (auto& answer : local_answers.value()) {
             if (answer.type() == record_type)
                 add_answer(answer);
@@ -169,7 +169,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
     }
 
     // Third, try our cache.
-    if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
+    if (auto cached_answers = m_lookup_cache.get_ref(name); cached_answers.has_value()) {
         for (auto& answer : cached_answers.value()) {
             // TODO: Actually remove expired answers from the cache.
             if (answer.type() == record_type && !answer.has_expired()) {
