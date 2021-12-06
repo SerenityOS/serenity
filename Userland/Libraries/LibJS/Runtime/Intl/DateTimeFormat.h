@@ -46,6 +46,9 @@ public:
     String const& locale() const { return m_locale; }
     void set_locale(String locale) { m_locale = move(locale); }
 
+    String const& data_locale() const { return m_data_locale; }
+    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
+
     String const& calendar() const { return m_calendar; }
     void set_calendar(String calendar) { m_calendar = move(calendar); }
 
@@ -129,6 +132,8 @@ private:
     String m_time_zone;                        // [[TimeZone]]
     Optional<Style> m_date_style;              // [[DateStyle]]
     Optional<Style> m_time_style;              // [[TimeStyle]]
+
+    String m_data_locale;
 };
 
 enum class OptionRequired {
