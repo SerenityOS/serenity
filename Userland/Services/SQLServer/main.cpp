@@ -6,34 +6,26 @@
 
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <SQLServer/ClientConnection.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio accept unix rpath wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio accept unix rpath wpath cpath"));
 
     if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
         perror("mkdir");
         return 1;
     }
 
-    if (unveil("/home/anon/sql", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::unveil("/home/anon/sql", "rwc"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop event_loop;
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
 
