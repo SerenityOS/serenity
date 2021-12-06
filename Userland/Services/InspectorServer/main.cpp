@@ -10,21 +10,16 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    auto server = TRY(Core::LocalServer::try_create());
 
     TRY(Core::System::pledge("stdio unix accept"));
 
-    TRY(server->take_over_from_system_server("/tmp/portal/inspector"));
-    server->on_accept = [&](auto client_socket) {
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        (void)IPC::new_client_connection<InspectorServer::ClientConnection>(move(client_socket), client_id);
-    };
+    auto server = TRY(IPC::MultiServer<InspectorServer::ClientConnection>::try_create("/tmp/portal/inspector"));
 
     auto inspectables_server = TRY(Core::LocalServer::try_create());
     TRY(inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"));

@@ -5,8 +5,8 @@
  */
 
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 #include <SQLServer/ClientConnection.h>
 #include <stdio.h>
@@ -26,13 +26,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
 
-    auto server = TRY(Core::LocalServer::try_create());
-    TRY(server->take_over_from_system_server());
-    server->on_accept = [&](auto client_socket) {
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        (void)IPC::new_client_connection<SQLServer::ClientConnection>(client_socket, client_id);
-    };
-
+    auto server = TRY(IPC::MultiServer<SQLServer::ClientConnection>::try_create());
     return event_loop.exec();
 }

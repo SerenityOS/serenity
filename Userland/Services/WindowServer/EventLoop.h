@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include "ClientConnection.h"
+#include "WMClientConnection.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>
+#include <LibIPC/MultiServer.h>
 
 namespace WindowServer {
 
@@ -31,8 +33,8 @@ private:
     RefPtr<Core::Notifier> m_keyboard_notifier;
     int m_mouse_fd { -1 };
     RefPtr<Core::Notifier> m_mouse_notifier;
-    RefPtr<Core::LocalServer> m_window_server;
-    RefPtr<Core::LocalServer> m_wm_server;
+    OwnPtr<IPC::MultiServer<ClientConnection>> m_window_server;
+    OwnPtr<IPC::MultiServer<WMClientConnection>> m_wm_server;
 };
 
 }

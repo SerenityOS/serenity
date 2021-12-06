@@ -19,26 +19,12 @@
 namespace WindowServer {
 
 EventLoop::EventLoop()
-    : m_window_server(Core::LocalServer::construct())
-    , m_wm_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    MUST(m_window_server->take_over_from_system_server("/tmp/portal/window"));
-    MUST(m_wm_server->take_over_from_system_server("/tmp/portal/wm"));
-
-    m_window_server->on_accept = [&](auto client_socket) {
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        (void)IPC::new_client_connection<ClientConnection>(move(client_socket), client_id);
-    };
-
-    m_wm_server->on_accept = [&](auto client_socket) {
-        static int s_next_wm_id = 0;
-        int wm_id = ++s_next_wm_id;
-        (void)IPC::new_client_connection<WMClientConnection>(move(client_socket), wm_id);
-    };
+    m_window_server = MUST(IPC::MultiServer<ClientConnection>::try_create("/tmp/portal/window"));
+    m_wm_server = MUST(IPC::MultiServer<WMClientConnection>::try_create("/tmp/portal/wm"));
 
     if (m_keyboard_fd >= 0) {
         m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);

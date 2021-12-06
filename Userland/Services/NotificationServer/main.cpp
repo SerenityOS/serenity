@@ -5,10 +5,9 @@
  */
 
 #include "ClientConnection.h"
-#include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/WindowServerConnection.h>
+#include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -16,14 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto server = TRY(Core::LocalServer::try_create());
-
-    TRY(server->take_over_from_system_server());
-    server->on_accept = [&](auto client_socket) {
-        static int s_next_client_id = 0;
-        int client_id = ++s_next_client_id;
-        (void)IPC::new_client_connection<NotificationServer::ClientConnection>(move(client_socket), client_id);
-    };
+    auto server = TRY(IPC::MultiServer<NotificationServer::ClientConnection>::try_create());
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
