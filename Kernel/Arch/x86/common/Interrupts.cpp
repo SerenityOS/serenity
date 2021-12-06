@@ -219,7 +219,8 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
     if (!current_thread)
         PANIC("{} with !Thread::current()", description);
 
-    if (!current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
+    auto crashed_in_kernel = (regs.cs & 3) == 0;
+    if (!crashed_in_kernel && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
         current_thread->send_urgent_signal_to_self(signal);
         return;
     }
@@ -233,9 +234,8 @@ void handle_crash(RegisterState const& regs, char const* description, int signal
     dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
     dump(regs);
 
-    if (!(regs.cs & 3)) {
+    if (crashed_in_kernel)
         PANIC("Crash in ring 0");
-    }
 
     process.crash(signal, regs.ip(), out_of_memory);
 }
