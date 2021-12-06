@@ -140,4 +140,40 @@ Vector<CalendarPattern> get_calendar_available_formats([[maybe_unused]] StringVi
 #endif
 }
 
+Optional<StringView> get_calendar_era_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Era value)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_era_symbol(locale, calendar, style, value);
+#else
+    return {};
+#endif
+}
+
+Optional<StringView> get_calendar_month_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Month value)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_month_symbol(locale, calendar, style, value);
+#else
+    return {};
+#endif
+}
+
+Optional<StringView> get_calendar_weekday_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Weekday value)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_weekday_symbol(locale, calendar, style, value);
+#else
+    return {};
+#endif
+}
+
+Optional<StringView> get_calendar_day_period_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::DayPeriod value)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_day_period_symbol(locale, calendar, style, value);
+#else
+    return {};
+#endif
+}
+
 }
