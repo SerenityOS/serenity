@@ -19,8 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto server = TRY(Core::LocalServer::try_create());
-    bool ok = server->take_over_from_system_server();
-    VERIFY(ok);
+    TRY(server->take_over_from_system_server());
 
     server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;

@@ -23,8 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     auto mixer = TRY(AudioServer::Mixer::try_create(config));
     auto server = TRY(Core::LocalServer::try_create());
-    bool ok = server->take_over_from_system_server();
-    VERIFY(ok);
+    TRY(server->take_over_from_system_server());
 
     server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> client_socket) {
         static int s_next_client_id = 0;

@@ -19,8 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("stdio unix accept"));
 
-    bool ok = server->take_over_from_system_server("/tmp/portal/inspector");
-    VERIFY(ok);
+    TRY(server->take_over_from_system_server("/tmp/portal/inspector"));
     server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
@@ -28,8 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     };
 
     auto inspectables_server = TRY(Core::LocalServer::try_create());
-    if (!inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"))
-        VERIFY_NOT_REACHED();
+    TRY(inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"));
 
     inspectables_server->on_accept = [&](auto client_socket) {
         auto pid = client_socket->peer_pid();

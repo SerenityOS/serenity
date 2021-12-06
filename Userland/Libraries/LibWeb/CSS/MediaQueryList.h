@@ -54,7 +54,7 @@ public:
 private:
     MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
 
-    DOM::Document& m_document;
+    WeakPtr<DOM::Document> m_document;
     NonnullRefPtrVector<MediaQuery> m_media;
 };
 
