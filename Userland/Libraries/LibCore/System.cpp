@@ -342,4 +342,22 @@ ErrorOr<struct passwd> getpwnam(StringView name)
         return Error::from_string_literal("getpwnam: Unknown username"sv);
 }
 
+ErrorOr<struct group> getgrnam(StringView name)
+{
+    ::setgrent();
+    if (errno)
+        return Error::from_syscall("getgrnam"sv, -errno);
+
+    while (auto* gr = ::getgrent()) {
+        if (errno)
+            return Error::from_syscall("getgrnam"sv, -errno);
+        if (gr->gr_name == name)
+            return *gr;
+    }
+    if (errno)
+        return Error::from_syscall("getgrnam"sv, -errno);
+    else
+        return Error::from_string_literal("getgrnam: Unknown username"sv);
+}
+
 }
