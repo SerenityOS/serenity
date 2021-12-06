@@ -302,7 +302,7 @@ template<typename LocalesType, typename ListFormatter>
 void generate_mapping(SourceGenerator& generator, LocalesType const& locales, StringView type, StringView name, StringView format, ListFormatter&& format_list)
 {
     auto format_mapping_name = [](StringView format, StringView name) {
-        auto mapping_name = name.to_lowercase_string().replace("-"sv, "_"sv, true);
+        auto mapping_name = name.to_lowercase_string().replace("-"sv, "_"sv, true).replace("/"sv, "_"sv, true);
         return String::formatted(format, mapping_name);
     };
 
