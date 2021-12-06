@@ -304,7 +304,9 @@ LineIterator::LineIterator(IODevice& device, bool is_end)
     : m_device(device)
     , m_is_end(is_end)
 {
-    ++*this;
+    if (!m_is_end) {
+        ++*this;
+    }
 }
 
 bool LineIterator::at_end() const
