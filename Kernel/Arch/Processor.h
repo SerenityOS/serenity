@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <Kernel/Arch/DeferredCallEntry.h>
 
 namespace Kernel {
 
@@ -16,8 +17,6 @@ class PageDirectory;
 }
 
 struct ProcessorMessageEntry;
-struct DeferredCallEntry;
-
 enum class ProcessorSpecificDataID {
     MemoryManager,
     __Count,
@@ -60,24 +59,6 @@ struct ProcessorMessage {
 struct ProcessorMessageEntry {
     ProcessorMessageEntry* next;
     ProcessorMessage* msg;
-};
-
-struct DeferredCallEntry {
-    using HandlerFunction = Function<void()>;
-
-    DeferredCallEntry* next;
-    alignas(HandlerFunction) u8 handler_storage[sizeof(HandlerFunction)];
-    bool was_allocated;
-
-    HandlerFunction& handler_value()
-    {
-        return *bit_cast<HandlerFunction*>(&handler_storage);
-    }
-
-    void invoke_handler()
-    {
-        handler_value()();
-    }
 };
 
 }
