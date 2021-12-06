@@ -11,6 +11,8 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/ProcessorSpecificDataID.h>
+
 namespace Kernel {
 
 class Thread;

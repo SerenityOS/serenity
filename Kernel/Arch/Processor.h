@@ -17,10 +17,6 @@ class PageDirectory;
 }
 
 struct ProcessorMessageEntry;
-enum class ProcessorSpecificDataID {
-    MemoryManager,
-    __Count,
-};
 struct ProcessorMessage {
     using CallbackFunction = Function<void()>;
 
