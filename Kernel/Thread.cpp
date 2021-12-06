@@ -701,6 +701,10 @@ void Thread::send_urgent_signal_to_self(u8 signal)
         SpinlockLocker lock(g_scheduler_lock);
         result = dispatch_signal(signal);
     }
+    if (result == DispatchSignalResult::Terminate) {
+        Thread::current()->die_if_needed();
+        VERIFY_NOT_REACHED(); // dispatch_signal will request termination of the thread, so the above call should never return
+    }
     if (result == DispatchSignalResult::Yield)
         yield_and_release_relock_big_lock();
 }
