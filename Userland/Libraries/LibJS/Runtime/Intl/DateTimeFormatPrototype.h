@@ -20,6 +20,7 @@ public:
     virtual ~DateTimeFormatPrototype() override = default;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(format);
     JS_DECLARE_NATIVE_FUNCTION(resolved_options);
 };
 

@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DateTimeFormatFunction.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatPrototype.h>
 #include <LibUnicode/DateTimeFormat.h>
 
@@ -25,8 +26,33 @@ void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
     // 11.4.2 Intl.DateTimeFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DateTimeFormat"), Attribute::Configurable);
 
+    define_native_accessor(vm.names.format, format, nullptr, Attribute::Configurable);
+
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
+}
+
+// 11.4.3 get Intl.DateTimeFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.format
+JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
+{
+    // 1. Let dtf be the this value.
+    // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
+    //     a. Set dtf to ? UnwrapDateTimeFormat(dtf).
+    // 3. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
+    auto* date_time_format = TRY(typed_this_object(global_object));
+
+    // 4. If dtf.[[BoundFormat]] is undefined, then
+    if (!date_time_format->bound_format()) {
+        // a. Let F be a new built-in function object as defined in DateTime Format Functions (11.1.6).
+        // b. Set F.[[DateTimeFormat]] to dtf.
+        auto* bound_format = DateTimeFormatFunction::create(global_object, *date_time_format);
+
+        // c. Set dtf.[[BoundFormat]] to F.
+        date_time_format->set_bound_format(bound_format);
+    }
+
+    // 5. Return dtf.[[BoundFormat]].
+    return date_time_format->bound_format();
 }
 
 // 11.4.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
