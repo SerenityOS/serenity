@@ -9,23 +9,19 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
 
     auto launcher = LaunchServer::Launcher();
-
     launcher.load_handlers();
     launcher.load_config(Core::ConfigFile::open_for_app("LaunchServer"));
 
-    if (pledge("stdio accept rpath proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio accept rpath proc exec"));
 
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
