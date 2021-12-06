@@ -88,6 +88,7 @@ set(SOURCES
     Runtime/Intl/AbstractOperations.cpp
     Runtime/Intl/DateTimeFormat.cpp
     Runtime/Intl/DateTimeFormatConstructor.cpp
+    Runtime/Intl/DateTimeFormatFunction.cpp
     Runtime/Intl/DateTimeFormatPrototype.cpp
     Runtime/Intl/DisplayNames.cpp
     Runtime/Intl/DisplayNamesConstructor.cpp
