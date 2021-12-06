@@ -37,6 +37,7 @@
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
     M(IntlInvalidDateTimeFormatOption, "Option {} cannot be set when also providing {}")                                                \
     M(IntlInvalidLanguageTag, "{} is not a structurally valid language tag")                                                            \
+    M(IntlInvalidTime, "Time value must be between -8.64E15 and 8.64E15")                                                               \
     M(IntlMinimumExceedsMaximum, "Minimum value {} is larger than maximum value {}")                                                    \
     M(IntlNumberIsNaNOrOutOfRange, "Value {} is NaN or is not between {} and {}")                                                       \
     M(IntlOptionUndefined, "Option {} must be defined when option {} is {}")                                                            \

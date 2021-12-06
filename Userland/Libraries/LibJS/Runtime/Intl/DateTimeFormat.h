@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibUnicode/DateTimeFormat.h>
 
@@ -121,17 +122,23 @@ public:
     Unicode::CalendarPatternStyle time_zone_name() const { return *Patterns::time_zone_name; };
     StringView time_zone_name_string() const { return Unicode::calendar_pattern_style_to_string(*Patterns::time_zone_name); }
 
+    NativeFunction* bound_format() const { return m_bound_format; }
+    void set_bound_format(NativeFunction* bound_format) { m_bound_format = bound_format; }
+
 private:
     static Style style_from_string(StringView style);
     static StringView style_to_string(Style style);
 
-    String m_locale;                           // [[Locale]]
-    String m_calendar;                         // [[Calendar]]
-    String m_numbering_system;                 // [[NumberingSystem]]
-    Optional<Unicode::HourCycle> m_hour_cycle; // [[HourCycle]]
-    String m_time_zone;                        // [[TimeZone]]
-    Optional<Style> m_date_style;              // [[DateStyle]]
-    Optional<Style> m_time_style;              // [[TimeStyle]]
+    virtual void visit_edges(Visitor&) override;
+
+    String m_locale;                            // [[Locale]]
+    String m_calendar;                          // [[Calendar]]
+    String m_numbering_system;                  // [[NumberingSystem]]
+    Optional<Unicode::HourCycle> m_hour_cycle;  // [[HourCycle]]
+    String m_time_zone;                         // [[TimeZone]]
+    Optional<Style> m_date_style;               // [[DateStyle]]
+    Optional<Style> m_time_style;               // [[TimeStyle]]
+    NativeFunction* m_bound_format { nullptr }; // [[BoundFormat]]
 
     String m_data_locale;
 };
@@ -148,11 +155,31 @@ enum class OptionDefaults {
     Time,
 };
 
+// Table 5: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
+struct LocalTime {
+    int weekday { 0 };     // [[Weekday]]
+    Unicode::Era era {};   // [[Era]]
+    i32 year { 0 };        // [[Year]]
+    Value related_year {}; // [[RelatedYear]]
+    Value year_name {};    // [[YearName]]
+    u8 month { 0 };        // [[Month]]
+    u8 day { 0 };          // [[Day]]
+    u8 hour { 0 };         // [[Hour]]
+    u8 minute { 0 };       // [[Minute]]
+    u8 second { 0 };       // [[Second]]
+    u16 millisecond { 0 }; // [[Millisecond]]
+    bool in_dst { false }; // [[InDST]]
+};
+
 ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& global_object, DateTimeFormat& date_time_format, Value locales_value, Value options_value);
 ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired, OptionDefaults);
 Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
 Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
 Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
+ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, Value time, Value range_format_options);
+ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Value time);
+ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTimeFormat& date_time_format, Value time);
+ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, StringView time_zone);
 
 template<typename Callback>
 ThrowCompletionOr<void> for_each_calendar_field(GlobalObject& global_object, Unicode::CalendarPattern& pattern, Callback&& callback)
