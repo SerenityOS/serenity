@@ -12,6 +12,8 @@
 
 namespace Core {
 
+class IODevice;
+
 // This is not necessarily a valid iterator in all contexts,
 // if we had concepts, this would be InputIterator, not Copyable, Movable.
 class LineIterator {
@@ -32,6 +34,20 @@ private:
     NonnullRefPtr<IODevice> m_device;
     bool m_is_end { false };
     String m_buffer;
+};
+
+class LineRange {
+public:
+    LineRange() = delete;
+    explicit LineRange(IODevice& device)
+        : m_device(device)
+    {
+    }
+    LineIterator begin();
+    LineIterator end();
+
+private:
+    IODevice& m_device;
 };
 
 enum class OpenMode : unsigned {
@@ -91,6 +107,10 @@ public:
 
     LineIterator line_begin() & { return LineIterator(*this); }
     LineIterator line_end() { return LineIterator(*this, true); }
+    LineRange lines()
+    {
+        return LineRange(*this);
+    }
 
 protected:
     explicit IODevice(Object* parent = nullptr);
