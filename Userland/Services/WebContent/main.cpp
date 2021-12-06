@@ -21,6 +21,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto client = IPC::take_over_accepted_client_from_system_server<WebContent::ClientConnection>();
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ClientConnection>());
     return event_loop.exec();
 }
