@@ -10,6 +10,14 @@
 #include <AK/Function.h>
 #include <Kernel/Arch/DeferredCallEntry.h>
 
+#if ARCH(X86_64) || ARCH(I386)
+#    include <Kernel/Arch/x86/Processor.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/Processor.h>
+#else
+#    error "Unknown architecture"
+#endif
+
 namespace Kernel {
 
 namespace Memory {
@@ -57,17 +65,6 @@ struct ProcessorMessageEntry {
     ProcessorMessage* msg;
 };
 
-}
-
-#if ARCH(X86_64) || ARCH(I386)
-#    include <Kernel/Arch/x86/Processor.h>
-#elif ARCH(AARCH64)
-#    include <Kernel/Arch/aarch64/Processor.h>
-#else
-#    error "Unknown architecture"
-#endif
-
-namespace Kernel {
 template<typename T>
 class ProcessorSpecific {
 public:
