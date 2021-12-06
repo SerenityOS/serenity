@@ -15,6 +15,45 @@
 
 namespace Unicode {
 
+enum class Era : u8 {
+    BC,
+    AD,
+};
+
+enum class Month : u8 {
+    January,
+    February,
+    March,
+    April,
+    May,
+    June,
+    July,
+    August,
+    September,
+    October,
+    November,
+    December,
+};
+
+enum class Weekday : u8 {
+    Sunday,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+};
+
+enum class DayPeriod : u8 {
+    AM,
+    PM,
+    Morning,
+    Afternoon,
+    Evening,
+    Night,
+};
+
 enum class HourCycle : u8 {
     H11,
     H12,
@@ -99,5 +138,9 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale);
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale);
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
 Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value);
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
 
 }
