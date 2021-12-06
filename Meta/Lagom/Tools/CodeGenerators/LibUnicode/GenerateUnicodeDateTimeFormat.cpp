@@ -368,13 +368,6 @@ static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern
         else if (all_of(segment, is_any_of("ab"sv))) {
             builder.append("{ampm}");
             hour12 = true;
-
-            if (segment.length() == 4)
-                format.day_period = CalendarPatternStyle::Long;
-            else if (segment.length() == 5)
-                format.day_period = CalendarPatternStyle::Narrow;
-            else
-                format.day_period = CalendarPatternStyle::Short;
         } else if (all_of(segment, is_char('B'))) {
             builder.append("{dayPeriod}");
             hour12 = true;
