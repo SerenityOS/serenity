@@ -142,5 +142,6 @@ Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calen
 Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
 Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
 Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
+Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
 
 }

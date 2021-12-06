@@ -176,4 +176,13 @@ Optional<StringView> get_calendar_day_period_symbol([[maybe_unused]] StringView 
 #endif
 }
 
+Optional<StringView> get_time_zone_name([[maybe_unused]] StringView locale, [[maybe_unused]] StringView time_zone, [[maybe_unused]] CalendarPatternStyle style)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_time_zone_name(locale, time_zone, style);
+#else
+    return {};
+#endif
+}
+
 }
