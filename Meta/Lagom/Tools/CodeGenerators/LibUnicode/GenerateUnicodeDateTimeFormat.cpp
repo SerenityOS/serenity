@@ -129,12 +129,19 @@ struct CalendarFormat {
     CalendarPatternIndexType short_format { 0 };
 };
 
+struct CalendarSymbols {
+    Vector<StringIndexType> narrow_symbols {};
+    Vector<StringIndexType> short_symbols {};
+    Vector<StringIndexType> long_symbols {};
+};
+
 struct Calendar {
     StringIndexType calendar { 0 };
     CalendarFormat date_formats {};
     CalendarFormat time_formats {};
     CalendarFormat date_time_formats {};
     Vector<CalendarPatternIndexType> available_formats {};
+    HashMap<String, CalendarSymbols> symbols {};
 };
 
 struct Locale {
@@ -154,6 +161,8 @@ struct UnicodeLocaleData {
         // FIXME: Aliases should come from BCP47. See: https://unicode-org.atlassian.net/browse/CLDR-15158
         { "gregorian"sv, "gregory"sv },
     };
+
+    Vector<String> symbols;
 };
 
 static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& locale_data)
@@ -537,6 +546,142 @@ static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern
     }
 }
 
+static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calendar_object, UnicodeLocaleData& locale_data)
+{
+    auto ensure_symbols = [&](auto name, size_t size) -> CalendarSymbols& {
+        if (!locale_data.symbols.contains_slow(name))
+            locale_data.symbols.append(name);
+
+        return calendar.symbols.ensure(name, [&]() {
+            CalendarSymbols symbols {};
+            symbols.narrow_symbols.resize(size);
+            symbols.short_symbols.resize(size);
+            symbols.long_symbols.resize(size);
+
+            return symbols;
+        });
+    };
+
+    auto parse_era_symbols = [&](auto const& symbols_object) {
+        auto const& narrow_symbols = symbols_object.get("eraNarrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get("eraAbbr"sv).as_object();
+        auto const& long_symbols = symbols_object.get("eraNames"sv).as_object();
+
+        auto& symbols = ensure_symbols("era"sv, 2);
+
+        auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
+            if (auto key_index = key.to_uint(); key_index.has_value())
+                symbols[*key_index] = locale_data.unique_strings.ensure(move(symbol));
+        };
+
+        narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(symbols.narrow_symbols, key, value.as_string());
+        });
+        short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(symbols.short_symbols, key, value.as_string());
+        });
+        long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(symbols.long_symbols, key, value.as_string());
+        });
+    };
+
+    auto parse_month_symbols = [&](auto const& symbols_object) {
+        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+
+        auto& month_symbols = ensure_symbols("month"sv, 12);
+
+        auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
+            auto key_index = key.to_uint().value() - 1;
+            symbols[key_index] = locale_data.unique_strings.ensure(move(symbol));
+        };
+
+        narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(month_symbols.narrow_symbols, key, value.as_string());
+        });
+        short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(month_symbols.short_symbols, key, value.as_string());
+        });
+        long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(month_symbols.long_symbols, key, value.as_string());
+        });
+    };
+
+    auto parse_weekday_symbols = [&](auto const& symbols_object) {
+        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+
+        auto& weekday_symbols = ensure_symbols("weekday"sv, 7);
+
+        auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
+            if (key == "sun"sv)
+                symbols[to_underlying(Unicode::Weekday::Sunday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "mon"sv)
+                symbols[to_underlying(Unicode::Weekday::Monday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "tue"sv)
+                symbols[to_underlying(Unicode::Weekday::Tuesday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "wed"sv)
+                symbols[to_underlying(Unicode::Weekday::Wednesday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "thu"sv)
+                symbols[to_underlying(Unicode::Weekday::Thursday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "fri"sv)
+                symbols[to_underlying(Unicode::Weekday::Friday)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "sat"sv)
+                symbols[to_underlying(Unicode::Weekday::Saturday)] = locale_data.unique_strings.ensure(move(symbol));
+        };
+
+        narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(weekday_symbols.narrow_symbols, key, value.as_string());
+        });
+        short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(weekday_symbols.short_symbols, key, value.as_string());
+        });
+        long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(weekday_symbols.long_symbols, key, value.as_string());
+        });
+    };
+
+    auto parse_day_period_symbols = [&](auto const& symbols_object) {
+        auto const& narrow_symbols = symbols_object.get("narrow"sv).as_object();
+        auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
+        auto const& long_symbols = symbols_object.get("wide"sv).as_object();
+
+        auto& day_period_symbols = ensure_symbols("dayPeriod"sv, 6);
+
+        auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
+            if (key == "am"sv)
+                symbols[to_underlying(Unicode::DayPeriod::AM)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "pm"sv)
+                symbols[to_underlying(Unicode::DayPeriod::PM)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "morning1"sv)
+                symbols[to_underlying(Unicode::DayPeriod::Morning)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "afternoon1"sv)
+                symbols[to_underlying(Unicode::DayPeriod::Afternoon)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "evening1"sv)
+                symbols[to_underlying(Unicode::DayPeriod::Evening)] = locale_data.unique_strings.ensure(move(symbol));
+            else if (key == "night1"sv)
+                symbols[to_underlying(Unicode::DayPeriod::Night)] = locale_data.unique_strings.ensure(move(symbol));
+        };
+
+        narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(day_period_symbols.narrow_symbols, key, value.as_string());
+        });
+        short_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(day_period_symbols.short_symbols, key, value.as_string());
+        });
+        long_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
+            append_symbol(day_period_symbols.long_symbols, key, value.as_string());
+        });
+    };
+
+    parse_era_symbols(calendar_object.get("eras"sv).as_object());
+    parse_month_symbols(calendar_object.get("months"sv).as_object().get("format"sv).as_object());
+    parse_weekday_symbols(calendar_object.get("days"sv).as_object().get("format"sv).as_object());
+    parse_day_period_symbols(calendar_object.get("dayPeriods"sv).as_object().get("format"sv).as_object());
+}
+
 static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocaleData& locale_data, Locale& locale)
 {
     LexicalPath calendars_path(move(locale_calendars_path));
@@ -615,6 +760,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         });
 
         generate_missing_patterns(calendar, move(date_formats), move(time_formats), locale_data);
+        parse_calendar_symbols(calendar, value.as_object(), locale_data);
     });
 
     return {};
@@ -682,6 +828,7 @@ namespace Unicode {
 
     generate_enum(generator, format_identifier, "Calendar"sv, {}, locale_data.calendars, locale_data.calendar_aliases);
     generate_enum(generator, format_identifier, "HourCycleRegion"sv, {}, locale_data.hour_cycle_regions);
+    generate_enum(generator, format_identifier, "CalendarSymbol"sv, {}, locale_data.symbols);
 
     generator.append(R"~~~(
 namespace Detail {
@@ -695,6 +842,11 @@ Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, St
 Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
 Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar);
 Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
+
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value);
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
 
 }
 
@@ -710,6 +862,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     SourceGenerator generator { builder };
     generator.set("string_index_type"sv, s_string_index_type);
     generator.set("calendar_pattern_index_type"sv, s_calendar_pattern_index_type);
+    generator.set("calendar_symbols_size"sv, String::number(locale_data.symbols.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -796,12 +949,15 @@ struct CalendarFormat {
     @calendar_pattern_index_type@ short_format { 0 };
 };
 
+using CalendarSymbols = Span<@string_index_type@ const>;
+
 struct CalendarData {
     @string_index_type@ calendar { 0 };
     CalendarFormat date_formats {};
     CalendarFormat time_formats {};
     CalendarFormat date_time_formats {};
     Span<@calendar_pattern_index_type@ const> available_formats {};
+    Array<Span<CalendarSymbols const>, @calendar_symbols_size@> symbols {};
 };
 )~~~");
 
@@ -813,15 +969,56 @@ struct CalendarData {
         generator.append("{ @full_format@, @long_format@, @medium_format@, @short_format@ },");
     };
 
+    auto append_calendar_symbols_for_style = [&](auto name, auto style, auto const& symbols) {
+        name = String::formatted("{}_{}", name, style);
+
+        generator.set("name", name);
+        generator.set("size", String::number(symbols.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<@string_index_type@, @size@> @name@ { {)~~~");
+
+        bool first = true;
+        for (auto symbol : symbols) {
+            generator.append(first ? " " : ", ");
+            generator.append(String::number(symbol));
+            first = false;
+        }
+
+        generator.append(" } };");
+        return name;
+    };
+
+    auto append_calendar_symbols = [&](auto name, auto symbol, auto const& symbols) {
+        name = String::formatted("{}_{}", name, symbol.to_lowercase());
+
+        auto narrow_symbols = append_calendar_symbols_for_style(name, "narrow"sv, symbols.narrow_symbols);
+        auto short_symbols = append_calendar_symbols_for_style(name, "short"sv, symbols.short_symbols);
+        auto long_symbols = append_calendar_symbols_for_style(name, "long"sv, symbols.long_symbols);
+
+        generator.set("narrow_symbols", move(narrow_symbols));
+        generator.set("short_symbols", move(short_symbols));
+        generator.set("long_symbols", move(long_symbols));
+        generator.set("name", name);
+
+        generator.append(R"~~~(
+static constexpr Array<CalendarSymbols, 3> @name@ { @narrow_symbols@.span(), @short_symbols@.span(), @long_symbols@.span() };
+)~~~");
+
+        return name;
+    };
+
     auto append_calendars = [&](String name, auto const& calendars) {
-        auto format_name = [&](StringView calendar_key) {
-            return String::formatted("{}_{}_formats", name, calendar_key);
+        auto format_name = [&](StringView calendar_key, StringView type) {
+            return String::formatted("{}_{}_{}", name, calendar_key, type);
         };
+
+        Vector<String> symbols_names;
 
         for (auto const& calendar_key : locale_data.calendars) {
             auto const& calendar = calendars.find(calendar_key)->value;
 
-            generator.set("name", format_name(calendar_key));
+            generator.set("name", format_name(calendar_key, "formats"sv));
             generator.set("size", String::number(calendar.available_formats.size()));
 
             generator.append(R"~~~(
@@ -834,7 +1031,16 @@ static constexpr Array<@calendar_pattern_index_type@, @size@> @name@ { {)~~~");
                 first = false;
             }
 
-            generator.append(" } };");
+            generator.append(" } };\n");
+
+            auto symbols_name = format_name(calendar_key, "symbols"sv);
+
+            for (auto const& symbol_key : locale_data.symbols) {
+                auto const& symbols = calendar.symbols.find(symbol_key)->value;
+
+                auto name = append_calendar_symbols(symbols_name, symbol_key, symbols);
+                symbols_names.append(name);
+            }
         }
 
         generator.set("name", name);
@@ -846,7 +1052,7 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
         for (auto const& calendar_key : locale_data.calendars) {
             auto const& calendar = calendars.find(calendar_key)->value;
 
-            generator.set("name", format_name(calendar_key));
+            generator.set("name", format_name(calendar_key, "formats"sv));
             generator.set("calendar"sv, String::number(calendar.calendar));
             generator.append(R"~~~(
     { @calendar@, )~~~");
@@ -856,7 +1062,16 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
             append_calendar_format(calendar.time_formats);
             generator.append(" ");
             append_calendar_format(calendar.date_time_formats);
-            generator.append(" @name@.span() },");
+            generator.append(" @name@.span(), {");
+
+            bool first = true;
+            for (auto const& symbols_name : symbols_names) {
+                generator.append(first ? " " : ", ");
+                generator.append(String::formatted("{}.span()", symbols_name));
+                first = false;
+            }
+
+            generator.append(" } },");
         }
 
         generator.append(R"~~~(
@@ -968,6 +1183,61 @@ Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView local
     }
 
     return result;
+}
+
+static CalendarSymbols find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
+{
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
+        auto symbol_index = to_underlying(symbol);
+        auto style_index = to_underlying(style);
+
+        auto symbols = data->symbols.at(symbol_index);
+        VERIFY(style_index < symbols.size());
+
+        return symbols.at(style_index);
+    }
+
+    return {};
+}
+
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value)
+{
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Era, style);
+
+    if (auto value_index = to_underlying(value); value_index < symbols.size())
+        return s_string_list[symbols.at(value_index)];
+
+    return {};
+}
+
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value)
+{
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Month, style);
+
+    if (auto value_index = to_underlying(value); value_index < symbols.size())
+        return s_string_list[symbols.at(value_index)];
+
+    return {};
+}
+
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value)
+{
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Weekday, style);
+
+    if (auto value_index = to_underlying(value); value_index < symbols.size())
+        return s_string_list[symbols.at(value_index)];
+
+    return {};
+}
+
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value)
+{
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::DayPeriod, style);
+
+    if (auto value_index = to_underlying(value); value_index < symbols.size())
+        return s_string_list[symbols.at(value_index)];
+
+    return {};
 }
 
 }
