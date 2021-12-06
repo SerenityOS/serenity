@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include "ClientConnection.h"
 #include "DNSName.h"
 #include "DNSPacket.h"
 #include "DNSServer.h"
 #include "MulticastDNS.h"
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
+#include <LibIPC/MultiServer.h>
 
 namespace LookupServer {
 
@@ -32,7 +34,7 @@ private:
 
     Vector<DNSAnswer> lookup(const DNSName& hostname, const String& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
-    RefPtr<Core::LocalServer> m_local_server;
+    OwnPtr<IPC::MultiServer<ClientConnection>> m_server;
     RefPtr<DNSServer> m_dns_server;
     RefPtr<MulticastDNS> m_mdns;
     Vector<String> m_nameservers;
