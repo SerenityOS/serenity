@@ -5,10 +5,9 @@
  */
 
 #include <FileSystemAccessServer/ClientConnection.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
-#include <LibIPC/ClientConnection.h>
+#include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
@@ -18,7 +17,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);
 
-    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    (void)IPC::new_client_connection<FileSystemAccessServer::ClientConnection>(move(socket), 1);
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<FileSystemAccessServer::ClientConnection>());
     return app->exec();
 }

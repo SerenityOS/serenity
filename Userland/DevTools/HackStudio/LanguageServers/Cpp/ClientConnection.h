@@ -15,8 +15,8 @@ class ClientConnection final : public LanguageServers::ClientConnection {
     C_OBJECT(ClientConnection);
 
 private:
-    ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-        : LanguageServers::ClientConnection(move(socket), client_id)
+    ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+        : LanguageServers::ClientConnection(move(socket))
     {
         m_autocomplete_engine = make<CppComprehensionEngine>(m_filedb);
         m_autocomplete_engine->set_declarations_of_document_callback = [this](const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations) {

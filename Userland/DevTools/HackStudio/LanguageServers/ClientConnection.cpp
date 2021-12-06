@@ -14,10 +14,10 @@ namespace LanguageServers {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+    : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), 1)
 {
-    s_connections.set(client_id, *this);
+    s_connections.set(1, *this);
 }
 
 ClientConnection::~ClientConnection()

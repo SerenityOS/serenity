@@ -8,7 +8,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/ClientConnection.h>
+#include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
 #include <RequestServer/ClientConnection.h>
@@ -36,8 +36,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
     [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
 
-    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    (void)IPC::new_client_connection<RequestServer::ClientConnection>(move(socket), 1);
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ClientConnection>());
+
     auto result = event_loop.exec();
 
     // FIXME: We exit instead of returning, so that protocol destructors don't get called.
