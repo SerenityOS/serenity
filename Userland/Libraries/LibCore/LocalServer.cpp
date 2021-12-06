@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/System.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -30,10 +31,10 @@ LocalServer::~LocalServer()
         ::close(m_fd);
 }
 
-bool LocalServer::take_over_from_system_server(String const& socket_path)
+ErrorOr<void> LocalServer::take_over_from_system_server(String const& socket_path)
 {
     if (m_listening)
-        return false;
+        return Error::from_string_literal("Core::LocalServer: Can't perform socket takeover when already listening"sv);
 
     if (!LocalSocket::s_overtaken_sockets_parsed)
         LocalSocket::parse_sockets_from_system_server();
@@ -51,32 +52,27 @@ bool LocalServer::take_over_from_system_server(String const& socket_path)
         }
     }
 
-    if (fd >= 0) {
-        // Sanity check: it has to be a socket.
-        struct stat stat;
-        int rc = fstat(fd, &stat);
-        if (rc == 0 && S_ISSOCK(stat.st_mode)) {
-            // The SystemServer has passed us the socket, so use that instead of
-            // creating our own.
-            m_fd = fd;
-            // It had to be !CLOEXEC for obvious reasons, but we
-            // don't need it to be !CLOEXEC anymore, so set the
-            // CLOEXEC flag now.
-            fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+    if (fd < 0)
+        return Error::from_string_literal("Core::LocalServer: No file descriptor for socket takeover"sv);
 
-            m_listening = true;
-            setup_notifier();
-            return true;
-        } else {
-            if (rc != 0)
-                perror("fstat");
-            dbgln("It's not a socket, what the heck??");
-        }
-    }
+    // Sanity check: it has to be a socket.
+    auto stat = TRY(Core::System::fstat(fd));
 
-    dbgln("Failed to take the socket over from SystemServer");
+    if (!S_ISSOCK(stat.st_mode))
+        return Error::from_string_literal("Core::LocalServer: Attempted socket takeover with non-socket file descriptor"sv);
 
-    return false;
+    // It had to be !CLOEXEC for obvious reasons, but we
+    // don't need it to be !CLOEXEC anymore, so set the
+    // CLOEXEC flag now.
+    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
+
+    // The SystemServer has passed us the socket, so use that instead of
+    // creating our own.
+    m_fd = fd;
+
+    m_listening = true;
+    setup_notifier();
+    return {};
 }
 
 void LocalServer::setup_notifier()

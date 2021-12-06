@@ -44,9 +44,12 @@ bool MediaQueryList::matches() const
 
 bool MediaQueryList::evaluate()
 {
+    if (!m_document)
+        return false;
+
     bool now_matches = false;
     for (auto& media : m_media) {
-        now_matches = now_matches || media.evaluate(m_document.window());
+        now_matches = now_matches || media.evaluate(m_document->window());
     }
 
     return now_matches;

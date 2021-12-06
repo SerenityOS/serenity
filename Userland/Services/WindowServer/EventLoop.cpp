@@ -25,10 +25,8 @@ EventLoop::EventLoop()
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    bool ok = m_window_server->take_over_from_system_server("/tmp/portal/window");
-    VERIFY(ok);
-    ok = m_wm_server->take_over_from_system_server("/tmp/portal/wm");
-    VERIFY(ok);
+    MUST(m_window_server->take_over_from_system_server("/tmp/portal/window"));
+    MUST(m_wm_server->take_over_from_system_server("/tmp/portal/wm"));
 
     m_window_server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
