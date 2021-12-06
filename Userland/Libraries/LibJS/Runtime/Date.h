@@ -98,6 +98,7 @@ u8 hour_from_time(double);
 u8 min_from_time(double);
 u8 sec_from_time(double);
 u16 ms_from_time(double);
+u8 week_day(double);
 double day(double);
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms);
 Value make_day(GlobalObject& global_object, Value year, Value month, Value date);
