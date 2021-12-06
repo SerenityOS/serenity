@@ -17,4 +17,4 @@ set(SOURCES
     )
 
 serenity_bin(SQLServer)
-target_link_libraries(SQLServer LibCore LibIPC LibSQL)
+target_link_libraries(SQLServer LibCore LibIPC LibSQL LibMain)
