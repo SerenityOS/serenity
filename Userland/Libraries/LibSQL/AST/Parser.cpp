@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,6 +47,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_alter_table_statement();
     case TokenType::Drop:
         return parse_drop_table_statement();
+    case TokenType::Describe:
+        return parse_describe_table_statement();
     case TokenType::Insert:
         return parse_insert_statement({});
     case TokenType::Update:
@@ -179,6 +182,16 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     parse_schema_and_table_name(schema_name, table_name);
 
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
+}
+
+NonnullRefPtr<DescribeTable> Parser::parse_describe_table_statement()
+{
+    consume(TokenType::Describe);
+    consume(TokenType::Table);
+
+    auto table_name = parse_qualified_table_name();
+
+    return create_ast_node<DescribeTable>(move(table_name));
 }
 
 NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
