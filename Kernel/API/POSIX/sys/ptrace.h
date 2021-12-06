@@ -21,11 +21,16 @@ extern "C" {
 #define PT_PEEK 7
 #define PT_POKE 8
 #define PT_SETREGS 9
+
+// Serenity extensions:
 #define PT_POKEDEBUG 10
 #define PT_PEEKDEBUG 11
+#define PT_PEEKBUF 12
 
 #define PT_READ_I PT_PEEK
 #define PT_READ_D PT_PEEK
+#define PT_WRITE_I PT_POKE
+#define PT_WRITE_D PT_POKE
 
 #define DEBUG_STATUS_REGISTER 6
 #define DEBUG_CONTROL_REGISTER 7

@@ -46,6 +46,7 @@ public:
     void set_wrap_s_mode(GLint mode) { m_wrap_s_mode = mode; }
     void set_wrap_t_mode(GLint mode) { m_wrap_t_mode = mode; }
     void set_texture_scale(float scale) { m_texture_scale = scale; }
+    void set_texture_enabled(bool texture_enabled) { m_texture_enabled = texture_enabled; }
     void set_mag_filter(GLint filter) { m_mag_filter = filter; }
 
     void toggle_show_frame_rate()
@@ -111,6 +112,7 @@ private:
     RefPtr<GUI::Label> m_stats;
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;
+    bool m_texture_enabled { true };
     float m_texture_scale = 1.0f;
     GLint m_mag_filter = GL_NEAREST;
     float m_zoom = 1;
@@ -173,9 +175,14 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glRotatef(m_angle_y, 0, 1, 0);
     glRotatef(m_angle_z, 0, 0, 1);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap_s_mode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap_t_mode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_mag_filter);
+    if (m_texture_enabled) {
+        glEnable(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap_s_mode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap_t_mode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_mag_filter);
+    } else {
+        glDisable(GL_TEXTURE_2D);
+    }
     glScalef(m_zoom, m_zoom, m_zoom);
 
     if (!m_mesh.is_null())
@@ -391,6 +398,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu.add_action(*show_frame_rate_action);
 
     auto& texture_menu = window->add_menu("&Texture");
+
+    auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture", [&widget](auto& action) {
+        widget.set_texture_enabled(action.is_checked());
+    });
+    texture_enabled_action->set_checked(true);
+    texture_menu.add_action(texture_enabled_action);
 
     auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S");
     GUI::ActionGroup wrap_s_actions;

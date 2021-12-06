@@ -588,15 +588,16 @@ public:
             Read = 1 << 0,
             Write = 1 << 1,
             ReadPriority = 1 << 2,
+            WritePriority = 1 << 3,
 
-            Accept = 1 << 3,
-            Connect = 1 << 4,
+            Accept = 1 << 4,
+            Connect = 1 << 5,
             SocketFlags = Accept | Connect,
 
-            WriteNotOpen = 1 << 5,
-            WriteError = 1 << 6,
-            WriteHangUp = 1 << 7,
-            ReadHangUp = 1 << 8,
+            WriteNotOpen = 1 << 6,
+            WriteError = 1 << 7,
+            WriteHangUp = 1 << 8,
+            ReadHangUp = 1 << 9,
             Exception = WriteNotOpen | WriteError | WriteHangUp | ReadHangUp,
         };
 
@@ -1023,8 +1024,12 @@ public:
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
+    [[nodiscard]] bool is_signal_masked(u8 signal) const;
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
+
+    [[nodiscard]] bool has_alternative_signal_stack() const;
+    [[nodiscard]] bool is_in_alternative_signal_stack() const;
 
     FPUState& fpu_state() { return m_fpu_state; }
 
@@ -1295,6 +1300,8 @@ private:
     u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
+    FlatPtr m_alternative_signal_stack { 0 };
+    FlatPtr m_alternative_signal_stack_size { 0 };
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
     OwnPtr<Memory::Region> m_kernel_stack_region;

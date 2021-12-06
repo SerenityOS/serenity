@@ -44,6 +44,7 @@ public:
     Vector<Substitution> const& substitutions() const { return m_substitutions; }
 
     void set_ignore_unsupported_keywords(bool ignore) { m_options.ignore_unsupported_keywords = ignore; }
+    void set_ignore_invalid_statements(bool ignore) { m_options.ignore_invalid_statements = ignore; }
     void set_keep_include_statements(bool keep) { m_options.keep_include_statements = keep; }
 
     Function<Definitions(StringView)> definitions_in_header_callback { nullptr };
@@ -91,6 +92,7 @@ private:
 
     struct Options {
         bool ignore_unsupported_keywords { false };
+        bool ignore_invalid_statements { false };
         bool keep_include_statements { false };
     } m_options;
 };

@@ -137,13 +137,13 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
 {
     // Calculate the preferred width by formatting the content without breaking lines
     // other than where explicit line breaks occur.
-    layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
+    (void)layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
     float preferred_width = greatest_child_width(box);
 
     // Also calculate the preferred minimum width, e.g., by trying all possible line breaks.
     // CSS 2.2 does not define the exact algorithm.
 
-    layout_inside(box, LayoutMode::AllPossibleLineBreaks);
+    (void)layout_inside(box, LayoutMode::AllPossibleLineBreaks);
     float preferred_minimum_width = greatest_child_width(box);
 
     return { preferred_width, preferred_minimum_width };
@@ -603,7 +603,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box& box)
     auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
 
     compute_width_for_absolutely_positioned_element(box);
-    layout_inside(box, LayoutMode::Default);
+    (void)layout_inside(box, LayoutMode::Default);
     compute_height_for_absolutely_positioned_element(box);
 
     box_model.margin.left = box.computed_values().margin().left.resolved_or_auto(box, containing_block.width()).to_px(box);

@@ -561,7 +561,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                 }
             }
         }
-    });
+    },
+        m_project_tree_view);
     delete_action->set_enabled(false);
     return delete_action;
 }
@@ -1480,6 +1481,13 @@ void HackStudioWidget::open_coredump(String const& coredump_path)
     if (m_coredump_inspector) {
         m_debug_info_widget->update_state(*m_coredump_inspector, m_coredump_inspector->get_registers());
         reveal_action_tab(*m_debug_info_widget);
+    }
+}
+
+void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> func)
+{
+    for (auto& open_file : m_open_files) {
+        func(*open_file.value);
     }
 }
 

@@ -624,6 +624,16 @@ struct Formatter<Error> : Formatter<FormatString> {
     }
 };
 
+template<typename T, typename ErrorType>
+struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, ErrorOr<T, ErrorType> const& error_or)
+    {
+        if (error_or.is_error())
+            return Formatter<FormatString>::format(builder, "{}", error_or.error());
+        return Formatter<FormatString>::format(builder, "{{{}}}", error_or.value());
+    }
+};
+
 } // namespace AK
 
 #ifdef KERNEL

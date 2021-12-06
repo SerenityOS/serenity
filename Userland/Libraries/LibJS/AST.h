@@ -260,8 +260,8 @@ public:
 
         ExportEntry(String export_name, String local_name)
             : kind(LocalExport)
-            , export_name(export_name)
-            , local_or_import_name(local_name)
+            , export_name(move(export_name))
+            , local_or_import_name(move(local_name))
         {
         }
     };
@@ -278,6 +278,9 @@ public:
     virtual void dump(int indent) const override;
 
     bool has_export(StringView export_name) const;
+
+    bool has_statement() const { return m_statement; }
+    Vector<ExportEntry> const& entries() const { return m_entries; }
 
 private:
     RefPtr<ASTNode> m_statement;
@@ -1218,6 +1221,8 @@ public:
 
     virtual bool is_lexical_declaration() const override { return true; }
 
+    StringView name() const { return m_class_expression->name(); }
+
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;
 };
@@ -1669,6 +1674,23 @@ public:
 
 private:
     Type m_type;
+};
+
+class ImportCall final : public Expression {
+public:
+    ImportCall(SourceRange source_range, NonnullRefPtr<Expression> specifier, RefPtr<Expression> options)
+        : Expression(source_range)
+        , m_specifier(move(specifier))
+        , m_options(move(options))
+    {
+    }
+
+    virtual void dump(int indent) const override;
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+private:
+    NonnullRefPtr<Expression> m_specifier;
+    RefPtr<Expression> m_options;
 };
 
 class ConditionalExpression final : public Expression {

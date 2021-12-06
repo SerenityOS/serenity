@@ -26,7 +26,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
-    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
     main_widget->layout()->set_margins(4);
     main_widget->layout()->set_spacing(6);
 
@@ -34,7 +34,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
     auto button_container = TRY(main_widget->try_add<GUI::Widget>());
     button_container->set_shrink_to_fit(true);
-    TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+    (void)TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
     button_container->layout()->set_spacing(6);
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {

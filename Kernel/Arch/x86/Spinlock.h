@@ -9,6 +9,9 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Locking/LockRank.h>
 
+#include <AK/Platform.h>
+VALIDATE_IS_X86()
+
 namespace Kernel {
 
 class Spinlock {

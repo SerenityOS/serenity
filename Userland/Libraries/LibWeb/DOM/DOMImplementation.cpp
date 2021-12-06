@@ -40,11 +40,11 @@ NonnullRefPtr<Document> DOMImplementation::create_document(const String& namespa
     xml_document->set_origin(m_document.origin());
 
     if (namespace_ == Namespace::HTML)
-        m_document.set_content_type("application/xhtml+xml");
+        xml_document->set_content_type("application/xhtml+xml");
     else if (namespace_ == Namespace::SVG)
-        m_document.set_content_type("image/svg+xml");
+        xml_document->set_content_type("image/svg+xml");
     else
-        m_document.set_content_type("application/xml");
+        xml_document->set_content_type("application/xml");
 
     return xml_document;
 }

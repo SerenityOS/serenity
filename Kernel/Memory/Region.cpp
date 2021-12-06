@@ -6,6 +6,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -290,6 +291,19 @@ void Region::remap()
     auto result = map(*m_page_directory);
     if (result.is_error())
         TODO();
+}
+
+void Region::clear_to_zero()
+{
+    VERIFY(vmobject().is_anonymous());
+    SpinlockLocker locker(vmobject().m_lock);
+    for (auto i = 0u; i < page_count(); ++i) {
+        auto page = physical_page_slot(i);
+        VERIFY(page);
+        if (page->is_shared_zero_page())
+            continue;
+        page = MM.shared_zero_page();
+    }
 }
 
 PageFaultResponse Region::handle_fault(PageFault const& fault)

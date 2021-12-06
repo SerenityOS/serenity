@@ -66,7 +66,8 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
     switch (type()) {
     case BinaryOperator::Concatenate: {
         if (lhs_value.type() != SQLType::Text) {
-            VERIFY_NOT_REACHED();
+            context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
+            return Value::null();
         }
         AK::StringBuilder builder;
         builder.append(lhs_value.to_string());
@@ -110,7 +111,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
             context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
             return Value::null();
         }
-        return Value(lhs_bool_maybe.value() && rhs_bool_maybe.value());
+        return Value(lhs_bool_maybe.release_value() && rhs_bool_maybe.release_value());
     }
     case BinaryOperator::Or: {
         auto lhs_bool_maybe = lhs_value.to_bool();
@@ -119,7 +120,7 @@ Value BinaryOperatorExpression::evaluate(ExecutionContext& context) const
             context.result->set_error(SQLErrorCode::BooleanOperatorTypeMismatch, BinaryOperator_name(type()));
             return Value::null();
         }
-        return Value(lhs_bool_maybe.value() || rhs_bool_maybe.value());
+        return Value(lhs_bool_maybe.release_value() || rhs_bool_maybe.release_value());
     }
     default:
         VERIFY_NOT_REACHED();
@@ -168,6 +169,10 @@ Value UnaryOperatorExpression::evaluate(ExecutionContext& context) const
 
 Value ColumnNameExpression::evaluate(ExecutionContext& context) const
 {
+    if (!context.current_row) {
+        context.result->set_error(SQLErrorCode::SyntaxError, column_name());
+        return Value::null();
+    }
     auto& descriptor = *context.current_row->descriptor();
     VERIFY(context.current_row->size() == descriptor.size());
     Optional<size_t> index_in_row;

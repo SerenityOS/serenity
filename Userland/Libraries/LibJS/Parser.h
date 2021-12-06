@@ -122,6 +122,8 @@ public:
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens, bool is_async = false);
     RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
+    RefPtr<MetaProperty> try_parse_import_meta_expression();
+    NonnullRefPtr<ImportCall> parse_import_call();
 
     Vector<CallExpression::Argument> parse_arguments();
 
@@ -173,6 +175,9 @@ public:
 
 private:
     friend class ScopePusher;
+
+    void parse_script(Program& program, bool starts_in_strict_mode);
+    void parse_module(Program& program);
 
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
@@ -259,7 +264,7 @@ private:
         bool in_function_context { false };
         bool in_formal_parameter_context { false };
         bool in_generator_function_context { false };
-        bool in_async_function_context { false };
+        bool await_expression_is_valid { false };
         bool in_arrow_function_context { false };
         bool in_break_context { false };
         bool in_continue_context { false };

@@ -553,6 +553,18 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
         break;
+    case GL_TEXTURE_1D:
+        m_active_texture_unit->set_texture_1d_enabled(true);
+        break;
+    case GL_TEXTURE_2D:
+        m_active_texture_unit->set_texture_2d_enabled(true);
+        break;
+    case GL_TEXTURE_3D:
+        m_active_texture_unit->set_texture_3d_enabled(true);
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        m_active_texture_unit->set_texture_cube_map_enabled(true);
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -596,6 +608,18 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = false;
         update_rasterizer_options = true;
+        break;
+    case GL_TEXTURE_1D:
+        m_active_texture_unit->set_texture_1d_enabled(false);
+        break;
+    case GL_TEXTURE_2D:
+        m_active_texture_unit->set_texture_2d_enabled(false);
+        break;
+    case GL_TEXTURE_3D:
+        m_active_texture_unit->set_texture_3d_enabled(false);
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        m_active_texture_unit->set_texture_cube_map_enabled(false);
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
@@ -661,7 +685,7 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
         // Check all texture units
         for (auto& texture_unit : m_texture_units) {
             if (texture_object->value == texture_unit.bound_texture())
-                texture_unit.unbind_texture(GL_TEXTURE_2D);
+                texture_unit.bind_texture_to_target(GL_TEXTURE_2D, nullptr);
         }
 
         m_allocated_textures.remove(name);
@@ -1362,7 +1386,7 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
     if (texture == 0) {
         switch (target) {
         case GL_TEXTURE_2D:
-            m_active_texture_unit->unbind_texture(target);
+            m_active_texture_unit->bind_texture_to_target(target, nullptr);
             return;
         default:
             VERIFY_NOT_REACHED();
@@ -1457,6 +1481,18 @@ void SoftwareGLContext::gl_get_booleanv(GLenum pname, GLboolean* data)
         break;
     case GL_CULL_FACE:
         *data = m_cull_faces ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_TEXTURE_1D:
+        *data = m_active_texture_unit->texture_1d_enabled() ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_TEXTURE_2D:
+        *data = m_active_texture_unit->texture_2d_enabled() ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_TEXTURE_3D:
+        *data = m_active_texture_unit->texture_3d_enabled() ? GL_TRUE : GL_FALSE;
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        *data = m_active_texture_unit->texture_cube_map_enabled() ? GL_TRUE : GL_FALSE;
         break;
     default:
         // According to the Khronos docs, we always return GL_INVALID_ENUM if we encounter a non-accepted value

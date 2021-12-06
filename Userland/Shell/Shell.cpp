@@ -466,7 +466,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     Core::EventLoop loop;
     setup_signals();
 
-    function.body->run(*this);
+    (void)function.body->run(*this);
 
     retval = last_return_code;
     return true;
@@ -491,7 +491,7 @@ Shell::Frame Shell::push_frame(String name)
 void Shell::pop_frame()
 {
     VERIFY(m_local_frames.size() > 1);
-    m_local_frames.take_last();
+    (void)m_local_frames.take_last();
 }
 
 Shell::Frame::~Frame()
@@ -505,7 +505,7 @@ Shell::Frame::~Frame()
             dbgln("- {:p}: {}", &frame, frame.name);
         VERIFY_NOT_REACHED();
     }
-    frames.take_last();
+    (void)frames.take_last();
 }
 
 String Shell::resolve_alias(const String& name) const
@@ -570,7 +570,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     tcgetattr(0, &termios);
     tcsetattr(0, TCSANOW, &default_termios);
 
-    command->run(*this);
+    (void)command->run(*this);
 
     tcsetattr(0, TCSANOW, &termios);
 
@@ -930,13 +930,13 @@ void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAc
     }
     auto evaluate = [&] {
         if (next_in_chain.node->would_execute()) {
-            next_in_chain.node->run(*this);
+            (void)next_in_chain.node->run(*this);
             return;
         }
         auto node = next_in_chain.node;
         if (!invoking_command.should_wait)
             node = adopt_ref(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
-        adopt_ref(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
+        (void)adopt_ref(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
     };
     switch (next_in_chain.action) {
     case AST::NodeWithAction::And:

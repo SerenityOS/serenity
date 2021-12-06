@@ -398,7 +398,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         }
 
         compute_width(child_box);
-        layout_inside(child_box, layout_mode);
+        (void)layout_inside(child_box, layout_mode);
         compute_height(child_box);
 
         if (child_box.computed_values().position() == CSS::Position::Relative)
@@ -576,7 +576,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     VERIFY(box.is_floating());
 
     compute_width(box);
-    layout_inside(box, LayoutMode::Default);
+    (void)layout_inside(box, LayoutMode::Default);
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)

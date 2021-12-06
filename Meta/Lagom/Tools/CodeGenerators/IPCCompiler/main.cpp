@@ -544,7 +544,7 @@ public:
                             message_generator.append("move(*");
                     } else {
                         message_generator.append(R"~~~(
-        )~~~");
+        (void) )~~~");
                     }
 
                     message_generator.append("m_connection.template send_sync<Messages::@endpoint.name@::@message.pascal_name@>(");

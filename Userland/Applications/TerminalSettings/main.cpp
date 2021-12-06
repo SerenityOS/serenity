@@ -28,8 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Terminal Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal"));
-    TRY(window->add_tab<TerminalSettingsViewWidget>("View"));
+    (void)TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal"));
+    (void)TRY(window->add_tab<TerminalSettingsViewWidget>("View"));
 
     window->show();
     return app->exec();

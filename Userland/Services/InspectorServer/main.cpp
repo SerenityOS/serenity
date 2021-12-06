@@ -8,44 +8,32 @@
 #include <InspectorServer/ClientConnection.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
+#include <LibCore/System.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    auto server = Core::LocalServer::construct();
+    auto server = TRY(Core::LocalServer::try_create());
 
-    if (pledge("stdio unix accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio unix accept"));
 
     bool ok = server->take_over_from_system_server("/tmp/portal/inspector");
     VERIFY(ok);
-    server->on_ready_to_accept = [&] {
-        auto client_socket = server->accept();
-        if (!client_socket) {
-            dbgln("accept failed.");
-            return;
-        }
+    server->on_accept = [&](auto client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::new_client_connection<InspectorServer::ClientConnection>(client_socket.release_nonnull(), client_id);
+        (void)IPC::new_client_connection<InspectorServer::ClientConnection>(move(client_socket), client_id);
     };
 
-    auto inspectables_server = Core::LocalServer::construct();
+    auto inspectables_server = TRY(Core::LocalServer::try_create());
     if (!inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"))
         VERIFY_NOT_REACHED();
 
-    inspectables_server->on_ready_to_accept = [&] {
-        auto client_socket = inspectables_server->accept();
-        if (!client_socket) {
-            dbgln("backdoor accept failed.");
-            return;
-        }
+    inspectables_server->on_accept = [&](auto client_socket) {
         auto pid = client_socket->peer_pid();
-
-        InspectorServer::g_processes.set(pid, make<InspectorServer::InspectableProcess>(pid, client_socket.release_nonnull()));
+        InspectorServer::g_processes.set(pid, make<InspectorServer::InspectableProcess>(pid, move(client_socket)));
     };
 
     return event_loop.exec();

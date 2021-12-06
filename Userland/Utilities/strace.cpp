@@ -12,6 +12,7 @@
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -87,6 +88,7 @@ HANDLE(EWHYTHO)
 HANDLE(ENOTEMPTY)
 HANDLE(EDOM)
 HANDLE(ECONNREFUSED)
+HANDLE(EHOSTDOWN)
 HANDLE(EADDRNOTAVAIL)
 HANDLE(EISCONN)
 HANDLE(ECONNABORTED)
@@ -104,7 +106,10 @@ HANDLE(ENOLCK)
 HANDLE(ENOMSG)
 HANDLE(ENOPROTOOPT)
 HANDLE(ENOTCONN)
+HANDLE(ESHUTDOWN)
+HANDLE(ETOOMANYREFS)
 HANDLE(EPROTONOSUPPORT)
+HANDLE(ESOCKTNOSUPPORT)
 HANDLE(EDEADLK)
 HANDLE(ETIMEDOUT)
 HANDLE(EPROTOTYPE)
@@ -220,32 +225,27 @@ static void handle_sigint(int)
     }
 }
 
-static void copy_from_process(const void* source_p, Bytes target)
+static ErrorOr<void> copy_from_process(const void* source, Bytes target)
 {
-    auto source = static_cast<const char*>(source_p);
-    size_t offset = 0;
-    size_t left = target.size();
-    while (left) {
-        int value = ptrace(PT_PEEK, g_pid, const_cast<char*>(source) + offset, 0);
-        size_t to_copy = min(sizeof(int), left);
-        target.overwrite(offset, &value, to_copy);
-        left -= to_copy;
-        offset += to_copy;
-    }
+    return Core::System::ptrace_peekbuf(g_pid, const_cast<void*>(source), target);
 }
 
-static ByteBuffer copy_from_process(const void* source, size_t length)
+static ErrorOr<ByteBuffer> copy_from_process(const void* source, size_t length)
 {
-    auto buffer = ByteBuffer::create_uninitialized(length).value();
-    copy_from_process(source, buffer.bytes());
-    return buffer;
+    auto buffer = ByteBuffer::create_uninitialized(length);
+    if (!buffer.has_value()) {
+        // Allocation failed. Inject an error:
+        return Error::from_errno(ENOMEM);
+    }
+    TRY(copy_from_process(source, buffer->bytes()));
+    return buffer.release_value();
 }
 
 template<typename T>
-static T copy_from_process(const T* source)
+static ErrorOr<T> copy_from_process(const T* source)
 {
     T value {};
-    copy_from_process(source, Bytes { &value, sizeof(T) });
+    TRY(copy_from_process(source, Bytes { &value, sizeof(T) }));
     return value;
 }
 
@@ -333,8 +333,45 @@ struct Formatter<PointerArgument> : StandardFormatter {
 };
 }
 
-class FormattedSyscallBuilder {
+struct StringArgument {
+    Syscall::StringArgument argument;
+    StringView trim_by {};
+};
 
+namespace AK {
+template<>
+struct Formatter<StringArgument> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    ErrorOr<void> format(FormatBuilder& format_builder, StringArgument const& string_argument)
+    {
+        auto& builder = format_builder.builder();
+        if (string_argument.argument.characters == nullptr) {
+            builder.append("null");
+            return {};
+        }
+
+        // TODO: Avoid trying to copy excessively long strings.
+        auto string_buffer = copy_from_process(string_argument.argument.characters, string_argument.argument.length);
+        if (string_buffer.is_error()) {
+            builder.appendff("{}{{{:p}, {}b}}", string_buffer.error(), (void const*)string_argument.argument.characters, string_argument.argument.length);
+        } else {
+            auto view = StringView(string_buffer.value());
+            if (!string_argument.trim_by.is_empty())
+                view = view.trim(string_argument.trim_by);
+            builder.appendff("\"{}\"", view);
+        }
+
+        return {};
+    }
+};
+}
+
+class FormattedSyscallBuilder {
 public:
     FormattedSyscallBuilder(StringView syscall_name)
     {
@@ -353,19 +390,6 @@ public:
     void add_argument(T&& arg)
     {
         add_argument("{}", forward<T>(arg));
-    }
-
-    void add_string_argument(Syscall::StringArgument const& string_argument, StringView trim_by = {})
-    {
-        if (string_argument.characters == nullptr)
-            add_argument("null");
-        else {
-            auto string_buffer = copy_from_process(string_argument.characters, string_argument.length);
-            auto view = StringView(string_buffer);
-            if (!trim_by.is_empty())
-                view = view.trim(trim_by);
-            add_argument("\"{}\"", view);
-        }
     }
 
     template<typename... Ts>
@@ -430,14 +454,8 @@ static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, siz
 
 static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p)
 {
-    auto params = copy_from_process(params_p);
-    builder.add_string_argument(params.path);
-    if (params.buffer.size == 0)
-        builder.add_argument("null");
-    else {
-        auto buffer = copy_from_process(params.buffer.data, params.buffer.size);
-        builder.add_argument("\"{}\"", StringView { (const char*)buffer.data() });
-    }
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    builder.add_arguments(StringArgument { params.path }, StringArgument { { params.buffer.data, params.buffer.size } });
 }
 
 static void format_exit(FormattedSyscallBuilder& builder, int status)
@@ -456,16 +474,14 @@ struct OpenOptions : BitflagBase {
 
 static void format_open(FormattedSyscallBuilder& builder, Syscall::SC_open_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
 
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
     else
         builder.add_argument(params.dirfd);
 
-    builder.add_string_argument(params.path);
-
-    builder.add_argument(OpenOptions { params.options });
+    builder.add_arguments(StringArgument { params.path }, OpenOptions { params.options });
 
     if (params.options & O_CREAT)
         builder.add_argument("{:04o}", params.mode);
@@ -525,13 +541,12 @@ static void format_fstat(FormattedSyscallBuilder& builder, int fd, struct stat* 
 
 static void format_stat(FormattedSyscallBuilder& builder, Syscall::SC_stat_params* params_p)
 {
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     if (params.dirfd == AT_FDCWD)
         builder.add_argument("AT_FDCWD");
     else
         builder.add_argument(params.dirfd);
-    builder.add_string_argument(params.path);
-    builder.add_arguments(copy_from_process(params.statbuf), params.follow_symlinks);
+    builder.add_arguments(StringArgument { params.path }, copy_from_process(params.statbuf), params.follow_symlinks);
 }
 
 static void format_lseek(FormattedSyscallBuilder& builder, int fd, off_t offset, int whence)
@@ -557,7 +572,7 @@ static void format_close(FormattedSyscallBuilder& builder, int fd)
 static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_params* params_p)
 {
     // TODO: format fds and sigmask properly
-    auto params = copy_from_process(params_p);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
     builder.add_arguments(
         params.nfds,
         PointerArgument { params.readfds },
@@ -607,8 +622,8 @@ static void format_connect(FormattedSyscallBuilder& builder, int socket, const s
 struct MsgOptions : BitflagBase {
     static constexpr auto options = {
         BITFLAG(MSG_TRUNC), BITFLAG(MSG_CTRUNC), BITFLAG(MSG_PEEK),
-        BITFLAG(MSG_OOB), BITFLAG(MSG_DONTWAIT)
-        // TODO: add MSG_WAITALL once its definition is added
+        BITFLAG(MSG_OOB), BITFLAG(MSG_DONTROUTE), BITFLAG(MSG_WAITALL),
+        BITFLAG(MSG_DONTWAIT)
     };
 };
 
@@ -635,9 +650,8 @@ struct MemoryProtectionFlags : BitflagBase {
 
 static void format_mmap(FormattedSyscallBuilder& builder, Syscall::SC_mmap_params* params_p)
 {
-    auto params = copy_from_process(params_p);
-    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment);
-    builder.add_string_argument(params.name);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    builder.add_arguments(params.addr, params.size, MemoryProtectionFlags { params.prot }, MmapFlags { params.flags }, params.fd, params.offset, params.alignment, StringArgument { params.name });
 }
 
 static void format_munmap(FormattedSyscallBuilder& builder, void* addr, size_t size)
@@ -652,9 +666,8 @@ static void format_mprotect(FormattedSyscallBuilder& builder, void* addr, size_t
 
 static void format_set_mmap_name(FormattedSyscallBuilder& builder, Syscall::SC_set_mmap_name_params* params_p)
 {
-    auto params = copy_from_process(params_p);
-    builder.add_arguments(params.addr, params.size);
-    builder.add_string_argument(params.name);
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    builder.add_arguments(params.addr, params.size, StringArgument { params.name });
 }
 
 static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clockid, struct timespec* time)
@@ -664,12 +677,12 @@ static void format_clock_gettime(FormattedSyscallBuilder& builder, clockid_t clo
 
 static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters, size_t size)
 {
-    builder.add_string_argument({ characters, size }, "\0\n"sv);
+    builder.add_argument(StringArgument { { characters, size }, "\0\n"sv });
 }
 
 static void format_get_process_name(FormattedSyscallBuilder& builder, char* buffer, size_t buffer_size)
 {
-    builder.add_string_argument({ buffer, buffer_size });
+    builder.add_argument(StringArgument { { buffer, buffer_size }, "\0"sv });
 }
 
 static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)

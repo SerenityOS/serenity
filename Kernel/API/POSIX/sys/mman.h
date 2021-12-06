@@ -31,8 +31,9 @@ extern "C" {
 
 #define MAP_FAILED ((void*)-1)
 
-#define MADV_SET_VOLATILE 0x100
-#define MADV_SET_NONVOLATILE 0x200
+#define MADV_SET_VOLATILE 0x1
+#define MADV_SET_NONVOLATILE 0x2
+#define MADV_DONTNEED 0x3
 
 #define MS_SYNC 1
 #define MS_ASYNC 2

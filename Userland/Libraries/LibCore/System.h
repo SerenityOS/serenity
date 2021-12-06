@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <termios.h>
 
 namespace Core::System {
 
@@ -18,6 +19,7 @@ ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
+ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
@@ -29,6 +31,7 @@ ErrorOr<int> open(StringView path, int options, ...);
 ErrorOr<void> close(int fd);
 ErrorOr<void> ftruncate(int fd, off_t length);
 ErrorOr<struct stat> stat(StringView path);
+ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer);
 ErrorOr<void> kill(pid_t, int signal);
@@ -36,5 +39,9 @@ ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
 ErrorOr<String> ptsname(int fd);
 ErrorOr<String> gethostname();
+ErrorOr<void> ioctl(int fd, unsigned request, ...);
+ErrorOr<struct termios> tcgetattr(int fd);
+ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
+ErrorOr<void> chmod(StringView pathname, mode_t mode);
 
 }

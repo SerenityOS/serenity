@@ -11,8 +11,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <Kernel/Arch/x86/PageFault.h>
-#include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
@@ -20,6 +18,10 @@
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/VMObject.h>
+
+namespace Kernel {
+class PageDirectoryEntry;
+}
 
 namespace Kernel::Memory {
 
@@ -325,6 +327,23 @@ inline bool PhysicalPage::is_shared_zero_page() const
 inline bool PhysicalPage::is_lazy_committed_page() const
 {
     return this == &MM.lazy_committed_page();
+}
+
+inline ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
+{
+    if (Memory::page_round_up_would_wrap(size))
+        return EINVAL;
+
+    if ((address + size) < address)
+        return EINVAL;
+
+    if (Memory::page_round_up_would_wrap(address + size))
+        return EINVAL;
+
+    auto base = VirtualAddress { address }.page_base();
+    auto end = Memory::page_round_up(address + size);
+
+    return Memory::VirtualRange { base, end - base.get() };
 }
 
 }

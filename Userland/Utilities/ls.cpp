@@ -17,6 +17,8 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -71,12 +73,9 @@ static HashMap<gid_t, String> groups;
 
 static bool is_a_tty = false;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty"));
 
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
@@ -118,7 +117,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (flag_show_almost_all_dotfiles)
         flag_show_dotfiles = true;

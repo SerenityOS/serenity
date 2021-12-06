@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
 
     auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    IPC::new_client_connection<RequestServer::ClientConnection>(move(socket), 1);
+    (void)IPC::new_client_connection<RequestServer::ClientConnection>(move(socket), 1);
     auto result = event_loop.exec();
 
     // FIXME: We exit instead of returning, so that protocol destructors don't get called.

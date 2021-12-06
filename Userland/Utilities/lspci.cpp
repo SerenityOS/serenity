@@ -1,47 +1,34 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
-#include <stdio.h>
-#include <unistd.h>
 
 static bool flag_show_numerical = false;
 
 static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
 static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/res/pci.ids", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/proc/pci", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    unveil(nullptr, nullptr);
+    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::unveil("/res/pci.ids", "r"));
+    TRY(Core::System::unveil("/proc/pci", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     const char* format = flag_show_numerical ? format_numerical : format_textual;
 
@@ -54,19 +41,12 @@ int main(int argc, char** argv)
         }
     }
 
-    auto proc_pci = Core::File::construct("/proc/pci");
-    if (!proc_pci->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", proc_pci->name(), proc_pci->error_string());
-        return 1;
-    }
+    auto proc_pci = TRY(Core::File::open("/proc/pci", Core::OpenMode::ReadOnly));
 
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     auto file_contents = proc_pci->read_all();
-    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+    auto json = TRY(JsonValue::from_string(file_contents));
     json.as_array().for_each([db, format](auto& value) {
         auto& dev = value.as_object();
         auto domain = dev.get("domain").to_u32();

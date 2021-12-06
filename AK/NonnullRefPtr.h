@@ -39,7 +39,7 @@ ALWAYS_INLINE void unref_if_not_null(T* ptr)
 }
 
 template<typename T>
-class NonnullRefPtr {
+class [[nodiscard]] NonnullRefPtr {
     template<typename U, typename P>
     friend class RefPtr;
     template<typename U>
@@ -218,8 +218,11 @@ public:
         AK::swap(m_ptr, other.m_ptr);
     }
 
+    // clang-format off
 private:
     NonnullRefPtr() = delete;
+    // clang-format on
+
     ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
     {
         VERIFY(m_ptr);

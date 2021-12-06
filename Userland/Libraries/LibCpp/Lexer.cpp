@@ -51,7 +51,7 @@ constexpr bool is_valid_nonfirst_character_of_identifier(char ch)
     return is_valid_first_character_of_identifier(ch) || is_ascii_digit(ch);
 }
 
-constexpr char const* s_known_keywords[] = {
+constexpr StringView s_known_keywords[] = {
     "alignas",
     "alignof",
     "and",
@@ -127,39 +127,54 @@ constexpr char const* s_known_keywords[] = {
     "xor_eq"
 };
 
-constexpr char const* s_known_types[] = {
+constexpr StringView s_known_types[] = {
+    "Array",
+    "Array",
+    "Badge",
+    "Bitmap",
     "ByteBuffer",
+    "Bytes",
+    "Checked",
     "CircularDeque",
     "CircularQueue",
     "Deque",
     "DoublyLinkedList",
-    "FileSystemPath",
-    "Array",
+    "Error",
+    "ErrorOr",
+    "FlyString",
     "Function",
     "HashMap",
     "HashTable",
     "IPv4Address",
     "IntrusiveList",
+    "IntrusiveList",
     "JsonArray",
     "JsonObject",
     "JsonValue",
+    "LexicalPath",
     "MappedFile",
     "NetworkOrdered",
+    "NeverDestroyed",
     "NonnullOwnPtr",
     "NonnullOwnPtrVector",
     "NonnullRefPtr",
     "NonnullRefPtrVector",
     "Optional",
     "OwnPtr",
+    "ReadonlyBytes",
+    "RedBlackTree",
     "RefPtr",
     "Result",
     "ScopeGuard",
+    "Singleton",
     "SinglyLinkedList",
+    "Span",
     "String",
     "StringBuilder",
     "StringImpl",
     "StringView",
     "Utf8View",
+    "Variant",
     "Vector",
     "WeakPtr",
     "auto",
@@ -185,7 +200,7 @@ constexpr char const* s_known_types[] = {
     "u8",
     "unsigned",
     "void",
-    "wchar_t"
+    "wchar_t",
 };
 
 static bool is_keyword(StringView string)

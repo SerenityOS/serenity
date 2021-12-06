@@ -172,6 +172,7 @@ enum class NeedsBigProcessLock {
     S(setuid, NeedsBigProcessLock::Yes)                     \
     S(shutdown, NeedsBigProcessLock::Yes)                   \
     S(sigaction, NeedsBigProcessLock::Yes)                  \
+    S(sigaltstack, NeedsBigProcessLock::Yes)                \
     S(sigpending, NeedsBigProcessLock::Yes)                 \
     S(sigprocmask, NeedsBigProcessLock::Yes)                \
     S(sigreturn, NeedsBigProcessLock::Yes)                  \
@@ -457,16 +458,15 @@ struct SC_stat_params {
     int follow_symlinks;
 };
 
+struct SC_ptrace_buf_params {
+    MutableBufferArgument<u8, size_t> buf;
+};
+
 struct SC_ptrace_params {
     int request;
     pid_t tid;
     void* addr;
     FlatPtr data;
-};
-
-struct SC_ptrace_peek_params {
-    const void* address;
-    FlatPtr* out_data;
 };
 
 struct SC_set_coredump_metadata_params {
@@ -488,6 +488,7 @@ struct SC_statvfs_params {
 void initialize();
 int sync();
 
+#    if ARCH(I386) || ARCH(X86_64)
 inline uintptr_t invoke(Function function)
 {
     uintptr_t result;
@@ -541,6 +542,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
                  : "memory");
     return result;
 }
+#    endif
 #endif
 
 }

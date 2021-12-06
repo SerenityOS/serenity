@@ -83,10 +83,9 @@
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
-            name: "inspect_button"
-            text: "Inspect in Hack Studio"
+            name: "debug_button"
+            text: "Debug in Hack Studio"
             fixed_width: 150
-            fixed_height: 22
         }
 
         // HACK: We need something like Layout::add_spacer() in GML! :^)
@@ -96,7 +95,6 @@
             name: "close_button"
             text: "Close"
             fixed_width: 70
-            fixed_height: 22
         }
     }
 }

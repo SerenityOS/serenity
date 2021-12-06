@@ -1,14 +1,19 @@
 describe("parsing freestanding async functions", () => {
     test("simple", () => {
         expect(`async function foo() {}`).toEval();
+        // Although it does not create an async function it is valid.
         expect(`async
-        function foo() {}`).not.toEval();
+        function foo() {}`).toEval();
     });
     test("await expression", () => {
         expect(`async function foo() { await bar(); }`).toEval();
         expect(`async function foo() { await; }`).not.toEval();
         expect(`function foo() { await bar(); }`).not.toEval();
         expect(`function foo() { await; }`).toEval();
+
+        expect(`\\u0061sync function foo() { await bar(); }`).not.toEval();
+        expect(`\\u0061sync function foo() { \\u0061wait bar(); }`).not.toEval();
+        expect(`async function foo() { \\u0061wait bar(); }`).not.toEval();
     });
 });
 
@@ -18,6 +23,14 @@ describe("parsing object literal async functions", () => {
         expect(`x = { async
                 foo() { } }`).not.toEval();
     });
+
+    test("property on object called async", () => {
+        expect(`x = { async() { } }`).toEval();
+        expect(`x = { async() { await 4; } }`).not.toEval();
+        expect(`x = { async: 3 }`).toEval();
+        expect(`x = { async: await 3, }`).not.toEval();
+    });
+
     test("await expression", () => {
         expect(`x = { foo() { await bar(); } }`).not.toEval();
         expect(`x = { foo() { await; } }`).toEval();
@@ -74,11 +87,15 @@ describe("async arrow functions", () => {
         expect("async (b = await) => await b;").not.toEval();
         expect("async (b = await 3) => await b;").not.toEval();
 
-        // Cannot escape the async keyword.
+        // Cannot escape the async keyword and get an async arrow function.
         expect("\\u0061sync () => await 3").not.toEval();
 
-        expect("for (async of => {};;) {}").toEval();
+        expect("for (async of => {};false;) {}").toEval();
         expect("for (async of []) {}").not.toEval();
+
+        expect("for (\\u0061sync of []) {}").toEval();
+        expect("for (\\u0061sync of => {};false;) {}").not.toEval();
+        expect("for (\\u0061sync => {};false;) {}").toEval();
     });
 
     test("async within a for-loop", () => {
@@ -150,5 +167,33 @@ describe("non async function declaration usage of async still works", () => {
 
         const evalResult = eval("async >= 2");
         expect(evalResult).toBeTrue();
+    });
+
+    test("async with line ending does not create a function", () => {
+        expect(() => {
+            // The ignore is needed otherwise prettier puts a ';' after async.
+            // prettier-ignore
+            async
+            function f() {}
+        }).toThrowWithMessage(ReferenceError, "'async' is not defined");
+
+        expect(`async
+                function f() { await 3; }`).not.toEval();
+    });
+});
+
+describe("await cannot be used in class static init blocks", () => {
+    test("directly", () => {
+        expect("class A{ static { await; } }").not.toEval();
+        expect("class A{ static { let await = 3; } }").not.toEval();
+        expect("class A{ static { call(await); } }").not.toEval();
+        expect("class A{ static { for(const await = 1; false ;) {} } }").not.toEval();
+    });
+
+    test("via declaration", () => {
+        expect("class A{ static { class await {} } }").not.toEval();
+        expect("class A{ static { function await() {} } }").not.toEval();
+        expect("class A{ static { function* await() {} } }").not.toEval();
+        expect("class A{ static { async function* await() {} } }").not.toEval();
     });
 });

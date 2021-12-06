@@ -56,9 +56,4 @@ const DOM::Document* BrowsingContextContainer::content_document() const
     return m_nested_browsing_context ? m_nested_browsing_context->active_document() : nullptr;
 }
 
-void BrowsingContextContainer::nested_browsing_context_did_load(Badge<FrameLoader>)
-{
-    dispatch_event(DOM::Event::create(EventNames::load));
-}
-
 }

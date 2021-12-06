@@ -18,6 +18,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/Assertions.h>
 #include <Kernel/AtomicEdgeAction.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -334,6 +335,7 @@ public:
     ErrorOr<FlatPtr> sys$execve(Userspace<const Syscall::SC_execve_params*>);
     ErrorOr<FlatPtr> sys$dup2(int old_fd, int new_fd);
     ErrorOr<FlatPtr> sys$sigaction(int signum, Userspace<const sigaction*> act, Userspace<sigaction*> old_act);
+    ErrorOr<FlatPtr> sys$sigaltstack(Userspace<const stack_t*> ss, Userspace<stack_t*> old_ss);
     ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
@@ -479,6 +481,7 @@ public:
         m_wait_for_tracer_at_next_execve = val;
     }
 
+    ErrorOr<void> peek_user_data(Span<u8> destination, Userspace<const u8*> address);
     ErrorOr<FlatPtr> peek_user_data(Userspace<const FlatPtr*> address);
     ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
@@ -554,6 +557,8 @@ private:
     void clear_futex_queues_on_exec();
 
     void setup_socket_fd(int fd, NonnullRefPtr<OpenFileDescription> description, int type);
+
+    ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
 public:
     NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }

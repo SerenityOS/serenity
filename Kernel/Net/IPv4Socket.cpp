@@ -210,7 +210,8 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuffe
     if (!is_connected() && m_peer_address.is_zero())
         return set_so_error(EPIPE);
 
-    auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface());
+    auto allow_using_gateway = ((flags & MSG_DONTROUTE) || m_routing_disabled) ? AllowUsingGateway::No : AllowUsingGateway::Yes;
+    auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface(), allow_using_gateway);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 
@@ -390,15 +391,26 @@ ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKer
 
     dbgln_if(IPV4_SOCKET_DEBUG, "recvfrom: type={}, local_port={}", type(), local_port());
 
-    ErrorOr<size_t> nreceived = 0;
-    if (buffer_mode() == BufferMode::Bytes)
-        nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
-    else
-        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length, packet_timestamp);
+    ErrorOr<size_t> total_nreceived = 0;
+    do {
+        auto offset_buffer = buffer.offset(total_nreceived.value());
+        auto offset_buffer_length = buffer_length - total_nreceived.value();
 
-    if (!nreceived.is_error())
-        Thread::current()->did_ipv4_socket_read(nreceived.value());
-    return nreceived;
+        ErrorOr<size_t> nreceived = 0;
+        if (buffer_mode() == BufferMode::Bytes)
+            nreceived = receive_byte_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length);
+        else
+            nreceived = receive_packet_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length, packet_timestamp);
+
+        if (nreceived.is_error())
+            total_nreceived = nreceived;
+        else
+            total_nreceived.value() += nreceived.value();
+    } while ((flags & MSG_WAITALL) && !total_nreceived.is_error() && total_nreceived.value() < buffer_length);
+
+    if (!total_nreceived.is_error())
+        Thread::current()->did_ipv4_socket_read(total_nreceived.value());
+    return total_nreceived;
 }
 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ReadonlyBytes packet, const Time& packet_timestamp)

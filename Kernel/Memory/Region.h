@@ -9,7 +9,6 @@
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
@@ -17,6 +16,10 @@
 #include <Kernel/Memory/VirtualRangeAllocator.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
+
+namespace Kernel {
+class PageFault;
+}
 
 namespace Kernel::Memory {
 
@@ -169,6 +172,8 @@ public:
     void set_writable(bool b) { set_access_bit(Access::Write, b); }
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
+    void unsafe_clear_access() { m_access = Region::None; }
+
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualRange {
@@ -178,6 +183,8 @@ public:
     void unmap(ShouldDeallocateVirtualRange = ShouldDeallocateVirtualRange::Yes);
 
     void remap();
+
+    void clear_to_zero();
 
     [[nodiscard]] bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }

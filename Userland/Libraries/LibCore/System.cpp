@@ -10,8 +10,11 @@
 #include <LibSystem/syscall.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/ptrace.h>
 #include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -64,6 +67,21 @@ ErrorOr<int> recvfd(int sockfd, int options)
     if (fd < 0)
         return Error::from_syscall("recvfd"sv, -errno);
     return fd;
+}
+
+ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf)
+{
+    Syscall::SC_ptrace_buf_params buf_params {
+        { destination_buf.data(), destination_buf.size() }
+    };
+    Syscall::SC_ptrace_params params {
+        PT_PEEKBUF,
+        tid,
+        const_cast<void*>(tracee_addr),
+        (FlatPtr)&buf_params,
+    };
+    int rc = syscall(SC_ptrace, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 #endif
 
@@ -173,6 +191,24 @@ ErrorOr<struct stat> stat(StringView path)
 #endif
 }
 
+ErrorOr<struct stat> lstat(StringView path)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("lstat"sv, -EFAULT);
+
+    struct stat st = {};
+#ifdef __serenity__
+    Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, AT_FDCWD, false };
+    int rc = syscall(SC_stat, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("lstat"sv, rc, st);
+#else
+    String path_string = path;
+    if (::stat(path_string.characters(), &st) < 0)
+        return Error::from_syscall("lstat"sv, -errno);
+    return st;
+#endif
+}
+
 ErrorOr<ssize_t> read(int fd, Bytes buffer)
 {
     ssize_t rc = ::read(fd, buffer.data(), buffer.size());
@@ -227,6 +263,48 @@ ErrorOr<String> gethostname()
     if (rc < 0)
         return Error::from_syscall("gethostname"sv, -errno);
     return String(&hostname[0]);
+}
+
+ErrorOr<void> ioctl(int fd, unsigned request, ...)
+{
+    va_list ap;
+    va_start(ap, request);
+    FlatPtr arg = va_arg(ap, FlatPtr);
+    va_end(ap);
+    if (::ioctl(fd, request, arg) < 0)
+        return Error::from_syscall("ioctl"sv, -errno);
+    return {};
+}
+
+ErrorOr<struct termios> tcgetattr(int fd)
+{
+    struct termios ios = {};
+    if (::tcgetattr(fd, &ios) < 0)
+        return Error::from_syscall("tcgetattr"sv, -errno);
+    return ios;
+}
+
+ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const& ios)
+{
+    if (::tcsetattr(fd, optional_actions, &ios) < 0)
+        return Error::from_syscall("tcsetattr"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> chmod(StringView pathname, mode_t mode)
+{
+    if (!pathname.characters_without_null_termination())
+        return Error::from_syscall("chmod"sv, -EFAULT);
+
+#ifdef __serenity__
+    int rc = syscall(SC_chmod, pathname.characters_without_null_termination(), pathname.length(), mode);
+    HANDLE_SYSCALL_RETURN_VALUE("chmod"sv, rc, {});
+#else
+    String path = pathname;
+    if (::chmod(path.characters(), mode) < 0)
+        return Error::from_syscall("chmod"sv, -errno);
+    return {};
+#endif
 }
 
 }

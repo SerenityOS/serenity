@@ -62,4 +62,11 @@ describe("octal escapes", () => {
         // Because of the non string statement in the middle strict mode is not enabled.
         expect("'\\123'; somethingElse; 'use strict'").toEval();
     });
+
+    test("invalid octal escapes fail in strict mode", () => {
+        expect("'use strict'; '\\8'").not.toEval();
+        expect("'use strict'; '\\800'").not.toEval();
+        expect("'use strict'; '\\9'").not.toEval();
+        expect("'use strict'; '\\912'").not.toEval();
+    });
 });

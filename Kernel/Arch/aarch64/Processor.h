@@ -58,7 +58,7 @@ public:
         return 0;
     }
 
-    ALWAYS_INLINE static Processor& current() { return *((Processor*)0); }
+    ALWAYS_INLINE static Processor& current() { VERIFY_NOT_REACHED(); }
 
     static void deferred_call_queue(Function<void()> /* callback */) { }
 

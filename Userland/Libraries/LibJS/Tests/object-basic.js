@@ -151,6 +151,54 @@ describe("side effects", () => {
     });
 });
 
+describe("shorthanded properties with special names", () => {
+    test("keywords cannot be used", () => {
+        expect("({ function, })").not.toEval();
+        expect("({ var, })").not.toEval();
+        expect("({ const, })").not.toEval();
+        expect("({ class, })").not.toEval();
+    });
+
+    test("reserved words are allowed in non-strict mode", () => {
+        {
+            var implements = 3;
+            expect({ implements }).toEqual({ implements: 3 });
+        }
+        {
+            var public = "a";
+            expect({ public }).toEqual({ public: "a" });
+        }
+        {
+            var let = 9;
+            expect({ let }).toEqual({ let: 9 });
+        }
+        {
+            var await = 8;
+            expect({ await }).toEqual({ await: 8 });
+        }
+        {
+            var async = 7;
+            expect({ async }).toEqual({ async: 7 });
+        }
+        {
+            var yield = 6;
+            expect({ yield }).toEqual({ yield: 6 });
+        }
+    });
+
+    test("reserved words are not allowed in strict mode", () => {
+        expect('"use strict"; var implements = 3; ({ implements })').not.toEval();
+        expect("\"use strict\"; var public = 'a'; ({ public })").not.toEval();
+        expect('"use strict"; var let = 9; ({ let, })').not.toEval();
+        expect('"use strict"; var yield = 6; ({ yield, })').not.toEval();
+    });
+
+    test("special non reserved words are allowed even in strict mode", () => {
+        expect('"use strict"; var await = 8; ({ await, })').toEval();
+        expect('"use strict"; var async = 7; ({ async, })').toEval();
+    });
+});
+
 describe("errors", () => {
     test("syntax errors", () => {
         expect("({ foo: function() { super.bar; } })").not.toEval();

@@ -20,7 +20,7 @@ TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
     auto source = TRY(vm.argument(0).to_string(global_object));
     auto parser = JS::Parser(JS::Lexer(source));
-    parser.parse_program();
+    (void)parser.parse_program();
     return JS::Value(!parser.has_errors());
 }
 

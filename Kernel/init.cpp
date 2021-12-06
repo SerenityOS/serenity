@@ -220,7 +220,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     {
         RefPtr<Thread> init_stage2_thread;
-        Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
+        (void)Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
         // We need to make sure we drop the reference for init_stage2_thread
         // before calling into Scheduler::start, otherwise we will have a
         // dangling Thread that never gets cleaned up
@@ -319,7 +319,7 @@ void init_stage2(void*)
     (void)RandomDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
 
-    SB16::try_detect_and_create();
+    (void)SB16::try_detect_and_create();
     AC97::detect();
 
     StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());

@@ -42,6 +42,19 @@ struct sigaction {
     int sa_flags;
 };
 
+typedef struct {
+    void* ss_sp;
+    int ss_flags;
+    size_t ss_size;
+} stack_t;
+
+#define SS_ONSTACK 1
+#define SS_DISABLE 2
+
+// FIXME: These values are arbitrary, and might be platform dependent
+#define MINSIGSTKSZ 4096 // Minimum allowed
+#define SIGSTKSZ 32768   // Recommended size
+
 #define SIG_DFL ((__sighandler_t)0)
 #define SIG_ERR ((__sighandler_t)-1)
 #define SIG_IGN ((__sighandler_t)1)
@@ -67,6 +80,15 @@ struct sigaction {
 #define CLD_TRAPPED 3
 #define CLD_STOPPED 4
 #define CLD_CONTINUED 5
+
+#define FPE_INTDIV 0
+#define FPE_INTOVF 1
+#define FPE_FLTDIV 2
+#define FPE_FLTOVF 3
+#define FPE_FLTUND 4
+#define FPE_FLTRES 5
+#define FPE_FLTINV 6
+#define FPE_FLTSUB 7
 
 #ifdef __cplusplus
 }
