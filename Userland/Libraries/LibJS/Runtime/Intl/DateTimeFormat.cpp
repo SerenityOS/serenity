@@ -129,6 +129,9 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
     // 23. Let dataLocale be r.[[dataLocale]].
     auto data_locale = move(result.data_locale);
 
+    // Non-standard, the data locale is needed for LibUnicode lookups while formatting.
+    date_time_format.set_data_locale(data_locale);
+
     // 24. Let timeZone be ? Get(options, "timeZone").
     auto time_zone_value = TRY(options->get(vm.names.timeZone));
     String time_zone;
