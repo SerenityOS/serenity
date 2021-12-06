@@ -319,4 +319,8 @@ LineIterator& LineIterator::operator++()
     m_buffer = m_device->read_line();
     return *this;
 }
+
+LineIterator LineRange::begin() { return m_device.line_begin(); }
+LineIterator LineRange::end() { return m_device.line_end(); }
+
 }
