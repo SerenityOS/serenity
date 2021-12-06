@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +54,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("DEFERRED", Deferred, Keyword)                  \
     __ENUMERATE_SQL_TOKEN("DELETE", Delete, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("DESC", Desc, Keyword)                          \
+    __ENUMERATE_SQL_TOKEN("DESCRIBE", Describe, Keyword)                  \
     __ENUMERATE_SQL_TOKEN("DETACH", Detach, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("DISTINCT", Distinct, Keyword)                  \
     __ENUMERATE_SQL_TOKEN("DO", Do, Keyword)                              \

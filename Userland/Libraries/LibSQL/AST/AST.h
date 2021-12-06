@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1048,6 +1049,20 @@ private:
     RefPtr<GroupByClause> m_group_by_clause;
     NonnullRefPtrVector<OrderingTerm> m_ordering_term_list;
     RefPtr<LimitClause> m_limit_clause;
+};
+
+class DescribeTable : public Statement {
+public:
+    DescribeTable(NonnullRefPtr<QualifiedTableName> qualified_table_name)
+        : m_qualified_table_name(move(qualified_table_name))
+    {
+    }
+
+    NonnullRefPtr<QualifiedTableName> qualified_table_name() const { return m_qualified_table_name; }
+    RefPtr<SQLResult> execute(ExecutionContext&) const override;
+
+private:
+    NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
 };
 
 }
