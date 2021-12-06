@@ -307,6 +307,13 @@ u16 ms_from_time(double t)
     return static_cast<u16>(modulo(t, MS_PER_SECOND));
 }
 
+// 21.4.1.6 Week Day, https://tc39.es/ecma262/#sec-week-day
+u8 week_day(double t)
+{
+    // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
+    return static_cast<u8>(modulo(day(t) + 4, 7.0));
+}
+
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms)
 {
