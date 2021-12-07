@@ -6,13 +6,14 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* path = nullptr;
+    String path = {};
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path", "path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     outln("{}", LexicalPath::dirname(path));
     return 0;
