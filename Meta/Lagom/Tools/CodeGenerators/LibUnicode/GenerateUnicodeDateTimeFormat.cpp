@@ -499,11 +499,11 @@ static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern
                 format.pattern12_index = replace_pattern(format.pattern_index, time_format.pattern12_index, date_format.pattern_index);
             format.pattern_index = replace_pattern(format.pattern_index, time_format.pattern_index, date_format.pattern_index);
 
-            format.for_each_calendar_field_zipped_with(date_format, [](auto& field, auto const& date_field) {
+            format.for_each_calendar_field_zipped_with(date_format, [](auto& field, auto const& date_field, auto) {
                 if (date_field.has_value())
                     field = date_field;
             });
-            format.for_each_calendar_field_zipped_with(time_format, [](auto& field, auto const& time_field) {
+            format.for_each_calendar_field_zipped_with(time_format, [](auto& field, auto const& time_field, auto) {
                 if (time_field.has_value())
                     field = time_field;
             });
