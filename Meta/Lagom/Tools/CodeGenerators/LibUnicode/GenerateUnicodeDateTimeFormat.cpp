@@ -466,6 +466,13 @@ static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern
         return locale_data.unique_strings.ensure(move(new_pattern));
     };
 
+    auto inject_fractional_second_digits = [&](auto format) {
+        auto pattern = locale_data.unique_strings.get(format);
+
+        auto new_pattern = pattern.replace("{second}"sv, "{second}{decimal}{fractionalSecondDigits}"sv);
+        return locale_data.unique_strings.ensure(move(new_pattern));
+    };
+
     auto append_if_unique = [&](auto format) {
         auto format_index = locale_data.unique_patterns.ensure(move(format));
 
@@ -473,10 +480,27 @@ static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern
             calendar.available_formats.append(format_index);
     };
 
+    Vector<CalendarPattern> time_formats_with_fractional_second_digits;
+
     for (auto const& format : date_formats)
         append_if_unique(format);
-    for (auto const& format : time_formats)
+    for (auto const& format : time_formats) {
         append_if_unique(format);
+
+        if (format.second.has_value() && !format.fractional_second_digits.has_value()) {
+            auto new_format = format;
+            new_format.fractional_second_digits = 2;
+
+            new_format.pattern_index = inject_fractional_second_digits(new_format.pattern_index);
+            if (new_format.pattern12_index != 0)
+                new_format.pattern12_index = inject_fractional_second_digits(new_format.pattern12_index);
+
+            time_formats_with_fractional_second_digits.append(new_format);
+            append_if_unique(move(new_format));
+        }
+    }
+
+    time_formats.extend(move(time_formats_with_fractional_second_digits));
 
     for (auto const& date_format : date_formats) {
         CalendarPatternIndexType date_time_format_index = 0;

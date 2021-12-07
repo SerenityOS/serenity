@@ -659,9 +659,18 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     //
     // Rather than generating an prohibitively large amount of nearly-duplicate patterns, which only
     // differ by field length, we expand the field lengths here.
-    best_format->for_each_calendar_field_zipped_with(options, [](auto& best_format_field, auto const& option_field, auto) {
-        if (best_format_field.has_value() && option_field.has_value())
-            best_format_field = option_field;
+    best_format->for_each_calendar_field_zipped_with(options, [&](auto& best_format_field, auto const& option_field, auto field_type) {
+        switch (field_type) {
+        case Unicode::CalendarPattern::Field::FractionalSecondDigits:
+            if (best_format->second.has_value() && option_field.has_value())
+                best_format_field = option_field;
+            break;
+
+        default:
+            if (best_format_field.has_value() && option_field.has_value())
+                best_format_field = option_field;
+            break;
+        }
     });
 
     // 11. Return bestFormat.
