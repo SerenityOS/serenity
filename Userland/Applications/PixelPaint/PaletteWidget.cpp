@@ -228,8 +228,7 @@ Result<Vector<Color>, String> PaletteWidget::load_palette_file(Core::File& file)
 {
     Vector<Color> palette;
 
-    while (file.can_read_line()) {
-        auto line = file.read_line();
+    for (auto line : file.lines()) {
         if (line.is_whitespace())
             continue;
 
