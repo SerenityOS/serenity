@@ -1,6 +1,3 @@
-// NOTE: We cannot yet test the fractionalSecondDigits option. There aren't any patterns in the CLDR
-//       with this field ('S' in https://unicode.org/reports/tr35/tr35-dates.html#dfst-second). We
-//       will need to figure out how this field should be generated.
 describe("correct behavior", () => {
     test("length is 0", () => {
         expect(Intl.DateTimeFormat.prototype.resolvedOptions).toHaveLength(0);
@@ -176,6 +173,15 @@ describe("correct behavior", () => {
         ["2-digit", "numeric"].forEach(second => {
             const en = new Intl.DateTimeFormat("en", { second: second });
             expect(en.resolvedOptions().second).toBe(second);
+        });
+    });
+
+    test("fractionalSecondDigits", () => {
+        [1, 2, 3].forEach(fractionalSecondDigits => {
+            const en = new Intl.DateTimeFormat("en", {
+                fractionalSecondDigits: fractionalSecondDigits,
+            });
+            expect(en.resolvedOptions().fractionalSecondDigits).toBe(fractionalSecondDigits);
         });
     });
 
