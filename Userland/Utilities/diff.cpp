@@ -6,34 +6,25 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibDiff/Generator.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser parser;
-    char const* filename1;
-    char const* filename2;
+    String filename1;
+    String filename2;
 
     parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
-    parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsageAndExit);
+    parser.parse(arguments);
 
-    auto file1 = Core::File::construct(filename1);
-    if (!file1->open(Core::OpenMode::ReadOnly)) {
-        warnln("Error: Cannot open {}: {}", filename1, file1->error_string());
-        return 1;
-    }
-    auto file2 = Core::File::construct(filename2);
-    if (!file2->open(Core::OpenMode::ReadOnly)) {
-        warnln("Error: Cannot open {}: {}", filename2, file2->error_string());
-        return 1;
-    }
+    auto file1 = TRY(Core::File::open(filename1, Core::OpenMode::ReadOnly));
+    auto file2 = TRY(Core::File::open(filename2, Core::OpenMode::ReadOnly));
 
     auto hunks = Diff::from_text(file1->read_all(), file2->read_all());
     for (const auto& hunk : hunks) {
