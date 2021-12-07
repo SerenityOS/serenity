@@ -249,7 +249,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         return &date_time_format;
 
     // 38. For each row in Table 4, except the header row, in table order, do
-    date_time_format.for_each_calendar_field_zipped_with(*best_format, [&](auto& date_time_format_field, auto const& best_format_field) {
+    date_time_format.for_each_calendar_field_zipped_with(*best_format, [&](auto& date_time_format_field, auto const& best_format_field, auto) {
         // a. Let prop be the name given in the Property column of the row.
         // b. If bestFormat has a field [[<prop>]], then
         if (best_format_field.has_value()) {
@@ -490,12 +490,12 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
         Unicode::CalendarPattern format {};
 
         // b. Add to format all fields from dateFormat except [[pattern]] and [[rangePatterns]].
-        format.for_each_calendar_field_zipped_with(date_format, [](auto& format_field, auto const& date_format_field) {
+        format.for_each_calendar_field_zipped_with(date_format, [](auto& format_field, auto const& date_format_field, auto) {
             format_field = date_format_field;
         });
 
         // c. Add to format all fields from timeFormat except [[pattern]], [[rangePatterns]], [[pattern12]], and [[rangePatterns12]], if present.
-        format.for_each_calendar_field_zipped_with(time_format, [](auto& format_field, auto const& time_format_field) {
+        format.for_each_calendar_field_zipped_with(time_format, [](auto& format_field, auto const& time_format_field, auto) {
             if (time_format_field.has_value())
                 format_field = time_format_field;
         });
@@ -577,7 +577,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
         int score = 0;
 
         // b. For each property name property shown in Table 4, do
-        format.for_each_calendar_field_zipped_with(options, [&](auto const& format_prop, auto const& options_prop) {
+        format.for_each_calendar_field_zipped_with(options, [&](auto const& format_prop, auto const& options_prop, auto) {
             using ValueType = typename RemoveReference<decltype(options_prop)>::ValueType;
 
             // i. If options has a field [[<property>]], let optionsProp be options.[[<property>]]; else let optionsProp be undefined.
@@ -659,7 +659,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     //
     // Rather than generating an prohibitively large amount of nearly-duplicate patterns, which only
     // differ by field length, we expand the field lengths here.
-    best_format->for_each_calendar_field_zipped_with(options, [](auto& best_format_field, auto const& option_field) {
+    best_format->for_each_calendar_field_zipped_with(options, [](auto& best_format_field, auto const& option_field, auto) {
         if (best_format_field.has_value() && option_field.has_value())
             best_format_field = option_field;
     });
