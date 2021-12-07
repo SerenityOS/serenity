@@ -443,6 +443,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 } else {
                     if (!state.has_fraction_length) {
                         state.has_fraction_length = true;
+                        state.zero_pad = true;
                         state.fraction_length = 0;
                     }
                     state.fraction_length *= 10;
@@ -454,6 +455,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
             if (*p == '*') {
                 if (state.dot) {
                     state.has_fraction_length = true;
+                    state.zero_pad = true;
                     state.fraction_length = NextArgument<int>()(ap);
                 } else {
                     state.field_width = NextArgument<int>()(ap);
