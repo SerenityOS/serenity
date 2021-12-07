@@ -6,7 +6,8 @@
 
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
-#include <stdio.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 class DiscordianDate {
@@ -99,12 +100,9 @@ private:
     }
 };
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio"));
 
     auto date = Core::DateTime::now();
     outln("Today is {}", DiscordianDate(date).to_string());
