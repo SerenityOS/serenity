@@ -666,6 +666,11 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
                 best_format_field = option_field;
             break;
 
+        case Unicode::CalendarPattern::Field::Hour:
+        case Unicode::CalendarPattern::Field::Minute:
+        case Unicode::CalendarPattern::Field::Second:
+            break;
+
         default:
             if (best_format_field.has_value() && option_field.has_value())
                 best_format_field = option_field;
