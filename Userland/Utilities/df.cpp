@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibMain/Main.h>
 #include <inttypes.h>
 #include <stdlib.h>
 
@@ -27,18 +26,14 @@ struct FileSystem {
     String mount_point;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display free disk space of each partition.");
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto file = Core::File::construct("/proc/df");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", file->name(), file->error_string());
-        return 1;
-    }
+    auto file = TRY(Core::File::open("/proc/df", Core::OpenMode::ReadOnly));
 
     if (flag_human_readable) {
         outln("Filesystem      Size        Used    Available   Mount point");
@@ -47,7 +42,7 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = file->read_all();
-    auto json_result = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+    auto json_result = TRY(JsonValue::from_string(file_contents));
     auto const& json = json_result.as_array();
     json.for_each([](auto& value) {
         auto& fs_object = value.as_object();
