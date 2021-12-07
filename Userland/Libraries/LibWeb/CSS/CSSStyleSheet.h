@@ -18,7 +18,9 @@ namespace Web::CSS {
 
 class CSSImportRule;
 
-class CSSStyleSheet final : public StyleSheet {
+class CSSStyleSheet final
+    : public StyleSheet
+    , public Weakable<CSSStyleSheet> {
 public:
     using WrapperType = Bindings::CSSStyleSheetWrapper;
 
@@ -52,8 +54,7 @@ private:
 
     NonnullRefPtr<CSSRuleList> m_rules;
 
-    // FIXME: Use WeakPtr.
-    CSSRule* m_owner_css_rule { nullptr };
+    WeakPtr<CSSRule> m_owner_css_rule;
 };
 
 }

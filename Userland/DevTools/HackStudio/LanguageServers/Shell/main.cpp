@@ -8,7 +8,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/ClientConnection.h>
+#include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio unix rpath recvfd"));
 
-    auto socket = TRY(Core::LocalSocket::take_over_accepted_socket_from_system_server());
-    (void)IPC::new_client_connection<LanguageServers::Shell::ClientConnection>(move(socket), 1);
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<LanguageServers::Shell::ClientConnection>());
+
     TRY(Core::System::pledge("stdio rpath recvfd"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
 

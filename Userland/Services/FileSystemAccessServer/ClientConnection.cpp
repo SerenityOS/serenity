@@ -20,10 +20,10 @@ namespace FileSystemAccessServer {
 
 static HashMap<int, NonnullRefPtr<ClientConnection>> s_connections;
 
-ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket), client_id)
+ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket)
+    : IPC::ClientConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket), 1)
 {
-    s_connections.set(client_id, *this);
+    s_connections.set(1, *this);
 }
 
 ClientConnection::~ClientConnection()
