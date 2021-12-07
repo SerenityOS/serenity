@@ -7,29 +7,22 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <LibDeviceTree/Validation.h>
-#include <serenity.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     String filename;
 
     Core::ArgsParser args;
     args.add_positional_argument(filename, "File to process", "file", Core::ArgsParser::Required::Yes);
-    args.parse(argc, argv);
+    args.parse(arguments);
 
     // FIXME: Figure out how to do this sanely from stdin
-    auto maybe_file = Core::MappedFile::map(filename);
-    if (maybe_file.is_error()) {
-        warnln("Unable to dump device tree from file {}: {}", filename, maybe_file.error());
-        return 1;
-    }
-    auto file = maybe_file.release_value();
+    auto file = TRY(Core::MappedFile::map(filename));
 
     if (file->size() < sizeof(DeviceTree::FlattenedDeviceTreeHeader)) {
         warnln("Not enough data in {} to contain a device tree header!", filename);
