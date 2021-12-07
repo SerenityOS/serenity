@@ -20,9 +20,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
     dbgln("Wavefront: Loading {}...", file.name());
 
     // Start reading file line by line
-    for (auto line = file.line_begin(); !line.at_end(); ++line) {
-        auto object_line = *line;
-
+    for (auto object_line : file.lines()) {
         // Ignore file comments
         if (object_line.starts_with("#"))
             continue;
