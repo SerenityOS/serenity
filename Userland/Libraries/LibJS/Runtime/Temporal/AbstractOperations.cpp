@@ -1319,11 +1319,8 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDateTimeStringUTCDesignator, iso_string);
     }
 
-    // 4. Let result be ? ParseISODateTime(isoString).
-    auto result = TRY(parse_iso_date_time(global_object, *parse_result));
-
-    // 5. Return result.
-    return result;
+    // 4. Return ? ParseISODateTime(isoString).
+    return parse_iso_date_time(global_object, *parse_result);
 }
 
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
