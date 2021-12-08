@@ -118,6 +118,26 @@ struct CalendarPattern {
     Optional<CalendarPatternStyle> time_zone_name {};
 };
 
+struct CalendarRangePattern : public CalendarPattern {
+    enum class Field {
+        Era,
+        Year,
+        Month,
+        Day,
+        AmPm,
+        DayPeriod,
+        Hour,
+        Minute,
+        Second,
+        FractionalSecondDigits,
+    };
+
+    Optional<Field> field {};
+    String start_range {};
+    StringView separator {};
+    String end_range {};
+};
+
 enum class CalendarFormatType : u8 {
     Date,
     Time,
@@ -139,6 +159,9 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale);
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale);
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
 Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
+Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar);
+Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton);
+Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton);
 Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value);
 Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
 Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
