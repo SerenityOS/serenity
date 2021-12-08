@@ -1141,24 +1141,6 @@ public:
         return JS::js_undefined();
     }
 
-    virtual JS::Value count() override
-    {
-        auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
-        auto counter_value = m_console.counter_increment(label);
-        js_outln("{}: {}", label, counter_value);
-        return JS::js_undefined();
-    }
-
-    virtual JS::Value count_reset() override
-    {
-        auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
-        if (m_console.counter_reset(label))
-            js_outln("{}: 0", label);
-        else
-            js_outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
-        return JS::js_undefined();
-    }
-
     virtual JS::Value assert_() override
     {
         auto& vm = this->vm();
@@ -1192,6 +1174,7 @@ public:
             js_outln("{}", output);
             break;
         case JS::Console::LogLevel::Warn:
+        case JS::Console::LogLevel::CountReset:
             js_outln("\033[33;1m{}\033[0m", output);
             break;
         default:

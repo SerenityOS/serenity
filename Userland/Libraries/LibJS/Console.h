@@ -63,12 +63,9 @@ public:
     ThrowCompletionOr<Value> warn();
     Value clear();
     Value trace();
-    Value count();
-    Value count_reset();
+    ThrowCompletionOr<Value> count();
+    ThrowCompletionOr<Value> count_reset();
     Value assert_();
-
-    unsigned counter_increment(String label);
-    bool counter_reset(String label);
 
     void output_debug_message(LogLevel log_level, String output) const;
 
@@ -92,8 +89,6 @@ public:
 
     virtual Value clear() = 0;
     virtual Value trace() = 0;
-    virtual Value count() = 0;
-    virtual Value count_reset() = 0;
     virtual Value assert_() = 0;
 
 protected:

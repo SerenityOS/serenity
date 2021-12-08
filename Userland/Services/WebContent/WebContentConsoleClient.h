@@ -26,8 +26,6 @@ public:
 private:
     virtual JS::Value clear() override;
     virtual JS::Value trace() override;
-    virtual JS::Value count() override;
-    virtual JS::Value count_reset() override;
     virtual JS::Value assert_() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>&) override;
 
