@@ -282,6 +282,7 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_environment);
+    visitor.visit(m_private_environment);
     visitor.visit(m_realm);
     visitor.visit(m_home_object);
 
