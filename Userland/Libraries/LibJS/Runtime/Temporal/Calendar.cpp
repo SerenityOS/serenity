@@ -407,8 +407,12 @@ ThrowCompletionOr<Object*> to_temporal_calendar(GlobalObject& global_object, Val
 
     // 3. If ! IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
-        // a. Let identifier be ? ParseTemporalCalendarString(identifier).
+        // a. Set identifier to ? ParseTemporalCalendarString(identifier).
         identifier = TRY(parse_temporal_calendar_string(global_object, identifier));
+
+        // b. If ! IsBuiltinCalendar(identifier) is false, throw a RangeError exception.
+        if (!is_builtin_calendar(identifier))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
     }
 
     // 4. Return ! CreateTemporalCalendar(identifier).
