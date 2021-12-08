@@ -34,14 +34,14 @@ private:
 
 class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
-    static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
+    static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(StringView name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~PCIDeviceAttributeSysFSComponent() {};
 
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
-    PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
+    PCIDeviceAttributeSysFSComponent(StringView name, const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width);
     NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
     PCI::RegisterOffset m_offset;
     size_t m_field_bytes_width;
