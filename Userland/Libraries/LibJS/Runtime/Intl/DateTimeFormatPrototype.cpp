@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatFunction.h>
 #include <LibJS/Runtime/Intl/DateTimeFormatPrototype.h>
@@ -29,6 +31,7 @@ void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.format, format, nullptr, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -53,6 +56,30 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
 
     // 5. Return dtf.[[BoundFormat]].
     return date_time_format->bound_format();
+}
+
+// 11.4.4 Intl.DateTimeFormat.prototype.formatToParts ( date ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatToParts
+JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
+{
+    auto date = vm.argument(0);
+
+    // 1. Let dtf be the this value.
+    // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
+    auto* date_time_format = TRY(typed_this_object(global_object));
+
+    // 3. If date is undefined, then
+    if (date.is_undefined()) {
+        // a. Let x be Call(%Date.now%, undefined).
+        date = MUST(call(global_object, global_object.date_constructor_now_function(), js_undefined()));
+    }
+    // 4. Else,
+    else {
+        // a. Let x be ? ToNumber(date).
+        date = TRY(date.to_number(global_object));
+    }
+
+    // 5. Return ? FormatDateTimeToParts(dtf, x).
+    return TRY(format_date_time_to_parts(global_object, *date_time_format, date));
 }
 
 // 11.4.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
