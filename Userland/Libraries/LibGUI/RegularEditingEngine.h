@@ -19,6 +19,7 @@ public:
 
 private:
     void sort_selected_lines();
+    virtual EngineType engine_type() const override { return EngineType::Regular; }
 };
 
 }
