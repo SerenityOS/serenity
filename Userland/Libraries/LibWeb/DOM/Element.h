@@ -118,6 +118,7 @@ public:
     {
         m_custom_properties.set(custom_property_name, style_property);
     }
+    HashMap<String, CSS::StyleComputer::CustomPropertyResolutionTuple> const& custom_properties() const { return m_custom_properties; }
 
     void queue_an_element_task(HTML::Task::Source, Function<void()>);
 

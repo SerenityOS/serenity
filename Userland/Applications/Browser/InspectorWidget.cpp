@@ -50,7 +50,7 @@ void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_inspected_node_id);
     if (maybe_inspected_node_properties.has_value()) {
         auto inspected_node_properties = maybe_inspected_node_properties.value();
-        load_style_json(inspected_node_properties.specified_values_json, inspected_node_properties.computed_values_json);
+        load_style_json(inspected_node_properties.specified_values_json, inspected_node_properties.computed_values_json, inspected_node_properties.custom_properties_json);
     } else {
         clear_style_json();
     }
@@ -86,6 +86,11 @@ InspectorWidget::InspectorWidget()
     computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
     computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
     m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
+
+    auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables");
+    custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>();
+    custom_properties_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
     m_dom_tree_view->set_focus(true);
 }
@@ -127,30 +132,38 @@ void InspectorWidget::clear_dom_json()
     clear_style_json();
 }
 
-void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json)
+void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json, String custom_properties_json)
 {
     if (node_id != m_inspected_node_id) {
         dbgln("Got data for the wrong node id! Wanted {}, got {}", m_inspected_node_id, node_id);
         return;
     }
 
-    load_style_json(specified_values_json, computed_values_json);
+    load_style_json(specified_values_json, computed_values_json, custom_properties_json);
 }
 
-void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json)
+void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
 {
     m_inspected_node_specified_values_json = specified_values_json;
-    m_inspected_node_computed_values_json = computed_values_json;
     m_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_specified_values_json.value().view()));
+
+    m_inspected_node_computed_values_json = computed_values_json;
     m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_computed_values_json.value().view()));
+
+    m_inspected_node_custom_properties_json = custom_properties_json;
+    m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_custom_properties_json.value().view()));
 }
 
 void InspectorWidget::clear_style_json()
 {
     m_inspected_node_specified_values_json.clear();
-    m_inspected_node_computed_values_json.clear();
     m_style_table_view->set_model(nullptr);
+
+    m_inspected_node_computed_values_json.clear();
     m_computed_style_table_view->set_model(nullptr);
+
+    m_inspected_node_custom_properties_json.clear();
+    m_custom_properties_table_view->set_model(nullptr);
 }
 
 }
