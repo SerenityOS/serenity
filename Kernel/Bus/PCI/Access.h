@@ -22,7 +22,6 @@ public:
         Memory,
     };
 
-public:
     static bool initialize_for_memory_access(PhysicalAddress mcfg_table);
     static bool initialize_for_io_access();
 
