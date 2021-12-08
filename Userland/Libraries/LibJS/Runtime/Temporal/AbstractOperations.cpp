@@ -1262,13 +1262,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject& global_ob
         return "iso8601"sv;
     }
 
-    // 5. If ! IsBuiltinCalendar(id) is false, then
-    if (!is_builtin_calendar(*id_part)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, *id_part);
-    }
-
-    // 6. Return id.
+    // 5. Return id.
     return id_part.value();
 }
 
