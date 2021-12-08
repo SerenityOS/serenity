@@ -65,7 +65,7 @@ public:
     Value trace();
     ThrowCompletionOr<Value> count();
     ThrowCompletionOr<Value> count_reset();
-    Value assert_();
+    ThrowCompletionOr<Value> assert_();
 
     void output_debug_message(LogLevel log_level, String output) const;
 
@@ -89,7 +89,6 @@ public:
 
     virtual void clear() = 0;
     virtual Value trace() = 0;
-    virtual Value assert_() = 0;
 
 protected:
     virtual ~ConsoleClient() = default;

@@ -1140,20 +1140,6 @@ public:
         return JS::js_undefined();
     }
 
-    virtual JS::Value assert_() override
-    {
-        auto& vm = this->vm();
-        if (!vm.argument(0).to_boolean()) {
-            if (vm.argument_count() > 1) {
-                js_out("\033[31;1mAssertion failed:\033[0m");
-                js_outln(" {}", vm.join_arguments(1));
-            } else {
-                js_outln("\033[31;1mAssertion failed\033[0m");
-            }
-        }
-        return JS::js_undefined();
-    }
-
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments) override
     {
         auto output = String::join(" ", arguments);
@@ -1164,6 +1150,7 @@ public:
             js_outln("\033[36;1m{}\033[0m", output);
             break;
         case JS::Console::LogLevel::Error:
+        case JS::Console::LogLevel::Assert:
             js_outln("\033[31;1m{}\033[0m", output);
             break;
         case JS::Console::LogLevel::Info:
