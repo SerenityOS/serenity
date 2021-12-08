@@ -1089,51 +1089,50 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     auto fraction_part = parse_result.time_fractional_part;
     auto calendar_part = parse_result.calendar_name;
 
-    // 3. Let year be the part of isoString produced by the DateYear production.
-    // 4. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
+    // 3. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
     String normalized_year;
     if (year_part.has_value() && year_part->starts_with("\xE2\x88\x92"sv))
         normalized_year = String::formatted("-{}", year_part->substring_view(3));
     else
         normalized_year = year_part.value_or("0");
 
-    // 5. Set year to ! ToIntegerOrInfinity(year).
+    // 4. Set year to ! ToIntegerOrInfinity(year).
     auto year = *normalized_year.to_int<i32>();
 
     u8 month;
-    // 6. If month is undefined, then
+    // 5. If month is undefined, then
     if (!month_part.has_value()) {
         // a. Set month to 1.
         month = 1;
     }
-    // 7. Else,
+    // 6. Else,
     else {
         // a. Set month to ! ToIntegerOrInfinity(month).
         month = *month_part->to_uint<u8>();
     }
 
     u8 day;
-    // 8. If day is undefined, then
+    // 7. If day is undefined, then
     if (!day_part.has_value()) {
         // a. Set day to 1.
         day = 1;
     }
-    // 9. Else,
+    // 8. Else,
     else {
         // a. Set day to ! ToIntegerOrInfinity(day).
         day = *day_part->to_uint<u8>();
     }
 
-    // 10. Set hour to ! ToIntegerOrInfinity(hour).
+    // 9. Set hour to ! ToIntegerOrInfinity(hour).
     u8 hour = *hour_part.value_or("0"sv).to_uint<u8>();
 
-    // 11. Set minute to ! ToIntegerOrInfinity(minute).
+    // 10. Set minute to ! ToIntegerOrInfinity(minute).
     u8 minute = *minute_part.value_or("0"sv).to_uint<u8>();
 
-    // 12. Set second to ! ToIntegerOrInfinity(second).
+    // 11. Set second to ! ToIntegerOrInfinity(second).
     u8 second = *second_part.value_or("0"sv).to_uint<u8>();
 
-    // 13. If second is 60, then
+    // 12. If second is 60, then
     if (second == 60) {
         // a. Set second to 59.
         second = 59;
@@ -1142,7 +1141,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     u16 millisecond;
     u16 microsecond;
     u16 nanosecond;
-    // 14. If fraction is not undefined, then
+    // 13. If fraction is not undefined, then
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
@@ -1156,7 +1155,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         // g. Set nanosecond to ! ToIntegerOrInfinity(nanosecond).
         nanosecond = *fraction.substring(6, 3).to_uint<u16>();
     }
-    // 15. Else,
+    // 14. Else,
     else {
         // a. Let millisecond be 0.
         millisecond = 0;
@@ -1166,15 +1165,15 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
         nanosecond = 0;
     }
 
-    // 16. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+    // 15. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
     if (!is_valid_iso_date(year, month, day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidISODate);
 
-    // 17. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    // 16. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidTime);
 
-    // 18. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
+    // 17. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond, [[Calendar]]: calendar }.
     return ISODateTime { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = microsecond, .nanosecond = nanosecond, .calendar = calendar_part.has_value() ? *calendar_part : Optional<String>() };
 }
 
