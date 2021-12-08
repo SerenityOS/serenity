@@ -88,7 +88,6 @@ private:
 
     void reset_port(u8);
 
-private:
     IOAddress m_io_base;
 
     OwnPtr<UHCIRootHub> m_root_hub;

@@ -37,7 +37,7 @@ Device::Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, Dev
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(address)
-    , m_controller(controller)
+    , m_controller(move(controller))
     , m_default_pipe(move(default_pipe))
 {
 }

@@ -99,7 +99,7 @@ ErrorOr<void> SysFSUSBBusDirectory::traverse_as_directory(FileSystemID fsid, Fun
     TRY(callback({ ".", { fsid, component_index() }, 0 }));
     TRY(callback({ "..", { fsid, m_parent_directory->component_index() }, 0 }));
 
-    for (auto& device_node : m_device_nodes) {
+    for (auto const& device_node : m_device_nodes) {
         InodeIdentifier identifier = { fsid, device_node.component_index() };
         TRY(callback({ device_node.name(), identifier, 0 }));
     }

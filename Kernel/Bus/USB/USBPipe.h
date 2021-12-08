@@ -40,7 +40,6 @@ public:
         FullSpeed
     };
 
-public:
     static ErrorOr<NonnullOwnPtr<Pipe>> try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval = 0);
 
     Type type() const { return m_type; }
