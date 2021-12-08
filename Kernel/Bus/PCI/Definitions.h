@@ -234,7 +234,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 class Access;
 class DeviceIdentifier {
 public:
-    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> capabilities)
+    DeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> const& capabilities)
         : m_address(address)
         , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
@@ -253,9 +253,9 @@ public:
         }
     }
 
-    Vector<Capability> capabilities() const { return m_capabilities; }
-    const HardwareID& hardware_id() const { return m_hardware_id; }
-    const Address& address() const { return m_address; }
+    Vector<Capability> const& capabilities() const { return m_capabilities; }
+    HardwareID const& hardware_id() const { return m_hardware_id; }
+    Address const& address() const { return m_address; }
 
     RevisionID revision_id() const { return m_revision_id; }
     ClassCode class_code() const { return m_class_code; }
