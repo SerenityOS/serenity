@@ -21,9 +21,7 @@ class Transfer : public RefCounted<Transfer> {
 public:
     static ErrorOr<NonnullRefPtr<Transfer>> try_create(Pipe&, u16 length);
 
-public:
     Transfer() = delete;
-    Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region>);
     ~Transfer();
 
     void set_setup_packet(const USBRequestData& request);
@@ -41,6 +39,7 @@ public:
     bool error_occurred() const { return m_error_occurred; }
 
 private:
+    Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region>);
     Pipe& m_pipe;                                // Pipe that initiated this transfer
     USBRequestData m_request;                    // USB request
     NonnullOwnPtr<Memory::Region> m_data_buffer; // DMA Data buffer for transaction
