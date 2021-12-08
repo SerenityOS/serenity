@@ -381,7 +381,7 @@ static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern
                 format.day = CalendarPatternStyle::Numeric;
             else
                 format.day = CalendarPatternStyle::TwoDigit;
-        } else if (all_of(segment, is_any_of("DFG"sv))) {
+        } else if (all_of(segment, is_any_of("DFg"sv))) {
             builder.append("{day}");
             format.day = CalendarPatternStyle::Numeric;
         }
