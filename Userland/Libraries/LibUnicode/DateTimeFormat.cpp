@@ -140,6 +140,33 @@ Vector<CalendarPattern> get_calendar_available_formats([[maybe_unused]] StringVi
 #endif
 }
 
+Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_default_range_format(locale, calendar);
+#else
+    return {};
+#endif
+}
+
+Vector<Unicode::CalendarRangePattern> get_calendar_range_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] StringView skeleton)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_range_formats(locale, calendar, skeleton);
+#else
+    return {};
+#endif
+}
+
+Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] StringView skeleton)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_range12_formats(locale, calendar, skeleton);
+#else
+    return {};
+#endif
+}
+
 Optional<StringView> get_calendar_era_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Era value)
 {
 #if ENABLE_UNICODE_DATA
