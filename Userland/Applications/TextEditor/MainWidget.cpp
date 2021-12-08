@@ -54,7 +54,12 @@ MainWidget::MainWidget()
     m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
-    m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
+    if (m_editor->editing_engine()->is_regular())
+        m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
+    else if (m_editor->editing_engine()->is_vim())
+        m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
+    else
+        VERIFY_NOT_REACHED();
 
     m_editor->on_change = [this] {
         update_preview();
