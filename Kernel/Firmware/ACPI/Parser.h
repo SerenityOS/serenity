@@ -74,7 +74,7 @@ public:
     const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
     const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
 
-    ~Parser() {};
+    ~Parser() = default;
 
 private:
     Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
