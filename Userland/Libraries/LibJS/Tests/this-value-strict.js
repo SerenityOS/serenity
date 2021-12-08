@@ -358,7 +358,7 @@ describe("derived classes which access this before super should fail", () => {
         }).toThrowWithMessage(ReferenceError, "|this| has not been initialized");
     });
 
-    test.skip("access of this via a eval in arrow function", () => {
+    test("access of this via a eval in arrow function", () => {
         class IncorrectConstructor extends Base {
             constructor() {
                 const arrow = () => eval("() => this")();
