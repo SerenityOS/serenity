@@ -10,9 +10,11 @@
 #include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -132,12 +134,9 @@ static Optional<String> get_description_from_mime_type(const String& mime, const
     return {};
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Vector<const char*> paths;
     bool flag_mime_only = false;
@@ -146,23 +145,20 @@ int main(int argc, char** argv)
     args_parser.set_general_help("Determine type of files");
     args_parser.add_option(flag_mime_only, "Only print mime type", "mime-type", 'I');
     args_parser.add_positional_argument(paths, "Files to identify", "files", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     bool all_ok = true;
 
     for (auto path : paths) {
-        auto file = Core::File::construct(path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
+        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+        if (file_or_error.is_error()) {
             perror(path);
             all_ok = false;
             continue;
         }
+        auto file = file_or_error.release_value();
 
-        struct stat file_stat;
-        if (lstat(path, &file_stat) < 0) {
-            perror("lstat");
-            return 1;
-        }
+        struct stat file_stat = TRY(Core::System::lstat(path));
 
         auto file_size_in_bytes = file_stat.st_size;
         if (file->is_directory()) {
