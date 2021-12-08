@@ -90,17 +90,58 @@ Value Console::trace()
     return js_undefined();
 }
 
-Value Console::count()
+// 1.2.1. count(label), https://console.spec.whatwg.org/#count
+ThrowCompletionOr<Value> Console::count()
 {
+    // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-count
+    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+
+    // 1. Let map be the associated count map.
+    auto& map = m_counters;
+
+    // 2. If map[label] exists, set map[label] to map[label] + 1.
+    if (auto found = map.find(label); found != map.end()) {
+        map.set(label, found->value + 1);
+    }
+    // 3. Otherwise, set map[label] to 1.
+    else {
+        map.set(label, 1);
+    }
+
+    // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and ToString(map[label]).
+    String concat = String::formatted("{}: {}", label, map.get(label).value());
+
+    // 5. Perform Logger("count", « concat »).
+    Vector<Value> concat_as_vector { js_string(vm(), concat) };
     if (m_client)
-        return m_client->count();
+        TRY(m_client->logger(LogLevel::Count, concat_as_vector));
     return js_undefined();
 }
 
-Value Console::count_reset()
+// 1.2.2. countReset(label), https://console.spec.whatwg.org/#countreset
+ThrowCompletionOr<Value> Console::count_reset()
 {
-    if (m_client)
-        return m_client->count_reset();
+    // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-countreset
+    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+
+    // 1. Let map be the associated count map.
+    auto& map = m_counters;
+
+    // 2. If map[label] exists, set map[label] to 0.
+    if (auto found = map.find(label); found != map.end()) {
+        map.set(label, 0);
+    }
+    // 3. Otherwise:
+    else {
+        // 1. Let message be a string without any formatting specifiers indicating generically
+        //    that the given label does not have an associated count.
+        auto message = String::formatted("\"{}\" doesn't have a count", label);
+        // 2. Perform Logger("countReset", « message »);
+        Vector<Value> message_as_vector { js_string(vm(), message) };
+        if (m_client)
+            TRY(m_client->logger(LogLevel::CountReset, message_as_vector));
+    }
+
     return js_undefined();
 }
 
@@ -109,28 +150,6 @@ Value Console::assert_()
     if (m_client)
         return m_client->assert_();
     return js_undefined();
-}
-
-unsigned Console::counter_increment(String label)
-{
-    auto value = m_counters.get(label);
-    if (!value.has_value()) {
-        m_counters.set(label, 1);
-        return 1;
-    }
-
-    auto new_value = value.value() + 1;
-    m_counters.set(label, new_value);
-    return new_value;
-}
-
-bool Console::counter_reset(String label)
-{
-    if (!m_counters.contains(label))
-        return false;
-
-    m_counters.remove(label);
-    return true;
 }
 
 Vector<Value> Console::vm_arguments()

@@ -135,25 +135,6 @@ JS::Value WebContentConsoleClient::trace()
     return JS::js_undefined();
 }
 
-JS::Value WebContentConsoleClient::count()
-{
-    auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
-    auto counter_value = m_console.counter_increment(label);
-    print_html(String::formatted("{}: {}", label, counter_value));
-    return JS::js_undefined();
-}
-
-JS::Value WebContentConsoleClient::count_reset()
-{
-    auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
-    if (m_console.counter_reset(label)) {
-        print_html(String::formatted("{}: 0", label));
-    } else {
-        print_html(String::formatted("\"{}\" doesn't have a count", label));
-    }
-    return JS::js_undefined();
-}
-
 JS::Value WebContentConsoleClient::assert_()
 {
     auto& vm = this->vm();
@@ -196,6 +177,7 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
         html.append("<span class=\"log\"> ");
         break;
     case JS::Console::LogLevel::Warn:
+    case JS::Console::LogLevel::CountReset:
         html.append("<span class=\"warn\">(w) ");
         break;
     default:
