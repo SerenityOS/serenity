@@ -159,13 +159,7 @@ public:
     {
     }
 
-    Address(const Address& address)
-        : m_domain(address.domain())
-        , m_bus(address.bus())
-        , m_device(address.device())
-        , m_function(address.function())
-    {
-    }
+    Address(const Address& address) = default;
 
     bool is_null() const { return !m_bus && !m_device && !m_function; }
     operator bool() const { return !is_null(); }
