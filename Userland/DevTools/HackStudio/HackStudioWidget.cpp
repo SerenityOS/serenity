@@ -293,7 +293,12 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
     }
     current_editor().horizontal_scrollbar().set_value(new_project_file->horizontal_scroll_value());
     current_editor().vertical_scrollbar().set_value(new_project_file->vertical_scroll_value());
-    current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+    if (current_editor().editing_engine()->is_regular())
+        current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+    else if (current_editor().editing_engine()->is_vim())
+        current_editor().set_editing_engine(make<GUI::VimEditingEngine>());
+    else
+        VERIFY_NOT_REACHED();
 
     set_edit_mode(EditMode::Text);
 
@@ -587,6 +592,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     } else {
         parent.add_child(wrapper);
     }
+    auto previous_editor_wrapper = m_current_editor_wrapper;
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
@@ -595,6 +601,12 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
     wrapper->on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
+    if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_regular())
+        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+    else if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_vim())
+        wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
+    else
+        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
@@ -1148,10 +1160,13 @@ void HackStudioWidget::create_edit_menu(GUI::Window& window)
     edit_menu.add_separator();
 
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
-        if (action.is_checked())
-            current_editor().set_editing_engine(make<GUI::VimEditingEngine>());
-        else
-            current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        if (action.is_checked()) {
+            for (auto& editor_wrapper : m_all_editor_wrappers)
+                editor_wrapper.editor().set_editing_engine(make<GUI::VimEditingEngine>());
+        } else {
+            for (auto& editor_wrapper : m_all_editor_wrappers)
+                editor_wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        }
     });
     vim_emulation_setting_action->set_checked(false);
     edit_menu.add_action(vim_emulation_setting_action);
