@@ -110,6 +110,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             }
             roots.set(execution_context->lexical_environment);
             roots.set(execution_context->variable_environment);
+            roots.set(execution_context->private_environment);
         }
     };
 
