@@ -118,9 +118,9 @@ Optional<u16> Queue::take_free_slot()
         m_free_head = m_descriptors[descriptor_index].next;
         --m_free_buffers;
         return descriptor_index;
-    } else {
-        return {};
     }
+
+    return {};
 }
 
 bool Queue::should_notify() const
