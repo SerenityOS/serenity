@@ -68,7 +68,7 @@ private:
     {
         // Go through the number of descriptors to create in the pool, and create a virtual/physical address mapping
         for (size_t i = 0; i < PAGE_SIZE / sizeof(T); i++) {
-            auto placement_address = reinterpret_cast<void*>(m_pool_region->vaddr().get() + (i * sizeof(T)));
+            auto* placement_address = reinterpret_cast<void*>(m_pool_region->vaddr().get() + (i * sizeof(T)));
             auto physical_address = static_cast<u32>(m_pool_region->physical_page(0)->paddr().get() + (i * sizeof(T)));
             auto* object = new (placement_address) T(physical_address);
             m_free_descriptor_stack.push(object); // Push the descriptor's pointer onto the free list
