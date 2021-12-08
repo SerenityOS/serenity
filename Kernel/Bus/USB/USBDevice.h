@@ -26,7 +26,6 @@ public:
         LowSpeed
     };
 
-public:
     static ErrorOr<NonnullRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
 
     Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);

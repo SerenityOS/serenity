@@ -85,11 +85,11 @@ static USBHubDescriptor uhci_root_hub_hub_descriptor = {
 
 ErrorOr<NonnullOwnPtr<UHCIRootHub>> UHCIRootHub::try_create(NonnullRefPtr<UHCIController> uhci_controller)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) UHCIRootHub(uhci_controller));
+    return adopt_nonnull_own_or_enomem(new (nothrow) UHCIRootHub(move(uhci_controller)));
 }
 
 UHCIRootHub::UHCIRootHub(NonnullRefPtr<UHCIController> uhci_controller)
-    : m_uhci_controller(uhci_controller)
+    : m_uhci_controller(move(uhci_controller))
 {
 }
 
@@ -109,7 +109,7 @@ ErrorOr<void> UHCIRootHub::setup(Badge<UHCIController>)
 
 ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
 {
-    auto& request = transfer.request();
+    auto const& request = transfer.request();
     auto* request_data = transfer.buffer().as_ptr() + sizeof(USBRequestData);
 
     if constexpr (UHCI_DEBUG) {
