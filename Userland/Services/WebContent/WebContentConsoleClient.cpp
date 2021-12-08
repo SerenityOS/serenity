@@ -115,10 +115,9 @@ void WebContentConsoleClient::send_messages(i32 start_index)
     m_client.async_did_get_js_console_messages(start_index, message_types, messages);
 }
 
-JS::Value WebContentConsoleClient::clear()
+void WebContentConsoleClient::clear()
 {
     clear_output();
-    return JS::js_undefined();
 }
 
 JS::Value WebContentConsoleClient::trace()

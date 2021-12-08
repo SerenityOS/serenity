@@ -76,10 +76,14 @@ ThrowCompletionOr<Value> Console::warn()
     return js_undefined();
 }
 
+// 1.1.2. clear(), https://console.spec.whatwg.org/#clear
 Value Console::clear()
 {
+    // 1. TODO: Empty the appropriate group stack.
+
+    // 2. If possible for the environment, clear the console. (Otherwise, do nothing.)
     if (m_client)
-        return m_client->clear();
+        m_client->clear();
     return js_undefined();
 }
 

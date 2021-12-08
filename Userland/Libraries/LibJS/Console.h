@@ -87,7 +87,7 @@ public:
     ThrowCompletionOr<Vector<Value>> formatter(Vector<Value>& args);
     virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, Vector<Value>&) = 0;
 
-    virtual Value clear() = 0;
+    virtual void clear() = 0;
     virtual Value trace() = 0;
     virtual Value assert_() = 0;
 

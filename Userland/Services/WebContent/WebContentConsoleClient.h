@@ -24,7 +24,7 @@ public:
     void send_messages(i32 start_index);
 
 private:
-    virtual JS::Value clear() override;
+    virtual void clear() override;
     virtual JS::Value trace() override;
     virtual JS::Value assert_() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>&) override;
