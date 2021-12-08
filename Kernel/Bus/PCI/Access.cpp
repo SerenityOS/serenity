@@ -458,7 +458,7 @@ void Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& callback) c
 {
     MutexLocker locker(m_access_lock);
     VERIFY(!m_device_identifiers.is_empty());
-    for (auto& device_identifier : m_device_identifiers) {
+    for (auto const& device_identifier : m_device_identifiers) {
         callback(device_identifier);
     }
 }
