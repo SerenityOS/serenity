@@ -149,10 +149,50 @@ ThrowCompletionOr<Value> Console::count_reset()
     return js_undefined();
 }
 
-Value Console::assert_()
+// 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
+ThrowCompletionOr<Value> Console::assert_()
 {
+    // 1. If condition is true, return.
+    auto condition = vm().argument(0).to_boolean();
+    if (condition)
+        return js_undefined();
+
+    // 2. Let message be a string without any formatting specifiers indicating generically an assertion failure (such as "Assertion failed").
+    auto message = js_string(vm(), "Assertion failed");
+
+    // NOTE: Assemble `data` from the function arguments.
+    Vector<JS::Value> data;
+    if (vm().argument_count() > 1) {
+        data.ensure_capacity(vm().argument_count() - 1);
+        for (size_t i = 1; i < vm().argument_count(); ++i) {
+            data.append(vm().argument(i));
+        }
+    }
+
+    // 3. If data is empty, append message to data.
+    if (data.is_empty()) {
+        data.append(message);
+    }
+    // 4. Otherwise:
+    else {
+        // 1. Let first be data[0].
+        auto& first = data[0];
+        // 2. If Type(first) is not String, then prepend message to data.
+        if (!first.is_string()) {
+            data.prepend(message);
+        }
+        // 3. Otherwise:
+        else {
+            // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
+            auto concat = js_string(vm(), String::formatted("{}: {}", message->string(), first.to_string(global_object()).value()));
+            // 2. Set data[0] to concat.
+            data[0] = concat;
+        }
+    }
+
+    // 5. Perform Logger("assert", data).
     if (m_client)
-        return m_client->assert_();
+        TRY(m_client->logger(LogLevel::Assert, data));
     return js_undefined();
 }
 

@@ -134,27 +134,6 @@ JS::Value WebContentConsoleClient::trace()
     return JS::js_undefined();
 }
 
-JS::Value WebContentConsoleClient::assert_()
-{
-    auto& vm = this->vm();
-    if (!vm.argument(0).to_boolean()) {
-        StringBuilder html;
-        if (vm.argument_count() > 1) {
-            html.append("<span class=\"error\">");
-            html.append("Assertion failed:");
-            html.append("</span>");
-            html.append(" ");
-            html.append(escape_html_entities(vm.join_arguments(1)));
-        } else {
-            html.append("<span class=\"error\">");
-            html.append("Assertion failed");
-            html.append("</span>");
-        }
-        print_html(html.string_view());
-    }
-    return JS::js_undefined();
-}
-
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments)
 {
@@ -189,5 +168,4 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
     print_html(html.string_view());
     return JS::js_undefined();
 }
-
 }
