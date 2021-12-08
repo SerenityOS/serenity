@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AnyOf.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 
@@ -17,19 +18,15 @@ Device::Device(Address address)
 
 bool Device::is_msi_capable() const
 {
-    for (const auto& capability : PCI::get_device_identifier(pci_address()).capabilities()) {
-        if (capability.id().value() == PCI::Capabilities::ID::MSI)
-            return true;
-    }
-    return false;
+    return AK::any_of(
+        PCI::get_device_identifier(pci_address()).capabilities(),
+        [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSI; });
 }
 bool Device::is_msix_capable() const
 {
-    for (const auto& capability : PCI::get_device_identifier(pci_address()).capabilities()) {
-        if (capability.id().value() == PCI::Capabilities::ID::MSIX)
-            return true;
-    }
-    return false;
+    return AK::any_of(
+        PCI::get_device_identifier(pci_address()).capabilities(),
+        [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSIX; });
 }
 
 void Device::enable_pin_based_interrupts() const
