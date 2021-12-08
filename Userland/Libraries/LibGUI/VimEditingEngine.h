@@ -187,6 +187,8 @@ private:
     bool on_key_in_insert_mode(const KeyEvent& event);
     bool on_key_in_normal_mode(const KeyEvent& event);
     bool on_key_in_visual_mode(const KeyEvent& event);
+
+    virtual EngineType engine_type() const override { return EngineType::Vim; }
 };
 
 }
