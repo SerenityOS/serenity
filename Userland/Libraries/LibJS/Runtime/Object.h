@@ -208,7 +208,7 @@ private:
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;
-    Vector<PrivateElement> m_private_elements; // [[PrivateElements]]
+    OwnPtr<Vector<PrivateElement>> m_private_elements; // [[PrivateElements]]
 };
 
 }

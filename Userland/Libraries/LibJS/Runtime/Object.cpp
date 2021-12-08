@@ -470,7 +470,10 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
 // 7.3.26 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
 PrivateElement* Object::private_element_find(PrivateName const& name)
 {
-    auto element = m_private_elements.find_if([&](auto const& element) {
+    if (!m_private_elements)
+        return nullptr;
+
+    auto element = m_private_elements->find_if([&](auto const& element) {
         return element.key == name;
     });
 
@@ -485,7 +488,9 @@ ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value
 {
     if (auto* entry = private_element_find(name); entry)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, name.description);
-    m_private_elements.empend(name, PrivateElement::Kind::Field, value);
+    if (!m_private_elements)
+        m_private_elements = make<Vector<PrivateElement>>();
+    m_private_elements->empend(name, PrivateElement::Kind::Field, value);
     return {};
 }
 
@@ -495,7 +500,9 @@ ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement el
     VERIFY(element.kind == PrivateElement::Kind::Method || element.kind == PrivateElement::Kind::Accessor);
     if (auto* entry = private_element_find(element.key); entry)
         return vm().throw_completion<TypeError>(global_object(), ErrorType::PrivateFieldAlreadyDeclared, element.key.description);
-    m_private_elements.append(move(element));
+    if (!m_private_elements)
+        m_private_elements = make<Vector<PrivateElement>>();
+    m_private_elements->append(move(element));
     return {};
 }
 
@@ -1187,8 +1194,10 @@ void Object::visit_edges(Cell::Visitor& visitor)
         visitor.visit(value);
     });
 
-    for (auto& private_element : m_private_elements)
-        visitor.visit(private_element.value);
+    if (m_private_elements) {
+        for (auto& private_element : *m_private_elements)
+            visitor.visit(private_element.value);
+    }
 }
 
 // 7.1.1.1 OrdinaryToPrimitive ( O, hint ), https://tc39.es/ecma262/#sec-ordinarytoprimitive
