@@ -45,6 +45,7 @@ struct CalendarPattern : public Unicode::CalendarPattern {
     unsigned hash() const
     {
         auto hash = pair_int_hash(pattern_index, pattern12_index);
+        hash = pair_int_hash(hash, skeleton_index);
 
         auto hash_field = [&](auto const& field) {
             if (field.has_value())
@@ -70,7 +71,8 @@ struct CalendarPattern : public Unicode::CalendarPattern {
 
     bool operator==(CalendarPattern const& other) const
     {
-        return (pattern_index == other.pattern_index)
+        return (skeleton_index == other.skeleton_index)
+            && (pattern_index == other.pattern_index)
             && (pattern12_index == other.pattern12_index)
             && (era == other.era)
             && (year == other.year)
@@ -85,6 +87,7 @@ struct CalendarPattern : public Unicode::CalendarPattern {
             && (time_zone_name == other.time_zone_name);
     }
 
+    StringIndexType skeleton_index { 0 };
     StringIndexType pattern_index { 0 };
     StringIndexType pattern12_index { 0 };
 };
@@ -100,7 +103,8 @@ struct AK::Formatter<CalendarPattern> : Formatter<FormatString> {
         };
 
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            pattern.skeleton_index,
             pattern.pattern_index,
             pattern.pattern12_index,
             field_to_i8(pattern.era),
@@ -298,12 +302,15 @@ static String remove_period_from_pattern(String pattern)
     return pattern;
 }
 
-static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern, UnicodeLocaleData& locale_data)
+static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern, String skeleton, UnicodeLocaleData& locale_data)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
     using Unicode::CalendarPatternStyle;
 
     CalendarPattern format {};
+
+    if (!skeleton.is_empty())
+        format.skeleton_index = locale_data.unique_strings.ensure(move(skeleton));
 
     GenericLexer lexer { pattern };
     StringBuilder builder;
@@ -742,10 +749,12 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         });
     };
 
-    auto parse_patterns = [&](auto& formats, auto const& patterns_object, Vector<CalendarPattern>* patterns) {
+    auto parse_patterns = [&](auto& formats, auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) {
         auto parse_pattern = [&](auto name) {
             auto format = patterns_object.get(name);
-            auto format_index = parse_date_time_pattern(format.as_string(), locale_data).value();
+            auto skeleton = skeletons_object.get(name);
+
+            auto format_index = parse_date_time_pattern(format.as_string(), skeleton.as_string_or(String::empty()), locale_data).value();
 
             if (patterns)
                 patterns->append(locale_data.unique_patterns.get(format_index));
@@ -774,17 +783,19 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         Vector<CalendarPattern> time_formats;
 
         auto const& date_formats_object = value.as_object().get("dateFormats"sv);
-        parse_patterns(calendar.date_formats, date_formats_object.as_object(), &date_formats);
+        auto const& date_skeletons_object = value.as_object().get("dateSkeletons"sv);
+        parse_patterns(calendar.date_formats, date_formats_object.as_object(), date_skeletons_object.as_object(), &date_formats);
 
         auto const& time_formats_object = value.as_object().get("timeFormats"sv);
-        parse_patterns(calendar.time_formats, time_formats_object.as_object(), &time_formats);
+        auto const& time_skeletons_object = value.as_object().get("timeSkeletons"sv);
+        parse_patterns(calendar.time_formats, time_formats_object.as_object(), time_skeletons_object.as_object(), &time_formats);
 
         auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
-        parse_patterns(calendar.date_time_formats, date_time_formats_object.as_object(), nullptr);
+        parse_patterns(calendar.date_time_formats, date_time_formats_object.as_object(), JsonObject {}, nullptr);
 
         auto const& available_formats = date_time_formats_object.as_object().get("availableFormats"sv);
-        available_formats.as_object().for_each_member([&](auto const&, JsonValue const& pattern) {
-            auto pattern_index = parse_date_time_pattern(pattern.as_string(), locale_data);
+        available_formats.as_object().for_each_member([&](auto const& skeleton, JsonValue const& pattern) {
+            auto pattern_index = parse_date_time_pattern(pattern.as_string(), skeleton, locale_data);
             if (!pattern_index.has_value())
                 return;
 
@@ -992,6 +1003,7 @@ struct CalendarPattern {
     Unicode::CalendarPattern to_unicode_calendar_pattern() const {
         Unicode::CalendarPattern calendar_pattern {};
 
+        calendar_pattern.skeleton = s_string_list[skeleton];
         calendar_pattern.pattern = s_string_list[pattern];
         if (pattern12 != 0)
             calendar_pattern.pattern12 = s_string_list[pattern12];
@@ -1022,6 +1034,7 @@ struct CalendarPattern {
         return calendar_pattern;
     }
 
+    @string_index_type@ skeleton { 0 };
     @string_index_type@ pattern { 0 };
     @string_index_type@ pattern12 { 0 };
 
