@@ -45,4 +45,10 @@ bool PrivateName::operator==(PrivateName const& rhs) const
     return unique_id == rhs.unique_id && description == rhs.description;
 }
 
+void PrivateEnvironment::visit_edges(Visitor& visitor)
+{
+    Cell::visit_edges(visitor);
+    visitor.visit(m_outer_environment);
+}
+
 }

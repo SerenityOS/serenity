@@ -36,6 +36,7 @@ public:
 
 private:
     virtual char const* class_name() const override { return "PrivateEnvironment"; }
+    virtual void visit_edges(Visitor&) override;
 
     auto find_private_name(FlyString const& description) const
     {
