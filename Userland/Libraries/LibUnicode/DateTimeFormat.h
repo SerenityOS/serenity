@@ -100,6 +100,7 @@ struct CalendarPattern {
         callback(time_zone_name, other.time_zone_name, Field::TimeZoneName);
     }
 
+    String skeleton {};
     String pattern {};
     Optional<String> pattern12 {};
 
