@@ -241,7 +241,7 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
 
     Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
     if (!node) {
-        return { false, "", "" };
+        return { false, "", "", "" };
     }
 
     node->document().set_inspected_node(node);
@@ -249,7 +249,7 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
         if (!element.specified_css_values())
-            return { false, "", "" };
+            return { false, "", "", "" };
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
             StringBuilder builder;
@@ -263,12 +263,35 @@ Messages::WebContentServer::InspectDomNodeResponse ClientConnection::inspect_dom
             return builder.to_string();
         };
 
+        auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> String {
+            StringBuilder builder;
+            JsonObjectSerializer serializer(builder);
+            HashTable<String> seen_properties;
+
+            auto const* element_to_check = &element;
+            while (element_to_check) {
+                for (auto const& property : element_to_check->custom_properties()) {
+                    if (!seen_properties.contains(property.key) && property.value.style.has_value()) {
+                        seen_properties.set(property.key);
+                        serializer.add(property.key, property.value.style.value().value->to_string());
+                    }
+                }
+
+                element_to_check = element_to_check->parent_element();
+            }
+
+            serializer.finish();
+
+            return builder.to_string();
+        };
+
         String specified_values_json = serialize_json(*element.specified_css_values());
         String computed_values_json = serialize_json(element.computed_style());
-        return { true, specified_values_json, computed_values_json };
+        String custom_properties_json = serialize_custom_properties_json(element);
+        return { true, specified_values_json, computed_values_json, custom_properties_json };
     }
 
-    return { false, "", "" };
+    return { false, "", "", "" };
 }
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ClientConnection::get_hovered_node_id()
