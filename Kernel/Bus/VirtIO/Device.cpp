@@ -46,7 +46,7 @@ UNMAP_AFTER_INIT void detect()
     });
 }
 
-static StringView const determine_device_class(PCI::DeviceIdentifier const& device_identifier)
+static StringView determine_device_class(PCI::DeviceIdentifier const& device_identifier)
 {
     if (device_identifier.revision_id().value() == 0) {
         // Note: If the device is a legacy (or transitional) device, therefore,

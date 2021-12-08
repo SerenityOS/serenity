@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<Console> Console::must_create(PCI::DeviceIdentifi
 UNMAP_AFTER_INIT void Console::initialize()
 {
     Device::initialize();
-    if (auto cfg = get_config(ConfigurationType::Device)) {
+    if (auto const* cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
             if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_SIZE))
@@ -156,7 +156,8 @@ void Console::process_control_message(ControlMessage message)
             if (id >= m_ports.size()) {
                 dbgln("Device provided an invalid port number {}. max_nr_ports: {}", id, m_ports.size());
                 return;
-            } else if (!m_ports.at(id).is_null()) {
+            }
+            if (!m_ports.at(id).is_null()) {
                 dbgln("Device tried to add port {} which was already added!", id);
                 return;
             }
@@ -178,7 +179,8 @@ void Console::process_control_message(ControlMessage message)
         if (message.id >= m_ports.size()) {
             dbgln("Device provided an invalid port number {}. max_nr_ports: {}", message.id, m_ports.size());
             return;
-        } else if (m_ports.at(message.id).is_null()) {
+        }
+        if (m_ports.at(message.id).is_null()) {
             dbgln("Device tried to open port {} which was not added!", message.id);
             return;
         }

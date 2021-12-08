@@ -116,8 +116,8 @@ public:
 
     QueueChain(QueueChain&& other)
         : m_queue(other.m_queue)
-        , m_start_of_chain_index(other.m_start_of_chain_index)
-        , m_end_of_chain_index(other.m_end_of_chain_index)
+        , m_start_of_chain_index(move(other.m_start_of_chain_index))
+        , m_end_of_chain_index(move(other.m_end_of_chain_index))
         , m_chain_length(other.m_chain_length)
         , m_chain_has_writable_pages(other.m_chain_has_writable_pages)
     {

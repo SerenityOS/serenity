@@ -121,7 +121,7 @@ protected:
 
     const Configuration* get_config(ConfigurationType cfg_type, u32 index = 0) const
     {
-        for (auto& cfg : m_configs) {
+        for (auto const& cfg : m_configs) {
             if (cfg.cfg_type != cfg_type)
                 continue;
             if (index > 0) {
