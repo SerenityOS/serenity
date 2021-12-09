@@ -53,6 +53,9 @@ public:
 
     bool is_null() const { return m_impl.is_null(); }
 
+    T* operator->() { return cell(); }
+    T const* operator->() const { return cell(); }
+
 private:
     explicit Handle(NonnullRefPtr<HandleImpl> impl)
         : m_impl(move(impl))
