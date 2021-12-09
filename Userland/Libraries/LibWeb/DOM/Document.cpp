@@ -22,6 +22,7 @@
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/CustomEvent.h>
 #include <LibWeb/DOM/DOMException.h>
+#include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -71,7 +72,7 @@ Document::Document(const AK::URL& url)
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
-    , m_implementation(DOMImplementation::create(*this))
+    , m_implementation(DOMImplementation::create({}, *this))
     , m_history(HTML::History::create(*this))
 {
     HTML::main_thread_event_loop().register_document({}, *this);
@@ -1134,6 +1135,11 @@ void Document::evaluate_media_queries_and_report_changes()
     for (auto& style_sheet : style_sheets().sheets()) {
         style_sheet.evaluate_media_queries(window());
     }
+}
+
+NonnullRefPtr<DOMImplementation> Document::implementation() const
+{
+    return *m_implementation;
 }
 
 }

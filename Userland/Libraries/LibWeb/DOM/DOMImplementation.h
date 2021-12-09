@@ -7,28 +7,30 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCountForwarder.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Document.h>
 
 namespace Web::DOM {
 
 class DOMImplementation final
-    : public RefCounted<DOMImplementation>
+    : public RefCountForwarder<Document>
     , public Weakable<DOMImplementation>
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::DOMImplementationWrapper;
 
-    static NonnullRefPtr<DOMImplementation> create(Document& document)
+    static NonnullOwnPtr<DOMImplementation> create(Badge<Document>, Document& document)
     {
-        return adopt_ref(*new DOMImplementation(document));
+        return adopt_own(*new DOMImplementation(document));
     }
 
     // FIXME: Add optional DocumentType once supported by IDL
     NonnullRefPtr<Document> create_document(const String&, const String&) const;
     NonnullRefPtr<Document> create_html_document(const String& title) const;
-    NonnullRefPtr<DocumentType> create_document_type(const String&, const String&, const String&) const;
+    NonnullRefPtr<DocumentType> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     bool has_feature() const { return true; }
@@ -36,7 +38,8 @@ public:
 private:
     explicit DOMImplementation(Document&);
 
-    Document& m_document;
+    Document& document() { return ref_count_target(); }
+    Document const& document() const { return ref_count_target(); }
 };
 
 }

@@ -22,7 +22,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>
-#include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -264,7 +263,7 @@ public:
 
     void completely_finish_loading();
 
-    const NonnullRefPtr<DOMImplementation> implementation() const { return m_implementation; }
+    NonnullRefPtr<DOMImplementation> implementation() const;
 
     RefPtr<HTML::HTMLScriptElement> current_script() const { return m_current_script; }
     void set_current_script(Badge<HTML::HTMLScriptElement>, RefPtr<HTML::HTMLScriptElement> script) { m_current_script = move(script); }
@@ -376,7 +375,7 @@ private:
 
     bool m_ready_for_post_load_tasks { false };
 
-    NonnullRefPtr<DOMImplementation> m_implementation;
+    NonnullOwnPtr<DOMImplementation> m_implementation;
     RefPtr<HTML::HTMLScriptElement> m_current_script;
 
     bool m_should_invalidate_styles_on_attribute_changes { true };
