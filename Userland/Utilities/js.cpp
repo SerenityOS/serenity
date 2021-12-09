@@ -1493,11 +1493,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         StringBuilder builder;
         for (auto& path : script_paths) {
-            auto file = Core::File::construct(path);
-            if (!file->open(Core::OpenMode::ReadOnly)) {
-                warnln("Failed to open {}: {}", path, file->error_string());
-                return 1;
-            }
+            auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
             auto file_contents = file->read_all();
             auto source = StringView { file_contents };
             builder.append(source);
