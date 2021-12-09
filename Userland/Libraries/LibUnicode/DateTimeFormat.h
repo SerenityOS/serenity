@@ -157,6 +157,7 @@ CalendarPatternStyle calendar_pattern_style_from_string(StringView style);
 StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
 Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale);
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale);
+String combine_skeletons(StringView first, StringView second);
 Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
 Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
 Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar);

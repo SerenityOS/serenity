@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
+#include <AK/StringBuilder.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 
@@ -111,6 +113,47 @@ Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
     if (auto hour_cycles = get_regional_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles.first();
     return {};
+}
+
+String combine_skeletons(StringView first, StringView second)
+{
+    // https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+    constexpr auto field_order = Array {
+        "G"sv,       // Era
+        "yYuUr"sv,   // Year
+        "ML"sv,      // Month
+        "dDFg"sv,    // Day
+        "Eec"sv,     // Weekday
+        "abB"sv,     // Period
+        "hHKk"sv,    // Hour
+        "m"sv,       // Minute
+        "sSA"sv,     // Second
+        "zZOvVXx"sv, // Zone
+    };
+
+    StringBuilder builder;
+
+    auto append_from_skeleton = [&](auto skeleton, auto ch) {
+        auto first_index = skeleton.find(ch);
+        if (!first_index.has_value())
+            return false;
+
+        auto last_index = skeleton.find_last(ch);
+
+        builder.append(skeleton.substring_view(*first_index, *last_index - *first_index + 1));
+        return true;
+    };
+
+    for (auto fields : field_order) {
+        for (auto ch : fields) {
+            if (append_from_skeleton(first, ch))
+                break;
+            if (append_from_skeleton(second, ch))
+                break;
+        }
+    }
+
+    return builder.build();
 }
 
 Optional<CalendarFormat> get_calendar_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarFormatType type)
