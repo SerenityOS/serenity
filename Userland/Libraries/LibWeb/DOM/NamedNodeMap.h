@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/RefCountForwarder.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -19,13 +20,13 @@ namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#interface-namednodemap
 class NamedNodeMap final
-    : public RefCounted<NamedNodeMap>
+    : public RefCountForwarder<Element>
     , public Bindings::Wrappable {
 
 public:
     using WrapperType = Bindings::NamedNodeMapWrapper;
 
-    static NonnullRefPtr<NamedNodeMap> create(Element const& associated_element);
+    static NonnullRefPtr<NamedNodeMap> create(Element& associated_element);
     ~NamedNodeMap() = default;
 
     bool is_supported_property_index(u32 index) const;
@@ -49,9 +50,11 @@ public:
     Attribute const* remove_attribute(StringView qualified_name);
 
 private:
-    explicit NamedNodeMap(Element const& associated_element);
+    explicit NamedNodeMap(Element& associated_element);
 
-    WeakPtr<Element> m_associated_element;
+    Element& associated_element() { return ref_count_target(); }
+    Element const& associated_element() const { return ref_count_target(); }
+
     NonnullRefPtrVector<Attribute> m_attributes;
 };
 
