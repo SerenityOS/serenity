@@ -1363,16 +1363,22 @@ ParseResult<Module> Module::parse(InputStream& stream)
     return Module { move(sections) };
 }
 
-void Module::populate_sections()
+bool Module::populate_sections()
 {
+    auto is_ok = true;
     FunctionSection const* function_section { nullptr };
     for_each_section_of_type<FunctionSection>([&](FunctionSection const& section) { function_section = &section; });
     for_each_section_of_type<CodeSection>([&](CodeSection const& section) {
-        // FIXME: This should be considered invalid once validation is implemented.
-        if (!function_section)
+        if (!function_section) {
+            is_ok = false;
             return;
+        }
         size_t index = 0;
         for (auto& entry : section.functions()) {
+            if (function_section->types().size() <= index) {
+                is_ok = false;
+                return;
+            }
             auto& type_index = function_section->types()[index];
             Vector<ValueType> locals;
             for (auto& local : entry.func().locals()) {
@@ -1383,6 +1389,7 @@ void Module::populate_sections()
             ++index;
         }
     });
+    return is_ok;
 }
 
 String parse_error_to_string(ParseError error)

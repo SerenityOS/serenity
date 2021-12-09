@@ -1003,7 +1003,10 @@ public:
     explicit Module(Vector<AnySection> sections)
         : m_sections(move(sections))
     {
-        populate_sections();
+        if (!populate_sections()) {
+            m_validation_status = ValidationStatus::Invalid;
+            m_validation_error = "Failed to populate module sections"sv;
+        }
     }
 
     auto& sections() const { return m_sections; }
@@ -1044,7 +1047,7 @@ public:
     static ParseResult<Module> parse(InputStream& stream);
 
 private:
-    void populate_sections();
+    bool populate_sections();
     void set_validation_status(ValidationStatus status) { m_validation_status = status; }
 
     Vector<AnySection> m_sections;
