@@ -28,6 +28,8 @@ Language language_from_file_extension(const String& extension)
         return Language::Shell;
     if (extension == "sql")
         return Language::SQL;
+    if (extension == "wast" || extension == "wasm-dump")
+        return Language::TextWasm;
 
     return Language::Unknown;
 }
@@ -40,6 +42,8 @@ Language language_from_name(const String& name)
         return Language::JavaScript;
     if (name == "Shell")
         return Language::Shell;
+    if (name == "Text Wasm")
+        return Language::TextWasm;
 
     return Language::Unknown;
 }
@@ -68,6 +72,8 @@ String language_name_from_file_extension(const String& extension)
         return "SQL";
     if (extension == "txt")
         return "Plaintext";
+    if (extension == "wast" || extension == "wasm-dump")
+        return "Text Wasm";
 
     return "Unknown";
 }

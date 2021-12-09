@@ -19,6 +19,7 @@ enum class Language {
     Ini,
     Shell,
     SQL,
+    TextWasm,
 };
 
 Language language_from_file_extension(const String&);

@@ -11,6 +11,7 @@
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
+#include "LibGUI/BasicSExpressionSyntaxHighlighter.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
@@ -615,6 +616,9 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
         break;
     case Language::SQL:
         set_syntax_highlighter(make<SQL::AST::SyntaxHighlighter>());
+        break;
+    case Language::TextWasm:
+        set_syntax_highlighter(make<GUI::BasicSExpressionSyntaxHighlighter>());
         break;
     default:
         set_syntax_highlighter({});

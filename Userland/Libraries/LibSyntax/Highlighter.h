@@ -24,6 +24,7 @@ enum class Language {
     PlainText,
     SQL,
     Shell,
+    GenericSExpression,
 };
 
 struct TextStyle {

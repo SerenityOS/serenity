@@ -13,6 +13,8 @@ set(SOURCES
     ActionGroup.cpp
     Application.cpp
     AutocompleteProvider.cpp
+    BasicSExpressionLexer.cpp
+    BasicSExpressionSyntaxHighlighter.cpp
     BoxLayout.cpp
     Breadcrumbbar.cpp
     Button.cpp
