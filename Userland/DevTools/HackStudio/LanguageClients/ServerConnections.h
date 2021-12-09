@@ -31,6 +31,7 @@ namespace LanguageClients {
 
 LANGUAGE_CLIENT(Cpp, cpp)
 LANGUAGE_CLIENT(Shell, shell)
+LANGUAGE_CLIENT(Wasm, wasm)
 
 }
 

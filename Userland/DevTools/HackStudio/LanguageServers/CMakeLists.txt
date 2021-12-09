@@ -14,3 +14,4 @@ target_link_libraries(LibLanguageServer LibC)
 
 add_subdirectory(Cpp)
 add_subdirectory(Shell)
+add_subdirectory(Wasm)
