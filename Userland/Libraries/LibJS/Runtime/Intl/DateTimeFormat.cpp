@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IterationDecision.h>
 #include <AK/NumericLimits.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -716,10 +717,12 @@ struct StyleAndValue {
     i32 value { 0 };
 };
 
-static Optional<StyleAndValue> find_calendar_field(StringView name, DateTimeFormat const& date_time_format, LocalTime const& local_time)
+static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::CalendarPattern const& options, Unicode::CalendarPattern const* range_options, LocalTime const& local_time)
 {
-    auto make_style_and_value = [](auto name, auto style, auto value) {
-        return StyleAndValue { name, style, static_cast<i32>(value) };
+    auto make_style_and_value = [](auto name, auto style, auto fallback_style, auto value) {
+        if (style.has_value())
+            return StyleAndValue { name, *style, static_cast<i32>(value) };
+        return StyleAndValue { name, fallback_style, static_cast<i32>(value) };
     };
 
     constexpr auto weekday = "weekday"sv;
@@ -731,27 +734,42 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, DateTimeForm
     constexpr auto minute = "minute"sv;
     constexpr auto second = "second"sv;
 
+    Optional<Unicode::CalendarPatternStyle> empty;
+
     if (name == weekday)
-        return make_style_and_value(weekday, date_time_format.weekday(), local_time.weekday);
+        return make_style_and_value(weekday, range_options ? range_options->weekday : empty, *options.weekday, local_time.weekday);
     if (name == era)
-        return make_style_and_value(era, date_time_format.era(), local_time.era);
+        return make_style_and_value(era, range_options ? range_options->era : empty, *options.era, local_time.era);
     if (name == year)
-        return make_style_and_value(year, date_time_format.year(), local_time.year);
+        return make_style_and_value(year, range_options ? range_options->year : empty, *options.year, local_time.year);
     if (name == month)
-        return make_style_and_value(month, date_time_format.month(), local_time.month);
+        return make_style_and_value(month, range_options ? range_options->month : empty, *options.month, local_time.month);
     if (name == day)
-        return make_style_and_value(day, date_time_format.day(), local_time.day);
+        return make_style_and_value(day, range_options ? range_options->day : empty, *options.day, local_time.day);
     if (name == hour)
-        return make_style_and_value(hour, date_time_format.hour(), local_time.hour);
+        return make_style_and_value(hour, range_options ? range_options->hour : empty, *options.hour, local_time.hour);
     if (name == minute)
-        return make_style_and_value(minute, date_time_format.minute(), local_time.minute);
+        return make_style_and_value(minute, range_options ? range_options->minute : empty, *options.minute, local_time.minute);
     if (name == second)
-        return make_style_and_value(second, date_time_format.second(), local_time.second);
+        return make_style_and_value(second, range_options ? range_options->second : empty, *options.second, local_time.second);
     return {};
 }
 
+static Optional<StringView> day_period_for_hour(StringView locale, StringView calendar, Unicode::CalendarPatternStyle style, u8 hour)
+{
+    // FIXME: This isn't locale-aware. We should parse the CLDR's cldr-core/supplemental/dayPeriods.json file
+    //        to acquire day periods per-locale. For now, these are hard-coded to the en locale's values.
+    if ((hour >= 6) && (hour < 12))
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Morning);
+    if ((hour >= 12) && (hour < 18))
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Afternoon);
+    if ((hour >= 18) && (hour < 21))
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Evening);
+    return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Night);
+}
+
 // 11.1.7 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
-ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, Value time, [[maybe_unused]] Value range_format_options)
+ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, Value time, Unicode::CalendarPattern const* range_format_options)
 {
     auto& vm = global_object.vm();
 
@@ -851,24 +869,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
 
         // d. Else if p is equal to "dayPeriod", then
         else if (part == "dayPeriod"sv) {
-            Optional<StringView> symbol;
             String formatted_value;
 
             // i. Let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
             auto style = date_time_format.day_period();
 
             // ii. Let fv be a String value representing the day period of tm in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-            // FIXME: This isn't locale-aware. We should parse the CLDR's cldr-core/supplemental/dayPeriods.json file to acquire day periods
-            //        per-locale. For now, these are hard-coded to the en locale's values.
-            if ((local_time.hour >= 6) && (local_time.hour < 12))
-                symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), style, Unicode::DayPeriod::Morning);
-            else if ((local_time.hour >= 12) && (local_time.hour < 18))
-                symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), style, Unicode::DayPeriod::Afternoon);
-            else if ((local_time.hour >= 18) && (local_time.hour < 21))
-                symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), style, Unicode::DayPeriod::Evening);
-            else
-                symbol = Unicode::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), style, Unicode::DayPeriod::Night);
-
+            auto symbol = day_period_for_hour(data_locale, date_time_format.calendar(), style, local_time.hour);
             if (symbol.has_value())
                 formatted_value = *symbol;
 
@@ -893,12 +900,12 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
         }
 
         // f. Else if p matches a Property column of the row in Table 4, then
-        else if (auto style_and_value = find_calendar_field(part, date_time_format, local_time); style_and_value.has_value()) {
+        else if (auto style_and_value = find_calendar_field(part, date_time_format, range_format_options, local_time); style_and_value.has_value()) {
             String formatted_value;
 
             // i. If rangeFormatOptions is not undefined, let f be the value of rangeFormatOptions's field whose name matches p.
             // ii. Else, let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
-            // FIXME: Implement step i when range format is supported.
+            // NOTE: find_calendar_field handles resolving rangeFormatOptions and dateTimeFormat fields.
             auto style = style_and_value->style;
 
             // iii. Let v be the value of tm's field whose name is the Internal Slot column of the matching row.
@@ -1052,7 +1059,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalOb
     auto pattern_parts = partition_pattern(date_time_format.pattern());
 
     // 2. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
-    auto result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), time, js_undefined()));
+    auto result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), time, nullptr));
 
     // 3. Return result.
     return result;
@@ -1111,6 +1118,290 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object,
 
     // 5. Return result.
     return result;
+}
+
+template<typename Callback>
+void for_each_range_pattern_field(LocalTime const& time1, LocalTime const& time2, Callback&& callback)
+{
+    // Table 6: Range pattern fields, https://tc39.es/ecma402/#table-datetimeformat-rangepatternfields
+    if (callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), Unicode::CalendarRangePattern::Field::Era) == IterationDecision::Break)
+        return;
+    if (callback(time1.year, time2.year, Unicode::CalendarRangePattern::Field::Year) == IterationDecision::Break)
+        return;
+    if (callback(time1.month, time2.month, Unicode::CalendarRangePattern::Field::Month) == IterationDecision::Break)
+        return;
+    if (callback(time1.day, time2.day, Unicode::CalendarRangePattern::Field::Day) == IterationDecision::Break)
+        return;
+    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::AmPm) == IterationDecision::Break)
+        return;
+    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::DayPeriod) == IterationDecision::Break)
+        return;
+    if (callback(time1.hour, time2.hour, Unicode::CalendarRangePattern::Field::Hour) == IterationDecision::Break)
+        return;
+    if (callback(time1.minute, time2.minute, Unicode::CalendarRangePattern::Field::Minute) == IterationDecision::Break)
+        return;
+    if (callback(time1.second, time2.second, Unicode::CalendarRangePattern::Field::Second) == IterationDecision::Break)
+        return;
+    if (callback(time1.millisecond, time2.millisecond, Unicode::CalendarRangePattern::Field::FractionalSecondDigits) == IterationDecision::Break)
+        return;
+}
+
+template<typename Callback>
+ThrowCompletionOr<void> for_each_range_pattern_with_source(Unicode::CalendarRangePattern& pattern, Callback&& callback)
+{
+    TRY(callback(pattern.start_range, "startRange"sv));
+    TRY(callback(pattern.separator, "shared"sv));
+    TRY(callback(pattern.end_range, "endRange"sv));
+    return {};
+}
+
+// 11.1.11 PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-partitiondatetimerangepattern
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Value start, Value end)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let x be TimeClip(x).
+    start = time_clip(global_object, start);
+
+    // 2. If x is NaN, throw a RangeError exception.
+    if (start.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
+
+    // 3. Let y be TimeClip(y).
+    end = time_clip(global_object, end);
+
+    // 4. If y is NaN, throw a RangeError exception.
+    if (end.is_nan())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidTime);
+
+    // 5. If x is greater than y, throw a RangeError exception.
+    if (start.as_double() > end.as_double())
+        return vm.throw_completion<RangeError>(global_object, ErrorType::IntlStartTimeAfterEndTime, start, end);
+
+    // 6. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    auto start_local_time = TRY(to_local_time(global_object, start.as_double(), date_time_format.calendar(), date_time_format.time_zone()));
+
+    // 7. Let tm2 be ToLocalTime(y, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    auto end_local_time = TRY(to_local_time(global_object, end.as_double(), date_time_format.calendar(), date_time_format.time_zone()));
+
+    // 8. Let rangePatterns be dateTimeFormat.[[RangePatterns]].
+    auto range_patterns = date_time_format.range_patterns();
+
+    // 9. Let rangePattern be undefined.
+    Optional<Unicode::CalendarRangePattern> range_pattern;
+
+    // 10. Let dateFieldsPracticallyEqual be true.
+    bool date_fields_practically_equal = true;
+
+    // 11. Let patternContainsLargerDateField be false.
+    bool pattern_contains_larger_date_field = false;
+
+    // 12. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 6 in order, except the header row:
+    for_each_range_pattern_field(start_local_time, end_local_time, [&](auto start_value, auto end_value, auto field_name) {
+        // a. Let fieldName be the name given in the Range Pattern Field column of the row.
+
+        // b. If rangePatterns has a field [[<fieldName>]], let rp be rangePatterns.[[<fieldName>]]; else let rp be undefined.
+        Optional<Unicode::CalendarRangePattern> pattern;
+        for (auto const& range : range_patterns) {
+            if (range.field == field_name) {
+                pattern = range;
+                break;
+            }
+        }
+
+        // c. If rangePattern is not undefined and rp is undefined, then
+        if (range_pattern.has_value() && !pattern.has_value()) {
+            // i. Set patternContainsLargerDateField to true.
+            pattern_contains_larger_date_field = true;
+        }
+        // d. Else,
+        else {
+            // i. Let rangePattern be rp.
+            range_pattern = pattern;
+
+            switch (field_name) {
+            // ii. If fieldName is equal to [[AmPm]], then
+            case Unicode::CalendarRangePattern::Field::AmPm: {
+                // 1. Let v1 be tm1.[[Hour]].
+                // 2. Let v2 be tm2.[[Hour]].
+
+                // 3. If v1 is greater than 11 and v2 less or equal than 11, or v1 is less or equal than 11 and v2 is greater than 11, then
+                if ((start_value > 11 && end_value <= 11) || (start_value <= 11 && end_value > 11)) {
+                    // a. Set dateFieldsPracticallyEqual to false.
+                    date_fields_practically_equal = false;
+                }
+
+                break;
+            }
+            // iii. Else if fieldName is equal to [[DayPeriod]], then
+            case Unicode::CalendarRangePattern::Field::DayPeriod: {
+                // 1. Let v1 be a String value representing the day period of tm1; the String value depends upon the implementation and the effective locale of dateTimeFormat.
+                auto start_period = day_period_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, start_value);
+
+                // 2. Let v2 be a String value representing the day period of tm2; the String value depends upon the implementation and the effective locale of dateTimeFormat.
+                auto end_period = day_period_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, end_value);
+
+                // 3. If v1 is not equal to v2, then
+                if (start_period != end_period) {
+                    // a. Set dateFieldsPracticallyEqual to false.
+                    date_fields_practically_equal = false;
+                }
+
+                break;
+            }
+            // iv. Else if fieldName is equal to [[FractionalSecondDigits]], then
+            case Unicode::CalendarRangePattern::Field::FractionalSecondDigits: {
+                // 1. Let fractionalSecondDigits be dateTimeFormat.[[FractionalSecondDigits]].
+                Optional<u8> fractional_second_digits;
+                if (date_time_format.has_fractional_second_digits())
+                    fractional_second_digits = date_time_format.fractional_second_digits();
+
+                // 2. If fractionalSecondDigits is undefined, then
+                if (!fractional_second_digits.has_value()) {
+                    // a. Set fractionalSecondDigits to 3.
+                    fractional_second_digits = 3;
+                }
+
+                // 3. Let v1 be tm1.[[Millisecond]].
+                // 4. Let v2 be tm2.[[Millisecond]].
+
+                // 5. Let v1 be floor(v1 × 10( fractionalSecondDigits - 3 )).
+                start_value = floor(start_value * pow(10, static_cast<int>(*fractional_second_digits) - 3));
+
+                // 6. Let v2 be floor(v2 × 10( fractionalSecondDigits - 3 )).
+                end_value = floor(end_value * pow(10, static_cast<int>(*fractional_second_digits) - 3));
+
+                // 7. If v1 is not equal to v2, then
+                if (start_value != end_value) {
+                    // a. Set dateFieldsPracticallyEqual to false.
+                    date_fields_practically_equal = false;
+                }
+
+                break;
+            }
+
+            // v. Else,
+            default: {
+                // 1. Let v1 be tm1.[[<fieldName>]].
+                // 2. Let v2 be tm2.[[<fieldName>]].
+
+                // 3. If v1 is not equal to v2, then
+                if (start_value != end_value) {
+                    // a. Set dateFieldsPracticallyEqual to false.
+                    date_fields_practically_equal = false;
+                }
+
+                break;
+            }
+            }
+        }
+
+        if (date_fields_practically_equal && !pattern_contains_larger_date_field)
+            return IterationDecision::Continue;
+        return IterationDecision::Break;
+    });
+
+    // 13. If dateFieldsPracticallyEqual is true, then
+    if (date_fields_practically_equal) {
+        // a. Let pattern be dateTimeFormat.[[Pattern]].
+        auto const& pattern = date_time_format.pattern();
+
+        // b. Let patternParts be PartitionPattern(pattern).
+        auto pattern_parts = partition_pattern(pattern);
+
+        // c. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
+        auto raw_result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), start, nullptr));
+        auto result = PatternPartitionWithSource::create_from_parent_list(move(raw_result));
+
+        // d. For each Record { [[Type]], [[Value]] } r in result, do
+        for (auto& part : result) {
+            // i. Set r.[[Source]] to "shared".
+            part.source = "shared"sv;
+        }
+
+        // e. Return result.
+        return result;
+    }
+
+    // 14. Let result be a new empty List.
+    Vector<PatternPartitionWithSource> result;
+
+    // 15. If rangePattern is undefined, then
+    if (!range_pattern.has_value()) {
+        // a. Let rangePattern be rangePatterns.[[Default]].
+        range_pattern = Unicode::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar());
+
+        // Non-standard, range_pattern will be empty if Unicode data generation is disabled.
+        if (!range_pattern.has_value())
+            return result;
+
+        // Non-standard, LibUnicode leaves the CLDR's {0} and {1} partitions in the default patterns
+        // to be replaced at runtime with the DateTimeFormat object's pattern.
+        auto const& pattern = date_time_format.pattern();
+
+        if (range_pattern->start_range.contains("{0}"sv)) {
+            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern);
+            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern);
+        } else {
+            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern);
+            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern);
+        }
+
+        // FIXME: The above is not sufficient. For example, if the start date is days before the end date, and only the timeStyle
+        //        option is provided, the resulting range will not include the differing dates. We will likely need to implement
+        //        step 3 here: https://unicode.org/reports/tr35/tr35-dates.html#intervalFormats
+    }
+
+    // 16. For each Record { [[Pattern]], [[Source]] } rangePatternPart in rangePattern.[[PatternParts]], do
+    TRY(for_each_range_pattern_with_source(*range_pattern, [&](auto const& pattern, auto source) -> ThrowCompletionOr<void> {
+        // a. Let pattern be rangePatternPart.[[Pattern]].
+        // b. Let source be rangePatternPart.[[Source]].
+
+        // c. If source is "startRange" or "shared", then
+        //     i. Let z be x.
+        // d. Else,
+        //     i. Let z be y.
+        auto time = ((source == "startRange") || (source == "shared")) ? start : end;
+
+        // e. Let patternParts be PartitionPattern(pattern).
+        auto pattern_parts = partition_pattern(pattern);
+
+        // f. Let partResult be ? FormatDateTimePattern(dateTimeFormat, patternParts, z, rangePattern).
+        auto raw_part_result = TRY(format_date_time_pattern(global_object, date_time_format, move(pattern_parts), time, &range_pattern.value()));
+        auto part_result = PatternPartitionWithSource::create_from_parent_list(move(raw_part_result));
+
+        // g. For each Record { [[Type]], [[Value]] } r in partResult, do
+        for (auto& part : part_result) {
+            // i. Set r.[[Source]] to source.
+            part.source = source;
+        }
+
+        // h. Add all elements in partResult to result in order.
+        result.extend(move(part_result));
+        return {};
+    }));
+
+    // 17. Return result.
+    return result;
+}
+
+// 11.1.12 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
+ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, DateTimeFormat& date_time_format, Value start, Value end)
+{
+    // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
+    auto parts = TRY(partition_date_time_range_pattern(global_object, date_time_format, start, end));
+
+    // 2. Let result be the empty String.
+    StringBuilder result;
+
+    // 3. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
+    for (auto& part : parts) {
+        // a. Set result to the string-concatenation of result and part.[[Value]].
+        result.append(move(part.value));
+    }
+
+    // 4. Return result.
+    return result.build();
 }
 
 // 11.1.14 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
