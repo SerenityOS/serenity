@@ -2,6 +2,9 @@
 port=dos2unix
 version=7.4.2
 workdir="${port}-${version}"
-files="https://waterlan.home.xs4all.nl/dos2unix/dos2unix-${version}.tar.gz ${port}-${version}.tar.gz 6035c58df6ea2832e868b599dfa0d60ad41ca3ecc8aa27822c4b7a9789d3ae01"
+files="https://waterlan.home.xs4all.nl/dos2unix/dos2unix-${version}.tar.gz ${port}-${version}.tar.gz
+https://waterlan.home.xs4all.nl/dos2unix/dos2unix-7.4.2.tar.gz.asc ${port}-${version}.tar.gz.asc"
 depends=("gettext")
-auth_type=sha256
+auth_type=sig
+auth_import_key="f8f1bea490496a09cca328cc38c1f572b12725be"
+auth_opts=("${port}-${version}.tar.gz.asc" "${port}-${version}.tar.gz")
