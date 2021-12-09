@@ -1,3 +1,5 @@
+#include <DevTools/HackStudio/Diagnostics.h>
+
 endpoint LanguageClient
 {
     auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> suggestions) =|
@@ -5,4 +7,5 @@ endpoint LanguageClient
     declarations_in_document(String filename, Vector<GUI::AutocompleteProvider::Declaration> declarations) =|
     todo_entries_in_document(String filename, Vector<Cpp::Parser::TodoEntry> todo_entries) =|
     parameters_hint_result(Vector<String> params, int current_index) =|
+    diagnostics_in_document(String filename, Vector<HackStudio::Diagnostic> diagnostics) =|
 }

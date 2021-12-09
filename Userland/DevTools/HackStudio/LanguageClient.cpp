@@ -43,6 +43,16 @@ void ServerConnection::parameters_hint_result(Vector<String> const& params, int 
     m_current_language_client->parameters_hint_result(params, static_cast<size_t>(argument_index));
 }
 
+void ServerConnection::diagnostics_in_document(String const& document, Vector<Diagnostic> const& diagnostics)
+{
+    if (!m_current_language_client) {
+        dbgln("Language Server connection has no attached language client");
+        return;
+    }
+
+    m_current_language_client->diagnostics_in_document(document, diagnostics);
+}
+
 void ServerConnection::die()
 {
     VERIFY(m_wrapper);
@@ -146,6 +156,15 @@ void LanguageClient::parameters_hint_result(Vector<String> const& params, size_t
         return;
     }
     on_function_parameters_hint_result(params, argument_index);
+}
+
+void LanguageClient::diagnostics_in_document(String const& document, Vector<Diagnostic> const& diagnostics) const
+{
+    if (!on_new_diagnostics_available) {
+        dbgln("on_new_diagnostics_available callback is not set");
+        return;
+    }
+    on_new_diagnostics_available(document, diagnostics);
 }
 
 void ServerConnectionInstances::set_instance_for_language(const String& language_name, NonnullOwnPtr<ServerConnectionWrapper>&& connection_wrapper)

@@ -44,8 +44,7 @@ namespace HackStudio {
 Editor::Editor()
 {
     set_document(CodeDocument::create());
-    initialize_documentation_tooltip();
-    initialize_parameters_hint_tooltip();
+    initialize_tooltips();
     m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
         VERIFY(is_program_running());
         auto dialog = EvaluateExpressionDialog::construct(window());
@@ -73,20 +72,22 @@ Editor::~Editor()
 {
 }
 
-void Editor::initialize_documentation_tooltip()
+void Editor::initialize_tooltips()
 {
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
-}
 
-void Editor::initialize_parameters_hint_tooltip()
-{
     m_parameters_hint_tooltip_window = GUI::Window::construct();
     m_parameters_hint_tooltip_window->set_rect(0, 0, 280, 35);
     m_parameters_hint_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_parameter_hint_page_view = m_parameters_hint_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+
+    m_diagnostic_display_tooltip_window = GUI::Window::construct();
+    m_diagnostic_display_tooltip_window->set_rect(0, 0, 280, 50);
+    m_diagnostic_display_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
+    m_diagnostic_display_view = m_diagnostic_display_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
 }
 
 EditorWrapper& Editor::wrapper()
@@ -646,6 +647,47 @@ void Editor::set_language_client_for(const CodeDocument& document)
 
     if (document.language() == Language::Shell)
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
+
+    if (document.language() == Language::TextWasm)
+        m_language_client = get_language_client<LanguageClients::Wasm::ServerConnection>(project().root_path());
+
+    if (!m_language_client)
+        return;
+
+    m_language_client->on_new_diagnostics_available = [&](String const&, Vector<Diagnostic> const& diagnostics) {
+        if (diagnostics.is_empty()) {
+            m_diagnostic_display_tooltip_window->hide();
+            return;
+        }
+
+        auto& diagnostic = diagnostics.first();
+        StringBuilder html;
+        html.append("<html>");
+        html.append("<head>");
+        html.append("<style>body { background-color: #dac7b5; }</style>");
+        html.append("</head>");
+        html.append("<body>");
+        auto diagnostic_level = diagnostic.level == Diagnostic::Level::Error ? "Error"
+            : diagnostic.level == Diagnostic::Level::Warning                 ? "Warning"
+            : diagnostic.level == Diagnostic::Level::Info                    ? "Info"
+            : diagnostic.level == Diagnostic::Level::Note                    ? "Note"
+                                                                             : "(Unknown)";
+        html.appendff("<p>{} at {}:{}</p><br>", diagnostic_level, diagnostic.start_position.line, diagnostic.start_position.column);
+        html.appendff("<p>{}</p>", escape_html_entities(diagnostic.text));
+        html.append("</body>");
+        html.append("</html>");
+
+        m_diagnostic_display_view->load_html(html.build(), {});
+        auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
+        Gfx::Rect content {
+            cursor_rect.x(),
+            cursor_rect.y(),
+            m_diagnostic_display_view->children_clip_rect().width(),
+            m_diagnostic_display_view->children_clip_rect().height()
+        };
+        m_diagnostic_display_tooltip_window->move_to(cursor_rect.x(), cursor_rect.y() - m_diagnostic_display_view->height() - vertical_scrollbar().value());
+        m_diagnostic_display_tooltip_window->show();
+    };
 }
 
 void Editor::keydown_event(GUI::KeyEvent& event)

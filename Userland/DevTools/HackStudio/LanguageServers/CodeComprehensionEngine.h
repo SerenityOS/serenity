@@ -8,6 +8,7 @@
 
 #include "../AutoCompleteResponse.h"
 #include "FileDB.h"
+#include <DevTools/HackStudio/Diagnostics.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/TextPosition.h>
 
@@ -37,6 +38,7 @@ public:
 public:
     Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
     Function<void(String const&, Vector<Cpp::Parser::TodoEntry>&&)> set_todo_entries_of_document_callback;
+    Function<void(String const&, Vector<HackStudio::Diagnostic>&&)> diagnostics_in_document_callback;
 
 protected:
     const FileDB& filedb() const { return m_filedb; }
