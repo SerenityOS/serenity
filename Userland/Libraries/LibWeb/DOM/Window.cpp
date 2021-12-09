@@ -111,7 +111,7 @@ Window::Window(Document& document)
     , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
     , m_crypto(Crypto::Crypto::create())
-    , m_screen(CSS::Screen::create(*this))
+    , m_screen(CSS::Screen::create({}, *this))
 {
 }
 

@@ -114,7 +114,7 @@ private:
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
-    NonnullRefPtr<CSS::Screen> m_screen;
+    NonnullOwnPtr<CSS::Screen> m_screen;
     RefPtr<Event> m_current_event;
 
     HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
