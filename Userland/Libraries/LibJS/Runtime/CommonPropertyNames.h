@@ -180,6 +180,7 @@ namespace JS {
     P(format)                                \
     P(formatMatcher)                         \
     P(formatRange)                           \
+    P(formatRangeToParts)                    \
     P(formatToParts)                         \
     P(fractionalSecondDigits)                \
     P(freeze)                                \
