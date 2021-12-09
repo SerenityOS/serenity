@@ -711,32 +711,42 @@ Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPatt
 }
 
 struct StyleAndValue {
+    StringView name {};
     Unicode::CalendarPatternStyle style {};
     i32 value { 0 };
 };
 
 static Optional<StyleAndValue> find_calendar_field(StringView name, DateTimeFormat const& date_time_format, LocalTime const& local_time)
 {
-    auto make_style_and_value = [](auto style, auto value) {
-        return StyleAndValue { style, static_cast<i32>(value) };
+    auto make_style_and_value = [](auto name, auto style, auto value) {
+        return StyleAndValue { name, style, static_cast<i32>(value) };
     };
 
-    if (name == "weekday"sv)
-        return make_style_and_value(date_time_format.weekday(), local_time.weekday);
-    if (name == "era"sv)
-        return make_style_and_value(date_time_format.era(), local_time.era);
-    if (name == "year"sv)
-        return make_style_and_value(date_time_format.year(), local_time.year);
-    if (name == "month"sv)
-        return make_style_and_value(date_time_format.month(), local_time.month);
-    if (name == "day"sv)
-        return make_style_and_value(date_time_format.day(), local_time.day);
-    if (name == "hour"sv)
-        return make_style_and_value(date_time_format.hour(), local_time.hour);
-    if (name == "minute"sv)
-        return make_style_and_value(date_time_format.minute(), local_time.minute);
-    if (name == "second"sv)
-        return make_style_and_value(date_time_format.second(), local_time.second);
+    constexpr auto weekday = "weekday"sv;
+    constexpr auto era = "era"sv;
+    constexpr auto year = "year"sv;
+    constexpr auto month = "month"sv;
+    constexpr auto day = "day"sv;
+    constexpr auto hour = "hour"sv;
+    constexpr auto minute = "minute"sv;
+    constexpr auto second = "second"sv;
+
+    if (name == weekday)
+        return make_style_and_value(weekday, date_time_format.weekday(), local_time.weekday);
+    if (name == era)
+        return make_style_and_value(era, date_time_format.era(), local_time.era);
+    if (name == year)
+        return make_style_and_value(year, date_time_format.year(), local_time.year);
+    if (name == month)
+        return make_style_and_value(month, date_time_format.month(), local_time.month);
+    if (name == day)
+        return make_style_and_value(day, date_time_format.day(), local_time.day);
+    if (name == hour)
+        return make_style_and_value(hour, date_time_format.hour(), local_time.hour);
+    if (name == minute)
+        return make_style_and_value(minute, date_time_format.minute(), local_time.minute);
+    if (name == second)
+        return make_style_and_value(second, date_time_format.second(), local_time.second);
     return {};
 }
 
@@ -969,7 +979,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             }
 
             // xi. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ part, move(formatted_value) });
+            result.append({ style_and_value->name, move(formatted_value) });
         }
 
         // g. Else if p is equal to "ampm", then
