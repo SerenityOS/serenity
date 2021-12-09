@@ -179,6 +179,7 @@ namespace JS {
     P(forEach)                               \
     P(format)                                \
     P(formatMatcher)                         \
+    P(formatRange)                           \
     P(formatToParts)                         \
     P(fractionalSecondDigits)                \
     P(freeze)                                \
