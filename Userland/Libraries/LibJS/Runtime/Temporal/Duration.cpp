@@ -748,8 +748,7 @@ ThrowCompletionOr<RelativeBalancedDuration> balance_duration_relative(GlobalObje
             one_year_days = move_result.days;
         }
 
-        // e. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
-        // FIXME: This should be "Set moveResult to" (spec issue)
+        // e. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
 
         // f. Set relativeTo to moveResult.[[RelativeTo]].
