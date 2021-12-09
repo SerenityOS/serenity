@@ -22,6 +22,7 @@ public:
     constexpr size_t tell_remaining() const { return m_input.length() - m_index; }
 
     StringView remaining() const { return m_input.substring_view(m_index); }
+    StringView input() const { return m_input; }
 
     constexpr bool is_eof() const { return m_index >= m_input.length(); }
 
