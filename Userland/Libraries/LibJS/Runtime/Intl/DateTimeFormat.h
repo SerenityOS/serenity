@@ -79,6 +79,9 @@ public:
     String const& pattern() const { return Patterns::pattern; };
     void set_pattern(String pattern) { Patterns::pattern = move(pattern); }
 
+    Span<Unicode::CalendarRangePattern const> range_patterns() const { return m_range_patterns.span(); };
+    void set_range_patterns(Vector<Unicode::CalendarRangePattern> range_patterns) { m_range_patterns = move(range_patterns); }
+
     bool has_era() const { return Patterns::era.has_value(); }
     Unicode::CalendarPatternStyle era() const { return *Patterns::era; };
     StringView era_string() const { return Unicode::calendar_pattern_style_to_string(*Patterns::era); }
@@ -131,14 +134,15 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    String m_locale;                            // [[Locale]]
-    String m_calendar;                          // [[Calendar]]
-    String m_numbering_system;                  // [[NumberingSystem]]
-    Optional<Unicode::HourCycle> m_hour_cycle;  // [[HourCycle]]
-    String m_time_zone;                         // [[TimeZone]]
-    Optional<Style> m_date_style;               // [[DateStyle]]
-    Optional<Style> m_time_style;               // [[TimeStyle]]
-    NativeFunction* m_bound_format { nullptr }; // [[BoundFormat]]
+    String m_locale;                                        // [[Locale]]
+    String m_calendar;                                      // [[Calendar]]
+    String m_numbering_system;                              // [[NumberingSystem]]
+    Optional<Unicode::HourCycle> m_hour_cycle;              // [[HourCycle]]
+    String m_time_zone;                                     // [[TimeZone]]
+    Optional<Style> m_date_style;                           // [[DateStyle]]
+    Optional<Style> m_time_style;                           // [[TimeStyle]]
+    Vector<Unicode::CalendarRangePattern> m_range_patterns; // [[RangePatterns]]
+    NativeFunction* m_bound_format { nullptr };             // [[BoundFormat]]
 
     String m_data_locale;
 };
