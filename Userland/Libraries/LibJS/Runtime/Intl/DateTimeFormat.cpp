@@ -279,6 +279,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
     });
 
     String pattern;
+    Vector<Unicode::CalendarRangePattern> range_patterns;
 
     // 39. If dateTimeFormat.[[Hour]] is undefined, then
     if (!date_time_format.has_hour()) {
@@ -288,8 +289,8 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // b. Let pattern be bestFormat.[[pattern]].
         pattern = move(best_format->pattern);
 
-        // FIXME: Implement step c when range formats are parsed by LibUnicode.
         // c. Let rangePatterns be bestFormat.[[rangePatterns]].
+        range_patterns = Unicode::get_calendar_range_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
     }
     // 40. Else,
     else {
@@ -336,8 +337,6 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
         // e. Set dateTimeFormat.[[HourCycle]] to hc.
         date_time_format.set_hour_cycle(hour_cycle);
 
-        // FIXME: Implement steps f.ii and g.ii when range formats are parsed by LibUnicode.
-
         // f. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
         if ((hour_cycle == Unicode::HourCycle::H11) || (hour_cycle == Unicode::HourCycle::H12)) {
             // i. Let pattern be bestFormat.[[pattern12]].
@@ -350,6 +349,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
             }
 
             // ii. Let rangePatterns be bestFormat.[[rangePatterns12]].
+            range_patterns = Unicode::get_calendar_range12_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
         }
         // g. Else,
         else {
@@ -357,14 +357,15 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
             pattern = move(best_format->pattern);
 
             // ii. Let rangePatterns be bestFormat.[[rangePatterns]].
+            range_patterns = Unicode::get_calendar_range_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
         }
     }
 
     // 41. Set dateTimeFormat.[[Pattern]] to pattern.
     date_time_format.set_pattern(move(pattern));
 
-    // FIXME: Implement step 42 when range formats are parsed by LibUnicode.
     // 42. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
+    date_time_format.set_range_patterns(move(range_patterns));
 
     // 43. Return dateTimeFormat.
     return &date_time_format;
@@ -539,11 +540,10 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
             format.pattern12 = move(pattern12);
         }
 
-        // FIXME: Implement steps h-j when range formats are parsed by LibUnicode.
-        // h. Let dateTimeRangeFormat be styles.[[DateTimeRangeFormat]].[[<dateStyle>]].[[<timeStyle>]].
-        // i. Set format.[[rangePatterns]] to dateTimeRangeFormat.[[rangePatterns]].
-        // j. If dateTimeRangeFormat has a [[rangePatterns12]] field, then
-        //     i. Set format.[[rangePatterns12]] to dateTimeRangeFormat.[[rangePatterns12]].
+        // NOTE: Our implementation of steps h-j differ from the spec. LibUnicode does not attach range patterns to the
+        //       format pattern; rather, lookups for range patterns are performed separately based on the format pattern's
+        //       skeleton. So we form a new skeleton here and defer the range pattern lookups.
+        format.skeleton = Unicode::combine_skeletons(date_format.skeleton, time_format.skeleton);
 
         // k. Return format.
         return format;
