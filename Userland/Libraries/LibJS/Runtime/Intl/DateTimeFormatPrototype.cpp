@@ -33,6 +33,7 @@ void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(vm.names.formatRange, format_range, 2, attr);
+    define_native_function(vm.names.formatRangeToParts, format_range_to_parts, 2, attr);
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
@@ -108,6 +109,32 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
     // 6. Return ? FormatDateTimeRange(dtf, x, y).
     auto formatted = TRY(format_date_time_range(global_object, *date_time_format, start_date, end_date));
     return js_string(vm, move(formatted));
+}
+
+// 11.4.6 Intl.DateTimeFormat.prototype.formatRangeToParts ( startDate, endDate ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatRangeToParts
+JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
+{
+    auto start_date = vm.argument(0);
+    auto end_date = vm.argument(1);
+
+    // 1. Let dtf be this value.
+    // 2. Perform ? RequireInternalSlot(dtf, [[InitializedDateTimeFormat]]).
+    auto* date_time_format = TRY(typed_this_object(global_object));
+
+    // 3. If startDate is undefined or endDate is undefined, throw a TypeError exception.
+    if (start_date.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "startDate"sv);
+    if (end_date.is_undefined())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::IsUndefined, "endDate"sv);
+
+    // 4. Let x be ? ToNumber(startDate).
+    start_date = TRY(start_date.to_number(global_object));
+
+    // 5. Let y be ? ToNumber(endDate).
+    end_date = TRY(end_date.to_number(global_object));
+
+    // 6. Return ? FormatDateTimeRangeToParts(dtf, x, y).
+    return TRY(format_date_time_range_to_parts(global_object, *date_time_format, start_date, end_date));
 }
 
 // 11.4.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
