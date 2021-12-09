@@ -6,22 +6,25 @@
 
 #pragma once
 
+#include <AK/RefCountForwarder.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
 class Screen final
-    : public RefCounted<Screen>
+    : public RefCountForwarder<DOM::Window>
     , public Bindings::Wrappable {
 
 public:
     using WrapperType = Bindings::ScreenWrapper;
+    using AllowOwnPtr = TrueType;
 
-    static NonnullRefPtr<Screen> create(DOM::Window& window)
+    static NonnullOwnPtr<Screen> create(Badge<DOM::Window>, DOM::Window& window)
     {
-        return adopt_ref(*new Screen(window));
+        return adopt_own(*new Screen(window));
     }
 
     i32 width() const { return screen_rect().width(); }
@@ -34,9 +37,9 @@ public:
 private:
     explicit Screen(DOM::Window&);
 
-    Gfx::IntRect screen_rect() const;
+    DOM::Window const& window() const { return ref_count_target(); }
 
-    DOM::Window& m_window;
+    Gfx::IntRect screen_rect() const;
 };
 
 }
