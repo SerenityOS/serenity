@@ -96,6 +96,20 @@ DatePrototype::~DatePrototype()
 {
 }
 
+// thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue
+static ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value)
+{
+    // 1. If Type(value) is Object and value has a [[DateValue]] internal slot, then
+    if (value.is_object() && is<Date>(value.as_object())) {
+        // a. Return value.[[DateValue]].
+        return Value(static_cast<Date&>(value.as_object()).date_value());
+    }
+
+    // 2. Throw a TypeError exception.
+    auto& vm = global_object.vm();
+    return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Date");
+}
+
 // 21.4.4.2 Date.prototype.getDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 {
@@ -688,8 +702,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisTimeValue(this value).
-    auto* this_object = TRY(typed_this_object(global_object));
-    auto time = Value(this_object->date_value());
+    auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -713,8 +726,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisTimeValue(this value).
-    auto* this_object = TRY(typed_this_object(global_object));
-    auto time = Value(this_object->date_value());
+    auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -738,8 +750,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisTimeValue(this value).
-    auto* this_object = TRY(typed_this_object(global_object));
-    auto time = Value(this_object->date_value());
+    auto time = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -797,8 +808,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
 {
     // 1. Let t be ? thisTimeValue(this value).
-    auto* this_object = TRY(typed_this_object(global_object));
-    auto t = Value(this_object->date_value());
+    auto t = TRY(this_time_value(global_object, vm.this_value(global_object)));
 
     // 2. Let ns be ? NumberToBigInt(t) × 10^6.
     auto* ns = TRY(number_to_bigint(global_object, t));
