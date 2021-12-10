@@ -760,12 +760,12 @@ static Optional<StringView> day_period_for_hour(StringView locale, StringView ca
     // FIXME: This isn't locale-aware. We should parse the CLDR's cldr-core/supplemental/dayPeriods.json file
     //        to acquire day periods per-locale. For now, these are hard-coded to the en locale's values.
     if ((hour >= 6) && (hour < 12))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Morning);
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Morning1);
     if ((hour >= 12) && (hour < 18))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Afternoon);
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Afternoon1);
     if ((hour >= 18) && (hour < 21))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Evening);
-    return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Night);
+        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Evening1);
+    return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Night1);
 }
 
 // 11.1.7 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
