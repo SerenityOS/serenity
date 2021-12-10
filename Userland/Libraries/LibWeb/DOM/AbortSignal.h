@@ -53,6 +53,8 @@ public:
     // https://dom.spec.whatwg.org/#dom-abortsignal-reason
     JS::Value reason() const { return m_abort_reason; }
 
+    JS::ThrowCompletionOr<void> throw_if_aborted() const;
+
     void visit_edges(JS::Cell::Visitor&);
 
     // ^EventTarget
