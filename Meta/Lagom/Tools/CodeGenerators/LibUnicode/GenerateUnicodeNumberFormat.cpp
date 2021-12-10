@@ -157,9 +157,9 @@ struct NumberSystem {
 
 struct Unit {
     StringIndexType unit { 0 };
-    Vector<NumberFormatIndexType> long_formats {};
-    Vector<NumberFormatIndexType> short_formats {};
-    Vector<NumberFormatIndexType> narrow_formats {};
+    NumberFormatListIndexType long_formats { 0 };
+    NumberFormatListIndexType short_formats { 0 };
+    NumberFormatListIndexType narrow_formats { 0 };
 };
 
 struct Locale {
@@ -487,11 +487,13 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
                     return;
             }
 
+            auto& unit = ensure_unit(unit_name);
+            NumberFormatList formats;
+
             value.as_object().for_each_member([&](auto const& unit_key, JsonValue const& pattern_value) {
                 if (!unit_key.starts_with(unit_pattern_prefix))
                     return;
 
-                auto& unit = ensure_unit(unit_name);
                 NumberFormat format {};
 
                 auto plurality = unit_key.substring_view(unit_pattern_prefix.length());
@@ -504,22 +506,24 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
                 format.negative_format_index = locale_data.unique_strings.ensure(zero_format.replace("{number}"sv, "{minusSign}{number}"sv));
                 format.zero_format_index = locale_data.unique_strings.ensure(move(zero_format));
 
-                auto format_index = locale_data.unique_formats.ensure(move(format));
-
-                switch (style) {
-                case Unicode::Style::Long:
-                    unit.long_formats.append(format_index);
-                    break;
-                case Unicode::Style::Short:
-                    unit.short_formats.append(format_index);
-                    break;
-                case Unicode::Style::Narrow:
-                    unit.narrow_formats.append(format_index);
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
+                formats.append(locale_data.unique_formats.ensure(move(format)));
             });
+
+            auto number_format_list_index = locale_data.unique_format_lists.ensure(move(formats));
+
+            switch (style) {
+            case Unicode::Style::Long:
+                unit.long_formats = number_format_list_index;
+                break;
+            case Unicode::Style::Short:
+                unit.short_formats = number_format_list_index;
+                break;
+            case Unicode::Style::Narrow:
+                unit.narrow_formats = number_format_list_index;
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
         });
     };
 
@@ -688,31 +692,14 @@ struct NumberSystem {
 
 struct Unit {
     @string_index_type@ unit { 0 };
-    Span<@number_format_index_type@ const> long_formats {};
-    Span<@number_format_index_type@ const> short_formats {};
-    Span<@number_format_index_type@ const> narrow_formats {};
+    @number_format_list_index_type@ long_formats { 0 };
+    @number_format_list_index_type@ short_formats { 0 };
+    @number_format_list_index_type@ narrow_formats { 0 };
 };
 )~~~");
 
     locale_data.unique_formats.generate(generator, "NumberFormat"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
-
-    auto append_number_formats = [&](String name, auto const& number_formats) {
-        generator.set("name"sv, move(name));
-        generator.set("size"sv, String::number(number_formats.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<@number_format_index_type@, @size@> @name@ { {)~~~");
-
-        bool first = true;
-        for (auto number_format : number_formats) {
-            generator.append(first ? " " : ", ");
-            generator.append(String::number(number_format));
-            first = false;
-        }
-
-        generator.append(" } };");
-    };
 
     auto append_number_systems = [&](String name, auto const& number_systems) {
         generator.set("name", name);
@@ -756,35 +743,25 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
     };
 
     auto append_units = [&](String name, auto const& units) {
-        auto format_name = [&](String unit, StringView format) {
-            unit = unit.replace("-"sv, "_"sv, true);
-            return String::formatted("{}_{}_{}", name, unit, format);
-        };
-
-        for (auto const& unit : units) {
-            append_number_formats(format_name(unit.key, "l"sv), unit.value.long_formats);
-            append_number_formats(format_name(unit.key, "s"sv), unit.value.short_formats);
-            append_number_formats(format_name(unit.key, "n"sv), unit.value.narrow_formats);
-        }
-
         generator.set("name", name);
         generator.set("size", String::number(units.size()));
 
         generator.append(R"~~~(
 static constexpr Array<Unit, @size@> @name@ { {)~~~");
 
+        bool first = true;
         for (auto const& unit : units) {
             generator.set("unit"sv, String::number(unit.value.unit));
-            generator.set("long_formats"sv, format_name(unit.key, "l"sv));
-            generator.set("short_formats"sv, format_name(unit.key, "s"sv));
-            generator.set("narrow_formats"sv, format_name(unit.key, "n"sv));
-            generator.append(R"~~~(
-    { @unit@, @long_formats@.span(), @short_formats@.span(), @narrow_formats@.span() },)~~~");
+            generator.set("long_formats"sv, String::number(unit.value.long_formats));
+            generator.set("short_formats"sv, String::number(unit.value.short_formats));
+            generator.set("narrow_formats"sv, String::number(unit.value.narrow_formats));
+
+            generator.append(first ? " " : ", ");
+            generator.append("{ @unit@, @long_formats@, @short_formats@, @narrow_formats@ }");
+            first = false;
         }
 
-        generator.append(R"~~~(
-} };
-)~~~");
+        generator.append(" } };");
     };
 
     generate_mapping(generator, locale_data.locales, "NumberSystem"sv, "s_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_number_systems(name, value.number_systems); });
@@ -924,22 +901,23 @@ Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView uni
     Vector<Unicode::NumberFormat> formats;
 
     if (auto const* units = find_units(locale, unit); units != nullptr) {
-        Span<@number_format_index_type@ const> number_formats;
+        @number_format_list_index_type@ number_format_list_index { 0 };
 
         switch (style) {
         case Style::Long:
-            number_formats = units->long_formats;
+            number_format_list_index = units->long_formats;
             break;
         case Style::Short:
-            number_formats = units->short_formats;
+            number_format_list_index = units->short_formats;
             break;
         case Style::Narrow:
-            number_formats = units->narrow_formats;
+            number_format_list_index = units->narrow_formats;
             break;
         default:
             VERIFY_NOT_REACHED();
         }
 
+        auto number_formats = s_number_format_lists.at(number_format_list_index);
         formats.ensure_capacity(number_formats.size());
 
         for (auto number_format : number_formats)
