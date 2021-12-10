@@ -1,8 +1,9 @@
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), CustomVisit]
 interface AbortSignal : EventTarget {
-    // FIXME: [NewObject] static AbortSignal abort();
+    // FIXME: [NewObject] static AbortSignal abort(optional any reason);
 
     readonly attribute boolean aborted;
+    readonly attribute any reason;
 
     attribute EventHandler onabort;
 };

@@ -20,9 +20,10 @@ AbortController::~AbortController()
 }
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abort
-void AbortController::abort()
+void AbortController::abort(JS::Value reason)
 {
-    m_signal->signal_abort();
+    // The abort(reason) method steps are to signal abort on this’s signal with reason if it is given.
+    m_signal->signal_abort(reason);
 }
 
 }

@@ -5,6 +5,8 @@
  */
 
 #include <LibWeb/Bindings/AbortSignalWrapper.h>
+#include <LibWeb/Bindings/DOMExceptionWrapper.h>
+#include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -29,25 +31,35 @@ JS::Object* AbortSignal::create_wrapper(JS::GlobalObject& global_object)
 // https://dom.spec.whatwg.org/#abortsignal-add
 void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
 {
-    if (m_aborted)
+    // 1. If signal is aborted, then return.
+    if (aborted())
         return;
 
+    // 2. Append algorithm to signal’s abort algorithms.
     m_abort_algorithms.append(move(abort_algorithm));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
-void AbortSignal::signal_abort()
+void AbortSignal::signal_abort(JS::Value reason)
 {
-    if (m_aborted)
+    // 1. If signal is aborted, then return.
+    if (aborted())
         return;
 
-    m_aborted = true;
+    // 2. Set signal’s abort reason to reason if it is given; otherwise to a new "AbortError" DOMException.
+    if (!reason.is_undefined())
+        m_abort_reason = reason;
+    else
+        m_abort_reason = wrap(wrapper()->global_object(), AbortError::create("Aborted without reason"));
 
+    // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)
         algorithm();
 
+    // 4. Empty signal’s abort algorithms.
     m_abort_algorithms.clear();
 
+    // 5. Fire an event named abort at signal.
     dispatch_event(Event::create(HTML::EventNames::abort));
 }
 
@@ -59,6 +71,11 @@ void AbortSignal::set_onabort(HTML::EventHandler event_handler)
 HTML::EventHandler AbortSignal::onabort()
 {
     return event_handler_attribute(HTML::EventNames::abort);
+}
+
+void AbortSignal::visit_edges(JS::Cell::Visitor& visitor)
+{
+    visitor.visit(m_abort_reason);
 }
 
 }
