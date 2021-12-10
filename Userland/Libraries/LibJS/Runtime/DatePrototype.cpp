@@ -11,10 +11,14 @@
 #include <AK/TypeCasts.h>
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/DateTimeFormat.h>
+#include <LibJS/Runtime/Intl/DateTimeFormatConstructor.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -667,6 +671,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
     return js_string(vm, move(string));
 }
 
+static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(GlobalObject& global_object, Value locales, Value options)
+{
+    MarkedValueList arguments { global_object.vm().heap() };
+    arguments.append(locales);
+    arguments.append(options);
+
+    auto* date_time_format = TRY(construct(global_object, *global_object.intl_date_time_format_constructor(), move(arguments)));
+    return static_cast<Intl::DateTimeFormat*>(date_time_format);
+}
+
 // 21.4.4.38 Date.prototype.toLocaleDateString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 {
@@ -680,17 +694,29 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
     return js_string(vm, move(string));
 }
 
-// 21.4.4.39 Date.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocalestring
+// 18.4.1 Date.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-date.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 {
+    auto locales = vm.argument(0);
+    auto options = vm.argument(1);
+
+    // 1. Let x be ? thisTimeValue(this value).
     auto* this_object = TRY(typed_this_object(global_object));
+    auto time = this_object->is_invalid() ? js_nan() : this_object->value_of();
 
-    if (this_object->is_invalid())
-        return js_string(vm, "Invalid Date");
+    // 2. If x is NaN, return "Invalid Date".
+    if (time.is_nan())
+        return js_string(vm, "Invalid Date"sv);
 
-    // FIXME: Optional locales, options params.
-    auto string = this_object->locale_string();
-    return js_string(vm, move(string));
+    // 3. Let options be ? ToDateTimeOptions(options, "any", "all").
+    options = Value(TRY(Intl::to_date_time_options(global_object, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All)));
+
+    // 4. Let dateFormat be ? Construct(%DateTimeFormat%, « locales, options »).
+    auto* date_format = TRY(construct_date_time_format(global_object, locales, options));
+
+    // 5. Return ? FormatDateTime(dateFormat, x).
+    auto formatted = TRY(Intl::format_date_time(global_object, *date_format, time));
+    return js_string(vm, move(formatted));
 }
 
 // 21.4.4.40 Date.prototype.toLocaleTimeString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring
