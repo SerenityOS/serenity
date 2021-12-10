@@ -246,6 +246,15 @@ Optional<StringView> get_calendar_day_period_symbol([[maybe_unused]] StringView 
 #endif
 }
 
+Optional<StringView> get_calendar_day_period_symbol_for_hour([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] u8 hour)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::get_calendar_day_period_symbol_for_hour(locale, calendar, style, hour);
+#else
+    return {};
+#endif
+}
+
 Optional<StringView> get_time_zone_name([[maybe_unused]] StringView locale, [[maybe_unused]] StringView time_zone, [[maybe_unused]] CalendarPatternStyle style)
 {
 #if ENABLE_UNICODE_DATA
