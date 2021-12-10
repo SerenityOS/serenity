@@ -49,9 +49,13 @@ enum class DayPeriod : u8 {
     AM,
     PM,
     Morning1,
+    Morning2,
     Afternoon1,
+    Afternoon2,
     Evening1,
+    Evening2,
     Night1,
+    Night2,
 };
 
 enum class HourCycle : u8 {
