@@ -913,13 +913,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
             else if (key == "pm"sv)
                 symbols[to_underlying(Unicode::DayPeriod::PM)] = locale_data.unique_strings.ensure(move(symbol));
             else if (key == "morning1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Morning)] = locale_data.unique_strings.ensure(move(symbol));
+                symbols[to_underlying(Unicode::DayPeriod::Morning1)] = locale_data.unique_strings.ensure(move(symbol));
             else if (key == "afternoon1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Afternoon)] = locale_data.unique_strings.ensure(move(symbol));
+                symbols[to_underlying(Unicode::DayPeriod::Afternoon1)] = locale_data.unique_strings.ensure(move(symbol));
             else if (key == "evening1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Evening)] = locale_data.unique_strings.ensure(move(symbol));
+                symbols[to_underlying(Unicode::DayPeriod::Evening1)] = locale_data.unique_strings.ensure(move(symbol));
             else if (key == "night1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Night)] = locale_data.unique_strings.ensure(move(symbol));
+                symbols[to_underlying(Unicode::DayPeriod::Night1)] = locale_data.unique_strings.ensure(move(symbol));
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
