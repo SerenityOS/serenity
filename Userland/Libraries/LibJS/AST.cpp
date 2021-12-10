@@ -364,7 +364,7 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
         return {};
 
     // 5. If IsConstructor(func) is false, throw a TypeError exception.
-    if (!func || !func->value_of().is_constructor()) {
+    if (!func || !Value(func).is_constructor()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
         return {};
     }

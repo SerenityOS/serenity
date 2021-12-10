@@ -55,7 +55,7 @@ static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, V
     if (value.is_number())
         return value;
     if (value.is_object() && is<NumberObject>(value.as_object()))
-        return static_cast<NumberObject&>(value.as_object()).value_of();
+        return Value(static_cast<NumberObject&>(value.as_object()).number());
     auto& vm = global_object.vm();
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
 }

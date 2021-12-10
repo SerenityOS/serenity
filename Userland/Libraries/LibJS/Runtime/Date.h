@@ -73,9 +73,13 @@ public:
     String locale_string() const { return m_datetime.to_string(); }
     String locale_time_string() const { return m_datetime.to_string("%H:%M:%S"); }
 
-    virtual Value value_of() const override
+    // https://tc39.es/ecma262/#sec-properties-of-date-instances
+    // [[DateValue]]
+    double date_value() const
     {
-        return Value(static_cast<double>(m_datetime.timestamp() * 1000 + m_milliseconds));
+        return m_is_invalid
+            ? NAN
+            : static_cast<double>(m_datetime.timestamp() * 1000 + m_milliseconds);
     }
 
 private:
