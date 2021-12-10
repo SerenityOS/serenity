@@ -257,6 +257,31 @@ struct UnicodeLocaleData {
     Vector<String> symbols;
 };
 
+static Optional<Unicode::DayPeriod> day_period_from_string(StringView day_period)
+{
+    if (day_period == "am"sv)
+        return Unicode::DayPeriod::AM;
+    if (day_period == "pm"sv)
+        return Unicode::DayPeriod::PM;
+    if (day_period == "morning1"sv)
+        return Unicode::DayPeriod::Morning1;
+    if (day_period == "morning2"sv)
+        return Unicode::DayPeriod::Morning2;
+    if (day_period == "afternoon1"sv)
+        return Unicode::DayPeriod::Afternoon1;
+    if (day_period == "afternoon2"sv)
+        return Unicode::DayPeriod::Afternoon2;
+    if (day_period == "evening1"sv)
+        return Unicode::DayPeriod::Evening1;
+    if (day_period == "evening2"sv)
+        return Unicode::DayPeriod::Evening2;
+    if (day_period == "night1"sv)
+        return Unicode::DayPeriod::Night1;
+    if (day_period == "night2"sv)
+        return Unicode::DayPeriod::Night2;
+    return {};
+};
+
 static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& locale_data)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#Time_Data
@@ -905,21 +930,11 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         auto const& short_symbols = symbols_object.get("abbreviated"sv).as_object();
         auto const& long_symbols = symbols_object.get("wide"sv).as_object();
 
-        auto& day_period_symbols = ensure_symbols("dayPeriod"sv, 6);
+        auto& day_period_symbols = ensure_symbols("dayPeriod"sv, 10);
 
         auto append_symbol = [&](auto& symbols, auto const& key, auto symbol) {
-            if (key == "am"sv)
-                symbols[to_underlying(Unicode::DayPeriod::AM)] = locale_data.unique_strings.ensure(move(symbol));
-            else if (key == "pm"sv)
-                symbols[to_underlying(Unicode::DayPeriod::PM)] = locale_data.unique_strings.ensure(move(symbol));
-            else if (key == "morning1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Morning1)] = locale_data.unique_strings.ensure(move(symbol));
-            else if (key == "afternoon1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Afternoon1)] = locale_data.unique_strings.ensure(move(symbol));
-            else if (key == "evening1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Evening1)] = locale_data.unique_strings.ensure(move(symbol));
-            else if (key == "night1"sv)
-                symbols[to_underlying(Unicode::DayPeriod::Night1)] = locale_data.unique_strings.ensure(move(symbol));
+            if (auto day_period = day_period_from_string(key); day_period.has_value())
+                symbols[to_underlying(*day_period)] = locale_data.unique_strings.ensure(move(symbol));
         };
 
         narrow_symbols.for_each_member([&](auto const& key, JsonValue const& value) {
