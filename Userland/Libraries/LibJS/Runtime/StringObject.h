@@ -23,11 +23,6 @@ public:
     PrimitiveString const& primitive_string() const { return m_string; }
     PrimitiveString& primitive_string() { return m_string; }
 
-    virtual Value value_of() const override
-    {
-        return Value(&m_string);
-    }
-
 private:
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&) override;

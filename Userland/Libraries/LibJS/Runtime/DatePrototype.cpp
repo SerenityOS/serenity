@@ -689,7 +689,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 
     // 1. Let x be ? thisTimeValue(this value).
     auto* this_object = TRY(typed_this_object(global_object));
-    auto time = this_object->is_invalid() ? js_nan() : this_object->value_of();
+    auto time = Value(this_object->date_value());
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -714,7 +714,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 
     // 1. Let x be ? thisTimeValue(this value).
     auto* this_object = TRY(typed_this_object(global_object));
-    auto time = this_object->is_invalid() ? js_nan() : this_object->value_of();
+    auto time = Value(this_object->date_value());
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -739,7 +739,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 
     // 1. Let x be ? thisTimeValue(this value).
     auto* this_object = TRY(typed_this_object(global_object));
-    auto time = this_object->is_invalid() ? js_nan() : this_object->value_of();
+    auto time = Value(this_object->date_value());
 
     // 2. If x is NaN, return "Invalid Date".
     if (time.is_nan())
@@ -798,7 +798,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
 {
     // 1. Let t be ? thisTimeValue(this value).
     auto* this_object = TRY(typed_this_object(global_object));
-    auto t = this_object->value_of();
+    auto t = Value(this_object->date_value());
 
     // 2. Let ns be ? NumberToBigInt(t) × 10^6.
     auto* ns = TRY(number_to_bigint(global_object, t));

@@ -19,8 +19,6 @@ public:
     NumberObject(double, Object& prototype);
     virtual ~NumberObject() override;
 
-    virtual Value value_of() const override { return Value(m_value); }
-
     double number() const { return m_value; }
 
 private:

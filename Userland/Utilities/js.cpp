@@ -760,7 +760,7 @@ static void print_primitive_wrapper_object(FlyString const& name, JS::Object con
     // BooleanObject, NumberObject, StringObject
     print_type(name);
     js_out(" ");
-    print_value(object.value_of(), seen_objects);
+    print_value(&object, seen_objects);
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)

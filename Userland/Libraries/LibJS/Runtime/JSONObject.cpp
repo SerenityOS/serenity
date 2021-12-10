@@ -145,9 +145,9 @@ ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& glob
         else if (is<StringObject>(value_object))
             value = TRY(value.to_primitive_string(global_object));
         else if (is<BooleanObject>(value_object))
-            value = static_cast<BooleanObject&>(value_object).value_of();
+            value = Value(static_cast<BooleanObject&>(value_object).boolean());
         else if (is<BigIntObject>(value_object))
-            value = static_cast<BigIntObject&>(value_object).value_of();
+            value = Value(&static_cast<BigIntObject&>(value_object).bigint());
     }
 
     if (value.is_null())

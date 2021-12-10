@@ -18,10 +18,7 @@ public:
     BooleanObject(bool, Object& prototype);
     virtual ~BooleanObject() override;
 
-    virtual Value value_of() const override
-    {
-        return Value(m_value);
-    }
+    bool boolean() const { return m_value; }
 
 private:
     bool m_value { false };

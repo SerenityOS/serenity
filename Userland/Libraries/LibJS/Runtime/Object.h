@@ -167,7 +167,6 @@ public:
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 
