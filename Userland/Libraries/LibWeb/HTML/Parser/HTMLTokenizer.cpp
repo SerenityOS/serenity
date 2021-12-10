@@ -1237,7 +1237,7 @@ _StartOfFunction:
                 ON_WHITESPACE
                 {
                     m_current_token.last_attribute().value = consume_current_builder();
-                    m_current_token.last_attribute().value_end_position = nth_last_position(2);
+                    m_current_token.last_attribute().value_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('&')
