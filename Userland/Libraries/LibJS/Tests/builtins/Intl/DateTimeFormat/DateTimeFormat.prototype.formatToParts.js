@@ -233,8 +233,6 @@ describe("special cases", () => {
             { type: "dayPeriod", value: "in the morning" },
         ]);
 
-        // FIXME: The ar format isn't entirely correct. LibUnicode is only parsing e.g. "morning1" in the "dayPeriods"
-        //        CLDR object. It will need to parse "morning2", and figure out how to apply it.
         const ar = new Intl.DateTimeFormat("ar", {
             dayPeriod: "long",
             hour: "numeric",
@@ -243,7 +241,7 @@ describe("special cases", () => {
         expect(ar.formatToParts(d)).toEqual([
             { type: "hour", value: "٧" },
             { type: "literal", value: " " },
-            { type: "dayPeriod", value: "في الصباح" },
+            { type: "dayPeriod", value: "صباحًا" },
         ]);
     });
 

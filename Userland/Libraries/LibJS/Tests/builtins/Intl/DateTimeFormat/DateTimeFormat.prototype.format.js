@@ -228,12 +228,10 @@ describe("day", () => {
 
 describe("dayPeriod", () => {
     // prettier-ignore
-    // FIXME: The ar formats aren't entirely correct. LibUnicode is only parsing e.g. "morning1" in the "dayPeriods"
-    //        CLDR object. It will need to parse "morning2", and figure out how to apply it.
     const data = [
-        { dayPeriod: "narrow", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ ظهرًا", ar1: "٧ فجرًا" },
-        { dayPeriod: "short", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ ظهرًا", ar1: "٧ فجرًا" },
-        { dayPeriod: "long", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ ظهرًا", ar1: "٧ في الصباح" },
+        { dayPeriod: "narrow", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا" },
+        { dayPeriod: "short", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ ص" },
+        { dayPeriod: "long", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا" },
     ];
 
     test("all", () => {

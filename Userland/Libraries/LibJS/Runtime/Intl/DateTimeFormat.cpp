@@ -755,19 +755,6 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::Cal
     return {};
 }
 
-static Optional<StringView> day_period_for_hour(StringView locale, StringView calendar, Unicode::CalendarPatternStyle style, u8 hour)
-{
-    // FIXME: This isn't locale-aware. We should parse the CLDR's cldr-core/supplemental/dayPeriods.json file
-    //        to acquire day periods per-locale. For now, these are hard-coded to the en locale's values.
-    if ((hour >= 6) && (hour < 12))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Morning1);
-    if ((hour >= 12) && (hour < 18))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Afternoon1);
-    if ((hour >= 18) && (hour < 21))
-        return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Evening1);
-    return Unicode::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::Night1);
-}
-
 // 11.1.7 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, Value time, Unicode::CalendarPattern const* range_format_options)
 {
@@ -875,7 +862,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             auto style = date_time_format.day_period();
 
             // ii. Let fv be a String value representing the day period of tm in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-            auto symbol = day_period_for_hour(data_locale, date_time_format.calendar(), style, local_time.hour);
+            auto symbol = Unicode::get_calendar_day_period_symbol_for_hour(data_locale, date_time_format.calendar(), style, local_time.hour);
             if (symbol.has_value())
                 formatted_value = *symbol;
 
@@ -1236,10 +1223,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
             // iii. Else if fieldName is equal to [[DayPeriod]], then
             case Unicode::CalendarRangePattern::Field::DayPeriod: {
                 // 1. Let v1 be a String value representing the day period of tm1; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto start_period = day_period_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, start_value);
+                auto start_period = Unicode::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, start_value);
 
                 // 2. Let v2 be a String value representing the day period of tm2; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto end_period = day_period_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, end_value);
+                auto end_period = Unicode::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), Unicode::CalendarPatternStyle::Short, end_value);
 
                 // 3. If v1 is not equal to v2, then
                 if (start_period != end_period) {
