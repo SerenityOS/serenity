@@ -41,6 +41,8 @@ WarningsAsErrors: ''
 HeaderFilterRegex: 'AK|Userland|Kernel|Tests'
 FormatStyle: none
 CheckOptions:
+  - key: bugprone-dangling-handle.HandleClasses
+    value: 'AK::StringView;AK::Span'
   - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value: true
   - key: readability-implicit-bool-conversion.AllowPointerConditions
