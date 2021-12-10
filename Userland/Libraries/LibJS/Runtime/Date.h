@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Math.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -78,7 +79,7 @@ public:
     double date_value() const
     {
         return m_is_invalid
-            ? NAN
+            ? AK::NaN<double>
             : static_cast<double>(m_datetime.timestamp() * 1000 + m_milliseconds);
     }
 
