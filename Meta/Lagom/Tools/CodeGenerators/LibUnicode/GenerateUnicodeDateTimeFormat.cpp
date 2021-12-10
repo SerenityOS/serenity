@@ -230,9 +230,16 @@ struct TimeZone {
     StringIndexType short_name { 0 };
 };
 
+struct DayPeriod {
+    Unicode::DayPeriod day_period {};
+    u8 begin { 0 };
+    u8 end { 0 };
+};
+
 struct Locale {
     HashMap<String, Calendar> calendars;
     HashMap<String, TimeZone> time_zones;
+    Vector<DayPeriod> day_periods;
 };
 
 struct UnicodeLocaleData {
@@ -1108,10 +1115,59 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     return {};
 }
 
+static ErrorOr<void> parse_day_periods(String core_path, UnicodeLocaleData& locale_data)
+{
+    // https://unicode.org/reports/tr35/tr35-dates.html#Day_Period_Rule_Sets
+    LexicalPath day_periods_path(move(core_path));
+    day_periods_path = day_periods_path.append("supplemental"sv);
+    day_periods_path = day_periods_path.append("dayPeriods.json"sv);
+
+    auto day_periods_file = TRY(Core::File::open(day_periods_path.string(), Core::OpenMode::ReadOnly));
+    auto day_periods = TRY(JsonValue::from_string(day_periods_file->read_all()));
+
+    auto const& supplemental_object = day_periods.as_object().get("supplemental"sv);
+    auto const& day_periods_object = supplemental_object.as_object().get("dayPeriodRuleSet"sv);
+
+    auto parse_hour = [](auto const& time) {
+        auto hour_end_index = time.find(':').value();
+
+        // The times are in the form "hours:minutes", but we only need the hour segment.
+        // TR-35 explicitly states that minutes other than :00 must not be used.
+        VERIFY(time.substring_view(hour_end_index) == ":00"sv);
+
+        auto hour = time.substring_view(0, hour_end_index);
+        return hour.template to_uint<u8>().value();
+    };
+
+    auto parse_day_period = [&](auto const& symbol, auto const& ranges) -> Optional<DayPeriod> {
+        auto day_period = day_period_from_string(symbol);
+        if (!day_period.has_value())
+            return {};
+
+        auto begin = parse_hour(ranges.get("_from"sv).as_string());
+        auto end = parse_hour(ranges.get("_before"sv).as_string());
+
+        return DayPeriod { *day_period, begin, end };
+    };
+
+    day_periods_object.as_object().for_each_member([&](auto const& language, JsonValue const& value) {
+        auto locale = locale_data.locales.find(language);
+        if (locale == locale_data.locales.end())
+            return;
+
+        value.as_object().for_each_member([&](auto const& symbol, JsonValue const& ranges) {
+            if (auto day_period = parse_day_period(symbol, ranges.as_object()); day_period.has_value())
+                locale->value.day_periods.append(day_period.release_value());
+        });
+    });
+
+    return {};
+};
+
 static ErrorOr<void> parse_all_locales(String core_path, String dates_path, UnicodeLocaleData& locale_data)
 {
     TRY(parse_hour_cycles(core_path, locale_data));
-    TRY(parse_meta_zones(move(core_path), locale_data));
+    TRY(parse_meta_zones(core_path, locale_data));
 
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
@@ -1143,6 +1199,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String dates_path, Unic
         TRY(parse_time_zone_names(move(dates_path), locale_data, locale));
     }
 
+    TRY(parse_day_periods(move(core_path), locale_data));
     return {};
 }
 
@@ -1199,6 +1256,7 @@ Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calen
 Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
 Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
 Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
+Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
 Optional<TimeZone> time_zone_from_string(StringView time_zone);
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
@@ -1368,6 +1426,12 @@ struct TimeZoneData {
     @string_index_type@ long_name { 0 };
     @string_index_type@ short_name { 0 };
 };
+
+struct DayPeriodData {
+    u8 day_period { 0 };
+    u8 begin { 0 };
+    u8 end { 0 };
+};
 )~~~");
 
     auto append_pattern_list = [&](auto name, auto type, auto const& formats) {
@@ -1535,6 +1599,23 @@ static constexpr Array<TimeZoneData, @size@> @name@ { {)~~~");
 )~~~");
     };
 
+    auto append_day_periods = [&](String name, auto const& day_periods) {
+        generator.set("name", move(name));
+        generator.set("size", String::number(day_periods.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<DayPeriodData, @size@> @name@ { {)~~~");
+
+        for (auto const& day_period : day_periods) {
+            generator.set("day_period", String::number(static_cast<u8>(day_period.day_period)));
+            generator.set("begin", String::number(day_period.begin));
+            generator.set("end", String::number(day_period.end));
+            generator.append(" { @day_period@, @begin@, @end@ },");
+        }
+
+        generator.append(" } };");
+    };
+
     auto append_hour_cycles = [&](String name, auto const& hour_cycle_region) {
         auto const& hour_cycles = locale_data.hour_cycles.find(hour_cycle_region)->value;
 
@@ -1549,11 +1630,12 @@ static constexpr Array<u8, @size@> @name@ { { )~~~");
             generator.append("@hour_cycle@, ");
         }
 
-        generator.append("} };");
+        generator.append(" } };");
     };
 
     generate_mapping(generator, locale_data.locales, "CalendarData"sv, "s_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
     generate_mapping(generator, locale_data.locales, "TimeZoneData"sv, "s_time_zones"sv, "s_time_zones_{}", [&](auto const& name, auto const& value) { append_time_zones(name, value.time_zones); });
+    generate_mapping(generator, locale_data.locales, "DayPeriodData"sv, "s_day_periods"sv, "s_day_periods_{}", [&](auto const& name, auto const& value) { append_day_periods(name, value.day_periods); });
     generate_mapping(generator, locale_data.hour_cycle_regions, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
@@ -1736,6 +1818,29 @@ Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringVie
         return s_string_list[symbols.at(value_index)];
 
     return {};
+}
+
+Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
+{
+    auto locale_value = locale_from_string(locale);
+    if (!locale_value.has_value())
+        return {};
+
+    auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
+    auto day_periods = s_day_periods[locale_index];
+
+    for (auto const& day_period : day_periods) {
+        if ((day_period.begin <= hour) && (hour < day_period.end)) {
+            auto period = static_cast<Unicode::DayPeriod>(day_period.day_period);
+            return Detail::get_calendar_day_period_symbol(locale, calendar, style, period);
+        }
+    }
+
+    // Fallback to fixed periods if the locale does not have flexible day periods.
+    // TR-35 states that the meaning of AM and PM does not change with locale.
+    if (hour < 12)
+        return Detail::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::AM);
+    return Detail::get_calendar_day_period_symbol(locale, calendar, style, Unicode::DayPeriod::PM);
 }
 
 static TimeZoneData const* find_time_zone_data(StringView locale, StringView time_zone)
