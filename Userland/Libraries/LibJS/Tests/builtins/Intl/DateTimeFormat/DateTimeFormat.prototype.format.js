@@ -229,9 +229,9 @@ describe("day", () => {
 describe("dayPeriod", () => {
     // prettier-ignore
     const data = [
-        { dayPeriod: "narrow", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا" },
-        { dayPeriod: "short", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ ص" },
-        { dayPeriod: "long", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا" },
+        { dayPeriod: "narrow", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا", as0: "অপৰাহ্ন ৫", as1: "পূৰ্বাহ্ন ৭"},
+        { dayPeriod: "short", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ ص", as0: "অপৰাহ্ন ৫", as1: "পূৰ্বাহ্ন ৭"},
+        { dayPeriod: "long", en0: "5 in the afternoon", en1: "7 in the morning", ar0: "٥ بعد الظهر", ar1: "٧ صباحًا", as0: "অপৰাহ্ন ৫", as1: "পূৰ্বাহ্ন ৭"},
     ];
 
     test("all", () => {
@@ -251,6 +251,14 @@ describe("dayPeriod", () => {
             });
             expect(ar.format(d0)).toBe(d.ar0);
             expect(ar.format(d1)).toBe(d.ar1);
+
+            const as = new Intl.DateTimeFormat("as", {
+                dayPeriod: d.dayPeriod,
+                hour: "numeric",
+                timeZone: "UTC",
+            });
+            expect(as.format(d0)).toBe(d.as0);
+            expect(as.format(d1)).toBe(d.as1);
         });
     });
 });
