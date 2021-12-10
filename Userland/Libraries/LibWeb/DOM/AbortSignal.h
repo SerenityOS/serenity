@@ -42,12 +42,18 @@ public:
     void add_abort_algorithm(Function<void()>);
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-aborted
-    bool aborted() const { return m_aborted; }
+    // An AbortSignal object is aborted when its abort reason is not undefined.
+    bool aborted() const { return !m_abort_reason.is_undefined(); }
 
-    void signal_abort();
+    void signal_abort(JS::Value reason);
 
     void set_onabort(HTML::EventHandler);
     HTML::EventHandler onabort();
+
+    // https://dom.spec.whatwg.org/#dom-abortsignal-reason
+    JS::Value reason() const { return m_abort_reason; }
+
+    void visit_edges(JS::Cell::Visitor&);
 
     // ^EventTarget
     virtual void ref_event_target() override { ref(); }
@@ -57,8 +63,9 @@ public:
 private:
     AbortSignal(Document& document);
 
-    // https://dom.spec.whatwg.org/#abortsignal-aborted-flag
-    bool m_aborted { false };
+    // https://dom.spec.whatwg.org/#abortsignal-abort-reason
+    // An AbortSignal object has an associated abort reason, which is a JavaScript value. It is undefined unless specified otherwise.
+    JS::Value m_abort_reason { JS::js_undefined() };
 
     // https://dom.spec.whatwg.org/#abortsignal-abort-algorithms
     // FIXME: This should be a set.

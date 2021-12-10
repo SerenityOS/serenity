@@ -39,7 +39,7 @@ public:
     // https://dom.spec.whatwg.org/#dom-abortcontroller-signal
     NonnullRefPtr<AbortSignal> signal() const { return m_signal; }
 
-    void abort();
+    void abort(JS::Value reason);
 
 private:
     AbortController(Document& document);
