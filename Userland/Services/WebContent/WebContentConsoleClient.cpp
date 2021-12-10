@@ -115,56 +115,6 @@ void WebContentConsoleClient::send_messages(i32 start_index)
     m_client.async_did_get_js_console_messages(start_index, message_types, messages);
 }
 
-JS::Value WebContentConsoleClient::log()
-{
-    print_html(escape_html_entities(vm().join_arguments()));
-    return JS::js_undefined();
-}
-
-JS::Value WebContentConsoleClient::info()
-{
-    StringBuilder html;
-    html.append("<span class=\"info\">");
-    html.append("(i) ");
-    html.append(escape_html_entities(vm().join_arguments()));
-    html.append("</span>");
-    print_html(html.string_view());
-    return JS::js_undefined();
-}
-
-JS::Value WebContentConsoleClient::debug()
-{
-    StringBuilder html;
-    html.append("<span class=\"debug\">");
-    html.append("(d) ");
-    html.append(escape_html_entities(vm().join_arguments()));
-    html.append("</span>");
-    print_html(html.string_view());
-    return JS::js_undefined();
-}
-
-JS::Value WebContentConsoleClient::warn()
-{
-    StringBuilder html;
-    html.append("<span class=\"warn\">");
-    html.append("(w) ");
-    html.append(escape_html_entities(vm().join_arguments()));
-    html.append("</span>");
-    print_html(html.string_view());
-    return JS::js_undefined();
-}
-
-JS::Value WebContentConsoleClient::error()
-{
-    StringBuilder html;
-    html.append("<span class=\"error\">");
-    html.append("(e) ");
-    html.append(escape_html_entities(vm().join_arguments()));
-    html.append("</span>");
-    print_html(html.string_view());
-    return JS::js_undefined();
-}
-
 JS::Value WebContentConsoleClient::clear()
 {
     clear_output();
@@ -222,6 +172,40 @@ JS::Value WebContentConsoleClient::assert_()
         }
         print_html(html.string_view());
     }
+    return JS::js_undefined();
+}
+
+// 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
+JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments)
+{
+    auto output = String::join(" ", arguments);
+    m_console.output_debug_message(log_level, output);
+
+    StringBuilder html;
+    switch (log_level) {
+    case JS::Console::LogLevel::Debug:
+        html.append("<span class=\"debug\">(d) ");
+        break;
+    case JS::Console::LogLevel::Error:
+        html.append("<span class=\"error\">(e) ");
+        break;
+    case JS::Console::LogLevel::Info:
+        html.append("<span class=\"info\">(i) ");
+        break;
+    case JS::Console::LogLevel::Log:
+        html.append("<span class=\"log\"> ");
+        break;
+    case JS::Console::LogLevel::Warn:
+        html.append("<span class=\"warn\">(w) ");
+        break;
+    default:
+        html.append("<span>");
+        break;
+    }
+
+    html.append(escape_html_entities(output));
+    html.append("</span>");
+    print_html(html.string_view());
     return JS::js_undefined();
 }
 

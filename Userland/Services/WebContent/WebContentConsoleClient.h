@@ -24,16 +24,12 @@ public:
     void send_messages(i32 start_index);
 
 private:
-    virtual JS::Value log() override;
-    virtual JS::Value info() override;
-    virtual JS::Value debug() override;
-    virtual JS::Value warn() override;
-    virtual JS::Value error() override;
     virtual JS::Value clear() override;
     virtual JS::Value trace() override;
     virtual JS::Value count() override;
     virtual JS::Value count_reset() override;
     virtual JS::Value assert_() override;
+    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>&) override;
 
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
