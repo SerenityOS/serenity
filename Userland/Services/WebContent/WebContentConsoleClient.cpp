@@ -120,24 +120,25 @@ void WebContentConsoleClient::clear()
     clear_output();
 }
 
-JS::Value WebContentConsoleClient::trace()
-{
-    StringBuilder html;
-    html.append(escape_html_entities(vm().join_arguments()));
-    auto trace = get_trace();
-    for (auto& function_name : trace) {
-        if (function_name.is_empty())
-            function_name = "&lt;anonymous&gt;";
-        html.appendff(" -> {}<br>", function_name);
-    }
-    print_html(html.string_view());
-    return JS::js_undefined();
-}
-
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
-JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments)
+JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, Variant<Vector<JS::Value>, JS::Console::Trace> arguments)
 {
-    auto output = String::join(" ", arguments);
+    if (log_level == JS::Console::LogLevel::Trace) {
+        auto trace = arguments.get<JS::Console::Trace>();
+        StringBuilder html;
+        if (!trace.label.is_empty())
+            html.appendff("<span class='title'>{}</span><br>", escape_html_entities(trace.label));
+
+        html.append("<span class='trace'>");
+        for (auto& function_name : trace.stack)
+            html.appendff("-> {}<br>", escape_html_entities(function_name));
+        html.append("</span>");
+
+        print_html(html.string_view());
+        return JS::js_undefined();
+    }
+
+    auto output = String::join(" ", arguments.get<Vector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     StringBuilder html;

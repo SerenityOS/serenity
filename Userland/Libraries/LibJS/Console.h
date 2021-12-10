@@ -43,6 +43,11 @@ public:
         Warn,
     };
 
+    struct Trace {
+        String label;
+        Vector<String> stack;
+    };
+
     explicit Console(GlobalObject&);
 
     void set_client(ConsoleClient& client) { m_client = &client; }
@@ -62,7 +67,7 @@ public:
     ThrowCompletionOr<Value> log();
     ThrowCompletionOr<Value> warn();
     Value clear();
-    Value trace();
+    ThrowCompletionOr<Value> trace();
     ThrowCompletionOr<Value> count();
     ThrowCompletionOr<Value> count_reset();
     ThrowCompletionOr<Value> assert_();
@@ -85,10 +90,9 @@ public:
 
     ThrowCompletionOr<Value> logger(Console::LogLevel log_level, Vector<Value>& args);
     ThrowCompletionOr<Vector<Value>> formatter(Vector<Value>& args);
-    virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, Vector<Value>&) = 0;
+    virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, Variant<Vector<Value>, Console::Trace>) = 0;
 
     virtual void clear() = 0;
-    virtual Value trace() = 0;
 
 protected:
     virtual ~ConsoleClient() = default;
@@ -97,8 +101,6 @@ protected:
 
     GlobalObject& global_object() { return m_console.global_object(); }
     const GlobalObject& global_object() const { return m_console.global_object(); }
-
-    Vector<String> get_trace() const;
 
     Console& m_console;
 };
