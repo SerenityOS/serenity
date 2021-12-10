@@ -25,8 +25,7 @@ public:
 
 private:
     virtual void clear() override;
-    virtual JS::Value trace() override;
-    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>&) override;
+    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Variant<Vector<JS::Value>, JS::Console::Trace>) override;
 
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;

@@ -87,11 +87,36 @@ Value Console::clear()
     return js_undefined();
 }
 
-Value Console::trace()
+// 1.1.8. trace(...data), https://console.spec.whatwg.org/#trace
+ThrowCompletionOr<Value> Console::trace()
 {
-    if (m_client)
-        return m_client->trace();
-    return js_undefined();
+    if (!m_client)
+        return js_undefined();
+
+    // 1. Let trace be some implementation-specific, potentially-interactive representation of the callstack from where this function was called.
+    Console::Trace trace;
+    auto& execution_context_stack = vm().execution_context_stack();
+    // NOTE: -2 to skip the console.trace() execution context
+    for (ssize_t i = execution_context_stack.size() - 2; i >= 0; --i) {
+        auto& function_name = execution_context_stack[i]->function_name;
+        trace.stack.append(function_name.is_empty() ? "<anonymous>" : function_name);
+    }
+
+    // 2. Optionally, let formattedData be the result of Formatter(data), and incorporate formattedData as a label for trace.
+    if (vm().argument_count() > 0) {
+        StringBuilder builder;
+        auto data = vm_arguments();
+        auto formatted_data = TRY(m_client->formatter(data));
+        for (auto const& item : formatted_data) {
+            if (!builder.is_empty())
+                builder.append(' ');
+            builder.append(TRY(item.to_string(global_object())));
+        }
+        trace.label = builder.to_string();
+    }
+
+    // 3. Perform Printer("trace", « trace »).
+    return m_client->printer(JS::Console::LogLevel::Trace, trace);
 }
 
 // 1.2.1. count(label), https://console.spec.whatwg.org/#count
@@ -235,16 +260,6 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
 VM& ConsoleClient::vm()
 {
     return global_object().vm();
-}
-
-Vector<String> ConsoleClient::get_trace() const
-{
-    Vector<String> trace;
-    auto& execution_context_stack = m_console.global_object().vm().execution_context_stack();
-    // NOTE: -2 to skip the console.trace() execution context
-    for (ssize_t i = execution_context_stack.size() - 2; i >= 0; --i)
-        trace.append(execution_context_stack[i]->function_name);
-    return trace;
 }
 
 // 2.1. Logger(logLevel, args), https://console.spec.whatwg.org/#logger

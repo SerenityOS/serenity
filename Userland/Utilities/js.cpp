@@ -1128,21 +1128,22 @@ public:
         fflush(stdout);
     }
 
-    virtual JS::Value trace() override
+    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Variant<Vector<JS::Value>, JS::Console::Trace> arguments) override
     {
-        js_outln("{}", vm().join_arguments());
-        auto trace = get_trace();
-        for (auto& function_name : trace) {
-            if (function_name.is_empty())
-                function_name = "<anonymous>";
-            js_outln(" -> {}", function_name);
-        }
-        return JS::js_undefined();
-    }
+        if (log_level == JS::Console::LogLevel::Trace) {
+            auto trace = arguments.get<JS::Console::Trace>();
+            StringBuilder builder;
+            if (!trace.label.is_empty())
+                builder.appendff("\033[36;1m{}\033[0m\n", trace.label);
 
-    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments) override
-    {
-        auto output = String::join(" ", arguments);
+            for (auto& function_name : trace.stack)
+                builder.appendff("-> {}\n", function_name);
+
+            js_outln("{}", builder.string_view());
+            return JS::js_undefined();
+        }
+
+        auto output = String::join(" ", arguments.get<Vector<JS::Value>>());
         m_console.output_debug_message(log_level, output);
 
         switch (log_level) {
