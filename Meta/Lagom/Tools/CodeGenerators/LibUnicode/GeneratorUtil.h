@@ -19,6 +19,12 @@
 #include <LibCore/File.h>
 #include <LibUnicode/Locale.h>
 
+template<class T>
+inline constexpr bool StorageTypeIsList = false;
+
+template<class T>
+inline constexpr bool StorageTypeIsList<Vector<T>> = true;
+
 template<typename StorageType, typename IndexType>
 class UniqueStorage {
 public:
@@ -57,7 +63,7 @@ public:
         return m_storage.at(index - 1);
     }
 
-    void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row)
+    void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row) requires(!StorageTypeIsList<StorageType>)
     {
         generator.set("type"sv, type);
         generator.set("name"sv, name);
@@ -89,9 +95,64 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
 )~~~");
     }
 
+    void generate(SourceGenerator& generator, StringView type, StringView name) requires(StorageTypeIsList<StorageType>)
+    {
+        generator.set("type"sv, type);
+        generator.set("name"sv, name);
+
+        for (size_t i = 0; i < m_storage.size(); ++i) {
+            auto const& list = m_storage[i];
+
+            generator.set("index"sv, String::number(i));
+            generator.set("size"sv, String::number(list.size()));
+
+            generator.append(R"~~~(
+static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
+
+            bool first = true;
+            for (auto const& value : list) {
+                generator.append(first ? " " : ", ");
+                generator.append(String::formatted("{}", value));
+                first = false;
+            }
+
+            generator.append(" } };");
+        }
+
+        generator.set("size"sv, String::number(m_storage.size()));
+
+        generator.append(R"~~~(
+
+static constexpr Array<Span<@type@ const>, @size@ + 1> @name@ { {
+    {})~~~");
+
+        constexpr size_t max_values_per_row = 10;
+        size_t values_in_current_row = 1;
+
+        for (size_t i = 0; i < m_storage.size(); ++i) {
+            if (values_in_current_row++ > 0)
+                generator.append(", ");
+
+            generator.set("index"sv, String::number(i));
+            generator.append("@name@@index@.span()");
+
+            if (values_in_current_row == max_values_per_row) {
+                values_in_current_row = 0;
+                generator.append(",\n    ");
+            }
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    }
+
+    // clang-format off
+    // clang-format gets confused by the requires() clauses above, and formats this section very weirdly.
 private:
     Vector<StorageType> m_storage;
     HashMap<StorageType, IndexType> m_storage_indices;
+    // clang-format on
 };
 
 template<typename StringIndexType>
