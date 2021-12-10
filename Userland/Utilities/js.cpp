@@ -1122,36 +1122,6 @@ public:
     {
     }
 
-    virtual JS::Value log() override
-    {
-        js_outln("{}", vm().join_arguments());
-        return JS::js_undefined();
-    }
-
-    virtual JS::Value info() override
-    {
-        js_outln("(i) {}", vm().join_arguments());
-        return JS::js_undefined();
-    }
-
-    virtual JS::Value debug() override
-    {
-        js_outln("\033[36;1m{}\033[0m", vm().join_arguments());
-        return JS::js_undefined();
-    }
-
-    virtual JS::Value warn() override
-    {
-        js_outln("\033[33;1m{}\033[0m", vm().join_arguments());
-        return JS::js_undefined();
-    }
-
-    virtual JS::Value error() override
-    {
-        js_outln("\033[31;1m{}\033[0m", vm().join_arguments());
-        return JS::js_undefined();
-    }
-
     virtual JS::Value clear() override
     {
         js_out("\033[3J\033[H\033[2J");
@@ -1199,6 +1169,34 @@ public:
             } else {
                 js_outln("\033[31;1mAssertion failed\033[0m");
             }
+        }
+        return JS::js_undefined();
+    }
+
+    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Vector<JS::Value>& arguments) override
+    {
+        auto output = String::join(" ", arguments);
+        m_console.output_debug_message(log_level, output);
+
+        switch (log_level) {
+        case JS::Console::LogLevel::Debug:
+            js_outln("\033[36;1m{}\033[0m", output);
+            break;
+        case JS::Console::LogLevel::Error:
+            js_outln("\033[31;1m{}\033[0m", output);
+            break;
+        case JS::Console::LogLevel::Info:
+            js_outln("(i) {}", output);
+            break;
+        case JS::Console::LogLevel::Log:
+            js_outln("{}", output);
+            break;
+        case JS::Console::LogLevel::Warn:
+            js_outln("\033[33;1m{}\033[0m", output);
+            break;
+        default:
+            js_outln("{}", output);
+            break;
         }
         return JS::js_undefined();
     }
