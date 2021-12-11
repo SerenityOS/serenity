@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Discard.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
@@ -29,7 +30,7 @@ inline void fill_with_random([[maybe_unused]] void* buffer, [[maybe_unused]] siz
     arc4random_buf(buffer, length);
 #elif defined(OSS_FUZZ)
 #elif defined(__unix__) or defined(AK_OS_MACOS)
-    [[maybe_unused]] int rc = getentropy(buffer, length);
+    discard(getentropy(buffer, length));
 #endif
 }
 
