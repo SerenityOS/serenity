@@ -43,6 +43,9 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
     child->address_space().set_enforces_syscall_regions(address_space().enforces_syscall_regions());
 
+    // A child created via fork(2) inherits a copy of its parent's signal mask
+    child_first_thread->update_signal_mask(Thread::current()->signal_mask());
+
 #if ARCH(I386)
     auto& child_regs = child_first_thread->m_regs;
     child_regs.eax = 0; // fork() returns 0 in the child :^)
