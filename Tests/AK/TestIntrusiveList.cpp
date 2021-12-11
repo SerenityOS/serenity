@@ -9,6 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Unused.h>
 
 class IntrusiveTestItem {
 public:
@@ -69,7 +70,7 @@ TEST_CASE(enumeration)
 
     size_t actual_size = 0;
     for (auto& elem : list) {
-        (void)elem;
+        unused(elem);
         actual_size++;
     }
     EXPECT_EQ(expected_size, actual_size);
