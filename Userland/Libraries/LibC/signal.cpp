@@ -163,6 +163,12 @@ int sigsuspend(const sigset_t* set)
     return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
+int sigtimedwait(sigset_t const* set, siginfo_t* info, struct timespec const* timeout)
+{
+    int rc = syscall(Syscall::SC_sigtimedwait, set, info, timeout);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 const char* sys_signame[] = {
     "INVAL",
     "HUP",

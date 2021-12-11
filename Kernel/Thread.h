@@ -292,6 +292,7 @@ public:
             Queue,
             Routing,
             Sleep,
+            Signal,
             Wait
         };
         virtual ~Blocker();
@@ -696,6 +697,41 @@ public:
 
         FDVector& m_fds;
         bool m_did_unblock { false };
+    };
+
+    class SignalBlocker final : public Blocker {
+    public:
+        explicit SignalBlocker(sigset_t pending_set, siginfo_t& result);
+        virtual StringView state_string() const override { return "Pending Signal"sv; }
+        virtual Type blocker_type() const override { return Type::Signal; }
+        void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
+        virtual bool setup_blocker() override;
+        bool check_pending_signals(bool from_add_blocker);
+
+    private:
+        sigset_t m_pending_set { 0 };
+        siginfo_t& m_result;
+        bool m_did_unblock { false };
+    };
+
+    class SignalBlockerSet final : public BlockerSet {
+    public:
+        void unblock_all_blockers_whose_conditions_are_met()
+        {
+            BlockerSet::unblock_all_blockers_whose_conditions_are_met([&](auto& b, void*, bool&) {
+                VERIFY(b.blocker_type() == Blocker::Type::Signal);
+                auto& blocker = static_cast<Thread::SignalBlocker&>(b);
+                return blocker.check_pending_signals(false);
+            });
+        }
+
+    private:
+        bool should_add_blocker(Blocker& b, void*) override
+        {
+            VERIFY(b.blocker_type() == Blocker::Type::Signal);
+            auto& blocker = static_cast<Thread::SignalBlocker&>(b);
+            return !blocker.check_pending_signals(true);
+        }
     };
 
     class WaitBlocker final : public Blocker {
@@ -1302,6 +1338,7 @@ private:
     u32 m_signal_mask { 0 };
     FlatPtr m_alternative_signal_stack { 0 };
     FlatPtr m_alternative_signal_stack_size { 0 };
+    SignalBlockerSet m_signal_blocker_set;
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
     OwnPtr<Memory::Region> m_kernel_stack_region;

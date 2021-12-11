@@ -446,6 +446,48 @@ void Thread::SelectBlocker::was_unblocked(bool did_timeout)
     }
 }
 
+Thread::SignalBlocker::SignalBlocker(sigset_t pending_set, siginfo_t& result)
+    : m_pending_set(pending_set)
+    , m_result(result)
+{
+}
+
+void Thread::SignalBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason unblock_immediately_reason)
+{
+    if (unblock_immediately_reason != UnblockImmediatelyReason::TimeoutInThePast)
+        return;
+    // If the specified timeout is 0 the caller is simply trying to poll once for pending signals,
+    // so simply calling check_pending_signals should populate the requested information.
+    check_pending_signals(false);
+}
+
+bool Thread::SignalBlocker::setup_blocker()
+{
+    return add_to_blocker_set(thread().m_signal_blocker_set);
+}
+
+bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
+{
+    {
+        SpinlockLocker lock(m_lock);
+        if (m_did_unblock)
+            return false;
+
+        auto matching_pending_signal = __builtin_ffsl(thread().pending_signals() & m_pending_set);
+        if (matching_pending_signal == 0)
+            return false;
+
+        m_did_unblock = true;
+        m_result = {};
+        m_result.si_signo = matching_pending_signal;
+        m_result.si_code = 0; // FIXME: How can we determine this?
+    }
+
+    if (!from_add_blocker)
+        unblock_from_blocker();
+    return true;
+}
+
 Thread::WaitBlockerSet::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
     : process(move(process))
     , flags(flags)

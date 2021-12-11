@@ -307,4 +307,35 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> ss, Userspac
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigtimedwait.html
+ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<const sigset_t*> set, Userspace<siginfo_t*> info, Userspace<const timespec*> timeout)
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    REQUIRE_PROMISE(sigaction);
+
+    sigset_t set_value;
+    TRY(copy_from_user(&set_value, set));
+
+    Thread::BlockTimeout block_timeout = {};
+    if (timeout) {
+        auto timeout_time = TRY(copy_time_from_user(timeout));
+        block_timeout = Thread::BlockTimeout(false, &timeout_time);
+    }
+
+    siginfo_t info_value = {};
+    auto block_result = Thread::current()->block<Thread::SignalBlocker>(block_timeout, set_value, info_value);
+    if (block_result.was_interrupted())
+        return EINTR;
+    // We check for an unset signal instead of directly checking for a timeout interruption
+    // in order to allow polling the pending signals by setting the timeout to 0.
+    if (info_value.si_signo == SIGINVAL) {
+        VERIFY(block_result == Thread::BlockResult::InterruptedByTimeout);
+        return EAGAIN;
+    }
+
+    if (info)
+        TRY(copy_to_user(info, &info_value));
+    return info_value.si_signo;
+}
+
 }
