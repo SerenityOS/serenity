@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/Types.h>
+#include <AK/Unused.h>
 #include <Kernel/Locking/LockRank.h>
 
 namespace Kernel {
@@ -19,7 +20,7 @@ class Spinlock {
 public:
     Spinlock(LockRank rank = LockRank::None)
     {
-        (void)rank;
+        unused(rank);
     }
 
     ALWAYS_INLINE u32 lock()
@@ -48,7 +49,7 @@ class RecursiveSpinlock {
 public:
     RecursiveSpinlock(LockRank rank = LockRank::None)
     {
-        (void)rank;
+        unused(rank);
     }
 
     ALWAYS_INLINE u32 lock()
