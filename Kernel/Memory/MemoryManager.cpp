@@ -620,11 +620,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
     SpinlockLocker lock(s_mm_lock);
-    for (auto& region : MM.m_kernel_regions) {
-        if (region.contains(vaddr))
-            return &region;
-    }
-    return nullptr;
+    auto* region_ptr = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
+    if (!region_ptr)
+        return nullptr;
+    return *region_ptr;
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
@@ -1051,14 +1050,14 @@ void MemoryManager::register_region(Region& region)
 {
     SpinlockLocker lock(s_mm_lock);
     if (region.is_kernel())
-        m_kernel_regions.append(region);
+        m_kernel_regions.insert(region.vaddr().get(), &region);
 }
 
 void MemoryManager::unregister_region(Region& region)
 {
     SpinlockLocker lock(s_mm_lock);
     if (region.is_kernel())
-        m_kernel_regions.remove(region);
+        m_kernel_regions.remove(region.vaddr().get());
 }
 
 void MemoryManager::dump_kernel_regions()
@@ -1072,7 +1071,8 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
-    for (auto& region : m_kernel_regions) {
+    for (auto* region_ptr : m_kernel_regions) {
+        auto& region = *region_ptr;
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),

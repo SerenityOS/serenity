@@ -292,7 +292,8 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    Region::ListInMemoryManager m_kernel_regions;
+    RedBlackTree<FlatPtr, Region*> m_kernel_regions;
+
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
