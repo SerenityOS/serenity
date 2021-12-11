@@ -155,6 +155,13 @@ struct CalendarFormat {
     CalendarPattern short_format {};
 };
 
+enum class CalendarSymbol : u8 {
+    DayPeriod,
+    Era,
+    Month,
+    Weekday,
+};
+
 HourCycle hour_cycle_from_string(StringView hour_cycle);
 StringView hour_cycle_to_string(HourCycle hour_cycle);
 CalendarPatternStyle calendar_pattern_style_from_string(StringView style);
