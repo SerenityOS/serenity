@@ -623,7 +623,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
     auto* region_ptr = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
     if (!region_ptr)
         return nullptr;
-    return *region_ptr;
+    return (*region_ptr)->contains(vaddr) ? *region_ptr : nullptr;
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
