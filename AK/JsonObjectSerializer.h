@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Discard.h>
 #include <AK/JsonArraySerializer.h>
 
 #ifndef KERNEL
@@ -20,7 +21,7 @@ public:
     explicit JsonObjectSerializer(Builder& builder)
         : m_builder(builder)
     {
-        (void)m_builder.append('{');
+        maybe_discard(m_builder.append('{'));
     }
 
     JsonObjectSerializer(const JsonObjectSerializer&) = delete;
@@ -43,74 +44,74 @@ public:
     void add(StringView key, StringView value)
     {
         begin_item(key);
-        (void)m_builder.append('"');
-        (void)m_builder.append_escaped_for_json(value);
-        (void)m_builder.append('"');
+        maybe_discard(m_builder.append('"'));
+        maybe_discard(m_builder.append_escaped_for_json(value));
+        maybe_discard(m_builder.append('"'));
     }
 
     void add(StringView key, const String& value)
     {
         begin_item(key);
-        (void)m_builder.append('"');
-        (void)m_builder.append_escaped_for_json(value);
-        (void)m_builder.append('"');
+        maybe_discard(m_builder.append('"'));
+        maybe_discard(m_builder.append_escaped_for_json(value));
+        maybe_discard(m_builder.append('"'));
     }
 
     void add(StringView key, const char* value)
     {
         begin_item(key);
-        (void)m_builder.append('"');
-        (void)m_builder.append_escaped_for_json(value);
-        (void)m_builder.append('"');
+        maybe_discard(m_builder.append('"'));
+        maybe_discard(m_builder.append_escaped_for_json(value));
+        maybe_discard(m_builder.append('"'));
     }
 
     void add(StringView key, bool value)
     {
         begin_item(key);
-        (void)m_builder.append(value ? "true" : "false");
+        maybe_discard(m_builder.append(value ? "true" : "false"));
     }
 
     void add(StringView key, int value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
     void add(StringView key, unsigned value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
     void add(StringView key, long value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
     void add(StringView key, long unsigned value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
     void add(StringView key, long long value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
     void add(StringView key, long long unsigned value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 
 #ifndef KERNEL
     void add(StringView key, double value)
     {
         begin_item(key);
-        (void)m_builder.appendff("{}", value);
+        maybe_discard(m_builder.appendff("{}", value));
     }
 #endif
 
@@ -130,19 +131,19 @@ public:
     {
         VERIFY(!m_finished);
         m_finished = true;
-        (void)m_builder.append('}');
+        maybe_discard(m_builder.append('}'));
     }
 
 private:
     void begin_item(StringView key)
     {
         if (!m_empty)
-            (void)m_builder.append(',');
+            maybe_discard(m_builder.append(','));
         m_empty = false;
 
-        (void)m_builder.append('"');
-        (void)m_builder.append_escaped_for_json(key);
-        (void)m_builder.append("\":");
+        maybe_discard(m_builder.append('"'));
+        maybe_discard(m_builder.append_escaped_for_json(key));
+        maybe_discard(m_builder.append("\":"));
     }
 
     Builder& m_builder;
