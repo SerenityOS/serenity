@@ -41,6 +41,9 @@ public:
 private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
+    static constexpr size_t large_zone_size = 16 * MiB;
+    static constexpr size_t small_zone_size = 1 * MiB;
+
     NonnullOwnPtrVector<PhysicalZone> m_zones;
 
     PhysicalZone::List m_usable_zones;
