@@ -163,6 +163,17 @@ int sigsuspend(const sigset_t* set)
     return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009604499/functions/sigwait.html
+int sigwait(sigset_t const* set, int* sig)
+{
+    int rc = syscall(Syscall::SC_sigtimedwait, set, nullptr, nullptr);
+    VERIFY(rc != 0);
+    if (rc < 0)
+        return -rc;
+    *sig = rc;
+    return 0;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigwaitinfo.html
 int sigwaitinfo(sigset_t const* set, siginfo_t* info)
 {
