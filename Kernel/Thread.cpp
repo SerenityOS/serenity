@@ -681,7 +681,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
 void Thread::clear_signals()
 {
     SpinlockLocker lock(g_scheduler_lock);
-    m_signal_mask = 0;
+    // The signal mask is preserved across execve(2).
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
     m_signal_action_data.fill({});

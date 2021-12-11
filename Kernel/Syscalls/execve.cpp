@@ -523,7 +523,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     for (auto& property : m_coredump_properties)
         property = {};
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     current_thread->clear_signals();
 
     clear_futex_queues_on_exec();
