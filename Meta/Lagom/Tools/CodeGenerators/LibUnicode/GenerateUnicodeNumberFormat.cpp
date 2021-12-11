@@ -41,6 +41,9 @@ constexpr auto s_number_format_list_index_type = "u16"sv;
 using NumericSymbolListIndexType = u8;
 constexpr auto s_numeric_symbol_list_index_type = "u8"sv;
 
+using NumberSystemIndexType = u8;
+constexpr auto s_number_system_index_type = "u8"sv;
+
 enum class NumberFormatType {
     Standard,
     Compact,
@@ -141,6 +144,40 @@ struct AK::Traits<NumberFormatList> : public GenericTraits<NumberFormatList> {
 using NumericSymbolList = Vector<StringIndexType>;
 
 struct NumberSystem {
+    unsigned hash() const
+    {
+        auto hash = pair_int_hash(system, symbols);
+        hash = pair_int_hash(hash, primary_grouping_size);
+        hash = pair_int_hash(hash, secondary_grouping_size);
+        hash = pair_int_hash(hash, decimal_format);
+        hash = pair_int_hash(hash, decimal_long_formats);
+        hash = pair_int_hash(hash, decimal_short_formats);
+        hash = pair_int_hash(hash, currency_format);
+        hash = pair_int_hash(hash, accounting_format);
+        hash = pair_int_hash(hash, currency_unit_formats);
+        hash = pair_int_hash(hash, currency_short_formats);
+        hash = pair_int_hash(hash, percent_format);
+        hash = pair_int_hash(hash, scientific_format);
+        return hash;
+    }
+
+    bool operator==(NumberSystem const& other) const
+    {
+        return (system == other.system)
+            && (symbols == other.symbols)
+            && (primary_grouping_size == other.primary_grouping_size)
+            && (secondary_grouping_size == other.secondary_grouping_size)
+            && (decimal_format == other.decimal_format)
+            && (decimal_long_formats == other.decimal_long_formats)
+            && (decimal_short_formats == other.decimal_short_formats)
+            && (currency_format == other.currency_format)
+            && (accounting_format == other.accounting_format)
+            && (currency_unit_formats == other.currency_unit_formats)
+            && (currency_short_formats == other.currency_short_formats)
+            && (percent_format == other.percent_format)
+            && (scientific_format == other.scientific_format);
+    }
+
     StringIndexType system { 0 };
     NumericSymbolListIndexType symbols { 0 };
 
@@ -160,6 +197,33 @@ struct NumberSystem {
     NumberFormatIndexType scientific_format { 0 };
 };
 
+template<>
+struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, NumberSystem const& system)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
+            system.system,
+            system.symbols,
+            system.primary_grouping_size,
+            system.secondary_grouping_size,
+            system.decimal_format,
+            system.decimal_long_formats,
+            system.decimal_short_formats,
+            system.currency_format,
+            system.accounting_format,
+            system.currency_unit_formats,
+            system.currency_short_formats,
+            system.percent_format,
+            system.scientific_format);
+    }
+};
+
+template<>
+struct AK::Traits<NumberSystem> : public GenericTraits<NumberSystem> {
+    static unsigned hash(NumberSystem const& s) { return s.hash(); }
+};
+
 struct Unit {
     StringIndexType unit { 0 };
     NumberFormatListIndexType long_formats { 0 };
@@ -168,7 +232,7 @@ struct Unit {
 };
 
 struct Locale {
-    HashMap<String, NumberSystem> number_systems;
+    HashMap<String, NumberSystemIndexType> number_systems;
     HashMap<String, Unit> units {};
 };
 
@@ -177,6 +241,7 @@ struct UnicodeLocaleData {
     UniqueStorage<NumberFormat, NumberFormatIndexType> unique_formats;
     UniqueStorage<NumberFormatList, NumberFormatListIndexType> unique_format_lists;
     UniqueStorage<NumericSymbolList, NumericSymbolListIndexType> unique_symbols;
+    UniqueStorage<NumberSystem, NumberSystemIndexType> unique_systems;
 
     HashMap<String, Locale> locales;
     size_t max_identifier_count { 0 };
@@ -332,8 +397,10 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
     auto const& locale_object = main_object.as_object().get(numbers_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
 
+    HashMap<String, NumberSystem> number_systems;
+
     auto ensure_number_system = [&](auto const& system) -> NumberSystem& {
-        return locale.number_systems.ensure(system, [&]() {
+        return number_systems.ensure(system, [&]() {
             auto system_index = locale_data.unique_strings.ensure(system);
             return NumberSystem { .system = system_index };
         });
@@ -463,6 +530,11 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             parse_number_pattern(format_object.as_string().split(';'), locale_data, NumberFormatType::Standard, number_system.scientific_format);
         }
     });
+
+    for (auto& number_system : number_systems) {
+        auto system_index = locale_data.unique_systems.ensure(move(number_system.value));
+        locale.number_systems.set(number_system.key, system_index);
+    }
 
     return {};
 }
@@ -720,39 +792,24 @@ struct Unit {
     locale_data.unique_formats.generate(generator, "NumberFormat"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
     locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
+    locale_data.unique_systems.generate(generator, "NumberSystem"sv, "s_number_systems"sv, 10);
 
-    auto append_number_systems = [&](String name, auto const& number_systems) {
+    auto append_map = [&](String name, auto type, auto const& map) {
         generator.set("name", name);
-        generator.set("size", String::number(number_systems.size()));
+        generator.set("type", type);
+        generator.set("size", String::number(map.size()));
 
         generator.append(R"~~~(
-static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
+static constexpr Array<@type@, @size@> @name@ { {)~~~");
 
-        for (auto const& number_system : number_systems) {
-            generator.set("system"sv, String::number(number_system.value.system));
-            generator.set("symbols"sv, String::number(number_system.value.symbols));
-            generator.set("primary_grouping_size"sv, String::number(number_system.value.primary_grouping_size));
-            generator.set("secondary_grouping_size"sv, String::number(number_system.value.secondary_grouping_size));
-            generator.set("decimal_format", String::number(number_system.value.decimal_format));
-            generator.set("decimal_long_formats"sv, String::number(number_system.value.decimal_long_formats));
-            generator.set("decimal_short_formats"sv, String::number(number_system.value.decimal_short_formats));
-            generator.set("currency_format", String::number(number_system.value.currency_format));
-            generator.set("accounting_format", String::number(number_system.value.accounting_format));
-            generator.set("currency_unit_formats"sv, String::number(number_system.value.currency_unit_formats));
-            generator.set("currency_short_formats"sv, String::number(number_system.value.currency_short_formats));
-            generator.set("percent_format", String::number(number_system.value.percent_format));
-            generator.set("scientific_format", String::number(number_system.value.scientific_format));
-
-            generator.append("\n    { ");
-            generator.append("@system@, @symbols@, @primary_grouping_size@, @secondary_grouping_size@, ");
-            generator.append("@decimal_format@, @decimal_long_formats@, @decimal_short_formats@, ");
-            generator.append("@currency_format@, @accounting_format@, @currency_unit_formats@, @currency_short_formats@, ");
-            generator.append("@percent_format@, @scientific_format@ },");
+        bool first = true;
+        for (auto const& item : map) {
+            generator.append(first ? " " : ", ");
+            generator.append(String::number(item.value));
+            first = false;
         }
 
-        generator.append(R"~~~(
-} };
-)~~~");
+        generator.append(" } };");
     };
 
     auto append_units = [&](String name, auto const& units) {
@@ -777,7 +834,7 @@ static constexpr Array<Unit, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    generate_mapping(generator, locale_data.locales, "NumberSystem"sv, "s_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_number_systems(name, value.number_systems); });
+    generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
     generate_mapping(generator, locale_data.locales, "Unit"sv, "s_units"sv, "s_units_{}", [&](auto const& name, auto const& value) { append_units(name, value.units); });
 
     generator.append(R"~~~(
@@ -788,9 +845,11 @@ static NumberSystem const* find_number_system(StringView locale, StringView syst
         return nullptr;
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    auto const& number_systems = s_number_systems.at(locale_index);
+    auto const& number_systems = s_locale_number_systems.at(locale_index);
 
-    for (auto const& number_system : number_systems) {
+    for (auto system_index : number_systems) {
+        auto const& number_system = s_number_systems.at(system_index);
+
         if (system == s_string_list[number_system.system])
             return &number_system;
     };
