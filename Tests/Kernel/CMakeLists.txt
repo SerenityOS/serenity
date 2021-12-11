@@ -42,6 +42,7 @@ set(LIBTEST_BASED_SOURCES
     TestProcFS.cpp
     TestProcFSWrite.cpp
     TestSigAltStack.cpp
+    TestSigWait.cpp
 )
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
