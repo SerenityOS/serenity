@@ -678,11 +678,11 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
     return previous_signal_mask;
 }
 
-void Thread::clear_signals()
+void Thread::reset_signals_for_exec()
 {
     SpinlockLocker lock(g_scheduler_lock);
     // The signal mask is preserved across execve(2).
-    m_pending_signals = 0;
+    // The pending signal set is preserved across an execve(2).
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
     m_signal_action_data.fill({});
     // A successful call to execve(2) removes any existing alternate signal stack
