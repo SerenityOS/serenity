@@ -44,6 +44,9 @@ constexpr auto s_numeric_symbol_list_index_type = "u8"sv;
 using NumberSystemIndexType = u8;
 constexpr auto s_number_system_index_type = "u8"sv;
 
+using UnitIndexType = u16;
+constexpr auto s_unit_index_type = "u16"sv;
+
 enum class NumberFormatType {
     Standard,
     Compact,
@@ -225,15 +228,50 @@ struct AK::Traits<NumberSystem> : public GenericTraits<NumberSystem> {
 };
 
 struct Unit {
+    unsigned hash() const
+    {
+        auto hash = int_hash(unit);
+        hash = pair_int_hash(hash, long_formats);
+        hash = pair_int_hash(hash, short_formats);
+        hash = pair_int_hash(hash, narrow_formats);
+        return hash;
+    }
+
+    bool operator==(Unit const& other) const
+    {
+        return (unit == other.unit)
+            && (long_formats == other.long_formats)
+            && (short_formats == other.short_formats)
+            && (narrow_formats == other.narrow_formats);
+    }
+
     StringIndexType unit { 0 };
     NumberFormatListIndexType long_formats { 0 };
     NumberFormatListIndexType short_formats { 0 };
     NumberFormatListIndexType narrow_formats { 0 };
 };
 
+template<>
+struct AK::Formatter<Unit> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Unit const& system)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {}, {} }}",
+            system.unit,
+            system.long_formats,
+            system.short_formats,
+            system.narrow_formats);
+    }
+};
+
+template<>
+struct AK::Traits<Unit> : public GenericTraits<Unit> {
+    static unsigned hash(Unit const& u) { return u.hash(); }
+};
+
 struct Locale {
     HashMap<String, NumberSystemIndexType> number_systems;
-    HashMap<String, Unit> units {};
+    HashMap<String, UnitIndexType> units {};
 };
 
 struct UnicodeLocaleData {
@@ -242,6 +280,7 @@ struct UnicodeLocaleData {
     UniqueStorage<NumberFormatList, NumberFormatListIndexType> unique_format_lists;
     UniqueStorage<NumericSymbolList, NumericSymbolListIndexType> unique_symbols;
     UniqueStorage<NumberSystem, NumberSystemIndexType> unique_systems;
+    UniqueStorage<Unit, UnitIndexType> unique_units;
 
     HashMap<String, Locale> locales;
     size_t max_identifier_count { 0 };
@@ -545,17 +584,19 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
     units_path = units_path.append("units.json"sv);
 
     auto units_file = TRY(Core::File::open(units_path.string(), Core::OpenMode::ReadOnly));
-    auto units = TRY(JsonValue::from_string(units_file->read_all()));
+    auto locale_units = TRY(JsonValue::from_string(units_file->read_all()));
 
-    auto const& main_object = units.as_object().get("main"sv);
+    auto const& main_object = locale_units.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(units_path.parent().basename());
     auto const& locale_units_object = locale_object.as_object().get("units"sv);
     auto const& long_object = locale_units_object.as_object().get("long"sv);
     auto const& short_object = locale_units_object.as_object().get("short"sv);
     auto const& narrow_object = locale_units_object.as_object().get("narrow"sv);
 
+    HashMap<String, Unit> units;
+
     auto ensure_unit = [&](auto const& unit) -> Unit& {
-        return locale.units.ensure(unit, [&]() {
+        return units.ensure(unit, [&]() {
             auto unit_index = locale_data.unique_strings.ensure(unit);
             return Unit { .unit = unit_index };
         });
@@ -635,6 +676,11 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
     parse_units_object(long_object.as_object(), Unicode::Style::Long);
     parse_units_object(short_object.as_object(), Unicode::Style::Short);
     parse_units_object(narrow_object.as_object(), Unicode::Style::Narrow);
+
+    for (auto& unit : units) {
+        auto unit_index = locale_data.unique_units.ensure(move(unit.value));
+        locale.units.set(unit.key, unit_index);
+    }
 
     return {};
 }
@@ -793,6 +839,7 @@ struct Unit {
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
     locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
     locale_data.unique_systems.generate(generator, "NumberSystem"sv, "s_number_systems"sv, 10);
+    locale_data.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
 
     auto append_map = [&](String name, auto type, auto const& map) {
         generator.set("name", name);
@@ -812,30 +859,8 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto append_units = [&](String name, auto const& units) {
-        generator.set("name", name);
-        generator.set("size", String::number(units.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<Unit, @size@> @name@ { {)~~~");
-
-        bool first = true;
-        for (auto const& unit : units) {
-            generator.set("unit"sv, String::number(unit.value.unit));
-            generator.set("long_formats"sv, String::number(unit.value.long_formats));
-            generator.set("short_formats"sv, String::number(unit.value.short_formats));
-            generator.set("narrow_formats"sv, String::number(unit.value.narrow_formats));
-
-            generator.append(first ? " " : ", ");
-            generator.append("{ @unit@, @long_formats@, @short_formats@, @narrow_formats@ }");
-            first = false;
-        }
-
-        generator.append(" } };");
-    };
-
     generate_mapping(generator, locale_data.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
-    generate_mapping(generator, locale_data.locales, "Unit"sv, "s_units"sv, "s_units_{}", [&](auto const& name, auto const& value) { append_units(name, value.units); });
+    generate_mapping(generator, locale_data.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}", [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
 
     generator.append(R"~~~(
 static NumberSystem const* find_number_system(StringView locale, StringView system)
@@ -947,9 +972,11 @@ static Unit const* find_units(StringView locale, StringView unit)
         return nullptr;
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    auto const& locale_units = s_units.at(locale_index);
+    auto const& locale_units = s_locale_units.at(locale_index);
 
-    for (auto const& units : locale_units) {
+    for (auto unit_index : locale_units) {
+        auto const& units = s_units.at(unit_index);
+
         if (unit == s_string_list[units.unit])
             return &units;
     };
