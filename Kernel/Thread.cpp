@@ -685,6 +685,9 @@ void Thread::clear_signals()
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
     m_signal_action_data.fill({});
+    // A successful call to execve(2) removes any existing alternate signal stack
+    m_alternative_signal_stack = 0;
+    m_alternative_signal_stack_size = 0;
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a
