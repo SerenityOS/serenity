@@ -6,6 +6,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/Queue.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -1568,7 +1569,7 @@ void Terminal::set_size(u16 columns, u16 rows)
                 if (m_history.size() >= 2 && m_history[m_history.size() - 2].termination_column().has_value())
                     break;
                 --extra_lines;
-                (void)m_history.take_last();
+                discard(m_history.take_last());
                 continue;
             }
             break;

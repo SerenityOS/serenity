@@ -6,6 +6,7 @@
  */
 
 #include "MonitorWidget.h"
+#include <AK/Discard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -30,7 +31,7 @@ bool MonitorWidget::set_wallpaper(String path)
     if (!is_different_to_current_wallpaper_path(path))
         return false;
 
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
+    discard(Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
         [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
             if (path.is_empty())
                 return Error::from_errno(ENOENT);
@@ -48,7 +49,7 @@ bool MonitorWidget::set_wallpaper(String path)
                 m_wallpaper_bitmap = bitmap_or_error.release_value();
             m_desktop_dirty = true;
             update();
-        });
+        }));
 
     if (path.is_empty())
         m_desktop_wallpaper_path = nullptr;

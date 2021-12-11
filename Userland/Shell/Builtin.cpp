@@ -7,6 +7,7 @@
 #include "AST.h"
 #include "Shell.h"
 #include "Shell/Formatter.h"
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
@@ -844,7 +845,7 @@ int Shell::builtin_shift(int argc, const char** argv)
     }
 
     for (auto i = 0; i < count; ++i)
-        (void)values.take_first();
+        discard(values.take_first());
 
     return 0;
 }

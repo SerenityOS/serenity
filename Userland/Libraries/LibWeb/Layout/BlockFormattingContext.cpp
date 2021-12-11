@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -410,7 +411,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer& block_c
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_vertically(child_box, block_container);
 
-        (void)layout_inside(child_box, layout_mode);
+        discard(layout_inside(child_box, layout_mode));
         compute_height(child_box);
 
         if (child_box.computed_values().position() == CSS::Position::Relative)
@@ -565,7 +566,7 @@ void BlockFormattingContext::layout_floating_child(Box& box, BlockContainer cons
     VERIFY(box.is_floating());
 
     compute_width(box);
-    (void)layout_inside(box, LayoutMode::Default);
+    discard(layout_inside(box, LayoutMode::Default));
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)

@@ -6,6 +6,7 @@
 
 #include "CatDog.h"
 #include "SpeechBubble.h"
+#include <AK/Discard.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
@@ -38,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto catdog_widget = TRY(window->try_set_main_widget<CatDog>());
-    (void)TRY(catdog_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(catdog_widget->try_set_layout<GUI::VerticalBoxLayout>()));
     catdog_widget->layout()->set_spacing(0);
 
     auto context_menu = TRY(GUI::Menu::try_create());
@@ -59,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_window->set_alpha_hit_threshold(1.0f);
 
     auto advice_widget = TRY(advice_window->try_set_main_widget<SpeechBubble>());
-    (void)TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>()));
     advice_widget->layout()->set_spacing(0);
 
     auto advice_timer = TRY(Core::Timer::try_create());

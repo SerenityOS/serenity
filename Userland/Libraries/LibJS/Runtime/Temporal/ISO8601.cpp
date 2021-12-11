@@ -5,6 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Discard.h>
 #include <LibJS/Runtime/Temporal/ISO8601.h>
 
 namespace JS::Temporal {
@@ -719,11 +720,11 @@ bool ISO8601Parser::parse_time_zone_numeric_utc_offset()
         if (m_state.lexer.consume_specific(':')) {
             if (!parse_time_zone_utc_offset_second())
                 return false;
-            (void)parse_time_zone_utc_offset_fraction();
+            discard(parse_time_zone_utc_offset_fraction());
         }
     } else if (parse_time_zone_utc_offset_minute()) {
         if (parse_time_zone_utc_offset_second())
-            (void)parse_time_zone_utc_offset_fraction();
+            discard(parse_time_zone_utc_offset_fraction());
     }
     m_state.parse_result.time_zone_numeric_utc_offset = transaction.parsed_string_view();
     transaction.commit();
@@ -815,11 +816,11 @@ bool ISO8601Parser::parse_time_zone_utc_offset_name()
         if (m_state.lexer.consume_specific(':')) {
             if (!parse_minute_second())
                 return false;
-            (void)parse_fraction();
+            discard(parse_fraction());
         }
     } else if (parse_minute_second()) {
         if (parse_minute_second())
-            (void)parse_fraction();
+            discard(parse_fraction());
     }
     transaction.commit();
     return true;
@@ -952,7 +953,7 @@ bool ISO8601Parser::parse_time_zone_offset_required()
     StateTransaction transaction { *this };
     if (!parse_time_zone_utc_offset())
         return false;
-    (void)parse_time_zone_bracketed_annotation();
+    discard(parse_time_zone_bracketed_annotation());
     transaction.commit();
     return true;
 }
@@ -963,7 +964,7 @@ bool ISO8601Parser::parse_time_zone_name_required()
     // TimeZoneNameRequired :
     //     TimeZoneUTCOffset[opt] TimeZoneBracketedAnnotation
     StateTransaction transaction { *this };
-    (void)parse_time_zone_utc_offset();
+    discard(parse_time_zone_utc_offset());
     if (!parse_time_zone_bracketed_annotation())
         return false;
     transaction.commit();
@@ -1050,11 +1051,11 @@ bool ISO8601Parser::parse_time_spec()
         if (m_state.lexer.consume_specific(':')) {
             if (!parse_time_second())
                 return false;
-            (void)parse_time_fraction();
+            discard(parse_time_fraction());
         }
     } else if (parse_time_minute()) {
         if (parse_time_second())
-            (void)parse_time_fraction();
+            discard(parse_time_fraction());
     }
     transaction.commit();
     return true;
@@ -1195,8 +1196,8 @@ bool ISO8601Parser::parse_date_time()
     //     Date TimeSpecSeparator[opt] TimeZone[opt]
     if (!parse_date())
         return false;
-    (void)parse_time_spec_separator();
-    (void)parse_time_zone();
+    discard(parse_time_spec_separator());
+    discard(parse_time_zone());
     return true;
 }
 
@@ -1236,7 +1237,7 @@ bool ISO8601Parser::parse_calendar_date_time()
     //     DateTime Calendar[opt]
     if (!parse_date_time())
         return false;
-    (void)parse_calendar();
+    discard(parse_calendar());
     return true;
 }
 
@@ -1290,7 +1291,7 @@ bool ISO8601Parser::parse_duration_seconds_part()
     StateTransaction transaction { *this };
     if (!parse_duration_whole_seconds())
         return false;
-    (void)parse_duration_seconds_fraction();
+    discard(parse_duration_seconds_fraction());
     if (!parse_seconds_designator())
         return false;
     transaction.commit();
@@ -1331,10 +1332,10 @@ bool ISO8601Parser::parse_duration_minutes_part()
     StateTransaction transaction { *this };
     if (!parse_duration_whole_minutes())
         return false;
-    (void)parse_duration_minutes_fraction();
+    discard(parse_duration_minutes_fraction());
     if (!parse_minutes_designator())
         return false;
-    (void)parse_duration_seconds_part();
+    discard(parse_duration_seconds_part());
     transaction.commit();
     return true;
 }
@@ -1374,11 +1375,11 @@ bool ISO8601Parser::parse_duration_hours_part()
     StateTransaction transaction { *this };
     if (!parse_duration_whole_hours())
         return false;
-    (void)parse_duration_hours_fraction();
+    discard(parse_duration_hours_fraction());
     if (!parse_hours_designator())
         return false;
-    (void)(parse_duration_minutes_part()
-        || parse_duration_seconds_part());
+    discard((parse_duration_minutes_part()
+        || parse_duration_seconds_part()));
     transaction.commit();
     return true;
 }
@@ -1452,7 +1453,7 @@ bool ISO8601Parser::parse_duration_weeks_part()
         return false;
     if (!parse_weeks_designator())
         return false;
-    (void)parse_duration_days_part();
+    discard(parse_duration_days_part());
     transaction.commit();
     return true;
 }
@@ -1481,8 +1482,8 @@ bool ISO8601Parser::parse_duration_months_part()
         return false;
     if (!parse_months_designator())
         return false;
-    (void)(parse_duration_weeks_part()
-        || parse_duration_days_part());
+    discard((parse_duration_weeks_part()
+        || parse_duration_days_part()));
     transaction.commit();
     return true;
 }
@@ -1512,9 +1513,9 @@ bool ISO8601Parser::parse_duration_years_part()
         return false;
     if (!parse_years_designator())
         return false;
-    (void)(parse_duration_months_part()
+    discard((parse_duration_months_part()
         || parse_duration_weeks_part()
-        || parse_duration_days_part());
+        || parse_duration_days_part()));
     transaction.commit();
     return true;
 }
@@ -1533,7 +1534,7 @@ bool ISO8601Parser::parse_duration_date()
         || parse_duration_days_part();
     if (!success)
         return false;
-    (void)parse_duration_time();
+    discard(parse_duration_time());
     return true;
 }
 
@@ -1544,7 +1545,7 @@ bool ISO8601Parser::parse_duration()
     //     Sign[opt] DurationDesignator DurationDate
     //     Sign[opt] DurationDesignator DurationTime
     StateTransaction transaction { *this };
-    (void)parse_sign();
+    discard(parse_sign());
     if (!parse_duration_designator())
         return false;
     auto success = parse_duration_date()
@@ -1563,7 +1564,7 @@ bool ISO8601Parser::parse_temporal_instant_string()
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
-    (void)parse_time_spec_separator();
+    discard(parse_time_spec_separator());
     if (!parse_time_zone_offset_required())
         return false;
     transaction.commit();
@@ -1638,10 +1639,10 @@ bool ISO8601Parser::parse_temporal_time_zone_string()
     if (!parse_temporal_time_zone_identifier()) {
         if (!parse_date())
             return false;
-        (void)parse_time_spec_separator();
+        discard(parse_time_spec_separator());
         if (!parse_time_zone())
             return false;
-        (void)parse_calendar();
+        discard(parse_calendar());
     }
     transaction.commit();
     return true;
@@ -1667,10 +1668,10 @@ bool ISO8601Parser::parse_temporal_zoned_date_time_string()
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
-    (void)parse_time_spec_separator();
+    discard(parse_time_spec_separator());
     if (!parse_time_zone_name_required())
         return false;
-    (void)parse_calendar();
+    discard(parse_calendar());
     transaction.commit();
     return true;
 }

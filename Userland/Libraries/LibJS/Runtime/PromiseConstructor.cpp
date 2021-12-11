@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Function.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -304,7 +305,7 @@ ThrowCompletionOr<Object*> PromiseConstructor::construct(FunctionObject& new_tar
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
     // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-    (void)JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
+    discard(JS::call(global_object, executor.as_function(), js_undefined(), &resolve_function, &reject_function));
 
     // 10. If completion is an abrupt completion, then
     if (auto* exception = vm.exception()) {

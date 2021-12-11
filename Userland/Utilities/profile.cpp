@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibCore/ArgsParser.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -94,7 +95,7 @@ int main(int argc, char** argv)
 
         if (wait) {
             outln("Profiling enabled, waiting for user input to disable...");
-            (void)getchar();
+            discard(getchar());
         }
 
         if (wait || disable) {

@@ -6,6 +6,7 @@
 
 #include "DHCPv4Client.h"
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -243,14 +244,14 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     interface.current_ip_address = new_ip;
     auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
-    (void)Core::Timer::create_single_shot(
+    discard(Core::Timer::create_single_shot(
         lease_time * 1000,
         [this, transaction, interface = InterfaceDescriptor { interface }] {
             transaction->accepted_offer = false;
             transaction->has_ip = false;
             dhcp_discover(interface);
         },
-        this);
+        this));
     set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), options.get_many<IPv4Address>(DHCPOption::Router, 1).first());
 }
 
@@ -267,12 +268,12 @@ void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->accepted_offer = false;
     transaction->has_ip = false;
     auto& iface = transaction->interface;
-    (void)Core::Timer::create_single_shot(
+    discard(Core::Timer::create_single_shot(
         10000,
         [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
         },
-        this);
+        this));
 }
 
 void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)

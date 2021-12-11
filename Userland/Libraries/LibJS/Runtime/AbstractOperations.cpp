@@ -6,6 +6,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Discard.h>
 #include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/TemporaryChange.h>
@@ -743,9 +744,9 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
     program.for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         declaration.for_each_bound_name([&](auto const& name) {
             if (declaration.is_constant_declaration())
-                (void)lexical_environment->create_immutable_binding(global_object, name, true);
+                discard(lexical_environment->create_immutable_binding(global_object, name, true));
             else
-                (void)lexical_environment->create_mutable_binding(global_object, name, false);
+                discard(lexical_environment->create_mutable_binding(global_object, name, false));
             if (vm.exception())
                 return IterationDecision::Break;
             return IterationDecision::Continue;

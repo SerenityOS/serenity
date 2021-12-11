@@ -6,6 +6,7 @@
  */
 
 #include "KeyboardSettingsWidget.h"
+#include <AK/Discard.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/SettingsWindow.h>

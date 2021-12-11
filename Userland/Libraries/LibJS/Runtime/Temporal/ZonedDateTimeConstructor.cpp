@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -83,13 +84,13 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
         auto& item_object = static_cast<ZonedDateTime&>(item.as_object());
 
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        discard(TRY(to_temporal_overflow(global_object, *options)));
 
         // b. Perform ? ToTemporalDisambiguation(options).
-        (void)TRY(to_temporal_disambiguation(global_object, *options));
+        discard(TRY(to_temporal_disambiguation(global_object, *options)));
 
         // c. Perform ? ToTemporalOffset(options, "reject").
-        (void)TRY(to_temporal_offset(global_object, *options, "reject"));
+        discard(TRY(to_temporal_offset(global_object, *options, "reject")));
 
         // d. Return ! CreateTemporalZonedDateTime(item.[[Nanoseconds]], item.[[TimeZone]], item.[[Calendar]]).
         return MUST(create_temporal_zoned_date_time(global_object, item_object.nanoseconds(), item_object.time_zone(), item_object.calendar()));

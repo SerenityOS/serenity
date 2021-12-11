@@ -7,6 +7,7 @@
  */
 
 #include <AK/Demangle.h>
+#include <AK/Discard.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/QuickSort.h>
@@ -4505,9 +4506,9 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         declaration.for_each_bound_name([&](auto const& name) {
             if (declaration.is_constant_declaration())
-                (void)global_environment.create_immutable_binding(global_object, name, true);
+                discard(global_environment.create_immutable_binding(global_object, name, true));
             else
-                (void)global_environment.create_mutable_binding(global_object, name, false);
+                discard(global_environment.create_mutable_binding(global_object, name, false));
             if (interpreter.exception())
                 return IterationDecision::Break;
             return IterationDecision::Continue;

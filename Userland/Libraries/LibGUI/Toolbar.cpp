@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
@@ -118,7 +119,7 @@ ErrorOr<void> Toolbar::try_add_separator()
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
     item->type = Item::Type::Separator;
-    (void)TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
+    discard(TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal)));
     m_items.unchecked_append(move(item));
     return {};
 }

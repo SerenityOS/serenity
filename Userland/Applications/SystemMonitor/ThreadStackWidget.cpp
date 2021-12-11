@@ -5,6 +5,7 @@
  */
 
 #include "ThreadStackWidget.h"
+#include <AK/Discard.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Model.h>
@@ -113,7 +114,7 @@ private:
 
 void ThreadStackWidget::refresh()
 {
-    (void)Threading::BackgroundAction<Vector<Symbolication::Symbol>>::construct(
+    discard(Threading::BackgroundAction<Vector<Symbolication::Symbol>>::construct(
         [pid = m_pid, tid = m_tid](auto&) {
             return Symbolication::symbolicate_thread(pid, tid, Symbolication::IncludeSourcePosition::No);
         },
@@ -122,7 +123,7 @@ void ThreadStackWidget::refresh()
             if (!weak_this)
                 return;
             Core::EventLoop::with_main_locked([&](auto* main_event_loop) { main_event_loop->post_event(const_cast<Core::Object&>(*weak_this), make<CompletionEvent>(move(result))); });
-        });
+        }));
 }
 
 void ThreadStackWidget::custom_event(Core::CustomEvent& event)

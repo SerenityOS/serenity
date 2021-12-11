@@ -7,6 +7,7 @@
 
 #include "Game.h"
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/Random.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
@@ -294,7 +295,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                     for (auto& to_intersect : m_focused_cards) {
                         mark_intersecting_stacks_dirty(to_intersect);
                         stack.push(to_intersect);
-                        (void)m_focused_stack->pop();
+                        discard(m_focused_stack->pop());
                     }
 
                     remember_move_for_undo(*m_focused_stack, stack, m_focused_cards);
@@ -629,7 +630,7 @@ void Game::perform_undo()
     for (auto& to_intersect : m_last_move.cards) {
         mark_intersecting_stacks_dirty(to_intersect);
         m_last_move.from->push(to_intersect);
-        (void)m_last_move.to->pop();
+        discard(m_last_move.to->pop());
     }
 
     if (m_last_move.from->type() == CardStack::Type::Stock) {

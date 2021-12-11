@@ -5,6 +5,7 @@
  */
 
 #include "GalleryWidget.h"
+#include <AK/Discard.h>
 #include <Demos/ModelGallery/BasicModelTabGML.h>
 
 GalleryWidget::GalleryWidget()
@@ -19,7 +20,7 @@ GalleryWidget::GalleryWidget()
     m_tab_widget = inner_widget.try_add<GUI::TabWidget>().release_value_but_fixme_should_propagate_errors();
     m_statusbar = add<GUI::Statusbar>();
 
-    (void)load_basic_model_tab();
+    discard(load_basic_model_tab());
     load_sorting_filtering_tab();
 }
 

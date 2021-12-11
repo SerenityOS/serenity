@@ -6,6 +6,7 @@
 
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Discard.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -85,7 +86,7 @@ bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
 
     // Don't show the file's trailing newline as an actual new line.
     if (line_count() > 1 && line(line_count() - 1).is_empty())
-        (void)m_lines.take_last();
+        discard(m_lines.take_last());
 
     m_client_notifications_enabled = true;
 

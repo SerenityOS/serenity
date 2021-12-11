@@ -6,6 +6,7 @@
 
 #include "Providers.h"
 #include "FuzzyMatch.h"
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/DirIterator.h>
@@ -161,7 +162,7 @@ void FileProvider::build_filesystem_cache()
     m_building_cache = true;
     m_work_queue.enqueue("/");
 
-    (void)Threading::BackgroundAction<int>::construct(
+    discard(Threading::BackgroundAction<int>::construct(
         [this, strong_ref = NonnullRefPtr(*this)](auto&) {
             String slash = "/";
             auto timer = Core::ElapsedTimer::start_new();
@@ -198,7 +199,7 @@ void FileProvider::build_filesystem_cache()
         },
         [this](auto) {
             m_building_cache = false;
-        });
+        }));
 }
 
 void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)

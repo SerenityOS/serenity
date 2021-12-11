@@ -6,6 +6,7 @@
  */
 
 #include "Mixer.h"
+#include <AK/Discard.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
@@ -28,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     server->on_accept = [&](NonnullOwnPtr<Core::Stream::LocalSocket> client_socket) {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        (void)IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
+        discard(IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer));
     };
 
     TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));

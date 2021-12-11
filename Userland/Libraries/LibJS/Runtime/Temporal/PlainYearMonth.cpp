@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -65,7 +66,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)TRY(to_temporal_overflow(global_object, *options));
+    discard(TRY(to_temporal_overflow(global_object, *options)));
 
     // 5. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));

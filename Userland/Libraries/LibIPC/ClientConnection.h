@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Discard.h>
 #include <LibIPC/Connection.h>
 
 namespace IPC {
@@ -32,7 +33,7 @@ public:
         VERIFY(this->socket().is_open());
         this->socket().on_ready_to_read = [this] {
             // FIXME: Do something about errors.
-            (void)this->drain_messages_from_peer();
+            discard(this->drain_messages_from_peer());
         };
     }
 

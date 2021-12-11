@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Date.h>
@@ -186,7 +187,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
     // 3. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        discard(TRY(to_temporal_overflow(global_object, *options)));
 
         // b. Let string be ? ToString(item).
         auto string = TRY(item.to_string(global_object));

@@ -7,6 +7,7 @@
 #include "Parser.h"
 #include "AST.h"
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>
 #include <LibCpp/Lexer.h>
@@ -252,7 +253,7 @@ bool Parser::match_template_arguments()
     while (!eof() && peek().type() != Token::Type::Greater) {
         if (!match_named_type())
             return false;
-        (void)parse_type(get_dummy_node());
+        discard(parse_type(get_dummy_node()));
     }
 
     return peek().type() == Token::Type::Greater;
@@ -285,13 +286,13 @@ bool Parser::match_variable_declaration()
     }
 
     VERIFY(m_root_node);
-    (void)parse_type(get_dummy_node());
+    discard(parse_type(get_dummy_node()));
 
     // Identifier
     if (!match_name())
         return false;
 
-    (void)parse_name(get_dummy_node());
+    discard(parse_name(get_dummy_node()));
 
     if (match(Token::Type::Equals)) {
         consume(Token::Type::Equals);
@@ -303,7 +304,7 @@ bool Parser::match_variable_declaration()
     }
 
     if (match_braced_init_list())
-        (void)parse_braced_init_list(get_dummy_node());
+        discard(parse_braced_init_list(get_dummy_node()));
 
     return match(Token::Type::Semicolon);
 }
@@ -695,7 +696,7 @@ bool Parser::match_class_declaration()
 
             if (!match_name())
                 return false;
-            (void)parse_name(get_dummy_node());
+            discard(parse_name(get_dummy_node()));
         } while (peek().type() == Token::Type::Comma);
     }
 
@@ -718,7 +719,7 @@ bool Parser::match_function_declaration()
         return false;
 
     VERIFY(m_root_node);
-    (void)parse_type(get_dummy_node());
+    discard(parse_type(get_dummy_node()));
 
     if (!peek(Token::Type::Identifier).has_value())
         return false;
@@ -1157,7 +1158,7 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
             while (match_keyword("private") || match_keyword("public") || match_keyword("protected") || match_keyword("virtual"))
                 consume();
 
-            (void)parse_name(get_dummy_node());
+            discard(parse_name(get_dummy_node()));
         } while (peek().type() == Token::Type::Comma);
     }
 
@@ -1479,7 +1480,7 @@ bool Parser::match_c_style_cast_expression()
 
     if (!match_type())
         return false;
-    (void)parse_type(get_dummy_node());
+    discard(parse_type(get_dummy_node()));
 
     if (consume().type() != Token::Type::RightParen)
         return false;

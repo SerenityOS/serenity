@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
@@ -235,9 +236,9 @@ FileResult TestRunner::run_test_file(const String& test_path)
     String dirname = path_for_test.dirname();
     String basename = path_for_test.basename();
 
-    (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO);
-    (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
-    (void)posix_spawn_file_actions_addchdir(&file_actions, dirname.characters());
+    discard(posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO));
+    discard(posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO));
+    discard(posix_spawn_file_actions_addchdir(&file_actions, dirname.characters()));
 
     Vector<const char*, 4> argv;
     argv.append(basename.characters());

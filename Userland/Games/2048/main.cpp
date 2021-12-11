@@ -7,6 +7,7 @@
 #include "BoardView.h"
 #include "Game.h"
 #include "GameSizeDialog.h"
+#include <AK/Discard.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -66,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(315, 336);
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>()));
     main_widget->set_fill_with_background_color(true);
 
     Game game { board_size, target_tile, evil_ai };

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/UndoStack.h>
 
@@ -57,7 +58,7 @@ void UndoStack::push(NonnullOwnPtr<Command> command)
 {
     // If the stack cursor is behind the top of the stack, nuke everything from here to the top.
     while (m_stack.size() != m_stack_index)
-        (void)m_stack.take_last();
+        discard(m_stack.take_last());
 
     if (m_clean_index.has_value() && m_clean_index.value() > m_stack.size())
         m_clean_index = {};

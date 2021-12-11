@@ -5,6 +5,7 @@
  */
 
 #include "BrowserSettingsWidget.h"
+#include <AK/Discard.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -26,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"));
+    discard(TRY(window->add_tab<BrowserSettingsWidget>("Browser")));
 
     window->show();
     return app->exec();

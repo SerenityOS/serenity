@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -443,7 +444,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
     // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]] or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
         // a. Perform ? ToTemporalDate(temporalDateLike).
-        (void)TRY(to_temporal_date(global_object, temporal_date_like));
+        discard(TRY(to_temporal_date(global_object, temporal_date_like)));
     }
 
     // 5. Return 12𝔽.

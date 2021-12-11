@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <LibDSP/Processor.h>
@@ -17,7 +18,7 @@ bool Track::add_processor(NonnullRefPtr<Processor> new_processor)
 {
     m_processor_chain.append(move(new_processor));
     if (!check_processor_chain_valid()) {
-        (void)m_processor_chain.take_last();
+        discard(m_processor_chain.take_last());
         return false;
     }
     return true;

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/Discard.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -121,7 +122,7 @@ void ClientConnection::ensure_connection(URL const& url, ::RequestServer::CacheL
     if (cache_level == CacheLevel::ResolveOnly) {
         return Core::deferred_invoke([host = url.host()] {
             dbgln("EnsureConnection: DNS-preload for {}", host);
-            (void)gethostbyname(host.characters());
+            discard(gethostbyname(host.characters()));
         });
     }
 

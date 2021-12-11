@@ -5,6 +5,7 @@
  */
 
 #include "PlaybackManager.h"
+#include <AK/Discard.h>
 
 PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connection)
     : m_connection(connection)
@@ -54,7 +55,7 @@ void PlaybackManager::stop()
     m_current_buffer = nullptr;
 
     if (m_loader)
-        (void)m_loader->reset();
+        discard(m_loader->reset());
 }
 
 void PlaybackManager::play()

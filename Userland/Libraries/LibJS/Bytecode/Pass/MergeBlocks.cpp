@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Bytecode/PassManager.h>
 
 namespace JS::Bytecode::Passes {
@@ -89,7 +90,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
 
     for (auto& entry : blocks_to_replace) {
         AK::Array candidates { entry.key };
-        (void)replace_blocks(candidates, *entry.value);
+        discard(replace_blocks(candidates, *entry.value));
     }
 
     while (!blocks_to_merge.is_empty()) {

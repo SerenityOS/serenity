@@ -5,6 +5,7 @@
  */
 
 #include <AK/AnyOf.h>
+#include <AK/Discard.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -241,7 +242,7 @@ void Element::recompute_style()
             return;
         // We need a new layout tree here!
         Layout::TreeBuilder tree_builder;
-        (void)tree_builder.build(*this);
+        discard(tree_builder.build(*this));
         return;
     }
 

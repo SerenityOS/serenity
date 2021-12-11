@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/StringBuilder.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
@@ -391,7 +392,7 @@ void HTMLScriptElement::prepare_script()
 
                 // 3. Remove the first element from this list of scripts that will execute in order
                 //    as soon as possible.
-                (void)m_preparation_time_document->scripts_to_execute_as_soon_as_possible().take_first();
+                discard(m_preparation_time_document->scripts_to_execute_as_soon_as_possible().take_first());
 
                 // 4. If this list of scripts that will execute in order as soon as possible is still
                 //    not empty and the first entry has already been marked as ready, then jump back

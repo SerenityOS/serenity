@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -203,7 +204,7 @@ i32 Window::request_animation_frame(JS::FunctionObject& js_callback)
     auto callback = request_animation_frame_driver().add([this, handle = JS::make_handle(&js_callback)](i32 id) mutable {
         auto& function = *handle.cell();
         auto& vm = function.vm();
-        (void)JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now()));
+        discard(JS::call(function.global_object(), function, JS::js_undefined(), JS::Value(performance().now())));
         if (vm.exception())
             vm.clear_exception();
         m_request_animation_frame_callbacks.remove(id);

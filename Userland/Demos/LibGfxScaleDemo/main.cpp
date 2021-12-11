@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -122,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->try_set_main_widget<Canvas>());
+    discard(TRY(window->try_set_main_widget<Canvas>()));
     window->show();
 
     return app->exec();

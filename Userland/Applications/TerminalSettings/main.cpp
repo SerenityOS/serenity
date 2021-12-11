@@ -5,6 +5,7 @@
  */
 
 #include "TerminalSettingsWidget.h"
+#include <AK/Discard.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/SettingsWindow.h>
@@ -28,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Terminal Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal"));
-    (void)TRY(window->add_tab<TerminalSettingsViewWidget>("View"));
+    discard(TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal")));
+    discard(TRY(window->add_tab<TerminalSettingsViewWidget>("View")));
 
     window->show();
     return app->exec();

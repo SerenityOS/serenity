@@ -9,6 +9,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSImportRule.h>
@@ -1682,7 +1683,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
                 break;
             dbgln("Discarding token: '{}'", peek.to_debug_string());
-            (void)consume_a_component_value(tokens);
+            discard(consume_a_component_value(tokens));
         }
     }
 

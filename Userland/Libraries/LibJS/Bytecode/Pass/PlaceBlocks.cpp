@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Bytecode/PassManager.h>
 
 namespace JS::Bytecode::Passes {
@@ -43,7 +44,7 @@ void PlaceBlocks::perform(PassPipelineExecutable& executable)
     // Put the unreferenced blocks back in at the end
     for (auto& entry : static_cast<Vector<NonnullOwnPtr<BasicBlock>>&>(executable.executable.basic_blocks)) {
         if (reachable_blocks.contains(entry.ptr()))
-            (void)entry.leak_ptr();
+            discard(entry.leak_ptr());
         else
             replaced_blocks.append(*entry.leak_ptr()); // Don't try to do DCE here.
     }

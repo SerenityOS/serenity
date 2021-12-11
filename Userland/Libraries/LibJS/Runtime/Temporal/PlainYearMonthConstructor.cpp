@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -95,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthConstructor::from)
     // 2. If Type(item) is Object and item has an [[InitializedTemporalYearMonth]] internal slot, then
     if (item.is_object() && is<PlainYearMonth>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        discard(TRY(to_temporal_overflow(global_object, *options)));
 
         auto& plain_year_month_object = static_cast<PlainYearMonth&>(item.as_object());
 

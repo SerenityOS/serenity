@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/SourceLocation.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
@@ -389,7 +390,7 @@ u32 Tokenizer::consume_escaped_code_point()
 
         // If the next input code point is whitespace, consume it as well.
         if (is_whitespace(peek_code_point())) {
-            (void)next_code_point();
+            discard(next_code_point());
         }
 
         // Interpret the hex digits as a hexadecimal number.
@@ -428,7 +429,7 @@ Token Tokenizer::consume_an_ident_like_token()
     // If string’s value is an ASCII case-insensitive match for "url", and the next input code
     // point is U+0028 LEFT PARENTHESIS ((), consume it.
     if (string.equals_ignoring_case("url") && is_left_paren(peek_code_point())) {
-        (void)next_code_point();
+        discard(next_code_point());
 
         // While the next two input code points are whitespace, consume the next input code point.
         for (;;) {
@@ -437,7 +438,7 @@ Token Tokenizer::consume_an_ident_like_token()
                 break;
             }
 
-            (void)next_code_point();
+            discard(next_code_point());
         }
 
         // If the next one or two input code points are U+0022 QUOTATION MARK ("), U+0027 APOSTROPHE ('),
@@ -454,7 +455,7 @@ Token Tokenizer::consume_an_ident_like_token()
 
     // Otherwise, if the next input code point is U+0028 LEFT PARENTHESIS ((), consume it.
     if (is_left_paren(peek_code_point())) {
-        (void)next_code_point();
+        discard(next_code_point());
 
         // Create a <function-token> with its value set to string and return it.
         return create_value_token(Token::Type::Function, string);
@@ -729,12 +730,12 @@ Token Tokenizer::consume_a_url_token()
             input = peek_code_point();
 
             if (is_right_paren(input)) {
-                (void)next_code_point();
+                discard(next_code_point());
                 return make_token();
             }
 
             if (is_eof(input)) {
-                (void)next_code_point();
+                discard(next_code_point());
                 log_parse_error();
                 return make_token();
             }
@@ -800,7 +801,7 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
             // Consume an escaped code point.
             // This allows an escaped right parenthesis ("\)") to be encountered without ending
             // the <bad-url-token>. This is otherwise identical to the "anything else" clause.
-            (void)consume_escaped_code_point();
+            discard(consume_escaped_code_point());
         }
 
         // anything else
@@ -811,7 +812,7 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
 void Tokenizer::consume_as_much_whitespace_as_possible()
 {
     while (is_whitespace(peek_code_point())) {
-        (void)next_code_point();
+        discard(next_code_point());
     }
 }
 
@@ -850,7 +851,7 @@ Token Tokenizer::consume_a_numeric_token()
 
     // Otherwise, if the next input code point is U+0025 PERCENTAGE SIGN (%), consume it.
     if (is_percent(peek_code_point())) {
-        (void)next_code_point();
+        discard(next_code_point());
 
         // Create a <percentage-token> with the same value as number, and return it.
         auto token = create_new_token(Token::Type::Percentage);
@@ -1029,7 +1030,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
 
             // Otherwise, if the next input code point is a newline, consume it.
             if (is_newline(next_input)) {
-                (void)next_code_point();
+                discard(next_code_point());
                 continue;
             }
 
@@ -1063,8 +1064,8 @@ start:
     if (!(is_solidus(twin.first) && is_asterisk(twin.second)))
         return;
 
-    (void)next_code_point();
-    (void)next_code_point();
+    discard(next_code_point());
+    discard(next_code_point());
 
     for (;;) {
         auto twin_inner = peek_twin();
@@ -1074,12 +1075,12 @@ start:
         }
 
         if (is_asterisk(twin_inner.first) && is_solidus(twin_inner.second)) {
-            (void)next_code_point();
-            (void)next_code_point();
+            discard(next_code_point());
+            discard(next_code_point());
             goto start;
         }
 
-        (void)next_code_point();
+        discard(next_code_point());
     }
 }
 
@@ -1196,8 +1197,8 @@ Token Tokenizer::consume_a_token()
         // GREATER-THAN SIGN (->), consume them and return a <CDC-token>.
         auto next_twin = peek_twin();
         if (is_hyphen_minus(next_twin.first) && is_greater_than_sign(next_twin.second)) {
-            (void)next_code_point();
-            (void)next_code_point();
+            discard(next_code_point());
+            discard(next_code_point());
 
             return create_new_token(Token::Type::CDC);
         }
@@ -1248,9 +1249,9 @@ Token Tokenizer::consume_a_token()
         // U+002D HYPHEN-MINUS (!--), consume them and return a <CDO-token>.
         auto maybe_cdo = peek_triplet();
         if (is_exclamation_mark(maybe_cdo.first) && is_hyphen_minus(maybe_cdo.second) && is_hyphen_minus(maybe_cdo.third)) {
-            (void)next_code_point();
-            (void)next_code_point();
-            (void)next_code_point();
+            discard(next_code_point());
+            discard(next_code_point());
+            discard(next_code_point());
 
             return create_new_token(Token::Type::CDO);
         }

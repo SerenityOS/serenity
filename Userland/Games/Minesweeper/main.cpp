@@ -6,6 +6,7 @@
 
 #include "CustomGameDialog.h"
 #include "Field.h"
+#include <AK/Discard.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -49,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(139, 175);
 
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    (void)TRY(widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(widget->try_set_layout<GUI::VerticalBoxLayout>()));
     widget->layout()->set_spacing(0);
 
     auto top_line = TRY(widget->try_add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal));
@@ -58,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto container = TRY(widget->try_add<GUI::Widget>());
     container->set_fill_with_background_color(true);
     container->set_fixed_height(36);
-    (void)TRY(container->try_set_layout<GUI::HorizontalBoxLayout>());
+    discard(TRY(container->try_set_layout<GUI::HorizontalBoxLayout>()));
 
     container->layout()->add_spacer();
 

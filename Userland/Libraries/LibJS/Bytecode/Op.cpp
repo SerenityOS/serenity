@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/HashTable.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
@@ -307,7 +308,7 @@ void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 
     auto reference = reference_or_error.release_value();
     // TODO: ThrowCompletionOr<void> return
-    (void)reference.put_value(interpreter.global_object(), interpreter.accumulator());
+    discard(reference.put_value(interpreter.global_object(), interpreter.accumulator()));
 }
 
 void GetById::execute_impl(Bytecode::Interpreter& interpreter) const

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/QuickSort.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
@@ -169,11 +170,11 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_role(ColorRole::Button);
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>()));
     main_widget->layout()->set_margins(4);
 
     auto find = TRY(main_widget->try_add<GUI::Widget>());
-    (void)TRY(find->try_set_layout<GUI::HorizontalBoxLayout>());
+    discard(TRY(find->try_set_layout<GUI::HorizontalBoxLayout>()));
     find->layout()->set_margins(4);
     find->set_fixed_height(30);
 

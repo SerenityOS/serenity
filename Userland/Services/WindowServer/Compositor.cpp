@@ -14,6 +14,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Timer.h>
@@ -807,7 +808,7 @@ bool Compositor::set_wallpaper_mode(const String& mode)
 
 bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
+    discard(Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
         [path](auto&) {
             return Gfx::Bitmap::try_load_from_file(path);
         },
@@ -824,7 +825,7 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
                 m_wallpaper = bitmap.release_value();
             invalidate_screen();
             callback(true);
-        });
+        }));
     return true;
 }
 

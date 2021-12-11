@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Discard.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Try.h>
 #include <LibCore/Event.h>
@@ -75,7 +76,7 @@ public:
         m_socket->on_ready_to_read = [this] {
             NonnullRefPtr protect = *this;
             // FIXME: Do something about errors.
-            (void)drain_messages_from_peer();
+            discard(drain_messages_from_peer());
             handle_messages();
         };
     }

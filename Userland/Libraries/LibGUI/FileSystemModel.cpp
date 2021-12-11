@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
@@ -649,7 +650,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
 
     auto weak_this = make_weak_ptr();
 
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
+    discard(Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
         [path](auto&) {
             return render_thumbnail(path);
         },
@@ -676,7 +677,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
             }
 
             did_update(UpdateFlag::DontInvalidateIndices);
-        });
+        }));
 
     return false;
 }

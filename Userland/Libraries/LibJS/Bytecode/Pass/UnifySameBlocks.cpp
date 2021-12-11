@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Bytecode/PassManager.h>
 #include <string.h>
 
@@ -54,7 +55,7 @@ void UnifySameBlocks::perform(PassPipelineExecutable& executable)
     };
 
     for (auto& entry : equal_blocks)
-        (void)replace_blocks(entry.key, *entry.value);
+        discard(replace_blocks(entry.key, *entry.value));
 
     finished();
 }

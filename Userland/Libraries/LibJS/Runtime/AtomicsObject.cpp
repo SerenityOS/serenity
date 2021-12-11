@@ -6,6 +6,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Discard.h>
 #include <AK/Endian.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -266,7 +267,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(GlobalObject& globa
         auto* v = reinterpret_cast<U*>(block.span().slice(indexed_position).data());
         auto* e = reinterpret_cast<U*>(expected_bytes.data());
         auto* r = reinterpret_cast<U*>(replacement_bytes.data());
-        (void)AK::atomic_compare_exchange_strong(v, *e, *r);
+        discard(AK::atomic_compare_exchange_strong(v, *e, *r));
     }
 
     // 16. Return RawBytesToNumeric(elementType, rawBytesRead, isLittleEndian).

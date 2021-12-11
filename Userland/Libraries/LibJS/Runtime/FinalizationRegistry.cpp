@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 
@@ -65,7 +66,7 @@ void FinalizationRegistry::cleanup(FunctionObject* callback)
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
         if (it->target != nullptr)
             continue;
-        (void)call(global_object(), *cleanup_callback, js_undefined(), it->held_value);
+        discard(call(global_object(), *cleanup_callback, js_undefined(), it->held_value));
         it.remove(m_records);
         if (vm.exception())
             return;
@@ -81,5 +82,4 @@ void FinalizationRegistry::visit_edges(Cell::Visitor& visitor)
         visitor.visit(record.unregister_token);
     }
 }
-
 }

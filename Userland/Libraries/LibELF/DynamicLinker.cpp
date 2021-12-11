@@ -9,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
@@ -540,7 +541,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         fflush(stderr);
         _exit(1);
     }
-    (void)result1.release_value();
+    discard(result1.release_value());
 
     auto result2 = map_dependencies(library_name);
     if (result2.is_error()) {

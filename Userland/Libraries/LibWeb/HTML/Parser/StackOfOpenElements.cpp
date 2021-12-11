@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/StackOfOpenElements.h>
@@ -96,8 +97,8 @@ bool StackOfOpenElements::contains(const FlyString& tag_name) const
 void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
 {
     while (m_elements.last().local_name() != tag_name)
-        (void)pop();
-    (void)pop();
+        discard(pop());
+    discard(pop());
 }
 
 DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element& formatting_element)

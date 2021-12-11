@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -231,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Backtrace"));
-    (void)TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>()));
     backtrace_tab->layout()->set_margins(4);
 
     auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"));
@@ -253,7 +254,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Environment"));
-    (void)TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>()));
     environment_tab->layout()->set_margins(4);
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
@@ -262,7 +263,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
     auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"));
-    (void)TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>()));
     memory_regions_tab->layout()->set_margins(4);
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());

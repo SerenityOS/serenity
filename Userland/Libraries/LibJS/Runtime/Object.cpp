@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/String.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -862,7 +863,7 @@ ThrowCompletionOr<bool> Object::ordinary_set_with_own_descriptor(PropertyKey con
         return false;
 
     // 7. Perform ? Call(setter, Receiver, « V »).
-    (void)TRY(call(global_object(), *setter, receiver, value));
+    discard(TRY(call(global_object(), *setter, receiver, value)));
 
     // 8. Return true.
     return true;

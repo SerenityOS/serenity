@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
@@ -157,7 +158,7 @@ ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> LocalServer::accept()
 #ifdef AK_OS_MACOS
     int option = 1;
     ioctl(m_fd, FIONBIO, &option);
-    (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
+    discard(fcntl(accepted_fd, F_SETFD, FD_CLOEXEC));
 #endif
 
     return Stream::LocalSocket::adopt_fd(accepted_fd);

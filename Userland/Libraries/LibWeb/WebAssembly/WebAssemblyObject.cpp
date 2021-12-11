@@ -11,6 +11,7 @@
 #include "WebAssemblyModulePrototype.h"
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
+#include <AK/Discard.h>
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -104,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     // Drop the module from the cache, we're never going to refer to it.
     ScopeGuard drop_from_cache {
         [&] {
-            (void)s_compiled_modules.take_last();
+            discard(s_compiled_modules.take_last());
         }
     };
 

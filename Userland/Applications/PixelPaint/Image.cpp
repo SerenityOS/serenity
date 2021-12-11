@@ -10,6 +10,7 @@
 #include "Layer.h"
 #include "Selection.h"
 #include <AK/Base64.h>
+#include <AK/Discard.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
@@ -445,7 +446,7 @@ ImageUndoCommand::ImageUndoCommand(Image& image)
 void ImageUndoCommand::undo()
 {
     // FIXME: Handle errors.
-    (void)m_image.restore_snapshot(*m_snapshot);
+    discard(m_image.restore_snapshot(*m_snapshot));
 }
 
 void ImageUndoCommand::redo()

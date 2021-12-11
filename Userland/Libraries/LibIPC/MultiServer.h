@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Discard.h>
 #include <AK/Error.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
@@ -28,7 +29,7 @@ private:
     {
         m_server->on_accept = [&](auto client_socket) {
             auto client_id = ++m_next_client_id;
-            (void)IPC::new_client_connection<ClientConnectionType>(move(client_socket), client_id);
+            discard(IPC::new_client_connection<ClientConnectionType>(move(client_socket), client_id));
         };
     }
 

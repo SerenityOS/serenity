@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -118,7 +119,7 @@ char* __attribute__((weak)) tgoto([[maybe_unused]] const char* cap, [[maybe_unus
 
     s_tgoto_buffer.clear_with_capacity();
     s_tgoto_buffer.ensure_capacity(cap_str.length());
-    (void)cap_str.copy_characters_to_buffer(s_tgoto_buffer.data(), cap_str.length());
+    discard(cap_str.copy_characters_to_buffer(s_tgoto_buffer.data(), cap_str.length()));
     return s_tgoto_buffer.data();
 }
 

@@ -10,6 +10,7 @@
 #include "DirectoryView.h"
 #include "FileUtils.h"
 #include "PropertiesWindow.h"
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -332,7 +333,7 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_has_alpha_channel(true);
 
     auto desktop_widget = TRY(window->try_set_main_widget<FileManager::DesktopWidget>());
-    (void)TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    discard(TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>()));
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
     directory_view->set_name("directory_view");
@@ -990,31 +991,31 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("app-file-manager"), window)));
 
-    (void)TRY(main_toolbar.try_add_action(go_back_action));
-    (void)TRY(main_toolbar.try_add_action(go_forward_action));
-    (void)TRY(main_toolbar.try_add_action(open_parent_directory_action));
-    (void)TRY(main_toolbar.try_add_action(go_home_action));
+    discard(TRY(main_toolbar.try_add_action(go_back_action)));
+    discard(TRY(main_toolbar.try_add_action(go_forward_action)));
+    discard(TRY(main_toolbar.try_add_action(open_parent_directory_action)));
+    discard(TRY(main_toolbar.try_add_action(go_home_action)));
 
     TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(directory_view->open_terminal_action()));
+    discard(TRY(main_toolbar.try_add_action(directory_view->open_terminal_action())));
 
     TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(mkdir_action));
-    (void)TRY(main_toolbar.try_add_action(touch_action));
+    discard(TRY(main_toolbar.try_add_action(mkdir_action)));
+    discard(TRY(main_toolbar.try_add_action(touch_action)));
     TRY(main_toolbar.try_add_separator());
 
-    (void)TRY(main_toolbar.try_add_action(focus_dependent_delete_action));
-    (void)TRY(main_toolbar.try_add_action(directory_view->rename_action()));
+    discard(TRY(main_toolbar.try_add_action(focus_dependent_delete_action)));
+    discard(TRY(main_toolbar.try_add_action(directory_view->rename_action())));
 
     TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(cut_action));
-    (void)TRY(main_toolbar.try_add_action(copy_action));
-    (void)TRY(main_toolbar.try_add_action(paste_action));
+    discard(TRY(main_toolbar.try_add_action(cut_action)));
+    discard(TRY(main_toolbar.try_add_action(copy_action)));
+    discard(TRY(main_toolbar.try_add_action(paste_action)));
 
     TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_icons_action()));
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_table_action()));
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action()));
+    discard(TRY(main_toolbar.try_add_action(directory_view->view_as_icons_action())));
+    discard(TRY(main_toolbar.try_add_action(directory_view->view_as_table_action())));
+    discard(TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action())));
 
     directory_view->on_path_change = [&](String const& new_path, bool can_read_in_path, bool can_write_in_path) {
         auto icon = GUI::FileIconProvider::icon_for_path(new_path);
