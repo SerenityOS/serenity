@@ -8,7 +8,6 @@
 
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Time/TimeManagement.h>
 

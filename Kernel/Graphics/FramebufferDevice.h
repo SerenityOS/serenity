@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/NonnullOwnPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/GenericFramebufferDevice.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>

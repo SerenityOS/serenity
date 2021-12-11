@@ -9,7 +9,6 @@
 #include <AK/Assertions.h>
 #include <AK/Endian.h>
 #include <AK/IPv4Address.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace Kernel {
