@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/PhysicalAddress.h>

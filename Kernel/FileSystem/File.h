@@ -9,7 +9,7 @@
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>

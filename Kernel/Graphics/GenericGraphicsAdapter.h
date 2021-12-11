@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
