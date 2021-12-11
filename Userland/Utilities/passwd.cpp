@@ -63,11 +63,6 @@ int main(int argc, char** argv)
 
     setpwent();
 
-    if (pledge("stdio wpath rpath cpath fattr tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     // target_account is the account we are changing the password of.
     auto& target_account = account_or_error.value();
 
