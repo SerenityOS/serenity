@@ -45,7 +45,6 @@ int main(int, char**)
 
         outln("\tCluster has {} blocks", cluster.blocks().size());
         for (auto const& block : cluster.blocks()) {
-            (void)block;
             outln("\t\tBlock for track #{} has {} frames", block.track_number(), block.frame_count());
             outln("\t\tBlock's timestamp is {}", block.timestamp());
             outln("\t\tBlock has lacing {}", static_cast<u8>(block.lacing()));
