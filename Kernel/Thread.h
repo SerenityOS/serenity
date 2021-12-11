@@ -1010,7 +1010,7 @@ public:
     u32 update_signal_mask(u32 signal_mask);
     u32 signal_mask_block(sigset_t signal_set, bool block);
     u32 signal_mask() const;
-    void clear_signals();
+    void reset_signals_for_exec();
 
     ErrorOr<FlatPtr> peek_debug_register(u32 register_index);
     ErrorOr<void> poke_debug_register(u32 register_index, FlatPtr data);
