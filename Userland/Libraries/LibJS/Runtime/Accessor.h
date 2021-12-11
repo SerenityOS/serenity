@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Discard.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/VM.h>
 

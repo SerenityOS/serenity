@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
@@ -17,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio inet unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
-    [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
+    discard(DefaultRootCACertificates::the());
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?

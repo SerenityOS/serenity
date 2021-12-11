@@ -379,7 +379,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
     VERIFY(calendar->identifier() == "iso8601"sv);
 
     // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
-    [[maybe_unused]] auto* temporal_date = TRY(to_temporal_date(global_object, vm.argument(0)));
+    discard(TRY(to_temporal_date(global_object, vm.argument(0))));
 
     // 5. Return 7𝔽.
     return Value(7);

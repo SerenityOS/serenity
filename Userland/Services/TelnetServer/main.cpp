@@ -5,6 +5,7 @@
  */
 
 #include "Client.h"
+#include <AK/Discard.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -35,13 +36,13 @@ static void run_command(int ptm_fd, String command)
         }
 
         // NOTE: It's okay if this fails.
-        [[maybe_unused]] auto rc = ioctl(0, TIOCNOTTY);
+        discard(ioctl(0, TIOCNOTTY));
 
         close(0);
         close(1);
         close(2);
 
-        rc = dup2(pts_fd, 0);
+        int rc = dup2(pts_fd, 0);
         if (rc < 0) {
             perror("dup2");
             exit(1);

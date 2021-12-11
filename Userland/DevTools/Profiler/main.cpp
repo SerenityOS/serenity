@@ -126,7 +126,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto main_splitter = TRY(main_widget->try_add<GUI::VerticalSplitter>());
 
-    [[maybe_unused]] auto timeline_container = TRY(main_splitter->try_add<TimelineContainer>(*timeline_header_container, *timeline_view));
+    discard(TRY(main_splitter->try_add<TimelineContainer>(*timeline_header_container, *timeline_view)));
 
     auto tab_widget = TRY(main_splitter->try_add<GUI::TabWidget>());
 

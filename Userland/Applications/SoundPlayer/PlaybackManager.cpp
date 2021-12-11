@@ -80,7 +80,7 @@ void PlaybackManager::seek(const int position)
     m_connection->clear_buffer(true);
     m_current_buffer = nullptr;
 
-    [[maybe_unused]] auto result = m_loader->seek(position);
+    discard(m_loader->seek(position));
 
     if (!paused_state)
         set_paused(false);

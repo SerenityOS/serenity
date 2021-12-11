@@ -90,7 +90,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
         auto* this_value = Bindings::wrap(global, *event.current_target());
         auto* wrapped_event = Bindings::wrap(global, event);
         auto& vm = global.vm();
-        [[maybe_unused]] auto rc = JS::call(global, function, this_value, wrapped_event);
+        discard(JS::call(global, function, this_value, wrapped_event));
         if (vm.exception()) {
             vm.clear_exception();
             // FIXME: Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)

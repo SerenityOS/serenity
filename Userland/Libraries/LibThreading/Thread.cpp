@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibThreading/Thread.h>
 #include <pthread.h>
 #include <string.h>
@@ -22,7 +23,7 @@ Threading::Thread::~Thread()
 {
     if (m_tid && !m_detached) {
         dbgln("Destroying thread \"{}\"({}) while it is still running!", m_thread_name, m_tid);
-        [[maybe_unused]] auto res = join();
+        discard(join());
     }
 }
 

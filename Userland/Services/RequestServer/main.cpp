@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -24,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
-    [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
+    discard(DefaultRootCACertificates::the());
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
@@ -32,9 +33,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
-    [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
-    [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
+    discard(make<RequestServer::GeminiProtocol>());
+    discard(make<RequestServer::HttpProtocol>());
+    discard(make<RequestServer::HttpsProtocol>());
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ClientConnection>());
 

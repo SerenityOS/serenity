@@ -6,6 +6,7 @@
  */
 
 #include "Game.h"
+#include <AK/Discard.h>
 #include <AK/Random.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
@@ -285,7 +286,7 @@ void Game::move_focused_cards(CardStack& stack)
     for (auto& to_intersect : m_focused_cards) {
         mark_intersecting_stacks_dirty(to_intersect);
         stack.push(to_intersect);
-        (void)m_focused_stack->pop();
+        discard(m_focused_stack->pop());
     }
 
     update_score(-1);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Discard.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
@@ -495,7 +496,7 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
-    [[maybe_unused]] auto& rc = node.leak_ref();
+    discard(node.leak_ref());
 }
 
 template<typename T>
@@ -519,7 +520,7 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child)
     child->m_previous_sibling = node;
 
     node->m_parent = static_cast<T*>(this);
-    [[maybe_unused]] auto& rc = node.leak_ref();
+    discard(node.leak_ref());
 }
 
 template<typename T>
@@ -538,7 +539,7 @@ inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
     if (!m_last_child)
         m_last_child = m_first_child;
     node->inserted_into(static_cast<T&>(*this));
-    [[maybe_unused]] auto& rc = node.leak_ref();
+    discard(node.leak_ref());
 
     static_cast<T*>(this)->children_changed();
 }

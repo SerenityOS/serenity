@@ -6,6 +6,7 @@
  */
 
 #include "ViewWidget.h"
+#include <AK/Discard.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -264,17 +265,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    (void)TRY(main_toolbar->try_add_action(open_action));
-    (void)TRY(main_toolbar->try_add_action(delete_action));
+    discard(TRY(main_toolbar->try_add_action(open_action)));
+    discard(TRY(main_toolbar->try_add_action(delete_action)));
     TRY(main_toolbar->try_add_separator());
-    (void)TRY(main_toolbar->try_add_action(go_first_action));
-    (void)TRY(main_toolbar->try_add_action(go_back_action));
-    (void)TRY(main_toolbar->try_add_action(go_forward_action));
-    (void)TRY(main_toolbar->try_add_action(go_last_action));
+    discard(TRY(main_toolbar->try_add_action(go_first_action)));
+    discard(TRY(main_toolbar->try_add_action(go_back_action)));
+    discard(TRY(main_toolbar->try_add_action(go_forward_action)));
+    discard(TRY(main_toolbar->try_add_action(go_last_action)));
     TRY(main_toolbar->try_add_separator());
-    (void)TRY(main_toolbar->try_add_action(zoom_in_action));
-    (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
-    (void)TRY(main_toolbar->try_add_action(zoom_out_action));
+    discard(TRY(main_toolbar->try_add_action(zoom_in_action)));
+    discard(TRY(main_toolbar->try_add_action(reset_zoom_action)));
+    discard(TRY(main_toolbar->try_add_action(zoom_out_action)));
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(open_action));

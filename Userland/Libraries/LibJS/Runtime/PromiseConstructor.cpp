@@ -467,7 +467,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto promise_capability = TRY(new_promise_capability(global_object, constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-    [[maybe_unused]] auto result = TRY(JS::call(global_object, *promise_capability.reject, js_undefined(), reason));
+    discard(TRY(JS::call(global_object, *promise_capability.reject, js_undefined(), reason)));
 
     // 4. Return promiseCapability.[[Promise]].
     return promise_capability.promise;

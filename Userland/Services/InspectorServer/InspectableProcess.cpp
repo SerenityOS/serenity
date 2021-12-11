@@ -5,6 +5,7 @@
  */
 
 #include "InspectableProcess.h"
+#include <AK/Discard.h>
 #include <AK/JsonObject.h>
 
 namespace InspectorServer {
@@ -25,7 +26,7 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::Stream::Lo
 
     m_socket->on_ready_to_read = [this] {
         char c;
-        [[maybe_unused]] auto buffer = m_socket->read({ &c, 1 });
+        discard(m_socket->read({ &c, 1 }));
         if (m_socket->is_eof()) {
             g_processes.remove(m_pid);
             return;

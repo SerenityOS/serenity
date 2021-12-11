@@ -5,6 +5,7 @@
  */
 
 #include "ClockSettingsWidget.h"
+#include <AK/Discard.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -26,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-analog-clock"); // FIXME: Create a ClockSettings icon.
 
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"));
+    discard(TRY(window->add_tab<ClockSettingsWidget>("Clock")));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

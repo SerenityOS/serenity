@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Discard.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibThreading/Thread.h>
 #include <errno.h>
@@ -31,7 +32,7 @@ static void test_once()
         threads.last().start();
     }
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        discard(thread.join());
 
     VERIFY(v.size() == 1);
 }
@@ -59,7 +60,7 @@ static void test_mutex()
         threads.last().start();
     }
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        discard(thread.join());
 
     VERIFY(v.size() == threads_count * num_times);
     VERIFY(pthread_mutex_trylock(&mutex) == 0);
@@ -90,7 +91,7 @@ static void test_semaphore_as_lock()
         threads.last().start();
     }
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        discard(thread.join());
 
     VERIFY(v.size() == threads_count * num_times);
     VERIFY(sem_trywait(&semaphore) == 0);
@@ -118,8 +119,8 @@ static void test_semaphore_as_event()
     });
     writer->start();
 
-    [[maybe_unused]] auto r1 = reader->join();
-    [[maybe_unused]] auto r2 = writer->join();
+    discard(reader->join());
+    discard(writer->join());
 
     VERIFY(sem_trywait(&semaphore) == EAGAIN);
 }
@@ -155,7 +156,7 @@ static void test_semaphore_nonbinary()
     }
 
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        discard(thread.join());
 
     VERIFY(value.load() == 0);
     VERIFY(seen_more_than_two.load());

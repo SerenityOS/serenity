@@ -173,7 +173,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         VERIFY(wrapper());
         auto& vm = wrapper()->vm();
 
-        [[maybe_unused]] auto rc = JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper());
+        discard(JS::call(wrapper()->global_object(), strong_timer->callback(), wrapper()));
         if (vm.exception())
             vm.clear_exception();
     });
@@ -395,7 +395,7 @@ void Window::queue_microtask(JS::FunctionObject& callback)
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
     HTML::queue_a_microtask(associated_document(), [&callback, handle = JS::make_handle(&callback)]() {
         auto& vm = callback.vm();
-        [[maybe_unused]] auto rc = JS::call(callback.global_object(), callback, JS::js_null());
+        discard(JS::call(callback.global_object(), callback, JS::js_null()));
         // FIXME: ...and if callback throws an exception, report the exception.
         if (vm.exception())
             vm.clear_exception();

@@ -7,6 +7,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Discard.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
@@ -628,7 +629,7 @@ void VM::run_queued_promise_jobs()
             pushed_execution_context = true;
         }
 
-        [[maybe_unused]] auto result = call(job->global_object(), *job, js_undefined());
+        discard(call(job->global_object(), *job, js_undefined()));
 
         // This doesn't match the spec, it actually defines that Job Abstract Closures must return
         // a normal completion. In reality that's not the case however, and all major engines clear

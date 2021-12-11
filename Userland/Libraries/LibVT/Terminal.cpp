@@ -384,7 +384,7 @@ void Terminal::XTERM_WM(Parameters params)
             return;
         }
         dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
-        [[maybe_unused]] auto rc = m_title_stack.try_append(move(m_current_window_title));
+        discard(m_title_stack.try_append(move(m_current_window_title)));
         break;
     }
     case 23: {

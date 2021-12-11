@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Format.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -45,7 +46,7 @@ int openpty(int* amaster, int* aslave, char* name, const struct termios* termp, 
 
     if (name) {
         /* The spec doesn't say how large name has to be. Good luck. */
-        [[maybe_unused]] auto rc = strlcpy(name, tty_name, 128);
+        discard(strlcpy(name, tty_name, 128));
     }
 
     *aslave = open(tty_name, O_RDWR | O_NOCTTY);

@@ -5,6 +5,7 @@
  */
 
 #include "TerminalWrapper.h"
+#include <AK/Discard.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
@@ -184,7 +185,7 @@ void TerminalWrapper::kill_running_command()
     VERIFY(m_pid != -1);
 
     // Kill our child process and its whole process group.
-    [[maybe_unused]] auto rc = killpg(m_pid, SIGTERM);
+    discard(killpg(m_pid, SIGTERM));
 }
 
 void TerminalWrapper::clear_including_history()

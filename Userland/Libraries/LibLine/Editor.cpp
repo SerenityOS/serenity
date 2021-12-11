@@ -1797,7 +1797,7 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
 
     do {
         more_junk_to_read = false;
-        [[maybe_unused]] auto rc = select(1, &readfds, nullptr, nullptr, &timeout);
+        discard(select(1, &readfds, nullptr, nullptr, &timeout));
         if (FD_ISSET(0, &readfds)) {
             auto nread = read(0, buf, 16);
             if (nread < 0) {

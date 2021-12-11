@@ -5,6 +5,7 @@
  */
 
 #include "AddEventDialog.h"
+#include <AK/Discard.h>
 #include <Applications/Calendar/CalendarWindowGML.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -99,14 +100,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_type_action_group->add_action(*view_month_action);
     view_type_action_group->add_action(*view_year_action);
 
-    (void)TRY(toolbar->try_add_action(prev_date_action));
-    (void)TRY(toolbar->try_add_action(next_date_action));
+    discard(TRY(toolbar->try_add_action(prev_date_action)));
+    discard(TRY(toolbar->try_add_action(next_date_action)));
     TRY(toolbar->try_add_separator());
-    (void)TRY(toolbar->try_add_action(jump_to_action));
-    (void)TRY(toolbar->try_add_action(add_event_action));
+    discard(TRY(toolbar->try_add_action(jump_to_action)));
+    discard(TRY(toolbar->try_add_action(add_event_action)));
     TRY(toolbar->try_add_separator());
-    (void)TRY(toolbar->try_add_action(view_month_action));
-    (void)TRY(toolbar->try_add_action(view_year_action));
+    discard(TRY(toolbar->try_add_action(view_month_action)));
+    discard(TRY(toolbar->try_add_action(view_year_action)));
 
     calendar->on_tile_doubleclick = [&] {
         AddEventDialog::show(calendar->selected_date(), window);

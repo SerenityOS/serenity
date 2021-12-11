@@ -292,7 +292,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(
+    discard(Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(
         [&, coredump = move(coredump)](auto&) {
             ThreadBacktracesAndCpuRegisters results;
             size_t thread_index = 0;
@@ -317,7 +317,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             for (auto& backtrace : results.thread_backtraces) {
                 auto container = MUST(backtrace_tab_widget->try_add_tab<GUI::Widget>(backtrace.title));
-                (void)MUST(container->template try_set_layout<GUI::VerticalBoxLayout>());
+                discard(MUST(container->template try_set_layout<GUI::VerticalBoxLayout>()));
                 container->layout()->set_margins(4);
                 auto backtrace_text_editor = MUST(container->template try_add<GUI::TextEditor>());
                 backtrace_text_editor->set_text(backtrace.text);
@@ -327,7 +327,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
                 auto container = MUST(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(cpu_registers.title));
-                (void)MUST(container->template try_set_layout<GUI::VerticalBoxLayout>());
+                discard(MUST(container->template try_set_layout<GUI::VerticalBoxLayout>()));
                 container->layout()->set_margins(4);
                 auto cpu_registers_text_editor = MUST(container->template try_add<GUI::TextEditor>());
                 cpu_registers_text_editor->set_text(cpu_registers.text);
@@ -339,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             tab_widget.set_visible(true);
             window->resize(window->width(), max(340, window->height()));
             window->set_progress(0);
-        });
+        }));
 
     window->show();
 

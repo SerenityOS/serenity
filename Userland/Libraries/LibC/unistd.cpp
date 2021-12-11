@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -119,18 +120,18 @@ int daemon(int nochdir, int noclose)
         return -1;
 
     if (nochdir == 0)
-        (void)chdir("/");
+        discard(chdir("/"));
 
     if (noclose == 0) {
         // redirect stdout and stderr to /dev/null
         int fd = open("/dev/null", O_WRONLY);
         if (fd < 0)
             return -1;
-        (void)close(STDOUT_FILENO);
-        (void)close(STDERR_FILENO);
-        (void)dup2(fd, STDOUT_FILENO);
-        (void)dup2(fd, STDERR_FILENO);
-        (void)close(fd);
+        discard(close(STDOUT_FILENO));
+        discard(close(STDERR_FILENO));
+        discard(dup2(fd, STDOUT_FILENO));
+        discard(dup2(fd, STDERR_FILENO));
+        discard(close(fd));
     }
     return 0;
 }
