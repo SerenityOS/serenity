@@ -34,6 +34,9 @@ constexpr auto s_calendar_pattern_index_type = "u16"sv;
 using CalendarRangePatternIndexType = u16;
 constexpr auto s_calendar_range_pattern_index_type = "u16"sv;
 
+using CalendarFormatIndexType = u8;
+constexpr auto s_calendar_format_index_type = "u8"sv;
+
 struct CalendarPattern : public Unicode::CalendarPattern {
     bool contains_only_date_fields() const
     {
@@ -197,10 +200,44 @@ struct AK::Traits<CalendarRangePattern> : public GenericTraits<CalendarRangePatt
 };
 
 struct CalendarFormat {
+    unsigned hash() const
+    {
+        auto hash = pair_int_hash(full_format, long_format);
+        hash = pair_int_hash(hash, medium_format);
+        hash = pair_int_hash(hash, short_format);
+        return hash;
+    }
+
+    bool operator==(CalendarFormat const& other) const
+    {
+        return (full_format == other.full_format)
+            && (long_format == other.long_format)
+            && (medium_format == other.medium_format)
+            && (short_format == other.short_format);
+    }
+
     CalendarPatternIndexType full_format { 0 };
     CalendarPatternIndexType long_format { 0 };
     CalendarPatternIndexType medium_format { 0 };
     CalendarPatternIndexType short_format { 0 };
+};
+
+template<>
+struct AK::Formatter<CalendarFormat> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, CalendarFormat const& pattern)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {}, {} }}",
+            pattern.full_format,
+            pattern.long_format,
+            pattern.medium_format,
+            pattern.short_format);
+    }
+};
+
+template<>
+struct AK::Traits<CalendarFormat> : public GenericTraits<CalendarFormat> {
+    static unsigned hash(CalendarFormat const& c) { return c.hash(); }
 };
 
 struct CalendarSymbols {
@@ -212,9 +249,9 @@ struct CalendarSymbols {
 struct Calendar {
     StringIndexType calendar { 0 };
 
-    CalendarFormat date_formats {};
-    CalendarFormat time_formats {};
-    CalendarFormat date_time_formats {};
+    CalendarFormatIndexType date_formats { 0 };
+    CalendarFormatIndexType time_formats { 0 };
+    CalendarFormatIndexType date_time_formats { 0 };
     Vector<CalendarPatternIndexType> available_formats {};
 
     CalendarRangePatternIndexType default_range_format { 0 };
@@ -246,6 +283,7 @@ struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
     UniqueStorage<CalendarPattern, CalendarPatternIndexType> unique_patterns;
     UniqueStorage<CalendarRangePattern, CalendarRangePatternIndexType> unique_range_patterns;
+    UniqueStorage<CalendarFormat, CalendarFormatIndexType> unique_formats;
 
     HashMap<String, Locale> locales;
 
@@ -801,17 +839,18 @@ static void generate_missing_patterns(Calendar& calendar, Vector<CalendarPattern
     time_formats.extend(move(time_formats_with_fractional_second_digits));
 
     for (auto const& date_format : date_formats) {
+        auto const& date_time_formats = locale_data.unique_formats.get(calendar.date_time_formats);
         CalendarPatternIndexType date_time_format_index = 0;
 
         if (date_format.month == Unicode::CalendarPatternStyle::Long) {
             if (date_format.weekday.has_value())
-                date_time_format_index = calendar.date_time_formats.full_format;
+                date_time_format_index = date_time_formats.full_format;
             else
-                date_time_format_index = calendar.date_time_formats.long_format;
+                date_time_format_index = date_time_formats.long_format;
         } else if (date_format.month == Unicode::CalendarPatternStyle::Short) {
-            date_time_format_index = calendar.date_time_formats.medium_format;
+            date_time_format_index = date_time_formats.medium_format;
         } else {
-            date_time_format_index = calendar.date_time_formats.short_format;
+            date_time_format_index = date_time_formats.short_format;
         }
 
         for (auto const& time_format : time_formats) {
@@ -982,7 +1021,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         });
     };
 
-    auto parse_patterns = [&](auto& formats, auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) {
+    auto parse_patterns = [&](auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) {
         auto parse_pattern = [&](auto name) {
             auto format = patterns_object.get(name);
             auto skeleton = skeletons_object.get(name);
@@ -995,10 +1034,13 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
             return format_index;
         };
 
+        CalendarFormat formats {};
         formats.full_format = parse_pattern("full"sv);
         formats.long_format = parse_pattern("long"sv);
         formats.medium_format = parse_pattern("medium"sv);
         formats.short_format = parse_pattern("short"sv);
+
+        return locale_data.unique_formats.ensure(move(formats));
     };
 
     calendars_object.as_object().for_each_member([&](auto const& calendar_name, JsonValue const& value) {
@@ -1017,14 +1059,14 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
 
         auto const& date_formats_object = value.as_object().get("dateFormats"sv);
         auto const& date_skeletons_object = value.as_object().get("dateSkeletons"sv);
-        parse_patterns(calendar.date_formats, date_formats_object.as_object(), date_skeletons_object.as_object(), &date_formats);
+        calendar.date_formats = parse_patterns(date_formats_object.as_object(), date_skeletons_object.as_object(), &date_formats);
 
         auto const& time_formats_object = value.as_object().get("timeFormats"sv);
         auto const& time_skeletons_object = value.as_object().get("timeSkeletons"sv);
-        parse_patterns(calendar.time_formats, time_formats_object.as_object(), time_skeletons_object.as_object(), &time_formats);
+        calendar.time_formats = parse_patterns(time_formats_object.as_object(), time_skeletons_object.as_object(), &time_formats);
 
         auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
-        parse_patterns(calendar.date_time_formats, date_time_formats_object.as_object(), JsonObject {}, nullptr);
+        calendar.date_time_formats = parse_patterns(date_time_formats_object.as_object(), JsonObject {}, nullptr);
 
         auto const& available_formats = date_time_formats_object.as_object().get("availableFormats"sv);
         available_formats.as_object().for_each_member([&](auto const& skeleton, JsonValue const& pattern) {
@@ -1276,6 +1318,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("string_index_type"sv, s_string_index_type);
     generator.set("calendar_pattern_index_type"sv, s_calendar_pattern_index_type);
     generator.set("calendar_range_pattern_index_type"sv, s_calendar_range_pattern_index_type);
+    generator.set("calendar_format_index_type"sv, s_calendar_format_index_type);
     generator.set("calendar_symbols_size"sv, String::number(locale_data.symbols.size()));
 
     generator.append(R"~~~(
@@ -1409,9 +1452,9 @@ using CalendarSymbols = Span<@string_index_type@ const>;
 struct CalendarData {
     @string_index_type@ calendar { 0 };
 
-    CalendarFormat date_formats {};
-    CalendarFormat time_formats {};
-    CalendarFormat date_time_formats {};
+    @calendar_format_index_type@ date_formats {};
+    @calendar_format_index_type@ time_formats {};
+    @calendar_format_index_type@ date_time_formats {};
     Span<@calendar_pattern_index_type@ const> available_formats {};
 
     @calendar_range_pattern_index_type@ default_range_format { 0 };
@@ -1434,6 +1477,8 @@ struct DayPeriodData {
 };
 )~~~");
 
+    locale_data.unique_formats.generate(generator, "CalendarFormat"sv, "s_calendar_formats"sv, 10);
+
     auto append_pattern_list = [&](auto name, auto type, auto const& formats) {
         generator.set("name", move(name));
         generator.set("type", move(type));
@@ -1450,14 +1495,6 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         }
 
         generator.append(" } };");
-    };
-
-    auto append_calendar_format = [&](auto const& calendar_format) {
-        generator.set("full_format", String::number(calendar_format.full_format));
-        generator.set("long_format", String::number(calendar_format.long_format));
-        generator.set("medium_format", String::number(calendar_format.medium_format));
-        generator.set("short_format", String::number(calendar_format.short_format));
-        generator.append("{ @full_format@, @long_format@, @medium_format@, @short_format@ },");
     };
 
     auto append_calendar_symbols_for_style = [&](auto name, auto style, auto const& symbols) {
@@ -1533,20 +1570,20 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
         for (auto const& calendar_key : locale_data.calendars) {
             auto const& calendar = calendars.find(calendar_key)->value;
 
+            generator.set("calendar"sv, String::number(calendar.calendar));
+            generator.set("date_formats"sv, String::number(calendar.date_formats));
+            generator.set("time_formats"sv, String::number(calendar.time_formats));
+            generator.set("date_time_formats"sv, String::number(calendar.date_time_formats));
             generator.set("formats", format_name(calendar_key, "formats"sv));
             generator.set("default_range_format", String::number(calendar.default_range_format));
             generator.set("range_formats", format_name(calendar_key, "range_formats"sv));
             generator.set("range12_formats", format_name(calendar_key, "range12_formats"sv));
-            generator.set("calendar"sv, String::number(calendar.calendar));
+
             generator.append(R"~~~(
     { @calendar@, )~~~");
 
-            append_calendar_format(calendar.date_formats);
-            generator.append(" ");
-            append_calendar_format(calendar.time_formats);
-            generator.append(" ");
-            append_calendar_format(calendar.date_time_formats);
-            generator.append(" @formats@.span(), @default_range_format@, @range_formats@.span(), @range12_formats@.span(), {");
+            generator.append("@date_formats@, @time_formats@, @date_time_formats@, @formats@.span(), ");
+            generator.append("@default_range_format@, @range_formats@.span(), @range12_formats@.span(), {");
 
             bool first = true;
             for (auto const& symbols_name : symbols_names) {
@@ -1692,22 +1729,28 @@ static CalendarData const* find_calendar_data(StringView locale, StringView cale
 
 Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr)
-        return data->date_formats.to_unicode_calendar_format();
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
+        auto const& formats = s_calendar_formats.at(data->date_formats);
+        return formats.to_unicode_calendar_format();
+    }
     return {};
 }
 
 Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr)
-        return data->time_formats.to_unicode_calendar_format();
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
+        auto const& formats = s_calendar_formats.at(data->time_formats);
+        return formats.to_unicode_calendar_format();
+    }
     return {};
 }
 
 Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr)
-        return data->date_time_formats.to_unicode_calendar_format();
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
+        auto const& formats = s_calendar_formats.at(data->date_time_formats);
+        return formats.to_unicode_calendar_format();
+    }
     return {};
 }
 
