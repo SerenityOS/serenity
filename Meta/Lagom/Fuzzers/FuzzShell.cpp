@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/StringView.h>
 #include <Shell/Shell.h>
 #include <stddef.h>
@@ -13,6 +14,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     auto source = StringView(static_cast<const unsigned char*>(data), size);
     Shell::Parser parser(source);
-    (void)parser.parse();
+    discard(parser.parse());
     return 0;
 }

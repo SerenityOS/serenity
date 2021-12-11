@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibPDF/Document.h>
 #include <stdint.h>
 
@@ -15,7 +16,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (doc) {
         auto pages = doc->get_page_count();
         for (size_t i = 0; i < pages; ++i) {
-            (void)doc->get_page(i);
+            discard(doc->get_page(i));
         }
     }
 
