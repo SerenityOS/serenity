@@ -163,6 +163,12 @@ int sigsuspend(const sigset_t* set)
     return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigwaitinfo.html
+int sigwaitinfo(sigset_t const* set, siginfo_t* info)
+{
+    return sigtimedwait(set, info, nullptr);
+}
+
 int sigtimedwait(sigset_t const* set, siginfo_t* info, struct timespec const* timeout)
 {
     int rc = syscall(Syscall::SC_sigtimedwait, set, info, timeout);
