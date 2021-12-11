@@ -637,6 +637,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
     m_pending_signals |= 1 << (signal - 1);
     m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
+    m_signal_blocker_set.unblock_all_blockers_whose_conditions_are_met();
 
     if (!has_unmasked_pending_signals())
         return;
