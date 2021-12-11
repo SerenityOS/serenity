@@ -46,10 +46,10 @@ index a75b44ee4..6fab7c3ca 100644
 +
  ; This comment is to ensure we retain the blank line above.
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 357b0bed0..18d099584 100644
+index 357b0bed0..151d93312 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -686,6 +686,12 @@ x86_cpus="generic intel"
+@@ -686,6 +686,13 @@ x86_cpus="generic intel"
  
  # Common parts for widely ported systems.
  case ${target} in
@@ -58,11 +58,12 @@ index 357b0bed0..18d099584 100644
 +  gnu_ld=yes
 +  default_use_cxa_atexit=yes
 +  extra_options="${extra_options} serenity.opt"
++  tmake_file="t-slibgcc"
 +  ;;
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1084,6 +1090,18 @@ case ${target} in
+@@ -1084,6 +1091,18 @@ case ${target} in
  esac
  
  case ${target} in
@@ -169,10 +170,10 @@ index 14a01fe71..3f8e44288 100644
  /* This allows for a pagesize of 16384, which we have on Darwin20, but should
 diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
 new file mode 100644
-index 000000000..d57aacca9
+index 000000000..dc2f5361e
 --- /dev/null
 +++ b/gcc/config/serenity.h
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,47 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -196,7 +197,7 @@ index 000000000..d57aacca9
 +#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
-+#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:%{!nostdlib:%{!nodefaultlibs:-lgcc_s}} -dynamic-linker /usr/lib/Loader.so}}"
++#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}"
 +
 +#undef CC1_SPEC
 +#define CC1_SPEC "-ftls-model=initial-exec %{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}} -fno-semantic-interposition"
@@ -206,6 +207,9 @@ index 000000000..d57aacca9
 +
 +#undef CPP_SPEC
 +#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
++
++/* Use --as-needed -lgcc_s for eh support. */
++#define USE_LD_AS_NEEDED 1
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
