@@ -674,9 +674,9 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
     SpinlockLocker lock(g_scheduler_lock);
     auto previous_signal_mask = m_signal_mask;
     if (block)
-        m_signal_mask &= ~signal_set;
-    else
         m_signal_mask |= signal_set;
+    else
+        m_signal_mask &= ~signal_set;
     m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
     return previous_signal_mask;
 }
