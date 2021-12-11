@@ -524,7 +524,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         property = {};
 
     auto* current_thread = Thread::current();
-    current_thread->clear_signals();
+    current_thread->reset_signals_for_exec();
 
     clear_futex_queues_on_exec();
 
