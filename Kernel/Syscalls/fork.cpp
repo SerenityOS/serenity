@@ -46,6 +46,10 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     // A child created via fork(2) inherits a copy of its parent's signal mask
     child_first_thread->update_signal_mask(Thread::current()->signal_mask());
 
+    // A child process created via fork(2) inherits a copy of its parent's alternate signal stack settings.
+    child_first_thread->m_alternative_signal_stack = Thread::current()->m_alternative_signal_stack;
+    child_first_thread->m_alternative_signal_stack_size = Thread::current()->m_alternative_signal_stack_size;
+
 #if ARCH(I386)
     auto& child_regs = child_first_thread->m_regs;
     child_regs.eax = 0; // fork() returns 0 in the child :^)
