@@ -146,10 +146,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     remote_process.update();
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     return app->exec();
 }
