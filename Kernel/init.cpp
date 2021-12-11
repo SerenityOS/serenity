@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/BootInfo.h>
@@ -228,7 +229,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     {
         RefPtr<Thread> init_stage2_thread;
-        (void)Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
+        discard(Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No));
         // We need to make sure we drop the reference for init_stage2_thread
         // before calling into Scheduler::start, otherwise we will have a
         // dangling Thread that never gets cleaned up
@@ -294,10 +295,10 @@ void init_stage2(void*)
     VirtualFileSystem::initialize();
 
     if (!get_serial_debug())
-        (void)SerialDevice::must_create(0).leak_ref();
-    (void)SerialDevice::must_create(1).leak_ref();
-    (void)SerialDevice::must_create(2).leak_ref();
-    (void)SerialDevice::must_create(3).leak_ref();
+        discard(SerialDevice::must_create(0).leak_ref());
+    discard(SerialDevice::must_create(1).leak_ref());
+    discard(SerialDevice::must_create(2).leak_ref());
+    discard(SerialDevice::must_create(3).leak_ref());
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
@@ -319,15 +320,15 @@ void init_stage2(void*)
     Syscall::initialize();
 
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    (void)KCOVDevice::must_create().leak_ref();
+    discard(KCOVDevice::must_create().leak_ref());
 #endif
-    (void)MemoryDevice::must_create().leak_ref();
-    (void)ZeroDevice::must_create().leak_ref();
-    (void)FullDevice::must_create().leak_ref();
-    (void)RandomDevice::must_create().leak_ref();
+    discard(MemoryDevice::must_create().leak_ref());
+    discard(ZeroDevice::must_create().leak_ref());
+    discard(FullDevice::must_create().leak_ref());
+    discard(RandomDevice::must_create().leak_ref());
     PTYMultiplexer::initialize();
 
-    (void)SB16::try_detect_and_create();
+    discard(SB16::try_detect_and_create());
     AC97::detect();
 
     StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());

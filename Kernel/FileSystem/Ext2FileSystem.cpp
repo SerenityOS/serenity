@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/HashMap.h>
 #include <AK/MemoryStream.h>
 #include <AK/StdLibExtras.h>
@@ -711,7 +712,7 @@ Ext2FSInode::~Ext2FSInode()
 {
     if (m_raw_inode.i_links_count == 0) {
         // Alas, we have nowhere to propagate any errors that occur here.
-        (void)fs().free_inode(*this);
+        discard(fs().free_inode(*this));
     }
 }
 

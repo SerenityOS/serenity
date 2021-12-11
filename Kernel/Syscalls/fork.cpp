@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Memory/Region.h>
@@ -125,7 +126,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     auto child_pid = child->pid().value();
 
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    (void)child.leak_ref();
+    discard(child.leak_ref());
 
     return child_pid;
 }

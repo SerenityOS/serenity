@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
@@ -881,7 +882,7 @@ ErrorOr<void> Process::require_promise(Pledge promise)
 
     dbgln("Has not pledged {}", to_string(promise));
     Thread::current()->set_promise_violation_pending(true);
-    (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
+    discard(try_set_coredump_property("pledge_violation"sv, to_string(promise)));
     return EPROMISEVIOLATION;
 }
 

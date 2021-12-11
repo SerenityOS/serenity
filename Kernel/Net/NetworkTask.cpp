@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
@@ -46,7 +47,7 @@ void NetworkTask::spawn()
     auto name = KString::try_create("NetworkTask");
     if (name.is_error())
         TODO();
-    (void)Process::create_kernel_process(thread, name.release_value(), NetworkTask_main, nullptr);
+    discard(Process::create_kernel_process(thread, name.release_value(), NetworkTask_main, nullptr));
     network_task = thread;
 }
 
@@ -440,7 +441,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         return;
     case TCPSocket::State::TimeWait:
         dbgln("handle_tcp: unexpected flags in TimeWait state");
-        (void)socket->send_tcp_packet(TCPFlags::RST);
+        discard(socket->send_tcp_packet(TCPFlags::RST));
         socket->set_state(TCPSocket::State::Closed);
         return;
     case TCPSocket::State::Listen:
@@ -472,12 +473,12 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_ack(true);
+            discard(socket->send_ack(true));
             socket->set_state(TCPSocket::State::SynReceived);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_ack(true);
+            discard(socket->send_ack(true));
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
@@ -496,7 +497,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in SynSent state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
@@ -511,7 +512,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             case TCPSocket::Direction::Incoming:
                 if (!socket->has_originator()) {
                     dbgln("handle_tcp: connection doesn't have an originating socket; maybe it went away?");
-                    (void)socket->send_tcp_packet(TCPFlags::RST);
+                    discard(socket->send_tcp_packet(TCPFlags::RST));
                     socket->set_state(TCPSocket::State::Closed);
                     return;
                 }
@@ -527,7 +528,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
                 return;
             default:
                 dbgln("handle_tcp: got ACK in SynReceived state but direction is invalid ({})", TCPSocket::to_string(socket->direction()));
-                (void)socket->send_tcp_packet(TCPFlags::RST);
+                discard(socket->send_tcp_packet(TCPFlags::RST));
                 socket->set_state(TCPSocket::State::Closed);
                 return;
             }
@@ -538,7 +539,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in SynReceived state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -546,7 +547,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
         switch (tcp_packet.flags()) {
         default:
             dbgln("handle_tcp: unexpected flags in CloseWait state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -558,7 +559,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in LastAck state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -574,7 +575,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in FinWait1 state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -589,7 +590,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in FinWait2 state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -601,7 +602,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             return;
         default:
             dbgln("handle_tcp: unexpected flags in Closing state ({:x})", tcp_packet.flags());
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            discard(socket->send_tcp_packet(TCPFlags::RST));
             socket->set_state(TCPSocket::State::Closed);
             return;
         }

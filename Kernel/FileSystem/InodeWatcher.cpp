@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Memory.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
@@ -19,7 +20,7 @@ ErrorOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::try_create()
 
 InodeWatcher::~InodeWatcher()
 {
-    (void)close();
+    discard(close());
 }
 
 bool InodeWatcher::can_read(const OpenFileDescription&, u64) const

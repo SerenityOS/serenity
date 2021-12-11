@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/MemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
@@ -56,7 +57,7 @@ OpenFileDescription::~OpenFileDescription()
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     // FIXME: Should this error path be observed somehow?
-    (void)m_file->close();
+    discard(m_file->close());
     if (m_inode)
         m_inode->detach(*this);
 

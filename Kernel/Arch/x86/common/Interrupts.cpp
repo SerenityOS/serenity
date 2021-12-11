@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
 
@@ -395,14 +396,14 @@ void page_fault_handler(TrapFrame* trap)
             if (current_process.is_user_process()) {
                 auto fault_address_string = KString::formatted("{:p}", fault_address);
                 auto fault_address_view = fault_address_string.is_error() ? ""sv : fault_address_string.value()->view();
-                (void)current_process.try_set_coredump_property("fault_address"sv, fault_address_view);
-                (void)current_process.try_set_coredump_property("fault_type"sv, fault.type() == PageFault::Type::PageNotPresent ? "NotPresent"sv : "ProtectionViolation"sv);
+                discard(current_process.try_set_coredump_property("fault_address"sv, fault_address_view));
+                discard(current_process.try_set_coredump_property("fault_type"sv, fault.type() == PageFault::Type::PageNotPresent ? "NotPresent"sv : "ProtectionViolation"sv));
                 StringView fault_access;
                 if (fault.is_instruction_fetch())
                     fault_access = "Execute"sv;
                 else
                     fault_access = fault.access() == PageFault::Access::Read ? "Read"sv : "Write"sv;
-                (void)current_process.try_set_coredump_property("fault_access"sv, fault_access);
+                discard(current_process.try_set_coredump_property("fault_access"sv, fault_access));
             }
         }
 

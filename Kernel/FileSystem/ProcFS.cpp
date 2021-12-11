@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Singleton.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
@@ -442,7 +443,7 @@ void ProcFSProcessPropertyInode::did_seek(OpenFileDescription& description, off_
 {
     if (offset != 0)
         return;
-    (void)refresh_data(description);
+    discard(refresh_data(description));
 }
 
 static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessSubDirectory parent_sub_directory_type, SegmentedProcFSIndex::MainProcessProperty main_property)

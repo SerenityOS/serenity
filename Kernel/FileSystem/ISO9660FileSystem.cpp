@@ -6,6 +6,7 @@
 
 #include "ISO9660FileSystem.h"
 #include <AK/CharacterTypes.h>
+#include <AK/Discard.h>
 #include <AK/Endian.h>
 #include <AK/HashFunctions.h>
 #include <AK/NonnullRefPtr.h>
@@ -39,7 +40,7 @@ public:
         , m_current_header(&header)
     {
         // FIXME: Panic or alternative method?
-        (void)read_directory_contents();
+        discard(read_directory_contents());
         get_header();
     }
 

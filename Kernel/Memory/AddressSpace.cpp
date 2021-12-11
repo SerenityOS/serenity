@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -205,7 +206,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
 
 void AddressSpace::deallocate_region(Region& region)
 {
-    (void)take_region(region);
+    discard(take_region(region));
 }
 
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)

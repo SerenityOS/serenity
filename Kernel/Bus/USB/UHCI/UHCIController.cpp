@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Platform.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
@@ -467,14 +468,14 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 ErrorOr<void> UHCIController::spawn_port_process()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI hotplug")), [&] {
+    discard(Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI hotplug")), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
 
-            (void)Thread::current()->sleep(Time::from_seconds(1));
+            discard(Thread::current()->sleep(Time::from_seconds(1)));
         }
-    });
+    }));
     return {};
 }
 

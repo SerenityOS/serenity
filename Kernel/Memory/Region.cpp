@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/x86/PageFault.h>
@@ -44,7 +45,7 @@ Region::~Region()
 {
     if (is_writable() && vmobject().is_shared_inode()) {
         // FIXME: This is very aggressive. Find a way to do less work!
-        (void)static_cast<SharedInodeVMObject&>(vmobject()).sync();
+        discard(static_cast<SharedInodeVMObject&>(vmobject()).sync());
     }
 
     m_vmobject->remove_region(*this);

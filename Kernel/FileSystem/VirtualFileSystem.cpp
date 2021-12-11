@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/GenericLexer.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
@@ -314,7 +315,7 @@ ErrorOr<void> VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, 
 
     auto basename = KLexicalPath::basename(path);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
-    (void)TRY(parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid()));
+    discard(TRY(parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid())));
     return {};
 }
 
@@ -380,7 +381,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
 
     auto basename = KLexicalPath::basename(path);
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::mkdir: '{}' in {}", basename, parent_inode.identifier());
-    (void)TRY(parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process.euid(), current_process.egid()));
+    discard(TRY(parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process.euid(), current_process.egid())));
     return {};
 }
 

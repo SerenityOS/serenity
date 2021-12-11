@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Panic.h>
@@ -44,7 +45,7 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     s_the = new CommandLine(s_cmd_line);
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
     // Validate the modes the user passed in.
-    (void)s_the->panic_mode(Validate::Yes);
+    discard(s_the->panic_mode(Validate::Yes));
     if (s_the->contains("boot_mode"sv)) {
         // I know, we don't do legacy, but even though I eliminated 'boot_mode' from the codebase, there
         // is a good chance that someone's still using it. Let's be nice and tell them where to look.

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
@@ -40,14 +41,14 @@ void Inode::sync_all()
 
     for (auto& inode : inodes) {
         VERIFY(inode.is_metadata_dirty());
-        (void)inode.flush_metadata();
+        discard(inode.flush_metadata());
     }
 }
 
 void Inode::sync()
 {
     if (is_metadata_dirty())
-        (void)flush_metadata();
+        discard(flush_metadata());
     fs().flush_writes();
 }
 
@@ -102,7 +103,7 @@ void Inode::will_be_destroyed()
 {
     MutexLocker locker(m_inode_lock);
     if (m_metadata_dirty)
-        (void)flush_metadata();
+        discard(flush_metadata());
 }
 
 ErrorOr<void> Inode::set_atime(time_t)

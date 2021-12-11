@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
@@ -104,7 +105,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
             StringBuilder builder;
             builder.appendff("{}", count);
             // FIXME: Propagate errors from callback.
-            (void)callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
+            discard(callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK }));
             count++;
         });
     });

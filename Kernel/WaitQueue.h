@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
+#include <AK/Discard.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Thread.h>
 
@@ -27,7 +28,7 @@ public:
     template<class... Args>
     void wait_forever(Args&&... args)
     {
-        (void)Thread::current()->block<Thread::WaitQueueBlocker>({}, *this, forward<Args>(args)...);
+        discard(Thread::current()->block<Thread::WaitQueueBlocker>({}, *this, forward<Args>(args)...));
     }
 
 protected:

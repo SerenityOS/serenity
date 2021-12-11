@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/Process.h>
 
@@ -179,7 +180,7 @@ private:
     {
         VERIFY(!m_have_been_built);
         // FIXME: Handle append failure.
-        (void)m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
+        discard(m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number)));
         return *this;
     }
 
@@ -266,7 +267,7 @@ Plan9FS::Message& Plan9FS::Message::operator<<(StringView string)
 {
     *this << static_cast<u16>(string.length());
     // FIXME: Handle append failure.
-    (void)m_builder.append(string);
+    discard(m_builder.append(string));
     return *this;
 }
 
@@ -274,7 +275,7 @@ void Plan9FS::Message::append_data(StringView data)
 {
     *this << static_cast<u32>(data.length());
     // FIXME: Handle append failure.
-    (void)m_builder.append(data);
+    discard(m_builder.append(data));
 }
 
 Plan9FS::Message::Decoder& Plan9FS::Message::Decoder::operator>>(u8& number)
@@ -658,10 +659,10 @@ void Plan9FS::ensure_thread()
         auto process_name = KString::try_create("Plan9FS");
         if (process_name.is_error())
             TODO();
-        (void)Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {
+        discard(Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {
             thread_main();
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
-        });
+        }));
     }
 }
 
