@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/MemMem.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>

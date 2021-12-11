@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/String.h>
 #include <Kernel/Devices/KCOVInstance.h>
 
 namespace Kernel {

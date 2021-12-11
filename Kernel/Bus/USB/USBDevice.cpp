@@ -5,7 +5,6 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBController.h>

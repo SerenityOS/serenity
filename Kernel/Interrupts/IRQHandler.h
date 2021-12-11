@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IRQController.h>
