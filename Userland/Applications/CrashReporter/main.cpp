@@ -218,8 +218,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         termination_signal = coredump->process_termination_signal();
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath proc exec"));
-
     TRY(Core::System::unveil(executable_path.characters(), "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
