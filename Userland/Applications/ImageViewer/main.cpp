@@ -266,12 +266,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     (void)TRY(main_toolbar->try_add_action(open_action));
     (void)TRY(main_toolbar->try_add_action(delete_action));
-    (void)TRY(main_toolbar->try_add_separator());
+    TRY(main_toolbar->try_add_separator());
     (void)TRY(main_toolbar->try_add_action(go_first_action));
     (void)TRY(main_toolbar->try_add_action(go_back_action));
     (void)TRY(main_toolbar->try_add_action(go_forward_action));
     (void)TRY(main_toolbar->try_add_action(go_last_action));
-    (void)TRY(main_toolbar->try_add_separator());
+    TRY(main_toolbar->try_add_separator());
     (void)TRY(main_toolbar->try_add_action(zoom_in_action));
     (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
     (void)TRY(main_toolbar->try_add_action(zoom_out_action));
