@@ -638,6 +638,9 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     m_pending_signals |= 1 << (signal - 1);
     m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
 
+    if (!has_unmasked_pending_signals())
+        return;
+
     if (m_state == Stopped) {
         SpinlockLocker lock(m_lock);
         if (pending_signals_for_state() != 0) {
