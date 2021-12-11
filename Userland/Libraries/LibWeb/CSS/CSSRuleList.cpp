@@ -5,6 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <AK/Unused.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
@@ -68,7 +69,7 @@ DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     auto& old_rule = m_rules[index];
 
     // FIXME: 4. If old rule is an @namespace at-rule, and list contains anything other than @import at-rules, and @namespace at-rules, throw an InvalidStateError exception.
-    (void)old_rule;
+    unused(old_rule);
 
     // 5. Remove rule old rule from list at the zero-indexed position index.
     m_rules.remove(index);

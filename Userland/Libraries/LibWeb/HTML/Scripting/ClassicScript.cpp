@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Unused.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -66,7 +67,7 @@ JS::Value ClassicScript::run(RethrowErrors rethrow_errors)
     }
 
     dbgln("ClassicScript: Running script {}", filename());
-    (void)rethrow_errors;
+    unused(rethrow_errors);
 
     auto timer = Core::ElapsedTimer::start_new();
 

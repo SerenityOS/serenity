@@ -15,6 +15,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Unused.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibRegex/Regex.h>
 
@@ -1046,6 +1047,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
     if (match(TokenType::Extends)) {
         consume();
         auto [expression, should_continue_parsing] = parse_primary_expression();
+        unused(should_continue_parsing);
 
         // Basically a (much) simplified parse_secondary_expression().
         for (;;) {
@@ -1063,7 +1065,6 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
 
         super_class = move(expression);
-        (void)should_continue_parsing;
     }
 
     consume(TokenType::CurlyOpen);

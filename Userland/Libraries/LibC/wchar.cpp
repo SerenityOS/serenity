@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/UnicodeUtils.h>
+#include <AK/Unused.h>
 #include <errno.h>
 #include <string.h>
 #include <wchar.h>
@@ -689,10 +690,10 @@ size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsftime.html
 size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, wchar_t const* __restrict format, const struct tm* __restrict timeptr)
 {
-    (void)wcs;
-    (void)maxsize;
-    (void)format;
-    (void)timeptr;
+    unused(wcs);
+    unused(maxsize);
+    unused(format);
+    unused(timeptr);
     dbgln("FIXME: Implement wcsftime()");
     TODO();
 }

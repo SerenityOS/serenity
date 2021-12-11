@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Unused.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
@@ -81,7 +82,7 @@ static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::
     sheet->set_title(move(title));
     sheet->set_alternate(alternate);
     sheet->set_origin_clean(origin_clean);
-    (void)location;
+    unused(location);
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
     add_a_css_style_sheet(document, move(sheet));

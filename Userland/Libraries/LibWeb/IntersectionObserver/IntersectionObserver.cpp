@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Unused.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 
@@ -13,9 +14,9 @@ namespace Web::IntersectionObserver {
 NonnullRefPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(JS::GlobalObject& global_object, JS::Value callback, IntersectionObserverInit const& options)
 {
     // FIXME: Implement
-    (void)global_object;
-    (void)callback;
-    (void)options;
+    unused(global_object);
+    unused(callback);
+    unused(options);
 
     return adopt_ref(*new IntersectionObserver);
 }
@@ -24,14 +25,14 @@ NonnullRefPtr<IntersectionObserver> IntersectionObserver::create_with_global_obj
 void IntersectionObserver::observe(DOM::Element& target)
 {
     // FIXME: Implement
-    (void)target;
+    unused(target);
 }
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-unobserve
 void IntersectionObserver::unobserve(DOM::Element& target)
 {
     // FIXME: Implement
-    (void)target;
+    unused(target);
 }
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-disconnect

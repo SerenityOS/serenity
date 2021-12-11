@@ -9,6 +9,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <AK/Unused.h>
 #include <bits/stdio_file_implementation.h>
 #include <errno.h>
 #include <stdio.h>
@@ -243,9 +244,9 @@ int wscanf(wchar_t const* __restrict format, ...)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfwscanf.html
 int vfwscanf(FILE* __restrict stream, wchar_t const* __restrict format, va_list arg)
 {
-    (void)stream;
-    (void)format;
-    (void)arg;
+    unused(stream);
+    unused(format);
+    unused(arg);
     dbgln("FIXME: Implement vfwscanf()");
     TODO();
 }
@@ -253,9 +254,9 @@ int vfwscanf(FILE* __restrict stream, wchar_t const* __restrict format, va_list 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vswscanf.html
 int vswscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, va_list arg)
 {
-    (void)ws;
-    (void)format;
-    (void)arg;
+    unused(ws);
+    unused(format);
+    unused(arg);
     dbgln("FIXME: Implement vswscanf()");
     TODO();
 }
@@ -263,8 +264,8 @@ int vswscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, va_
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vwscanf.html
 int vwscanf(wchar_t const* __restrict format, va_list arg)
 {
-    (void)format;
-    (void)arg;
+    unused(format);
+    unused(arg);
     dbgln("FIXME: Implement vwscanf()");
     TODO();
 }

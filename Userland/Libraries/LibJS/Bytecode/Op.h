@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Unused.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
@@ -494,6 +495,7 @@ public:
         : Instruction(Type::NewClass)
         , m_class_expression(class_expression)
     {
+        unused(m_class_expression);
     }
 
     void execute_impl(Bytecode::Interpreter&) const;

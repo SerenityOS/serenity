@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
+#include <AK/Unused.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDebug/DebugInfo.h>
@@ -88,6 +89,7 @@ static bool handle_disassemble_command(const String& command, FlatPtr first_inst
 
 static bool handle_backtrace_command(const PtraceRegisters& regs)
 {
+    maybe_unused(regs);
 #if ARCH(I386)
     auto ebp_val = regs.ebp;
     auto eip_val = regs.eip;
@@ -107,7 +109,6 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
         ebp_val = (u32)next_ebp.value();
     }
 #else
-    (void)regs;
     TODO();
 #endif
     return true;

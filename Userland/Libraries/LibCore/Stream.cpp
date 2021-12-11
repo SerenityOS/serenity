@@ -6,6 +6,7 @@
  */
 
 #include "Stream.h"
+#include <AK/Unused.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -484,20 +485,20 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd)
 
 ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
+    maybe_unused(flags);
 #ifdef __serenity__
     return Core::System::recvfd(m_helper.fd(), flags);
 #else
-    (void)flags;
     return Error::from_string_literal("File descriptor passing not supported on this platform");
 #endif
 }
 
 ErrorOr<void> LocalSocket::send_fd(int fd)
 {
+    maybe_unused(fd);
 #ifdef __serenity__
     return Core::System::sendfd(m_helper.fd(), fd);
 #else
-    (void)fd;
     return Error::from_string_literal("File descriptor passing not supported on this platform");
 #endif
 }

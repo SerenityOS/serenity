@@ -616,7 +616,6 @@ void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void NewClass::execute_impl(Bytecode::Interpreter&) const
 {
-    (void)m_class_expression;
     TODO();
 }
 

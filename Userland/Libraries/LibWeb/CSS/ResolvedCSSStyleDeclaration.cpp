@@ -6,6 +6,7 @@
  */
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/Unused.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -29,7 +30,7 @@ size_t ResolvedCSSStyleDeclaration::length() const
 
 String ResolvedCSSStyleDeclaration::item(size_t index) const
 {
-    (void)index;
+    unused(index);
     return {};
 }
 

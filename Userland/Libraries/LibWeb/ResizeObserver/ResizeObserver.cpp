@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Unused.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/ResizeObserver/ResizeObserver.h>
 
@@ -13,8 +14,8 @@ namespace Web::ResizeObserver {
 NonnullRefPtr<ResizeObserver> ResizeObserver::create_with_global_object(JS::GlobalObject& global_object, JS::Value callback)
 {
     // FIXME: Implement
-    (void)global_object;
-    (void)callback;
+    unused(global_object);
+    unused(callback);
     return adopt_ref(*new ResizeObserver);
 }
 
@@ -22,15 +23,15 @@ NonnullRefPtr<ResizeObserver> ResizeObserver::create_with_global_object(JS::Glob
 void ResizeObserver::observe(DOM::Element& target, ResizeObserverOptions options)
 {
     // FIXME: Implement
-    (void)target;
-    (void)options;
+    unused(target);
+    unused(options);
 }
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-unobserve
 void ResizeObserver::unobserve(DOM::Element& target)
 {
     // FIXME: Implement
-    (void)target;
+    unused(target);
 }
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-disconnect

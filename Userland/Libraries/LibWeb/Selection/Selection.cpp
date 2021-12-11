@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Unused.h>
 #include <LibWeb/Selection/Selection.h>
 
 namespace Web::Selection {
@@ -50,7 +51,7 @@ String Selection::type() const
 
 NonnullRefPtr<DOM::Range> Selection::get_range_at(unsigned index)
 {
-    (void)index;
+    unused(index);
     TODO();
 }
 
@@ -76,13 +77,13 @@ void Selection::empty()
 
 void Selection::collapse(DOM::Node*, unsigned offset)
 {
-    (void)offset;
+    unused(offset);
     TODO();
 }
 
 void Selection::set_position(DOM::Node*, unsigned offset)
 {
-    (void)offset;
+    unused(offset);
     TODO();
 }
 
@@ -98,16 +99,16 @@ void Selection::collapse_to_end()
 
 void Selection::extend(DOM::Node&, unsigned offset)
 {
-    (void)offset;
+    unused(offset);
     TODO();
 }
 
 void Selection::set_base_and_extent(DOM::Node& anchor_node, unsigned anchor_offset, DOM::Node& focus_node, unsigned focus_offset)
 {
-    (void)anchor_node;
-    (void)anchor_offset;
-    (void)focus_node;
-    (void)focus_offset;
+    unused(anchor_node);
+    unused(anchor_offset);
+    unused(focus_node);
+    unused(focus_offset);
     TODO();
 }
 
@@ -123,7 +124,7 @@ void Selection::delete_from_document()
 
 bool Selection::contains_node(DOM::Node&, bool allow_partial_containment) const
 {
-    (void)allow_partial_containment;
+    unused(allow_partial_containment);
     TODO();
 }
 

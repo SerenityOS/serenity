@@ -7,6 +7,7 @@
 #include <AK/LEB128.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>
+#include <AK/Unused.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -973,42 +974,42 @@ ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(In
 ParseResult<ElementSection::SegmentType2> ElementSection::SegmentType2::parse(InputStream& stream)
 {
     dbgln("Type 2");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 
 ParseResult<ElementSection::SegmentType3> ElementSection::SegmentType3::parse(InputStream& stream)
 {
     dbgln("Type 3");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 
 ParseResult<ElementSection::SegmentType4> ElementSection::SegmentType4::parse(InputStream& stream)
 {
     dbgln("Type 4");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 
 ParseResult<ElementSection::SegmentType5> ElementSection::SegmentType5::parse(InputStream& stream)
 {
     dbgln("Type 5");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 
 ParseResult<ElementSection::SegmentType6> ElementSection::SegmentType6::parse(InputStream& stream)
 {
     dbgln("Type 6");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 
 ParseResult<ElementSection::SegmentType7> ElementSection::SegmentType7::parse(InputStream& stream)
 {
     dbgln("Type 7");
-    (void)stream;
+    unused(stream);
     return ParseError::NotImplemented;
 }
 

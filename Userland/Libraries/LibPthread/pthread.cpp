@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Unused.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
 #include <bits/pthread_integration.h>
@@ -650,7 +651,7 @@ constexpr static u32 writer_intent_mask = 1 << 16;
 int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, const pthread_rwlockattr_t* __restrict attr)
 {
     // Just ignore the attributes. use defaults for now.
-    (void)attr;
+    unused(attr);
 
     // No readers, no writer, not locked at all.
     *lockp = 0;

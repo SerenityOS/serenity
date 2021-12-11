@@ -8,6 +8,7 @@
 #include "AudioPlayerLoop.h"
 
 #include "TrackManager.h"
+#include <AK/Unused.h>
 
 // Converts Piano-internal data to an Audio::Buffer that AudioServer receives
 static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
@@ -29,7 +30,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
 {
     m_audio_client = Audio::ClientConnection::try_create().release_value_but_fixme_should_propagate_errors();
     m_audio_client->on_finish_playing_buffer = [this](int buffer_id) {
-        (void)buffer_id;
+        unused(buffer_id);
         enqueue_audio();
     };
 
