@@ -605,12 +605,12 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
     // 2. If x is NaN, then
     if (Value(number).is_nan()) {
         // a. Let n be an implementation- and locale-dependent (ILD) String value indicating the NaN value.
-        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "nan"sv).value_or("NaN"sv);
+        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::NaN).value_or("NaN"sv);
     }
     // 3. Else if x is a non-finite Number, then
     else if (!Value(number).is_finite_number()) {
         // a. Let n be an ILD String value indicating infinity.
-        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "infinity"sv).value_or("infinity"sv);
+        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
     }
     // 4. Else,
     else {
@@ -669,7 +669,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // d. Else if p is equal to "plusSign", then
         else if (part == "plusSign"sv) {
             // i. Let plusSignSymbol be the ILND String representing the plus sign.
-            auto plus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "plusSign"sv).value_or("+"sv);
+            auto plus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::PlusSign).value_or("+"sv);
             // ii. Append a new Record { [[Type]]: "plusSign", [[Value]]: plusSignSymbol } as the last element of result.
             result.append({ "plusSign"sv, plus_sign_symbol });
         }
@@ -677,7 +677,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // e. Else if p is equal to "minusSign", then
         else if (part == "minusSign"sv) {
             // i. Let minusSignSymbol be the ILND String representing the minus sign.
-            auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "minusSign"sv).value_or("-"sv);
+            auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::MinusSign).value_or("-"sv);
             // ii. Append a new Record { [[Type]]: "minusSign", [[Value]]: minusSignSymbol } as the last element of result.
             result.append({ "minusSign"sv, minus_sign_symbol });
         }
@@ -685,7 +685,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // f. Else if p is equal to "percentSign" and numberFormat.[[Style]] is "percent", then
         else if ((part == "percentSign"sv) && (number_format.style() == NumberFormat::Style::Percent)) {
             // i. Let percentSignSymbol be the ILND String representing the percent sign.
-            auto percent_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "percentSign"sv).value_or("%"sv);
+            auto percent_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::PercentSign).value_or("%"sv);
             // ii. Append a new Record { [[Type]]: "percentSign", [[Value]]: percentSignSymbol } as the last element of result.
             result.append({ "percentSign"sv, percent_sign_symbol });
         }
@@ -937,7 +937,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 // 6. If the numberFormat.[[UseGrouping]] is true, then
                 if (use_grouping) {
                     // a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
-                    auto group_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "group"sv).value_or(","sv);
+                    auto group_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Group).value_or(","sv);
 
                     // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer.
                     auto groups = separate_integer_into_groups(*grouping_sizes, integer);
@@ -969,7 +969,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 // 8. If fraction is not undefined, then
                 if (fraction.has_value()) {
                     // a. Let decimalSepSymbol be the ILND String representing the decimal separator.
-                    auto decimal_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "decimal"sv).value_or("."sv);
+                    auto decimal_sep_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Decimal).value_or("."sv);
                     // b. Append a new Record { [[Type]]: "decimal", [[Value]]: decimalSepSymbol } as the last element of result.
                     result.append({ "decimal"sv, decimal_sep_symbol });
                     // c. Append a new Record { [[Type]]: "fraction", [[Value]]: fraction } as the last element of result.
@@ -993,7 +993,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
                 // 1. Let scientificSeparator be the ILND String representing the exponent separator.
-                auto scientific_separator = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "exponential"sv).value_or("E"sv);
+                auto scientific_separator = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Exponential).value_or("E"sv);
                 // 2. Append a new Record { [[Type]]: "exponentSeparator", [[Value]]: scientificSeparator } as the last element of result.
                 result.append({ "exponentSeparator"sv, scientific_separator });
             }
@@ -1002,7 +1002,7 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
                 // 1. If exponent < 0, then
                 if (exponent < 0) {
                     // a. Let minusSignSymbol be the ILND String representing the minus sign.
-                    auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), "minusSign"sv).value_or("-"sv);
+                    auto minus_sign_symbol = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::MinusSign).value_or("-"sv);
 
                     // b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
                     result.append({ "exponentMinusSign"sv, minus_sign_symbol });

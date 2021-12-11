@@ -38,6 +38,9 @@ constexpr auto s_number_format_index_type = "u16"sv;
 using NumberFormatListIndexType = u16;
 constexpr auto s_number_format_list_index_type = "u16"sv;
 
+using NumericSymbolListIndexType = u8;
+constexpr auto s_numeric_symbol_list_index_type = "u8"sv;
+
 enum class NumberFormatType {
     Standard,
     Compact,
@@ -135,9 +138,11 @@ struct AK::Traits<NumberFormatList> : public GenericTraits<NumberFormatList> {
     }
 };
 
+using NumericSymbolList = Vector<StringIndexType>;
+
 struct NumberSystem {
     StringIndexType system { 0 };
-    HashMap<String, StringIndexType> symbols {};
+    NumericSymbolListIndexType symbols { 0 };
 
     u8 primary_grouping_size { 0 };
     u8 secondary_grouping_size { 0 };
@@ -171,9 +176,9 @@ struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
     UniqueStorage<NumberFormat, NumberFormatIndexType> unique_formats;
     UniqueStorage<NumberFormatList, NumberFormatListIndexType> unique_format_lists;
+    UniqueStorage<NumericSymbolList, NumericSymbolListIndexType> unique_symbols;
 
     HashMap<String, Locale> locales;
-    Vector<String> numeric_symbols;
     size_t max_identifier_count { 0 };
 };
 
@@ -370,6 +375,26 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
         return locale_data.unique_format_lists.ensure(move(result));
     };
 
+    auto numeric_symbol_from_string = [&](StringView numeric_symbol) -> Optional<Unicode::NumericSymbol> {
+        if (numeric_symbol == "decimal"sv)
+            return Unicode::NumericSymbol::Decimal;
+        if (numeric_symbol == "exponential"sv)
+            return Unicode::NumericSymbol::Exponential;
+        if (numeric_symbol == "group"sv)
+            return Unicode::NumericSymbol::Group;
+        if (numeric_symbol == "infinity"sv)
+            return Unicode::NumericSymbol::Infinity;
+        if (numeric_symbol == "minusSign"sv)
+            return Unicode::NumericSymbol::MinusSign;
+        if (numeric_symbol == "nan"sv)
+            return Unicode::NumericSymbol::NaN;
+        if (numeric_symbol == "percentSign"sv)
+            return Unicode::NumericSymbol::PercentSign;
+        if (numeric_symbol == "plusSign"sv)
+            return Unicode::NumericSymbol::PlusSign;
+        return {};
+    };
+
     locale_numbers_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         constexpr auto symbols_prefix = "symbols-numberSystem-"sv;
         constexpr auto decimal_formats_prefix = "decimalFormats-numberSystem-"sv;
@@ -381,13 +406,21 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, UnicodeLoc
             auto system = key.substring(symbols_prefix.length());
             auto& number_system = ensure_number_system(system);
 
-            value.as_object().for_each_member([&](auto const& symbol, JsonValue const& localization) {
-                auto symbol_index = locale_data.unique_strings.ensure(localization.as_string());
-                number_system.symbols.set(symbol, symbol_index);
+            NumericSymbolList symbols;
 
-                if (!locale_data.numeric_symbols.contains_slow(symbol))
-                    locale_data.numeric_symbols.append(symbol);
+            value.as_object().for_each_member([&](auto const& symbol, JsonValue const& localization) {
+                auto numeric_symbol = numeric_symbol_from_string(symbol);
+                if (!numeric_symbol.has_value())
+                    return;
+
+                if (to_underlying(*numeric_symbol) >= symbols.size())
+                    symbols.resize(to_underlying(*numeric_symbol) + 1);
+
+                auto symbol_index = locale_data.unique_strings.ensure(localization.as_string());
+                symbols[to_underlying(*numeric_symbol)] = symbol_index;
             });
+
+            number_system.symbols = locale_data.unique_symbols.ensure(move(symbols));
         } else if (key.starts_with(decimal_formats_prefix)) {
             auto system = key.substring(decimal_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
@@ -571,18 +604,7 @@ static ErrorOr<void> parse_all_locales(String numbers_path, String units_path, U
     return {};
 }
 
-static String format_identifier(StringView owner, String identifier)
-{
-    identifier = identifier.replace("-"sv, "_"sv, true);
-
-    if (all_of(identifier, is_ascii_digit))
-        return String::formatted("{}_{}", owner[0], identifier);
-    if (is_ascii_lower_alpha(identifier[0]))
-        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
-    return identifier;
-}
-
-static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
+static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -592,19 +614,16 @@ static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& 
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
 
 namespace Unicode {
 )~~~");
 
-    generate_enum(generator, format_identifier, "NumericSymbol"sv, {}, locale_data.numeric_symbols);
-
     generator.append(R"~~~(
 namespace Detail {
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView numeric_symbol);
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol);
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
@@ -626,7 +645,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("string_index_type"sv, s_string_index_type);
     generator.set("number_format_index_type"sv, s_number_format_index_type);
     generator.set("number_format_list_index_type"sv, s_number_format_list_index_type);
-    generator.set("numeric_symbols_size", String::number(locale_data.numeric_symbols.size()));
+    generator.set("numeric_symbol_list_index_type"sv, s_numeric_symbol_list_index_type);
     generator.set("identifier_count", String::number(locale_data.max_identifier_count));
 
     generator.append(R"~~~(
@@ -672,7 +691,7 @@ struct NumberFormat {
 
 struct NumberSystem {
     @string_index_type@ system { 0 };
-    Array<@string_index_type@, @numeric_symbols_size@> symbols {};
+    @numeric_symbol_list_index_type@ symbols { 0 };
 
     u8 primary_grouping_size { 0 };
     u8 secondary_grouping_size { 0 };
@@ -700,6 +719,7 @@ struct Unit {
 
     locale_data.unique_formats.generate(generator, "NumberFormat"sv, "s_number_formats"sv, 10);
     locale_data.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
+    locale_data.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
 
     auto append_number_systems = [&](String name, auto const& number_systems) {
         generator.set("name", name);
@@ -710,6 +730,7 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
 
         for (auto const& number_system : number_systems) {
             generator.set("system"sv, String::number(number_system.value.system));
+            generator.set("symbols"sv, String::number(number_system.value.symbols));
             generator.set("primary_grouping_size"sv, String::number(number_system.value.primary_grouping_size));
             generator.set("secondary_grouping_size"sv, String::number(number_system.value.secondary_grouping_size));
             generator.set("decimal_format", String::number(number_system.value.decimal_format));
@@ -722,16 +743,8 @@ static constexpr Array<NumberSystem, @size@> @name@ { {)~~~");
             generator.set("percent_format", String::number(number_system.value.percent_format));
             generator.set("scientific_format", String::number(number_system.value.scientific_format));
 
-            generator.append(R"~~~(
-    { @system@, {)~~~");
-
-            for (auto const& symbol : locale_data.numeric_symbols) {
-                auto index = number_system.value.symbols.get(symbol).value_or(0);
-                generator.set("index", String::number(index));
-                generator.append(" @index@,");
-            }
-
-            generator.append(" }, @primary_grouping_size@, @secondary_grouping_size@, ");
+            generator.append("\n    { ");
+            generator.append("@system@, @symbols@, @primary_grouping_size@, @secondary_grouping_size@, ");
             generator.append("@decimal_format@, @decimal_long_formats@, @decimal_short_formats@, ");
             generator.append("@currency_format@, @accounting_format@, @currency_unit_formats@, @currency_short_formats@, ");
             generator.append("@percent_format@, @scientific_format@ },");
@@ -767,18 +780,6 @@ static constexpr Array<Unit, @size@> @name@ { {)~~~");
     generate_mapping(generator, locale_data.locales, "NumberSystem"sv, "s_number_systems"sv, "s_number_systems_{}", [&](auto const& name, auto const& value) { append_number_systems(name, value.number_systems); });
     generate_mapping(generator, locale_data.locales, "Unit"sv, "s_units"sv, "s_units_{}", [&](auto const& name, auto const& value) { append_units(name, value.units); });
 
-    auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values) {
-        HashValueMap<String> hashes;
-        hashes.ensure_capacity(values.size());
-
-        for (auto const& value : values)
-            hashes.set(value.hash(), format_identifier(enum_title, value));
-
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
-    };
-
-    append_from_string("NumericSymbol"sv, "numeric_symbol"sv, locale_data.numeric_symbols);
-
     generator.append(R"~~~(
 static NumberSystem const* find_number_system(StringView locale, StringView system)
 {
@@ -797,15 +798,16 @@ static NumberSystem const* find_number_system(StringView locale, StringView syst
     return nullptr;
 }
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol)
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol)
 {
-    auto symbol_value = numeric_symbol_from_string(symbol);
-    if (!symbol_value.has_value())
-        return {};
-
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
-        auto symbol_index = to_underlying(*symbol_value);
-        return s_string_list[number_system->symbols[symbol_index]];
+        auto symbols = s_numeric_symbol_lists.at(number_system->symbols);
+
+        auto symbol_index = to_underlying(symbol);
+        if (symbol_index >= symbols.size())
+            return {};
+
+        return s_string_list[symbols[symbol_index]];
     }
 
     return {};

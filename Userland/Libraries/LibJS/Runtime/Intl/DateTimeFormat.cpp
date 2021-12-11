@@ -1021,7 +1021,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
         // Non-standard, TR-35 requires the decimal separator before injected {fractionalSecondDigits} partitions
         // to adhere to the selected locale. This depends on other generated data, so it is deferred to here.
         else if (part == "decimal"sv) {
-            auto decimal_symbol = Unicode::get_number_system_symbol(data_locale, date_time_format.numbering_system(), "decimal"sv).value_or("."sv);
+            auto decimal_symbol = Unicode::get_number_system_symbol(data_locale, date_time_format.numbering_system(), Unicode::NumericSymbol::Decimal).value_or("."sv);
             result.append({ "literal"sv, decimal_symbol });
         }
 
