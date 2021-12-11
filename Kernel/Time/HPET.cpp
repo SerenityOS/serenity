@@ -46,8 +46,13 @@ enum class TimerConfiguration : u32 {
 };
 
 struct [[gnu::packed]] HPETRegister {
-    volatile u32 low;
-    volatile u32 high;
+    union {
+        volatile u64 full;
+        struct {
+            volatile u32 low;
+            volatile u32 high;
+        };
+    };
 };
 
 struct [[gnu::packed]] TimerStructure {
@@ -87,6 +92,9 @@ static_assert(AssertSize<HPETRegistersBlock, 0x500>());
 
 static u64 read_register_safe64(const HPETRegister& reg)
 {
+#if ARCH(X86_64)
+    return reg.full;
+#else
     // As per 2.4.7 this reads the 64 bit value in a consistent manner
     // using only 32 bit reads
     u32 low, high = reg.high;
@@ -98,6 +106,7 @@ static u64 read_register_safe64(const HPETRegister& reg)
         high = new_high;
     }
     return ((u64)high << 32) | (u64)low;
+#endif
 }
 
 static HPET* s_hpet;
