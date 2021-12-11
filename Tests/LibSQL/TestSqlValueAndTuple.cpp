@@ -6,6 +6,7 @@
 
 #include <unistd.h>
 
+#include <AK/Discard.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Row.h>
 #include <LibSQL/Tuple.h>
@@ -87,7 +88,7 @@ TEST_CASE(text_value_to_other_types)
 TEST_CASE(text_value_to_int_crash)
 {
     SQL::Value v(SQL::SQLType::Text, "Not a valid integer");
-    EXPECT_CRASH("Can't convert 'Not a valid integer' to integer", [&]() { (void) (int) v; return Test::Crash::Failure::DidNotCrash; });
+    EXPECT_CRASH("Can't convert 'Not a valid integer' to integer", [&]() { discard((int) v); return Test::Crash::Failure::DidNotCrash; });
 }
 
 TEST_CASE(serialize_text_value)

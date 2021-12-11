@@ -10,6 +10,7 @@
 #    pragma GCC optimize("O0")
 #endif
 
+#include <AK/Discard.h>
 #include <LibTest/TestCase.h>
 #include <signal.h>
 #include <unistd.h>
@@ -54,6 +55,6 @@ TEST_CASE(success_case)
     res = sigaction(SIGSEGV, &sa, 0);
     EXPECT_EQ(res, 0);
 
-    (void)infinite_recursion(0);
+    discard(infinite_recursion(0));
     FAIL("Infinite recursion finished successfully");
 }

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <LibTest/JavaScriptTestRunner.h>
 
 TEST_ROOT("Userland/Libraries/LibJS/Tests");
@@ -20,7 +21,7 @@ TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
     auto source = TRY(vm.argument(0).to_string(global_object));
     auto parser = JS::Parser(JS::Lexer(source));
-    (void)parser.parse_program();
+    discard(parser.parse_program());
     return JS::Value(!parser.has_errors());
 }
 
