@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/MemoryStream.h>
 #include <AK/Stream.h>
 #include <LibWasm/Types.h>
@@ -14,7 +15,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     ReadonlyBytes bytes { data, size };
     InputMemoryStream stream { bytes };
-    [[maybe_unused]] auto result = Wasm::Module::parse(stream);
+    discard(Wasm::Module::parse(stream));
     stream.handle_any_error();
     return 0;
 }
