@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/Discard.h>
 #include <AK/Format.h>
 #include <AK/String.h>
 #include <stdlib.h>
@@ -240,11 +241,11 @@ static long long cast_ll(double d)
         long long as_ll;
     };
     typedef char assert_double_8bytes[sizeof(double) == 8 ? 1 : -1];
-    [[maybe_unused]] auto double_size = sizeof(assert_double_8bytes);
+    discard(sizeof(assert_double_8bytes));
     typedef char assert_ll_8bytes[sizeof(long long) == 8 ? 1 : -1];
-    [[maybe_unused]] auto longlong_size = sizeof(assert_ll_8bytes);
+    discard(sizeof(assert_ll_8bytes));
     typedef char assert_readable_8bytes[sizeof(readable_t) == 8 ? 1 : -1];
-    [[maybe_unused]] auto readable8_size = sizeof(assert_readable_8bytes);
+    discard(sizeof(assert_readable_8bytes));
     readable_t readable;
     readable.as_double = d;
     return readable.as_ll;
@@ -257,9 +258,9 @@ static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, cons
         unsigned char as_bytes[8];
     };
     typedef char assert_double_8bytes[sizeof(double) == 8 ? 1 : -1];
-    [[maybe_unused]] auto double_size = sizeof(assert_double_8bytes);
+    discard(sizeof(assert_double_8bytes));
     typedef char assert_readable_8bytes[sizeof(readable_t) == 8 ? 1 : -1];
-    [[maybe_unused]] auto readable8_size = sizeof(assert_readable_8bytes);
+    discard(sizeof(assert_readable_8bytes));
     readable_t readable;
     char* endptr = (char*)0x123;
 

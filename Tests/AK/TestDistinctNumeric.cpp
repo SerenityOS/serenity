@@ -236,35 +236,35 @@ TEST_CASE(negative_incr)
 TEST_CASE(negative_cmp)
 {
     BareNumeric a = 12;
-    [[maybe_unused]] auto res = (a < a);
+    discard(a < a);
     // error: static assertion failed: 'a<b' is only available for DistinctNumeric types with 'Cmp'.
 }
 
 TEST_CASE(negative_bool)
 {
     BareNumeric a = 12;
-    [[maybe_unused]] auto res = !a;
+    discard(!a);
     // error: static assertion failed: '!a', 'a&&b', 'a||b' and similar operators are only available for DistinctNumeric types with 'Bool'.
 }
 
 TEST_CASE(negative_flags)
 {
     BareNumeric a = 12;
-    [[maybe_unused]] auto res = (a & a);
+    discard(a & a);
     // error: static assertion failed: 'a&b' is only available for DistinctNumeric types with 'Flags'.
 }
 
 TEST_CASE(negative_shift)
 {
     BareNumeric a = 12;
-    [[maybe_unused]] auto res = (a << a);
+    discard(a << a);
     // error: static assertion failed: 'a<<b' is only available for DistinctNumeric types with 'Shift'.
 }
 
 TEST_CASE(negative_arith)
 {
     BareNumeric a = 12;
-    [[maybe_unused]] auto res = (a + a);
+    discard(a + a);
     // error: static assertion failed: 'a+b' is only available for DistinctNumeric types with 'Arith'.
 }
 
@@ -274,12 +274,12 @@ TEST_CASE(negative_incompatible)
     ArithNumeric b = 345;
     // And this is the entire point of `DistinctNumeric`:
     // Theoretically, the operation *could* be supported, but we declared those int types incompatible.
-    [[maybe_unused]] auto res = (a + b);
+    discard(a + b);
     // error: no match for ‘operator+’ (operand types are ‘GeneralNumeric’ {aka ‘AK::DistinctNumeric<int, true, true, true, true, true, true, 64, 64>’} and ‘ArithNumeric’ {aka ‘AK::DistinctNumeric<int, false, false, false, false, false, true, 64, 63>’})
-    //    313 |     [[maybe_unused]] auto res = (a + b);
-    //        |                                  ~ ^ ~
-    //        |                                  |   |
-    //        |                                  |   DistinctNumeric<[...],false,false,false,false,false,[...],[...],63>
-    //        |                                  DistinctNumeric<[...],true,true,true,true,true,[...],[...],64>
+    //    313 |     discard(a + b);
+    //        |             ~ ^ ~
+    //        |             |   |
+    //        |             |   DistinctNumeric<[...],false,false,false,false,false,[...],[...],63>
+    //        |             DistinctNumeric<[...],true,true,true,true,true,[...],[...],64>
 }
 #endif /* COMPILE_NEGATIVE_TESTS */

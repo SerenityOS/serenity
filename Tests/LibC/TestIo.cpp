@@ -6,6 +6,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Discard.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
 #include <LibTest/TestCase.h>
@@ -242,7 +243,7 @@ TEST_CASE(tmpfs_eoverflow)
     EXPECT_EQ(rc, -1);
     EXPECT_EQ(errno, EOVERFLOW);
 
-    [[maybe_unused]] auto ignored = strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1);
+    discard(strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1));
 
     rc = write(fd, buffer, sizeof(buffer));
     EXPECT_EQ(rc, -1);
@@ -288,7 +289,7 @@ TEST_CASE(tmpfs_massive_file)
     rc = read(fd, buffer, sizeof(buffer));
     EXPECT_EQ(rc, 0);
 
-    [[maybe_unused]] auto ignored = strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1);
+    discard(strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1));
 
     rc = write(fd, buffer, sizeof(buffer));
     EXPECT_EQ(rc, -1);

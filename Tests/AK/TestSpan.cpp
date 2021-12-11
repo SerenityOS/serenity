@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Checked.h>
+#include <AK/Discard.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <string.h>
@@ -114,14 +115,14 @@ TEST_CASE(can_subspan_as_intended)
 TEST_CASE(span_from_void_pointer)
 {
     int value = 0;
-    [[maybe_unused]] Bytes bytes0 { reinterpret_cast<void*>(value), 4 };
-    [[maybe_unused]] ReadonlyBytes bytes1 { reinterpret_cast<const void*>(value), 4 };
+    discard(Bytes { reinterpret_cast<void*>(value), 4 });
+    discard(ReadonlyBytes { reinterpret_cast<const void*>(value), 4 });
 }
 
 TEST_CASE(span_from_c_string)
 {
     const char* str = "Serenity";
-    [[maybe_unused]] ReadonlyBytes bytes { str, strlen(str) };
+    discard(ReadonlyBytes { str, strlen(str) });
 }
 
 TEST_CASE(starts_with)

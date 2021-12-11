@@ -6,6 +6,7 @@
 
 #include <LibTest/TestSuite.h>
 
+#include <AK/Discard.h>
 #include <AK/RefPtr.h>
 #include <AK/Variant.h>
 
@@ -141,8 +142,8 @@ TEST_CASE(moved_from_state)
     Variant<Vector<i32>, Empty> optionally_a_bunch_of_values { Vector<i32> { 1, 2, 3, 4, 5, 6, 7, 8 } };
 
     {
-        [[maybe_unused]] auto devnull_0 = move(bunch_of_values);
-        [[maybe_unused]] auto devnull_1 = move(optionally_a_bunch_of_values);
+        discard(Vector<i32> { move(bunch_of_values) });
+        discard(Variant<Vector<i32>, Empty> { move(optionally_a_bunch_of_values) });
     }
 
     // The moved-from state should be the same in both cases, and the variant should still contain a moved-from vector.

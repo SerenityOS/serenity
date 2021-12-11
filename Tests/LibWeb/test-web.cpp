@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/URL.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -63,7 +64,7 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
     }
 
     after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
-        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+        discard(JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object));
     });
     return JS::js_undefined();
 }
@@ -77,7 +78,7 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
     }
 
     before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &global_object](auto& page_object) {
-        [[maybe_unused]] auto unused = JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
+        discard(JS::call(global_object, const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object));
     });
     return JS::js_undefined();
 }

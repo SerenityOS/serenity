@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Checked.h>
+#include <AK/Discard.h>
 #include <AK/NumericLimits.h>
 
 // These tests only check whether the usual operator semantics work.
@@ -387,5 +388,5 @@ TEST_CASE(should_constexpr_compare_checked_values_rhs)
 
 TEST_CASE(should_constexpr_make_via_factory)
 {
-    [[maybe_unused]] constexpr auto value = make_checked(42);
+    discard(make_checked(42));
 }
