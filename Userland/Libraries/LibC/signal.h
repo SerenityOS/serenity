@@ -28,6 +28,7 @@ int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
 int sigpending(sigset_t*);
 int sigsuspend(const sigset_t*);
 int sigtimedwait(sigset_t const*, siginfo_t*, struct timespec const*);
+int sigwait(sigset_t const*, int*);
 int sigwaitinfo(sigset_t const*, siginfo_t*);
 int raise(int sig);
 int getsignalbyname(const char*);
