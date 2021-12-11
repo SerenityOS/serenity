@@ -41,7 +41,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
                 if (have_more)
                     continue;
             }
-            [[maybe_unused]] auto result = m_wait_queue.wait_on({});
+            discard(m_wait_queue.wait_on({}));
         }
     }));
     // If we can't create the thread we're in trouble...

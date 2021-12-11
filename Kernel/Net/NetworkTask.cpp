@@ -106,7 +106,7 @@ void NetworkTask_main(void*)
         if (!packet_size) {
             auto timeout_time = Time::from_milliseconds(500);
             auto timeout = Thread::BlockTimeout { false, &timeout_time };
-            [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask");
+            discard(packet_wait_queue.wait_on(timeout, "NetworkTask"));
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {
@@ -307,7 +307,7 @@ void send_delayed_tcp_ack(RefPtr<TCPSocket> socket)
 {
     VERIFY(socket->mutex().is_locked());
     if (!socket->should_delay_next_ack()) {
-        [[maybe_unused]] auto result = socket->send_ack();
+        discard(socket->send_ack());
         return;
     }
 
@@ -323,7 +323,7 @@ void flush_delayed_tcp_acks()
             MUST(remaining_sockets.try_append(socket));
             continue;
         }
-        [[maybe_unused]] auto result = socket->send_ack();
+        discard(socket->send_ack());
     }
 
     if (remaining_sockets.size() != delayed_ack_sockets->size()) {
@@ -460,7 +460,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            [[maybe_unused]] auto rc2 = client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
+            discard(client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK));
             client->set_state(TCPSocket::State::SynReceived);
             return;
         }
@@ -617,7 +617,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             if (socket->duplicate_acks() < TCPSocket::maximum_duplicate_acks) {
                 dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
                 socket->set_duplicate_acks(socket->duplicate_acks() + 1);
-                [[maybe_unused]] auto result = socket->send_ack(true);
+                discard(socket->send_ack(true));
             }
             return;
         }

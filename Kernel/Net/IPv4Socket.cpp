@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/POSIX/errno.h>
@@ -796,7 +797,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
 ErrorOr<void> IPv4Socket::close()
 {
-    [[maybe_unused]] auto rc = shutdown(SHUT_RDWR);
+    discard(shutdown(SHUT_RDWR));
     return {};
 }
 

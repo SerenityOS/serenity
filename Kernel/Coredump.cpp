@@ -8,6 +8,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Discard.h>
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -153,7 +154,7 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr)));
+        discard(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr))));
     }
 
     ElfW(Phdr) notes_pheader {};

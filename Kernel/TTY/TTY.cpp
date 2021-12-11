@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <Kernel/API/POSIX/errno.h>
@@ -45,7 +46,7 @@ ErrorOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer,
 {
     if (Process::current().pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
-        [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTIN, nullptr);
+        discard(Process::current().send_signal(SIGTTIN, nullptr));
         return EINTR;
     }
     if (m_input_buffer.size() < static_cast<size_t>(size))
@@ -83,7 +84,7 @@ ErrorOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer,
 ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
-        [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
+        discard(Process::current().send_signal(SIGTTOU, nullptr));
         return EINTR;
     }
 
@@ -202,7 +203,7 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             dbgln("{}: VSUSP pressed!", tty_name());
             generate_signal(SIGTSTP);
             if (auto original_process_parent = m_original_process_parent.strong_ref()) {
-                [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
+                discard(original_process_parent->send_signal(SIGCHLD, nullptr));
             }
             // TODO: Else send it to the session leader maybe?
             return;
@@ -367,7 +368,7 @@ void TTY::generate_signal(int signal)
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbgln_if(TTY_DEBUG, "{}: Send signal {} to {}", tty_name(), signal, process);
         // FIXME: Should this error be propagated somehow?
-        [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
+        discard(process.send_signal(signal, nullptr));
     });
 }
 

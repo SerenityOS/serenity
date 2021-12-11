@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/IntrusiveList.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
@@ -269,7 +270,7 @@ void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
             return;
         size_t base_offset = entry->block_index.value() * block_size();
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry->data);
-        (void)file_description().write(base_offset, entry_data_buffer, block_size());
+        discard(file_description().write(base_offset, entry_data_buffer, block_size()));
     });
 }
 
@@ -282,7 +283,7 @@ void BlockBasedFileSystem::flush_writes_impl()
         cache->for_each_dirty_entry([&](CacheEntry& entry) {
             auto base_offset = entry.block_index.value() * block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-            [[maybe_unused]] auto rc = file_description().write(base_offset, entry_data_buffer, block_size());
+            discard(file_description().write(base_offset, entry_data_buffer, block_size()));
             ++count;
         });
         cache->mark_all_clean();

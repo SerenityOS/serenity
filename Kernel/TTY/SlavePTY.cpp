@@ -64,7 +64,7 @@ void SlavePTY::echo(u8 ch)
 {
     if (should_echo_input()) {
         auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        [[maybe_unused]] auto result = m_master->on_slave_write(buffer, 1);
+        discard(m_master->on_slave_write(buffer, 1));
     }
 }
 

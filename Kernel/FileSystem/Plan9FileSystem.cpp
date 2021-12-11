@@ -681,7 +681,7 @@ Plan9FSInode::~Plan9FSInode()
     Plan9FS::Message clunk_request { fs(), Plan9FS::Message::Type::Tclunk };
     clunk_request << fid();
     // FIXME: Should we observe this  error somehow?
-    [[maybe_unused]] auto rc = fs().post_message_and_explicitly_ignore_reply(clunk_request);
+    discard(fs().post_message_and_explicitly_ignore_reply(clunk_request));
 }
 
 ErrorOr<void> Plan9FSInode::ensure_open_for_mode(int mode)
@@ -849,7 +849,7 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSys
                 Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
                 close_message << clone_fid;
                 // FIXME: Should we observe this error?
-                [[maybe_unused]] auto rc = fs().post_message_and_explicitly_ignore_reply(close_message);
+                discard(fs().post_message_and_explicitly_ignore_reply(close_message));
                 return result;
             }
         }
@@ -888,7 +888,7 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSys
         Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
         close_message << clone_fid;
         // FIXME: Should we observe this error?
-        [[maybe_unused]] auto rc = fs().post_message_and_explicitly_ignore_reply(close_message);
+        discard(fs().post_message_and_explicitly_ignore_reply(close_message));
         return result;
     }
 

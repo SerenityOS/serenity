@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Discard.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
@@ -150,7 +151,7 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
     VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
     // FIXME: Should we observe this error somehow?
-    [[maybe_unused]] auto rc = queue_connection_from(*socket);
+    discard(queue_connection_from(*socket));
 }
 
 TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer)
@@ -502,7 +503,7 @@ void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN/ACK from Established and moving into FinWait1");
-        [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        discard(send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK));
         set_state(State::FinWait1);
     } else {
         dbgln(" Shutting down TCPSocket for writing but not moving to FinWait1 since state is {}", to_string(state()));
@@ -515,7 +516,7 @@ ErrorOr<void> TCPSocket::close()
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
-        [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        discard(send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK));
         set_state(State::LastAck);
     }
 

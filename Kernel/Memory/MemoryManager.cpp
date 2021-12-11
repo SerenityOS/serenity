@@ -516,7 +516,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(MayReturnToFreeList::No));
 
         // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
-        (void)physical_page.leak_ref();
+        discard(physical_page.leak_ref());
 
         virtual_page_array_current_page += (PAGE_SIZE / sizeof(PageTableEntry)) * PAGE_SIZE;
     }
@@ -595,7 +595,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     pde.set_global(&page_directory == m_kernel_page_directory.ptr());
 
     // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
-    (void)page_table.leak_ref();
+    discard(page_table.leak_ref());
 
     return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 }

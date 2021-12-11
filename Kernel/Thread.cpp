@@ -442,7 +442,7 @@ void Thread::die_if_needed()
         return;
 
     u32 unlock_count;
-    [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
+    discard(unlock_process_if_locked(unlock_count));
 
     dbgln_if(THREAD_DEBUG, "Thread {} is dying", *this);
 
@@ -477,7 +477,7 @@ void Thread::exit(void* exit_value)
     m_join_blocker_set.thread_did_exit(exit_value);
     set_should_die();
     u32 unlock_count;
-    [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
+    discard(unlock_process_if_locked(unlock_count));
     if (m_thread_specific_range.has_value()) {
         auto* region = process().address_space().find_region_from_range(m_thread_specific_range.value());
         process().address_space().deallocate_region(*region);
@@ -1228,7 +1228,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
             // Tell the parent process (if any) about this change.
             if (auto parent = Process::from_pid(process.ppid())) {
-                [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
+                discard(parent->send_signal(SIGCHLD, &process));
             }
         }
     }
@@ -1252,7 +1252,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
             if (auto parent = Process::from_pid(process.ppid())) {
-                [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
+                discard(parent->send_signal(SIGCHLD, &process));
             }
         }
     } else if (m_state == Thread::State::Dying) {
