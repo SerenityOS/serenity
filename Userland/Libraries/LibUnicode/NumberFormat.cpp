@@ -16,7 +16,7 @@
 
 namespace Unicode {
 
-Optional<StringView> get_number_system_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] StringView symbol)
+Optional<StringView> get_number_system_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] NumericSymbol symbol)
 {
 #if ENABLE_UNICODE_DATA
     return Detail::get_number_system_symbol(locale, system, symbol);

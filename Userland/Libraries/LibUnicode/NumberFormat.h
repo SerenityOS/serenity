@@ -54,7 +54,18 @@ struct NumberFormat {
     Vector<StringView> identifiers {};
 };
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, StringView symbol);
+enum class NumericSymbol : u8 {
+    Decimal,
+    Exponential,
+    Group,
+    Infinity,
+    MinusSign,
+    NaN,
+    PercentSign,
+    PlusSign,
+};
+
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
 Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
