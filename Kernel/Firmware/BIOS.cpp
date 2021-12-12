@@ -19,7 +19,7 @@ namespace Kernel {
 #define SMBIOS_END_SEARCH_ADDR 0xfffff
 #define SMBIOS_SEARCH_AREA_SIZE (SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR)
 
-UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlob::create(PhysicalAddress dmi_entry_point, size_t blob_size)
+UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlob::must_create(PhysicalAddress dmi_entry_point, size_t blob_size)
 {
     return adopt_ref(*new (nothrow) DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
 }
@@ -53,7 +53,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> DMIEntryPointExposedBlob::try_to_generate_buffer
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_dmi_entry_point_length });
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::create(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
+UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::must_create(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
 {
     return adopt_ref(*new (nothrow) SMBIOSExposedTable(smbios_structure_table, smbios_structure_table_length));
 }
@@ -89,9 +89,9 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<BIOSSysFSDirectory>> BIOSSysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<BIOSSysFSDirectory> BIOSSysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    auto bios_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BIOSSysFSDirectory(firmware_directory)));
+    auto bios_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) BIOSSysFSDirectory(firmware_directory)));
     bios_directory->create_components();
     return bios_directory;
 }
@@ -108,10 +108,8 @@ void BIOSSysFSDirectory::create_components()
         dbgln("BIOSSysFSDirectory: invalid smbios structure table length");
         return;
     }
-    auto dmi_entry_point = DMIEntryPointExposedBlob::create(m_dmi_entry_point, m_dmi_entry_point_length);
-    m_components.append(dmi_entry_point);
-    auto smbios_table = SMBIOSExposedTable::create(m_smbios_structure_table, m_smbios_structure_table_length);
-    m_components.append(smbios_table);
+    m_components.append(DMIEntryPointExposedBlob::must_create(m_dmi_entry_point, m_dmi_entry_point_length));
+    m_components.append(SMBIOSExposedTable::must_create(m_smbios_structure_table, m_smbios_structure_table_length));
 }
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()

@@ -67,9 +67,9 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(NonnullOwnPtr<KString> t
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<ACPISysFSDirectory>> ACPISysFSDirectory::try_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
 {
-    auto acpi_directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
+    auto acpi_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
     return acpi_directory;
 }
 

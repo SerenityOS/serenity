@@ -23,7 +23,7 @@ namespace Kernel::ACPI {
 class ACPISysFSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "acpi"sv; }
-    static ErrorOr<NonnullRefPtr<ACPISysFSDirectory>> try_create(FirmwareSysFSDirectory& firmware_directory);
+    static NonnullRefPtr<ACPISysFSDirectory> must_create(FirmwareSysFSDirectory& firmware_directory);
 
 private:
     explicit ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory);
