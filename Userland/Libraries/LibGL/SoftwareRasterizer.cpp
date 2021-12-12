@@ -15,7 +15,7 @@ namespace GL {
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
 
-static constexpr int RASTERIZER_BLOCK_SIZE = 16;
+static constexpr int RASTERIZER_BLOCK_SIZE = 8;
 
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
 {
@@ -199,8 +199,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) + block_padding) / RASTERIZER_BLOCK_SIZE;
     // clang-format on
 
-    static_assert(RASTERIZER_BLOCK_SIZE < sizeof(int) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
-    int pixel_mask[RASTERIZER_BLOCK_SIZE];
+    u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
+    static_assert(RASTERIZER_BLOCK_SIZE <= sizeof(decltype(*pixel_mask)) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
 
     FloatVector4 pixel_buffer[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
