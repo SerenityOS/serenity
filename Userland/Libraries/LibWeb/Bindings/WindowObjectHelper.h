@@ -262,6 +262,8 @@
 #include <LibWeb/Bindings/SubmitEventConstructor.h>
 #include <LibWeb/Bindings/SubmitEventPrototype.h>
 #include <LibWeb/Bindings/TextConstructor.h>
+#include <LibWeb/Bindings/TextEncoderConstructor.h>
+#include <LibWeb/Bindings/TextEncoderPrototype.h>
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
@@ -416,6 +418,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGPathElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
+    ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)               \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)           \
     ADD_WINDOW_OBJECT_INTERFACE(URL)                       \
