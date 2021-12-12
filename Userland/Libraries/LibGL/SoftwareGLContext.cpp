@@ -328,6 +328,12 @@ void SoftwareGLContext::gl_end()
         }
     }
 
+    m_bound_texture_units.clear();
+    for (auto& texture_unit : m_texture_units) {
+        if (texture_unit.is_bound())
+            m_bound_texture_units.append(texture_unit);
+    }
+
     for (size_t i = 0; i < processed_triangles.size(); i++) {
         GLTriangle& triangle = processed_triangles.at(i);
 
@@ -356,7 +362,7 @@ void SoftwareGLContext::gl_end()
             swap(triangle.vertices[0], triangle.vertices[1]);
         }
 
-        m_rasterizer.submit_triangle(triangle, m_texture_units);
+        m_rasterizer.submit_triangle(triangle, m_bound_texture_units);
     }
 }
 
