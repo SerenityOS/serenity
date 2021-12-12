@@ -18,4 +18,5 @@ struct Arguments {
 
 }
 
+const char* serenity_get_initial_promises();
 ErrorOr<int> serenity_main(Main::Arguments);

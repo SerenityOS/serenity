@@ -26,14 +26,11 @@
 namespace Core::System {
 
 #ifdef __serenity__
-ErrorOr<void> pledge(StringView promises, StringView execpromises)
+ErrorOr<void> retract(StringView promises)
 {
-    Syscall::SC_pledge_params params {
-        { promises.characters_without_null_termination(), promises.length() },
-        { execpromises.characters_without_null_termination(), execpromises.length() },
-    };
-    int rc = syscall(SC_pledge, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc, {});
+    // check internal structure if promises were actually pledged
+    // remove retracted promises from internal structure
+    // syscall pledge() with updated promises
 }
 
 ErrorOr<void> unveil(StringView path, StringView permissions)

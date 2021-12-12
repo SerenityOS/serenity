@@ -11,10 +11,13 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
+const char* serenity_get_initial_promises()
+{
+    return "stdio recvfd thread accept cpath rpath wpath unix";
+}
+
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath unix"));
-
     auto config = Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes);
     TRY(Core::System::unveil(config->filename(), "rwc"));
     TRY(Core::System::unveil("/dev/audio", "wc"));
@@ -31,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         (void)IPC::new_client_connection<AudioServer::ClientConnection>(move(client_socket), client_id, *mixer);
     };
 
-    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));
+    TRY(Core::System::retract("unix"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     return event_loop.exec();

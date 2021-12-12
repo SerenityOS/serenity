@@ -12,6 +12,15 @@
 
 int main(int argc, char** argv)
 {
+    //
+    // This should set up an internal Core::System::xxx structure
+    // so Core::System::retract() knows which promises are pledged.
+    //
+    if (pledge(serenity_get_initial_promises(), nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Vector<StringView> arguments;
     arguments.ensure_capacity(argc);
     for (int i = 0; i < argc; ++i)

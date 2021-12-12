@@ -17,18 +17,22 @@
 #include <RequestServer/HttpsProtocol.h>
 #include <signal.h>
 
+const char* serenity_get_initial_promises()
+{
+    return "stdio inet accept unix rpath sendfd recvfd sigaction";
+}
+
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
-
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
+    TRY(Core::System::retract("sigaction"));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd"));
+    TRY(Core::System::retract("rpath"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

@@ -18,7 +18,7 @@
 namespace Core::System {
 
 #ifdef __serenity__
-ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
+ErrorOr<void> retract(StringView promises);
 ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> sendfd(int sockfd, int fd);

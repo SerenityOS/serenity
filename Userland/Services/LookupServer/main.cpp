@@ -10,13 +10,17 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
+const char* serenity_get_initial_promises()
+{
+    return "stdio accept unix inet rpath";
+}
+
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio accept unix inet rpath"));
     Core::EventLoop event_loop;
     auto server = TRY(LookupServer::LookupServer::try_create());
+    TRY(Core::System::retract("unix"));
 
-    TRY(Core::System::pledge("stdio accept inet rpath"));
     TRY(Core::System::unveil("/proc/net/adapters", "r"));
     TRY(Core::System::unveil("/etc/hosts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

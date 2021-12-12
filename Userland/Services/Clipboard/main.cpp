@@ -11,9 +11,13 @@
 #include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 
+const char* serenity_get_initial_promises()
+{
+    return "stdio recvfd sendfd accept";
+}
+
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd accept"));
     Core::EventLoop event_loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 

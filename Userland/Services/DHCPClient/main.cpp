@@ -9,16 +9,20 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
+const char* serenity_get_initial_promises()
+{
+    return "stdio unix inet cpath rpath";
+}
+
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio unix inet cpath rpath"));
     Core::EventLoop event_loop;
 
     TRY(Core::System::unveil("/proc/net/", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto client = TRY(DHCPv4Client::try_create());
+    TRY(Core::System::retract("unix"));
 
-    TRY(Core::System::pledge("stdio inet cpath rpath"));
     return event_loop.exec();
 }
