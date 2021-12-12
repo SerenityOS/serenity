@@ -29,6 +29,7 @@ enum class MainProcessProperty {
     CurrentWorkDirectoryLink = 5,
     PerformanceEvents = 6,
     VirtualMemoryStats = 7,
+    TTYLink = 8,
 };
 
 enum class ProcessSubDirectory {

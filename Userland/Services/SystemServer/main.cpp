@@ -363,6 +363,11 @@ static void prepare_synthetic_filesystems()
         VERIFY_NOT_REACHED();
     }
 
+    rc = symlink("/proc/self/tty", "/dev/tty");
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
     populate_devfs();
 
     rc = mkdir("/dev/pts", 0755);

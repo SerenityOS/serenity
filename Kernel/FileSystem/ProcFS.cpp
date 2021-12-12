@@ -318,6 +318,8 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView nam
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents, associated_pid()));
     if (name == "vm"sv)
         return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats, associated_pid()));
+    if (name == "tty"sv)
+        return TRY(ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::TTYLink, associated_pid()));
     return ENOENT;
 }
 
@@ -454,6 +456,8 @@ static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessS
         return S_IFLNK | 0777;
     if (main_property == SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink)
         return S_IFLNK | 0777;
+    if (main_property == SegmentedProcFSIndex::MainProcessProperty::TTYLink)
+        return S_IFLNK | 0777;
     return S_IFREG | 0400;
 }
 
@@ -557,6 +561,8 @@ ErrorOr<void> ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, 
         return process.procfs_get_perf_events(builder);
     case SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats:
         return process.procfs_get_virtual_memory_stats(builder);
+    case SegmentedProcFSIndex::MainProcessProperty::TTYLink:
+        return process.procfs_get_tty_link(builder);
     default:
         VERIFY_NOT_REACHED();
     }
