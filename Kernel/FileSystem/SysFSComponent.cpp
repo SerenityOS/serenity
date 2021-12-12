@@ -20,9 +20,8 @@ static size_t allocate_inode_index()
     return s_next_inode_index.value();
 }
 
-SysFSComponent::SysFSComponent(StringView name)
-    : m_name(KString::try_create(name).release_value()) // FIXME: Handle KString allocation failure.
-    , m_component_index(allocate_inode_index())
+SysFSComponent::SysFSComponent()
+    : m_component_index(allocate_inode_index())
 {
 }
 
@@ -55,13 +54,8 @@ RefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
     return {};
 }
 
-SysFSDirectory::SysFSDirectory(StringView name)
-    : SysFSComponent(name)
-{
-}
-
-SysFSDirectory::SysFSDirectory(StringView name, SysFSDirectory const& parent_directory)
-    : SysFSComponent(name)
+SysFSDirectory::SysFSDirectory(SysFSDirectory const& parent_directory)
+    : SysFSComponent()
     , m_parent_directory(parent_directory)
 {
 }
