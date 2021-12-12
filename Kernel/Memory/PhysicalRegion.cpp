@@ -123,7 +123,8 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 
 void PhysicalRegion::return_page(PhysicalAddress paddr)
 {
-    size_t full_size_zone_index = (paddr.get() - lower().get()) / large_zone_size;
+    size_t offset = paddr.get() - lower().get();
+    size_t full_size_zone_index = offset / large_zone_size;
     size_t large_zone_count = m_pages / (large_zone_size / PAGE_SIZE);
 
     if (full_size_zone_index < large_zone_count) {
@@ -135,14 +136,14 @@ void PhysicalRegion::return_page(PhysicalAddress paddr)
         return;
     }
 
-    for (size_t i = large_zone_count; i < m_zones.size(); ++i) {
-        auto& zone = m_zones[i];
-        if (zone.contains(paddr)) {
-            zone.deallocate_block(paddr, 0);
-            if (m_full_zones.contains(zone))
-                m_usable_zones.append(zone);
-            return;
-        }
+    size_t small_size_zone_index = full_size_zone_index + (offset % large_zone_size) / small_zone_size;
+    if (small_size_zone_index < m_zones.size()) {
+        auto& zone = m_zones[small_size_zone_index];
+        VERIFY(zone.contains(paddr));
+        zone.deallocate_block(paddr, 0);
+        if (m_full_zones.contains(zone))
+            m_usable_zones.append(zone);
+        return;
     }
 
     VERIFY_NOT_REACHED();
