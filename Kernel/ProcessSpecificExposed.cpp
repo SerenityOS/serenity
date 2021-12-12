@@ -15,6 +15,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
@@ -279,6 +280,13 @@ ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
     if (!custody)
         return Error::from_errno(ENOEXEC);
     return builder.append(custody->absolute_path().bytes());
+}
+
+ErrorOr<void> Process::procfs_get_tty_link(KBufferBuilder& builder) const
+{
+    if (m_tty.is_null())
+        return Error::from_errno(ENOENT);
+    return builder.append(m_tty->tty_name().characters());
 }
 
 }
