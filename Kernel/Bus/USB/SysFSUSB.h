@@ -20,11 +20,12 @@ public:
     virtual ~SysFSUSBDeviceInformation() override;
 
     static NonnullRefPtr<SysFSUSBDeviceInformation> create(USB::Device&);
+    virtual StringView name() const override { return m_device_name->view(); }
 
     RefPtr<USB::Device> device() const { return m_device; }
 
 protected:
-    explicit SysFSUSBDeviceInformation(USB::Device& device);
+    SysFSUSBDeviceInformation(NonnullOwnPtr<KString> device_name, USB::Device& device);
 
     virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
 
@@ -36,12 +37,15 @@ private:
     ErrorOr<void> try_generate(KBufferBuilder&);
     virtual ErrorOr<void> refresh_data(OpenFileDescription& description) const override;
     mutable Mutex m_lock { "SysFSUSBDeviceInformation" };
+    NonnullOwnPtr<KString> m_device_name;
 };
 
 class SysFSUSBBusDirectory final : public SysFSDirectory {
 public:
     static void initialize();
     static SysFSUSBBusDirectory& the();
+
+    virtual StringView name() const override { return "usb"sv; }
 
     void plug(USB::Device&);
     void unplug(USB::Device&);

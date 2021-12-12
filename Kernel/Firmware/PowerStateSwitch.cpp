@@ -26,7 +26,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<PowerStateSwitchNode> PowerStateSwitchNode::must_
 }
 
 UNMAP_AFTER_INIT PowerStateSwitchNode::PowerStateSwitchNode(FirmwareSysFSDirectory&)
-    : SysFSComponent("power_state")
+    : SysFSComponent()
 {
 }
 

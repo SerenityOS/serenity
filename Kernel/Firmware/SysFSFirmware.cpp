@@ -32,7 +32,7 @@ void FirmwareSysFSDirectory::create_components()
 }
 
 UNMAP_AFTER_INIT FirmwareSysFSDirectory::FirmwareSysFSDirectory()
-    : SysFSDirectory("firmware", SysFSComponentRegistry::the().root_directory())
+    : SysFSDirectory(SysFSComponentRegistry::the().root_directory())
 {
 }
 

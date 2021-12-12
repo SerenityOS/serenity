@@ -13,9 +13,10 @@ namespace Kernel::USB {
 
 static SysFSUSBBusDirectory* s_procfs_usb_bus_directory;
 
-SysFSUSBDeviceInformation::SysFSUSBDeviceInformation(USB::Device& device)
-    : SysFSComponent(String::number(device.address()))
+SysFSUSBDeviceInformation::SysFSUSBDeviceInformation(NonnullOwnPtr<KString> device_name, USB::Device& device)
+    : SysFSComponent()
     , m_device(device)
+    , m_device_name(move(device_name))
 {
 }
 
@@ -150,7 +151,7 @@ SysFSUSBBusDirectory& SysFSUSBBusDirectory::the()
 }
 
 UNMAP_AFTER_INIT SysFSUSBBusDirectory::SysFSUSBBusDirectory(SysFSBusDirectory& buses_directory)
-    : SysFSDirectory("usb"sv, buses_directory)
+    : SysFSDirectory(buses_directory)
 {
 }
 
@@ -163,7 +164,8 @@ UNMAP_AFTER_INIT void SysFSUSBBusDirectory::initialize()
 
 NonnullRefPtr<SysFSUSBDeviceInformation> SysFSUSBDeviceInformation::create(USB::Device& device)
 {
-    return adopt_ref(*new SysFSUSBDeviceInformation(device));
+    auto device_name = KString::must_create(String::number(device.address()));
+    return adopt_ref(*new SysFSUSBDeviceInformation(move(device_name), device));
 }
 
 }
