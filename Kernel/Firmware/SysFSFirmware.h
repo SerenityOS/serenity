@@ -13,6 +13,7 @@ namespace Kernel {
 
 class FirmwareSysFSDirectory : public SysFSDirectory {
 public:
+    virtual StringView name() const override { return "firmware"sv; }
     static void initialize();
 
     void create_components();

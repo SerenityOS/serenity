@@ -15,11 +15,14 @@ namespace Kernel {
 
 NonnullRefPtr<SysFSDeviceComponent> SysFSDeviceComponent::must_create(Device const& device)
 {
-    return adopt_ref_if_nonnull(new SysFSDeviceComponent(device)).release_nonnull();
+    // FIXME: Handle allocation failure gracefully
+    auto device_name = MUST(KString::try_create(String::formatted("{}:{}", device.major(), device.minor())));
+    return adopt_ref_if_nonnull(new SysFSDeviceComponent(move(device_name), device)).release_nonnull();
 }
-SysFSDeviceComponent::SysFSDeviceComponent(Device const& device)
-    : SysFSComponent(String::formatted("{}:{}", device.major(), device.minor()))
+SysFSDeviceComponent::SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const& device)
+    : SysFSComponent()
     , m_block_device(device.is_block_device())
+    , m_major_minor_formatted_device_name(move(major_minor_formatted_device_name))
 {
     VERIFY(device.is_block_device() || device.is_character_device());
 }
@@ -32,7 +35,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSDevicesDirectory> SysFSDevicesDirectory::mus
     return devices_directory;
 }
 SysFSDevicesDirectory::SysFSDevicesDirectory(SysFSRootDirectory const& root_directory)
-    : SysFSDirectory("dev"sv, root_directory)
+    : SysFSDirectory(root_directory)
 {
 }
 
@@ -41,7 +44,7 @@ NonnullRefPtr<SysFSBlockDevicesDirectory> SysFSBlockDevicesDirectory::must_creat
     return adopt_ref_if_nonnull(new SysFSBlockDevicesDirectory(devices_directory)).release_nonnull();
 }
 SysFSBlockDevicesDirectory::SysFSBlockDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
-    : SysFSDirectory("block"sv, devices_directory)
+    : SysFSDirectory(devices_directory)
 {
 }
 
@@ -79,7 +82,7 @@ NonnullRefPtr<SysFSCharacterDevicesDirectory> SysFSCharacterDevicesDirectory::mu
     return adopt_ref_if_nonnull(new SysFSCharacterDevicesDirectory(devices_directory)).release_nonnull();
 }
 SysFSCharacterDevicesDirectory::SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const& devices_directory)
-    : SysFSDirectory("char"sv, devices_directory)
+    : SysFSDirectory(devices_directory)
 {
 }
 ErrorOr<void> SysFSCharacterDevicesDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const

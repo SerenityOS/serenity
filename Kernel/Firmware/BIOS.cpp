@@ -24,8 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlo
     return adopt_ref(*new (nothrow) DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
 }
 
-UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(StringView name)
-    : SysFSComponent(name)
+UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent()
 {
 }
 
@@ -42,7 +41,7 @@ ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserO
 }
 
 UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size)
-    : BIOSSysFSComponent("smbios_entry_point"sv)
+    : BIOSSysFSComponent()
     , m_dmi_entry_point(dmi_entry_point)
     , m_dmi_entry_point_length(blob_size)
 {
@@ -60,7 +59,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::create(Ph
 }
 
 UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
-    : BIOSSysFSComponent("DMI"sv)
+    : BIOSSysFSComponent()
     , m_smbios_structure_table(smbios_structure_table)
     , m_smbios_structure_table_length(smbios_structure_table_length)
 {
@@ -127,7 +126,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
 }
 
 UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
-    : SysFSDirectory("bios", firmware_directory)
+    : SysFSDirectory(firmware_directory)
 {
     auto entry_32bit = find_dmi_entry32bit_point();
     if (entry_32bit.has_value()) {

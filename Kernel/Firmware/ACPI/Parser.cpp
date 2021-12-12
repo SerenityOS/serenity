@@ -34,9 +34,11 @@ void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_
     VERIFY(s_acpi_parser);
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(String name, PhysicalAddress paddr, size_t table_size)
+UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(StringView name, PhysicalAddress paddr, size_t table_size)
 {
-    return adopt_ref(*new (nothrow) ACPISysFSComponent(name, paddr, table_size));
+    // FIXME: Handle allocation failure gracefully
+    auto table_name = KString::must_create(name);
+    return adopt_ref(*new (nothrow) ACPISysFSComponent(move(table_name), paddr, table_size));
 }
 
 ErrorOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
@@ -57,10 +59,11 @@ ErrorOr<NonnullOwnPtr<KBuffer>> ACPISysFSComponent::try_to_generate_buffer() con
     return KBuffer::try_create_with_bytes(Span<u8> { acpi_blob.ptr(), m_length });
 }
 
-UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAddress paddr, size_t table_size)
-    : SysFSComponent(name)
+UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(NonnullOwnPtr<KString> table_name, PhysicalAddress paddr, size_t table_size)
+    : SysFSComponent()
     , m_paddr(paddr)
     , m_length(table_size)
+    , m_table_name(move(table_name))
 {
 }
 
@@ -71,7 +74,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<ACPISysFSDirectory>> ACPISysFSDirectory::
 }
 
 UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
-    : SysFSDirectory("acpi", firmware_directory)
+    : SysFSDirectory(firmware_directory)
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;

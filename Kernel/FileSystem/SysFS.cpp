@@ -60,7 +60,6 @@ ErrorOr<void> SysFSRootDirectory::traverse_as_directory(FileSystemID fsid, Funct
 }
 
 SysFSRootDirectory::SysFSRootDirectory()
-    : SysFSDirectory(".")
 {
     auto buses_directory = SysFSBusDirectory::must_create(*this);
     auto devices_directory = SysFSDevicesDirectory::must_create(*this);
@@ -252,7 +251,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create
 }
 
 UNMAP_AFTER_INIT SysFSBusDirectory::SysFSBusDirectory(SysFSRootDirectory const& parent_directory)
-    : SysFSDirectory("bus"sv, parent_directory)
+    : SysFSDirectory(parent_directory)
 {
 }
 

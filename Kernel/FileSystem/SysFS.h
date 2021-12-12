@@ -18,6 +18,7 @@ class SysFSRootDirectory final : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
+    virtual StringView name() const override { return "."sv; }
     static NonnullRefPtr<SysFSRootDirectory> create();
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
 
@@ -33,17 +34,20 @@ class SysFSDeviceComponent final
 
 public:
     static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);
-
+    virtual StringView name() const override { return m_major_minor_formatted_device_name->view(); }
     bool is_block_device() const { return m_block_device; }
 
 private:
-    explicit SysFSDeviceComponent(Device const&);
+    SysFSDeviceComponent(NonnullOwnPtr<KString> major_minor_formatted_device_name, Device const&);
     IntrusiveListNode<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>> m_list_node;
     bool m_block_device;
+
+    NonnullOwnPtr<KString> m_major_minor_formatted_device_name;
 };
 
 class SysFSDevicesDirectory final : public SysFSDirectory {
 public:
+    virtual StringView name() const override { return "dev"sv; }
     static NonnullRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
 
 private:
@@ -52,6 +56,7 @@ private:
 
 class SysFSBlockDevicesDirectory final : public SysFSDirectory {
 public:
+    virtual StringView name() const override { return "block"sv; }
     static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDevicesDirectory const&);
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
@@ -62,6 +67,7 @@ private:
 
 class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
 public:
+    virtual StringView name() const override { return "char"sv; }
     static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDevicesDirectory const&);
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
@@ -74,6 +80,7 @@ class SysFSBusDirectory : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
+    virtual StringView name() const override { return "bus"sv; }
     static NonnullRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
 
 private:

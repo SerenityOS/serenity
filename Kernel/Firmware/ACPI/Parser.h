@@ -22,6 +22,7 @@ namespace Kernel::ACPI {
 
 class ACPISysFSDirectory : public SysFSDirectory {
 public:
+    virtual StringView name() const override { return "acpi"sv; }
     static ErrorOr<NonnullRefPtr<ACPISysFSDirectory>> try_create(FirmwareSysFSDirectory& firmware_directory);
 
 private:
@@ -30,16 +31,17 @@ private:
 
 class ACPISysFSComponent : public SysFSComponent {
 public:
-    static NonnullRefPtr<ACPISysFSComponent> create(String name, PhysicalAddress, size_t table_size);
-
+    static NonnullRefPtr<ACPISysFSComponent> create(StringView name, PhysicalAddress, size_t table_size);
+    virtual StringView name() const override { return m_table_name->view(); }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
-    ACPISysFSComponent(String name, PhysicalAddress, size_t table_size);
+    ACPISysFSComponent(NonnullOwnPtr<KString> table_name, PhysicalAddress, size_t table_size);
 
     PhysicalAddress m_paddr;
     size_t m_length;
+    NonnullOwnPtr<KString> m_table_name;
 };
 
 class Parser final : public IRQHandler {

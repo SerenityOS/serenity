@@ -25,7 +25,7 @@ struct SysFSInodeData : public OpenFileDescriptionData {
 
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
-    virtual StringView name() const { return m_name->view(); }
+    virtual StringView name() const = 0;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
@@ -42,10 +42,9 @@ public:
     virtual ~SysFSComponent() = default;
 
 protected:
-    explicit SysFSComponent(StringView name);
+    SysFSComponent();
 
 private:
-    NonnullOwnPtr<KString> m_name;
     InodeIndex m_component_index {};
 };
 
@@ -57,8 +56,8 @@ public:
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
-    explicit SysFSDirectory(StringView name);
-    SysFSDirectory(StringView name, SysFSDirectory const& parent_directory);
+    SysFSDirectory() = default;
+    explicit SysFSDirectory(SysFSDirectory const& parent_directory);
     NonnullRefPtrVector<SysFSComponent> m_components;
     RefPtr<SysFSDirectory> m_parent_directory;
 };
