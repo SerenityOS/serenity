@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             ;
     });
 
-    // We need to obtain the WM connection here as well before the pledge shortening.
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
     GUI::WindowManagerServerConnection::the();
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
