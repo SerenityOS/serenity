@@ -807,7 +807,7 @@ int main(int argc, char** argv)
 
     auto interface = IDL::parse_interface(path, data, import_base_path);
 
-    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "XHR", "URL")) {
+    if (namespace_.is_one_of("Crypto", "CSS", "DOM", "Encoding", "HTML", "UIEvents", "Geometry", "HighResolutionTime", "IntersectionObserver", "NavigationTiming", "RequestIdleCallback", "ResizeObserver", "SVG", "Selection", "XHR", "URL")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -1452,6 +1452,8 @@ static void generate_header(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Encoding/@name@.h>)
+#    include <LibWeb/Encoding/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -2500,6 +2502,8 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Encoding/@name@.h>)
+#    include <LibWeb/Encoding/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -2815,6 +2819,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Encoding/@name@.h>)
+#    include <LibWeb/Encoding/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -3268,6 +3274,8 @@ static void generate_iterator_header(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Encoding/@name@.h>)
+#    include <LibWeb/Encoding/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -3456,6 +3464,8 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #    include <LibWeb/CSS/@name@.h>
 #elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/Encoding/@name@.h>)
+#    include <LibWeb/Encoding/@name@.h>
 #elif __has_include(<LibWeb/Geometry/@name@.h>)
 #    include <LibWeb/Geometry/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
