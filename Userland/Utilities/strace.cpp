@@ -582,6 +582,17 @@ static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_p
         PointerArgument { params.sigmask });
 }
 
+static void format_poll(FormattedSyscallBuilder& builder, Syscall::SC_poll_params* params_p)
+{
+    // TODO: format fds and sigmask properly
+    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
+    builder.add_arguments(
+        params.nfds,
+        PointerArgument { params.fds },
+        copy_from_process(params.timeout),
+        PointerArgument { params.sigmask });
+}
+
 namespace AK {
 template<>
 struct Formatter<struct sockaddr> : StandardFormatter {
@@ -740,6 +751,9 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         break;
     case SC_open:
         format_open(builder, (Syscall::SC_open_params*)arg1);
+        break;
+    case SC_poll:
+        format_poll(builder, (Syscall::SC_poll_params*)arg1);
         break;
     case SC_read:
         format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
