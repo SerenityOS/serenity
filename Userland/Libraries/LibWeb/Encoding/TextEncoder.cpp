@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Encoding/TextEncoder.h>
@@ -31,6 +32,13 @@ JS::Uint8Array* TextEncoder::encode(String const& input) const
     auto* typed_array = JS::Uint8Array::create(global_object, byte_buffer.size());
     typed_array->viewed_array_buffer()->buffer() = move(byte_buffer);
     return typed_array;
+}
+
+// https://encoding.spec.whatwg.org/#dom-textencoder-encoding
+FlyString const& TextEncoder::encoding()
+{
+    static FlyString encoding = "utf-8"sv;
+    return encoding;
 }
 
 }
