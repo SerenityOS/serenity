@@ -1,0 +1,27 @@
+--- Python-3.10.1/setup.py	2021-12-12 00:14:06.628584207 +0000
++++ Python-3.10.1/setup.py	2021-12-12 00:14:57.889343919 +0000
+@@ -846,8 +846,8 @@
+             add_dir_to_list(self.compiler.include_dirs,
+                             sysconfig.get_config_var("INCLUDEDIR"))
+ 
+-        system_lib_dirs = ['/lib64', '/usr/lib64', '/lib', '/usr/lib']
+-        system_include_dirs = ['/usr/include']
++        system_lib_dirs = ['/lib64', '/usr/lib64', '/lib', '/usr/lib', '/usr/local/lib']
++        system_include_dirs = ['/usr/include', '/usr/local/include']
+         # lib_dirs and inc_dirs are used to search for files;
+         # if a file is found in one of those directories, it can
+         # be assumed that no additional -I,-L directives are needed.
+@@ -1158,7 +1158,12 @@
+         # Curses support, requiring the System V version of curses, often
+         # provided by the ncurses library.
+         curses_defines = []
+-        curses_includes = []
++        if not CROSS_COMPILING:
++            curses_includes = ['/usr/local/include/ncurses']
++        else:
++            curses_includes = sysroot_paths(
++                ('CPPFLAGS', 'CFLAGS', 'CC'), ['/usr/local/include/ncurses']
++            )
+         panel_library = 'panel'
+         if curses_library == 'ncursesw':
+             curses_defines.append(('HAVE_NCURSESW', '1'))
