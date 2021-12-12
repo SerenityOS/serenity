@@ -109,6 +109,10 @@ template<typename ValueType>
 class ExceptionOr;
 }
 
+namespace Web::Encoding {
+class TextEncoder;
+}
+
 namespace Web::Geometry {
 class DOMRect;
 class DOMRectReadOnly;
@@ -432,6 +436,7 @@ class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
 class SVGPathElementWrapper;
 class SVGSVGElementWrapper;
+class TextEncoderWrapper;
 class TextWrapper;
 class UIEventWrapper;
 class URLConstructor;
