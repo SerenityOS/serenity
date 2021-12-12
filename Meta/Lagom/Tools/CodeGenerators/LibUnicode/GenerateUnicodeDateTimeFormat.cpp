@@ -58,6 +58,9 @@ constexpr auto s_calendar_index_type = "u8"sv;
 using TimeZoneIndexType = u16;
 constexpr auto s_time_zone_index_type = "u16"sv;
 
+using DayPeriodIndexType = u16;
+constexpr auto s_day_period_index_type = "u16"sv;
+
 struct CalendarPattern : public Unicode::CalendarPattern {
     bool contains_only_date_fields() const
     {
@@ -408,15 +411,47 @@ struct AK::Traits<TimeZone> : public GenericTraits<TimeZone> {
 };
 
 struct DayPeriod {
+    unsigned hash() const
+    {
+        auto hash = int_hash(static_cast<u8>(day_period));
+        hash = pair_int_hash(hash, begin);
+        hash = pair_int_hash(hash, end);
+        return hash;
+    }
+
+    bool operator==(DayPeriod const& other) const
+    {
+        return (day_period == other.day_period)
+            && (begin == other.begin)
+            && (end == other.end);
+    }
+
     Unicode::DayPeriod day_period {};
     u8 begin { 0 };
     u8 end { 0 };
 };
 
+template<>
+struct AK::Formatter<DayPeriod> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, DayPeriod const& day_period)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {} }}",
+            static_cast<u8>(day_period.day_period),
+            day_period.begin,
+            day_period.end);
+    }
+};
+
+template<>
+struct AK::Traits<DayPeriod> : public GenericTraits<DayPeriod> {
+    static unsigned hash(DayPeriod const& d) { return d.hash(); }
+};
+
 struct Locale {
     HashMap<String, CalendarIndexType> calendars;
     HashMap<String, TimeZoneIndexType> time_zones;
-    Vector<DayPeriod> day_periods;
+    Vector<DayPeriodIndexType> day_periods;
 };
 
 struct UnicodeLocaleData {
@@ -431,6 +466,7 @@ struct UnicodeLocaleData {
     UniqueStorage<CalendarSymbolsList, CalendarSymbolsListIndexType> unique_calendar_symbols_lists;
     UniqueStorage<Calendar, CalendarIndexType> unique_calendars;
     UniqueStorage<TimeZone, TimeZoneIndexType> unique_time_zones;
+    UniqueStorage<DayPeriod, DayPeriodIndexType> unique_day_periods;
 
     HashMap<String, Locale> locales;
 
@@ -1376,8 +1412,10 @@ static ErrorOr<void> parse_day_periods(String core_path, UnicodeLocaleData& loca
             return;
 
         value.as_object().for_each_member([&](auto const& symbol, JsonValue const& ranges) {
-            if (auto day_period = parse_day_period(symbol, ranges.as_object()); day_period.has_value())
-                locale->value.day_periods.append(day_period.release_value());
+            if (auto day_period = parse_day_period(symbol, ranges.as_object()); day_period.has_value()) {
+                auto day_period_index = locale_data.unique_day_periods.ensure(day_period.release_value());
+                locale->value.day_periods.append(day_period_index);
+            }
         });
     });
 
@@ -1503,6 +1541,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("calendar_symbols_list_index_type"sv, s_calendar_symbols_list_index_type);
     generator.set("calendar_index_type"sv, s_calendar_index_type);
     generator.set("time_zone_index_type"sv, s_time_zone_index_type);
+    generator.set("day_period_index_type"sv, s_day_period_index_type);
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -1672,6 +1711,7 @@ struct DayPeriodData {
     locale_data.unique_calendar_symbols_lists.generate(generator, s_calendar_symbols_index_type, "s_calendar_symbol_lists"sv);
     locale_data.unique_calendars.generate(generator, "CalendarData"sv, "s_calendars"sv, 10);
     locale_data.unique_time_zones.generate(generator, "TimeZoneData"sv, "s_time_zones"sv, 30);
+    locale_data.unique_day_periods.generate(generator, "DayPeriodData"sv, "s_day_periods"sv, 30);
 
     auto append_calendars = [&](String name, auto const& calendars) {
         generator.set("name", name);
@@ -1716,13 +1756,13 @@ static constexpr Array<@time_zone_index_type@, @size@> @name@ { {)~~~");
         generator.set("size", String::number(day_periods.size()));
 
         generator.append(R"~~~(
-static constexpr Array<DayPeriodData, @size@> @name@ { {)~~~");
+static constexpr Array<@day_period_index_type@, @size@> @name@ { {)~~~");
 
-        for (auto const& day_period : day_periods) {
-            generator.set("day_period", String::number(static_cast<u8>(day_period.day_period)));
-            generator.set("begin", String::number(day_period.begin));
-            generator.set("end", String::number(day_period.end));
-            generator.append(" { @day_period@, @begin@, @end@ },");
+        bool first = true;
+        for (auto day_period : day_periods) {
+            generator.append(first ? " " : ", ");
+            generator.append(String::number(day_period));
+            first = false;
         }
 
         generator.append(" } };");
@@ -1747,7 +1787,7 @@ static constexpr Array<u8, @size@> @name@ { { )~~~");
 
     generate_mapping(generator, locale_data.locales, s_calendar_index_type, "s_locale_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
     generate_mapping(generator, locale_data.locales, s_time_zone_index_type, "s_locale_time_zones"sv, "s_time_zones_{}", [&](auto const& name, auto const& value) { append_time_zones(name, value.time_zones); });
-    generate_mapping(generator, locale_data.locales, "DayPeriodData"sv, "s_day_periods"sv, "s_day_periods_{}", [&](auto const& name, auto const& value) { append_day_periods(name, value.day_periods); });
+    generate_mapping(generator, locale_data.locales, s_day_period_index_type, "s_locale_day_periods"sv, "s_day_periods_{}", [&](auto const& name, auto const& value) { append_day_periods(name, value.day_periods); });
     generate_mapping(generator, locale_data.hour_cycle_regions, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
@@ -1968,9 +2008,11 @@ Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, 
         return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    auto day_periods = s_day_periods[locale_index];
+    auto day_periods = s_locale_day_periods[locale_index];
 
-    for (auto const& day_period : day_periods) {
+    for (auto day_period_index : day_periods) {
+        auto const& day_period = s_day_periods[day_period_index];
+
         if ((day_period.begin <= hour) && (hour < day_period.end)) {
             auto period = static_cast<Unicode::DayPeriod>(day_period.day_period);
             return Detail::get_calendar_day_period_symbol(locale, calendar, style, period);
