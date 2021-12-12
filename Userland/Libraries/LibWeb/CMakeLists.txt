@@ -92,6 +92,7 @@ set(SOURCES
     DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
+    Encoding/TextEncoder.cpp
     FontCache.cpp
     HTML/AttributeNames.cpp
     HTML/BrowsingContext.cpp

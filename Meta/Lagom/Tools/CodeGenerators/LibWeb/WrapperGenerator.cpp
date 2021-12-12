@@ -1330,7 +1330,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((i32)@value@);
 )~~~");
-    } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8ClampedArray" || type.name == "any") {
+    } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
 )~~~");
