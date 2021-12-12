@@ -32,6 +32,8 @@ public:
         return TextEncoder::create();
     }
 
+    JS::Uint8Array* encode(String const& input) const;
+
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
     TextEncoder() = default;
