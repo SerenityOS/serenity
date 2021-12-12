@@ -18,7 +18,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/poll.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -203,8 +202,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$sched_getparam(arg1, arg2);
     case SC_sched_setparam:
         return virt$sched_setparam(arg1, arg2);
-    case SC_select:
-        return virt$select(arg1);
     case SC_sendfd:
         return virt$sendfd(arg1, arg2);
     case SC_sendmsg:
@@ -698,44 +695,6 @@ int Emulator::virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags)
 
     msghdr msg = { mmu_msg.msg_name ? &address : nullptr, address_length, iovs.data(), (int)iovs.size(), mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
     return sendmsg(sockfd, &msg, flags);
-}
-
-int Emulator::virt$select(FlatPtr params_addr)
-{
-    Syscall::SC_select_params params;
-    mmu().copy_from_vm(&params, params_addr, sizeof(params));
-
-    fd_set readfds {};
-    fd_set writefds {};
-    fd_set exceptfds {};
-    struct timespec timeout;
-    u32 sigmask;
-
-    if (params.readfds)
-        mmu().copy_from_vm(&readfds, (FlatPtr)params.readfds, sizeof(readfds));
-    if (params.writefds)
-        mmu().copy_from_vm(&writefds, (FlatPtr)params.writefds, sizeof(writefds));
-    if (params.exceptfds)
-        mmu().copy_from_vm(&exceptfds, (FlatPtr)params.exceptfds, sizeof(exceptfds));
-    if (params.timeout)
-        mmu().copy_from_vm(&timeout, (FlatPtr)params.timeout, sizeof(timeout));
-    if (params.sigmask)
-        mmu().copy_from_vm(&sigmask, (FlatPtr)params.sigmask, sizeof(sigmask));
-
-    int rc = pselect(params.nfds, &readfds, &writefds, &exceptfds, params.timeout ? &timeout : nullptr, params.sigmask ? &sigmask : nullptr);
-    if (rc < 0)
-        return -errno;
-
-    if (params.readfds)
-        mmu().copy_to_vm((FlatPtr)params.readfds, &readfds, sizeof(readfds));
-    if (params.writefds)
-        mmu().copy_to_vm((FlatPtr)params.writefds, &writefds, sizeof(writefds));
-    if (params.exceptfds)
-        mmu().copy_to_vm((FlatPtr)params.exceptfds, &exceptfds, sizeof(exceptfds));
-    if (params.timeout)
-        mmu().copy_to_vm((FlatPtr)params.timeout, &timeout, sizeof(timeout));
-
-    return rc;
 }
 
 int Emulator::virt$getsockopt(FlatPtr params_addr)

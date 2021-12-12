@@ -210,7 +210,6 @@ private:
     int virt$rmdir(FlatPtr path, size_t path_length);
     int virt$sched_getparam(pid_t, FlatPtr);
     int virt$sched_setparam(int, FlatPtr);
-    int virt$select(FlatPtr);
     int virt$sendfd(int, int);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$set_coredump_metadata(FlatPtr address);
