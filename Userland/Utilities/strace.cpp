@@ -569,19 +569,6 @@ static void format_close(FormattedSyscallBuilder& builder, int fd)
     builder.add_arguments(fd);
 }
 
-static void format_select(FormattedSyscallBuilder& builder, Syscall::SC_select_params* params_p)
-{
-    // TODO: format fds and sigmask properly
-    auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
-    builder.add_arguments(
-        params.nfds,
-        PointerArgument { params.readfds },
-        PointerArgument { params.writefds },
-        PointerArgument { params.exceptfds },
-        copy_from_process(params.timeout),
-        PointerArgument { params.sigmask });
-}
-
 static void format_poll(FormattedSyscallBuilder& builder, Syscall::SC_poll_params* params_p)
 {
     // TODO: format fds and sigmask properly
@@ -765,9 +752,6 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
     case SC_recvmsg:
         format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
         result_type = Ssize;
-        break;
-    case SC_select:
-        format_select(builder, (Syscall::SC_select_params*)arg1);
         break;
     case SC_set_mmap_name:
         format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1);
