@@ -25,7 +25,7 @@ StackInfo::StackInfo()
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();
     }
-#elif __linux__
+#elif defined(__linux__)
     int rc;
     pthread_attr_t attr = {};
     if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
