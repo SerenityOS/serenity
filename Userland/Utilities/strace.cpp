@@ -696,77 +696,77 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
 
     ResultType result_type { Int };
     switch (syscall_function) {
-    case SC_getrandom:
-        format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
+    case SC_clock_gettime:
+        format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
         break;
-    case SC_realpath:
-        format_realpath(builder, (Syscall::SC_realpath_params*)arg1);
+    case SC_close:
+        format_close(builder, (int)arg1);
+        break;
+    case SC_connect:
+        format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
+        break;
+    case SC_dbgputstr:
+        format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
         break;
     case SC_exit:
         format_exit(builder, (int)arg1);
         result_type = Void;
         break;
-    case SC_open:
-        format_open(builder, (Syscall::SC_open_params*)arg1);
-        break;
-    case SC_ioctl:
-        format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
-        break;
     case SC_fstat:
         format_fstat(builder, (int)arg1, (struct stat*)arg2);
         result_type = Ssize;
         break;
-    case SC_stat:
-        format_stat(builder, (Syscall::SC_stat_params*)arg1);
+    case SC_get_process_name:
+        format_get_process_name(builder, (char*)arg1, (size_t)arg2);
+        break;
+    case SC_getrandom:
+        format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
+        break;
+    case SC_ioctl:
+        format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
         break;
     case SC_lseek:
         format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
-        break;
-    case SC_read:
-        format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
-        result_type = Ssize;
-        break;
-    case SC_write:
-        format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
-        result_type = Ssize;
-        break;
-    case SC_close:
-        format_close(builder, (int)arg1);
-        break;
-    case SC_select:
-        format_select(builder, (Syscall::SC_select_params*)arg1);
-        break;
-    case SC_socket:
-        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
-        break;
-    case SC_recvmsg:
-        format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
-        result_type = Ssize;
-        break;
-    case SC_connect:
-        format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
         break;
     case SC_mmap:
         format_mmap(builder, (Syscall::SC_mmap_params*)arg1);
         result_type = VoidP;
         break;
+    case SC_mprotect:
+        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+        break;
     case SC_munmap:
         format_munmap(builder, (void*)arg1, (size_t)arg2);
         break;
-    case SC_mprotect:
-        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+    case SC_open:
+        format_open(builder, (Syscall::SC_open_params*)arg1);
+        break;
+    case SC_read:
+        format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
+        result_type = Ssize;
+        break;
+    case SC_realpath:
+        format_realpath(builder, (Syscall::SC_realpath_params*)arg1);
+        break;
+    case SC_recvmsg:
+        format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
+        result_type = Ssize;
+        break;
+    case SC_select:
+        format_select(builder, (Syscall::SC_select_params*)arg1);
         break;
     case SC_set_mmap_name:
         format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1);
         break;
-    case SC_clock_gettime:
-        format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
+    case SC_socket:
+        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
         break;
-    case SC_dbgputstr:
-        format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
+    case SC_stat:
+        format_stat(builder, (Syscall::SC_stat_params*)arg1);
         break;
-    case SC_get_process_name:
-        format_get_process_name(builder, (char*)arg1, (size_t)arg2);
+    case SC_write:
+        format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
+        result_type = Ssize;
         break;
     case SC_getuid:
     case SC_geteuid:
