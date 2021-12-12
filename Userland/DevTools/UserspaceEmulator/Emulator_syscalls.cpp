@@ -17,6 +17,7 @@
 #include <strings.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/poll.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -174,6 +175,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$pipe(arg1, arg2);
     case SC_pledge:
         return virt$pledge(arg1);
+    case SC_poll:
+        return virt$poll(arg1);
     case SC_profiling_disable:
         return virt$profiling_disable(arg1);
     case SC_profiling_enable:
@@ -1619,5 +1622,36 @@ int Emulator::virt$futex(FlatPtr params_addr)
 
     // FIXME: Implement this.
     return 0;
+}
+
+int Emulator::virt$poll(FlatPtr params_addr)
+{
+    Syscall::SC_poll_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    if (params.nfds >= FD_SETSIZE)
+        return EINVAL;
+
+    Vector<pollfd, FD_SETSIZE> fds;
+    struct timespec timeout;
+    u32 sigmask;
+
+    if (params.fds)
+        mmu().copy_from_vm(fds.data(), (FlatPtr)params.fds, sizeof(pollfd) * params.nfds);
+    if (params.timeout)
+        mmu().copy_from_vm(&timeout, (FlatPtr)params.timeout, sizeof(timeout));
+    if (params.sigmask)
+        mmu().copy_from_vm(&sigmask, (FlatPtr)params.sigmask, sizeof(sigmask));
+
+    int rc = ppoll(params.fds ? fds.data() : nullptr, params.nfds, params.timeout ? &timeout : nullptr, params.sigmask ? &sigmask : nullptr);
+    if (rc < 0)
+        return -errno;
+
+    if (params.fds)
+        mmu().copy_to_vm((FlatPtr)params.fds, fds.data(), sizeof(pollfd) * params.nfds);
+    if (params.timeout)
+        mmu().copy_to_vm((FlatPtr)params.timeout, &timeout, sizeof(timeout));
+
+    return rc;
 }
 }

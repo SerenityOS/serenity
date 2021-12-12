@@ -196,6 +196,7 @@ private:
     FlatPtr virt$perf_register_string(FlatPtr, size_t);
     int virt$pipe(FlatPtr pipefd, int flags);
     u32 virt$pledge(u32);
+    int virt$poll(FlatPtr);
     int virt$profiling_disable(pid_t);
     int virt$profiling_enable(pid_t);
     int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
