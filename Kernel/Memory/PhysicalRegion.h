@@ -46,6 +46,9 @@ private:
 
     NonnullOwnPtrVector<PhysicalZone> m_zones;
 
+    size_t m_large_zones;
+    size_t m_small_zones;
+
     PhysicalZone::List m_usable_zones;
     PhysicalZone::List m_full_zones;
 

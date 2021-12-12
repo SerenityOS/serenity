@@ -42,7 +42,7 @@ void PhysicalRegion::initialize_zones()
     size_t remaining_pages = m_pages;
     auto base_address = m_lower;
 
-    auto make_zones = [&](size_t zone_size) {
+    auto make_zones = [&](size_t zone_size) -> size_t {
         size_t pages_per_zone = zone_size / PAGE_SIZE;
         size_t zone_count = 0;
         auto first_address = base_address;
@@ -55,13 +55,14 @@ void PhysicalRegion::initialize_zones()
         }
         if (zone_count)
             dmesgln(" * {}x PhysicalZone ({} MiB) @ {:016x}-{:016x}", zone_count, pages_per_zone / 256, first_address.get(), base_address.get() - pages_per_zone * PAGE_SIZE - 1);
+        return zone_count;
     };
 
     // First make 16 MiB zones (with 4096 pages each)
-    make_zones(large_zone_size);
+    m_large_zones = make_zones(large_zone_size);
 
     // Then divide any remaining space into 1 MiB zones (with 256 pages each)
-    make_zones(small_zone_size);
+    m_small_zones = make_zones(small_zone_size);
 }
 
 OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned page_count)
@@ -123,29 +124,20 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 
 void PhysicalRegion::return_page(PhysicalAddress paddr)
 {
-    size_t full_size_zone_index = (paddr.get() - lower().get()) / large_zone_size;
-    size_t large_zone_count = m_pages / (large_zone_size / PAGE_SIZE);
+    auto large_zone_base = lower().get();
+    auto small_zone_base = lower().get() + (m_large_zones * large_zone_size);
 
-    if (full_size_zone_index < large_zone_count) {
-        auto& zone = m_zones[full_size_zone_index];
-        VERIFY(zone.contains(paddr));
-        zone.deallocate_block(paddr, 0);
-        if (m_full_zones.contains(zone))
-            m_usable_zones.append(zone);
-        return;
-    }
+    size_t zone_index;
+    if (paddr.get() < small_zone_base)
+        zone_index = (paddr.get() - large_zone_base) / large_zone_size;
+    else
+        zone_index = m_large_zones + (paddr.get() - small_zone_base) / small_zone_size;
 
-    for (size_t i = large_zone_count; i < m_zones.size(); ++i) {
-        auto& zone = m_zones[i];
-        if (zone.contains(paddr)) {
-            zone.deallocate_block(paddr, 0);
-            if (m_full_zones.contains(zone))
-                m_usable_zones.append(zone);
-            return;
-        }
-    }
-
-    VERIFY_NOT_REACHED();
+    auto& zone = m_zones[zone_index];
+    VERIFY(zone.contains(paddr));
+    zone.deallocate_block(paddr, 0);
+    if (m_full_zones.contains(zone))
+        m_usable_zones.append(zone);
 }
 
 }
