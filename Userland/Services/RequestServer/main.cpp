@@ -20,15 +20,15 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
-
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
+    TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd"));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
+    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd"));
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    TRY(Core::System::pledge("stdio inet accept unix sendfd recvfd"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
