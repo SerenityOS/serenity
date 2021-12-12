@@ -67,14 +67,7 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(NonnullOwnPtr<KString> t
 {
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
-{
-    auto acpi_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
-    return acpi_directory;
-}
-
-UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
-    : SysFSDirectory(firmware_directory)
+UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_components()
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;
@@ -97,6 +90,18 @@ UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& 
     } else {
         m_components.append(ACPISysFSComponent::create("RSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
     }
+}
+
+UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
+{
+    auto acpi_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
+    acpi_directory->find_tables_and_register_them_as_components();
+    return acpi_directory;
+}
+
+UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
+    : SysFSDirectory(firmware_directory)
+{
 }
 
 void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, size_t)> callback)
