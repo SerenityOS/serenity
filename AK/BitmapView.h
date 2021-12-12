@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/BuiltinWrappers.h>
 #include <AK/Optional.h>
-#include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
@@ -205,18 +205,20 @@ public:
             return {};
         }
 
-        u32* bitmap32 = (u32*)m_data;
+        size_t bit_size = 8 * sizeof(size_t);
+
+        size_t* bitmap = (size_t*)m_data;
 
         // Calculating the start offset.
-        size_t start_bucket_index = from / 32;
-        size_t start_bucket_bit = from % 32;
+        size_t start_bucket_index = from / bit_size;
+        size_t start_bucket_bit = from % bit_size;
 
         size_t* start_of_free_chunks = &from;
         size_t free_chunks = 0;
 
-        for (size_t bucket_index = start_bucket_index; bucket_index < m_size / 32; ++bucket_index) {
-            if (bitmap32[bucket_index] == 0xffffffff) {
-                // Skip over completely full bucket of size 32.
+        for (size_t bucket_index = start_bucket_index; bucket_index < m_size / bit_size; ++bucket_index) {
+            if (bitmap[bucket_index] == NumericLimits<size_t>::max()) {
+                // Skip over completely full bucket of size bit_size.
                 if (free_chunks >= min_length) {
                     return min(free_chunks, max_length);
                 }
@@ -224,12 +226,12 @@ public:
                 start_bucket_bit = 0;
                 continue;
             }
-            if (bitmap32[bucket_index] == 0x0) {
-                // Skip over completely empty bucket of size 32.
+            if (bitmap[bucket_index] == 0x0) {
+                // Skip over completely empty bucket of size bit_size.
                 if (free_chunks == 0) {
-                    *start_of_free_chunks = bucket_index * 32;
+                    *start_of_free_chunks = bucket_index * bit_size;
                 }
-                free_chunks += 32;
+                free_chunks += bit_size;
                 if (free_chunks >= max_length) {
                     return max_length;
                 }
@@ -237,26 +239,26 @@ public:
                 continue;
             }
 
-            u32 bucket = bitmap32[bucket_index];
+            size_t bucket = bitmap[bucket_index];
             u8 viewed_bits = start_bucket_bit;
             u32 trailing_zeroes = 0;
 
             bucket >>= viewed_bits;
             start_bucket_bit = 0;
 
-            while (viewed_bits < 32) {
+            while (viewed_bits < bit_size) {
                 if (bucket == 0) {
                     if (free_chunks == 0) {
-                        *start_of_free_chunks = bucket_index * 32 + viewed_bits;
+                        *start_of_free_chunks = bucket_index * bit_size + viewed_bits;
                     }
-                    free_chunks += 32 - viewed_bits;
-                    viewed_bits = 32;
+                    free_chunks += bit_size - viewed_bits;
+                    viewed_bits = bit_size;
                 } else {
-                    trailing_zeroes = count_trailing_zeroes_32(bucket);
+                    trailing_zeroes = count_trailing_zeroes(bucket);
                     bucket >>= trailing_zeroes;
 
                     if (free_chunks == 0) {
-                        *start_of_free_chunks = bucket_index * 32 + viewed_bits;
+                        *start_of_free_chunks = bucket_index * bit_size + viewed_bits;
                     }
                     free_chunks += trailing_zeroes;
                     viewed_bits += trailing_zeroes;
@@ -266,7 +268,7 @@ public:
                     }
 
                     // Deleting trailing ones.
-                    u32 trailing_ones = count_trailing_zeroes_32(~bucket);
+                    u32 trailing_ones = count_trailing_zeroes(~bucket);
                     bucket >>= trailing_ones;
                     viewed_bits += trailing_ones;
                     free_chunks = 0;
@@ -275,8 +277,8 @@ public:
         }
 
         if (free_chunks < min_length) {
-            size_t first_trailing_bit = (m_size / 32) * 32;
-            size_t trailing_bits = size() % 32;
+            size_t first_trailing_bit = (m_size / bit_size) * bit_size;
+            size_t trailing_bits = size() % bit_size;
             for (size_t i = 0; i < trailing_bits; ++i) {
                 if (!get(first_trailing_bit + i)) {
                     if (free_chunks == 0)
