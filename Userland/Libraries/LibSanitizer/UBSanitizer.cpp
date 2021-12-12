@@ -13,7 +13,7 @@ bool AK::UBSanitizer::g_ubsan_is_deadly { false };
 
 #define WARNLN_AND_DBGLN(fmt, ...) \
     warnln(fmt, ##__VA_ARGS__);    \
-    dbgln(fmt, ##__VA_ARGS__);
+    dbgln("\x1B[31m" fmt "\x1B[0m", ##__VA_ARGS__);
 
 extern "C" {
 
