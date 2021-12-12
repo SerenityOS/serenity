@@ -71,4 +71,10 @@ inline Handle<T> make_handle(T* cell)
     return Handle<T>::create(cell);
 }
 
+template<class T>
+inline Handle<T> make_handle(T& cell)
+{
+    return Handle<T>::create(&cell);
+}
+
 }
