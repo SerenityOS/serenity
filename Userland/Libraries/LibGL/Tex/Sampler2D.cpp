@@ -16,33 +16,34 @@ static constexpr float wrap_repeat(float value)
     return value - floorf(value);
 }
 
-static constexpr float wrap_mirrored_repeat(float value)
+static constexpr float wrap_clamp_to_edge(float value, int num_texels)
+{
+    float const clamp_limit = 1.f / (2 * num_texels);
+    return clamp(value, clamp_limit, 1.0f - clamp_limit);
+}
+
+static constexpr float wrap_mirrored_repeat(float value, int num_texels)
 {
     float integer = floorf(value);
     float frac = value - integer;
     bool iseven = fmodf(integer, 2.0f) == 0.0f;
-    return iseven ? frac : 1 - frac;
+    return wrap_clamp_to_edge(iseven ? frac : 1 - frac, num_texels);
 }
 
-static constexpr float wrap_clamp(float value)
-{
-    return clamp(value, 0.0f, 1.0f);
-}
-
-static constexpr float wrap(float value, GLint mode)
+static constexpr float wrap(float value, GLint mode, int num_texels)
 {
     switch (mode) {
     case GL_REPEAT:
         return wrap_repeat(value);
 
-    // FIXME: These clamp modes actually have slightly different behavior
+    // FIXME: These clamp modes actually have slightly different behavior. Currently we use GL_CLAMP_TO_EDGE for all of them.
     case GL_CLAMP:
     case GL_CLAMP_TO_BORDER:
     case GL_CLAMP_TO_EDGE:
-        return wrap_clamp(value);
+        return wrap_clamp_to_edge(value, num_texels);
 
     case GL_MIRRORED_REPEAT:
-        return wrap_mirrored_repeat(value);
+        return wrap_mirrored_repeat(value, num_texels);
 
     default:
         VERIFY_NOT_REACHED();
@@ -59,11 +60,11 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
     if (mip.width() < 1 || mip.height() < 1)
         return { 1, 1, 1, 1 };
 
-    float x = wrap(uv.x(), m_wrap_t_mode);
-    float y = wrap(uv.y(), m_wrap_s_mode);
+    float x = wrap(uv.x(), m_wrap_s_mode, mip.width());
+    float y = wrap(uv.y(), m_wrap_t_mode, mip.height());
 
-    x *= mip.width() - 1;
-    y *= mip.height() - 1;
+    x *= mip.width();
+    y *= mip.height();
 
     // Sampling implemented according to https://www.khronos.org/registry/OpenGL/specs/gl/glspec121.pdf Chapter 3.8
     if (m_mag_filter == GL_NEAREST) {
