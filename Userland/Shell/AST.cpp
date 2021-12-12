@@ -879,7 +879,7 @@ CloseFdRedirection::~CloseFdRedirection()
 void CommandLiteral::dump(int level) const
 {
     Node::dump(level);
-    print_indented("(Generated command literal)", level + 1);
+    print_indented(String::formatted("(Generated command literal: {})", m_command), level + 1);
 }
 
 RefPtr<Value> CommandLiteral::run(RefPtr<Shell>)
@@ -2035,6 +2035,13 @@ RefPtr<Value> Join::run(RefPtr<Shell> shell)
     auto left = m_left->to_lazy_evaluated_commands(shell);
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
+
+    if (left.last().should_wait && !left.last().next_chain.is_empty()) {
+        // Join (C0s*; C1) X -> (C0s*; Join C1 X)
+        auto& lhs_node = left.last().next_chain.last().node;
+        lhs_node = make_ref_counted<Join>(m_position, lhs_node, m_right);
+        return make_ref_counted<CommandSequenceValue>(move(left));
+    }
 
     auto right = m_right->to_lazy_evaluated_commands(shell);
     if (shell && shell->has_any_error())
