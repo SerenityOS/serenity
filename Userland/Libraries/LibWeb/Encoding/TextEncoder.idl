@@ -5,5 +5,5 @@ interface TextEncoder {
     [NewObject] Uint8Array encode(optional USVString input = "");
     // TextEncoderEncodeIntoResult encodeInto(USVString source, [AllowShared] Uint8Array destination);
 
-    // readonly attribute DOMString encoding;
+    readonly attribute DOMString encoding;
 };
