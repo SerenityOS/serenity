@@ -26,6 +26,7 @@ public:
     static NonnullRefPtr<ACPISysFSDirectory> must_create(FirmwareSysFSDirectory& firmware_directory);
 
 private:
+    void find_tables_and_register_them_as_components();
     explicit ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory);
 };
 
