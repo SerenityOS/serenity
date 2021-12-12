@@ -34,6 +34,8 @@ public:
 
     JS::Uint8Array* encode(String const& input) const;
 
+    static FlyString const& encoding();
+
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
     TextEncoder() = default;
