@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
 #include <LibGL/Tex/Texture2D.h>
 
@@ -34,6 +35,9 @@ public:
     void set_texture_3d_enabled(bool texture_3d_enabled) { m_texture_3d_enabled = texture_3d_enabled; }
     bool texture_cube_map_enabled() const { return m_texture_cube_map_enabled; };
     void set_texture_cube_map_enabled(bool texture_cube_map_enabled) { m_texture_cube_map_enabled = texture_cube_map_enabled; }
+
+    IntrusiveListNode<TextureUnit> m_bound_node;
+    using BoundList = IntrusiveList<&TextureUnit::m_bound_node>;
 
 private:
     mutable RefPtr<Texture2D> m_texture_target_2d { nullptr };
