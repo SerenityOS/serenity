@@ -40,6 +40,9 @@ constexpr auto s_calendar_format_index_type = "u8"sv;
 using SymbolListIndexType = u16;
 constexpr auto s_symbol_list_index_type = "u16"sv;
 
+using CalendarSymbolsIndexType = u16;
+constexpr auto s_calendar_symbols_index_type = "u16"sv;
+
 struct CalendarPattern : public Unicode::CalendarPattern {
     bool contains_only_date_fields() const
     {
@@ -246,9 +249,40 @@ struct AK::Traits<CalendarFormat> : public GenericTraits<CalendarFormat> {
 using SymbolList = Vector<StringIndexType>;
 
 struct CalendarSymbols {
+    unsigned hash() const
+    {
+        auto hash = pair_int_hash(narrow_symbols, short_symbols);
+        hash = pair_int_hash(hash, long_symbols);
+        return hash;
+    }
+
+    bool operator==(CalendarSymbols const& other) const
+    {
+        return (narrow_symbols == other.narrow_symbols)
+            && (short_symbols == other.short_symbols)
+            && (long_symbols == other.long_symbols);
+    }
+
     SymbolListIndexType narrow_symbols { 0 };
     SymbolListIndexType short_symbols { 0 };
     SymbolListIndexType long_symbols { 0 };
+};
+
+template<>
+struct AK::Formatter<CalendarSymbols> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, CalendarSymbols const& symbols)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ {}, {}, {} }}",
+            symbols.narrow_symbols,
+            symbols.short_symbols,
+            symbols.long_symbols);
+    }
+};
+
+template<>
+struct AK::Traits<CalendarSymbols> : public GenericTraits<CalendarSymbols> {
+    static unsigned hash(CalendarSymbols const& c) { return c.hash(); }
 };
 
 struct Calendar {
@@ -263,7 +297,7 @@ struct Calendar {
     Vector<CalendarRangePatternIndexType> range_formats {};
     Vector<CalendarRangePatternIndexType> range12_formats {};
 
-    Vector<CalendarSymbols> symbols {};
+    Vector<CalendarSymbolsIndexType> symbols {};
 };
 
 struct TimeZone {
@@ -290,6 +324,7 @@ struct UnicodeLocaleData {
     UniqueStorage<CalendarRangePattern, CalendarRangePatternIndexType> unique_range_patterns;
     UniqueStorage<CalendarFormat, CalendarFormatIndexType> unique_formats;
     UniqueStorage<SymbolList, SymbolListIndexType> unique_symbol_lists;
+    UniqueStorage<CalendarSymbols, CalendarSymbolsIndexType> unique_calendar_symbols;
 
     HashMap<String, Locale> locales;
 
@@ -901,10 +936,13 @@ static void parse_calendar_symbols(Calendar& calendar, JsonObject const& calenda
         if (symbol_index >= calendar.symbols.size())
             calendar.symbols.resize(symbol_index + 1);
 
-        auto& symbols = calendar.symbols.at(symbol_index);
+        CalendarSymbols symbols {};
         symbols.narrow_symbols = locale_data.unique_symbol_lists.ensure(move(symbol_lists[0]));
         symbols.short_symbols = locale_data.unique_symbol_lists.ensure(move(symbol_lists[1]));
         symbols.long_symbols = locale_data.unique_symbol_lists.ensure(move(symbol_lists[2]));
+
+        auto calendar_symbols_index = locale_data.unique_calendar_symbols.ensure(move(symbols));
+        calendar.symbols[symbol_index] = calendar_symbols_index;
     };
 
     auto parse_era_symbols = [&](auto const& symbols_object) {
@@ -1340,6 +1378,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("calendar_range_pattern_index_type"sv, s_calendar_range_pattern_index_type);
     generator.set("calendar_format_index_type"sv, s_calendar_format_index_type);
     generator.set("symbol_list_index_type"sv, s_symbol_list_index_type);
+    generator.set("calendar_symbols_index_type"sv, s_calendar_symbols_index_type);
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -1467,7 +1506,11 @@ struct CalendarFormat {
     @calendar_pattern_index_type@ short_format { 0 };
 };
 
-using CalendarSymbols = Span<@string_index_type@ const>;
+struct CalendarSymbols {
+    @symbol_list_index_type@ narrow_symbols { 0 };
+    @symbol_list_index_type@ short_symbols { 0 };
+    @symbol_list_index_type@ long_symbols { 0 };
+};
 
 struct CalendarData {
     @string_index_type@ calendar { 0 };
@@ -1481,7 +1524,7 @@ struct CalendarData {
     Span<@calendar_range_pattern_index_type@ const> range_formats {};
     Span<@calendar_range_pattern_index_type@ const> range12_formats {};
 
-    Array<CalendarSymbols, 4> symbols {};
+    Array<@calendar_symbols_index_type@, 4> symbols {};
 };
 
 struct TimeZoneData {
@@ -1499,6 +1542,7 @@ struct DayPeriodData {
 
     locale_data.unique_formats.generate(generator, "CalendarFormat"sv, "s_calendar_formats"sv, 10);
     locale_data.unique_symbol_lists.generate(generator, s_string_index_type, "s_symbol_lists"sv);
+    locale_data.unique_calendar_symbols.generate(generator, "CalendarSymbols"sv, "s_calendar_symbols"sv, 10);
 
     auto append_pattern_list = [&](auto name, auto type, auto const& formats) {
         generator.set("name", move(name));
@@ -1518,27 +1562,10 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto append_calendar_symbols = [&](auto name, auto const& symbols) {
-        static unsigned index = 0; // NOTE: This is very temporary, until the CalendarSymbols struct is made unique.
-        name = String::formatted("{}_{}", name, index++);
-
-        generator.set("narrow_symbols", String::number(symbols.narrow_symbols));
-        generator.set("short_symbols", String::number(symbols.short_symbols));
-        generator.set("long_symbols", String::number(symbols.long_symbols));
-        generator.set("name", name);
-
-        generator.append(R"~~~(
-static constexpr Array<@symbol_list_index_type@, 3> @name@ { { @narrow_symbols@, @short_symbols@, @long_symbols@ } };)~~~");
-
-        return name;
-    };
-
     auto append_calendars = [&](String name, auto const& calendars) {
         auto format_name = [&](StringView calendar_key, StringView type) {
             return String::formatted("{}_{}_{}", name, calendar_key, type);
         };
-
-        Vector<String> symbols_names;
 
         for (auto const& calendar_key : locale_data.calendars) {
             auto const& calendar = calendars.find(calendar_key)->value;
@@ -1546,15 +1573,6 @@ static constexpr Array<@symbol_list_index_type@, 3> @name@ { { @narrow_symbols@,
             append_pattern_list(format_name(calendar_key, "formats"sv), s_calendar_pattern_index_type, calendar.available_formats);
             append_pattern_list(format_name(calendar_key, "range_formats"sv), s_calendar_range_pattern_index_type, calendar.range_formats);
             append_pattern_list(format_name(calendar_key, "range12_formats"sv), s_calendar_range_pattern_index_type, calendar.range12_formats);
-            generator.append("\n");
-
-            auto symbols_name = format_name(calendar_key, "symbols"sv);
-
-            for (auto const& symbols : calendar.symbols) {
-                auto name = append_calendar_symbols(symbols_name, symbols);
-                symbols_names.append(name);
-            }
-
             generator.append("\n");
         }
 
@@ -1583,9 +1601,9 @@ static constexpr Array<CalendarData, @size@> @name@ { {)~~~");
             generator.append("@default_range_format@, @range_formats@.span(), @range12_formats@.span(), {");
 
             bool first = true;
-            for (auto const& symbols_name : symbols_names) {
+            for (auto symbols : calendar.symbols) {
                 generator.append(first ? " " : ", ");
-                generator.append(String::formatted("{}.span()", symbols_name));
+                generator.append(String::number(symbols));
                 first = false;
             }
 
@@ -1805,16 +1823,30 @@ Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView lo
     return result;
 }
 
-static CalendarSymbols find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
+static Span<@string_index_type@ const> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto symbol_index = to_underlying(symbol);
-        auto style_index = to_underlying(style);
 
-        auto symbols = data->symbols.at(symbol_index);
-        VERIFY(style_index < symbols.size());
+        auto calendar_symbols_index = data->symbols.at(symbol_index);
+        auto const& symbols = s_calendar_symbols.at(calendar_symbols_index);
 
-        auto symbol_list_index = symbols.at(style_index);
+        @symbol_list_index_type@ symbol_list_index = 0;
+
+        switch (style) {
+        case CalendarPatternStyle::Narrow:
+            symbol_list_index = symbols.narrow_symbols;
+            break;
+        case CalendarPatternStyle::Short:
+            symbol_list_index = symbols.short_symbols;
+            break;
+        case CalendarPatternStyle::Long:
+            symbol_list_index = symbols.long_symbols;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
         return s_symbol_lists.at(symbol_list_index);
     }
 
