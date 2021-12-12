@@ -14,7 +14,7 @@ index 974d67f0..3496eebe 100644
  static char *
  ssh_askpass(char *askpass, const char *msg, const char *env_hint)
  {
-@@ -122,62 +126,33 @@ ssh_askpass(char *askpass, const char *msg, const char *env_hint)
+@@ -122,62 +126,35 @@ ssh_askpass(char *askpass, const char *msg, const char *env_hint)
  char *
  read_passphrase(const char *prompt, int flags)
  {
@@ -56,7 +56,8 @@ index 974d67f0..3496eebe 100644
 +	struct termios no_echo = original;
 +	no_echo.c_lflag &= ~ECHO;
 +	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &no_echo) < 0) {
-+		return errno;
++		perror("Failed to turn off echo for passphrase");
++		exit(errno);
  	}
  
 -	if ((flags & RP_USE_ASKPASS) && getenv("DISPLAY") == NULL)
@@ -79,7 +80,8 @@ index 974d67f0..3496eebe 100644
 +	tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
 +	putchar('\n');
 +	if (ret < 0) {
-+		return errno;
++		perror("Failed to read passphrase");
++		exit(errno);
  	}
  
 -	if (readpassphrase(prompt, buf, sizeof buf, rppflags) == NULL) {
