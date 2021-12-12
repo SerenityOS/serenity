@@ -229,6 +229,7 @@ set(KERNEL_SOURCES
     Syscalls/perf_event.cpp
     Syscalls/pipe.cpp
     Syscalls/pledge.cpp
+    Syscalls/poll.cpp
     Syscalls/prctl.cpp
     Syscalls/process.cpp
     Syscalls/profiling.cpp
