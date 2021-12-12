@@ -72,7 +72,7 @@ protected:
 class DMIEntryPointExposedBlob : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "smbios_entry_point"sv; }
-    static NonnullRefPtr<DMIEntryPointExposedBlob> create(PhysicalAddress dmi_entry_point, size_t blob_size);
+    static NonnullRefPtr<DMIEntryPointExposedBlob> must_create(PhysicalAddress dmi_entry_point, size_t blob_size);
 
 private:
     DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size);
@@ -84,7 +84,7 @@ private:
 class SMBIOSExposedTable : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "DMI"sv; }
-    static NonnullRefPtr<SMBIOSExposedTable> create(PhysicalAddress, size_t blob_size);
+    static NonnullRefPtr<SMBIOSExposedTable> must_create(PhysicalAddress, size_t blob_size);
 
 private:
     SMBIOSExposedTable(PhysicalAddress dmi_entry_point, size_t blob_size);
@@ -97,7 +97,7 @@ private:
 class BIOSSysFSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "bios"sv; }
-    static ErrorOr<NonnullRefPtr<BIOSSysFSDirectory>> try_create(FirmwareSysFSDirectory&);
+    static NonnullRefPtr<BIOSSysFSDirectory> must_create(FirmwareSysFSDirectory&);
 
     void create_components();
 
