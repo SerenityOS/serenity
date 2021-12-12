@@ -1095,9 +1095,14 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         set_edit_mode(EditMode::Diff);
     });
     m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>("GML Preview", "");
+    m_diagnostics_widget = m_action_tab_widget->add_tab<DiagnosticsWidget>("Diagnostics");
 
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();
+    };
+
+    DiagnosticsData::the().on_update = [this] {
+        m_diagnostics_widget->refresh();
     };
 }
 

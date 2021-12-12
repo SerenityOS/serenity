@@ -104,10 +104,8 @@ private:
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
     RefPtr<GUI::Window> m_parameters_hint_tooltip_window;
-    RefPtr<GUI::Window> m_diagnostic_display_tooltip_window;
     RefPtr<Web::OutOfProcessWebView> m_documentation_page_view;
     RefPtr<Web::OutOfProcessWebView> m_parameter_hint_page_view;
-    RefPtr<Web::OutOfProcessWebView> m_diagnostic_display_view;
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };

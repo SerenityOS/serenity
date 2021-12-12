@@ -11,6 +11,7 @@
 #include "ClassViewWidget.h"
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/DisassemblyWidget.h"
+#include "DiagnosticsWidget.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
 #include "GMLPreviewWidget.h"
@@ -186,6 +187,7 @@ private:
     RefPtr<Locator> m_locator;
     RefPtr<FindInFilesWidget> m_find_in_files_widget;
     RefPtr<ToDoEntriesWidget> m_todo_entries_widget;
+    RefPtr<DiagnosticsWidget> m_diagnostics_widget;
     RefPtr<DebugInfoWidget> m_debug_info_widget;
     RefPtr<DisassemblyWidget> m_disassembly_widget;
     RefPtr<Threading::Thread> m_debugger_thread;

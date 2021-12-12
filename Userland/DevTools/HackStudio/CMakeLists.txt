@@ -23,6 +23,7 @@ set(SOURCES
     Debugger/EvaluateExpressionDialog.cpp
     Debugger/RegistersModel.cpp
     Debugger/VariablesModel.cpp
+    DiagnosticsWidget.cpp
     Dialogs/NewProjectDialog.cpp
     Dialogs/NewProjectDialogGML.h
     Dialogs/ProjectTemplatesModel.cpp

@@ -8,7 +8,8 @@
 
 #include <AK/Assertions.h>
 #include <LibGUI/AutocompleteProvider.h>
-#include <LibIPC/Forward.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 
 namespace HackStudio {
 
