@@ -12,9 +12,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd unix rpath"));
-    Core::EventLoop loop;
     TRY(Core::System::pledge("stdio recvfd sendfd unix"));
+    Core::EventLoop loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto engine = TRY(ChessEngine::try_create(Core::File::standard_input(), Core::File::standard_output()));
