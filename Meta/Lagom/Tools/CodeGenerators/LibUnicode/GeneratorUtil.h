@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
@@ -14,6 +15,7 @@
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/Traits.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -24,6 +26,26 @@ inline constexpr bool StorageTypeIsList = false;
 
 template<class T>
 inline constexpr bool StorageTypeIsList<Vector<T>> = true;
+
+template<typename T>
+concept IntegralOrEnum = Integral<T> || Enum<T>;
+
+template<IntegralOrEnum T>
+struct AK::Traits<Vector<T>> : public GenericTraits<Vector<T>> {
+    static unsigned hash(Vector<T> const& list)
+    {
+        auto hash = int_hash(static_cast<u32>(list.size()));
+
+        for (auto value : list) {
+            if constexpr (Enum<T>)
+                hash = pair_int_hash(hash, to_underlying(value));
+            else
+                hash = pair_int_hash(hash, value);
+        }
+
+        return hash;
+    }
+};
 
 template<typename StorageType, typename IndexType>
 class UniqueStorage {

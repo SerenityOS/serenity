@@ -130,20 +130,6 @@ struct AK::Traits<NumberFormat> : public GenericTraits<NumberFormat> {
 };
 
 using NumberFormatList = Vector<NumberFormatIndexType>;
-
-template<>
-struct AK::Traits<NumberFormatList> : public GenericTraits<NumberFormatList> {
-    static unsigned hash(NumberFormatList const& formats)
-    {
-        auto hash = int_hash(static_cast<u32>(formats.size()));
-
-        for (auto format : formats)
-            hash = pair_int_hash(hash, format);
-
-        return hash;
-    }
-};
-
 using NumericSymbolList = Vector<StringIndexType>;
 
 struct NumberSystem {
