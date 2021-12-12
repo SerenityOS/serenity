@@ -315,7 +315,6 @@ public:
     ErrorOr<FlatPtr> sys$msyscall(Userspace<void*>);
     ErrorOr<FlatPtr> sys$msync(Userspace<void*>, size_t, int flags);
     ErrorOr<FlatPtr> sys$purge(int mode);
-    ErrorOr<FlatPtr> sys$select(Userspace<const Syscall::SC_select_params*>);
     ErrorOr<FlatPtr> sys$poll(Userspace<const Syscall::SC_poll_params*>);
     ErrorOr<FlatPtr> sys$get_dir_entries(int fd, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$getcwd(Userspace<char*>, size_t);
