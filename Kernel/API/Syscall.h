@@ -150,7 +150,6 @@ enum class NeedsBigProcessLock {
     S(rmdir, NeedsBigProcessLock::Yes)                      \
     S(sched_getparam, NeedsBigProcessLock::Yes)             \
     S(sched_setparam, NeedsBigProcessLock::Yes)             \
-    S(select, NeedsBigProcessLock::Yes)                     \
     S(sendfd, NeedsBigProcessLock::Yes)                     \
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
     S(set_coredump_metadata, NeedsBigProcessLock::Yes)      \
@@ -262,15 +261,6 @@ struct SC_open_params {
     StringArgument path;
     int options;
     u16 mode;
-};
-
-struct SC_select_params {
-    int nfds;
-    fd_set* readfds;
-    fd_set* writefds;
-    fd_set* exceptfds;
-    const struct timespec* timeout;
-    const u32* sigmask;
 };
 
 struct SC_poll_params {

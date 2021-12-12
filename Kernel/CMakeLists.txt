@@ -241,7 +241,6 @@ set(KERNEL_SOURCES
     Syscalls/rename.cpp
     Syscalls/rmdir.cpp
     Syscalls/sched.cpp
-    Syscalls/select.cpp
     Syscalls/sendfd.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
