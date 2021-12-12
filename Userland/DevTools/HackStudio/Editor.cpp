@@ -647,6 +647,9 @@ void Editor::set_language_client_for(const CodeDocument& document)
     if (document.language() == Language::TextWasm)
         m_language_client = get_language_client<LanguageClients::Wasm::ServerConnection>(project().root_path());
 
+    if (document.language() == Language::JavaScript)
+        m_language_client = get_language_client<LanguageClients::JS::ServerConnection>(project().root_path());
+
     if (!m_language_client)
         return;
 

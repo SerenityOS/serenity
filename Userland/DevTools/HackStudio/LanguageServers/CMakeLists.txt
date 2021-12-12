@@ -13,5 +13,6 @@ serenity_lib(LibLanguageServer language_server)
 target_link_libraries(LibLanguageServer LibC)
 
 add_subdirectory(Cpp)
+add_subdirectory(JS)
 add_subdirectory(Shell)
 add_subdirectory(Wasm)
