@@ -7,9 +7,15 @@ die() {
     exit 1
 }
 
+USE_FUSE2FS=0
+
 if [ "$(id -u)" != 0 ]; then
-    sudo -E -- "$0" "$@" || die "this script needs to run as root"
-    exit 0
+    if [ -x /usr/sbin/fuse2fs ] && /usr/sbin/fuse2fs --help 2>&1 |grep fakeroot > /dev/null; then
+        USE_FUSE2FS=1
+    else
+        sudo -E -- "$0" "$@" || die "this script needs to run as root"
+        exit 0
+    fi
 else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
@@ -68,7 +74,7 @@ if [ -f _disk_image ]; then
 
     echo "checking existing image"
     result=0
-    e2fsck -f -y _disk_image || result=$?
+    /usr/sbin/e2fsck -f -y _disk_image || result=$?
     if [ $result -ge 4 ]; then
         rm -f _disk_image
         USE_EXISTING=0
@@ -116,7 +122,9 @@ fi
 printf "mounting filesystem... "
 mkdir -p mnt
 use_genext2fs=0
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ $USE_FUSE2FS -eq 1 ]; then
+    mount_cmd="/usr/sbin/fuse2fs _disk_image mnt/ -o fakeroot,rw"
+elif [ "$(uname -s)" = "Darwin" ]; then
     mount_cmd="fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20"
 elif [ "$(uname -s)" = "OpenBSD" ]; then
     VND=$(vnconfig _disk_image)
@@ -142,7 +150,11 @@ cleanup() {
     if [ -d mnt ]; then
         if [ $use_genext2fs = 0 ] ; then
             printf "unmounting filesystem... "
-            umount mnt || ( sleep 1 && sync && umount mnt )
+            if [ $USE_FUSE2FS -eq 1 ]; then
+                fusermount -u mnt || (sleep 1 && sync && fusermount -u mnt)
+            else
+                umount mnt || ( sleep 1 && sync && umount mnt )
+            fi
             rmdir mnt
         else
             rm -rf mnt
