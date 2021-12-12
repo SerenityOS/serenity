@@ -213,9 +213,13 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
         -device ich9-ahci,bus=bridge3
         -chardev stdio,id=stdout,mux=on
-        -qmp unix:qmp-sock,server,nowait
         "
     fi
+fi
+
+if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ]; then
+    SERENITY_MACHINE="$SERENITY_MACHINE
+    -qmp unix:qmp-sock,server,nowait"
 fi
 
 
