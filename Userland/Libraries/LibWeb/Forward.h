@@ -15,6 +15,7 @@ enum class Source;
 
 namespace Web::Crypto {
 class Crypto;
+class SubtleCrypto;
 }
 
 namespace Web::CSS {
@@ -431,6 +432,7 @@ class SelectionWrapper;
 class StyleSheetListWrapper;
 class StyleSheetWrapper;
 class SubmitEventWrapper;
+class SubtleCryptoWrapper;
 class SVGElementWrapper;
 class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;

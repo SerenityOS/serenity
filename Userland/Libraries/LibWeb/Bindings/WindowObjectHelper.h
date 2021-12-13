@@ -261,6 +261,8 @@
 #include <LibWeb/Bindings/StyleSheetPrototype.h>
 #include <LibWeb/Bindings/SubmitEventConstructor.h>
 #include <LibWeb/Bindings/SubmitEventPrototype.h>
+#include <LibWeb/Bindings/SubtleCryptoConstructor.h>
+#include <LibWeb/Bindings/SubtleCryptoPrototype.h>
 #include <LibWeb/Bindings/TextConstructor.h>
 #include <LibWeb/Bindings/TextEncoderConstructor.h>
 #include <LibWeb/Bindings/TextEncoderPrototype.h>
@@ -412,6 +414,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)            \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)               \
+    ADD_WINDOW_OBJECT_INTERFACE(SubtleCrypto)              \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)                \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGeometryElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGraphicsElement)        \

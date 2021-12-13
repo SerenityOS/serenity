@@ -8,6 +8,7 @@
 
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::Crypto {
@@ -23,10 +24,14 @@ public:
         return adopt_ref(*new Crypto());
     }
 
+    NonnullRefPtr<SubtleCrypto> subtle() const { return m_subtle; }
+
     DOM::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
 
 private:
-    Crypto() = default;
+    Crypto();
+
+    NonnullRefPtr<SubtleCrypto> m_subtle;
 };
 
 }
