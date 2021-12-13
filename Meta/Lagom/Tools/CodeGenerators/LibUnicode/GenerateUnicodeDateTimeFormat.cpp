@@ -319,8 +319,7 @@ using CalendarSymbolsList = Vector<CalendarSymbolsIndexType>;
 struct Calendar {
     unsigned hash() const
     {
-        auto hash = int_hash(calendar);
-        hash = pair_int_hash(hash, date_formats);
+        auto hash = int_hash(date_formats);
         hash = pair_int_hash(hash, time_formats);
         hash = pair_int_hash(hash, date_time_formats);
         hash = pair_int_hash(hash, available_formats);
@@ -333,8 +332,7 @@ struct Calendar {
 
     bool operator==(Calendar const& other) const
     {
-        return (calendar == other.calendar)
-            && (date_formats == other.date_formats)
+        return (date_formats == other.date_formats)
             && (time_formats == other.time_formats)
             && (date_time_formats == other.date_time_formats)
             && (available_formats == other.available_formats)
@@ -343,8 +341,6 @@ struct Calendar {
             && (range12_formats == other.range12_formats)
             && (symbols == other.symbols);
     }
-
-    StringIndexType calendar { 0 };
 
     CalendarFormatIndexType date_formats { 0 };
     CalendarFormatIndexType time_formats { 0 };
@@ -363,8 +359,7 @@ struct AK::Formatter<Calendar> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Calendar const& calendar)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {} }}",
-            calendar.calendar,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {} }}",
             calendar.date_formats,
             calendar.time_formats,
             calendar.date_time_formats,
@@ -384,20 +379,14 @@ struct AK::Traits<Calendar> : public GenericTraits<Calendar> {
 struct TimeZone {
     unsigned hash() const
     {
-        auto hash = int_hash(time_zone);
-        hash = pair_int_hash(hash, long_name);
-        hash = pair_int_hash(hash, short_name);
-        return hash;
+        return pair_int_hash(long_name, short_name);
     }
 
     bool operator==(TimeZone const& other) const
     {
-        return (time_zone == other.time_zone)
-            && (long_name == other.long_name)
-            && (short_name == other.short_name);
+        return (long_name == other.long_name) && (short_name == other.short_name);
     }
 
-    StringIndexType time_zone { 0 };
     StringIndexType long_name { 0 };
     StringIndexType short_name { 0 };
 };
@@ -407,8 +396,7 @@ struct AK::Formatter<TimeZone> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, TimeZone const& time_zone)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {} }}",
-            time_zone.time_zone,
+            "{{ {}, {} }}",
             time_zone.long_name,
             time_zone.short_name);
     }
@@ -497,7 +485,7 @@ struct UnicodeLocaleData {
     HashMap<String, HourCycleListIndexType> hour_cycles;
     Vector<String> hour_cycle_regions;
 
-    HashMap<String, StringIndexType> meta_zones;
+    HashMap<String, String> meta_zones;
     Vector<String> time_zones { "UTC"sv };
 
     Vector<String> calendars;
@@ -596,12 +584,11 @@ static ErrorOr<void> parse_meta_zones(String core_path, UnicodeLocaleData& local
         auto const& meta_zone = mapping.as_object().get("_other"sv);
         auto const& golden_zone = mapping.as_object().get("_type"sv);
 
-        auto golden_zone_index = locale_data.unique_strings.ensure(golden_zone.as_string());
-        locale_data.meta_zones.set(meta_zone.as_string(), golden_zone_index);
+        locale_data.meta_zones.set(meta_zone.as_string(), golden_zone.as_string());
     });
 
     // UTC does not appear in metaZones.json. Define it for convenience so other parsers don't need to check for its existence.
-    locale_data.meta_zones.set("UTC"sv, locale_data.unique_strings.ensure("UTC"sv));
+    locale_data.meta_zones.set("UTC"sv, "UTC"sv);
 
     return {};
 };
@@ -1250,11 +1237,6 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
     auto const& dates_object = locale_object.as_object().get("dates"sv);
     auto const& calendars_object = dates_object.as_object().get("calendars"sv);
 
-    auto create_calendar = [&](auto const& calendar) {
-        auto calendar_index = locale_data.unique_strings.ensure(calendar);
-        return Calendar { .calendar = calendar_index };
-    };
-
     auto parse_patterns = [&](auto const& patterns_object, auto const& skeletons_object, Vector<CalendarPattern>* patterns) {
         auto parse_pattern = [&](auto name) {
             auto format = patterns_object.get(name);
@@ -1283,7 +1265,7 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, UnicodeLocale
         if (calendar_name == "generic"sv)
             return;
 
-        auto calendar = create_calendar(calendar_name);
+        Calendar calendar {};
         CalendarPatternList available_formats {};
 
         if (!locale_data.calendars.contains_slow(calendar_name))
@@ -1368,26 +1350,23 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, U
     TimeZoneList time_zones;
 
     auto parse_time_zone = [&](StringView meta_zone, JsonObject const& meta_zone_object) {
-        auto golden_zone = locale_data.meta_zones.get(meta_zone).value();
-        TimeZone time_zone { .time_zone = golden_zone };
+        auto const& golden_zone = locale_data.meta_zones.find(meta_zone)->value;
+        TimeZone time_zone {};
 
         if (auto long_name = parse_name("long"sv, meta_zone_object); long_name.has_value())
             time_zone.long_name = long_name.value();
         if (auto short_name = parse_name("short"sv, meta_zone_object); short_name.has_value())
             time_zone.short_name = short_name.value();
 
-        auto const& time_zone_name = locale_data.unique_strings.get(golden_zone);
-        auto time_zone_index = locale_data.time_zones.find_first_index(time_zone_name).value();
-
+        auto time_zone_index = locale_data.time_zones.find_first_index(golden_zone).value();
         time_zones[time_zone_index] = locale_data.unique_time_zones.ensure(move(time_zone));
     };
 
     meta_zone_object.as_object().for_each_member([&](auto const& meta_zone, JsonValue const&) {
-        auto golden_zone = locale_data.meta_zones.get(meta_zone).value();
-        auto const& time_zone_name = locale_data.unique_strings.get(golden_zone);
+        auto const& golden_zone = locale_data.meta_zones.find(meta_zone)->value;
 
-        if (!locale_data.time_zones.contains_slow(time_zone_name))
-            locale_data.time_zones.append(time_zone_name);
+        if (!locale_data.time_zones.contains_slow(golden_zone))
+            locale_data.time_zones.append(golden_zone);
     });
 
     time_zones.resize(locale_data.time_zones.size());
@@ -1719,8 +1698,6 @@ struct CalendarSymbols {
 };
 
 struct CalendarData {
-    @string_index_type@ calendar { 0 };
-
     @calendar_format_index_type@ date_formats { 0 };
     @calendar_format_index_type@ time_formats { 0 };
     @calendar_format_index_type@ date_time_formats { 0 };
@@ -1734,7 +1711,6 @@ struct CalendarData {
 };
 
 struct TimeZoneData {
-    @string_index_type@ time_zone { 0 };
     @string_index_type@ long_name { 0 };
     @string_index_type@ short_name { 0 };
 };
