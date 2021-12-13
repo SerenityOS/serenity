@@ -57,7 +57,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
         return __builtin_##name(x);                   \
     }
 
-INTEGER_BUILTIN(clz);
 INTEGER_BUILTIN(ctz);
 INTEGER_BUILTIN(popcnt);
 
