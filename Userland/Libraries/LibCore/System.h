@@ -11,6 +11,7 @@
 #include <grp.h>
 #include <pwd.h>
 #include <signal.h>
+#include <spawn.h>
 #include <sys/stat.h>
 #include <termios.h>
 #include <time.h>
@@ -51,5 +52,6 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<struct passwd> getpwnam(StringView name);
 ErrorOr<struct group> getgrnam(StringView name);
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
+ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[]);
 
 }
