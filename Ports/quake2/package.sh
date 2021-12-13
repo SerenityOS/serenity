@@ -4,7 +4,6 @@ version=0.1
 workdir=SerenityQuakeII-master
 useconfigure=true
 files="https://github.com/SerenityPorts/SerenityQuakeII/archive/master.tar.gz quake2.tar.gz"
-makeopts=()
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 depends=("SDL2")
 launcher_name=QuakeII
