@@ -36,6 +36,9 @@ constexpr auto s_script_list_index_type = "u8"sv;
 using CurrencyListIndexType = u16;
 constexpr auto s_currency_list_index_type = "u16"sv;
 
+using KeywordListIndexType = u8;
+constexpr auto s_keyword_list_index_type = "u8"sv;
+
 struct ListPatterns {
     String type;
     String style;
@@ -49,6 +52,7 @@ using LanguageList = Vector<StringIndexType>;
 using TerritoryList = Vector<StringIndexType>;
 using ScriptList = Vector<StringIndexType>;
 using CurrencyList = Vector<StringIndexType>;
+using KeywordList = Vector<StringIndexType>;
 
 struct Locale {
     String language;
@@ -61,7 +65,7 @@ struct Locale {
     CurrencyListIndexType short_currencies { 0 };
     CurrencyListIndexType narrow_currencies { 0 };
     CurrencyListIndexType numeric_currencies { 0 };
-    HashMap<String, StringIndexType> keywords;
+    KeywordListIndexType keywords { 0 };
     Vector<ListPatterns> list_patterns;
 };
 
@@ -76,6 +80,7 @@ struct UnicodeLocaleData {
     UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
     UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
+    UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
 
     HashMap<String, Locale> locales;
     Vector<Alias> locale_aliases;
@@ -85,7 +90,7 @@ struct UnicodeLocaleData {
     Vector<String> scripts;
     Vector<String> variants;
     Vector<String> currencies;
-    Vector<String> keywords;
+    Vector<String> keywords { "ca"sv, "nu"sv }; // FIXME: These should be parsed from BCP47. https://unicode-org.atlassian.net/browse/CLDR-15158
     Vector<String> list_pattern_types;
     Vector<String> list_pattern_styles;
     HashMap<String, StringIndexType> language_aliases;
@@ -388,7 +393,7 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
     return {};
 }
 
-static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
 {
     static constexpr StringView key = "nu"sv;
 
@@ -425,16 +430,13 @@ static ErrorOr<void> parse_numeric_keywords(String locale_numbers_path, UnicodeL
     StringBuilder builder;
     builder.join(',', keyword_values);
 
-    auto index = locale_data.unique_strings.ensure(builder.build());
-    locale.keywords.set(key, index);
-
-    if (!locale_data.keywords.contains_slow(key))
-        locale_data.keywords.append(key);
+    auto index = locale_data.keywords.find_first_index(key).value();
+    keywords[index] = locale_data.unique_strings.ensure(builder.build());
 
     return {};
 }
 
-static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, Locale& locale)
+static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLocaleData& locale_data, KeywordList& keywords)
 {
     static constexpr StringView key = "ca"sv;
 
@@ -474,11 +476,8 @@ static ErrorOr<void> parse_calendar_keywords(String locale_dates_path, UnicodeLo
     StringBuilder builder;
     builder.join(',', keyword_values);
 
-    auto index = locale_data.unique_strings.ensure(builder.build());
-    locale.keywords.set(key, index);
-
-    if (!locale_data.keywords.contains_slow(key))
-        locale_data.keywords.append(key);
+    auto index = locale_data.keywords.find_first_index(key).value();
+    keywords[index] = locale_data.unique_strings.ensure(builder.build());
 
     return {};
 }
@@ -598,6 +597,15 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     quick_sort(locale_data.territories);
     quick_sort(locale_data.scripts);
 
+    HashMap<String, KeywordList> keywords;
+    auto ensure_keyword_list = [&](auto const& language) -> KeywordList& {
+        return keywords.ensure(language, [&]() {
+            KeywordList keywords;
+            keywords.resize(locale_data.keywords.size());
+            return keywords;
+        });
+    };
+
     while (locale_names_iterator.has_next()) {
         auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
         auto language = TRY(remove_variants_from_path(locale_path));
@@ -622,19 +630,26 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
 
         auto& locale = locale_data.locales.ensure(language);
         TRY(parse_locale_currencies(numbers_path, locale_data, locale));
-        TRY(parse_numeric_keywords(numbers_path, locale_data, locale));
+
+        auto& keywords = ensure_keyword_list(language);
+        TRY(parse_numeric_keywords(numbers_path, locale_data, keywords));
     }
 
     while (dates_iterator.has_next()) {
         auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
         auto language = TRY(remove_variants_from_path(dates_path));
 
-        auto& locale = locale_data.locales.ensure(language);
-        TRY(parse_calendar_keywords(dates_path, locale_data, locale));
+        auto& keywords = ensure_keyword_list(language);
+        TRY(parse_calendar_keywords(dates_path, locale_data, keywords));
     }
 
     TRY(parse_default_content_locales(move(core_path), locale_data));
     TRY(define_aliases_without_scripts(locale_data));
+
+    for (auto& list : keywords) {
+        auto& locale = locale_data.locales.find(list.key)->value;
+        locale.keywords = locale_data.unique_keyword_lists.ensure(move(list.value));
+    }
 
     return {};
 }
@@ -757,6 +772,7 @@ struct Patterns {
     locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
     locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
+    locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -799,38 +815,6 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto append_string_index_list = [&](String name, auto const& keys, auto const& mappings) {
-        generator.set("name", name);
-        generator.set("size", String::number(keys.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<@string_index_type@, @size@> @name@ { {
-    )~~~");
-
-        constexpr size_t max_values_per_row = 30;
-        size_t values_in_current_row = 0;
-
-        for (auto const& key : keys) {
-            if (values_in_current_row++ > 0)
-                generator.append(" ");
-
-            if (auto it = mappings.find(key); it != mappings.end())
-                generator.set("mapping"sv, String::number(it->value));
-            else
-                generator.set("mapping"sv, "0"sv);
-            generator.append("@mapping@,");
-
-            if (values_in_current_row == max_values_per_row) {
-                values_in_current_row = 0;
-                generator.append("\n    ");
-            }
-        }
-
-        generator.append(R"~~~(
-} };
-)~~~");
-    };
-
     auto append_list_patterns = [&](StringView name, Vector<ListPatterns> const& list_patterns) {
         generator.set("name", name);
         generator.set("size", String::number(list_patterns.size()));
@@ -865,7 +849,7 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
+    append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_keywords"sv, [&](auto const& locale) { return locale.keywords; });
     generate_mapping(generator, locale_data.locales, "Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
     generator.append(R"~~~(
@@ -1048,10 +1032,12 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
 
 )~~~");
 
-    auto append_mapping_search = [&](StringView enum_snake, StringView from_string_name, StringView collection_name, StringView unique_list = {}) {
+    auto append_mapping_search = [&](StringView enum_snake, StringView from_string_name, StringView collection_name, StringView unique_list) {
         generator.set("enum_snake", enum_snake);
         generator.set("from_string_name", from_string_name);
         generator.set("collection_name", collection_name);
+        generator.set("unique_list", unique_list);
+
         generator.append(R"~~~(
 Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringView @enum_snake@)
 {
@@ -1065,21 +1051,10 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
     auto @enum_snake@_index = to_underlying(*@enum_snake@_value);
-)~~~");
 
-        if (unique_list.is_empty()) {
-            generator.append(R"~~~(
-    auto const& mappings = @collection_name@.at(locale_index);
-)~~~");
-        } else {
-            generator.set("unique_list", unique_list);
-            generator.append(R"~~~(
     auto mapping_index = @collection_name@.at(locale_index);
     auto const& mappings = @unique_list@.at(mapping_index);
-)~~~");
-        }
 
-        generator.append(R"~~~(
     auto @enum_snake@_string_index = mappings.at(@enum_snake@_index);
     auto @enum_snake@_mapping = s_string_list.at(@enum_snake@_string_index);
 
@@ -1132,7 +1107,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
 
-    append_mapping_search("key"sv, "key"sv, "s_keywords"sv);
+    append_mapping_search("key"sv, "key"sv, "s_keywords"sv, "s_keyword_lists"sv);
     append_from_string("Key"sv, "key"sv, locale_data.keywords);
 
     append_alias_search("variant"sv, locale_data.variant_aliases);
