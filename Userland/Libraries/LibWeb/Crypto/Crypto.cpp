@@ -8,8 +8,14 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Wrapper.h>
 #include <LibWeb/Crypto/Crypto.h>
+#include <LibWeb/Crypto/SubtleCrypto.h>
 
 namespace Web::Crypto {
+
+Crypto::Crypto()
+    : m_subtle(SubtleCrypto::create())
+{
+}
 
 DOM::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
 {
