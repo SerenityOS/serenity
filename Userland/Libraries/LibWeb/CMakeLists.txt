@@ -15,6 +15,7 @@ set(SOURCES
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
+    Crypto/SubtleCrypto.cpp
     CSS/Serialize.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
@@ -364,6 +365,7 @@ function(libweb_js_wrapper class)
 endfunction()
 
 libweb_js_wrapper(Crypto/Crypto)
+libweb_js_wrapper(Crypto/SubtleCrypto)
 libweb_js_wrapper(CSS/CSSRule)
 libweb_js_wrapper(CSS/CSSRuleList)
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
