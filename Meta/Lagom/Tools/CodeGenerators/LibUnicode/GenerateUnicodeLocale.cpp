@@ -39,13 +39,70 @@ constexpr auto s_currency_list_index_type = "u16"sv;
 using KeywordListIndexType = u8;
 constexpr auto s_keyword_list_index_type = "u8"sv;
 
+using ListPatternIndexType = u16;
+constexpr auto s_list_pattern_index_type = "u16"sv;
+
+using ListPatternListIndexType = u8;
+constexpr auto s_list_pattern_list_index_type = "u8"sv;
+
+static String format_identifier(StringView owner, String identifier)
+{
+    identifier = identifier.replace("-"sv, "_"sv, true);
+
+    if (all_of(identifier, is_ascii_digit))
+        return String::formatted("{}_{}", owner[0], identifier);
+    if (is_ascii_lower_alpha(identifier[0]))
+        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
+    return identifier;
+}
+
 struct ListPatterns {
-    String type;
-    String style;
+    unsigned hash() const
+    {
+        auto hash = pair_int_hash(type.hash(), style.hash());
+        hash = pair_int_hash(hash, start);
+        hash = pair_int_hash(hash, middle);
+        hash = pair_int_hash(hash, end);
+        hash = pair_int_hash(hash, pair);
+        return hash;
+    }
+
+    bool operator==(ListPatterns const& other) const
+    {
+        return (type == other.type)
+            && (style == other.style)
+            && (start == other.start)
+            && (middle == other.middle)
+            && (end == other.end)
+            && (pair == other.pair);
+    }
+
+    StringView type;
+    StringView style;
     StringIndexType start { 0 };
     StringIndexType middle { 0 };
     StringIndexType end { 0 };
     StringIndexType pair { 0 };
+};
+
+template<>
+struct AK::Formatter<ListPatterns> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, ListPatterns const& patterns)
+    {
+        return Formatter<FormatString>::format(builder,
+            "{{ ListPatternType::{}, ListPatternStyle::{}, {}, {}, {}, {} }}",
+            format_identifier({}, patterns.type),
+            format_identifier({}, patterns.style),
+            patterns.start,
+            patterns.middle,
+            patterns.end,
+            patterns.pair);
+    }
+};
+
+template<>
+struct AK::Traits<ListPatterns> : public GenericTraits<ListPatterns> {
+    static unsigned hash(ListPatterns const& p) { return p.hash(); }
 };
 
 using LanguageList = Vector<StringIndexType>;
@@ -53,6 +110,7 @@ using TerritoryList = Vector<StringIndexType>;
 using ScriptList = Vector<StringIndexType>;
 using CurrencyList = Vector<StringIndexType>;
 using KeywordList = Vector<StringIndexType>;
+using ListPatternList = Vector<ListPatternIndexType>;
 
 struct Locale {
     String language;
@@ -66,7 +124,7 @@ struct Locale {
     CurrencyListIndexType narrow_currencies { 0 };
     CurrencyListIndexType numeric_currencies { 0 };
     KeywordListIndexType keywords { 0 };
-    Vector<ListPatterns> list_patterns;
+    ListPatternListIndexType list_patterns { 0 };
 };
 
 struct LanguageMapping {
@@ -81,6 +139,8 @@ struct UnicodeLocaleData {
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
     UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
     UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
+    UniqueStorage<ListPatterns, ListPatternIndexType> unique_list_patterns;
+    UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
 
     HashMap<String, Locale> locales;
     Vector<Alias> locale_aliases;
@@ -299,9 +359,9 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
     list_patterns_path = list_patterns_path.append("listPatterns.json"sv);
 
     auto list_patterns_file = TRY(Core::File::open(list_patterns_path.string(), Core::OpenMode::ReadOnly));
-    auto list_patterns = TRY(JsonValue::from_string(list_patterns_file->read_all()));
+    auto locale_list_patterns = TRY(JsonValue::from_string(list_patterns_file->read_all()));
 
-    auto const& main_object = list_patterns.as_object().get("main"sv);
+    auto const& main_object = locale_list_patterns.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(list_patterns_path.parent().basename());
     auto const& list_patterns_object = locale_object.as_object().get("listPatterns"sv);
 
@@ -323,6 +383,9 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
         return "long"sv;
     };
 
+    ListPatternList list_patterns;
+    list_patterns.ensure_capacity(list_patterns_object.as_object().size());
+
     list_patterns_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         auto type = list_pattern_type(key);
         auto style = list_pattern_style(key);
@@ -337,9 +400,11 @@ static ErrorOr<void> parse_locale_list_patterns(String misc_path, UnicodeLocaleD
         if (!locale_data.list_pattern_styles.contains_slow(style))
             locale_data.list_pattern_styles.append(style);
 
-        locale.list_patterns.append({ move(type), move(style), move(start), move(middle), move(end), move(pair) });
+        ListPatterns list_pattern { type, style, start, middle, end, pair };
+        list_patterns.append(locale_data.unique_list_patterns.ensure(move(list_pattern)));
     });
 
+    locale.list_patterns = locale_data.unique_list_pattern_lists.ensure(move(list_patterns));
     return {};
 }
 
@@ -654,17 +719,6 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     return {};
 }
 
-static String format_identifier(StringView owner, String identifier)
-{
-    identifier = identifier.replace("-"sv, "_"sv, true);
-
-    if (all_of(identifier, is_ascii_digit))
-        return String::formatted("{}_{}", owner[0], identifier);
-    if (is_ascii_lower_alpha(identifier[0]))
-        return String::formatted("{:c}{}", to_ascii_uppercase(identifier[0]), identifier.substring_view(1));
-    return identifier;
-}
-
 static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& locale_data)
 {
     StringBuilder builder;
@@ -773,6 +827,8 @@ struct Patterns {
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
     locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
     locale_data.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
+    locale_data.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
+    locale_data.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -815,30 +871,6 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto append_list_patterns = [&](StringView name, Vector<ListPatterns> const& list_patterns) {
-        generator.set("name", name);
-        generator.set("size", String::number(list_patterns.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<Patterns, @size@> @name@ { {)~~~");
-
-        for (auto const& list_pattern : list_patterns) {
-            generator.set("type"sv, String::formatted("ListPatternType::{}", format_identifier({}, list_pattern.type)));
-            generator.set("style"sv, String::formatted("ListPatternStyle::{}", format_identifier({}, list_pattern.style)));
-            generator.set("start"sv, String::number(list_pattern.start));
-            generator.set("middle"sv, String::number(list_pattern.middle));
-            generator.set("end"sv, String::number(list_pattern.end));
-            generator.set("pair"sv, String::number(list_pattern.pair));
-
-            generator.append(R"~~~(
-    { @type@, @style@, @start@, @middle@, @end@, @pair@ },)~~~");
-        }
-
-        generator.append(R"~~~(
-} };
-)~~~");
-    };
-
     auto locales = locale_data.locales.keys();
     quick_sort(locales);
 
@@ -850,9 +882,10 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
     append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
     append_mapping(locales, locale_data.locales, s_keyword_list_index_type, "s_keywords"sv, [&](auto const& locale) { return locale.keywords; });
-    generate_mapping(generator, locale_data.locales, "Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
+    append_mapping(locales, locale_data.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
 
     generator.append(R"~~~(
+
 struct CanonicalLanguageID {
     Unicode::LanguageID to_unicode_language_id() const
     {
@@ -1132,9 +1165,13 @@ Optional<ListPatterns> get_locale_list_pattern_mapping(StringView locale, String
         return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
-    auto const& locale_list_patterns = s_list_patterns.at(locale_index);
 
-    for (auto const& list_patterns : locale_list_patterns) {
+    auto list_patterns_list_index = s_locale_list_patterns.at(locale_index);
+    auto const& locale_list_patterns = s_list_pattern_lists.at(list_patterns_list_index);
+
+    for (auto list_patterns_index : locale_list_patterns) {
+        auto const& list_patterns = s_list_patterns.at(list_patterns_index);
+
         if ((list_patterns.type == type_value) && (list_patterns.style == style_value)) {
             auto const& start = s_string_list[list_patterns.start];
             auto const& middle = s_string_list[list_patterns.middle];
