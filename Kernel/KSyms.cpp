@@ -73,7 +73,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes buffer)
     size_t current_symbol_index = 0;
 
     while ((u8 const*)bufptr < buffer.data() + buffer.size()) {
-        for (size_t i = 0; i < 8; ++i)
+        for (size_t i = 0; i < sizeof(void*) * 2; ++i)
             address = (address << 4) | parse_hex_digit(*(bufptr++));
         bufptr += 3;
         start_of_name = bufptr;
@@ -168,10 +168,15 @@ void dump_backtrace(PrintToScreen print_to_screen)
         return;
     TemporaryChange change(in_dump_backtrace, true);
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
-    FlatPtr ebp;
+    FlatPtr base_pointer;
+#if ARCH(I386)
     asm volatile("movl %%ebp, %%eax"
-                 : "=a"(ebp));
-    dump_backtrace_impl(ebp, g_kernel_symbols_available, print_to_screen);
+                 : "=a"(base_pointer));
+#else
+    asm volatile("movq %%rbp, %%rax"
+                 : "=a"(base_pointer));
+#endif
+    dump_backtrace_impl(base_pointer, g_kernel_symbols_available, print_to_screen);
 }
 
 UNMAP_AFTER_INIT void load_kernel_symbol_table()
