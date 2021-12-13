@@ -89,6 +89,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     int x = raw_packet.bytes[1];
     int y = raw_packet.bytes[2];
     int z = 0;
+    int w = 0;
     if (m_has_wheel) {
         // FIXME: For non-Intellimouse, this is a full byte.
         //        However, for now, m_has_wheel is only set for Intellimouse.
@@ -97,6 +98,14 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
         // -1 in 4 bits
         if (z == 15)
             z = -1;
+
+        if ((raw_packet.bytes[3] & 0xc0) == 0x40) {
+            // FIXME: Scroll only functions correctly when the sign is flipped there
+            w = -z;
+            z = 0;
+        } else {
+            w = 0;
+        }
     }
     bool x_overflow = raw_packet.bytes[0] & 0x40;
     bool y_overflow = raw_packet.bytes[0] & 0x80;
@@ -114,6 +123,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     packet.x = x;
     packet.y = y;
     packet.z = z;
+    packet.w = w;
     packet.buttons = raw_packet.bytes[0] & 0x07;
 
     if (m_has_five_buttons) {
@@ -125,7 +135,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
 
     packet.is_relative = true;
     dbgln_if(PS2MOUSE_DEBUG, "PS2 Relative Mouse: Buttons {:x}", packet.buttons);
-    dbgln_if(PS2MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}", packet.x, packet.y, packet.z);
+    dbgln_if(PS2MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}", packet.x, packet.y, packet.z, packet.w);
     return packet;
 }
 
