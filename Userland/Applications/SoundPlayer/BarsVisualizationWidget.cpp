@@ -61,8 +61,6 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
         current_xpos += pixel_per_group_width + pixels_inbetween_groups;
         m_gfx_falling_bars[g] += 3;
     }
-
-    m_is_using_last = false;
 }
 
 BarsVisualizationWidget::~BarsVisualizationWidget()
@@ -71,7 +69,6 @@ BarsVisualizationWidget::~BarsVisualizationWidget()
 
 BarsVisualizationWidget::BarsVisualizationWidget()
     : m_last_id(-1)
-    , m_is_using_last(false)
     , m_adjust_frequencies(false)
 {
     m_context_menu = GUI::Menu::construct();
@@ -93,9 +90,6 @@ u32 round_previous_power_of_2(u32 x)
 
 void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer, int samples_to_use)
 {
-    if (m_is_using_last)
-        return;
-    m_is_using_last = true;
     // FIXME: We should dynamically adapt to the sample count and e.g. perform the fft over multiple buffers.
     // For now, the visualizer doesn't work with extremely low global sample rates.
     if (buffer->sample_count() < 256)

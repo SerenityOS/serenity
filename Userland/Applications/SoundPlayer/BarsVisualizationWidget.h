@@ -31,7 +31,6 @@ private:
     int m_last_id;
     int m_sample_count;
     int m_samplerate;
-    bool m_is_using_last;
     bool m_adjust_frequencies;
     RefPtr<GUI::Menu> m_context_menu;
 };
