@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/CountOnes.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -54,30 +55,30 @@ public:
         byte &= bitmask_first_byte[start % 8];
         if (first == last) {
             byte &= bitmask_last_byte[(start + len) % 8];
-            count = __builtin_popcount(byte);
+            count = count_ones(byte);
         } else {
-            count = __builtin_popcount(byte);
+            count = count_ones(byte);
             // Don't access *last if it's out of bounds
             if (last < &m_data[size_in_bytes()]) {
                 byte = *last;
                 byte &= bitmask_last_byte[(start + len) % 8];
-                count += __builtin_popcount(byte);
+                count += count_ones(byte);
             }
             if (++first < last) {
                 const u32* ptr32 = (const u32*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
                 if ((const u8*)ptr32 > last)
                     ptr32 = (const u32*)last;
                 while (first < (const u8*)ptr32) {
-                    count += __builtin_popcount(*first);
+                    count += count_ones(*first);
                     first++;
                 }
                 const u32* last32 = (const u32*)((FlatPtr)last & ~(sizeof(u32) - 1));
                 while (ptr32 < last32) {
-                    count += __builtin_popcountl(*ptr32);
+                    count += count_ones(*ptr32);
                     ptr32++;
                 }
                 for (first = (const u8*)ptr32; first < last; first++)
-                    count += __builtin_popcount(*first);
+                    count += count_ones(*first);
             }
         }
 

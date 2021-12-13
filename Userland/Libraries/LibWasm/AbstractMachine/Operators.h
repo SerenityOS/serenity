@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/BitCast.h>
+#include <AK/CountOnes.h>
 #include <AK/Result.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -207,12 +208,7 @@ struct PopCount {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_popcount(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_popcountll(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return count_ones(lhs);
     }
 
     static StringView name() { return "popcnt"; }
