@@ -2798,6 +2798,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/StyleSheetListWrapper.h>
+#include <LibWeb/Bindings/SubtleCryptoWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -2886,6 +2887,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     generator.append(R"~~~(
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Crypto;
 using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::Geometry;
