@@ -380,4 +380,12 @@ ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* c
     return child_pid;
 }
 
+ErrorOr<pid_t> waitpid(pid_t waitee, int* wstatus, int options)
+{
+    pid_t pid = ::waitpid(waitee, wstatus, options);
+    if (pid < 0)
+        return Error::from_syscall("waitpid"sv, -errno);
+    return pid;
+}
+
 }
