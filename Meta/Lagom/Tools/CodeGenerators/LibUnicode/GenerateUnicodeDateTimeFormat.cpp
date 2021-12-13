@@ -67,6 +67,9 @@ constexpr auto s_day_period_index_type = "u8"sv;
 using DayPeriodListIndexType = u8;
 constexpr auto s_day_period_list_index_type = "u8"sv;
 
+using HourCycleListIndexType = u8;
+constexpr auto s_hour_cycle_list_index_type = "u8"sv;
+
 struct CalendarPattern : public Unicode::CalendarPattern {
     bool contains_only_date_fields() const
     {
@@ -456,6 +459,15 @@ struct AK::Traits<DayPeriod> : public GenericTraits<DayPeriod> {
 
 using TimeZoneList = Vector<TimeZoneIndexType>;
 using DayPeriodList = Vector<DayPeriodIndexType>;
+using HourCycleList = Vector<Unicode::HourCycle>;
+
+template<>
+struct AK::Formatter<Unicode::HourCycle> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Unicode::HourCycle hour_cycle)
+    {
+        return Formatter<FormatString>::format(builder, "{}", to_underlying(hour_cycle));
+    }
+};
 
 struct Locale {
     HashMap<String, CalendarIndexType> calendars;
@@ -478,10 +490,11 @@ struct UnicodeLocaleData {
     UniqueStorage<TimeZoneList, TimeZoneListIndexType> unique_time_zone_lists;
     UniqueStorage<DayPeriod, DayPeriodIndexType> unique_day_periods;
     UniqueStorage<DayPeriodList, DayPeriodListIndexType> unique_day_period_lists;
+    UniqueStorage<HourCycleList, HourCycleListIndexType> unique_hour_cycle_lists;
 
     HashMap<String, Locale> locales;
 
-    HashMap<String, Vector<Unicode::HourCycle>> hour_cycles;
+    HashMap<String, HourCycleListIndexType> hour_cycles;
     Vector<String> hour_cycle_regions;
 
     HashMap<String, StringIndexType> meta_zones;
@@ -554,7 +567,8 @@ static ErrorOr<void> parse_hour_cycles(String core_path, UnicodeLocaleData& loca
                 hour_cycles.append(*hour_cycle);
         }
 
-        locale_data.hour_cycles.set(key, move(hour_cycles));
+        auto hour_cycles_index = locale_data.unique_hour_cycle_lists.ensure(move(hour_cycles));
+        locale_data.hour_cycles.set(key, hour_cycles_index);
 
         if (!locale_data.hour_cycle_regions.contains_slow(key))
             locale_data.hour_cycle_regions.append(key);
@@ -1741,6 +1755,7 @@ struct DayPeriodData {
     locale_data.unique_time_zone_lists.generate(generator, s_time_zone_index_type, "s_time_zone_lists"sv);
     locale_data.unique_day_periods.generate(generator, "DayPeriodData"sv, "s_day_periods"sv, 30);
     locale_data.unique_day_period_lists.generate(generator, s_day_period_index_type, "s_day_period_lists"sv);
+    locale_data.unique_hour_cycle_lists.generate(generator, "u8"sv, "s_hour_cycle_lists"sv);
 
     auto append_calendars = [&](String name, auto const& calendars) {
         generator.set("name", name);
@@ -1782,30 +1797,14 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
         generator.append(" } };");
     };
 
-    auto append_hour_cycles = [&](String name, auto const& hour_cycle_region) {
-        auto const& hour_cycles = locale_data.hour_cycles.find(hour_cycle_region)->value;
-
-        generator.set("name", name);
-        generator.set("size", String::number(hour_cycles.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<u8, @size@> @name@ { { )~~~");
-
-        for (auto hour_cycle : hour_cycles) {
-            generator.set("hour_cycle", String::number(static_cast<u8>(hour_cycle)));
-            generator.append("@hour_cycle@, ");
-        }
-
-        generator.append(" } };");
-    };
-
     auto locales = locale_data.locales.keys();
     quick_sort(locales);
 
     generate_mapping(generator, locale_data.locales, s_calendar_index_type, "s_locale_calendars"sv, "s_calendars_{}", [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
     append_mapping(locales, locale_data.locales, s_time_zone_index_type, "s_locale_time_zones"sv, [](auto const& locale) { return locale.time_zones; });
     append_mapping(locales, locale_data.locales, s_day_period_index_type, "s_locale_day_periods"sv, [](auto const& locale) { return locale.day_periods; });
-    generate_mapping(generator, locale_data.hour_cycle_regions, "u8"sv, "s_hour_cycles"sv, "s_hour_cycles_{}", [&](auto const& name, auto const& value) { append_hour_cycles(name, value); });
+    append_mapping(locale_data.hour_cycle_regions, locale_data.hour_cycles, s_hour_cycle_list_index_type, "s_hour_cycles"sv, [](auto const& hour_cycles) { return hour_cycles; });
+    generator.append("\n");
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& values, Vector<Alias> const& aliases = {}) {
         HashValueMap<String> hashes;
@@ -1831,7 +1830,9 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region)
         return {};
 
     auto region_index = to_underlying(*region_value);
-    auto const& regional_hour_cycles = s_hour_cycles.at(region_index);
+
+    auto regional_hour_cycles_index = s_hour_cycles.at(region_index);
+    auto const& regional_hour_cycles = s_hour_cycle_lists.at(regional_hour_cycles_index);
 
     Vector<Unicode::HourCycle> hour_cycles;
     hour_cycles.ensure_capacity(regional_hour_cycles.size());
