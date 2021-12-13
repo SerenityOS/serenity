@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/CountOnes.h>
+#include <AK/CountTrailingZeros.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -253,7 +254,7 @@ public:
                     free_chunks += 32 - viewed_bits;
                     viewed_bits = 32;
                 } else {
-                    trailing_zeroes = count_trailing_zeroes_32(bucket);
+                    trailing_zeroes = count_trailing_zeros(bucket);
                     bucket >>= trailing_zeroes;
 
                     if (free_chunks == 0) {
@@ -267,7 +268,7 @@ public:
                     }
 
                     // Deleting trailing ones.
-                    u32 trailing_ones = count_trailing_zeroes_32(~bucket);
+                    u32 trailing_ones = count_trailing_zeros(~bucket);
                     bucket >>= trailing_ones;
                     viewed_bits += trailing_ones;
                     free_chunks = 0;
