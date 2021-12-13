@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/CountLeadingZeros.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
@@ -312,7 +313,7 @@ constexpr T log2(T x)
 template<Integral T>
 constexpr T log2(T x)
 {
-    return x ? 8 * sizeof(T) - clz(x) : 0;
+    return x ? 8 * sizeof(T) - count_leading_zeros(x) : 0;
 }
 
 template<FloatingPoint T>
