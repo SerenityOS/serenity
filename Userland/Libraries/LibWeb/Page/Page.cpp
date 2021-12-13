@@ -61,9 +61,9 @@ CSS::PreferredColorScheme Page::preferred_color_scheme() const
     return m_client.preferred_color_scheme();
 }
 
-bool Page::handle_mousewheel(const Gfx::IntPoint& position, unsigned button, unsigned modifiers, int wheel_delta)
+bool Page::handle_mousewheel(const Gfx::IntPoint& position, unsigned button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
 {
-    return top_level_browsing_context().event_handler().handle_mousewheel(position, button, modifiers, wheel_delta);
+    return top_level_browsing_context().event_handler().handle_mousewheel(position, button, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
 bool Page::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)

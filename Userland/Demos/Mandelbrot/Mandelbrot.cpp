@@ -350,7 +350,7 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
 
 void Mandelbrot::mousewheel_event(GUI::MouseEvent& event)
 {
-    zoom(event.wheel_delta() < 0 ? Zoom::In : Zoom::Out, event.position());
+    zoom(event.wheel_delta_y() < 0 ? Zoom::In : Zoom::Out, event.position());
 }
 
 void Mandelbrot::resize_event(GUI::ResizeEvent& event)

@@ -211,7 +211,7 @@ void TaskbarWindow::event(Core::Event& event)
 
         if (adjusted_point != mouse_event.position()) {
             GUI::WindowServerConnection::the().async_set_global_cursor_position(position() + adjusted_point);
-            GUI::MouseEvent adjusted_event = { (GUI::Event::Type)mouse_event.type(), adjusted_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta() };
+            GUI::MouseEvent adjusted_event = { (GUI::Event::Type)mouse_event.type(), adjusted_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta_x(), mouse_event.wheel_delta_y() };
             Window::event(adjusted_event);
             return;
         }

@@ -136,12 +136,12 @@ void BlockContainer::set_scroll_offset(const Gfx::FloatPoint& offset)
     set_needs_display();
 }
 
-bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
+bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta_x, int wheel_delta_y)
 {
     if (!is_scrollable())
         return false;
     auto new_offset = m_scroll_offset;
-    new_offset.translate_by(0, wheel_delta);
+    new_offset.translate_by(wheel_delta_x, wheel_delta_y);
     set_scroll_offset(new_offset);
 
     return true;

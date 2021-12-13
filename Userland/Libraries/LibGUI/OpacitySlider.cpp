@@ -139,7 +139,7 @@ void OpacitySlider::mouseup_event(MouseEvent& event)
 
 void OpacitySlider::mousewheel_event(MouseEvent& event)
 {
-    decrease_slider_by(event.wheel_delta());
+    decrease_slider_by(event.wheel_delta_y());
 }
 
 }

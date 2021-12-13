@@ -88,13 +88,14 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
+    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x = 0, int wheel_delta_y = 0)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
         , m_modifiers(modifiers)
-        , m_wheel_delta(wheel_delta)
+        , m_wheel_delta_x(wheel_delta_x)
+        , m_wheel_delta_y(wheel_delta_y)
     {
     }
 
@@ -104,7 +105,8 @@ public:
     MouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
-    int wheel_delta() const { return m_wheel_delta; }
+    int wheel_delta_x() const { return m_wheel_delta_x; }
+    int wheel_delta_y() const { return m_wheel_delta_y; }
     bool is_drag() const { return m_drag; }
 
     Vector<String> mime_types() const
@@ -129,7 +131,8 @@ private:
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
-    int m_wheel_delta { 0 };
+    int m_wheel_delta_x { 0 };
+    int m_wheel_delta_y { 0 };
     bool m_drag { false };
     RefPtr<const Core::MimeData> m_mime_data;
 };

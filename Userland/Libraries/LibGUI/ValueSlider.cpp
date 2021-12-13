@@ -162,7 +162,7 @@ void ValueSlider::leave_event(Core::Event&)
 
 void ValueSlider::mousewheel_event(MouseEvent& event)
 {
-    if (event.wheel_delta() < 0)
+    if (event.wheel_delta_y() < 0)
         increase_slider_by(1);
     else
         decrease_slider_by(1);

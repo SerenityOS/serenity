@@ -154,9 +154,9 @@ void ClientConnection::mouse_up(const Gfx::IntPoint& position, unsigned int butt
     page().handle_mouseup(position, button, modifiers);
 }
 
-void ClientConnection::mouse_wheel(const Gfx::IntPoint& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers, i32 wheel_delta)
+void ClientConnection::mouse_wheel(const Gfx::IntPoint& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
-    page().handle_mousewheel(position, button, modifiers, wheel_delta);
+    page().handle_mousewheel(position, button, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
 void ClientConnection::key_down(i32 key, unsigned int modifiers, u32 code_point)
