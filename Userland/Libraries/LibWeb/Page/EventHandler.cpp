@@ -112,7 +112,7 @@ Layout::InitialContainingBlock* EventHandler::layout_root()
     return m_frame.active_document()->layout_node();
 }
 
-bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta)
+bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (!layout_root())
         return false;
@@ -121,12 +121,12 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     if (result.layout_node) {
-        if (result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta))
+        if (result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
             return true;
     }
 
     if (auto* page = m_frame.page()) {
-        page->client().page_did_request_scroll(0, wheel_delta * 20);
+        page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
         return true;
     }
 

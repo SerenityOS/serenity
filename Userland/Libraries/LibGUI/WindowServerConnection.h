@@ -26,11 +26,11 @@ private:
 
     virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, i32) override;
     virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;
-    virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, bool, Vector<String> const&) override;
-    virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
-    virtual void mouse_double_click(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
-    virtual void mouse_up(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
-    virtual void mouse_wheel(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
+    virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, i32, bool, Vector<String> const&) override;
+    virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32, i32) override;
+    virtual void mouse_double_click(i32, Gfx::IntPoint const&, u32, u32, u32, i32, i32) override;
+    virtual void mouse_up(i32, Gfx::IntPoint const&, u32, u32, u32, i32, i32) override;
+    virtual void mouse_wheel(i32, Gfx::IntPoint const&, u32, u32, u32, i32, i32) override;
     virtual void window_entered(i32) override;
     virtual void window_left(i32) override;
     virtual void key_down(i32, u32, u32, u32, u32) override;

@@ -6,11 +6,11 @@ endpoint WindowClient
     fast_greet(Vector<Gfx::IntRect> screen_rects, u32 main_screen_index, u32 workspace_rows, u32 workspace_columns, Core::AnonymousBuffer theme_buffer, String default_font_query, String fixed_width_font_query, i32 client_id) =|
 
     paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> rects) =|
-    mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> mime_types) =|
-    mouse_down(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
-    mouse_double_click(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
-    mouse_up(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
-    mouse_wheel(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, bool is_drag, Vector<String> mime_types) =|
+    mouse_down(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
+    mouse_double_click(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
+    mouse_up(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
+    mouse_wheel(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y) =|
     window_entered(i32 window_id) =|
     window_left(i32 window_id) =|
     window_input_entered(i32 window_id) =|

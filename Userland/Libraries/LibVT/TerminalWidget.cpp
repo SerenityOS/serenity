@@ -918,7 +918,7 @@ void TerminalWidget::mousewheel_event(GUI::MouseEvent& event)
     if (!is_scrollable())
         return;
     set_auto_scroll_direction(AutoScrollDirection::None);
-    m_scrollbar->increase_slider_by(event.wheel_delta() * scroll_length());
+    m_scrollbar->increase_slider_by(event.wheel_delta_y() * scroll_length());
     GUI::Frame::mousewheel_event(event);
 }
 

@@ -156,7 +156,7 @@ void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
 
 void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    if (event.wheel_delta() > 0)
+    if (event.wheel_delta_y() > 0)
         m_zoom /= 1.1f;
     else
         m_zoom *= 1.1f;

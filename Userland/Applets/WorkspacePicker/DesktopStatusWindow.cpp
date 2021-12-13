@@ -76,7 +76,7 @@ public:
 
         auto vcols = desktop.workspace_columns();
         auto vrows = desktop.workspace_rows();
-        auto direction = event.wheel_delta() < 0 ? 1 : -1;
+        auto direction = event.wheel_delta_y() < 0 ? 1 : -1;
 
         if (event.modifiers() & Mod_Shift)
             col = abs((int)col + direction) % vcols;

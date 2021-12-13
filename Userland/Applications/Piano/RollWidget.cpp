@@ -239,7 +239,12 @@ void RollWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event)
 void RollWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     if (event.modifiers() & KeyModifier::Mod_Shift) {
-        horizontal_scrollbar().increase_slider_by(event.wheel_delta() * horizontal_scroll_sensitivity);
+        horizontal_scrollbar().increase_slider_by(event.wheel_delta_y() * horizontal_scroll_sensitivity);
+        return;
+    }
+
+    if (event.wheel_delta_x() != 0) {
+        horizontal_scrollbar().increase_slider_by(event.wheel_delta_x() * horizontal_scroll_sensitivity);
         return;
     }
 
@@ -248,7 +253,7 @@ void RollWidget::mousewheel_event(GUI::MouseEvent& event)
         return;
     }
 
-    double multiplier = event.wheel_delta() >= 0 ? 0.5 : 2;
+    double multiplier = event.wheel_delta_y() >= 0 ? 0.5 : 2;
 
     if (m_zoom_level * multiplier > max_zoom)
         return;

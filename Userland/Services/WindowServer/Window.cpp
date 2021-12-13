@@ -264,19 +264,19 @@ void Window::handle_mouse_event(const MouseEvent& event)
 
     switch (event.type()) {
     case Event::MouseMove:
-        m_client->async_mouse_move(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta(), event.is_drag(), event.mime_types());
+        m_client->async_mouse_move(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y(), event.is_drag(), event.mime_types());
         break;
     case Event::MouseDown:
-        m_client->async_mouse_down(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
+        m_client->async_mouse_down(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         break;
     case Event::MouseDoubleClick:
-        m_client->async_mouse_double_click(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
+        m_client->async_mouse_double_click(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         break;
     case Event::MouseUp:
-        m_client->async_mouse_up(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
+        m_client->async_mouse_up(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         break;
     case Event::MouseWheel:
-        m_client->async_mouse_wheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
+        m_client->async_mouse_wheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
         break;
     default:
         VERIFY_NOT_REACHED();

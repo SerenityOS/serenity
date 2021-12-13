@@ -299,7 +299,7 @@ void Scrollbar::mousewheel_event(MouseEvent& event)
 {
     if (!is_scrollable())
         return;
-    increase_slider_by_steps(event.wheel_delta());
+    increase_slider_by_steps(event.wheel_delta_y());
     Widget::mousewheel_event(event);
 }
 
