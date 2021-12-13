@@ -57,8 +57,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
         return __builtin_##name(x);                   \
     }
 
-INTEGER_BUILTIN(ctz);
-
 namespace Division {
 template<FloatingPoint T>
 constexpr T fmod(T x, T y)
