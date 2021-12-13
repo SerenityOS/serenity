@@ -58,7 +58,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
     }
 
 INTEGER_BUILTIN(ctz);
-INTEGER_BUILTIN(popcnt);
 
 namespace Division {
 template<FloatingPoint T>
