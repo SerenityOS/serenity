@@ -24,6 +24,15 @@
 using StringIndexType = u16;
 constexpr auto s_string_index_type = "u16"sv;
 
+using LanguageListIndexType = u8;
+constexpr auto s_language_list_index_type = "u8"sv;
+
+using TerritoryListIndexType = u8;
+constexpr auto s_territory_list_index_type = "u8"sv;
+
+using ScriptListIndexType = u8;
+constexpr auto s_script_list_index_type = "u8"sv;
+
 struct ListPatterns {
     String type;
     String style;
@@ -33,13 +42,17 @@ struct ListPatterns {
     StringIndexType pair { 0 };
 };
 
+using LanguageList = Vector<StringIndexType>;
+using TerritoryList = Vector<StringIndexType>;
+using ScriptList = Vector<StringIndexType>;
+
 struct Locale {
     String language;
     Optional<String> territory;
     Optional<String> variant;
-    HashMap<String, StringIndexType> languages;
-    HashMap<String, StringIndexType> territories;
-    HashMap<String, StringIndexType> scripts;
+    LanguageListIndexType languages { 0 };
+    TerritoryListIndexType territories { 0 };
+    ScriptListIndexType scripts { 0 };
     HashMap<String, StringIndexType> long_currencies;
     HashMap<String, StringIndexType> short_currencies;
     HashMap<String, StringIndexType> narrow_currencies;
@@ -55,6 +68,9 @@ struct LanguageMapping {
 
 struct UnicodeLocaleData {
     UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStorage<LanguageList, LanguageListIndexType> unique_language_lists;
+    UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
+    UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
 
     HashMap<String, Locale> locales;
     Vector<Alias> locale_aliases;
@@ -164,6 +180,7 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
     auto const& identity_object = locale_object.as_object().get("identity"sv);
     auto const& language_string = identity_object.as_object().get("language"sv);
     auto const& territory_string = identity_object.as_object().get("territory"sv);
+    auto const& script_string = identity_object.as_object().get("script"sv);
     auto const& variant_string = identity_object.as_object().get("variant"sv);
 
     locale.language = language_string.as_string();
@@ -174,6 +191,12 @@ static ErrorOr<void> parse_identity(String locale_path, UnicodeLocaleData& local
         locale.territory = territory_string.as_string();
         if (!locale_data.territories.contains_slow(*locale.territory))
             locale_data.territories.append(*locale.territory);
+    }
+
+    if (script_string.is_string()) {
+        auto script = script_string.as_string();
+        if (!locale_data.scripts.contains_slow(script))
+            locale_data.scripts.append(script);
     }
 
     if (variant_string.is_string()) {
@@ -191,21 +214,22 @@ static ErrorOr<void> parse_locale_languages(String locale_path, UnicodeLocaleDat
     languages_path = languages_path.append("languages.json"sv);
 
     auto languages_file = TRY(Core::File::open(languages_path.string(), Core::OpenMode::ReadOnly));
-    auto languages = TRY(JsonValue::from_string(languages_file->read_all()));
+    auto locale_languages = TRY(JsonValue::from_string(languages_file->read_all()));
 
-    auto const& main_object = languages.as_object().get("main"sv);
+    auto const& main_object = locale_languages.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(languages_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& languages_object = locale_display_names_object.as_object().get("languages"sv);
 
-    languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        if (!locale_data.languages.contains_slow(key))
-            return;
+    LanguageList languages;
+    languages.resize(locale_data.languages.size());
 
-        auto index = locale_data.unique_strings.ensure(value.as_string());
-        locale.languages.set(key, index);
+    languages_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (auto index = locale_data.languages.find_first_index(key); index.has_value())
+            languages[*index] = locale_data.unique_strings.ensure(value.as_string());
     });
 
+    locale.languages = locale_data.unique_language_lists.ensure(move(languages));
     return {};
 }
 
@@ -215,21 +239,22 @@ static ErrorOr<void> parse_locale_territories(String locale_path, UnicodeLocaleD
     territories_path = territories_path.append("territories.json"sv);
 
     auto territories_file = TRY(Core::File::open(territories_path.string(), Core::OpenMode::ReadOnly));
-    auto territories = TRY(JsonValue::from_string(territories_file->read_all()));
+    auto locale_territories = TRY(JsonValue::from_string(territories_file->read_all()));
 
-    auto const& main_object = territories.as_object().get("main"sv);
+    auto const& main_object = locale_territories.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(territories_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& territories_object = locale_display_names_object.as_object().get("territories"sv);
 
-    territories_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        if (!locale_data.territories.contains_slow(key))
-            return;
+    TerritoryList territories;
+    territories.resize(locale_data.territories.size());
 
-        auto index = locale_data.unique_strings.ensure(value.as_string());
-        locale.territories.set(key, index);
+    territories_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (auto index = locale_data.territories.find_first_index(key); index.has_value())
+            territories[*index] = locale_data.unique_strings.ensure(value.as_string());
     });
 
+    locale.territories = locale_data.unique_territory_lists.ensure(move(territories));
     return {};
 }
 
@@ -239,21 +264,22 @@ static ErrorOr<void> parse_locale_scripts(String locale_path, UnicodeLocaleData&
     scripts_path = scripts_path.append("scripts.json"sv);
 
     auto scripts_file = TRY(Core::File::open(scripts_path.string(), Core::OpenMode::ReadOnly));
-    auto scripts = TRY(JsonValue::from_string(scripts_file->read_all()));
+    auto locale_scripts = TRY(JsonValue::from_string(scripts_file->read_all()));
 
-    auto const& main_object = scripts.as_object().get("main"sv);
+    auto const& main_object = locale_scripts.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(scripts_path.parent().basename());
     auto const& locale_display_names_object = locale_object.as_object().get("localeDisplayNames"sv);
     auto const& scripts_object = locale_display_names_object.as_object().get("scripts"sv);
 
-    scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
-        auto index = locale_data.unique_strings.ensure(value.as_string());
-        locale.scripts.set(key, index);
+    ScriptList scripts;
+    scripts.resize(locale_data.scripts.size());
 
-        if (!locale_data.scripts.contains_slow(key))
-            locale_data.scripts.append(key);
+    scripts_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
+        if (auto index = locale_data.scripts.find_first_index(key); index.has_value())
+            scripts[*index] = locale_data.unique_strings.ensure(value.as_string());
     });
 
+    locale.scripts = locale_data.unique_script_lists.ensure(move(scripts));
     return {};
 }
 
@@ -544,6 +570,10 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
         TRY(parse_identity(locale_path, locale_data, locale));
     }
 
+    quick_sort(locale_data.languages);
+    quick_sort(locale_data.territories);
+    quick_sort(locale_data.scripts);
+
     while (locale_names_iterator.has_next()) {
         auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
         auto language = TRY(remove_variants_from_path(locale_path));
@@ -699,6 +729,9 @@ struct Patterns {
 )~~~");
 
     locale_data.unique_strings.generate(generator);
+    locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
+    locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
+    locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -718,6 +751,27 @@ struct Patterns {
             first = false;
         }
         generator.append(String::formatted(" }}, {}", list.size()));
+    };
+
+    auto append_mapping = [&](auto const& keys, auto const& map, auto type, auto name, auto mapping_getter) {
+        generator.set("type", type);
+        generator.set("name", name);
+        generator.set("size", String::number(keys.size()));
+
+        generator.append(R"~~~(
+static constexpr Array<@type@, @size@> @name@ { {)~~~");
+
+        bool first = true;
+        for (auto const& key : keys) {
+            auto const& value = map.find(key)->value;
+            auto mapping = mapping_getter(value);
+
+            generator.append(first ? " " : ", ");
+            generator.append(String::number(mapping));
+            first = false;
+        }
+
+        generator.append(" } };");
     };
 
     auto append_string_index_list = [&](String name, auto const& keys, auto const& mappings) {
@@ -776,9 +830,12 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
 )~~~");
     };
 
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_languages"sv, "s_languages_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.languages, value.languages); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_territories"sv, "s_territories_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.territories, value.territories); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_scripts"sv, "s_scripts_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.scripts, value.scripts); });
+    auto locales = locale_data.locales.keys();
+    quick_sort(locales);
+
+    append_mapping(locales, locale_data.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
+    append_mapping(locales, locale_data.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
+    append_mapping(locales, locale_data.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_long_currencies"sv, "s_long_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.long_currencies); });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_short_currencies"sv, "s_short_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.short_currencies); });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_narrow_currencies"sv, "s_narrow_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.narrow_currencies); });
@@ -966,7 +1023,7 @@ static LanguageMapping const* resolve_likely_subtag(Unicode::LanguageID const& l
 
 )~~~");
 
-    auto append_mapping_search = [&](StringView enum_snake, StringView from_string_name, StringView collection_name) {
+    auto append_mapping_search = [&](StringView enum_snake, StringView from_string_name, StringView collection_name, StringView unique_list = {}) {
         generator.set("enum_snake", enum_snake);
         generator.set("from_string_name", from_string_name);
         generator.set("collection_name", collection_name);
@@ -983,8 +1040,21 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
     auto @enum_snake@_index = to_underlying(*@enum_snake@_value);
+)~~~");
 
+        if (unique_list.is_empty()) {
+            generator.append(R"~~~(
     auto const& mappings = @collection_name@.at(locale_index);
+)~~~");
+        } else {
+            generator.set("unique_list", unique_list);
+            generator.append(R"~~~(
+    auto mapping_index = @collection_name@.at(locale_index);
+    auto const& mappings = @unique_list@.at(mapping_index);
+)~~~");
+        }
+
+        generator.append(R"~~~(
     auto @enum_snake@_string_index = mappings.at(@enum_snake@_index);
     auto @enum_snake@_mapping = s_string_list.at(@enum_snake@_string_index);
 
@@ -1019,15 +1089,15 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
 
     append_from_string("Locale"sv, "locale"sv, locale_data.locales.keys(), locale_data.locale_aliases);
 
-    append_mapping_search("language"sv, "language"sv, "s_languages"sv);
+    append_mapping_search("language"sv, "language"sv, "s_languages"sv, "s_language_lists"sv);
     append_from_string("Language"sv, "language"sv, locale_data.languages);
     append_alias_search("language"sv, locale_data.language_aliases);
 
-    append_mapping_search("territory"sv, "territory"sv, "s_territories"sv);
+    append_mapping_search("territory"sv, "territory"sv, "s_territories"sv, "s_territory_lists"sv);
     append_from_string("Territory"sv, "territory"sv, locale_data.territories);
     append_alias_search("territory"sv, locale_data.territory_aliases);
 
-    append_mapping_search("script_tag"sv, "script_tag"sv, "s_scripts"sv);
+    append_mapping_search("script_tag"sv, "script_tag"sv, "s_scripts"sv, "s_script_lists"sv);
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
     append_alias_search("script_tag"sv, locale_data.script_aliases);
 
