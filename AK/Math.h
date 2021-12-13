@@ -46,17 +46,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
             return __builtin_##function##f(args); \
     }
 
-#define INTEGER_BUILTIN(name)                         \
-    template<Integral T>                              \
-    constexpr T name(T x)                             \
-    {                                                 \
-        if constexpr (sizeof(T) == sizeof(long long)) \
-            return __builtin_##name##ll(x);           \
-        if constexpr (sizeof(T) == sizeof(long))      \
-            return __builtin_##name##l(x);            \
-        return __builtin_##name(x);                   \
-    }
-
 namespace Division {
 template<FloatingPoint T>
 constexpr T fmod(T x, T y)
@@ -465,6 +454,5 @@ constexpr T pow(T x, T y)
 }
 
 #undef CONSTEXPR_STATE
-#undef INTEGER_BUILTIN
 
 }
