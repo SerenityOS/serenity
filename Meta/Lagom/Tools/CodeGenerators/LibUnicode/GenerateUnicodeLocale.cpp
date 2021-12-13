@@ -33,6 +33,9 @@ constexpr auto s_territory_list_index_type = "u8"sv;
 using ScriptListIndexType = u8;
 constexpr auto s_script_list_index_type = "u8"sv;
 
+using CurrencyListIndexType = u16;
+constexpr auto s_currency_list_index_type = "u16"sv;
+
 struct ListPatterns {
     String type;
     String style;
@@ -45,6 +48,7 @@ struct ListPatterns {
 using LanguageList = Vector<StringIndexType>;
 using TerritoryList = Vector<StringIndexType>;
 using ScriptList = Vector<StringIndexType>;
+using CurrencyList = Vector<StringIndexType>;
 
 struct Locale {
     String language;
@@ -53,10 +57,10 @@ struct Locale {
     LanguageListIndexType languages { 0 };
     TerritoryListIndexType territories { 0 };
     ScriptListIndexType scripts { 0 };
-    HashMap<String, StringIndexType> long_currencies;
-    HashMap<String, StringIndexType> short_currencies;
-    HashMap<String, StringIndexType> narrow_currencies;
-    HashMap<String, StringIndexType> numeric_currencies;
+    CurrencyListIndexType long_currencies { 0 };
+    CurrencyListIndexType short_currencies { 0 };
+    CurrencyListIndexType narrow_currencies { 0 };
+    CurrencyListIndexType numeric_currencies { 0 };
     HashMap<String, StringIndexType> keywords;
     Vector<ListPatterns> list_patterns;
 };
@@ -71,6 +75,7 @@ struct UnicodeLocaleData {
     UniqueStorage<LanguageList, LanguageListIndexType> unique_language_lists;
     UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
     UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
+    UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
 
     HashMap<String, Locale> locales;
     Vector<Alias> locale_aliases;
@@ -339,12 +344,29 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
     currencies_path = currencies_path.append("currencies.json"sv);
 
     auto currencies_file = TRY(Core::File::open(currencies_path.string(), Core::OpenMode::ReadOnly));
-    auto currencies = TRY(JsonValue::from_string(currencies_file->read_all()));
+    auto locale_currencies = TRY(JsonValue::from_string(currencies_file->read_all()));
 
-    auto const& main_object = currencies.as_object().get("main"sv);
+    auto const& main_object = locale_currencies.as_object().get("main"sv);
     auto const& locale_object = main_object.as_object().get(currencies_path.parent().basename());
     auto const& locale_numbers_object = locale_object.as_object().get("numbers"sv);
     auto const& currencies_object = locale_numbers_object.as_object().get("currencies"sv);
+
+    currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const&) {
+        if (!locale_data.currencies.contains_slow(key))
+            locale_data.currencies.append(key);
+    });
+
+    CurrencyList long_currencies {};
+    long_currencies.resize(locale_data.currencies.size());
+
+    CurrencyList short_currencies {};
+    short_currencies.resize(locale_data.currencies.size());
+
+    CurrencyList narrow_currencies {};
+    narrow_currencies.resize(locale_data.currencies.size());
+
+    CurrencyList numeric_currencies {};
+    numeric_currencies.resize(locale_data.currencies.size());
 
     currencies_object.as_object().for_each_member([&](auto const& key, JsonValue const& value) {
         auto const& long_name = value.as_object().get("displayName"sv);
@@ -352,15 +374,17 @@ static ErrorOr<void> parse_locale_currencies(String numbers_path, UnicodeLocaleD
         auto const& narrow_name = value.as_object().get("symbol-alt-narrow"sv);
         auto const& numeric_name = value.as_object().get("displayName-count-other"sv);
 
-        locale.long_currencies.set(key, locale_data.unique_strings.ensure(long_name.as_string()));
-        locale.short_currencies.set(key, locale_data.unique_strings.ensure(short_name.as_string()));
-        locale.narrow_currencies.set(key, narrow_name.is_null() ? 0 : locale_data.unique_strings.ensure(narrow_name.as_string()));
-        locale.numeric_currencies.set(key, locale_data.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string()));
-
-        if (!locale_data.currencies.contains_slow(key))
-            locale_data.currencies.append(key);
+        auto index = locale_data.currencies.find_first_index(key).value();
+        long_currencies[index] = locale_data.unique_strings.ensure(long_name.as_string());
+        short_currencies[index] = locale_data.unique_strings.ensure(short_name.as_string());
+        narrow_currencies[index] = narrow_name.is_null() ? 0 : locale_data.unique_strings.ensure(narrow_name.as_string());
+        numeric_currencies[index] = locale_data.unique_strings.ensure(numeric_name.is_null() ? long_name.as_string() : numeric_name.as_string());
     });
 
+    locale.long_currencies = locale_data.unique_currency_lists.ensure(move(long_currencies));
+    locale.short_currencies = locale_data.unique_currency_lists.ensure(move(short_currencies));
+    locale.narrow_currencies = locale_data.unique_currency_lists.ensure(move(narrow_currencies));
+    locale.numeric_currencies = locale_data.unique_currency_lists.ensure(move(numeric_currencies));
     return {};
 }
 
@@ -732,6 +756,7 @@ struct Patterns {
     locale_data.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
     locale_data.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
     locale_data.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
+    locale_data.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
 
     auto append_index = [&](auto index) {
         generator.append(String::formatted(", {}", index));
@@ -836,10 +861,10 @@ static constexpr Array<Patterns, @size@> @name@ { {)~~~");
     append_mapping(locales, locale_data.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
     append_mapping(locales, locale_data.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
     append_mapping(locales, locale_data.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_long_currencies"sv, "s_long_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.long_currencies); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_short_currencies"sv, "s_short_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.short_currencies); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_narrow_currencies"sv, "s_narrow_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.narrow_currencies); });
-    generate_mapping(generator, locale_data.locales, s_string_index_type, "s_numeric_currencies"sv, "s_numeric_currencies_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.currencies, value.numeric_currencies); });
+    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_long_currencies"sv, [&](auto const& locale) { return locale.long_currencies; });
+    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
+    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
+    append_mapping(locales, locale_data.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
     generate_mapping(generator, locale_data.locales, s_string_index_type, "s_keywords"sv, "s_keywords_{}", [&](auto const& name, auto const& value) { append_string_index_list(name, locale_data.keywords, value.keywords); });
     generate_mapping(generator, locale_data.locales, "Patterns"sv, "s_list_patterns"sv, "s_list_patterns_{}", [&](auto const& name, auto const& value) { append_list_patterns(name, value.list_patterns); });
 
@@ -1101,10 +1126,10 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     append_from_string("ScriptTag"sv, "script_tag"sv, locale_data.scripts);
     append_alias_search("script_tag"sv, locale_data.script_aliases);
 
-    append_mapping_search("long_currency"sv, "currency"sv, "s_long_currencies"sv);
-    append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv);
-    append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv);
-    append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv);
+    append_mapping_search("long_currency"sv, "currency"sv, "s_long_currencies"sv, "s_currency_lists"sv);
+    append_mapping_search("short_currency"sv, "currency"sv, "s_short_currencies"sv, "s_currency_lists"sv);
+    append_mapping_search("narrow_currency"sv, "currency"sv, "s_narrow_currencies"sv, "s_currency_lists"sv);
+    append_mapping_search("numeric_currency"sv, "currency"sv, "s_numeric_currencies"sv, "s_currency_lists"sv);
     append_from_string("Currency"sv, "currency"sv, locale_data.currencies);
 
     append_mapping_search("key"sv, "key"sv, "s_keywords"sv);
