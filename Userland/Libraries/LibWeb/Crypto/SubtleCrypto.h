@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Forward.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
 namespace Web::Crypto {
@@ -20,6 +21,8 @@ public:
     {
         return adopt_ref(*new SubtleCrypto());
     }
+
+    JS::Promise* digest(String const& algorithm, JS::Handle<JS::Object> const& data);
 
 private:
     SubtleCrypto() = default;
