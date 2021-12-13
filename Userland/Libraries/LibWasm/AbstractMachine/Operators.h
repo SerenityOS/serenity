@@ -8,6 +8,7 @@
 
 #include <AK/BitCast.h>
 #include <AK/CountOnes.h>
+#include <AK/CountTrailingZeros.h>
 #include <AK/Result.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -191,15 +192,7 @@ struct CountTrailingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
     {
-        if (lhs == 0)
-            return sizeof(Lhs) * CHAR_BIT;
-
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_ctz(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_ctzll(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return count_trailing_zeros(lhs);
     }
 
     static StringView name() { return "ctz"; }

@@ -9,6 +9,7 @@
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
 #include <AK/CountLeadingZeros.h>
+#include <AK/CountTrailingZeros.h>
 #include <AK/Format.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
@@ -105,9 +106,9 @@ public:
     constexpr size_t ctz() const requires(IsSame<T, u64>)
     {
         if (m_low)
-            return __builtin_ctzll(m_low);
+            return count_trailing_zeros(m_low);
         else
-            return sizeof(T) * 8 + __builtin_ctzll(m_high);
+            return sizeof(T) * 8 + count_trailing_zeros(m_high);
     }
     constexpr size_t ctz() const requires(!IsSame<T, u64>)
     {
