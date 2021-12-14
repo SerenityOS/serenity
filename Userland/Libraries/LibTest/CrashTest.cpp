@@ -64,6 +64,8 @@ bool Crash::do_report(Report report)
     bool pass = false;
     if (m_crash_signal == ANY_SIGNAL) {
         pass = report.has<int>();
+    } else if (m_crash_signal == 0) {
+        pass = report.has<Failure>() && report.get<Failure>() == Failure::DidNotCrash;
     } else if (m_crash_signal > 0) {
         pass = report.has<int>() && report.get<int>() == m_crash_signal;
     } else {
