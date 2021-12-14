@@ -115,7 +115,6 @@ Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
     // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to ! GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
     for (u64 i = offset; i <= offset + length - 1; ++i) {
         auto value = es_array_buffer->get_value<u8>(i, true, JS::ArrayBuffer::Unordered);
-        dbgln("value at i = {} is {}", i, value);
         (*bytes)[i - offset] = (u8)value.as_u32();
     }
 
