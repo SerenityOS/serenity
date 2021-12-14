@@ -16,6 +16,11 @@ namespace Test {
 
 class Crash {
 public:
+    enum class SuccessCondition {
+        DidCrash,
+        DidNotCrash,
+    };
+
     enum class RunType {
         UsingChildProcess,
         UsingCurrentProcess,
@@ -26,7 +31,8 @@ public:
         UnexpectedError,
     };
 
-    Crash(String test_type, Function<Crash::Failure()> crash_function);
+    Crash(String test_type, Function<Crash::Failure()> crash_function,
+        SuccessCondition success_condition = SuccessCondition::DidCrash);
 
     bool run(RunType run_type = RunType::UsingChildProcess);
 
@@ -36,6 +42,7 @@ private:
 
     String m_type;
     Function<Crash::Failure()> m_crash_function;
+    SuccessCondition m_success_condition;
 };
 
 }

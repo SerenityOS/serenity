@@ -17,9 +17,11 @@
 
 namespace Test {
 
-Crash::Crash(String test_type, Function<Crash::Failure()> crash_function)
+Crash::Crash(String test_type, Function<Crash::Failure()> crash_function,
+    SuccessCondition success_condition)
     : m_type(move(test_type))
     , m_crash_function(move(crash_function))
+    , m_success_condition(success_condition)
 {
 }
 
@@ -57,7 +59,10 @@ bool Crash::run(RunType run_type)
 
 bool Crash::do_report(report_type report)
 {
-    const bool pass = report.has<int>();
+    bool pass = report.has<int>();
+    if (m_success_condition == SuccessCondition::DidCrash) {
+        pass = !pass;
+    }
 
     if (pass)
         out("\x1B[32mPASS\x1B[0m: ");

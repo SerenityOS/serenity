@@ -127,3 +127,14 @@ void current_test_case_did_fail();
         if (!crash.run())                           \
             ::Test::current_test_case_did_fail();   \
     } while (false)
+
+// To use, specify the lambda to execute in a sub process and verify it exits:
+//  EXPECT_NOT_CRASH("This should not fail", []{
+//      return Test::Crash::Failure::DidNotCrash;
+//  });
+#define EXPECT_NOT_CRASH(test_message, test_func)                                         \
+    do {                                                                                  \
+        Test::Crash crash(test_message, test_func, SuccessCondition::SuccessDidNotCrash); \
+        if (!crash.run())                                                                 \
+            ::Test::current_test_case_did_fail();                                         \
+    } while (false)
