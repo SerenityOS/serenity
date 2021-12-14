@@ -105,7 +105,7 @@ Optional<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
 
     // 7. If ! IsDetachedBuffer(esArrayBuffer) is true, then return the empty byte sequence.
     if (es_array_buffer->is_detached())
-        return {};
+        return ByteBuffer {};
 
     // 8. Let bytes be a new byte sequence of length equal to length.
     auto bytes = ByteBuffer::create_zeroed(length);
