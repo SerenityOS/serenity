@@ -208,15 +208,15 @@ public:
 
     static ComparisonOperation op_from(StringView sv)
     {
-        if (sv == "<")
+        if (sv == "<"sv)
             return ComparisonOperation::Less;
-        if (sv == "<=")
+        if (sv == "<="sv)
             return ComparisonOperation::LessEq;
-        if (sv == "=")
+        if (sv == "="sv)
             return ComparisonOperation::Eq;
-        if (sv == "!=")
+        if (sv == "!="sv)
             return ComparisonOperation::Neq;
-        if (sv == ">=")
+        if (sv == ">="sv)
             return ComparisonOperation::GreaterEq;
         return ComparisonOperation::Greater;
     }
@@ -278,13 +278,13 @@ public:
     };
     static ArithmeticOperation op_from(StringView sv)
     {
-        if (sv == "+")
+        if (sv == "+"sv)
             return ArithmeticOperation::Sum;
-        if (sv == "-")
+        if (sv == "-"sv)
             return ArithmeticOperation::Difference;
-        if (sv == "*")
+        if (sv == "*"sv)
             return ArithmeticOperation::Product;
-        if (sv == "/")
+        if (sv == "/"sv)
             return ArithmeticOperation::Quotient;
         return ArithmeticOperation::Remainder;
     }
@@ -473,7 +473,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
     }
     case And: {
         auto left = parse(args, Comp);
-        while (!args.is_empty() && args.head() == "&") {
+        while (!args.is_empty() && args.head() == "&"sv) {
             args.dequeue();
             auto right = parse(args, Comp);
             left = make<BooleanExpression>(BooleanExpression::BooleanOperator::And, move(left), move(right));
@@ -482,7 +482,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
     }
     case Comp: {
         auto left = parse(args, ArithS);
-        while (!args.is_empty() && args.head().is_one_of("<", "<=", "=", "!=", "=>", ">")) {
+        while (!args.is_empty() && args.head().is_one_of("<"sv, "<="sv, "="sv, "!="sv, "=>"sv, ">"sv)) {
             auto op = args.dequeue();
             auto right = parse(args, ArithM);
             left = make<ComparisonExpression>(ComparisonExpression::op_from(op), move(left), move(right));
@@ -491,7 +491,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
     }
     case ArithS: {
         auto left = parse(args, ArithM);
-        while (!args.is_empty() && args.head().is_one_of("+", "-")) {
+        while (!args.is_empty() && args.head().is_one_of("+"sv, "-"sv)) {
             auto op = args.dequeue();
             auto right = parse(args, ArithM);
             left = make<ArithmeticExpression>(ArithmeticExpression::op_from(op), move(left), move(right));
@@ -500,7 +500,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
     }
     case ArithM: {
         auto left = parse(args, StringO);
-        while (!args.is_empty() && args.head().is_one_of("*", "/", "%")) {
+        while (!args.is_empty() && args.head().is_one_of("*"sv, "/"sv, "%"sv)) {
             auto op = args.dequeue();
             auto right = parse(args, StringO);
             left = make<ArithmeticExpression>(ArithmeticExpression::op_from(op), move(left), move(right));
@@ -515,26 +515,26 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
 
         while (!args.is_empty()) {
             auto& op = args.head();
-            if (op == "+") {
+            if (op == "+"sv) {
                 args.dequeue();
                 left = make<ValueExpression>(args.dequeue());
-            } else if (op == "substr") {
+            } else if (op == "substr"sv) {
                 args.dequeue();
                 auto str = parse(args, Paren);
                 auto pos = parse(args, Paren);
                 auto len = parse(args, Paren);
                 left = make<StringExpression>(StringExpression::StringOperation::Substring, move(str), move(pos), move(len));
-            } else if (op == "index") {
+            } else if (op == "index"sv) {
                 args.dequeue();
                 auto str = parse(args, Paren);
                 auto chars = parse(args, Paren);
                 left = make<StringExpression>(StringExpression::StringOperation::Index, move(str), move(chars));
-            } else if (op == "match") {
+            } else if (op == "match"sv) {
                 args.dequeue();
                 auto str = parse(args, Paren);
                 auto pattern = parse(args, Paren);
                 left = make<StringExpression>(StringExpression::StringOperation::Match, move(str), move(pattern));
-            } else if (op == "length") {
+            } else if (op == "length"sv) {
                 args.dequeue();
                 auto str = parse(args, Paren);
                 left = make<StringExpression>(StringExpression::StringOperation::Length, move(str));
@@ -542,7 +542,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
                 left = parse(args, Paren);
             }
 
-            if (!args.is_empty() && args.head() == ":") {
+            if (!args.is_empty() && args.head() == ":"sv) {
                 args.dequeue();
                 auto right = parse(args, Paren);
                 left = make<StringExpression>(StringExpression::StringOperation::Match, left.release_nonnull(), move(right));
@@ -557,7 +557,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
         if (args.is_empty())
             fail("Expected a term");
 
-        if (args.head() == "(") {
+        if (args.head() == "("sv) {
             args.dequeue();
             auto expr = parse(args);
             if (args.head() != ")")
