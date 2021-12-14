@@ -6,6 +6,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/CountLeadingOnes.h>
 #include <AK/Hex.h>
 #include <AK/Platform.h>
 #include <AK/Utf8View.h>
@@ -500,7 +501,7 @@ static ThrowCompletionOr<String> decode(JS::GlobalObject& global_object, const S
             continue;
         }
 
-        auto leading_ones = count_trailing_zeroes_32_safe(~decoded_code_unit) - 24;
+        auto leading_ones = count_leading_ones(decoded_code_unit);
         if (leading_ones == 1 || leading_ones > 4)
             return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
 
