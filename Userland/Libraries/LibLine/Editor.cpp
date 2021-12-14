@@ -628,6 +628,7 @@ void Editor::handle_resize_event(bool reset_origin)
 
     reposition_cursor(stderr_stream, true);
     m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
+    m_origin_row = m_suggestion_display->origin_row();
     reposition_cursor(stderr_stream);
 
     if (m_is_searching)
