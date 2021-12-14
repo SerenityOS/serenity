@@ -83,7 +83,7 @@ struct Configuration {
     void set(RefreshBehavior refresh) { refresh_behavior = refresh; }
     void set(OperationMode mode) { operation_mode = mode; }
     void set(SignalHandler mode) { m_signal_mode = mode; }
-    void set(const KeyBinding& binding) { keybindings.append(binding); }
+    void set(KeyBinding const& binding) { keybindings.append(binding); }
     void set(DefaultTextEditor editor) { m_default_text_editor = move(editor.command); }
     void set(Flags flags)
     {
@@ -143,26 +143,26 @@ public:
 
     ~Editor();
 
-    Result<String, Error> get_line(const String& prompt);
+    Result<String, Error> get_line(String const& prompt);
 
     void initialize();
 
     void refetch_default_termios();
 
-    void add_to_history(const String& line);
-    bool load_history(const String& path);
-    bool save_history(const String& path);
-    const auto& history() const { return m_history; }
+    void add_to_history(String const& line);
+    bool load_history(String const& path);
+    bool save_history(String const& path);
+    auto const& history() const { return m_history; }
     bool is_history_dirty() const { return m_history_dirty; }
 
-    void register_key_input_callback(const KeyBinding&);
+    void register_key_input_callback(KeyBinding const&);
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
     void register_key_input_callback(Key key, Function<bool(Editor&)> callback) { register_key_input_callback(Vector<Key> { key }, move(callback)); }
 
     static StringMetrics actual_rendered_string_metrics(StringView);
-    static StringMetrics actual_rendered_string_metrics(const Utf32View&);
+    static StringMetrics actual_rendered_string_metrics(Utf32View const&);
 
-    Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
+    Function<Vector<CompletionSuggestion>(Editor const&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
@@ -196,7 +196,7 @@ public:
     String line(size_t up_to_index) const;
 
     // Only makes sense inside a character_input callback or on_* callback.
-    void set_prompt(const String& prompt)
+    void set_prompt(String const& prompt)
     {
         if (m_cached_prompt_valid)
             m_old_prompt_metrics = m_cached_prompt_metrics;
@@ -206,11 +206,11 @@ public:
     }
 
     void clear_line();
-    void insert(const String&);
+    void insert(String const&);
     void insert(StringView);
-    void insert(const Utf32View&);
+    void insert(Utf32View const&);
     void insert(const u32);
-    void stylize(const Span&, const Style&);
+    void stylize(Span const&, Style const&);
     void strip_styles(bool strip_anchored = false);
 
     // Invariant Offset is an offset into the suggested data, hinting the editor what parts of the suggestion will not change
@@ -332,7 +332,7 @@ private:
             Core::EventLoop::unregister_signal(id);
     }
 
-    const StringMetrics& current_prompt_metrics() const
+    StringMetrics const& current_prompt_metrics() const
     {
         return m_cached_prompt_valid ? m_cached_prompt_metrics : m_old_prompt_metrics;
     }
@@ -486,7 +486,7 @@ private:
         HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
         HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
 
-        bool contains_up_to_offset(const Spans& other, size_t offset) const;
+        bool contains_up_to_offset(Spans const& other, size_t offset) const;
     } m_drawn_spans, m_current_spans;
 
     RefPtr<Core::Notifier> m_notifier;

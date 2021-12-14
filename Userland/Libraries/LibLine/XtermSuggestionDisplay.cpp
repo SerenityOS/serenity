@@ -14,7 +14,7 @@
 
 namespace Line {
 
-void XtermSuggestionDisplay::display(const SuggestionManager& manager)
+void XtermSuggestionDisplay::display(SuggestionManager const& manager)
 {
     did_display();
 
