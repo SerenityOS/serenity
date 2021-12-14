@@ -1919,23 +1919,29 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
     m_extra_chars_not_allowed_in_barewords.append(',');
 
     auto rule_start = push_start();
-    auto start_expr = parse_expression();
-    if (start_expr) {
-        if (expect("..")) {
-            if (auto end_expr = parse_expression()) {
-                if (end_expr->position().start_offset != start_expr->position().end_offset + 2)
-                    end_expr->set_is_syntax_error(create<AST::SyntaxError>("Expected no whitespace between '..' and the following expression in brace expansion"));
-
-                return create<AST::Range>(start_expr.release_nonnull(), end_expr.release_nonnull());
-            }
-
-            return create<AST::Range>(start_expr.release_nonnull(), create<AST::SyntaxError>("Expected an expression to end range brace expansion with", true));
-        }
-    }
-
     NonnullRefPtrVector<AST::Node> subexpressions;
-    if (start_expr)
-        subexpressions.append(start_expr.release_nonnull());
+
+    if (next_is(",")) {
+        // Note that we don't consume the ',' here.
+        subexpressions.append(create<AST::StringLiteral>(""));
+    } else {
+        auto start_expr = parse_expression();
+        if (start_expr) {
+            if (expect("..")) {
+                if (auto end_expr = parse_expression()) {
+                    if (end_expr->position().start_offset != start_expr->position().end_offset + 2)
+                        end_expr->set_is_syntax_error(create<AST::SyntaxError>("Expected no whitespace between '..' and the following expression in brace expansion"));
+
+                    return create<AST::Range>(start_expr.release_nonnull(), end_expr.release_nonnull());
+                }
+
+                return create<AST::Range>(start_expr.release_nonnull(), create<AST::SyntaxError>("Expected an expression to end range brace expansion with", true));
+            }
+        }
+
+        if (start_expr)
+            subexpressions.append(start_expr.release_nonnull());
+    }
 
     while (expect(',')) {
         auto expr = parse_expression();
