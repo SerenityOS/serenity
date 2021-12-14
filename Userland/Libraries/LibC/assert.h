@@ -11,12 +11,12 @@
 __BEGIN_DECLS
 
 #ifndef NDEBUG
-__attribute__((noreturn)) void __assertion_failed(const char* msg);
-#    define __stringify_helper(x) #    x
-#    define __stringify(x) __stringify_helper(x)
-#    define assert(expr)                                                            \
-        (__builtin_expect(!(expr), 0)                                               \
-                ? __assertion_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)) \
+
+__attribute__((noreturn)) void __assertion_failed(const char* msg, const char* file, unsigned int line, const char* function);
+
+#    define assert(expr)                                                             \
+        (__builtin_expect(!(expr), 0)                                                \
+                ? __assertion_failed(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__) \
                 : (void)0)
 
 #else

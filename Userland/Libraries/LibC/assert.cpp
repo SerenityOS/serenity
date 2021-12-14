@@ -17,12 +17,12 @@ extern "C" {
 
 extern bool __stdio_is_initialized;
 
-void __assertion_failed(const char* msg)
+void __assertion_failed(const char* msg, const char* file, unsigned int line, const char* function)
 {
     if (__heap_is_stable) {
-        dbgln("ASSERTION FAILED: {}", msg);
+        dbgln("ASSERTION FAILED: {}\n{}:{} in ", msg, file, line, function);
         if (__stdio_is_initialized)
-            warnln("ASSERTION FAILED: {}", msg);
+            warnln("ASSERTION FAILED: {}\n{}:{}", msg, file, line, function);
     }
 
     Syscall::SC_set_coredump_metadata_params params {
