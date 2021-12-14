@@ -898,6 +898,9 @@ void Window::window_menu_activate_default()
 
 void Window::request_close()
 {
+    if (is_destroyed())
+        return;
+
     Event close_request(Event::WindowCloseRequest);
     event(close_request);
 }
