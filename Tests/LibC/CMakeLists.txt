@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestAbort.cpp
+    TestAssert.cpp
     TestIo.cpp
     TestLibCExec.cpp
     TestLibCDirEnt.cpp
