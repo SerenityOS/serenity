@@ -485,7 +485,7 @@ static ThrowCompletionOr<String> decode(JS::GlobalObject& global_object, const S
         if (second_digit >= 16)
             return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
 
-        char decoded_code_unit = (first_digit << 4) | second_digit;
+        u8 decoded_code_unit = (first_digit << 4) | second_digit;
         k += 2;
         if (expected_continuation_bytes > 0) {
             decoded_builder.append(decoded_code_unit);
@@ -501,7 +501,7 @@ static ThrowCompletionOr<String> decode(JS::GlobalObject& global_object, const S
             continue;
         }
 
-        auto leading_ones = count_trailing_zeroes(static_cast<u32>(~decoded_code_unit)) - 24;
+        auto leading_ones = count_leading_ones(decoded_code_unit);
         if (leading_ones == 1 || leading_ones > 4)
             return global_object.vm().throw_completion<URIError>(global_object, ErrorType::URIMalformed);
 
