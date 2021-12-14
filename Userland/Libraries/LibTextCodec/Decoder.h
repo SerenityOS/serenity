@@ -52,6 +52,11 @@ public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
 };
 
+class Koi8RDecoder final : public Decoder {
+public:
+    virtual void process(StringView, Function<void(u32)> on_code_point) override;
+};
+
 class Latin9Decoder final : public Decoder {
 public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
