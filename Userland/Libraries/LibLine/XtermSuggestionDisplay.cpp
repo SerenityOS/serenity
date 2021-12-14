@@ -126,6 +126,9 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
     m_lines_used_for_last_suggestions = lines_used;
 
+    // The last line of the prompt is the same line as the first line of the buffer, so we need to subtract one here.
+    lines_used += m_prompt_lines_at_suggestion_initiation - 1;
+
     // If we filled the screen, move back the origin.
     if (m_origin_row + lines_used >= m_num_lines) {
         m_origin_row = m_num_lines - lines_used;
