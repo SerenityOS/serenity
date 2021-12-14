@@ -4,10 +4,6 @@ Visual Studio Code does not work optimally for Serenity development, and there's
 
 The WSL Remote extension allows you to use VSCode in Windows while using the normal WSL workflow. This works surprisingly well, but for code comprehension speed you should put the Serenity directory on your WSL root partition.
 
-## Note on CMake
-
-The CMake Tools plugin for VSCode does not work with projects that don't accept a CMAKE_BUILD_TYPE. See also [this CMake Tools issue](https://github.com/microsoft/vscode-cmake-tools/issues/1639); an appropriate feature is planned for 1.9.0. For now, it is best to disable all CMake extensions when working on Serenity.
-
 ## Code comprehension
 
 Both C++ comprehension tools listed below report fake errors.
@@ -32,56 +28,62 @@ These extensions can be used as-is, but you need to point them to the custom Ser
 
 ```json
 {
-    "name": "Userspace",
-    "includePath": [
-        "${workspaceFolder}",
-        "${workspaceFolder}/Build/i686/",
-        "${workspaceFolder}/Build/i686/Userland",
-        "${workspaceFolder}/Build/i686/Userland/Applications",
-        "${workspaceFolder}/Build/i686/Userland/Libraries",
-        "${workspaceFolder}/Build/i686/Userland/Services",
-        "${workspaceFolder}/Build/i686/Root/usr/include/**",
-        "${workspaceFolder}/Userland",
-        "${workspaceFolder}/Userland/Libraries",
-        "${workspaceFolder}/Userland/Libraries/LibC",
-        "${workspaceFolder}/Userland/Libraries/LibM",
-        "${workspaceFolder}/Userland/Libraries/LibPthread",
-        "${workspaceFolder}/Userland/Services",
-        "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
+    "configurations": [
+        {
+            "name": "userland-i386-gcc",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/Build/i686/",
+                "${workspaceFolder}/Build/i686/Userland",
+                "${workspaceFolder}/Build/i686/Userland/Applications",
+                "${workspaceFolder}/Build/i686/Userland/Libraries",
+                "${workspaceFolder}/Build/i686/Userland/Services",
+                "${workspaceFolder}/Build/i686/Root/usr/include/**",
+                "${workspaceFolder}/Userland",
+                "${workspaceFolder}/Userland/Libraries",
+                "${workspaceFolder}/Userland/Libraries/LibC",
+                "${workspaceFolder}/Userland/Libraries/LibM",
+                "${workspaceFolder}/Userland/Libraries/LibPthread",
+                "${workspaceFolder}/Userland/Services",
+                "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
+            ],
+            "defines": [
+                "DEBUG",
+                "__serenity__"
+            ],
+            "compilerPath": "${workspaceFolder}/Toolchain/Local/i686/bin/i686-pc-serenity-g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x86",
+            "compileCommands": "Build/i686/compile_commands.json",
+            "compilerArgs": [
+                "-wall",
+                "-wextra",
+                "-werror"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/Build/i686/",
+                    "${workspaceFolder}/Build/i686/Userland",
+                    "${workspaceFolder}/Build/i686/Userland/Applications",
+                    "${workspaceFolder}/Build/i686/Userland/Libraries",
+                    "${workspaceFolder}/Build/i686/Userland/Services",
+                    "${workspaceFolder}/Build/i686/Root/usr/include/**",
+                    "${workspaceFolder}/Userland",
+                    "${workspaceFolder}/Userland/Libraries",
+                    "${workspaceFolder}/Userland/Libraries/LibC",
+                    "${workspaceFolder}/Userland/Libraries/LibM",
+                    "${workspaceFolder}/Userland/Libraries/LibPthread",
+                    "${workspaceFolder}/Userland/Services",
+                    "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/Build/i686/"
+            }
+        }
     ],
-    "defines": [
-        "DEBUG",
-        "__serenity__",
-    ],
-    "compilerPath": "${workspaceFolder}/Toolchain/Local/i686/bin/i686-pc-serenity-g++",
-    "cStandard": "c17",
-    "cppStandard": "c++20",
-    "intelliSenseMode": "linux-gcc-x86",
-    "browse": {
-        "path": [
-            "${workspaceFolder}",
-            "${workspaceFolder}/Build/i686/",
-            "${workspaceFolder}/Build/i686/Userland",
-            "${workspaceFolder}/Build/i686/Userland/Applications",
-            "${workspaceFolder}/Build/i686/Userland/Libraries",
-            "${workspaceFolder}/Build/i686/Userland/Services",
-            "${workspaceFolder}/Build/i686/Root/usr/include/**",
-            "${workspaceFolder}/Userland",
-            "${workspaceFolder}/Userland/Libraries",
-            "${workspaceFolder}/Userland/Libraries/LibC",
-            "${workspaceFolder}/Userland/Libraries/LibM",
-            "${workspaceFolder}/Userland/Libraries/LibPthread",
-            "${workspaceFolder}/Userland/Services",
-            "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
-        ],
-        "limitSymbolsToIncludedHeaders": true
-    },
-    "compileCommands": "Build/i686/compile_commands.json",
-    "compilerArgs": [
-        "-wall",
-        "-wextra",
-        "-werror"
-    ]
+    "version": 4
 }
 ```
 </details>
@@ -101,28 +103,30 @@ clang-format is included with the Microsoft tools (see above). The settings belo
 These belong in the `.vscode/settings.json` of Serenity.
 
 ```json
-// Excluding the generated directories keeps your file view clean and speeds up search.
-"files.exclude": {
-    "**/.git": true,
-    "Toolchain/Local/**": true,
-    "Toolchain/Tarballs/**": true,
-    "Toolchain/Build/**": true,
-    "Build/**": true,
-    "build/**": true,
-},
-"search.exclude": {
-    "**/.git": true,
-    "Toolchain/Local/**": true,
-    "Toolchain/Tarballs/**": true,
-    "Toolchain/Build/**": true,
-    "Build/**": true,
-    "build/**": true,
-},
-// Force clang-format to respect Serenity's .clang-format style file.
-"C_Cpp.clang_format_style": "file",
-// Tab settings
-"editor.tabSize": 4,
-"editor.useTabStops": false,
+{
+    // Excluding the generated directories keeps your file view clean and speeds up search.
+    "files.exclude": {
+        "**/.git": true,
+        "Toolchain/Local/**": true,
+        "Toolchain/Tarballs/**": true,
+        "Toolchain/Build/**": true,
+        "Build/**": true,
+        "build/**": true,
+    },
+    "search.exclude": {
+        "**/.git": true,
+        "Toolchain/Local/**": true,
+        "Toolchain/Tarballs/**": true,
+        "Toolchain/Build/**": true,
+        "Build/**": true,
+        "build/**": true,
+    },
+    // Force clang-format to respect Serenity's .clang-format style file.
+    "C_Cpp.clang_format_style": "file",
+    // Tab settings
+    "editor.tabSize": 4,
+    "editor.useTabStops": false
+}
 ```
 
 ## Customization
@@ -139,14 +143,20 @@ Note: The Assertion und KUBSan Problem matchers will only run after you have clo
 
 ```json
 {
+    "version": "2.0.0",
     "tasks": [
         {
             "label": "build lagom",
             "type": "shell",
-            "problemMatcher":[{
-                "base": "$gcc",
-                "fileLocation": ["relative","${workspaceFolder}/Build/lagom"]
-            }],
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/Build/lagom"
+                    ]
+                }
+            ],
             "command": [
                 "bash"
             ],
@@ -168,121 +178,120 @@ Note: The Assertion und KUBSan Problem matchers will only run after you have clo
             "label": "build",
             "type": "shell",
             "command": "bash",
-                "args": [
-                    "-c",
-                    "Meta/serenity.sh build ${input:arch} ${input:compiler}"
-                ],
-                "options": {
-                    "env": {
-                        "SERENITY_RAM_SIZE": "4G",
-                    }
+            "args": [
+                "-c",
+                "Meta/serenity.sh build ${input:arch} ${input:compiler}"
+            ],
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        // FIXME: Clang uses ${input:arch}clang
+                        "${workspaceFolder}/Build/${input:arch}"
+                    ]
                 },
-                "problemMatcher": [
-                    {
-                        "base": "$gcc",
-                        "fileLocation": [
-                            "relative",
-                            // FIXME: Clang uses ${input:arch}clang
-                            "${workspaceFolder}/Build/${input:arch}"
-                        ]
-                    },
-                    {
-                        "source": "gcc",
-                        "fileLocation": [
-                            "relative",
-                            // FIXME: Clang uses ${input:arch}clang
-                            "${workspaceFolder}/Build/${input:arch}"
-                        ],
-                        "pattern": [
-                            {
-                                "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
-                                "file": 1,
-                                "location": 2,
-                                "message": 3
-                            }
-                        ]
-                    }
-                ]
+                {
+                    "source": "gcc",
+                    "fileLocation": [
+                        "relative",
+                        // FIXME: Clang uses ${input:arch}clang
+                        "${workspaceFolder}/Build/${input:arch}"
+                    ],
+                    "pattern": [
+                        {
+                            "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ]
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "launch",
             "type": "shell",
             "command": "bash",
-                "args": [
-                    "-c",
-                    "Meta/serenity.sh run ${input:arch} ${input:compiler}"
-                ],
-                "options": {
-                    "env": {
-                        // Put your custom run configuration here, e.g. SERENITY_RAM_SIZE
-                    }
+            "args": [
+                "-c",
+                "Meta/serenity.sh run ${input:arch} ${input:compiler}"
+            ],
+            "options": {
+                "env": {
+                    // Put your custom run configuration here, e.g. SERENITY_RAM_SIZE
+                }
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": [
+                        "relative",
+                        // FIXME: Clang uses ${input:arch}clang
+                        "${workspaceFolder}/Build/${input:arch}"
+                    ]
                 },
-                "problemMatcher": [
-                    {
-                        "base": "$gcc",
-                        "fileLocation": [
-                            "relative",
-                            // FIXME: Clang uses ${input:arch}clang
-                            "${workspaceFolder}/Build/${input:arch}"
-                        ]
-                    },
-                    {
-                        "source": "gcc",
-                        "fileLocation": [
-                            "relative",
-                            // FIXME: Clang uses ${input:arch}clang
-                            "${workspaceFolder}/Build/${input:arch}"
-                        ],
-                        "pattern": [
-                            {
-                                "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
-                                "file": 1,
-                                "location": 2,
-                                "message": 3
-                            }
-                        ]
-                    },
-                    {
-                        "source": "KUBSan",
-                        "owner": "cpp",
-                        "fileLocation": [
-                            "relative",
-                            "${workspaceFolder}"
-                        ],
-                        "pattern": [
-                            {
-                                "regexp": "KUBSAN: (.*)",
-                                "message": 0
-                            },
-                            {
-                                "regexp": "KUBSAN: at ../(.*), line (\\d*), column: (\\d*)",
-                                "file": 1,
-                                "line": 2,
-                                "column": 3
-                            }
-                        ]
-                    },
-                    {
-                        "source": "Assertion Failed",
-                        "owner": "cpp",
-                        "pattern": [
-                            {
-                                "regexp": "ASSERTION FAILED: (.*)$",
-                                "message": 1
-                            },
-                            {
-                                "regexp": "^((?:.*)\\.(h|cpp|c|S)):(\\d*)$",
-                                "file":1,
-                                "location":3
-                            }
-                        ],
-                        "fileLocation": [
-                            "relative",
-                            // FIXME: Clang uses ${input:arch}clang
-                            "${workspaceFolder}/Build/${input:arch}"
-                        ]
-                    }
-                ]
+                {
+                    "source": "gcc",
+                    "fileLocation": [
+                        "relative",
+                        // FIXME: Clang uses ${input:arch}clang
+                        "${workspaceFolder}/Build/${input:arch}"
+                    ],
+                    "pattern": [
+                        {
+                            "regexp": "^([^\\s]*\\.S):(\\d*): (.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ]
+                },
+                {
+                    "source": "KUBSan",
+                    "owner": "cpp",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}"
+                    ],
+                    "pattern": [
+                        {
+                            "regexp": "KUBSAN: (.*)",
+                            "message": 0
+                        },
+                        {
+                            "regexp": "KUBSAN: at ../(.*), line (\\d*), column: (\\d*)",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3
+                        }
+                    ]
+                },
+                {
+                    "source": "Assertion Failed",
+                    "owner": "cpp",
+                    "pattern": [
+                        {
+                            "regexp": "ASSERTION FAILED: (.*)$",
+                            "message": 1
+                        },
+                        {
+                            "regexp": "^((?:.*)\\.(h|cpp|c|S)):(\\d*)$",
+                            "file": 1,
+                            "location": 3
+                        }
+                    ],
+                    "fileLocation": [
+                        "relative",
+                        // FIXME: Clang uses ${input:arch}clang
+                        "${workspaceFolder}/Build/${input:arch}"
+                    ]
+                }
+            ]
         }
     ],
     "inputs": [
