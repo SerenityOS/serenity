@@ -237,7 +237,7 @@ when adding extra debugging instrumentation, without resorting to
 litering the code with preprocessor macros.
 
 To use it, you can add the `AK::SourceLocation` as a default argument
-to any function, using `AK::SourceLocatin::current()` to initialize the
+to any function, using `AK::SourceLocation::current()` to initialize the
 default argument.
 
 Example Usage:
