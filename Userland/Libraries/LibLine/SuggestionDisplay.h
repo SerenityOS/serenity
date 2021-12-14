@@ -19,12 +19,12 @@ class Editor;
 class SuggestionDisplay {
 public:
     virtual ~SuggestionDisplay() { }
-    virtual void display(const SuggestionManager&) = 0;
+    virtual void display(SuggestionManager const&) = 0;
     virtual bool cleanup() = 0;
     virtual void finish() = 0;
     virtual void set_initial_prompt_lines(size_t) = 0;
 
-    void redisplay(const SuggestionManager& manager, size_t lines, size_t columns)
+    void redisplay(SuggestionManager const& manager, size_t lines, size_t columns)
     {
         if (m_is_showing_suggestions) {
             cleanup();
@@ -63,7 +63,7 @@ public:
     {
     }
     virtual ~XtermSuggestionDisplay() override { }
-    virtual void display(const SuggestionManager&) override;
+    virtual void display(SuggestionManager const&) override;
     virtual bool cleanup() override;
     virtual void finish() override
     {

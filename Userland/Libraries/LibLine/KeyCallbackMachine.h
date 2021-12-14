@@ -34,12 +34,12 @@ struct Key {
     {
     }
 
-    bool operator==(const Key& other) const
+    bool operator==(Key const& other) const
     {
         return other.key == key && other.modifiers == modifiers;
     }
 
-    bool operator!=(const Key& other) const
+    bool operator!=(Key const& other) const
     {
         return !(*this == other);
     }

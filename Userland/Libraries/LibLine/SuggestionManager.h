@@ -26,12 +26,12 @@ public:
     static constexpr ForSearchTag ForSearch {};
 
     // Intentionally not explicit. (To allow suggesting bare strings)
-    CompletionSuggestion(const String& completion)
+    CompletionSuggestion(String const& completion)
         : CompletionSuggestion(completion, "", {})
     {
     }
 
-    CompletionSuggestion(const String& completion, ForSearchTag)
+    CompletionSuggestion(String const& completion, ForSearchTag)
         : text_string(completion)
     {
     }
@@ -43,7 +43,7 @@ public:
 
     CompletionSuggestion(StringView completion, StringView trailing_trivia, Style style);
 
-    bool operator==(const CompletionSuggestion& suggestion) const
+    bool operator==(CompletionSuggestion const& suggestion) const
     {
         return suggestion.text_string == text_string;
     }
@@ -73,7 +73,7 @@ public:
     size_t next_index() const { return m_next_suggestion_index; }
     void set_start_index(size_t index) const { m_last_displayed_suggestion_index = index; }
 
-    size_t for_each_suggestion(Function<IterationDecision(const CompletionSuggestion&, size_t)>) const;
+    size_t for_each_suggestion(Function<IterationDecision(CompletionSuggestion const&, size_t)>) const;
 
     enum CompletionMode {
         DontComplete,
@@ -109,8 +109,8 @@ public:
         m_next_suggestion_invariant_offset = invariant_offset;
     }
 
-    const CompletionSuggestion& suggest();
-    const CompletionSuggestion& current_suggestion() const { return m_last_shown_suggestion; }
+    CompletionSuggestion const& suggest();
+    CompletionSuggestion const& current_suggestion() const { return m_last_shown_suggestion; }
     bool is_current_suggestion_complete() const { return m_last_shown_suggestion_was_complete; }
 
     void reset()
