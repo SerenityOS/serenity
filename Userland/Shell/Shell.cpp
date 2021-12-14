@@ -568,11 +568,8 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     }
 
     tcgetattr(0, &termios);
-    tcsetattr(0, TCSANOW, &default_termios);
 
     (void)command->run(*this);
-
-    tcsetattr(0, TCSANOW, &termios);
 
     if (!has_error(ShellError::None)) {
         possibly_print_error();
@@ -743,7 +740,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (child == 0) {
         close(sync_pipe[1]);
 
-        m_is_subshell = true;
         m_pid = getpid();
         Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
         TemporaryChange signal_handler_install { m_should_reinstall_signal_handlers, true };
@@ -768,6 +764,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
         if (!m_is_subshell && command.should_wait)
             tcsetattr(0, TCSANOW, &default_termios);
+
+        m_is_subshell = true;
 
         if (command.should_immediately_execute_next) {
             VERIFY(command.argv.is_empty());
