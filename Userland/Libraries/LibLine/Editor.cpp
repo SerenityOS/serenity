@@ -1121,17 +1121,15 @@ void Editor::handle_read_event()
                 break;
             }
 
-            if (m_times_tab_pressed > 1) {
-                if (m_suggestion_manager.count() > 0) {
-                    if (m_suggestion_display->cleanup())
-                        reposition_cursor(stderr_stream);
+            if (m_times_tab_pressed > 1 && m_suggestion_manager.count() > 0) {
+                if (m_suggestion_display->cleanup())
+                    reposition_cursor(stderr_stream);
 
-                    m_suggestion_display->set_initial_prompt_lines(m_prompt_lines_at_suggestion_initiation);
+                m_suggestion_display->set_initial_prompt_lines(m_prompt_lines_at_suggestion_initiation);
 
-                    m_suggestion_display->display(m_suggestion_manager);
+                m_suggestion_display->display(m_suggestion_manager);
 
-                    m_origin_row = m_suggestion_display->origin_row();
-                }
+                m_origin_row = m_suggestion_display->origin_row();
             }
 
             if (m_times_tab_pressed > 2) {
