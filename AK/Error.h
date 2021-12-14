@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
+#include <AK/Variant.h>
 
 #if defined(__serenity__) && defined(KERNEL)
 #    include <LibC/errno_numbers.h>
@@ -55,58 +56,41 @@ private:
 };
 
 template<typename T, typename ErrorType>
-class [[nodiscard]] ErrorOr {
+class [[nodiscard]] ErrorOr final : public Variant<T, ErrorType> {
 public:
-    ErrorOr(T const& value)
-        : m_value(value)
-    {
-    }
-
-    ErrorOr(T&& value)
-        : m_value(move(value))
-    {
-    }
+    using Variant<T, ErrorType>::Variant;
 
     template<typename U>
     ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T>>)
-        : m_value(forward<U>(value))
+        : Variant<T, ErrorType>(forward<U>(value))
     {
     }
 
 #ifdef __serenity__
     ErrorOr(ErrnoCode code)
-        : m_error(Error::from_errno(code))
+        : Variant<T, ErrorType>(Error::from_errno(code))
     {
     }
 #endif
 
-    ErrorOr(ErrorType&& error)
-        : m_error(move(error))
+    T& value()
     {
+        return this->template get<T>();
     }
+    T const& value() const { return this->template get<T>(); }
+    ErrorType& error() { return this->template get<ErrorType>(); }
+    ErrorType const& error() const { return this->template get<ErrorType>(); }
 
-    ErrorOr(ErrorOr&& other) = default;
-    ErrorOr(ErrorOr const& other) = default;
-    ~ErrorOr() = default;
+    bool is_error() const { return this->template has<ErrorType>(); }
 
-    ErrorOr& operator=(ErrorOr&& other) = default;
-    ErrorOr& operator=(ErrorOr const& other) = default;
-
-    T& value() { return m_value.value(); }
-    T const& value() const { return m_value.value(); }
-    ErrorType& error() { return m_error.value(); }
-    ErrorType const& error() const { return m_error.value(); }
-
-    bool is_error() const { return m_error.has_value(); }
-
-    T release_value() { return m_value.release_value(); }
-    ErrorType release_error() { return m_error.release_value(); }
+    T release_value() { return move(value()); }
+    ErrorType release_error() { return move(error()); }
 
     T release_value_but_fixme_should_propagate_errors() { return release_value(); }
 
 private:
-    Optional<T> m_value;
-    Optional<ErrorType> m_error;
+    // 'downcast' is fishy in this context. Let's hide it by making it private.
+    using Variant<T, ErrorType>::downcast;
 };
 
 // Partial specialization for void value type
