@@ -11,6 +11,8 @@
 #include <AK/Queue.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -571,24 +573,17 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
     fail("Invalid expression");
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio", nullptr) < 0) {
-        perror("pledge");
-        return 3;
-    }
+    TRY(Core::System::pledge("stdio"sv));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 3;
-    }
-
-    if ((argc == 2 && "--help"sv == argv[1]) || argc == 1)
+    if ((arguments.strings.size() == 2 && "--help"sv == arguments.strings[1]) || arguments.strings.size() == 1)
         print_help_and_exit();
 
     Queue<StringView> args;
-    for (int i = 1; i < argc; ++i)
-        args.enqueue(argv[i]);
+    for (size_t i = 1; i < arguments.strings.size(); ++i)
+        args.enqueue(arguments.strings[i]);
 
     auto expression = Expression::parse(args);
     if (!args.is_empty())
