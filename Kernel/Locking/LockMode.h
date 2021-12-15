@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Kernel {
 
 enum class LockMode : u8 {

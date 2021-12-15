@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/StdLibExtras.h>
+#include <Kernel/Debug.h>
 #if LOCK_DEBUG
 #    include <AK/SourceLocation.h>
 #endif
