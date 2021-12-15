@@ -10,6 +10,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 
 namespace Test {
 
@@ -30,7 +31,8 @@ public:
     bool run(RunType run_type = RunType::UsingChildProcess);
 
 private:
-    bool do_report(Failure failure);
+    using Report = Variant<Failure, int>;
+    bool do_report(Report report);
 
     String m_type;
     Function<Crash::Failure()> m_crash_function;
