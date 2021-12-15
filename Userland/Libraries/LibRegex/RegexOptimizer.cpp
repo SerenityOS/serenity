@@ -21,16 +21,15 @@ void Regex<Parser>::run_optimization_passes()
 
     // Rewrite fork loops as atomic groups
     // e.g. a*b -> (ATOMIC a*)b
-    attempt_rewrite_loops_as_atomic_groups(split_basic_blocks());
+    attempt_rewrite_loops_as_atomic_groups(split_basic_blocks(parser_result.bytecode));
 
     parser_result.bytecode.flatten();
 }
 
 template<typename Parser>
-typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks()
+typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks(ByteCode const& bytecode)
 {
     BasicBlockList block_boundaries;
-    auto& bytecode = parser_result.bytecode;
     size_t end_of_last_block = 0;
 
     MatchState state;
@@ -472,33 +471,37 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
         return;
     }
 
+    auto left_blocks = Regex<PosixBasicParser>::split_basic_blocks(left);
+    auto right_blocks = Regex<PosixBasicParser>::split_basic_blocks(right);
+
     size_t left_skip = 0;
     MatchState state;
-    for (state.instruction_position = 0; state.instruction_position < left.size() && state.instruction_position < right.size();) {
-        auto left_size = left.get_opcode(state).size();
-        auto right_size = right.get_opcode(state).size();
-        if (left_size != right_size)
+    for (size_t block_index = 0; block_index < left_blocks.size() && block_index < right_blocks.size(); block_index++) {
+        auto& left_block = left_blocks[block_index];
+        auto& right_block = right_blocks[block_index];
+        auto left_end = block_index + 1 == left_blocks.size() ? left_block.end : left_blocks[block_index + 1].start;
+        auto right_end = block_index + 1 == right_blocks.size() ? right_block.end : right_blocks[block_index + 1].start;
+
+        if (left_end - left_block.start != right_end - right_block.start)
             break;
 
-        if (left.spans().slice(state.instruction_position, left_size) == right.spans().slice(state.instruction_position, right_size))
-            left_skip = state.instruction_position + left_size;
-        else
+        if (left.spans().slice(left_block.start, left_end - left_block.start) != right.spans().slice(right_block.start, right_end - right_block.start))
             break;
 
-        state.instruction_position += left_size;
+        left_skip = left_end;
     }
 
     dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}/{}", left_skip, 0, left.size(), right.size());
 
-    if (left_skip) {
-        target.extend(left.release_slice(0, left_skip));
+    if (left_skip > 0) {
+        target.extend(left.release_slice(left_blocks.first().start, left_skip));
         right = right.release_slice(left_skip);
     }
 
     auto left_size = left.size();
 
     target.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-    target.empend(right.size() + (left_size ? 2 : 0)); // Jump to the _ALT label
+    target.empend(right.size() + (left_size > 0 ? 2 : 0)); // Jump to the _ALT label
 
     target.extend(move(right));
 

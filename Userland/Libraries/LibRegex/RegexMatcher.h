@@ -227,10 +227,11 @@ public:
         return result.success;
     }
 
+    using BasicBlockList = Vector<Detail::Block>;
+    static BasicBlockList split_basic_blocks(ByteCode const&);
+
 private:
     void run_optimization_passes();
-    using BasicBlockList = Vector<Detail::Block>;
-    BasicBlockList split_basic_blocks();
     void attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&);
 };
 
