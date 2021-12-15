@@ -67,7 +67,6 @@ protected:
     const unsigned m_major_number { 0 };
     const unsigned m_minor_number { 0 };
 
-protected:
     enum class Type {
         BlockDevice,
         CharacterDevice,
