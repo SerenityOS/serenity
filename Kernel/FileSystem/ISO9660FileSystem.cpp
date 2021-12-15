@@ -240,7 +240,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
             return EIO;
         }
 
-        auto header = reinterpret_cast<ISO::VolumeDescriptorHeader const*>(block->data());
+        auto const* header = reinterpret_cast<ISO::VolumeDescriptorHeader const*>(block->data());
         if (StringView { header->identifier, 5 } != "CD001") {
             dbgln_if(ISO9660_DEBUG, "Header magic at volume descriptor {} is not valid", current_block_index - first_data_area_block);
             return EIO;
@@ -248,7 +248,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
 
         switch (header->type) {
         case ISO::VolumeDescriptorType::PrimaryVolumeDescriptor: {
-            auto primary_volume = reinterpret_cast<ISO::PrimaryVolumeDescriptor const*>(header);
+            auto const* primary_volume = reinterpret_cast<ISO::PrimaryVolumeDescriptor const*>(header);
             m_primary_volume = adopt_own_if_nonnull(new ISO::PrimaryVolumeDescriptor(*primary_volume));
             break;
         }
@@ -611,7 +611,7 @@ time_t ISO9660Inode::parse_numerical_date_time(ISO::NumericalDateAndTime const& 
 
 StringView ISO9660Inode::get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer)
 {
-    auto file_identifier = reinterpret_cast<u8 const*>(&record + 1);
+    auto const* file_identifier = reinterpret_cast<u8 const*>(&record + 1);
     auto filename = StringView { file_identifier, record.file_identifier_length };
 
     if (filename.length() == 1) {
