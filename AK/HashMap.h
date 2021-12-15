@@ -63,6 +63,17 @@ public:
         return false;
     }
 
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) bool remove(Key const& key)
+    {
+        auto it = find(key);
+        if (it != end()) {
+            m_table.remove(it);
+            return true;
+        }
+        return false;
+    }
+
     using HashTableType = HashTable<Entry, EntryTraits, IsOrdered>;
     using IteratorType = typename HashTableType::Iterator;
     using ConstIteratorType = typename HashTableType::ConstIterator;
