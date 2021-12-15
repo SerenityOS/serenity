@@ -59,19 +59,16 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     // 7. If the following steps or referenced procedures say to throw an error, reject promise with the returned error and then terminate the algorithm.
 
     // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm using algorithm, with data as message.
-    ::Crypto::Hash::Manager hash;
-    hash.initialize(hash_kind);
+    ::Crypto::Hash::Manager hash { hash_kind };
     hash.update(*data_buffer);
+
     auto digest = hash.digest();
-    auto const* digest_data = digest.immutable_data();
-    auto result_buffer = ByteBuffer::create_zeroed(hash.digest_size());
+    auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
     if (!result_buffer.has_value()) {
         auto* error = wrap(wrapper()->global_object(), DOM::OperationError::create("Failed to create result buffer"));
         promise->reject(error);
         return promise;
     }
-    for (size_t i = 0; i < hash.digest_size(); ++i)
-        (*result_buffer)[i] = digest_data[i];
 
     auto* result = JS::ArrayBuffer::create(global_object, result_buffer.release_value());
 
