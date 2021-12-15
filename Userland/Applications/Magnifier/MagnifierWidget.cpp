@@ -27,6 +27,22 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
     update();
 }
 
+void MagnifierWidget::display_previous_frame()
+{
+    --m_frame_offset_from_head;
+    auto index = m_grabbed_bitmaps.head_index() + m_frame_offset_from_head;
+    m_grabbed_bitmap = m_grabbed_bitmaps.at(index);
+    update();
+}
+
+void MagnifierWidget::display_next_frame()
+{
+    ++m_frame_offset_from_head;
+    auto index = m_grabbed_bitmaps.head_index() + m_frame_offset_from_head;
+    m_grabbed_bitmap = m_grabbed_bitmaps.at(index);
+    update();
+}
+
 void MagnifierWidget::sync()
 {
     if (m_pause_capture)
@@ -35,6 +51,7 @@ void MagnifierWidget::sync()
     auto size = frame_inner_rect().size();
     Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
     m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
+    m_grabbed_bitmaps.enqueue(m_grabbed_bitmap);
     update();
 }
 
