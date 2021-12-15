@@ -34,6 +34,7 @@ private:
 
     Vector<KeyButton*> m_keys;
     RefPtr<GUI::Widget> m_map_group;
+    void add_map_radio_button(const StringView map_name, const StringView button_text);
 
     String m_filename;
     Keyboard::CharacterMapData m_character_map;

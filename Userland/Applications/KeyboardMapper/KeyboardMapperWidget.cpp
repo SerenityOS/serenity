@@ -13,7 +13,6 @@
 #include <LibGUI/RadioButton.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <LibKeyboard/CharacterMapFile.h>
-#include <string.h>
 
 KeyboardMapperWidget::KeyboardMapperWidget()
 {
@@ -92,33 +91,21 @@ void KeyboardMapperWidget::create_frame()
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
     m_map_group->set_fixed_width(450);
 
-    auto& radio_map = m_map_group->add<GUI::RadioButton>("Default");
-    radio_map.set_name("map");
-    radio_map.on_checked = [&](bool) {
-        set_current_map("map");
-    };
-    auto& radio_shift = m_map_group->add<GUI::RadioButton>("Shift");
-    radio_shift.set_name("shift_map");
-    radio_shift.on_checked = [this](bool) {
-        set_current_map("shift_map");
-    };
-    auto& radio_altgr = m_map_group->add<GUI::RadioButton>("AltGr");
-    radio_altgr.set_name("altgr_map");
-    radio_altgr.on_checked = [this](bool) {
-        set_current_map("altgr_map");
-    };
-    auto& radio_alt = m_map_group->add<GUI::RadioButton>("Alt");
-    radio_alt.set_name("alt_map");
-    radio_alt.on_checked = [this](bool) {
-        set_current_map("alt_map");
-    };
-    auto& radio_shift_altgr = m_map_group->add<GUI::RadioButton>("Shift+AltGr");
-    radio_shift_altgr.set_name("shift_altgr_map");
-    radio_shift_altgr.on_checked = [this](bool) {
-        set_current_map("shift_altgr_map");
-    };
+    add_map_radio_button("map", "Default");
+    add_map_radio_button("shift_map", "Shift");
+    add_map_radio_button("altgr_map", "AltGr");
+    add_map_radio_button("alt_map", "Alt");
+    add_map_radio_button("shift_altgr_map", "Shift+AltGr");
 
     bottom_widget.layout()->add_spacer();
+}
+
+void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, const StringView button_text) {
+    auto& map_radio_button = m_map_group->add<GUI::RadioButton>(button_text);
+    map_radio_button.set_name(map_name);
+    map_radio_button.on_checked = [map_name, this](bool){
+        set_current_map(map_name);
+    };
 }
 
 void KeyboardMapperWidget::load_from_file(String filename)
