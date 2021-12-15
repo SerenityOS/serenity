@@ -49,28 +49,39 @@ bool Crash::run(RunType run_type)
             return do_report(Failure(WEXITSTATUS(status)));
         }
         if (WIFSIGNALED(status)) {
-            outln("\x1B[32mPASS\x1B[0m: Terminated with signal {}", WTERMSIG(status));
-            return true;
+            return do_report(WTERMSIG(status));
         }
         VERIFY_NOT_REACHED();
     }
 }
 
-bool Crash::do_report(Failure failure)
+bool Crash::do_report(Report report)
 {
-    // If we got here something went wrong
-    out("\x1B[31mFAIL\x1B[0m: ");
-    switch (failure) {
-    case Failure::DidNotCrash:
-        outln("Did not crash!");
-        break;
-    case Failure::UnexpectedError:
-        outln("Unexpected error!");
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-    return false;
+    const bool pass = report.has<int>();
+
+    if (pass)
+        out("\x1B[32mPASS\x1B[0m: ");
+    else
+        out("\x1B[31mFAIL\x1B[0m: ");
+
+    report.visit(
+        [&](const Failure& failure) {
+            switch (failure) {
+            case Failure::DidNotCrash:
+                outln("Did not crash!");
+                break;
+            case Failure::UnexpectedError:
+                outln("Unexpected error!");
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        },
+        [&](const int& signal) {
+            outln("Terminated with signal {}", signal);
+        });
+
+    return pass;
 }
 
 }
