@@ -30,6 +30,8 @@ public:
     bool run(RunType run_type = RunType::UsingChildProcess);
 
 private:
+    bool do_report(Failure failure);
+
     String m_type;
     Function<Crash::Failure()> m_crash_function;
 };

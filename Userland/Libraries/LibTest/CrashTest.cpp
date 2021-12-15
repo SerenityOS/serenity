@@ -27,26 +27,8 @@ bool Crash::run(RunType run_type)
 {
     outln("\x1B[33mTesting\x1B[0m: \"{}\"", m_type);
 
-    auto run_crash_and_print_if_error = [this]() -> bool {
-        auto failure = m_crash_function();
-
-        // If we got here something went wrong
-        out("\x1B[31mFAIL\x1B[0m: ");
-        switch (failure) {
-        case Failure::DidNotCrash:
-            outln("Did not crash!");
-            break;
-        case Failure::UnexpectedError:
-            outln("Unexpected error!");
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        return false;
-    };
-
     if (run_type == RunType::UsingCurrentProcess) {
-        return run_crash_and_print_if_error();
+        return do_report(m_crash_function());
     } else {
         // Run the test in a child process so that we do not crash the crash program :^)
         pid_t pid = fork();
@@ -58,7 +40,7 @@ bool Crash::run(RunType run_type)
             if (prctl(PR_SET_DUMPABLE, 0, 0) < 0)
                 perror("prctl(PR_SET_DUMPABLE)");
 #endif
-            run_crash_and_print_if_error();
+            return do_report(m_crash_function());
             exit(0);
         }
 
@@ -70,6 +52,23 @@ bool Crash::run(RunType run_type)
         }
         return false;
     }
+}
+
+bool Crash::do_report(Failure failure)
+{
+    // If we got here something went wrong
+    out("\x1B[31mFAIL\x1B[0m: ");
+    switch (failure) {
+    case Failure::DidNotCrash:
+        outln("Did not crash!");
+        break;
+    case Failure::UnexpectedError:
+        outln("Unexpected error!");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return false;
 }
 
 }
