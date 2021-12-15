@@ -95,7 +95,7 @@ ErrorOr<void> Ext2FS::initialize()
     bool success = raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
     VERIFY(success);
 
-    auto& super_block = this->super_block();
+    auto const& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
         dmesgln("Ext2FS: super block magic: {:04x} (super block size: {})", super_block.s_magic, sizeof(ext2_super_block));
     }
@@ -138,7 +138,7 @@ ErrorOr<void> Ext2FS::initialize()
 
     if constexpr (EXT2_DEBUG) {
         for (unsigned i = 1; i <= m_block_group_count; ++i) {
-            auto& group = group_descriptor(i);
+            auto const& group = group_descriptor(i);
             dbgln("Ext2FS: group[{}] ( block_bitmap: {}, inode_bitmap: {}, inode_table: {} )", i, group.bg_block_bitmap, group.bg_inode_bitmap, group.bg_inode_table);
         }
     }
@@ -154,7 +154,7 @@ Ext2FSInode& Ext2FS::root_inode()
 
 bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const
 {
-    auto& super_block = this->super_block();
+    auto const& super_block = this->super_block();
 
     if (inode != EXT2_ROOT_INO && inode < EXT2_FIRST_INO(&super_block))
         return false;
@@ -162,7 +162,7 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
     if (inode > super_block.s_inodes_count)
         return false;
 
-    auto& bgd = group_descriptor(group_index_from_inode(inode));
+    auto const& bgd = group_descriptor(group_index_from_inode(inode));
 
     u64 full_offset = ((inode.value() - 1) % inodes_per_group()) * inode_size();
     block_index = bgd.bg_inode_table + (full_offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
@@ -1283,7 +1283,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         }
 
         VERIFY(found_a_group);
-        auto& bgd = group_descriptor(group_index);
+        auto const& bgd = group_descriptor(group_index);
 
         auto* cached_bitmap = TRY(get_bitmap_block(bgd.bg_block_bitmap));
 
@@ -1338,7 +1338,7 @@ ErrorOr<InodeIndex> Ext2FS::allocate_inode(GroupIndex preferred_group)
 
     dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_inode: found suitable group [{}] for new inode :^)", group_index);
 
-    auto& bgd = group_descriptor(group_index);
+    auto const& bgd = group_descriptor(group_index);
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
     InodeIndex first_inode_in_group = (group_index.value() - 1) * inodes_per_group() + 1;
 
@@ -1387,7 +1387,7 @@ ErrorOr<bool> Ext2FS::get_inode_allocation_state(InodeIndex index) const
     if (index == 0)
         return EINVAL;
     auto group_index = group_index_from_inode(index);
-    auto& bgd = group_descriptor(group_index);
+    auto const& bgd = group_descriptor(group_index);
     unsigned index_in_group = index.value() - ((group_index.value() - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 

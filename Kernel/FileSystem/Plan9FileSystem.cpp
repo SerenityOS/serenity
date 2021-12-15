@@ -491,7 +491,7 @@ bool Plan9FS::is_complete(const ReceiveCompletion& completion)
 
 ErrorOr<void> Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> completion)
 {
-    auto& buffer = message.build();
+    auto const& buffer = message.build();
     const u8* data = buffer.data();
     size_t size = buffer.size();
     auto& description = file_description();
@@ -562,7 +562,7 @@ ErrorOr<void> Plan9FS::read_and_dispatch_one_message()
 
     auto optional_completion = m_completions.get(header.tag);
     if (optional_completion.has_value()) {
-        auto completion = optional_completion.value();
+        auto* completion = optional_completion.value();
         SpinlockLocker lock(completion->lock);
         completion->result = {};
         completion->message = adopt_own_if_nonnull(new (nothrow) Message { move(buffer) });
