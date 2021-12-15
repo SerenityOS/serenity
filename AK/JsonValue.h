@@ -131,7 +131,7 @@ public:
         return m_value.as_u64;
     }
 
-    int as_bool() const
+    bool as_bool() const
     {
         VERIFY(is_bool());
         return m_value.as_bool;
