@@ -49,7 +49,7 @@ public:
 
     [[nodiscard]] JsonValue const& get(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         static JsonValue* s_null_value { nullptr };
         if (!value) {
             if (!s_null_value)
@@ -74,58 +74,58 @@ public:
 
     [[nodiscard]] bool has_null(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_null();
     }
     [[nodiscard]] bool has_bool(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_bool();
     }
     [[nodiscard]] bool has_string(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_string();
     }
     [[nodiscard]] bool has_i32(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_i32();
     }
     [[nodiscard]] bool has_u32(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_u32();
     }
     [[nodiscard]] bool has_i64(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_i64();
     }
     [[nodiscard]] bool has_u64(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_u64();
     }
     [[nodiscard]] bool has_number(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_number();
     }
     [[nodiscard]] bool has_array(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_array();
     }
     [[nodiscard]] bool has_object(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_object();
     }
 #ifndef KERNEL
     [[nodiscard]] [[nodiscard]] bool has_double(StringView key) const
     {
-        auto* value = get_ptr(key);
+        auto const* value = get_ptr(key);
         return value && value->is_double();
     }
 #endif
@@ -138,7 +138,7 @@ public:
     template<typename Callback>
     void for_each_member(Callback callback) const
     {
-        for (auto& member : m_members)
+        for (auto const& member : m_members)
             callback(member.key, member.value);
     }
 

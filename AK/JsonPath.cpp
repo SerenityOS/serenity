@@ -16,7 +16,7 @@ JsonPathElement JsonPathElement::any_object_element { Kind::AnyKey };
 JsonValue JsonPath::resolve(const JsonValue& top_root) const
 {
     auto root = top_root;
-    for (auto& element : *this) {
+    for (auto const& element : *this) {
         switch (element.kind()) {
         case JsonPathElement::Kind::Key:
             root = JsonValue { root.as_object().get(element.key()) };
@@ -35,7 +35,7 @@ String JsonPath::to_string() const
 {
     StringBuilder builder;
     builder.append("{ .");
-    for (auto& el : *this) {
+    for (auto const& el : *this) {
         builder.append(" > ");
         builder.append(el.to_string());
     }

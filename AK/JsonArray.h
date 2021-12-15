@@ -69,7 +69,7 @@ public:
     template<typename Callback>
     void for_each(Callback callback) const
     {
-        for (auto& value : m_values)
+        for (auto const& value : m_values)
             callback(value);
     }
 
