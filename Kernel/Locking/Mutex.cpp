@@ -21,7 +21,7 @@ void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
     if constexpr (LOCK_IN_CRITICAL_DEBUG)
         VERIFY_INTERRUPTS_ENABLED();
     VERIFY(mode != Mode::Unlocked);
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
 
     SpinlockLocker lock(m_lock);
     bool did_block = false;
@@ -148,7 +148,7 @@ void Mutex::unlock()
     if constexpr (LOCK_IN_CRITICAL_DEBUG)
         VERIFY_INTERRUPTS_ENABLED();
     VERIFY(!Processor::current_in_irq());
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
     Mode current_mode = m_mode;
     if constexpr (LOCK_TRACE_DEBUG) {
@@ -260,7 +260,7 @@ auto Mutex::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
     VERIFY(!Processor::current_in_irq());
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
     auto current_mode = m_mode;
     switch (current_mode) {
@@ -323,7 +323,7 @@ void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocatio
     VERIFY(mode != Mode::Unlocked);
     VERIFY(lock_count > 0);
     VERIFY(!Processor::current_in_irq());
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     bool did_block = false;
     SpinlockLocker lock(m_lock);
     switch (mode) {
