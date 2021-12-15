@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,6 +45,7 @@ public:
     ~Icon() { }
 
     static Icon default_icon(StringView);
+    static ErrorOr<Icon> try_create_default_icon(StringView);
 
     Icon& operator=(const Icon& other)
     {

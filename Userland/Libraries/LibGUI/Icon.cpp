@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,6 +81,14 @@ Icon Icon::default_icon(StringView name)
         bitmap16 = bitmap_or_error.release_value();
     if (auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name)); !bitmap_or_error.is_error())
         bitmap32 = bitmap_or_error.release_value();
+    return Icon(move(bitmap16), move(bitmap32));
+}
+
+ErrorOr<Icon> Icon::try_create_default_icon(StringView name)
+{
+    RefPtr<Gfx::Bitmap> bitmap16 = TRY(Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/16x16/{}.png", name)));
+    RefPtr<Gfx::Bitmap> bitmap32 = TRY(Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name)));
+
     return Icon(move(bitmap16), move(bitmap32));
 }
 
