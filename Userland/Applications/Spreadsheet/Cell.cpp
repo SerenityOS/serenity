@@ -13,7 +13,8 @@ namespace Spreadsheet {
 
 void Cell::set_data(String new_data)
 {
-    if (m_data == new_data)
+    //If we are a formula, we do not save the beginning '=', if the new_data is "" it is different from us.
+    if (m_data == new_data && (m_kind != Formula || new_data.length() != 0))
         return;
 
     if (new_data.starts_with("=")) {
