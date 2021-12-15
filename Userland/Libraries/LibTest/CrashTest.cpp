@@ -40,17 +40,19 @@ bool Crash::run(RunType run_type)
             if (prctl(PR_SET_DUMPABLE, 0, 0) < 0)
                 perror("prctl(PR_SET_DUMPABLE)");
 #endif
-            return do_report(m_crash_function());
-            exit(0);
+            exit((int)m_crash_function());
         }
 
         int status;
         waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            return do_report(Failure(WEXITSTATUS(status)));
+        }
         if (WIFSIGNALED(status)) {
             outln("\x1B[32mPASS\x1B[0m: Terminated with signal {}", WTERMSIG(status));
             return true;
         }
-        return false;
+        VERIFY_NOT_REACHED();
     }
 }
 
