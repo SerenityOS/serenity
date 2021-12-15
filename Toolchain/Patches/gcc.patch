@@ -367,7 +367,15 @@ index 326a279c5..6b76901dc 100755
  if test x$gcc_no_link = xyes; then
    # Setting cross_compile will disable run tests; it will
    # also disable AC_CHECK_FILE but that's generally
-@@ -29270,6 +29262,5986 @@ else
+@@ -29264,6 +29256,5 @@ if
+ 
+     $as_echo "#define HAVE_ICONV 1" >>confdefs.h
+ 
+-    $as_echo "#define HAVE_MEMALIGN 1" >>confdefs.h
+ 
+   else
+ 
+@@ -29270,6 +29261,5986 @@ else
  
  # Base decisions on target environment.
  case "${host}" in
