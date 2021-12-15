@@ -296,14 +296,14 @@ ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flo
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
     if (new_lock.l_type == F_UNLCK) {
-        for (auto& lock : m_flocks) {
+        for (auto const& lock : m_flocks) {
             if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
                 return {};
         }
         return EINVAL;
     }
 
-    for (auto& lock : m_flocks) {
+    for (auto const& lock : m_flocks) {
         if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
             continue;
 
@@ -348,7 +348,7 @@ ErrorOr<void> Inode::get_flock(OpenFileDescription const& description, Userspace
 
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
-    for (auto& lock : m_flocks) {
+    for (auto const& lock : m_flocks) {
         if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
             continue;
 
