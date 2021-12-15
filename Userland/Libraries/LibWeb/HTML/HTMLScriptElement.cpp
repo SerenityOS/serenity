@@ -45,10 +45,11 @@ void HTMLScriptElement::set_non_blocking(Badge<HTMLParser>, bool non_blocking)
 // https://html.spec.whatwg.org/multipage/scripting.html#execute-the-script-block
 void HTMLScriptElement::execute_script()
 {
-    // 1. Let document be scriptElement's node document. (NOTE: This is not necessary)
+    // 1. Let document be scriptElement's node document.
+    NonnullRefPtr<DOM::Document> node_document = document();
 
     // 2. If scriptElement's preparation-time document is not equal to document, then return.
-    if (m_preparation_time_document.ptr() != &document()) {
+    if (m_preparation_time_document.ptr() != node_document.ptr()) {
         dbgln("HTMLScriptElement: Refusing to run script because the preparation time document is not the same as the node document.");
         return;
     }
@@ -63,7 +64,7 @@ void HTMLScriptElement::execute_script()
     // 4. If scriptElement is from an external file, or the script's type for scriptElement is "module", then increment document's ignore-destructive-writes counter.
     bool incremented_destructive_writes_counter = false;
     if (m_from_an_external_file || m_script_type == ScriptType::Module) {
-        document().increment_ignore_destructive_writes_counter();
+        node_document->increment_ignore_destructive_writes_counter();
         incremented_destructive_writes_counter = true;
     }
 
@@ -74,9 +75,9 @@ void HTMLScriptElement::execute_script()
         auto old_current_script = document().current_script();
         // 2. If scriptElement's root is not a shadow root, then set document's currentScript attribute to scriptElement. Otherwise, set it to null.
         if (!is<DOM::ShadowRoot>(root()))
-            document().set_current_script({}, this);
+            node_document->set_current_script({}, this);
         else
-            document().set_current_script({}, nullptr);
+            node_document->set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
@@ -86,8 +87,8 @@ void HTMLScriptElement::execute_script()
         // 3. Run the classic script given by the script's script for scriptElement.
         verify_cast<ClassicScript>(*m_script).run();
 
-        // Set document's currentScript attribute to oldCurrentScript.
-        document().set_current_script({}, old_current_script);
+        // 4. Set document's currentScript attribute to oldCurrentScript.
+        node_document->set_current_script({}, old_current_script);
     } else {
         // -> "module"
         // 1. Assert: document's currentScript attribute is null.
@@ -99,7 +100,7 @@ void HTMLScriptElement::execute_script()
 
     // 6. Decrement the ignore-destructive-writes counter of document, if it was incremented in the earlier step.
     if (incremented_destructive_writes_counter)
-        document().decrement_ignore_destructive_writes_counter();
+        node_document->decrement_ignore_destructive_writes_counter();
 
     // 7. If scriptElement is from an external file, then fire an event named load at scriptElement.
     if (m_from_an_external_file)
