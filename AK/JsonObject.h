@@ -142,7 +142,7 @@ public:
             callback(member.key, member.value);
     }
 
-    bool remove(String const& key)
+    bool remove(StringView key)
     {
         return m_members.remove(key);
     }
