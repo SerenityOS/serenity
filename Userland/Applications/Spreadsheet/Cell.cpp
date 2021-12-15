@@ -13,6 +13,12 @@ namespace Spreadsheet {
 
 void Cell::set_data(String new_data)
 {
+    // If we are a formula, we do not save the beginning '=', if the new_data is "" we can simply change our kind
+    if (m_kind == Formula && m_data.is_empty() && new_data.is_empty()) {
+        m_kind = LiteralString;
+        return;
+    }
+
     if (m_data == new_data)
         return;
 
