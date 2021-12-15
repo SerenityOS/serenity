@@ -304,22 +304,29 @@ DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> HTMLTableElement::insert_ro
     return tr;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-deleterow
 DOM::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 {
     auto rows = this->rows();
     auto rows_length = rows->length();
 
-    if (index < -1 || index >= (long)rows_length) {
+    // 1. If index is less than −1 or greater than or equal to the number of elements in the rows collection, then throw an "IndexSizeError" DOMException.
+    if (index < -1 || index >= (long)rows_length)
         return DOM::IndexSizeError::create("Index is negative or greater than the number of rows");
-    }
-    if (index == -1 && rows_length > 0) {
+
+    // 2. If index is −1, then remove the last element in the rows collection from its parent, or do nothing if the rows collection is empty.
+    if (index == -1) {
+        if (rows_length == 0)
+            return {};
+
         auto row_to_remove = rows->item(rows_length - 1);
         row_to_remove->remove(false);
-    } else {
-        auto row_to_remove = rows->item(index);
-        row_to_remove->remove(false);
+        return {};
     }
 
+    // 3. Otherwise, remove the indexth element in the rows collection from its parent.
+    auto row_to_remove = rows->item(index);
+    row_to_remove->remove(false);
     return {};
 }
 
