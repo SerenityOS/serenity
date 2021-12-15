@@ -373,6 +373,17 @@ public:
         return false;
     }
 
+    template<Concepts::HashCompatible<T> K>
+    requires(IsSame<TraitsForT, Traits<T>>) bool remove(K const& value)
+    {
+        auto it = find(value);
+        if (it != end()) {
+            remove(it);
+            return true;
+        }
+        return false;
+    }
+
     void remove(Iterator iterator)
     {
         VERIFY(iterator.m_bucket);
