@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {
