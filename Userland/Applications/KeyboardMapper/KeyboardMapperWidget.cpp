@@ -52,21 +52,7 @@ void KeyboardMapperWidget::create_frame()
                 VERIFY(index > 0);
 
                 tmp_button.set_text(value);
-                u32* map;
-
-                if (m_current_map_name == "map") {
-                    map = m_character_map.map;
-                } else if (m_current_map_name == "shift_map") {
-                    map = m_character_map.shift_map;
-                } else if (m_current_map_name == "alt_map") {
-                    map = m_character_map.alt_map;
-                } else if (m_current_map_name == "altgr_map") {
-                    map = m_character_map.altgr_map;
-                } else if (m_current_map_name == "shift_altgr_map") {
-                    map = m_character_map.shift_altgr_map;
-                } else {
-                    VERIFY_NOT_REACHED();
-                }
+                u32* map = map_from_name(m_current_map_name);
 
                 if (value.length() == 0)
                     map[index] = '\0'; // Empty string
@@ -100,12 +86,32 @@ void KeyboardMapperWidget::create_frame()
     bottom_widget.layout()->add_spacer();
 }
 
-void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, const StringView button_text) {
+void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, const StringView button_text)
+{
     auto& map_radio_button = m_map_group->add<GUI::RadioButton>(button_text);
     map_radio_button.set_name(map_name);
-    map_radio_button.on_checked = [map_name, this](bool){
+    map_radio_button.on_checked = [map_name, this](bool) {
         set_current_map(map_name);
     };
+}
+
+u32* KeyboardMapperWidget::map_from_name(const StringView map_name)
+{
+    u32* map;
+    if (map_name == "map"sv) {
+        map = m_character_map.map;
+    } else if (map_name == "shift_map"sv) {
+        map = m_character_map.shift_map;
+    } else if (map_name == "alt_map"sv) {
+        map = m_character_map.alt_map;
+    } else if (map_name == "altgr_map"sv) {
+        map = m_character_map.altgr_map;
+    } else if (map_name == "shift_altgr_map"sv) {
+        map = m_character_map.shift_altgr_map;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+    return map;
 }
 
 void KeyboardMapperWidget::load_from_file(String filename)
@@ -230,21 +236,7 @@ void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
 void KeyboardMapperWidget::set_current_map(const String current_map)
 {
     m_current_map_name = current_map;
-    u32* map;
-
-    if (m_current_map_name == "map") {
-        map = m_character_map.map;
-    } else if (m_current_map_name == "shift_map") {
-        map = m_character_map.shift_map;
-    } else if (m_current_map_name == "alt_map") {
-        map = m_character_map.alt_map;
-    } else if (m_current_map_name == "altgr_map") {
-        map = m_character_map.altgr_map;
-    } else if (m_current_map_name == "shift_altgr_map") {
-        map = m_character_map.shift_altgr_map;
-    } else {
-        VERIFY_NOT_REACHED();
-    }
+    u32* map = map_from_name(m_current_map_name);
 
     for (unsigned k = 0; k < KEY_COUNT; k++) {
         auto index = keys[k].map_index;
