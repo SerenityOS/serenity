@@ -13,6 +13,7 @@ set(SOURCES
     DateTimeFormat.cpp
     Locale.cpp
     NumberFormat.cpp
+    UnicodeSymbols.cpp
 )
 
 serenity_lib(LibUnicode unicode)

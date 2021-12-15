@@ -574,8 +574,6 @@ enum class @name@ : @underlying@ {)~~~");
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibUnicode/Forward.h>
 #include <LibUnicode/UnicodeLocale.h>
@@ -605,28 +603,6 @@ struct SpecialCasing {
     Condition condition { Condition::None };
 };
 
-namespace Detail {
-
-Optional<String> code_point_display_name(u32 code_point);
-
-u32 canonical_combining_class(u32 code_point);
-
-u32 simple_uppercase_mapping(u32 code_point);
-u32 simple_lowercase_mapping(u32 code_point);
-Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
-
-bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
-Optional<GeneralCategory> general_category_from_string(StringView general_category);
-
-bool code_point_has_property(u32 code_point, Property property);
-Optional<Property> property_from_string(StringView property);
-
-bool code_point_has_script(u32 code_point, Script script);
-bool code_point_has_script_extension(u32 code_point, Script script);
-Optional<Script> script_from_string(StringView script);
-
-}
-
 }
 )~~~");
 
@@ -645,11 +621,13 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
 
-namespace Unicode {
+namespace Unicode::Detail {
 )~~~");
 
     auto append_list_and_size = [&](auto const& list, StringView format) {
@@ -873,8 +851,7 @@ static constexpr Array<CodePointName, @code_point_display_names_size@> s_code_po
 )~~~");
 
     generator.append(R"~~~(
-namespace Detail {
-
+Optional<String> code_point_display_name(u32 code_point) asm("unicode_code_point_display_name");
 Optional<String> code_point_display_name(u32 code_point)
 {
     if (auto const* entry = binary_search(s_code_point_display_names, code_point, nullptr, CodePointNameComparator {})) {
@@ -893,6 +870,7 @@ Optional<String> code_point_display_name(u32 code_point)
         generator.set("mappings", mappings);
         generator.set("fallback", fallback);
         generator.append(R"~~~(
+u32 @method@(u32 code_point) asm("unicode_@method@");
 u32 @method@(u32 code_point)
 {
     auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator<CodePointMapping> {});
@@ -906,6 +884,7 @@ u32 @method@(u32 code_point)
     append_code_point_mapping_search("simple_lowercase_mapping"sv, "s_lowercase_mappings"sv, "code_point"sv);
 
     generator.append(R"~~~(
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point) asm("unicode_special_case_mapping");
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
 {
     auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
@@ -921,6 +900,7 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
         generator.set("enum_snake", enum_snake);
         generator.set("collection_name", collection_name);
         generator.append(R"~~~(
+bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@) asm("unicode_code_point_has_@enum_snake@");
 bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 {
     auto index = static_cast<@enum_title@UnderlyingType>(@enum_snake@);
@@ -941,7 +921,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
         for (auto const& alias : aliases)
             hashes.set(alias.alias.hash(), alias.alias);
 
-        generate_value_from_string(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
+        generate_value_from_string_for_dynamic_loading(generator, "{}_from_string"sv, enum_title, enum_snake, move(hashes));
     };
 
     append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
@@ -955,8 +935,6 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
 
     generator.append(R"~~~(
-}
-
 }
 )~~~");
 

@@ -11,6 +11,7 @@
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
+#include <LibUnicode/UnicodeSymbols.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
@@ -22,6 +23,18 @@
 namespace Unicode {
 
 #if ENABLE_UNICODE_DATA
+
+static u32 canonical_combining_class(u32 code_point)
+{
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.canonical_combining_class(code_point);
+}
+
+static Span<Unicode::SpecialCasing const* const> special_case_mapping(u32 code_point)
+{
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.special_case_mapping(code_point);
+}
 
 static bool is_after_uppercase_i(Utf8View const& string, size_t index)
 {
@@ -36,11 +49,11 @@ static bool is_after_uppercase_i(Utf8View const& string, size_t index)
             continue;
         }
 
-        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+        u32 combining_class = canonical_combining_class(code_point);
 
-        if (canonical_combining_class == 0)
+        if (combining_class == 0)
             found_uppercase_i = false;
-        else if (canonical_combining_class == 230)
+        else if (combining_class == 230)
             found_uppercase_i = false;
     }
 
@@ -60,11 +73,11 @@ static bool is_after_soft_dotted_code_point(Utf8View const& string, size_t index
             continue;
         }
 
-        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+        u32 combining_class = canonical_combining_class(code_point);
 
-        if (canonical_combining_class == 0)
+        if (combining_class == 0)
             found_soft_dotted_code_point = false;
-        else if (canonical_combining_class == 230)
+        else if (combining_class == 230)
             found_soft_dotted_code_point = false;
     }
 
@@ -119,11 +132,11 @@ static bool is_followed_by_combining_class_above(Utf8View const& string, size_t 
         : Utf8View {};
 
     for (auto code_point : following_view) {
-        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+        u32 combining_class = canonical_combining_class(code_point);
 
-        if (canonical_combining_class == 0)
+        if (combining_class == 0)
             return false;
-        if (canonical_combining_class == 230)
+        if (combining_class == 230)
             return true;
     }
 
@@ -142,11 +155,11 @@ static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t in
         if (code_point == 0x307)
             return true;
 
-        u32 canonical_combining_class = Detail::canonical_combining_class(code_point);
+        u32 combining_class = canonical_combining_class(code_point);
 
-        if (canonical_combining_class == 0)
+        if (combining_class == 0)
             return false;
-        if (canonical_combining_class == 230)
+        if (combining_class == 230)
             return false;
     }
 
@@ -162,7 +175,7 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
             requested_locale = *maybe_locale;
     }
 
-    auto special_casings = Detail::special_case_mapping(code_point);
+    auto special_casings = special_case_mapping(code_point);
 
     for (auto const* special_casing : special_casings) {
         if (special_casing->locale != Locale::None && special_casing->locale != requested_locale)
@@ -206,29 +219,20 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
 
 u32 to_unicode_lowercase(u32 code_point)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::simple_lowercase_mapping(code_point);
-#else
-    return AK::to_ascii_lowercase(code_point);
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.simple_lowercase_mapping(code_point);
 }
 
 u32 to_unicode_uppercase(u32 code_point)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::simple_uppercase_mapping(code_point);
-#else
-    return AK::to_ascii_uppercase(code_point);
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.simple_uppercase_mapping(code_point);
 }
 
-Optional<String> code_point_display_name([[maybe_unused]] u32 code_point)
+Optional<String> code_point_display_name(u32 code_point)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::code_point_display_name(code_point);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.code_point_display_name(code_point);
 }
 
 String to_unicode_lowercase_full(StringView string, [[maybe_unused]] Optional<StringView> locale)
@@ -289,40 +293,28 @@ String to_unicode_uppercase_full(StringView string, [[maybe_unused]] Optional<St
 #endif
 }
 
-Optional<GeneralCategory> general_category_from_string([[maybe_unused]] StringView general_category)
+Optional<GeneralCategory> general_category_from_string(StringView general_category)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::general_category_from_string(general_category);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.general_category_from_string(general_category);
 }
 
-bool code_point_has_general_category([[maybe_unused]] u32 code_point, [[maybe_unused]] GeneralCategory general_category)
+bool code_point_has_general_category(u32 code_point, GeneralCategory general_category)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::code_point_has_general_category(code_point, general_category);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.code_point_has_general_category(code_point, general_category);
 }
 
-Optional<Property> property_from_string([[maybe_unused]] StringView property)
+Optional<Property> property_from_string(StringView property)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::property_from_string(property);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.property_from_string(property);
 }
 
-bool code_point_has_property([[maybe_unused]] u32 code_point, [[maybe_unused]] Property property)
+bool code_point_has_property(u32 code_point, Property property)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::code_point_has_property(code_point, property);
-#else
-    return false;
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.code_point_has_property(code_point, property);
 }
 
 bool is_ecma262_property([[maybe_unused]] Property property)
@@ -392,31 +384,22 @@ bool is_ecma262_property([[maybe_unused]] Property property)
 #endif
 }
 
-Optional<Script> script_from_string([[maybe_unused]] StringView script)
+Optional<Script> script_from_string(StringView script)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::script_from_string(script);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.script_from_string(script);
 }
 
-bool code_point_has_script([[maybe_unused]] u32 code_point, [[maybe_unused]] Script script)
+bool code_point_has_script(u32 code_point, Script script)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::code_point_has_script(code_point, script);
-#else
-    return false;
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.code_point_has_script(code_point, script);
 }
 
-bool code_point_has_script_extension([[maybe_unused]] u32 code_point, [[maybe_unused]] Script script)
+bool code_point_has_script_extension(u32 code_point, Script script)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::code_point_has_script_extension(code_point, script);
-#else
-    return false;
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.code_point_has_script_extension(code_point, script);
 }
 
 }
