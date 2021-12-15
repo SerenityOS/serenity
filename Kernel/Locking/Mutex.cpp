@@ -329,12 +329,8 @@ void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocatio
     switch (mode) {
     case Mode::Exclusive: {
         auto previous_mode = m_mode;
-        bool need_to_block = false;
-        if (m_mode == Mode::Exclusive && m_holder != current_thread)
-            need_to_block = true;
-        else if (m_mode == Mode::Shared && (m_shared_holders.size() != 1 || !m_shared_holders.contains(current_thread)))
-            need_to_block = true;
-        if (need_to_block) {
+        if ((m_mode == Mode::Exclusive && m_holder != current_thread)
+            || (m_mode == Mode::Shared && (m_shared_holders.size() != 1 || !m_shared_holders.contains(current_thread)))) {
             block(*current_thread, Mode::Exclusive, lock, lock_count);
             did_block = true;
             // If we blocked then m_mode should have been updated to what we requested
