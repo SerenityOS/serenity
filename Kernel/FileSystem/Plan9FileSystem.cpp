@@ -603,7 +603,8 @@ ErrorOr<void> Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         u32 error_code;
         message >> error_code;
         return Error::from_errno((ErrnoCode)error_code);
-    } else if (reply_type == Message::Type::Rerror) {
+    }
+    if (reply_type == Message::Type::Rerror) {
         // Contains an error message. We could attempt to parse it, but for now
         // we simply return EIO instead. In 9P200.u, it can also contain a
         // numerical errno in an unspecified encoding; we ignore those too.
@@ -611,14 +612,15 @@ ErrorOr<void> Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         message >> error_name;
         dbgln("Plan9FS: Received error name {}", error_name);
         return EIO;
-    } else if ((u8)reply_type != (u8)request_type + 1) {
+    }
+    if ((u8)reply_type != (u8)request_type + 1) {
         // Other than those error messages. we only expect the matching reply
         // message type.
         dbgln("Plan9FS: Received unexpected message type {} in response to {}", (u8)reply_type, (u8)request_type);
         return EIO;
-    } else {
-        return {};
     }
+
+    return {};
 }
 
 size_t Plan9FS::adjust_buffer_size(size_t size) const
@@ -711,11 +713,11 @@ ErrorOr<void> Plan9FSInode::ensure_open_for_mode(int mode)
         Plan9FS::Message message { fs(), Plan9FS::Message::Type::Tlopen };
         message << fid() << l_mode;
         return fs().post_message_and_wait_for_a_reply(message);
-    } else {
-        Plan9FS::Message message { fs(), Plan9FS::Message::Type::Topen };
-        message << fid() << p9_mode;
-        return fs().post_message_and_wait_for_a_reply(message);
     }
+
+    Plan9FS::Message message { fs(), Plan9FS::Message::Type::Topen };
+    message << fid() << p9_mode;
+    return fs().post_message_and_wait_for_a_reply(message);
 }
 
 ErrorOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
@@ -887,10 +889,10 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSys
         // FIXME: Should we observe this error?
         [[maybe_unused]] auto rc = fs().post_message_and_explicitly_ignore_reply(close_message);
         return result;
-    } else {
-        // TODO
-        return ENOTIMPL;
     }
+
+    // TODO
+    return ENOTIMPL;
 }
 
 ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
@@ -946,10 +948,10 @@ ErrorOr<void> Plan9FSInode::truncate(u64 new_size)
         u64 mtime_nsec = 0;
         message << fid() << (u64)valid << mode << uid << gid << new_size << atime_sec << atime_nsec << mtime_sec << mtime_nsec;
         return fs().post_message_and_wait_for_a_reply(message);
-    } else {
-        // TODO: wstat version
-        return {};
     }
+
+    // TODO: wstat version
+    return {};
 }
 
 }
