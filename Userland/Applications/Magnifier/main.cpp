@@ -75,6 +75,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(pause_action));
 
+    auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
+    auto previous_frame_action = GUI::Action::create(
+        "&Previous frame", { Key_Left }, [&](auto&) {
+            pause_action->set_checked(true);
+            magnifier->pause_capture(true);
+            magnifier->display_previous_frame();
+        });
+    auto next_frame_action = GUI::Action::create(
+        "&Next frame", { Key_Right }, [&](auto&) {
+            pause_action->set_checked(true);
+            magnifier->pause_capture(true);
+            magnifier->display_next_frame();
+        });
+    TRY(timeline_menu->try_add_action(previous_frame_action));
+    TRY(timeline_menu->try_add_action(next_frame_action));
+
     auto help_menu = TRY(window->try_add_menu("&Help"));
     help_menu->add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
 
