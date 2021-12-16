@@ -215,21 +215,24 @@ void KeyboardMapperWidget::save_to_file(StringView filename)
 void KeyboardMapperWidget::keydown_event(GUI::KeyEvent& event)
 {
     for (int i = 0; i < KEY_COUNT; i++) {
+        if (keys[i].scancode != event.scancode())
+            continue;
         auto& tmp_button = m_keys.at(i);
-        tmp_button->set_pressed(keys[i].scancode == event.scancode());
+        tmp_button->set_pressed(true);
         tmp_button->update();
+        break;
     }
 }
 
 void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
 {
     for (int i = 0; i < KEY_COUNT; i++) {
-        if (keys[i].scancode == event.scancode()) {
-            auto& tmp_button = m_keys.at(i);
-            tmp_button->set_pressed(false);
-            tmp_button->update();
-            break;
-        }
+        if (keys[i].scancode != event.scancode())
+            continue;
+        auto& tmp_button = m_keys.at(i);
+        tmp_button->set_pressed(false);
+        tmp_button->update();
+        break;
     }
 }
 
