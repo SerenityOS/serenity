@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/StdLibExtras.h"
 #include <AK/Debug.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Math.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
@@ -30,19 +30,15 @@ FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
         return;
     }
 
-    auto maybe_stream = Core::InputFileStream::open_buffered(path);
-    if (maybe_stream.is_error()) {
-        m_error = LoaderError { "Can't open file stream" };
-        return;
-    }
-    m_stream = make<FlacInputStream>(maybe_stream.release_value());
+    auto maybe_stream = Buffered<Core::InputFileStream, FLAC_BUFFER_SIZE> { MUST(Core::File::open(path, Core::OpenMode::ReadOnly)) };
+    m_stream = make<FlacInputStream<FLAC_BUFFER_SIZE>>(move(maybe_stream));
     if (!m_stream)
         m_error = LoaderError { "Can't open file stream" };
 }
 
 FlacLoaderPlugin::FlacLoaderPlugin(const ByteBuffer& buffer)
 {
-    m_stream = make<FlacInputStream>(InputMemoryStream(buffer));
+    m_stream = make<FlacInputStream<FLAC_BUFFER_SIZE>>(InputMemoryStream(buffer));
     if (!m_stream)
         m_error = LoaderError { "Can't open memory stream" };
 }
@@ -61,7 +57,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 {
     InputBitStream bit_input = [&]() -> InputBitStream {
         if (m_file) {
-            return InputBitStream(m_stream->get<Buffered<Core::InputFileStream>>());
+            return InputBitStream(m_stream->get<Buffered<Core::InputFileStream, FLAC_BUFFER_SIZE>>());
         }
         return InputBitStream(m_stream->get<InputMemoryStream>());
     }();
