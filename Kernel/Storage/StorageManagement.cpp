@@ -15,6 +15,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCIController.h>
 #include <Kernel/Storage/ATA/IDEController.h>
+#include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
@@ -59,6 +60,17 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_controllers(bool force_pio)
                 && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::SATAController)
                 && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
                 m_controllers.append(AHCIController::initialize(device_identifier));
+            }
+        });
+        PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+            if (device_identifier.class_code().value() == to_underlying(PCI::ClassID::MassStorage)
+                && device_identifier.subclass_code().value() == to_underlying(PCI::MassStorage::SubclassID::NVMeController)) {
+                auto controller = NVMeController::try_initialize(device_identifier);
+                if (controller.is_error()) {
+                    dmesgln("Unable to initialize NVMe controller");
+                } else {
+                    m_controllers.append(controller.release_value());
+                }
             }
         });
     }
