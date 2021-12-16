@@ -72,6 +72,27 @@ struct Symbols {
     Vector<NumberFormat> (*get_compact_number_system_formats)(StringView, StringView, CompactNumberFormatType);
     Vector<NumberFormat> (*get_unit_formats)(StringView, StringView, Style);
 
+    // Loaded from UnicodeDateTimeFormat.cpp:
+
+    Vector<HourCycle> (*get_regional_hour_cycles)(StringView) { nullptr };
+
+    Optional<CalendarFormat> (*get_calendar_date_format)(StringView, StringView) { nullptr };
+    Optional<CalendarFormat> (*get_calendar_time_format)(StringView, StringView) { nullptr };
+    Optional<CalendarFormat> (*get_calendar_date_time_format)(StringView, StringView) { nullptr };
+    Vector<CalendarPattern> (*get_calendar_available_formats)(StringView, StringView) { nullptr };
+
+    Optional<CalendarRangePattern> (*get_calendar_default_range_format)(StringView, StringView) { nullptr };
+    Vector<CalendarRangePattern> (*get_calendar_range_formats)(StringView, StringView, StringView) { nullptr };
+    Vector<CalendarRangePattern> (*get_calendar_range12_formats)(StringView, StringView, StringView) { nullptr };
+
+    Optional<StringView> (*get_calendar_era_symbol)(StringView, StringView, CalendarPatternStyle, Era) { nullptr };
+    Optional<StringView> (*get_calendar_month_symbol)(StringView, StringView, CalendarPatternStyle, Month) { nullptr };
+    Optional<StringView> (*get_calendar_weekday_symbol)(StringView, StringView, CalendarPatternStyle, Weekday) { nullptr };
+    Optional<StringView> (*get_calendar_day_period_symbol)(StringView, StringView, CalendarPatternStyle, DayPeriod) { nullptr };
+    Optional<StringView> (*get_calendar_day_period_symbol_for_hour)(StringView, StringView, CalendarPatternStyle, u8) { nullptr };
+
+    Optional<StringView> (*get_time_zone_name)(StringView, StringView, CalendarPatternStyle) { nullptr };
+
 private:
     Symbols() = default;
 };

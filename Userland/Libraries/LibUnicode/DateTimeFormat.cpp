@@ -8,10 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
-
-#if ENABLE_UNICODE_DATA
-#    include <LibUnicode/UnicodeDateTimeFormat.h>
-#endif
+#include <LibUnicode/UnicodeSymbols.h>
 
 namespace Unicode {
 
@@ -78,17 +75,14 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
-Vector<Unicode::HourCycle> get_regional_hour_cycles([[maybe_unused]] StringView locale)
+Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView locale)
 {
-#if ENABLE_UNICODE_DATA
-    if (auto hour_cycles = Detail::get_regional_hour_cycles(locale); !hour_cycles.is_empty())
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+
+    if (auto hour_cycles = symbols.get_regional_hour_cycles(locale); !hour_cycles.is_empty())
         return hour_cycles;
 
-    auto return_default_hour_cycles = []() {
-        auto hour_cycles = Detail::get_regional_hour_cycles("001"sv);
-        VERIFY(!hour_cycles.is_empty());
-        return hour_cycles;
-    };
+    auto return_default_hour_cycles = [&]() { return symbols.get_regional_hour_cycles("001"sv); };
 
     auto language = parse_unicode_language_id(locale);
     if (!language.has_value())
@@ -99,13 +93,10 @@ Vector<Unicode::HourCycle> get_regional_hour_cycles([[maybe_unused]] StringView 
     if (!language.has_value() || !language->region.has_value())
         return return_default_hour_cycles();
 
-    if (auto hour_cycles = Detail::get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
+    if (auto hour_cycles = symbols.get_regional_hour_cycles(*language->region); !hour_cycles.is_empty())
         return hour_cycles;
 
     return return_default_hour_cycles();
-#else
-    return {};
-#endif
 }
 
 Optional<Unicode::HourCycle> get_default_regional_hour_cycle(StringView locale)
@@ -156,112 +147,80 @@ String combine_skeletons(StringView first, StringView second)
     return builder.build();
 }
 
-Optional<CalendarFormat> get_calendar_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarFormatType type)
+Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type)
 {
-#if ENABLE_UNICODE_DATA
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+
     switch (type) {
     case CalendarFormatType::Date:
-        return Detail::get_calendar_date_format(locale, calendar);
+        return symbols.get_calendar_date_format(locale, calendar);
     case CalendarFormatType::Time:
-        return Detail::get_calendar_time_format(locale, calendar);
+        return symbols.get_calendar_time_format(locale, calendar);
     case CalendarFormatType::DateTime:
-        return Detail::get_calendar_date_time_format(locale, calendar);
+        return symbols.get_calendar_date_time_format(locale, calendar);
     default:
         VERIFY_NOT_REACHED();
     }
-#else
-    return {};
-#endif
 }
 
-Vector<CalendarPattern> get_calendar_available_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar)
+Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_available_formats(locale, calendar);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_available_formats(locale, calendar);
 }
 
-Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar)
+Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_default_range_format(locale, calendar);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_default_range_format(locale, calendar);
 }
 
-Vector<Unicode::CalendarRangePattern> get_calendar_range_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] StringView skeleton)
+Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_range_formats(locale, calendar, skeleton);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_range_formats(locale, calendar, skeleton);
 }
 
-Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] StringView skeleton)
+Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_range12_formats(locale, calendar, skeleton);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_range12_formats(locale, calendar, skeleton);
 }
 
-Optional<StringView> get_calendar_era_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Era value)
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_era_symbol(locale, calendar, style, value);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_era_symbol(locale, calendar, style, value);
 }
 
-Optional<StringView> get_calendar_month_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Month value)
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_month_symbol(locale, calendar, style, value);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_month_symbol(locale, calendar, style, value);
 }
 
-Optional<StringView> get_calendar_weekday_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::Weekday value)
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_weekday_symbol(locale, calendar, style, value);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_weekday_symbol(locale, calendar, style, value);
 }
 
-Optional<StringView> get_calendar_day_period_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] Unicode::DayPeriod value)
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_day_period_symbol(locale, calendar, style, value);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_day_period_symbol(locale, calendar, style, value);
 }
 
-Optional<StringView> get_calendar_day_period_symbol_for_hour([[maybe_unused]] StringView locale, [[maybe_unused]] StringView calendar, [[maybe_unused]] CalendarPatternStyle style, [[maybe_unused]] u8 hour)
+Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_calendar_day_period_symbol_for_hour(locale, calendar, style, hour);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_calendar_day_period_symbol_for_hour(locale, calendar, style, hour);
 }
 
-Optional<StringView> get_time_zone_name([[maybe_unused]] StringView locale, [[maybe_unused]] StringView time_zone, [[maybe_unused]] CalendarPatternStyle style)
+Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_time_zone_name(locale, time_zone, style);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_time_zone_name(locale, time_zone, style);
 }
 
 }
