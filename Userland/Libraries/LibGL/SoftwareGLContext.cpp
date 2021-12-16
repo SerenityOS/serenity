@@ -208,137 +208,21 @@ void SoftwareGLContext::gl_end()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_end);
 
-    // At this point, the user has effectively specified that they are done with defining the geometry
-    // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
-    //
-    // 1.   Transform all of the vertices in the current vertex list into eye space by mulitplying the model-view matrix
-    // 2.   Transform all of the vertices from eye space into clip space by multiplying by the projection matrix
-    // 3.   If culling is enabled, we cull the desired faces (https://learnopengl.com/Advanced-OpenGL/Face-culling)
-    // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
-    // 5.   The vertices are sorted (for the rasteriser, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
-    // 6.   The vertices are then sent off to the rasteriser and drawn to the screen
-
-    float scr_width = m_frontbuffer->width();
-    float scr_height = m_frontbuffer->height();
-
     // Make sure we had a `glBegin` before this call...
     RETURN_WITH_ERROR_IF(!m_in_draw_state, GL_INVALID_OPERATION);
 
     m_in_draw_state = false;
 
-    triangle_list.clear_with_capacity();
-    processed_triangles.clear_with_capacity();
+    // FIXME: Add support for the remaining primitive types.
+    if (m_current_draw_mode != GL_TRIANGLES
+        && m_current_draw_mode != GL_TRIANGLE_FAN
+        && m_current_draw_mode != GL_TRIANGLE_STRIP
+        && m_current_draw_mode != GL_QUADS
+        && m_current_draw_mode != GL_POLYGON) {
 
-    // Let's construct some triangles
-    if (m_current_draw_mode == GL_TRIANGLES) {
-        GLTriangle triangle;
-        for (size_t i = 0; i < vertex_list.size(); i += 3) {
-            triangle.vertices[0] = vertex_list.at(i);
-            triangle.vertices[1] = vertex_list.at(i + 1);
-            triangle.vertices[2] = vertex_list.at(i + 2);
-
-            triangle_list.append(triangle);
-        }
-    } else if (m_current_draw_mode == GL_QUADS) {
-        // We need to construct two triangles to form the quad
-        GLTriangle triangle;
-        VERIFY(vertex_list.size() % 4 == 0);
-        for (size_t i = 0; i < vertex_list.size(); i += 4) {
-            // Triangle 1
-            triangle.vertices[0] = vertex_list.at(i);
-            triangle.vertices[1] = vertex_list.at(i + 1);
-            triangle.vertices[2] = vertex_list.at(i + 2);
-            triangle_list.append(triangle);
-
-            // Triangle 2
-            triangle.vertices[0] = vertex_list.at(i + 2);
-            triangle.vertices[1] = vertex_list.at(i + 3);
-            triangle.vertices[2] = vertex_list.at(i);
-            triangle_list.append(triangle);
-        }
-    } else if (m_current_draw_mode == GL_TRIANGLE_FAN || m_current_draw_mode == GL_POLYGON) {
-        GLTriangle triangle;
-        triangle.vertices[0] = vertex_list.at(0); // Root vertex is always the vertex defined first
-
-        for (size_t i = 1; i < vertex_list.size() - 1; i++) // This is technically `n-2` triangles. We start at index 1
-        {
-            triangle.vertices[1] = vertex_list.at(i);
-            triangle.vertices[2] = vertex_list.at(i + 1);
-            triangle_list.append(triangle);
-        }
-    } else if (m_current_draw_mode == GL_TRIANGLE_STRIP) {
-        GLTriangle triangle;
-        for (size_t i = 0; i < vertex_list.size() - 2; i++) {
-            triangle.vertices[0] = vertex_list.at(i);
-            triangle.vertices[1] = vertex_list.at(i + 1);
-            triangle.vertices[2] = vertex_list.at(i + 2);
-            triangle_list.append(triangle);
-        }
-    } else {
-        vertex_list.clear_with_capacity();
+        m_vertex_list.clear_with_capacity();
         dbgln_if(GL_DEBUG, "gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
-    }
-
-    vertex_list.clear_with_capacity();
-
-    auto mvp = m_projection_matrix * m_model_view_matrix;
-
-    // Now let's transform each triangle and send that to the GPU
-    for (size_t i = 0; i < triangle_list.size(); i++) {
-        GLTriangle& triangle = triangle_list.at(i);
-
-        // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
-        triangle.vertices[0].position = mvp * triangle.vertices[0].position;
-        triangle.vertices[1].position = mvp * triangle.vertices[1].position;
-        triangle.vertices[2].position = mvp * triangle.vertices[2].position;
-
-        // Apply texture transformation
-        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
-        triangle.vertices[0].tex_coord = m_texture_matrix * triangle.vertices[0].tex_coord;
-        triangle.vertices[1].tex_coord = m_texture_matrix * triangle.vertices[1].tex_coord;
-        triangle.vertices[2].tex_coord = m_texture_matrix * triangle.vertices[2].tex_coord;
-
-        // At this point, we're in clip space
-        // Here's where we do the clipping. This is a really crude implementation of the
-        // https://learnopengl.com/Getting-started/Coordinate-Systems
-        // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
-        // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
-        //
-        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
-
-        // Okay, let's do some face culling first
-
-        m_clipped_vertices.clear_with_capacity();
-        m_clipped_vertices.append(triangle.vertices[0]);
-        m_clipped_vertices.append(triangle.vertices[1]);
-        m_clipped_vertices.append(triangle.vertices[2]);
-        m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
-
-        if (m_clipped_vertices.size() < 3)
-            continue;
-
-        for (auto& vec : m_clipped_vertices) {
-            // perspective divide
-            float w = vec.position.w();
-            vec.position.set_x(vec.position.x() / w);
-            vec.position.set_y(vec.position.y() / w);
-            vec.position.set_z(vec.position.z() / w);
-            vec.position.set_w(1 / w);
-
-            // to screen space
-            vec.position.set_x(scr_width / 2 + vec.position.x() * scr_width / 2);
-            vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
-        }
-
-        GLTriangle tri;
-        tri.vertices[0] = m_clipped_vertices[0];
-        for (size_t i = 1; i < m_clipped_vertices.size() - 1; i++) {
-
-            tri.vertices[1] = m_clipped_vertices[i];
-            tri.vertices[2] = m_clipped_vertices[i + 1];
-            processed_triangles.append(tri);
-        }
     }
 
     m_bound_texture_units.clear();
@@ -347,36 +231,9 @@ void SoftwareGLContext::gl_end()
             m_bound_texture_units.append(texture_unit);
     }
 
-    for (size_t i = 0; i < processed_triangles.size(); i++) {
-        GLTriangle& triangle = processed_triangles.at(i);
+    m_rasterizer.draw_primitives(m_current_draw_mode, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, m_bound_texture_units);
 
-        // Let's calculate the (signed) area of the triangle
-        // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].position.x() - triangle.vertices[1].position.x(); // A.x - B.x
-        float dxBC = triangle.vertices[1].position.x() - triangle.vertices[2].position.x(); // B.X - C.x
-        float dyAB = triangle.vertices[0].position.y() - triangle.vertices[1].position.y();
-        float dyBC = triangle.vertices[1].position.y() - triangle.vertices[2].position.y();
-        float area = (dxAB * dyBC) - (dxBC * dyAB);
-
-        if (area == 0.0f)
-            continue;
-
-        if (m_cull_faces) {
-            bool is_front = (m_front_face == GL_CCW ? area < 0 : area > 0);
-
-            if (is_front && (m_culled_sides == GL_FRONT || m_culled_sides == GL_FRONT_AND_BACK))
-                continue;
-
-            if (!is_front && (m_culled_sides == GL_BACK || m_culled_sides == GL_FRONT_AND_BACK))
-                continue;
-        }
-
-        if (area > 0) {
-            swap(triangle.vertices[0], triangle.vertices[1]);
-        }
-
-        m_rasterizer.submit_triangle(triangle, m_bound_texture_units);
-    }
+    m_vertex_list.clear_with_capacity();
 }
 
 void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -650,7 +507,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     vertex.tex_coord = m_current_vertex_tex_coord;
     vertex.normal = m_current_vertex_normal;
 
-    vertex_list.append(vertex);
+    m_vertex_list.append(vertex);
 }
 
 // FIXME: We need to add `r` and `q` to our GLVertex?!

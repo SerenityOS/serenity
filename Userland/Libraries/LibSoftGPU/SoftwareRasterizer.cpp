@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -494,7 +495,160 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
-void SoftwareRasterizer::submit_triangle(GL::GLTriangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
+void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<GL::GLVertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
+{
+    // At this point, the user has effectively specified that they are done with defining the geometry
+    // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
+    //
+    // 1.   Transform all of the vertices in the current vertex list into eye space by mulitplying the model-view matrix
+    // 2.   Transform all of the vertices from eye space into clip space by multiplying by the projection matrix
+    // 3.   If culling is enabled, we cull the desired faces (https://learnopengl.com/Advanced-OpenGL/Face-culling)
+    // 4.   Each element of the vertex is then divided by w to bring the positions into NDC (Normalized Device Coordinates)
+    // 5.   The vertices are sorted (for the rasteriser, how are we doing this? 3Dfx did this top to bottom in terms of vertex y coordinates)
+    // 6.   The vertices are then sent off to the rasteriser and drawn to the screen
+
+    float scr_width = m_render_target->width();
+    float scr_height = m_render_target->height();
+
+    m_triangle_list.clear_with_capacity();
+    m_processed_triangles.clear_with_capacity();
+
+    // Let's construct some triangles
+    if (primitive_type == GL_TRIANGLES) {
+        GL::GLTriangle triangle;
+        for (size_t i = 0; i < vertices.size(); i += 3) {
+            triangle.vertices[0] = vertices.at(i);
+            triangle.vertices[1] = vertices.at(i + 1);
+            triangle.vertices[2] = vertices.at(i + 2);
+
+            m_triangle_list.append(triangle);
+        }
+    } else if (primitive_type == GL_QUADS) {
+        // We need to construct two triangles to form the quad
+        GL::GLTriangle triangle;
+        VERIFY(vertices.size() % 4 == 0);
+        for (size_t i = 0; i < vertices.size(); i += 4) {
+            // Triangle 1
+            triangle.vertices[0] = vertices.at(i);
+            triangle.vertices[1] = vertices.at(i + 1);
+            triangle.vertices[2] = vertices.at(i + 2);
+            m_triangle_list.append(triangle);
+
+            // Triangle 2
+            triangle.vertices[0] = vertices.at(i + 2);
+            triangle.vertices[1] = vertices.at(i + 3);
+            triangle.vertices[2] = vertices.at(i);
+            m_triangle_list.append(triangle);
+        }
+    } else if (primitive_type == GL_TRIANGLE_FAN || primitive_type == GL_POLYGON) {
+        GL::GLTriangle triangle;
+        triangle.vertices[0] = vertices.at(0); // Root vertex is always the vertex defined first
+
+        for (size_t i = 1; i < vertices.size() - 1; i++) // This is technically `n-2` triangles. We start at index 1
+        {
+            triangle.vertices[1] = vertices.at(i);
+            triangle.vertices[2] = vertices.at(i + 1);
+            m_triangle_list.append(triangle);
+        }
+    } else if (primitive_type == GL_TRIANGLE_STRIP) {
+        GL::GLTriangle triangle;
+        for (size_t i = 0; i < vertices.size() - 2; i++) {
+            triangle.vertices[0] = vertices.at(i);
+            triangle.vertices[1] = vertices.at(i + 1);
+            triangle.vertices[2] = vertices.at(i + 2);
+            m_triangle_list.append(triangle);
+        }
+    }
+
+    // Now let's transform each triangle and send that to the GPU
+    for (size_t i = 0; i < m_triangle_list.size(); i++) {
+        GL::GLTriangle& triangle = m_triangle_list.at(i);
+
+        // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
+        triangle.vertices[0].position = transform * triangle.vertices[0].position;
+        triangle.vertices[1].position = transform * triangle.vertices[1].position;
+        triangle.vertices[2].position = transform * triangle.vertices[2].position;
+
+        // Apply texture transformation
+        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
+        triangle.vertices[0].tex_coord = texture_matrix * triangle.vertices[0].tex_coord;
+        triangle.vertices[1].tex_coord = texture_matrix * triangle.vertices[1].tex_coord;
+        triangle.vertices[2].tex_coord = texture_matrix * triangle.vertices[2].tex_coord;
+
+        // At this point, we're in clip space
+        // Here's where we do the clipping. This is a really crude implementation of the
+        // https://learnopengl.com/Getting-started/Coordinate-Systems
+        // "Note that if only a part of a primitive e.g. a triangle is outside the clipping volume OpenGL
+        // will reconstruct the triangle as one or more triangles to fit inside the clipping range. "
+        //
+        // ALL VERTICES ARE DEFINED IN A CLOCKWISE ORDER
+
+        // Okay, let's do some face culling first
+
+        m_clipped_vertices.clear_with_capacity();
+        m_clipped_vertices.append(triangle.vertices[0]);
+        m_clipped_vertices.append(triangle.vertices[1]);
+        m_clipped_vertices.append(triangle.vertices[2]);
+        m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
+
+        if (m_clipped_vertices.size() < 3)
+            continue;
+
+        for (auto& vec : m_clipped_vertices) {
+            // perspective divide
+            float w = vec.position.w();
+            vec.position.set_x(vec.position.x() / w);
+            vec.position.set_y(vec.position.y() / w);
+            vec.position.set_z(vec.position.z() / w);
+            vec.position.set_w(1 / w);
+
+            // to screen space
+            vec.position.set_x(scr_width / 2 + vec.position.x() * scr_width / 2);
+            vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
+        }
+
+        GL::GLTriangle tri;
+        tri.vertices[0] = m_clipped_vertices[0];
+        for (size_t i = 1; i < m_clipped_vertices.size() - 1; i++) {
+            tri.vertices[1] = m_clipped_vertices[i];
+            tri.vertices[2] = m_clipped_vertices[i + 1];
+            m_processed_triangles.append(tri);
+        }
+    }
+
+    for (size_t i = 0; i < m_processed_triangles.size(); i++) {
+        GL::GLTriangle& triangle = m_processed_triangles.at(i);
+
+        // Let's calculate the (signed) area of the triangle
+        // https://cp-algorithms.com/geometry/oriented-triangle-area.html
+        float dxAB = triangle.vertices[0].position.x() - triangle.vertices[1].position.x(); // A.x - B.x
+        float dxBC = triangle.vertices[1].position.x() - triangle.vertices[2].position.x(); // B.X - C.x
+        float dyAB = triangle.vertices[0].position.y() - triangle.vertices[1].position.y();
+        float dyBC = triangle.vertices[1].position.y() - triangle.vertices[2].position.y();
+        float area = (dxAB * dyBC) - (dxBC * dyAB);
+
+        if (area == 0.0f)
+            continue;
+
+        if (m_options.enable_culling) {
+            bool is_front = (m_options.front_face == GL_CCW ? area < 0 : area > 0);
+
+            if (is_front && (m_options.culled_sides == GL_FRONT || m_options.culled_sides == GL_FRONT_AND_BACK))
+                continue;
+
+            if (!is_front && (m_options.culled_sides == GL_BACK || m_options.culled_sides == GL_FRONT_AND_BACK))
+                continue;
+        }
+
+        if (area > 0) {
+            swap(triangle.vertices[0], triangle.vertices[1]);
+        }
+
+        submit_triangle(triangle, bound_texture_units);
+    }
+}
+
+void SoftwareRasterizer::submit_triangle(const GL::GLTriangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;

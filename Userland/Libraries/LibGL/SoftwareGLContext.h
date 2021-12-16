@@ -176,10 +176,7 @@ private:
     FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
-    Vector<GLVertex, 96> vertex_list;
-    Vector<GLTriangle, 32> triangle_list;
-    Vector<GLTriangle, 32> processed_triangles;
-    Vector<GLVertex> m_clipped_vertices;
+    Vector<GLVertex, 96> m_vertex_list;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
@@ -228,8 +225,6 @@ private:
     bool m_client_side_texture_coord_array_enabled = false;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
-
-    SoftGPU::Clipper m_clipper;
 
     // Texture objects
     TextureNameAllocator m_name_allocator;
