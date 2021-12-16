@@ -33,9 +33,3 @@ void __assertion_failed(const char* msg)
     abort();
 }
 }
-
-void _abort()
-{
-    asm volatile("ud2");
-    __builtin_unreachable();
-}
