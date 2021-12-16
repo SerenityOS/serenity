@@ -416,4 +416,12 @@ ErrorOr<void> setegid(gid_t gid)
     return {};
 }
 
+ErrorOr<bool> isatty(int fd)
+{
+    int rc = ::isatty(fd);
+    if (rc < 0)
+        return Error::from_syscall("isatty"sv, -errno);
+    return rc == 1;
+}
+
 }
