@@ -30,6 +30,8 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_STRING = '#pragma once'
+PRAGMA_ONCE_CHECK_EXCLUDES = {
+}
 
 # We make sure that there's a blank line before and after pragma once
 GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
@@ -58,7 +60,10 @@ def run():
         if LIBM_MATH_H_INCLUDE_STRING in file_content:
             errors_libm_math_h.append(filename)
         if filename.endswith('.h'):
-            if GOOD_PRAGMA_ONCE_PATTERN.search(file_content):
+            if any(filename.startswith(forbidden_prefix) for forbidden_prefix in PRAGMA_ONCE_CHECK_EXCLUDES):
+                # File was excluded
+                pass
+            elif GOOD_PRAGMA_ONCE_PATTERN.search(file_content):
                 # Excellent, the formatting is correct.
                 pass
             elif PRAGMA_ONCE_STRING in file_content:
