@@ -610,7 +610,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
 
     dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
-    decoded = TRY(decode_residual(decoded, subframe, bit_input));
+    TRY(decode_residual(decoded, subframe, bit_input));
 
     // approximate the waveform with the predictor
     for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
@@ -680,7 +680,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 }
 
 // Decode the residual, the "error" between the function approximation and the actual audio data
-ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input)
+MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input)
 {
     u8 residual_mode = static_cast<u8>(bit_input.read_bits_big_endian(2));
     u8 partition_order = static_cast<u8>(bit_input.read_bits_big_endian(4));
@@ -701,7 +701,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_residual(Vector<i32>&
     } else
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Reserved residual coding method" };
 
-    return decoded;
+    return {};
 }
 
 // Decode a single Rice partition as part of the residual, every partition can have its own Rice parameter k
