@@ -53,19 +53,19 @@ static void sigchld_handler(int)
     }
 }
 
-static void determine_system_mode()
+static ErrorOr<void> determine_system_mode()
 {
     auto f = Core::File::construct("/proc/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue to assume "graphical".
-        return;
+        return {};
     }
     const String system_mode = String::copy(f->read_all(), Chomp);
     if (f->error()) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue to assume "graphical".
-        return;
+        return {};
     }
 
     g_system_mode = system_mode;
@@ -80,6 +80,7 @@ static void determine_system_mode()
         dbgln("WARNING: Text mode with framebuffers won't work as expected! Consider using 'fbdev=off'.");
     }
     dbgln("System in {} mode", g_system_mode);
+    return {};
 }
 
 static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
@@ -332,60 +333,26 @@ static void populate_devfs()
     umask(old_mask);
 }
 
-static void prepare_synthetic_filesystems()
+static ErrorOr<void> prepare_synthetic_filesystems()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
-    int rc = mount(-1, "/proc", "proc", MS_NOSUID);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::mount(-1, "/proc", "proc", MS_NOSUID));
+    TRY(Core::System::mount(-1, "/sys", "sys", 0));
+    TRY(Core::System::mount(-1, "/dev", "dev", 0));
 
-    rc = mount(-1, "/sys", "sys", 0);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
-
-    rc = mount(-1, "/dev", "dev", 0);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
-
-    rc = symlink("/proc/self/fd/0", "/dev/stdin");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-
-    rc = symlink("/proc/self/fd/1", "/dev/stdout");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-
-    rc = symlink("/proc/self/fd/2", "/dev/stderr");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-
-    rc = symlink("/proc/self/tty", "/dev/tty");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
+    TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
+    TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
+    TRY(Core::System::symlink("/proc/self/tty", "/dev/tty"));
 
     populate_devfs();
 
-    rc = mkdir("/dev/pts", 0755);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::mkdir("/dev/pts", 0755));
 
-    rc = mount(-1, "/dev/pts", "devpts", 0);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::mount(-1, "/dev/pts", "devpts", 0));
 
-    rc = symlink("/dev/random", "/dev/urandom");
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::symlink("/dev/random", "/dev/urandom"));
+
     chmod_wrapper("/dev/urandom", 0666);
 
     auto phys_group = getgrnam("phys");
@@ -413,55 +380,39 @@ static void prepare_synthetic_filesystems()
     // This affects also every other process that inherits the file descriptors
     // from SystemServer, so it is important for other things (also for ProcFS
     // tests that are running in CI mode).
-    int stdin_new_fd = open("/dev/null", O_NONBLOCK);
-    if (stdin_new_fd < 0) {
-        VERIFY_NOT_REACHED();
-    }
-    rc = dup2(stdin_new_fd, 0);
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
+    int stdin_new_fd = TRY(Core::System::open("/dev/null", O_NONBLOCK));
 
-    rc = dup2(stdin_new_fd, 1);
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
-    rc = dup2(stdin_new_fd, 2);
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::dup2(stdin_new_fd, 0));
+    TRY(Core::System::dup2(stdin_new_fd, 1));
+    TRY(Core::System::dup2(stdin_new_fd, 2));
 
     endgrent();
+    return {};
 }
 
-static void mount_all_filesystems()
+static ErrorOr<void> mount_all_filesystems()
 {
     dbgln("Spawning mount -a to mount all filesystems.");
-    pid_t pid = fork();
+    pid_t pid = TRY(Core::System::fork());
 
-    if (pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
-    } else if (pid == 0) {
+    if (pid == 0) {
         execl("/bin/mount", "mount", "-a", nullptr);
         perror("exec");
         VERIFY_NOT_REACHED();
     } else {
         wait(nullptr);
     }
+    return {};
 }
 
-static void create_tmp_coredump_directory()
+static ErrorOr<void> create_tmp_coredump_directory()
 {
     dbgln("Creating /tmp/coredump directory");
     auto old_umask = umask(0);
     // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
-    auto rc = mkdir("/tmp/coredump", 0777);
-    if (rc < 0) {
-        perror("mkdir(/tmp/coredump)");
-        VERIFY_NOT_REACHED();
-    }
+    TRY(Core::System::mkdir("/tmp/coredump", 0777));
     umask(old_umask);
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -472,15 +423,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (!user) {
-        mount_all_filesystems();
-        prepare_synthetic_filesystems();
+        TRY(mount_all_filesystems());
+        TRY(prepare_synthetic_filesystems());
     }
 
     TRY(Core::System::pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction"));
 
     if (!user) {
-        create_tmp_coredump_directory();
-        determine_system_mode();
+        TRY(create_tmp_coredump_directory());
+        TRY(determine_system_mode());
     }
 
     Core::EventLoop event_loop;
