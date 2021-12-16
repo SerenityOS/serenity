@@ -64,16 +64,16 @@ public:
     const String& shell() const { return m_shell; }
     const Vector<gid_t>& extra_gids() const { return m_extra_gids; }
 
-    bool sync();
+    ErrorOr<void> sync();
 
 private:
     static ErrorOr<Account> from_passwd(passwd const&, spwd const&);
 
     Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
-    String generate_passwd_file() const;
+    ErrorOr<String> generate_passwd_file() const;
 #ifndef AK_OS_BSD_GENERIC
-    String generate_shadow_file() const;
+    ErrorOr<String> generate_shadow_file() const;
 #endif
 
     String m_username;
