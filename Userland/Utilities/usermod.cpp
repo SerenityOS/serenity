@@ -134,10 +134,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
-    if (!target_account.sync()) {
-        perror("Core::Account::Sync");
-        return 1;
-    }
+
+    TRY(target_account.sync());
 
     return 0;
 }

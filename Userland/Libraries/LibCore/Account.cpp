@@ -8,6 +8,7 @@
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
@@ -218,7 +219,7 @@ Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
 {
 }
 
-String Account::generate_passwd_file() const
+ErrorOr<String> Account::generate_passwd_file() const
 {
     StringBuilder builder;
 
@@ -244,16 +245,14 @@ String Account::generate_passwd_file() const
     }
     endpwent();
 
-    if (errno) {
-        dbgln("errno was non-zero after generating new passwd file.");
-        return {};
-    }
+    if (errno)
+        return Error::from_errno(errno);
 
     return builder.to_string();
 }
 
 #ifndef AK_OS_BSD_GENERIC
-String Account::generate_shadow_file() const
+ErrorOr<String> Account::generate_shadow_file() const
 {
     StringBuilder builder;
 
@@ -287,22 +286,18 @@ String Account::generate_shadow_file() const
     }
     endspent();
 
-    if (errno) {
-        dbgln("errno was non-zero after generating new passwd file.");
-        return {};
-    }
+    if (errno)
+        return Error::from_errno(errno);
 
     return builder.to_string();
 }
 #endif
 
-bool Account::sync()
+ErrorOr<void> Account::sync()
 {
-    auto new_passwd_file_content = generate_passwd_file();
-    VERIFY(!new_passwd_file_content.is_null());
+    auto new_passwd_file_content = TRY(generate_passwd_file());
 #ifndef AK_OS_BSD_GENERIC
-    auto new_shadow_file_content = generate_shadow_file();
-    VERIFY(!new_shadow_file_content.is_null());
+    auto new_shadow_file_content = TRY(generate_shadow_file());
 #endif
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
@@ -311,56 +306,30 @@ bool Account::sync()
 #endif
 
     {
-        auto new_passwd_fd = mkstemp(new_passwd_name);
-        if (new_passwd_fd < 0) {
-            perror("mkstemp");
-            VERIFY_NOT_REACHED();
-        }
+        auto new_passwd_fd = TRY(Core::System::mkstemp(new_passwd_name));
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
 #ifndef AK_OS_BSD_GENERIC
-        auto new_shadow_fd = mkstemp(new_shadow_name);
-        if (new_shadow_fd < 0) {
-            perror("mkstemp");
-            VERIFY_NOT_REACHED();
-        }
+        auto new_shadow_fd = TRY(Core::System::mkstemp(new_shadow_name));
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
 #endif
 
-        if (fchmod(new_passwd_fd, 0644) < 0) {
-            perror("fchmod");
-            VERIFY_NOT_REACHED();
-        }
+        TRY(Core::System::fchmod(new_passwd_fd, 0644));
 
-        auto nwritten = write(new_passwd_fd, new_passwd_file_content.characters(), new_passwd_file_content.length());
-        if (nwritten < 0) {
-            perror("write");
-            VERIFY_NOT_REACHED();
-        }
+        auto nwritten = TRY(Core::System::write(new_passwd_fd, new_passwd_file_content.bytes()));
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
 #ifndef AK_OS_BSD_GENERIC
-        nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
-        if (nwritten < 0) {
-            perror("write");
-            VERIFY_NOT_REACHED();
-        }
+        nwritten = TRY(Core::System::write(new_shadow_fd, new_shadow_file_content.bytes()));
         VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
 #endif
     }
 
-    if (rename(new_passwd_name, "/etc/passwd") < 0) {
-        perror("Failed to install new /etc/passwd");
-        return false;
-    }
-
+    TRY(Core::System::rename(new_passwd_name, "/etc/passwd"));
 #ifndef AK_OS_BSD_GENERIC
-    if (rename(new_shadow_name, "/etc/shadow") < 0) {
-        perror("Failed to install new /etc/shadow");
-        return false;
-    }
+    TRY(Core::System::rename(new_shadow_name, "/etc/shadow"));
 #endif
 
-    return true;
+    return {};
     // FIXME: Sync extra groups.
 }
 
