@@ -465,4 +465,19 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
 #endif
 }
 
+ErrorOr<void> mkdir(StringView path, mode_t mode)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+#ifdef __serenity__
+    int rc = syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
+    HANDLE_SYSCALL_RETURN_VALUE("mkdir"sv, rc, {});
+#else
+    String path_string = path;
+    if (::mkdir(path_string.characters(), mode) < 0)
+        return Error::from_syscall("mkdir"sv, -errno);
+    return {};
+#endif
+}
+
 }
