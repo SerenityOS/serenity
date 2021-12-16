@@ -1207,7 +1207,7 @@ public:
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio rpath wpath cpath tty sigaction"));
+    TRY(Core::System::pledge("stdio rpath wpath cpath tty sigaction prot_exec"));
 #endif
 
     bool gc_on_every_allocation = false;
