@@ -121,7 +121,7 @@ private:
     ErrorOr<Vector<i32>, LoaderError> decode_fixed_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
     ErrorOr<Vector<i32>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, InputBitStream& bit_input);
     ErrorOr<Vector<i32>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, InputBitStream& bit_input);
-    ErrorOr<Vector<i32>, LoaderError> decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input);
+    MaybeLoaderError decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, InputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
     ALWAYS_INLINE Vector<i32> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, InputBitStream& bit_input);
 
