@@ -31,7 +31,7 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
     return false;
 }
 
-GL::GLVertex Clipper::clip_intersection_point(const GL::GLVertex& p1, const GL::GLVertex& p2, ClipPlane plane_index)
+Vertex Clipper::clip_intersection_point(const Vertex& p1, const Vertex& p2, ClipPlane plane_index)
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
@@ -42,14 +42,14 @@ GL::GLVertex Clipper::clip_intersection_point(const GL::GLVertex& p1, const GL::
     float x2 = clip_plane_normals[plane_index].dot(p2.position);
     float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
-    GL::GLVertex out;
+    Vertex out;
     out.position = p1.position * (1 - a) + p2.position * a;
     out.color = p1.color * (1 - a) + p2.color * a;
     out.tex_coord = p1.tex_coord * (1 - a) + p2.tex_coord * a;
     return out;
 }
 
-void Clipper::clip_triangle_against_frustum(Vector<GL::GLVertex>& input_verts)
+void Clipper::clip_triangle_against_frustum(Vector<Vertex>& input_verts)
 {
     list_a = input_verts;
     list_b.clear_with_capacity();
