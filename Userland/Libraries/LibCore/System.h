@@ -27,6 +27,7 @@ ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
 ErrorOr<void> setgroups(Span<gid_t const>);
+ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
@@ -61,5 +62,6 @@ ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
 ErrorOr<bool> isatty(int fd);
+ErrorOr<void> symlink(StringView target, StringView link_path);
 
 }
