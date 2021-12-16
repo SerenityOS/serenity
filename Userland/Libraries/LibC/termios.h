@@ -10,8 +10,10 @@
 
 __BEGIN_DECLS
 
+int tcdrain(int fd);
 int tcgetattr(int fd, struct termios*);
 int tcsetattr(int fd, int optional_actions, const struct termios*);
+int tcsendbreak(int fd, int duration);
 int tcflow(int fd, int action);
 int tcflush(int fd, int queue_selector);
 
