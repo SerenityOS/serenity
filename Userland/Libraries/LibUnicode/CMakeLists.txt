@@ -21,5 +21,5 @@ target_link_libraries(LibUnicode LibCore)
 target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
 
 if (DEFINED UNICODE_DATA_SOURCES)
-    target_link_libraries(LibUnicode LibUnicodeData)
+    add_dependencies(LibUnicode LibUnicodeData)
 endif()
