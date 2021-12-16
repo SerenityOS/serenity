@@ -10,7 +10,7 @@
 #include <LibGL/GLStruct.h>
 #include <LibGfx/Vector4.h>
 
-namespace GL {
+namespace SoftGPU {
 
 class Clipper final {
     enum ClipPlane : u8 {
@@ -46,13 +46,13 @@ class Clipper final {
 public:
     Clipper() { }
 
-    void clip_triangle_against_frustum(Vector<GLVertex>& input_vecs);
+    void clip_triangle_against_frustum(Vector<GL::GLVertex>& input_vecs);
 
 private:
     bool point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane);
-    GLVertex clip_intersection_point(const GLVertex& vec, const GLVertex& prev_vec, ClipPlane plane_index);
-    Vector<GLVertex> list_a;
-    Vector<GLVertex> list_b;
+    GL::GLVertex clip_intersection_point(const GL::GLVertex& vec, const GL::GLVertex& prev_vec, ClipPlane plane_index);
+    Vector<GL::GLVertex> list_a;
+    Vector<GL::GLVertex> list_b;
 };
 
 }

@@ -1,9 +1,4 @@
 set(SOURCES
-    Tex/NameAllocator.cpp
-    Tex/Sampler2D.cpp
-    Tex/Texture2D.cpp
-    Tex/TextureUnit.cpp
-    Clipper.cpp
     GLBlend.cpp
     GLColor.cpp
     GLContext.cpp
@@ -18,9 +13,11 @@ set(SOURCES
     GLVert.cpp
     GLVertexArrays.cpp
     SoftwareGLContext.cpp
-    SoftwareRasterizer.cpp
-    DepthBuffer.cpp
+    Tex/NameAllocator.cpp
+    Tex/Sampler2D.cpp
+    Tex/Texture2D.cpp
+    Tex/TextureUnit.cpp
 )
 
 serenity_lib(LibGL gl)
-target_link_libraries(LibGL LibM LibCore LibGfx)
+target_link_libraries(LibGL LibM LibCore LibGfx LibSoftGPU)

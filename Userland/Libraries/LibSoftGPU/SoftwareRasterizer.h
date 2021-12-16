@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "DepthBuffer.h"
-#include "GL/gl.h"
-#include "GLStruct.h"
-#include "Tex/Texture2D.h"
-#include "Tex/TextureUnit.h"
 #include <AK/Array.h>
 #include <AK/OwnPtr.h>
+#include <LibGL/GL/gl.h>
+#include <LibGL/GLStruct.h>
+#include <LibGL/Tex/Texture2D.h>
+#include <LibGL/Tex/TextureUnit.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/DepthBuffer.h>
 
-namespace GL {
+namespace SoftGPU {
 
 struct RasterizerOptions {
     bool shade_smooth { true };
@@ -56,7 +56,7 @@ class SoftwareRasterizer final {
 public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
-    void submit_triangle(GLTriangle const& triangle, TextureUnit::BoundList const& bound_texture_units);
+    void submit_triangle(GL::GLTriangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
