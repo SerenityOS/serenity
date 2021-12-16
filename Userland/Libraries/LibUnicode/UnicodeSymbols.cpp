@@ -15,6 +15,7 @@
 #    endif
 #else
 #    include <AK/Function.h>
+#    include <LibUnicode/Locale.h>
 #endif
 
 namespace Unicode::Detail {
@@ -28,7 +29,10 @@ template<typename ReturnType, typename... ParameterTypes>
 struct FunctionStub<Function<ReturnType(ParameterTypes...)>> {
     static constexpr auto make_stub()
     {
-        return [](ParameterTypes...) -> ReturnType { return {}; };
+        if constexpr (IsVoid<ReturnType>)
+            return [](ParameterTypes...) {};
+        else
+            return [](ParameterTypes...) -> ReturnType { return {}; };
     }
 };
 
@@ -86,6 +90,25 @@ Symbols const& Symbols::ensure_loaded()
     load_symbol(symbols.script_from_string, "unicode_script_from_string");
     load_symbol(symbols.code_point_has_script, "unicode_code_point_has_script");
     load_symbol(symbols.code_point_has_script_extension, "unicode_code_point_has_script_extension");
+
+    load_symbol(symbols.locale_from_string, "unicode_locale_from_string");
+    load_symbol(symbols.get_locale_language_mapping, "unicode_get_locale_language_mapping");
+    load_symbol(symbols.get_locale_territory_mapping, "unicode_get_locale_territory_mapping");
+    load_symbol(symbols.get_locale_script_tag_mapping, "unicode_get_locale_script_tag_mapping");
+    load_symbol(symbols.get_locale_long_currency_mapping, "unicode_get_locale_long_currency_mapping");
+    load_symbol(symbols.get_locale_short_currency_mapping, "unicode_get_locale_short_currency_mapping");
+    load_symbol(symbols.get_locale_narrow_currency_mapping, "unicode_get_locale_narrow_currency_mapping");
+    load_symbol(symbols.get_locale_numeric_currency_mapping, "unicode_get_locale_numeric_currency_mapping");
+    load_symbol(symbols.get_locale_key_mapping, "unicode_get_locale_key_mapping");
+    load_symbol(symbols.get_locale_list_pattern_mapping, "unicode_get_locale_list_pattern_mapping");
+    load_symbol(symbols.resolve_language_alias, "unicode_resolve_language_alias");
+    load_symbol(symbols.resolve_territory_alias, "unicode_resolve_territory_alias");
+    load_symbol(symbols.resolve_script_tag_alias, "unicode_resolve_script_tag_alias");
+    load_symbol(symbols.resolve_variant_alias, "unicode_resolve_variant_alias");
+    load_symbol(symbols.resolve_subdivision_alias, "unicode_resolve_subdivision_alias");
+    load_symbol(symbols.resolve_complex_language_aliases, "unicode_resolve_complex_language_aliases");
+    load_symbol(symbols.add_likely_subtags, "unicode_add_likely_subtags");
+    load_symbol(symbols.resolve_most_likely_territory, "unicode_resolve_most_likely_territory");
 
     initialized = true;
     return symbols;
