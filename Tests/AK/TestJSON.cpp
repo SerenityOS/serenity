@@ -122,3 +122,9 @@ TEST_CASE(json_u64_roundtrip)
     EXPECT_EQ_FORCE(value.is_error(), false);
     EXPECT_EQ(value.value().as_u64(), big_value);
 }
+
+TEST_CASE(json_parse_empty_string)
+{
+    auto value = JsonValue::from_string("");
+    EXPECT_EQ(value.value().is_null(), true);
+}
