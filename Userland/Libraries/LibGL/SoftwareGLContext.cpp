@@ -685,6 +685,8 @@ void SoftwareGLContext::gl_enable(GLenum capability)
     switch (capability) {
     case GL_CULL_FACE:
         m_cull_faces = true;
+        rasterizer_options.enable_culling = true;
+        update_rasterizer_options = true;
         break;
     case GL_DEPTH_TEST:
         m_depth_test_enabled = true;
@@ -750,6 +752,8 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     switch (capability) {
     case GL_CULL_FACE:
         m_cull_faces = false;
+        rasterizer_options.enable_culling = false;
+        update_rasterizer_options = true;
         break;
     case GL_DEPTH_TEST:
         m_depth_test_enabled = false;
@@ -1007,6 +1011,10 @@ void SoftwareGLContext::gl_front_face(GLenum face)
     RETURN_WITH_ERROR_IF(face < GL_CW || face > GL_CCW, GL_INVALID_ENUM);
 
     m_front_face = face;
+
+    auto rasterizer_options = m_rasterizer.options();
+    rasterizer_options.front_face = face;
+    m_rasterizer.set_options(rasterizer_options);
 }
 
 void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
@@ -1016,6 +1024,10 @@ void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
     RETURN_WITH_ERROR_IF(cull_mode < GL_FRONT || cull_mode > GL_FRONT_AND_BACK, GL_INVALID_ENUM);
 
     m_culled_sides = cull_mode;
+
+    auto rasterizer_options = m_rasterizer.options();
+    rasterizer_options.culled_sides = cull_mode;
+    m_rasterizer.set_options(rasterizer_options);
 }
 
 GLuint SoftwareGLContext::gl_gen_lists(GLsizei range)

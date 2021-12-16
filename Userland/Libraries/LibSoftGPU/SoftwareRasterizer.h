@@ -50,6 +50,9 @@ struct RasterizerOptions {
     GLenum draw_buffer { GL_BACK };
     GLfloat depth_offset_factor { 0 };
     GLfloat depth_offset_constant { 0 };
+    bool enable_culling { false };
+    GLenum front_face { GL_CCW };
+    GLenum culled_sides { GL_BACK };
 };
 
 class SoftwareRasterizer final {
