@@ -17,13 +17,11 @@ namespace Keyboard {
 #ifndef KERNEL
 // The Kernel explicitly and exclusively links only this file into it.
 // Thus, we cannot even include a reference to the symbol `CharacterMapFile::load_from_file`.
-Optional<CharacterMap> CharacterMap::load_from_file(const String& map_name)
+ErrorOr<CharacterMap> CharacterMap::load_from_file(const String& map_name)
 {
-    auto result = CharacterMapFile::load_from_file(map_name);
-    if (!result.has_value())
-        return {};
+    auto result = TRY(CharacterMapFile::load_from_file(map_name));
 
-    return CharacterMap(map_name, result.value());
+    return CharacterMap(map_name, result);
 }
 #endif
 
