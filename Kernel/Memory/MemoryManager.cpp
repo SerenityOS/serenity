@@ -733,6 +733,25 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
+{
+    dma_buffer_page = allocate_supervisor_physical_page();
+    if (dma_buffer_page.is_null())
+        return ENOMEM;
+    auto region_or_error = allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access);
+    return region_or_error;
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages)
+{
+    VERIFY(!(size % PAGE_SIZE));
+    dma_buffer_pages = allocate_contiguous_supervisor_physical_pages(size);
+    if (dma_buffer_pages.is_empty())
+        return ENOMEM;
+    auto region_or_error = allocate_kernel_region(dma_buffer_pages.first().paddr(), size, name, access);
+    return region_or_error;
+}
+
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
