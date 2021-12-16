@@ -12,7 +12,6 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibGL/GLStruct.h>
 #include <LibGL/SoftwareGLContext.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>

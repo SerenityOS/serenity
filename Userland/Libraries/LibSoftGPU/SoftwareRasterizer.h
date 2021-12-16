@@ -9,7 +9,6 @@
 #include <AK/Array.h>
 #include <AK/OwnPtr.h>
 #include <LibGL/GL/gl.h>
-#include <LibGL/GLStruct.h>
 #include <LibGL/Tex/Texture2D.h>
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGfx/Bitmap.h>

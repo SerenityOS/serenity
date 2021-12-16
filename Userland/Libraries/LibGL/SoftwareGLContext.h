@@ -13,7 +13,6 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
-#include <LibGL/GLStruct.h>
 #include <LibGL/Tex/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
