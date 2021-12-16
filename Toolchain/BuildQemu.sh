@@ -11,8 +11,8 @@ PREFIX="$DIR/Local/qemu"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
-QEMU_VERSION="qemu-6.1.0"
-QEMU_MD5SUM="47f776c276a24f42108ba512a2aa3013"
+QEMU_VERSION="qemu-6.2.0"
+QEMU_MD5SUM="a077669ce58b6ee07ec355e54aad25be"
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
