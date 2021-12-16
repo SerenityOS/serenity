@@ -17,17 +17,6 @@ struct GLColor {
     GLclampf r, g, b, a;
 };
 
-struct GLVertex {
-    FloatVector4 position;
-    FloatVector4 color;
-    FloatVector4 tex_coord;
-    FloatVector3 normal;
-};
-
-struct GLTriangle {
-    GLVertex vertices[3];
-};
-
 struct GLEdge {
     GLfloat x1;
     GLfloat y1;
