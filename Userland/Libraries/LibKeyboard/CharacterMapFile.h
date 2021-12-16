@@ -14,7 +14,7 @@ namespace Keyboard {
 class CharacterMapFile {
 
 public:
-    static Optional<CharacterMapData> load_from_file(const String& filename);
+    static ErrorOr<CharacterMapData> load_from_file(const String& filename);
 
 private:
     static Vector<u32> read_map(const JsonObject& json, const String& name);

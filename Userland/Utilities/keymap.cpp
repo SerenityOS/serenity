@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto character_map = Keyboard::CharacterMap::load_from_file(path);
-    if (!character_map.has_value()) {
+    if (character_map.is_error()) {
         warnln("Cannot read keymap {}", path);
         warnln("Hint: Must be either a keymap name (e.g. 'en-us') or a full path.");
         return 1;
