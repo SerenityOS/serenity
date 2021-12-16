@@ -13,7 +13,7 @@ extern u16 be_u16(u8 const*);
 extern u32 be_u32(u8 const*);
 extern i16 be_i16(u8 const*);
 
-Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
+Optional<Cmap::Subtable::Platform> Cmap::Subtable::platform_id() const
 {
     switch (m_raw_platform_id) {
     case 0:
@@ -25,7 +25,7 @@ Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
     case 4:
         return Platform::Custom;
     default:
-        VERIFY_NOT_REACHED();
+        return {};
     }
 }
 
