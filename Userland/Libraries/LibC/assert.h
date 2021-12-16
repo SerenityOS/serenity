@@ -21,7 +21,6 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 
 #else
 #    define assert(expr) ((void)(0))
-#    define VERIFY_NOT_REACHED() _abort()
 #endif
 
 __attribute__((noreturn)) void _abort();
