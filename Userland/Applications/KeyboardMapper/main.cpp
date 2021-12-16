@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* path = nullptr;
+    StringView path;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -38,25 +38,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
 
     auto keyboard_mapper_widget = (KeyboardMapperWidget*)window->main_widget();
-    if (path != nullptr) {
-        keyboard_mapper_widget->load_from_file(path);
-    } else {
-        keyboard_mapper_widget->load_from_system();
-    }
+    if (path.is_empty())
+        TRY(keyboard_mapper_widget->load_map_from_system());
+    else
+        TRY(keyboard_mapper_widget->load_map_from_file(path));
 
     TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd"));
 
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
             Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open", "/res/keymaps/");
-            if (path.has_value()) {
-                keyboard_mapper_widget->load_from_file(path.value());
-            }
+            if (!path.has_value()) return;
+
+            ErrorOr<void> error_or = keyboard_mapper_widget->load_map_from_file(path.value());
+            if (error_or.is_error())
+                keyboard_mapper_widget->show_error_to_user(error_or.error());
         });
 
     auto save_action = GUI::CommonActions::make_save_action(
         [&](auto&) {
-            keyboard_mapper_widget->save();
+            ErrorOr<void> error_or = keyboard_mapper_widget->save();
+            if (error_or.is_error())
+                keyboard_mapper_widget->show_error_to_user(error_or.error());
         });
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -65,7 +68,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!save_path.has_value())
             return;
 
-        keyboard_mapper_widget->save_to_file(save_path.value());
+        ErrorOr<void> error_or = keyboard_mapper_widget->save_to_file(save_path.value());
+        if (error_or.is_error())
+            keyboard_mapper_widget->show_error_to_user(error_or.error());
     });
 
     auto quit_action = GUI::CommonActions::make_quit_action(
