@@ -83,6 +83,13 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     int rc = syscall(SC_ptrace, &params);
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
+
+ErrorOr<void> setgroups(Span<gid_t const> gids)
+{
+    if (::setgroups(gids.size(), gids.data()) < 0)
+        return Error::from_syscall("setgroups"sv, -errno);
+    return {};
+}
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
