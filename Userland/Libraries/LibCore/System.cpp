@@ -330,6 +330,13 @@ ErrorOr<void> chmod(StringView pathname, mode_t mode)
 #endif
 }
 
+ErrorOr<void> fchmod(int fd, mode_t mode)
+{
+    if (::fchmod(fd, mode) < 0)
+        return Error::from_syscall("fchmod"sv, -errno);
+    return {};
+}
+
 ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 {
     if (!pathname.characters_without_null_termination())
