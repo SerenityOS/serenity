@@ -55,5 +55,9 @@ ErrorOr<struct group> getgrnam(StringView name);
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts);
 ErrorOr<pid_t> posix_spawnp(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[]);
 ErrorOr<pid_t> waitpid(pid_t waitee, int* wstatus, int options);
+ErrorOr<void> setuid(uid_t);
+ErrorOr<void> seteuid(uid_t);
+ErrorOr<void> setgid(gid_t);
+ErrorOr<void> setegid(gid_t);
 
 }
