@@ -68,6 +68,8 @@ protected:
         : Device(major, minor)
         , m_block_size(block_size)
     {
+        // 512 is the minimum sector size in most block devices
+        VERIFY(m_block_size >= 512);
     }
 
 private:
