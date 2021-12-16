@@ -16,7 +16,7 @@
 extern "C" {
 
 extern bool __stdio_is_initialized;
-#ifndef NDEBUG
+
 void __assertion_failed(const char* msg)
 {
     if (__heap_is_stable) {
@@ -32,7 +32,6 @@ void __assertion_failed(const char* msg)
     syscall(SC_set_coredump_metadata, &params);
     abort();
 }
-#endif
 }
 
 void _abort()
