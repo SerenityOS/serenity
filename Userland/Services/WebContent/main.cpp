@@ -14,11 +14,12 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath prot_exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/portal/websocket", "rw"));
+    TRY(Core::System::unveil("/usr/lib/libunicodedata.so.serenity", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ClientConnection>());

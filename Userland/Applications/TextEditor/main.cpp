@@ -18,7 +18,7 @@ using namespace TextEditor;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix prot_exec"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -35,6 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/usr/lib/libunicodedata.so.serenity", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView preview_mode_view = preview_mode;
