@@ -317,7 +317,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBGL_TEX_SCOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
     lagom_lib(GL gl
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SCOURCES}
-        LIBS m LagomGfx)
+        LIBS m LagomGfx LagomSoftGPU)
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML*.cpp")
@@ -394,6 +394,13 @@ if (BUILD_LAGOM)
         LIBS LagomLine LagomRegex
     )
 
+    # SoftGPU
+    file(GLOB_RECURSE LIBSOFTGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSoftGPU/*.cpp")
+    lagom_lib(SoftGPU softgpu
+        SOURCES ${LIBSOFTGPU_SOURCES}
+        LIBS m LagomGfx
+    )
+    
     # SQL
     file(GLOB_RECURSE LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/AST/SyntaxHighlighter.cpp")

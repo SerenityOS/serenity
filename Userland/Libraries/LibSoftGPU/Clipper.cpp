@@ -7,9 +7,9 @@
 
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
-#include <LibGL/Clipper.h>
+#include <LibSoftGPU/Clipper.h>
 
-namespace GL {
+namespace SoftGPU {
 
 bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane)
 {
@@ -31,7 +31,7 @@ bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plan
     return false;
 }
 
-GLVertex Clipper::clip_intersection_point(const GLVertex& p1, const GLVertex& p2, ClipPlane plane_index)
+GL::GLVertex Clipper::clip_intersection_point(const GL::GLVertex& p1, const GL::GLVertex& p2, ClipPlane plane_index)
 {
     // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
     // "Clipping Using Homogeneous Coordinates" Blinn/Newell, 1978
@@ -42,14 +42,14 @@ GLVertex Clipper::clip_intersection_point(const GLVertex& p1, const GLVertex& p2
     float x2 = clip_plane_normals[plane_index].dot(p2.position);
     float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
-    GLVertex out;
+    GL::GLVertex out;
     out.position = p1.position * (1 - a) + p2.position * a;
     out.color = p1.color * (1 - a) + p2.color * a;
     out.tex_coord = p1.tex_coord * (1 - a) + p2.tex_coord * a;
     return out;
 }
 
-void Clipper::clip_triangle_against_frustum(Vector<GLVertex>& input_verts)
+void Clipper::clip_triangle_against_frustum(Vector<GL::GLVertex>& input_verts)
 {
     list_a = input_verts;
     list_b.clear_with_capacity();
