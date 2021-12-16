@@ -8,57 +8,42 @@
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
+#include <LibUnicode/UnicodeSymbols.h>
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
-#    include <LibUnicode/UnicodeNumberFormat.h>
 #endif
 
 namespace Unicode {
 
-Optional<StringView> get_number_system_symbol([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] NumericSymbol symbol)
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_number_system_symbol(locale, system, symbol);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_number_system_symbol(locale, system, symbol);
 }
 
-Optional<NumberGroupings> get_number_system_groupings([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system)
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_number_system_groupings(locale, system);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_number_system_groupings(locale, system);
 }
 
-Optional<NumberFormat> get_standard_number_system_format([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] StandardNumberFormatType type)
+Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_standard_number_system_format(locale, system, type);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_standard_number_system_format(locale, system, type);
 }
 
-Vector<NumberFormat> get_compact_number_system_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView system, [[maybe_unused]] CompactNumberFormatType type)
+Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_compact_number_system_formats(locale, system, type);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_compact_number_system_formats(locale, system, type);
 }
 
-Vector<NumberFormat> get_unit_formats([[maybe_unused]] StringView locale, [[maybe_unused]] StringView unit, [[maybe_unused]] Style style)
+Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
 {
-#if ENABLE_UNICODE_DATA
-    return Detail::get_unit_formats(locale, unit, style);
-#else
-    return {};
-#endif
+    static auto const& symbols = Detail::Symbols::ensure_loaded();
+    return symbols.get_unit_formats(locale, unit, style);
 }
 
 Optional<NumberFormat> select_pattern_with_plurality(Vector<NumberFormat> const& formats, double number)
