@@ -1560,6 +1560,7 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.set("calendar_symbols_list_index_type"sv, s_calendar_symbols_list_index_type);
     generator.set("calendar_index_type"sv, s_calendar_index_type);
     generator.set("time_zone_index_type"sv, s_time_zone_index_type);
+    generator.set("time_zone_list_index_type"sv, s_time_zone_list_index_type);
     generator.set("day_period_index_type"sv, s_day_period_index_type);
     generator.set("day_period_list_index_type"sv, s_day_period_list_index_type);
 
