@@ -1500,9 +1500,7 @@ static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData& 
     generator.append(R"~~~(
 #pragma once
 
-#include <AK/Optional.h>
-#include <AK/StringView.h>
-#include <LibUnicode/Forward.h>
+#include <AK/Types.h>
 
 namespace Unicode {
 )~~~");
@@ -1512,33 +1510,6 @@ namespace Unicode {
     generate_enum(generator, format_identifier, "TimeZone"sv, {}, locale_data.time_zones);
 
     generator.append(R"~~~(
-namespace Detail {
-
-Optional<Calendar> calendar_from_string(StringView calendar);
-
-Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
-Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region);
-
-Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar);
-Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
-Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar);
-Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
-
-Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar);
-Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton);
-Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton);
-
-Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value);
-Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value);
-Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value);
-Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value);
-Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
-
-Optional<TimeZone> time_zone_from_string(StringView time_zone);
-Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style);
-
-}
-
 }
 )~~~");
 
@@ -1567,6 +1538,8 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.append(R"~~~(
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
+#include <AK/Optional.h>
+#include <AK/StringView.h>
 #include <LibUnicode/DateTimeFormat.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/UnicodeDateTimeFormat.h>
@@ -1578,7 +1551,7 @@ namespace Unicode::Detail {
 
     generator.append(R"~~~(
 template <typename SourceType, typename TargetType>
-void convert_calendar_fields(SourceType const& source, TargetType& target)
+static void convert_calendar_fields(SourceType const& source, TargetType& target)
 {
     if (source.era != -1)
         target.era = static_cast<Unicode::CalendarPatternStyle>(source.era);
@@ -1800,6 +1773,7 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     append_from_string("TimeZone"sv, "time_zone"sv, locale_data.time_zones);
 
     generator.append(R"~~~(
+Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region) asm("unicode_get_regional_hour_cycles");
 Vector<Unicode::HourCycle> get_regional_hour_cycles(StringView region)
 {
     auto region_value = hour_cycle_region_from_string(region);
@@ -1839,6 +1813,7 @@ static CalendarData const* find_calendar_data(StringView locale, StringView cale
     return &s_calendars[calendar_index];
 }
 
+Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar) asm("unicode_get_calendar_date_format");
 Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1848,6 +1823,7 @@ Optional<Unicode::CalendarFormat> get_calendar_date_format(StringView locale, St
     return {};
 }
 
+Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar) asm("unicode_get_calendar_time_format");
 Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1857,6 +1833,7 @@ Optional<Unicode::CalendarFormat> get_calendar_time_format(StringView locale, St
     return {};
 }
 
+Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar) asm("unicode_get_calendar_date_time_format");
 Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1866,6 +1843,7 @@ Optional<Unicode::CalendarFormat> get_calendar_date_time_format(StringView local
     return {};
 }
 
+Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar) asm("unicode_get_calendar_available_formats");
 Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar)
 {
     Vector<Unicode::CalendarPattern> result {};
@@ -1881,6 +1859,7 @@ Vector<Unicode::CalendarPattern> get_calendar_available_formats(StringView local
     return result;
 }
 
+Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar) asm("unicode_get_calendar_default_range_format");
 Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1891,7 +1870,9 @@ Optional<Unicode::CalendarRangePattern> get_calendar_default_range_format(String
     return {};
 }
 
-Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton) {
+Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton) asm("unicode_get_calendar_range_formats");
+Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton)
+{
     Vector<Unicode::CalendarRangePattern> result {};
 
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1908,7 +1889,9 @@ Vector<Unicode::CalendarRangePattern> get_calendar_range_formats(StringView loca
     return result;
 }
 
-Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton) {
+Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton) asm("unicode_get_calendar_range12_formats");
+Vector<Unicode::CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton)
+{
     Vector<Unicode::CalendarRangePattern> result {};
 
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
@@ -1956,7 +1939,8 @@ static Span<@string_index_type@ const> find_calendar_symbols(StringView locale, 
     return {};
 }
 
-Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Era value)
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value) asm("unicode_get_calendar_era_symbol");
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value)
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Era, style);
 
@@ -1966,7 +1950,8 @@ Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calen
     return {};
 }
 
-Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Month value)
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value) asm("unicode_get_calendar_month_symbol");
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value)
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Month, style);
 
@@ -1976,7 +1961,8 @@ Optional<StringView> get_calendar_month_symbol(StringView locale, StringView cal
     return {};
 }
 
-Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::Weekday value)
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value) asm("unicode_get_calendar_weekday_symbol");
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value)
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Weekday, style);
 
@@ -1986,7 +1972,8 @@ Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView c
     return {};
 }
 
-Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Unicode::DayPeriod value)
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value) asm("unicode_get_calendar_day_period_symbol");
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value)
 {
     auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::DayPeriod, style);
 
@@ -1996,6 +1983,7 @@ Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringVie
     return {};
 }
 
+Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour) asm("unicode_get_calendar_day_period_symbol_for_hour");
 Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
 {
     auto locale_value = locale_from_string(locale);
@@ -2043,6 +2031,7 @@ static TimeZoneData const* find_time_zone_data(StringView locale, StringView tim
     return &s_time_zones[time_zone_index];
 }
 
+Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style) asm("unicode_get_time_zone_name");
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style)
 {
     if (auto const* data = find_time_zone_data(locale, time_zone); data != nullptr) {
