@@ -63,5 +63,6 @@ ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
+ErrorOr<void> mkdir(StringView path, mode_t);
 
 }
