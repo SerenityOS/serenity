@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SoftwareRasterizer.h"
 #include <AK/Function.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
+#include <LibSoftGPU/SoftwareRasterizer.h>
 
-namespace GL {
+namespace SoftGPU {
 
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
@@ -110,7 +110,7 @@ static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, f
 }
 
 template<typename PS>
-static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GLTriangle& triangle, PS pixel_shader)
+static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GL::GLTriangle& triangle, PS pixel_shader)
 {
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
@@ -494,7 +494,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
-void SoftwareRasterizer::submit_triangle(GLTriangle const& triangle, TextureUnit::BoundList const& bound_texture_units)
+void SoftwareRasterizer::submit_triangle(GL::GLTriangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "DepthBuffer.h"
+#include <LibSoftGPU/DepthBuffer.h>
 
-namespace GL {
+namespace SoftGPU {
 
 DepthBuffer::DepthBuffer(Gfx::IntSize const& size)
     : m_size(size)

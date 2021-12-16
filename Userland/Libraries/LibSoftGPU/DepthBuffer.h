@@ -9,7 +9,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 
-namespace GL {
+namespace SoftGPU {
 
 class DepthBuffer final {
 public:

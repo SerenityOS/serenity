@@ -6,23 +6,23 @@
 
 #pragma once
 
-#include "Clipper.h"
-#include "GLContext.h"
-#include "GLStruct.h"
-#include "SoftwareRasterizer.h"
-#include "Tex/NameAllocator.h"
-#include "Tex/Texture.h"
-#include "Tex/TextureUnit.h"
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibGL/GLContext.h>
+#include <LibGL/GLStruct.h>
+#include <LibGL/Tex/NameAllocator.h>
+#include <LibGL/Tex/Texture.h>
+#include <LibGL/Tex/TextureUnit.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
+#include <LibSoftGPU/Clipper.h>
+#include <LibSoftGPU/SoftwareRasterizer.h>
 
 namespace GL {
 
@@ -229,7 +229,7 @@ private:
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
-    Clipper m_clipper;
+    SoftGPU::Clipper m_clipper;
 
     // Texture objects
     TextureNameAllocator m_name_allocator;
@@ -238,7 +238,7 @@ private:
     TextureUnit* m_active_texture_unit { &m_texture_units[0] };
     TextureUnit::BoundList m_bound_texture_units;
 
-    SoftwareRasterizer m_rasterizer;
+    SoftGPU::SoftwareRasterizer m_rasterizer;
 
     struct Listing {
 
