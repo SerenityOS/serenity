@@ -90,6 +90,22 @@ ErrorOr<void> setgroups(Span<gid_t const> gids)
         return Error::from_syscall("setgroups"sv, -errno);
     return {};
 }
+
+ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags)
+{
+    if (target.is_null() || fs_type.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_mount_params params {
+        { target.characters_without_null_termination(), target.length() },
+        { fs_type.characters_without_null_termination(), fs_type.length() },
+        source_fd,
+        flags
+    };
+    int rc = syscall(SC_mount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("mount", rc, {});
+}
+
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
@@ -429,6 +445,24 @@ ErrorOr<bool> isatty(int fd)
     if (rc < 0)
         return Error::from_syscall("isatty"sv, -errno);
     return rc == 1;
+}
+
+ErrorOr<void> symlink(StringView target, StringView link_path)
+{
+#ifdef __serenity__
+    Syscall::SC_symlink_params params {
+        .target = { target.characters_without_null_termination(), target.length() },
+        .linkpath = { link_path.characters_without_null_termination(), link_path.length() },
+    };
+    int rc = syscall(SC_symlink, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("symlink"sv, rc, {});
+#else
+    String target_string = target;
+    String link_path_string = link_path;
+    if (::symlink(target_string.characters(), link_path_string.characters()) < 0)
+        return Error::from_syscall("symlink"sv, -errno);
+    return {};
+#endif
 }
 
 }
