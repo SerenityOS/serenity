@@ -59,5 +59,6 @@ ErrorOr<void> setuid(uid_t);
 ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
+ErrorOr<bool> isatty(int fd);
 
 }
