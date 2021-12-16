@@ -610,7 +610,6 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
 
     dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
-    // decode residual
     decoded = TRY(decode_residual(decoded, subframe, bit_input));
 
     // approximate the waveform with the predictor
