@@ -209,6 +209,12 @@ int atexit(void (*handler)())
     return __cxa_atexit(__atexit_to_cxa_atexit, (void*)handler, nullptr);
 }
 
+void _abort()
+{
+    asm volatile("ud2");
+    __builtin_unreachable();
+}
+
 void abort()
 {
     // For starters, send ourselves a SIGABRT.

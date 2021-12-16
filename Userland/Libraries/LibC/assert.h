@@ -23,8 +23,6 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define assert(expr) ((void)(0))
 #endif
 
-__attribute__((noreturn)) void _abort();
-
 #ifndef __cplusplus
 #    define static_assert _Static_assert
 #endif
