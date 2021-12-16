@@ -503,4 +503,25 @@ ErrorOr<int> mkstemp(Span<char> pattern)
     return fd;
 }
 
+ErrorOr<void> rename(StringView old_path, StringView new_path)
+{
+    if (old_path.is_null() || new_path.is_null())
+        return Error::from_errno(EFAULT);
+
+#ifdef __serenity__
+    Syscall::SC_rename_params params {
+        .old_path = { old_path.characters_without_null_termination(), old_path.length() },
+        .new_path = { new_path.characters_without_null_termination(), new_path.length() },
+    };
+    int rc = syscall(SC_rename, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("rename"sv, rc, {});
+#else
+    String old_path_string = old_path;
+    String new_path_string = new_path;
+    if (::rename(old_path_string.characters(), new_path_string.characters()) < 0)
+        return Error::from_syscall("rename"sv, -errno);
+    return {};
+#endif
+}
+
 }
