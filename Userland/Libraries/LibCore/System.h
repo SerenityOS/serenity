@@ -65,5 +65,6 @@ ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);
 ErrorOr<pid_t> fork();
+ErrorOr<int> mkstemp(Span<char> pattern);
 
 }

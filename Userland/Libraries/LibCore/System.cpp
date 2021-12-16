@@ -488,4 +488,12 @@ ErrorOr<pid_t> fork()
     return pid;
 }
 
+ErrorOr<int> mkstemp(Span<char> pattern)
+{
+    int fd = ::mkstemp(pattern.data());
+    if (fd < 0)
+        return Error::from_syscall("mkstemp"sv, -errno);
+    return fd;
+}
+
 }
