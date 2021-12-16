@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGL/GLStruct.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
 
@@ -46,13 +46,13 @@ class Clipper final {
 public:
     Clipper() { }
 
-    void clip_triangle_against_frustum(Vector<GL::GLVertex>& input_vecs);
+    void clip_triangle_against_frustum(Vector<Vertex>& input_vecs);
 
 private:
     bool point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane);
-    GL::GLVertex clip_intersection_point(const GL::GLVertex& vec, const GL::GLVertex& prev_vec, ClipPlane plane_index);
-    Vector<GL::GLVertex> list_a;
-    Vector<GL::GLVertex> list_b;
+    Vertex clip_intersection_point(const Vertex& vec, const Vertex& prev_vec, ClipPlane plane_index);
+    Vector<Vertex> list_a;
+    Vector<Vertex> list_b;
 };
 
 }

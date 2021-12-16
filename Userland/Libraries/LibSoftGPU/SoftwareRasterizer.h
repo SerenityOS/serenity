@@ -18,6 +18,8 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/DepthBuffer.h>
+#include <LibSoftGPU/Triangle.h>
+#include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
 
@@ -61,7 +63,7 @@ class SoftwareRasterizer final {
 public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
-    void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<GL::GLVertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units);
+    void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
@@ -74,16 +76,16 @@ public:
     float get_depthbuffer_value(int x, int y);
 
 private:
-    void submit_triangle(GL::GLTriangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
+    void submit_triangle(Triangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
     OwnPtr<DepthBuffer> m_depth_buffer;
     RasterizerOptions m_options;
     Clipper m_clipper;
-    Vector<GL::GLTriangle, 32> m_triangle_list;
-    Vector<GL::GLTriangle, 32> m_processed_triangles;
-    Vector<GL::GLVertex> m_clipped_vertices;
+    Vector<Triangle> m_triangle_list;
+    Vector<Triangle> m_processed_triangles;
+    Vector<Vertex> m_clipped_vertices;
 };
 
 }

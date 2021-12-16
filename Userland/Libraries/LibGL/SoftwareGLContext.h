@@ -23,6 +23,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/SoftwareRasterizer.h>
+#include <LibSoftGPU/Vertex.h>
 
 namespace GL {
 
@@ -176,7 +177,7 @@ private:
     FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
-    Vector<GLVertex, 96> m_vertex_list;
+    Vector<SoftGPU::Vertex> m_vertex_list;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;

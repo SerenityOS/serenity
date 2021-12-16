@@ -111,7 +111,7 @@ static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, f
 }
 
 template<typename PS>
-static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GL::GLTriangle& triangle, PS pixel_shader)
+static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const Triangle& triangle, PS pixel_shader)
 {
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
@@ -495,7 +495,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
-void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<GL::GLVertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
+void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -515,7 +515,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
 
     // Let's construct some triangles
     if (primitive_type == GL_TRIANGLES) {
-        GL::GLTriangle triangle;
+        Triangle triangle;
         for (size_t i = 0; i < vertices.size(); i += 3) {
             triangle.vertices[0] = vertices.at(i);
             triangle.vertices[1] = vertices.at(i + 1);
@@ -525,7 +525,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
         }
     } else if (primitive_type == GL_QUADS) {
         // We need to construct two triangles to form the quad
-        GL::GLTriangle triangle;
+        Triangle triangle;
         VERIFY(vertices.size() % 4 == 0);
         for (size_t i = 0; i < vertices.size(); i += 4) {
             // Triangle 1
@@ -541,7 +541,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
             m_triangle_list.append(triangle);
         }
     } else if (primitive_type == GL_TRIANGLE_FAN || primitive_type == GL_POLYGON) {
-        GL::GLTriangle triangle;
+        Triangle triangle;
         triangle.vertices[0] = vertices.at(0); // Root vertex is always the vertex defined first
 
         for (size_t i = 1; i < vertices.size() - 1; i++) // This is technically `n-2` triangles. We start at index 1
@@ -551,7 +551,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
             m_triangle_list.append(triangle);
         }
     } else if (primitive_type == GL_TRIANGLE_STRIP) {
-        GL::GLTriangle triangle;
+        Triangle triangle;
         for (size_t i = 0; i < vertices.size() - 2; i++) {
             triangle.vertices[0] = vertices.at(i);
             triangle.vertices[1] = vertices.at(i + 1);
@@ -562,7 +562,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
 
     // Now let's transform each triangle and send that to the GPU
     for (size_t i = 0; i < m_triangle_list.size(); i++) {
-        GL::GLTriangle& triangle = m_triangle_list.at(i);
+        Triangle& triangle = m_triangle_list.at(i);
 
         // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
         triangle.vertices[0].position = transform * triangle.vertices[0].position;
@@ -607,7 +607,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
             vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
         }
 
-        GL::GLTriangle tri;
+        Triangle tri;
         tri.vertices[0] = m_clipped_vertices[0];
         for (size_t i = 1; i < m_clipped_vertices.size() - 1; i++) {
             tri.vertices[1] = m_clipped_vertices[i];
@@ -617,7 +617,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
     }
 
     for (size_t i = 0; i < m_processed_triangles.size(); i++) {
-        GL::GLTriangle& triangle = m_processed_triangles.at(i);
+        Triangle& triangle = m_processed_triangles.at(i);
 
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
@@ -648,7 +648,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
     }
 }
 
-void SoftwareRasterizer::submit_triangle(const GL::GLTriangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
+void SoftwareRasterizer::submit_triangle(const Triangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;
