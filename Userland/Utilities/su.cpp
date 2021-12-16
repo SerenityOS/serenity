@@ -8,76 +8,45 @@
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/GetPassword.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-extern "C" int main(int, char**);
-
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty exec id", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty exec id"));
 
-    if (!isatty(STDIN_FILENO)) {
-        warnln("{}: standard in is not a terminal", argv[0]);
-        return 1;
-    }
+    if (!TRY(Core::System::isatty(STDIN_FILENO)))
+        return Error::from_string_literal("Standard input is not a terminal");
 
     const char* user = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (geteuid() != 0) {
-        warnln("Not running as root :(");
-        return 1;
-    }
+    if (geteuid() != 0)
+        return Error::from_string_literal("Not running as root :(");
 
-    auto account_or_error = (user)
-        ? Core::Account::from_name(user)
-        : Core::Account::from_uid(0);
-    if (account_or_error.is_error()) {
-        warnln("Core::Account::from_name: {}", account_or_error.error());
-        return 1;
-    }
+    auto account = TRY(user ? Core::Account::from_name(user) : Core::Account::from_uid(0));
 
-    if (pledge("stdio tty exec id", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    const auto& account = account_or_error.value();
+    TRY(Core::System::pledge("stdio tty exec id"));
 
     if (getuid() != 0 && account.has_password()) {
-        auto password = Core::get_password();
-        if (password.is_error()) {
-            warnln("{}", password.error());
-            return 1;
-        }
-
-        if (!account.authenticate(password.value())) {
-            warnln("Incorrect or disabled password.");
-            return 1;
-        }
+        auto password = TRY(Core::get_password());
+        if (!account.authenticate(password))
+            return Error::from_string_literal("Incorrect or disabled password.");
     }
 
-    if (pledge("stdio exec id", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio exec id"));
 
     if (!account.login()) {
         perror("Core::Account::login");
         return 1;
     }
 
-    if (pledge("stdio exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio exec"));
 
     execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");
