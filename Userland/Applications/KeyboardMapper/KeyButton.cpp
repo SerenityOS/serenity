@@ -53,7 +53,7 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
 
 void KeyButton::click(unsigned)
 {
-    if (on_click)
+    if (on_click && m_face_hovered)
         on_click();
 }
 
@@ -64,17 +64,22 @@ void KeyButton::mousemove_event(GUI::MouseEvent& event)
 
     Gfx::IntRect key_cap_face_rect = { rect().x() + 7, rect().y() + 4, rect().width() - 14, rect().height() - 14 };
 
-    if (key_cap_face_rect.contains(event.position())) {
-        window()->set_cursor(Gfx::StandardCursor::Hand);
-        return;
-    }
-    window()->set_cursor(Gfx::StandardCursor::Arrow);
+    set_face_hovered(key_cap_face_rect.contains(event.position()));
 
     AbstractButton::mousemove_event(event);
 }
 
 void KeyButton::leave_event(Core::Event& event)
 {
-    window()->set_cursor(Gfx::StandardCursor::Arrow);
+    set_face_hovered(false);
     AbstractButton::leave_event(event);
+}
+
+void KeyButton::set_face_hovered(bool value)
+{
+    m_face_hovered = value;
+    if (m_face_hovered)
+        set_override_cursor(Gfx::StandardCursor::Hand);
+    else
+        set_override_cursor(Gfx::StandardCursor::None);
 }
