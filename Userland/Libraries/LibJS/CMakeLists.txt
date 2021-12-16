@@ -20,6 +20,7 @@ set(SOURCES
     Heap/Handle.cpp
     Heap/Heap.cpp
     Heap/HeapBlock.cpp
+    Heap/MarkedVector.cpp
     Interpreter.cpp
     Lexer.cpp
     MarkupGenerator.cpp

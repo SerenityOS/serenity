@@ -119,6 +119,11 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
         }
     }
 
+    for (auto& vector : m_marked_vectors) {
+        for (auto* cell : vector.cells())
+            roots.set(cell);
+    }
+
     if constexpr (HEAP_DEBUG) {
         dbgln("gather_roots:");
         for (auto* root : roots)
@@ -316,6 +321,18 @@ void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList
 {
     VERIFY(m_marked_value_lists.contains(list));
     m_marked_value_lists.remove(list);
+}
+
+void Heap::did_create_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
+{
+    VERIFY(!m_marked_vectors.contains(vector));
+    m_marked_vectors.append(vector);
+}
+
+void Heap::did_destroy_marked_vector(Badge<MarkedVectorBase>, MarkedVectorBase& vector)
+{
+    VERIFY(m_marked_vectors.contains(vector));
+    m_marked_vectors.remove(vector);
 }
 
 void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)

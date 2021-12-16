@@ -228,6 +228,9 @@ class ThrowCompletionOr;
 template<class T>
 class Handle;
 
+template<class T>
+class MarkedVector;
+
 namespace Bytecode {
 class BasicBlock;
 struct Executable;
