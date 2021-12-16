@@ -45,7 +45,7 @@ public:
         }
         // Returns 0 if glyph not found. This corresponds to the "missing glyph"
         u32 glyph_id_for_code_point(u32 code_point) const;
-        Platform platform_id() const;
+        Optional<Platform> platform_id() const;
         u16 encoding_id() const { return m_encoding_id; }
         Format format() const;
 
