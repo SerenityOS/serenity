@@ -22,23 +22,27 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
     auto cont_rect = rect();
     auto& font = this->font();
 
-    Color color;
+    Color face_color;
     if (m_pressed) {
-        color = Color::Cyan;
+        face_color = Color::Cyan;
     } else if (!is_enabled()) {
-        color = Color::LightGray;
+        face_color = Color::LightGray;
     } else {
-        color = Color::White;
+        face_color = Color::White;
     }
 
-    painter.fill_rect(cont_rect, Color::Black);
-    painter.fill_rect({ cont_rect.x() + 1, cont_rect.y() + 1, cont_rect.width() - 2, cont_rect.height() - 2 }, Color::from_rgb(0x999999));
-    painter.fill_rect({ cont_rect.x() + 6, cont_rect.y() + 3, cont_rect.width() - 12, cont_rect.height() - 12 }, Color::from_rgb(0x8C7272));
-    painter.fill_rect({ cont_rect.x() + 7, cont_rect.y() + 4, cont_rect.width() - 14, cont_rect.height() - 14 }, color);
+    Gfx::IntRect key_cap_side_rect = { cont_rect.x() + 1, cont_rect.y() + 1, cont_rect.width() - 2, cont_rect.height() - 2 };
+    Gfx::IntRect key_cap_face_border_rect = { cont_rect.x() + 6, cont_rect.y() + 3, cont_rect.width() - 12, cont_rect.height() - 12 };
+    Gfx::IntRect key_cap_face_rect = { cont_rect.x() + 7, cont_rect.y() + 4, cont_rect.width() - 14, cont_rect.height() - 14 };
+
+    painter.draw_rect(cont_rect, Color::Black); // Key cap border
+    painter.fill_rect(key_cap_side_rect, Color::from_rgb(0x999999));
+    painter.draw_rect(key_cap_face_border_rect, Color::from_rgb(0x8C7272), false);
+    painter.fill_rect(key_cap_face_rect, face_color);
 
     if (!text().is_empty()) {
         Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
-        text_rect.align_within({ cont_rect.x() + 7, cont_rect.y() + 4, cont_rect.width() - 14, cont_rect.height() - 14 }, Gfx::TextAlignment::Center);
+        text_rect.align_within(key_cap_face_rect, Gfx::TextAlignment::Center);
 
         painter.draw_text(text_rect, text(), font, Gfx::TextAlignment::Center, Color::Black, Gfx::TextElision::Right);
         if (is_focused())
@@ -57,9 +61,9 @@ void KeyButton::mousemove_event(GUI::MouseEvent& event)
     if (!is_enabled())
         return;
 
-    Gfx::IntRect c = { rect().x() + 7, rect().y() + 4, rect().width() - 14, rect().height() - 14 };
+    Gfx::IntRect key_cap_face_rect = { rect().x() + 7, rect().y() + 4, rect().width() - 14, rect().height() - 14 };
 
-    if (c.contains(event.position())) {
+    if (key_cap_face_rect.contains(event.position())) {
         window()->set_cursor(Gfx::StandardCursor::Hand);
         return;
     }
