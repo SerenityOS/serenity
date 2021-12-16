@@ -427,7 +427,7 @@ ErrorOr<void> setuid(uid_t uid)
 
 ErrorOr<void> seteuid(uid_t uid)
 {
-    if (::setuid(uid) < 0)
+    if (::seteuid(uid) < 0)
         return Error::from_syscall("seteuid"sv, -errno);
     return {};
 }
@@ -441,7 +441,7 @@ ErrorOr<void> setgid(gid_t gid)
 
 ErrorOr<void> setegid(gid_t gid)
 {
-    if (::setgid(gid) < 0)
+    if (::setegid(gid) < 0)
         return Error::from_syscall("setegid"sv, -errno);
     return {};
 }
