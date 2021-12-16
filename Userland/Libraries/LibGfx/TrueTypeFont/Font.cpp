@@ -368,7 +368,11 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             continue;
         }
         auto subtable = opt_subtable.value();
-        if (subtable.platform_id() == Cmap::Subtable::Platform::Windows) {
+        auto platform = subtable.platform_id();
+        if (!platform.has_value())
+            return Error::from_string_literal("Invalid Platform ID"sv);
+
+        if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
                 cmap.set_active_index(i);
                 break;
