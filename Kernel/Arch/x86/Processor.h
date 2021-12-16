@@ -179,8 +179,6 @@ public:
     void flush_gdt();
     const DescriptorTablePointer& get_gdtr();
 
-    static size_t processor_count() { return processors().size(); }
-
     template<IteratorFunction<Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
     {

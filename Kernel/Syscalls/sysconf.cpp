@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
         return 1;
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
-        return Processor::processor_count();
+        return Processor::count();
     case _SC_OPEN_MAX:
         return OpenFileDescriptions::max_open();
     case _SC_PAGESIZE:
