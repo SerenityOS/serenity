@@ -17,10 +17,11 @@ public:
     virtual ~KeyboardMapperWidget() override;
 
     void create_frame();
-    void load_from_file(const String);
-    void load_from_system();
-    void save();
-    void save_to_file(StringView);
+    ErrorOr<void> load_map_from_file(const String&);
+    ErrorOr<void> load_map_from_system();
+    ErrorOr<void> save();
+    ErrorOr<void> save_to_file(StringView);
+    void show_error_to_user(Error);
 
 protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
