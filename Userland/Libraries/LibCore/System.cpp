@@ -480,4 +480,12 @@ ErrorOr<void> mkdir(StringView path, mode_t mode)
 #endif
 }
 
+ErrorOr<pid_t> fork()
+{
+    pid_t pid = ::fork();
+    if (pid < 0)
+        return Error::from_syscall("fork"sv, -errno);
+    return pid;
+}
+
 }
