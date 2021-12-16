@@ -19,15 +19,22 @@
 
 namespace Audio {
 
-class FlacInputStream : public Variant<Buffered<Core::InputFileStream>, InputMemoryStream> {
+// Experimentally determined to be a decent buffer size on i686:
+// 4K (the default) is slightly worse, and 64K is much worse.
+// At sufficiently large buffer sizes, the advantage of infrequent read() calls is outweighed by the memmove() overhead.
+// There was no intensive fine-tuning done to determine this value, so improvements may definitely be possible.
+constexpr size_t FLAC_BUFFER_SIZE = 8 * KiB;
+
+template<size_t Size = FLAC_BUFFER_SIZE>
+class FlacInputStream : public Variant<Buffered<Core::InputFileStream, Size>, InputMemoryStream> {
 
 public:
-    using Variant<Buffered<Core::InputFileStream>, InputMemoryStream>::Variant;
+    using Variant<Buffered<Core::InputFileStream, Size>, InputMemoryStream>::Variant;
 
     bool seek(size_t pos)
     {
         return this->visit(
-            [&](Buffered<Core::InputFileStream>& buffered) {
+            [&](Buffered<Core::InputFileStream, Size>& buffered) {
                 // Discard the buffer, then seek normally.
                 if (!buffered.discard_or_error(buffered.buffered()))
                     return false;
@@ -142,7 +149,7 @@ private:
 
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };
-    OwnPtr<FlacInputStream> m_stream;
+    OwnPtr<FlacInputStream<FLAC_BUFFER_SIZE>> m_stream;
     Optional<FlacFrameHeader> m_current_frame;
     Vector<Sample> m_current_frame_data;
     u64 m_current_sample_or_frame { 0 };
