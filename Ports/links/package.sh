@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=links
-version=2.22
+version=2.25
 useconfigure=true
-files="http://links.twibright.com/download/links-${version}.tar.bz2 links-${version}.tar.bz2 0364986b3a7f1e8e3171bea362b53f71e1dd3360a8842d66fdc65580ebc2084d"
+files="http://links.twibright.com/download/links-${version}.tar.bz2 links-${version}.tar.bz2 2dd78508698e8279ef4f09a3a2a21e9595040113402da6c553974414fb49dd2c"
 auth_type=sha256
