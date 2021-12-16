@@ -5,98 +5,61 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/GetPassword.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<char const*> command;
     Core::ArgsParser args_parser;
     uid_t as_user_uid = 0;
     args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (pledge("stdio rpath exec id tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath exec id tty"));
 
-    if (seteuid(0) < 0) {
-        perror("seteuid");
-        return 1;
-    }
+    TRY(Core::System::seteuid(0));
 
-    // Fail gracefully if as_user_uid is invalid
-    auto as_user_or_error = Core::Account::from_uid(as_user_uid);
-    if (as_user_or_error.is_error()) {
-        warnln("{}", as_user_or_error.error());
-        return 1;
-    }
+    auto as_user = TRY(Core::Account::from_uid(as_user_uid));
 
     // If the current user is not a superuser, make them authenticate themselves.
     if (auto uid = getuid()) {
-        auto account_or_error = Core::Account::from_uid(uid);
-        if (account_or_error.is_error()) {
-            warnln("{}", account_or_error.error());
-            return 1;
-        }
-
-        auto const& account = account_or_error.value();
+        auto account = TRY(Core::Account::from_uid(uid));
         if (account.has_password()) {
-            auto password_or_error = Core::get_password();
-            if (password_or_error.is_error()) {
-                warnln("{}", password_or_error.error());
-                return 1;
-            }
-
-            auto const& password = password_or_error.value();
-            if (!account.authenticate(password)) {
-                warnln("Incorrect or disabled password.");
-                return 1;
-            }
+            auto password = TRY(Core::get_password());
+            if (!account.authenticate(password))
+                return Error::from_string_literal("Incorrect or disabled password."sv);
         }
     }
 
-    if (pledge("stdio rpath exec id", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath exec id"));
 
-    if (setgid(0) < 0) {
-        perror("setgid");
-        return 1;
-    }
+    TRY(Core::System::setgid(0));
+    TRY(Core::System::setuid(as_user_uid));
 
-    if (setuid(as_user_uid) < 0) {
-        perror("setuid");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath exec"));
 
-    if (pledge("stdio rpath exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    Vector<char const*> arguments;
+    Vector<char const*> exec_arguments;
     for (auto const& arg : command)
-        arguments.append(arg);
-    arguments.append(nullptr);
+        exec_arguments.append(arg);
+    exec_arguments.append(nullptr);
 
     Vector<String> environment_strings;
     if (auto* term = getenv("TERM"))
         environment_strings.append(String::formatted("TERM={}", term));
 
-    Vector<char const*> environment;
+    Vector<char const*> exec_environment;
     for (auto& item : environment_strings)
-        environment.append(item.characters());
-    environment.append(nullptr);
+        exec_environment.append(item.characters());
+    exec_environment.append(nullptr);
 
-    if (execvpe(command.at(0), const_cast<char**>(arguments.data()), const_cast<char**>(environment.data())) < 0) {
+    if (execvpe(command.at(0), const_cast<char**>(exec_arguments.data()), const_cast<char**>(exec_environment.data())) < 0) {
         perror("execvpe");
         exit(1);
     }
