@@ -388,4 +388,32 @@ ErrorOr<pid_t> waitpid(pid_t waitee, int* wstatus, int options)
     return pid;
 }
 
+ErrorOr<void> setuid(uid_t uid)
+{
+    if (::setuid(uid) < 0)
+        return Error::from_syscall("setuid"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> seteuid(uid_t uid)
+{
+    if (::setuid(uid) < 0)
+        return Error::from_syscall("seteuid"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> setgid(gid_t gid)
+{
+    if (::setgid(gid) < 0)
+        return Error::from_syscall("setgid"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> setegid(gid_t gid)
+{
+    if (::setgid(gid) < 0)
+        return Error::from_syscall("setegid"sv, -errno);
+    return {};
+}
+
 }
