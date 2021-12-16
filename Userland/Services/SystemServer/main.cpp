@@ -15,6 +15,8 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -462,22 +464,19 @@ static void create_tmp_coredump_directory()
     umask(old_umask);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool user = false;
     Core::ArgsParser args_parser;
     args_parser.add_option(user, "Run in user-mode", "user", 'u');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!user) {
         mount_all_filesystems();
         prepare_synthetic_filesystems();
     }
 
-    if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction"));
 
     if (!user) {
         create_tmp_coredump_directory();
