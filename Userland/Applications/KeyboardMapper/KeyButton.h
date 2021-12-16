@@ -28,4 +28,6 @@ private:
     KeyButton() = default;
 
     bool m_pressed { false };
+    bool m_face_hovered { false };
+    void set_face_hovered(bool value);
 };
