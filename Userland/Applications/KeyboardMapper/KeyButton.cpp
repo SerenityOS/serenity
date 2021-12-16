@@ -40,14 +40,15 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
     painter.draw_rect(key_cap_face_border_rect, Color::from_rgb(0x8C7272), false);
     painter.fill_rect(key_cap_face_rect, face_color);
 
-    if (!text().is_empty()) {
-        Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
-        text_rect.align_within(key_cap_face_rect, Gfx::TextAlignment::Center);
+    if (text().is_empty() || text().starts_with('\0'))
+        return;
 
-        painter.draw_text(text_rect, text(), font, Gfx::TextAlignment::Center, Color::Black, Gfx::TextElision::Right);
-        if (is_focused())
-            painter.draw_rect(text_rect.inflated(6, 4), palette().focus_outline());
-    }
+    Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
+    text_rect.align_within(key_cap_face_rect, Gfx::TextAlignment::Center);
+
+    painter.draw_text(text_rect, text(), font, Gfx::TextAlignment::Center, Color::Black, Gfx::TextElision::Right);
+    if (is_focused())
+        painter.draw_rect(text_rect.inflated(6, 4), palette().focus_outline());
 }
 
 void KeyButton::click(unsigned)
