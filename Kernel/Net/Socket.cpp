@@ -162,7 +162,7 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
         if (size < sizeof(timeval))
             return EINVAL;
         {
-            timeval tv = m_send_timeout.to_timeval();
+            timeval tv = m_receive_timeout.to_timeval();
             TRY(copy_to_user(static_ptr_cast<timeval*>(value), &tv));
         }
         size = sizeof(timeval);
