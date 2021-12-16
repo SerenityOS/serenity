@@ -713,30 +713,9 @@ static void generate_unicode_locale_header(Core::File& file, UnicodeLocaleData&)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    // FIXME: Update unicode_data.cmake to not require a header.
     generator.append(R"~~~(
 #pragma once
-
-#include <AK/Optional.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
-#include <LibUnicode/Forward.h>
-
-namespace Unicode {
-)~~~");
-
-    generator.append(R"~~~(
-namespace Detail {
-
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol);
-Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
-Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
-Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
-Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style);
-Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
-
-}
-
-}
 )~~~");
 
     VERIFY(file.write(generator.as_string_view()));
@@ -755,7 +734,10 @@ static void generate_unicode_locale_implementation(Core::File& file, UnicodeLoca
     generator.append(R"~~~(
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
+#include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/StringView.h>
+#include <AK/Vector.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
 #include <LibUnicode/UnicodeNumberFormat.h>
@@ -868,6 +850,7 @@ static NumberSystem const* find_number_system(StringView locale, StringView syst
     return nullptr;
 }
 
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol) asm("unicode_get_number_system_symbol");
 Optional<StringView> get_number_system_symbol(StringView locale, StringView system, Unicode::NumericSymbol symbol)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
@@ -883,6 +866,7 @@ Optional<StringView> get_number_system_symbol(StringView locale, StringView syst
     return {};
 }
 
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system) asm("unicode_get_number_system_groupings");
 Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
@@ -890,6 +874,7 @@ Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringV
     return {};
 }
 
+Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type) asm("unicode_get_standard_number_system_format");
 Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
@@ -919,6 +904,7 @@ Optional<Unicode::NumberFormat> get_standard_number_system_format(StringView loc
     return {};
 }
 
+Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type) asm("unicode_get_compact_number_system_formats");
 Vector<Unicode::NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
 {
     Vector<Unicode::NumberFormat> formats;
@@ -970,6 +956,7 @@ static Unit const* find_units(StringView locale, StringView unit)
     return nullptr;
 }
 
+Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style) asm("unicode_get_unit_formats");
 Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
 {
     Vector<Unicode::NumberFormat> formats;
