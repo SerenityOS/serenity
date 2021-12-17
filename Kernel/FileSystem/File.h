@@ -91,7 +91,7 @@ public:
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
     virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
-    virtual ErrorOr<void> stat(::stat&) const { return EBADF; }
+    virtual ErrorOr<struct stat> stat() const { return EBADF; }
 
     // Although this might be better described "name" or "description", these terms already have other meanings.
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const = 0;

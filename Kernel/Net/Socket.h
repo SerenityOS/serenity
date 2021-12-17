@@ -104,7 +104,7 @@ public:
     // ^File
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
-    virtual ErrorOr<void> stat(::stat&) const override;
+    virtual ErrorOr<struct stat> stat() const override;
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }

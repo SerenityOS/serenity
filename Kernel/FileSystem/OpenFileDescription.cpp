@@ -97,13 +97,13 @@ Thread::FileBlocker::BlockFlags OpenFileDescription::should_unblock(Thread::File
     return unblock_flags;
 }
 
-ErrorOr<void> OpenFileDescription::stat(::stat& buffer)
+ErrorOr<struct stat> OpenFileDescription::stat()
 {
     MutexLocker locker(m_lock);
     // FIXME: This is due to the Device class not overriding File::stat().
     if (m_inode)
-        return m_inode->metadata().stat(buffer);
-    return m_file->stat(buffer);
+        return m_inode->metadata().stat();
+    return m_file->stat();
 }
 
 ErrorOr<off_t> OpenFileDescription::seek(off_t offset, int whence)
