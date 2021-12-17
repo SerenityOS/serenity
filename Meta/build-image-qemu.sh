@@ -7,24 +7,10 @@ die() {
     exit 1
 }
 
-if [ "$(id -u)" != 0 ]; then
-    # Check for doas instead of sudo, see https://man.openbsd.org/doas.conf#keepenv
-    # for the required configuration to pass through environment variables since we
-    # don't have -E.
-    # If we have doas and sudo installed but only want to use sudo, set the NO_DOAS
-    # environment variable to anything.
-    if [ -z "$NO_DOAS" ] && type doas > /dev/null 2>&1; then
-        exec doas -- "$0" "$@" || die "this script needs to run as root"
-    else
-        exec sudo -E -- "$0" "$@" || die "this script needs to run as root"
-    fi
-else
-    if [ -z "$NO_DOAS" ] && type doas > /dev/null 2>&1; then
-        : "${SUDO_UID:=$(id -u "$DOAS_USER")}" "${SUDO_GID:="$(id -g "$DOAS_USER")"}"
-    else
-        : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
-    fi
-fi
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+# shellcheck source=/dev/null
+. "$script_path/escalate-privilege.sh" || die "this script needs to run as root"
 
 if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
@@ -33,15 +19,13 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
 fi
 
-SCRIPT_DIR="$(dirname "${0}")"
-
 # Prepend the toolchain qemu directory so we pick up QEMU from there
-PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
+PATH="$script_path/../Toolchain/Local/qemu/bin:$PATH"
 
 # Also prepend the i686 toolchain directory because that's where most
 # people will have their QEMU binaries if they built them before the
 # directory was changed to Toolchain/Local/qemu.
-PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
+PATH="$script_path/../Toolchain/Local/i686/bin:$PATH"
 
 # We depend on GNU coreutils du for the --apparent-size extension.
 # GNU coreutils is a build dependency.
@@ -169,7 +153,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
 if [ $use_genext2fs = 1 ]; then
