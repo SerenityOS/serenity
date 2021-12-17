@@ -700,9 +700,10 @@ int gettid()
     return cached_tid;
 }
 
-void sysbeep()
+int sysbeep()
 {
-    syscall(SC_beep);
+    int rc = syscall(SC_beep);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int fsync(int fd)
