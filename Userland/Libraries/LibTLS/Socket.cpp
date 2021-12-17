@@ -261,7 +261,7 @@ bool TLSv12::flush()
         dbgln("SENDING...");
         print_buffer(out_buffer, out_buffer_length);
     }
-    if (Core::Socket::write(&out_buffer[out_buffer_index], out_buffer_length)) {
+    if (!Core::Socket::write(&out_buffer[out_buffer_index], out_buffer_length).is_error()) {
         write_buffer().clear();
         return true;
     }

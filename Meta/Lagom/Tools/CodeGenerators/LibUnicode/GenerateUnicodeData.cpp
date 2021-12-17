@@ -630,7 +630,7 @@ Optional<Script> script_from_string(StringView script);
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 static void generate_unicode_data_implementation(Core::File& file, UnicodeData const& unicode_data)
@@ -960,7 +960,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)

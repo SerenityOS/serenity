@@ -24,7 +24,7 @@ public:
     bool has_error() const { return !m_error_string.is_null(); }
     const char* error_string() const { return m_error_string.characters(); }
 
-    void write_samples(const u8* samples, size_t size);
+    ErrorOr<void> write_samples(const u8* samples, size_t size);
     void finalize(); // You can finalize manually or let the destructor do it.
 
     u32 sample_rate() const { return m_sample_rate; }
@@ -40,7 +40,7 @@ public:
     void clear_error() { m_error_string = String(); }
 
 private:
-    void write_header();
+    ErrorOr<void> write_header();
     RefPtr<Core::File> m_file;
     String m_error_string;
     bool m_finalized { false };

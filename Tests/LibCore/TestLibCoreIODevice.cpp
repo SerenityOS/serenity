@@ -29,8 +29,8 @@ TEST_CASE(file_readline)
     auto outfile_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
     auto outputfile = outfile_or_error.release_value();
     while (file->can_read_line()) {
-        outputfile->write(file->read_line());
-        outputfile->write("\n");
+        MUST(outputfile->write(file->read_line()));
+        MUST(outputfile->write("\n"));
     }
     file->close();
     outputfile->close();
@@ -81,10 +81,12 @@ TEST_CASE(file_lines_range)
     auto output_path = "/tmp/output.txt";
     auto outfile_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
     auto outputfile = outfile_or_error.release_value();
+    StringBuilder builder;
     for (auto line : file->lines()) {
-        outputfile->write(line);
-        outputfile->write("\n");
+        builder.append(line);
+        builder.append("\n");
     }
+    MUST(outputfile->write(builder.build()));
     file->close();
     outputfile->close();
     VERIFY(files_have_same_contents(path, output_path));

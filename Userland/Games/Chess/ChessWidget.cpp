@@ -634,25 +634,26 @@ bool ChessWidget::export_pgn(StringView export_path) const
     }
     auto& file = *file_or_error.value();
 
+    StringBuilder builder;
     // Tag Pair Section
-    file.write("[Event \"Casual Game\"]\n");
-    file.write("[Site \"SerenityOS Chess\"]\n");
-    file.write(String::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d")));
-    file.write("[Round \"1\"]\n");
+    builder.append("[Event \"Casual Game\"]\n");
+    builder.append("[Site \"SerenityOS Chess\"]\n");
+    builder.appendff("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d"));
+    builder.append("[Round \"1\"]\n");
 
     String username(getlogin());
     const String player1 = (!username.is_empty() ? username : "?");
     const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine" : "?");
-    file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
-    file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
+    builder.appendff("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2);
+    builder.appendff("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2);
 
-    file.write(String::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
-    file.write("[WhiteElo \"?\"]\n");
-    file.write("[BlackElo \"?\"]\n");
-    file.write("[Variant \"Standard\"]\n");
-    file.write("[TimeControl \"-\"]\n");
-    file.write("[Annotator \"SerenityOS Chess\"]\n");
-    file.write("\n");
+    builder.appendff("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
+    builder.append("[WhiteElo \"?\"]\n");
+    builder.append("[BlackElo \"?\"]\n");
+    builder.append("[Variant \"Standard\"]\n");
+    builder.append("[TimeControl \"-\"]\n");
+    builder.append("[Annotator \"SerenityOS Chess\"]\n");
+    builder.append("\n");
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
@@ -660,20 +661,21 @@ bool ChessWidget::export_pgn(StringView export_path) const
 
         if (i + 1 < m_board.moves().size()) {
             const String black = m_board.moves().at(i + 1).to_algebraic();
-            file.write(String::formatted("{}. {} {} ", move_no, white, black));
+            builder.appendff("{}. {} {} ", move_no, white, black);
         } else {
-            file.write(String::formatted("{}. {} ", move_no, white));
+            builder.appendff("{}. {} ", move_no, white);
         }
     }
 
-    file.write("{ ");
-    file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()));
-    file.write(" } ");
-    file.write(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
-    file.write("\n");
+    builder.append("{ ");
+    builder.append(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()));
+    builder.append(" } ");
+    builder.append(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
+    builder.append("\n");
 
+    auto result = file.write(builder.string_view());
     file.close();
-    return true;
+    return !result.is_error();
 }
 
 void ChessWidget::flip_board()

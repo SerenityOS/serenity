@@ -99,7 +99,9 @@ void RunWindow::do_run()
         // Remove any existing history entry, prepend the successful run string to history and save.
         m_path_history.remove_all_matching([&](String v) { return v == run_input; });
         m_path_history.prepend(run_input);
-        save_history();
+        auto result = save_history();
+        if (result.is_error())
+            warnln("Unhandled error: {}", result.error().string_literal());
 
         close();
         return;
@@ -183,14 +185,13 @@ void RunWindow::load_history()
     }
 }
 
-void RunWindow::save_history()
+ErrorOr<void> RunWindow::save_history()
 {
-    auto file_or_error = Core::File::open(history_file_path(), Core::OpenMode::WriteOnly);
-    if (file_or_error.is_error())
-        return;
+    auto file = TRY(Core::File::open(history_file_path(), Core::OpenMode::WriteOnly));
 
-    auto file = file_or_error.release_value();
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
-        file->write(String::formatted("{}\n", m_path_history[i]));
+        TRY(file->write(String::formatted("{}\n", m_path_history[i])));
+
+    return {};
 }

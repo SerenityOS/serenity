@@ -46,7 +46,7 @@ static bool write_variable(StringView name, StringView value)
         warnln("Failed to open {}: {}", path, file->error_string());
         return false;
     }
-    if (!file->write(value)) {
+    if (file->write(value).is_error()) {
         warnln("Failed to write {}: {}", path, file->error_string());
         return false;
     }

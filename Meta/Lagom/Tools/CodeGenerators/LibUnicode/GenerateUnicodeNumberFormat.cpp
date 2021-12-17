@@ -739,7 +739,7 @@ Optional<NumericSymbol> numeric_symbol_from_string(StringView numeric_symbol);
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
@@ -1004,7 +1004,7 @@ Vector<Unicode::NumberFormat> get_unit_formats(StringView locale, StringView uni
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

@@ -167,8 +167,8 @@ public:
     {
         auto serialized = response.to_string();
         u32 length = serialized.length();
-        m_socket->write((const u8*)&length, sizeof(length));
-        m_socket->write(serialized);
+        MUST(m_socket->write((const u8*)&length, sizeof(length)));
+        MUST(m_socket->write(serialized));
     }
 
     void handle_request(const JsonObject& request)

@@ -172,12 +172,11 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
 
 void Client::send_raw(StringView data)
 {
-    if (m_tls) {
-        m_tls_socket->write(data.bytes());
-        m_tls_socket->write("\r\n"sv.bytes());
-    } else {
-        m_socket->write(data.bytes());
-        m_socket->write("\r\n"sv.bytes());
+    RefPtr<Core::Socket> socket = m_tls ? m_tls_socket : m_socket;
+    auto result = socket->write(String::formatted("{}{}", data.bytes(), "\r\n"sv.bytes()));
+    if (result.is_error()) {
+        dbgln("Unhandled error: {}", result.error().string_literal());
+        VERIFY_NOT_REACHED();
     }
 }
 

@@ -949,7 +949,7 @@ int main(int argc, char** argv)
         FormattedSyscallBuilder builder(syscall_name);
         format_syscall(builder, syscall_function, arg1, arg2, arg3, res);
 
-        if (!trace_file->write(builder.string_view())) {
+        if (trace_file->write(builder.string_view()).is_error()) {
             warnln("write: {}", trace_file->error_string());
             return 1;
         }

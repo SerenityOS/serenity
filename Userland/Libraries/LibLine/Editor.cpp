@@ -328,9 +328,13 @@ bool Editor::save_history(String const& path)
         return false;
     auto file = file_or_error.release_value();
     final_history.take_first();
+    StringBuilder builder;
     for (auto const& entry : final_history)
-        file->write(String::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
-
+        builder.append(String::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
+    auto result = file->write(builder.build());
+    if (result.is_error()) {
+        return false;
+    }
     m_history_dirty = false;
     return true;
 }

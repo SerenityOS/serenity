@@ -24,7 +24,11 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 void Endpoint::send_command(const Command& command)
 {
     dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
-    m_out->write(command.to_string());
+    auto result = m_out->write(command.to_string());
+    if (result.is_error()) {
+        dbgln("Unhandled error: {}", result.error().string_literal());
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void Endpoint::event(Core::Event& event)

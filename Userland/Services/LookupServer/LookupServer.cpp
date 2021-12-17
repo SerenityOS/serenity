@@ -249,7 +249,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
     if (!udp_socket->connect(nameserver, 53))
         return {};
 
-    if (!udp_socket->write(buffer))
+    if (udp_socket->write(buffer).is_error())
         return {};
 
     u8 response_buffer[4096];

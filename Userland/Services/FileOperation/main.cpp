@@ -275,7 +275,7 @@ int execute_work_items(Vector<WorkItem> const& items)
                 auto buffer = source_file.read(65536);
                 if (buffer.is_empty())
                     break;
-                if (!destination_file.write(buffer)) {
+                if (destination_file.write(buffer).is_error()) {
                     report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
                     return false;
                 }

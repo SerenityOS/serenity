@@ -122,7 +122,7 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
         *buffer.offset_pointer(2), *buffer.offset_pointer(3),
         *buffer.offset_pointer(4), *buffer.offset_pointer(5),
         *buffer.offset_pointer(6), *buffer.offset_pointer(7));
-    if (m_file->write(buffer.data(), (int)buffer.size())) {
+    if (!m_file->write(buffer.data(), (int)buffer.size()).is_error()) {
         if (block == m_end_of_file)
             m_end_of_file++;
         return {};

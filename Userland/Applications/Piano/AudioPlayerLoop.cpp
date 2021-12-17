@@ -54,7 +54,7 @@ void AudioPlayerLoop::enqueue_audio()
         m_track_manager.set_should_loop(false);
         do {
             m_track_manager.fill_buffer(m_buffer);
-            m_wav_writer.write_samples(reinterpret_cast<u8*>(m_buffer.data()), buffer_size);
+            MUST(m_wav_writer.write_samples(reinterpret_cast<u8*>(m_buffer.data()), buffer_size));
         } while (m_track_manager.time());
         m_track_manager.reset();
         m_track_manager.set_should_loop(true);

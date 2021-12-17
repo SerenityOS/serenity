@@ -203,8 +203,8 @@ void KeyboardMapperWidget::save_to_file(StringView filename)
         return;
     }
 
-    bool result = file->write(file_content);
-    if (!result) {
+    auto result = file->write(file_content);
+    if (result.is_error()) {
         int error_number = errno;
         StringBuilder sb;
         sb.append("Unable to save file. Error: ");

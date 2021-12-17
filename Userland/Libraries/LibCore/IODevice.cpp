@@ -275,15 +275,19 @@ bool IODevice::truncate(off_t size)
     return true;
 }
 
-bool IODevice::write(const u8* data, int size)
+ErrorOr<void> IODevice::write(const u8* data, int size)
 {
     int rc = ::write(m_fd, data, size);
     if (rc < 0) {
         set_error(errno);
-        perror("IODevice::write: write");
-        return false;
+        return Error::from_errno(error());
     }
-    return rc == size;
+    return {};
+}
+
+ErrorOr<void> IODevice::write(StringView sv)
+{
+    return IODevice::write((const u8*)sv.characters_without_null_termination(), sv.length());
 }
 
 void IODevice::set_fd(int fd)
@@ -293,11 +297,6 @@ void IODevice::set_fd(int fd)
 
     m_fd = fd;
     did_update_fd(fd);
-}
-
-bool IODevice::write(StringView v)
-{
-    return write((const u8*)v.characters_without_null_termination(), v.length());
 }
 
 LineIterator::LineIterator(IODevice& device, bool is_end)

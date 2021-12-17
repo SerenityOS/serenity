@@ -44,7 +44,8 @@ void TCPWebSocketConnectionImpl::connect(ConnectionInfo const& connection)
 
 bool TCPWebSocketConnectionImpl::send(ReadonlyBytes data)
 {
-    return m_socket->write(data);
+    // TODO: Propagate errno code
+    return m_socket->write(data).is_error();
 }
 
 bool TCPWebSocketConnectionImpl::can_read_line()

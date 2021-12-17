@@ -111,7 +111,7 @@ public:
 
     size_t write(ReadonlyBytes bytes) override
     {
-        if (!m_file->write(bytes.data(), bytes.size())) {
+        if (m_file->write(bytes.data(), bytes.size()).is_error()) {
             set_fatal_error();
             return 0;
         }

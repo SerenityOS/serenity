@@ -104,7 +104,7 @@ void Mixer::mix()
         }
 
         if (m_muted) {
-            m_device->write(m_zero_filled_buffer, sizeof(m_zero_filled_buffer));
+            MUST(m_device->write(m_zero_filled_buffer, sizeof(m_zero_filled_buffer)));
         } else {
             Array<u8, 4096> buffer;
             OutputMemoryStream stream { buffer };
@@ -129,7 +129,7 @@ void Mixer::mix()
 
             VERIFY(stream.is_end());
             VERIFY(!stream.has_any_error());
-            m_device->write(stream.data(), stream.size());
+            MUST(m_device->write(stream.data(), stream.size()));
         }
     }
 }

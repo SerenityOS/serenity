@@ -90,8 +90,8 @@ public:
     ByteBuffer read_all();
     String read_line(size_t max_size = 16384);
 
-    bool write(const u8*, int size);
-    bool write(StringView);
+    ErrorOr<void> write(const u8*, int size);
+    ErrorOr<void> write(StringView);
 
     bool truncate(off_t);
 

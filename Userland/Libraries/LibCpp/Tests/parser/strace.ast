@@ -845,19 +845,21 @@ TranslationUnit[0:0->144:0]
               res
           IfStatement[137:8->141:4]
             Predicate:
-            UnaryExpression[137:12->137:38]
-              !
-              BinaryExpression[137:13->137:38]
-                Name[137:13->137:23]
-                trace_file
-                ->
-                FunctionCall[137:25->137:38]
-                  Name[137:25->137:30]
-                  write
-                  Name[137:31->137:37]
-                  string
+            BinaryExpression[137:12->137:48]
+              Name[137:12->137:22]
+              trace_file
+              ->
+              FunctionCall[137:24->137:48]
+                MemberExpression[137:24->137:46]
+                  FunctionCall[137:24->137:37]
+                    Name[137:24->137:29]
+                    write
+                    Name[137:30->137:36]
+                    string
+                  Identifier[137:38->137:45]
+                  is_error
             Then:
-            BlockStatement[137:40->141:4]
+            BlockStatement[137:50->141:4]
               FunctionCall[138:12->138:59]
                 Name[138:12->138:18]
                 warnln

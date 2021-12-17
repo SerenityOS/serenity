@@ -165,11 +165,17 @@ bool ConfigFile::sync()
     m_file->truncate(0);
     m_file->seek(0);
 
+    StringBuilder builder;
     for (auto& it : m_groups) {
-        m_file->write(String::formatted("[{}]\n", it.key));
+        builder.append(String::formatted("[{}]\n", it.key));
         for (auto& jt : it.value)
-            m_file->write(String::formatted("{}={}\n", jt.key, jt.value));
-        m_file->write("\n");
+            builder.append(String::formatted("{}={}\n", jt.key, jt.value));
+        builder.append("\n");
+    }
+    auto result = m_file->write(builder.build());
+    if (result.is_error()) {
+        dbgln("Unhandled error: {}", result.error().string_literal());
+        VERIFY_NOT_REACHED();
     }
 
     m_dirty = false;

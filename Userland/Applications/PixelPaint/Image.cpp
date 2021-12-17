@@ -144,8 +144,8 @@ ErrorOr<void> Image::write_to_file(const String& file_path) const
     json.finish();
 
     auto file = TRY(Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)));
-    if (!file->write(builder.string_view()))
-        return Error::from_errno(file->error());
+    TRY(file->write(builder.string_view()));
+
     return {};
 }
 
@@ -188,8 +188,7 @@ ErrorOr<void> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_chan
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
 
-    if (!file->write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file->error());
+    TRY(file->write(encoded_data.data(), encoded_data.size()));
 
     return {};
 }
@@ -205,8 +204,7 @@ ErrorOr<void> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_chan
     auto bitmap = TRY(try_compose_bitmap(bitmap_format));
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
-    if (!file->write(encoded_data.data(), encoded_data.size()))
-        return Error::from_errno(file->error());
+    TRY(file->write(encoded_data.data(), encoded_data.size()));
 
     return {};
 }

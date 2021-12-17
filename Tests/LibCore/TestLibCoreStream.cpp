@@ -295,7 +295,7 @@ TEST_CASE(local_socket_read)
     EXPECT(local_server->listen("/tmp/test-socket"));
 
     local_server->on_accept = [&](NonnullRefPtr<Core::LocalSocket> server_socket) {
-        EXPECT(server_socket->write(sent_data));
+        EXPECT(!server_socket->write(sent_data).is_error());
 
         event_loop.quit(0);
         event_loop.pump();

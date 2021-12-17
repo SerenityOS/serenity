@@ -277,8 +277,8 @@ Result<void, String> PaletteWidget::save_palette_fd_and_close(Vector<Color> pale
         return String { file->error_string() };
 
     for (auto& color : palette) {
-        file->write(color.to_string_without_alpha());
-        file->write("\n");
+        if (file->write(String::formatted("{}\n", color.to_string_without_alpha())).is_error())
+            return String { file->error_string() };
     }
 
     file->close();

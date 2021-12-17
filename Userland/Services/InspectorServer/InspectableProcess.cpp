@@ -74,8 +74,8 @@ void InspectableProcess::send_request(JsonObject const& request)
 {
     auto serialized = request.to_string();
     auto length = serialized.length();
-    m_socket->write((u8 const*)&length, sizeof(length));
-    m_socket->write(serialized);
+    MUST(m_socket->write((u8 const*)&length, sizeof(length)));
+    MUST(m_socket->write(serialized));
 }
 
 }

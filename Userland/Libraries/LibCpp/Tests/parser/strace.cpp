@@ -135,7 +135,7 @@ int main(int argc, char** argv)
             arg3,
             res);
 
-        if (!trace_file->write(string)) {
+        if (trace_file->write(string).is_error()) {
             warnln("write: {}", trace_file->error_string());
             return 1;
         }

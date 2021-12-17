@@ -108,7 +108,7 @@ bool HttpJob::eof() const
 
 bool HttpJob::write(ReadonlyBytes bytes)
 {
-    return m_socket->write(bytes);
+    return !m_socket->write(bytes).is_error();
 }
 
 }

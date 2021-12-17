@@ -80,7 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (!file->write(json.to_string())) {
+    if (file->write(json.to_string()).is_error()) {
         dbgln("Write failed");
         return 1;
     }

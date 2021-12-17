@@ -28,7 +28,7 @@ private:
 
     String history_file_path();
     void load_history();
-    void save_history();
+    ErrorOr<void> save_history();
 
     Vector<String> m_path_history;
     NonnullRefPtr<GUI::ItemListModel<String>> m_path_history_model;

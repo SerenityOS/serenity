@@ -714,7 +714,7 @@ Result<void, String> ImageEditor::save_project_to_fd_and_close(int fd) const
     if (file->has_error())
         return String { file->error_string() };
 
-    if (!file->write(builder.string_view()))
+    if (file->write(builder.string_view()).is_error())
         return String { file->error_string() };
     return {};
 }

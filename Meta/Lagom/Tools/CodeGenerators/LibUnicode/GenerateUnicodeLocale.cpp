@@ -790,7 +790,7 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 static void generate_unicode_locale_implementation(Core::File& file, UnicodeLocaleData& locale_data)
@@ -1253,7 +1253,7 @@ Optional<String> resolve_most_likely_territory(Unicode::LanguageID const& langua
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    MUST(file.write(generator.as_string_view()));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
