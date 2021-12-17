@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
+#include <WindowServer/Compositor.h>
 
 namespace ThemeEditor {
 
@@ -152,6 +154,12 @@ void PreviewWidget::set_theme_from_file(String const& path, int fd)
         on_theme_load_from_file(path);
 }
 
+void PreviewWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
+{
+    m_color_filter = move(color_filter);
+    repaint();
+}
+
 void PreviewWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
@@ -217,6 +225,24 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, *m_active_window_icon);
     paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active, *m_inactive_window_icon);
+}
+
+void PreviewWidget::second_paint_event(GUI::PaintEvent&)
+{
+    if (!m_color_filter)
+        return;
+
+    GUI::Painter painter(*this);
+
+    auto target = painter.target();
+    auto bitmap_clone_or_error = target->clone();
+    if (bitmap_clone_or_error.is_error())
+        return;
+
+    auto clone = bitmap_clone_or_error.release_value();
+    auto rect = target->rect();
+
+    m_color_filter->apply(*target, rect, *clone, rect);
 }
 
 void PreviewWidget::resize_event(GUI::ResizeEvent&)

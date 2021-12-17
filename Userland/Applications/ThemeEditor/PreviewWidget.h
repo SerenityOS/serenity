@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Filters/ColorBlindnessFilter.h>
 #include <LibGfx/Palette.h>
 
 namespace ThemeEditor {
@@ -25,6 +27,8 @@ public:
     void set_preview_palette(const Gfx::Palette&);
     void set_theme_from_file(String const& path, int fd);
 
+    void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
+
     Function<void(String const&)> on_theme_load_from_file;
 
 private:
@@ -33,10 +37,13 @@ private:
     void load_theme_bitmaps();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     Gfx::Palette m_preview_palette;
+
+    OwnPtr<Gfx::ColorBlindnessFilter> m_color_filter = nullptr;
 
     RefPtr<Gfx::Bitmap> m_active_window_icon;
     RefPtr<Gfx::Bitmap> m_inactive_window_icon;
