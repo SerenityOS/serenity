@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2021, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +49,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
             Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open", "/res/keymaps/");
-            if (!path.has_value()) return;
+            if (!path.has_value())
+                return;
 
             ErrorOr<void> error_or = keyboard_mapper_widget->load_map_from_file(path.value());
             if (error_or.is_error())

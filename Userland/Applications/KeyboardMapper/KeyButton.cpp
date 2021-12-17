@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2021, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
