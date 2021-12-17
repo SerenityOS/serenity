@@ -49,7 +49,7 @@ public:
     ErrorOr<off_t> seek(off_t, int whence);
     ErrorOr<size_t> read(UserOrKernelBuffer&, size_t);
     ErrorOr<size_t> write(const UserOrKernelBuffer& data, size_t);
-    ErrorOr<void> stat(::stat&);
+    ErrorOr<struct stat> stat();
 
     // NOTE: These ignore the current offset of this file description.
     ErrorOr<size_t> read(UserOrKernelBuffer&, u64 offset, size_t);

@@ -137,11 +137,11 @@ ErrorOr<NonnullOwnPtr<KString>> FIFO::pseudo_path(const OpenFileDescription&) co
     return KString::formatted("fifo:{}", m_fifo_id);
 }
 
-ErrorOr<void> FIFO::stat(::stat& st) const
+ErrorOr<struct stat> FIFO::stat() const
 {
-    memset(&st, 0, sizeof(st));
+    struct stat st = {};
     st.st_mode = S_IFIFO;
-    return {};
+    return st;
 }
 
 }

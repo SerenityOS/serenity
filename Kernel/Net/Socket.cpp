@@ -263,11 +263,11 @@ ErrorOr<void> Socket::shutdown(int how)
     return {};
 }
 
-ErrorOr<void> Socket::stat(::stat& st) const
+ErrorOr<struct stat> Socket::stat() const
 {
-    memset(&st, 0, sizeof(st));
+    struct stat st = {};
     st.st_mode = S_IFSOCK;
-    return {};
+    return st;
 }
 
 void Socket::set_connected(bool connected)

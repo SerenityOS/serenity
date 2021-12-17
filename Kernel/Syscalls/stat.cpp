@@ -16,8 +16,7 @@ ErrorOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto description = TRY(fds().open_file_description(fd));
-    stat buffer = {};
-    TRY(description->stat(buffer));
+    auto buffer = TRY(description->stat());
     TRY(copy_to_user(user_statbuf, &buffer));
     return 0;
 }
@@ -42,8 +41,7 @@ ErrorOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> use
         base = base_description->custody();
     }
     auto metadata = TRY(VirtualFileSystem::the().lookup_metadata(path->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
-    stat statbuf = {};
-    TRY(metadata.stat(statbuf));
+    auto statbuf = TRY(metadata.stat());
     TRY(copy_to_user(params.statbuf, &statbuf));
     return 0;
 }

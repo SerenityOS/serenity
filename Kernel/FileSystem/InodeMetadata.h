@@ -86,10 +86,11 @@ struct InodeMetadata {
     bool is_setuid() const { return Kernel::is_setuid(mode); }
     bool is_setgid() const { return Kernel::is_setgid(mode); }
 
-    ErrorOr<void> stat(stat& buffer) const
+    ErrorOr<struct stat> stat() const
     {
         if (!is_valid())
             return EIO;
+        struct stat buffer = {};
         buffer.st_rdev = encoded_device(major_device, minor_device);
         buffer.st_ino = inode.index().value();
         buffer.st_mode = mode;
@@ -106,7 +107,7 @@ struct InodeMetadata {
         buffer.st_mtim.tv_nsec = 0;
         buffer.st_ctim.tv_sec = ctime;
         buffer.st_ctim.tv_nsec = 0;
-        return {};
+        return buffer;
     }
 
     InodeIdentifier inode;
