@@ -318,8 +318,7 @@ ErrorOr<void> Inode::can_apply_flock(OpenFileDescription const& description, flo
 
 ErrorOr<void> Inode::apply_flock(Process const& process, OpenFileDescription const& description, Userspace<flock const*> input_lock)
 {
-    flock new_lock = {};
-    TRY(copy_from_user(&new_lock, input_lock));
+    auto new_lock = TRY(copy_typed_from_user(input_lock));
     TRY(normalize_flock(description, new_lock));
 
     MutexLocker locker(m_inode_lock);

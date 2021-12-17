@@ -61,9 +61,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         return copy_to_user(user_head_properties, &head_properties);
     }
     case FB_IOCTL_SET_HEAD_RESOLUTION: {
-        auto user_head_resolution = static_ptr_cast<FBHeadResolution*>(arg);
-        FBHeadResolution head_resolution;
-        TRY(copy_from_user(&head_resolution, user_head_resolution));
+        auto user_head_resolution = static_ptr_cast<FBHeadResolution const*>(arg);
+        auto head_resolution = TRY(copy_typed_from_user(user_head_resolution));
         TRY(verify_head_index(head_resolution.head_index));
 
         if (head_resolution.pitch < 0)
@@ -76,9 +75,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         return {};
     }
     case FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
-        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
-        FBHeadVerticalOffset head_vertical_buffer_offset;
-        TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
+        auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset const*>(arg);
+        auto head_vertical_buffer_offset = TRY(copy_typed_from_user(user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
         if (head_vertical_buffer_offset.offsetted < 0 || head_vertical_buffer_offset.offsetted > 1)
@@ -98,9 +96,8 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
     case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
         if (!partial_flushing_support())
             return Error::from_errno(ENOTSUP);
-        auto user_flush_rects = static_ptr_cast<FBFlushRects*>(arg);
-        FBFlushRects flush_rects;
-        TRY(copy_from_user(&flush_rects, user_flush_rects));
+        auto user_flush_rects = static_ptr_cast<FBFlushRects const*>(arg);
+        auto flush_rects = TRY(copy_typed_from_user(user_flush_rects));
         if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
             return Error::from_errno(EFAULT);
         MutexLocker locker(m_flushing_lock);
@@ -117,11 +114,9 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         if (!flushing_support())
             return Error::from_errno(ENOTSUP);
         // Note: We accept a FBRect, but we only really care about the head_index value.
-        auto user_rect = static_ptr_cast<FBRect*>(arg);
-        FBRect rect;
-        TRY(copy_from_user(&rect, user_rect));
+        auto user_rect = static_ptr_cast<FBRect const*>(arg);
+        auto rect = TRY(copy_typed_from_user(user_rect));
         TRY(verify_head_index(rect.head_index));
-
         TRY(flush_head_buffer(rect.head_index));
         return {};
     }

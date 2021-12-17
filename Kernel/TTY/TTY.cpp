@@ -476,9 +476,6 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = Process::current();
-    Userspace<termios*> user_termios;
-    Userspace<winsize*> user_winsize;
-
 #if 0
     // FIXME: When should we block things?
     //        How do we make this work together with MasterPTY forwarding to us?
@@ -521,15 +518,14 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         return {};
     }
     case TCGETS: {
-        user_termios = static_ptr_cast<termios*>(arg);
+        auto user_termios = static_ptr_cast<termios*>(arg);
         return copy_to_user(user_termios, &m_termios);
     }
     case TCSETS:
     case TCSETSF:
     case TCSETSW: {
-        user_termios = static_ptr_cast<termios*>(arg);
-        termios termios;
-        TRY(copy_from_user(&termios, user_termios));
+        auto user_termios = static_ptr_cast<termios const*>(arg);
+        auto termios = TRY(copy_typed_from_user(user_termios));
         auto rc = set_termios(termios);
         if (request == TCSETSF)
             flush_input();
@@ -545,18 +541,18 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         }
         return {};
     }
-    case TIOCGWINSZ:
-        user_winsize = static_ptr_cast<winsize*>(arg);
+    case TIOCGWINSZ: {
+        auto user_winsize = static_ptr_cast<winsize*>(arg);
         winsize ws;
         ws.ws_row = m_rows;
         ws.ws_col = m_columns;
         ws.ws_xpixel = 0;
         ws.ws_ypixel = 0;
         return copy_to_user(user_winsize, &ws);
+    }
     case TIOCSWINSZ: {
-        user_winsize = static_ptr_cast<winsize*>(arg);
-        winsize ws;
-        TRY(copy_from_user(&ws, user_winsize));
+        auto user_winsize = static_ptr_cast<winsize const*>(arg);
+        auto ws = TRY(copy_typed_from_user(user_winsize));
         if (ws.ws_col == m_columns && ws.ws_row == m_rows)
             return {};
         m_rows = ws.ws_row;

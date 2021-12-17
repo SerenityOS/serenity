@@ -18,8 +18,7 @@ ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> se
     auto current_thread = Thread::current();
     u32 previous_signal_mask;
     if (set) {
-        sigset_t set_value;
-        TRY(copy_from_user(&set_value, set));
+        auto set_value = TRY(copy_typed_from_user(set));
         switch (how) {
         case SIG_BLOCK:
             previous_signal_mask = current_thread->signal_mask_block(set_value, true);
@@ -67,8 +66,7 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
         TRY(copy_to_user(user_old_act, &old_act));
     }
     if (user_act) {
-        sigaction act {};
-        TRY(copy_from_user(&act, user_act));
+        auto act = TRY(copy_typed_from_user(user_act));
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
     }
@@ -258,12 +256,12 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
     return EINVAL;
 }
 
-ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> ss, Userspace<stack_t*> old_ss)
+ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> user_ss, Userspace<stack_t*> user_old_ss)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);
 
-    if (old_ss) {
+    if (user_old_ss) {
         stack_t old_ss_value;
         old_ss_value.ss_sp = (void*)Thread::current()->m_alternative_signal_stack;
         old_ss_value.ss_size = Thread::current()->m_alternative_signal_stack_size;
@@ -272,33 +270,32 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> ss, Userspac
             old_ss_value.ss_flags = SS_DISABLE;
         else if (Thread::current()->is_in_alternative_signal_stack())
             old_ss_value.ss_flags = SS_ONSTACK;
-        TRY(copy_to_user(old_ss, &old_ss_value));
+        TRY(copy_to_user(user_old_ss, &old_ss_value));
     }
 
-    if (ss) {
-        stack_t ss_value;
-        TRY(copy_from_user(&ss_value, ss));
+    if (user_ss) {
+        auto ss = TRY(copy_typed_from_user(user_ss));
 
         if (Thread::current()->is_in_alternative_signal_stack())
             return EPERM;
 
-        if (ss_value.ss_flags == SS_DISABLE) {
+        if (ss.ss_flags == SS_DISABLE) {
             Thread::current()->m_alternative_signal_stack_size = 0;
             Thread::current()->m_alternative_signal_stack = 0;
-        } else if (ss_value.ss_flags == 0) {
-            if (ss_value.ss_size <= MINSIGSTKSZ)
+        } else if (ss.ss_flags == 0) {
+            if (ss.ss_size <= MINSIGSTKSZ)
                 return ENOMEM;
-            if (Checked<FlatPtr>::addition_would_overflow((FlatPtr)ss_value.ss_sp, ss_value.ss_size))
+            if (Checked<FlatPtr>::addition_would_overflow((FlatPtr)ss.ss_sp, ss.ss_size))
                 return ENOMEM;
 
             // In order to preserve compatibility with our MAP_STACK, W^X and syscall region
             // protections, sigaltstack ranges are carved out of their regions, zeroed, and
             // turned into read/writable MAP_STACK-enabled regions.
             // This is inspired by OpenBSD's solution: https://man.openbsd.org/sigaltstack.2
-            TRY(remap_range_as_stack((FlatPtr)ss_value.ss_sp, ss_value.ss_size));
+            TRY(remap_range_as_stack((FlatPtr)ss.ss_sp, ss.ss_size));
 
-            Thread::current()->m_alternative_signal_stack = (FlatPtr)ss_value.ss_sp;
-            Thread::current()->m_alternative_signal_stack_size = ss_value.ss_size;
+            Thread::current()->m_alternative_signal_stack = (FlatPtr)ss.ss_sp;
+            Thread::current()->m_alternative_signal_stack_size = ss.ss_size;
         } else {
             return EINVAL;
         }

@@ -180,9 +180,7 @@ ErrorOr<FlatPtr> Process::peek_user_data(Userspace<const FlatPtr*> address)
     // This function can be called from the context of another
     // process that called PT_PEEK
     ScopedAddressSpaceSwitcher switcher(*this);
-    FlatPtr data;
-    TRY(copy_from_user(&data, address));
-    return data;
+    return TRY(copy_typed_from_user(address));
 }
 
 ErrorOr<void> Process::peek_user_data(Span<u8> destination, Userspace<const u8*> address)
