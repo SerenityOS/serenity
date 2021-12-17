@@ -431,27 +431,45 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 // 22.2.5.8 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
+    // 1. Let R be the this value.
+    // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
+    // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
     auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
+    // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
     auto flags = TRY(flags_value.to_string(global_object));
 
-    bool global = flags.find('g').has_value();
-    bool unicode = flags.find('u').has_value();
+    // Steps 9-12 are performed early so that flags can be moved.
 
+    // 9. If flags contains "g", let global be true.
+    // 10. Else, let global be false.
+    bool global = flags.contains('g');
+
+    // 11. If flags contains "u", let fullUnicode be true.
+    // 12. Else, let fullUnicode be false.
+    bool full_unicode = flags.contains('u');
+
+    // 6. Let matcher be ? Construct(C, « R, flags »).
     MarkedValueList arguments(vm.heap());
     arguments.append(regexp_object);
     arguments.append(js_string(vm, move(flags)));
     auto* matcher = TRY(construct(global_object, *constructor, move(arguments)));
+
+    // 7. Let lastIndex be ? ToLength(? Get(R, "lastIndex")).
     auto last_index_value = TRY(regexp_object->get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
 
+    // 8. Perform ? Set(matcher, "lastIndex", lastIndex, true).
     TRY(matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
 
-    return RegExpStringIterator::create(global_object, *matcher, move(string), global, unicode);
+    // 13. Return ! CreateRegExpStringIterator(matcher, S, global, fullUnicode).
+    return RegExpStringIterator::create(global_object, *matcher, move(string), global, full_unicode);
 }
 
 // 22.2.5.10 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
