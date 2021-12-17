@@ -164,6 +164,9 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
 
 NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
+    // Make sure SMAP protection is enabled on syscall entry.
+    clac();
+
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
@@ -181,9 +184,6 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     }
 
     current_thread->yield_if_stopped();
-
-    // Make sure SMAP protection is enabled on syscall entry.
-    clac();
 
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
