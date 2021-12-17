@@ -68,14 +68,19 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     return index + code_point.code_unit_count;
 }
 
+// Non-standard abstraction around steps used by multiple prototypes.
 static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object, Object& regexp_object, Utf16View const& string, bool unicode)
 {
     auto& vm = global_object.vm();
 
+    // Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
 
+    // Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
     last_index = advance_string_index(string, last_index, unicode);
+
+    // Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
     TRY(regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes));
     return {};
 }
@@ -357,40 +362,68 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
+    // 1. Let rx be the this value.
+    // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
+    // 4. Let global be ! ToBoolean(? Get(rx, "global")).
     bool global = TRY(regexp_object->get(vm.names.global)).to_boolean();
 
-    if (!global)
+    // 5. If global is false, then
+    if (!global) {
+        // a. Return ? RegExpExec(rx, S).
         return TRY(regexp_exec(global_object, *regexp_object, move(string)));
+    }
 
+    // 6. Else,
+    // a. Assert: global is true.
+
+    // b. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
+    bool full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+
+    // c. Perform ? Set(rx, "lastIndex", +0𝔽, true).
     TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
+    // d. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));
 
-    bool unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
-
+    // e. Let n be 0.
     size_t n = 0;
 
+    // f. Repeat,
     while (true) {
+        // i. Let result be ? RegExpExec(rx, S).
         auto result = TRY(regexp_exec(global_object, *regexp_object, string));
 
+        // ii. If result is null, then
         if (result.is_null()) {
+            // 1. If n = 0, return null.
             if (n == 0)
                 return js_null();
+
+            // 2. Return A.
             return array;
         }
 
-        auto* result_object = TRY(result.to_object(global_object));
-        auto match_object = TRY(result_object->get(0));
-        auto match_str = TRY(match_object.to_string(global_object));
+        // iii. Else,
 
-        TRY(array->create_data_property_or_throw(n, js_string(vm, match_str)));
+        // 1. Let matchStr be ? ToString(? Get(result, "0")).
+        auto match_value = TRY(result.get(global_object, 0));
+        auto match_str = TRY(match_value.to_string(global_object));
 
-        if (match_str.is_empty())
-            TRY(increment_last_index(global_object, *regexp_object, string.view(), unicode));
+        // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
+        MUST(array->create_data_property_or_throw(n, js_string(vm, match_str)));
 
+        // 3. If matchStr is the empty String, then
+        if (match_str.is_empty()) {
+            // Stepsp 3a-3c are implemented by increment_last_index.
+            TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
+        }
+
+        // 4. Set n to n + 1.
         ++n;
     }
 }
