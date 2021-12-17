@@ -6,6 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Cipher/AESTables.h>
 
 namespace Crypto {
 namespace Cipher {
@@ -403,6 +404,6 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
         }
     }
 }
-}
 
+}
 }
