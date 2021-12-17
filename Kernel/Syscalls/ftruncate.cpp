@@ -9,12 +9,11 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
+ErrorOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t const*> userspace_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    off_t length;
-    TRY(copy_from_user(&length, userspace_length));
+    auto length = TRY(copy_typed_from_user(userspace_length));
     if (length < 0)
         return EINVAL;
     auto description = TRY(fds().open_file_description(fd));
