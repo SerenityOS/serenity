@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2021, Rasmus Nylander <RasmusNylander.SerenityOS@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "KeyboardMapperWidget.h"
 #include "KeyPositions.h"
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
@@ -178,11 +179,9 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
 
     // Write to file.
     String file_content = map_json.to_string();
-    auto file = TRY(Core::File::open(filename, Core::OpenMode::WriteOnly));
-
-    bool result = file->write(file_content);
-    if (!result)
-        return Error::from_errno(file->error());
+    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
+    TRY(file.write(file_content.bytes()));
+    file.close();
 
     m_modified = false;
     m_filename = filename;
@@ -244,6 +243,7 @@ void KeyboardMapperWidget::update_window_title()
     window()->set_title(sb.to_string());
 }
 
-void KeyboardMapperWidget::show_error_to_user(Error error){
+void KeyboardMapperWidget::show_error_to_user(Error error)
+{
     GUI::MessageBox::show_error(window(), error.string_literal());
 }
