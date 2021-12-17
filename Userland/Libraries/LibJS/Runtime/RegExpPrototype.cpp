@@ -860,27 +860,33 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 {
-    auto* regexp_object = TRY(typed_this_object(global_object));
-
     auto pattern = vm.argument(0);
     auto flags = vm.argument(1);
 
-    Value pattern_value;
-    Value flags_value;
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[RegExpMatcher]]).
+    auto* regexp_object = TRY(typed_this_object(global_object));
 
+    // 3. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {
+        // a. If flags is not undefined, throw a TypeError exception.
         if (!flags.is_undefined())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotUndefined, flags.to_string_without_side_effects());
 
         auto& regexp_pattern = static_cast<RegExpObject&>(pattern.as_object());
-        pattern_value = js_string(vm, regexp_pattern.pattern());
-        flags_value = js_string(vm, regexp_pattern.flags());
-    } else {
-        pattern_value = pattern;
-        flags_value = flags;
-    }
 
-    return TRY(regexp_object->regexp_initialize(global_object, pattern_value, flags_value));
+        // b. Let P be pattern.[[OriginalSource]].
+        pattern = js_string(vm, regexp_pattern.pattern());
+
+        // c. Let F be pattern.[[OriginalFlags]].
+        flags = js_string(vm, regexp_pattern.flags());
+    }
+    // 4. Else,
+    //     a. Let P be pattern.
+    //     b. Let F be flags.
+
+    // 5. Return ? RegExpInitialize(O, P, F).
+    return TRY(regexp_object->regexp_initialize(global_object, pattern, flags));
 }
 
 }
