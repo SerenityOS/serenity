@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <AK/Vector.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
@@ -39,6 +40,9 @@ public:
     Function<void()> on_finished_playing;
 
 private:
+    // Number of buffers we want to always keep enqueued.
+    static constexpr size_t always_enqueued_buffer_count = 2;
+
     void next_buffer();
     void set_paused(bool);
 
@@ -52,12 +56,12 @@ private:
     RefPtr<Audio::Loader> m_loader { nullptr };
     NonnullRefPtr<Audio::ClientConnection> m_connection;
     RefPtr<Audio::Buffer> m_current_buffer;
+    Queue<i32, always_enqueued_buffer_count + 1> m_enqueued_buffers;
     Optional<Audio::ResampleHelper<double>> m_resampler;
     RefPtr<Core::Timer> m_timer;
 
     // Controls the GUI update rate. A smaller value makes the visualizations nicer.
     static constexpr u32 update_rate_ms = 50;
-
     // Number of milliseconds of audio data contained in each audio buffer
     static constexpr u32 buffer_size_ms = 100;
 };
