@@ -46,7 +46,6 @@ private:
     bool m_loop = { false };
     size_t m_last_seek { 0 };
     float m_total_length { 0 };
-    // FIXME: Get this from the audio server
     size_t m_device_sample_rate { 44100 };
     size_t m_device_samples_per_buffer { 0 };
     size_t m_source_buffer_size_bytes { 0 };
