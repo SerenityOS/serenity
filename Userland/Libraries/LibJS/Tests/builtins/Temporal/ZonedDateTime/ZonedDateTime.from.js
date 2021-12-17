@@ -95,7 +95,6 @@ describe("correct behavior", () => {
         expect(createdZoneDateTime.nanosecond).toBe(300);
     });
 
-    // FIXME: Enable when parse_iso_date_time is implemented.
     test("from string", () => {
         const zonedDateTime = Temporal.ZonedDateTime.from(
             "2021-11-07T00:20:05.100200300+00:00[UTC][u-ca=iso8601]"
