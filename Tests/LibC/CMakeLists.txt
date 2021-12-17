@@ -11,6 +11,7 @@ set(TEST_SOURCES
     TestLibCTime.cpp
     TestMemmem.cpp
     TestQsort.cpp
+    TestRaise.cpp
     TestRealpath.cpp
     TestScanf.cpp
     TestSearch.cpp
