@@ -57,15 +57,13 @@ public:
         auto nread = buffer().trim(m_buffered).copy_trimmed_to(bytes);
 
         m_buffered -= nread;
-        buffer().slice(nread, m_buffered).copy_to(buffer());
+        if (m_buffered > 0)
+            buffer().slice(nread, m_buffered).copy_to(buffer());
 
         if (nread < bytes.size()) {
+            nread += m_stream.read(bytes.slice(nread));
+
             m_buffered = m_stream.read(buffer());
-
-            if (m_buffered == 0)
-                return nread;
-
-            nread += read(bytes.slice(nread));
         }
 
         return nread;
