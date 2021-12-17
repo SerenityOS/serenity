@@ -160,7 +160,7 @@ public:
 
     void protect_readonly_after_init_memory();
     void unmap_text_after_init();
-    void unmap_ksyms_after_init();
+    void protect_ksyms_after_init();
 
     static void enter_process_address_space(Process&);
     static void enter_address_space(AddressSpace&);

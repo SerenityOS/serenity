@@ -136,7 +136,7 @@ void MemoryManager::unmap_text_after_init()
     dmesgln("Unmapped {} KiB of kernel text after init! :^)", (end - start) / KiB);
 }
 
-void MemoryManager::unmap_ksyms_after_init()
+void MemoryManager::protect_ksyms_after_init()
 {
     SpinlockLocker mm_lock(s_mm_lock);
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
@@ -144,14 +144,13 @@ void MemoryManager::unmap_ksyms_after_init()
     auto start = page_round_down((FlatPtr)start_of_kernel_ksyms);
     auto end = page_round_up((FlatPtr)end_of_kernel_ksyms);
 
-    // Unmap the entire .ksyms section
     for (auto i = start; i < end; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
-        pte.clear();
+        pte.set_writable(false);
         flush_tlb(&kernel_page_directory(), VirtualAddress(i));
     }
 
-    dmesgln("Unmapped {} KiB of kernel symbols after init! :^)", (end - start) / KiB);
+    dmesgln("Write-protected kernel symbols after init.");
 }
 
 UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
