@@ -54,12 +54,12 @@ const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
     return nullptr;
 }
 
-UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes buffer)
+UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
 
-    auto* bufptr = (const char*)buffer.data();
+    auto* bufptr = (char*)buffer.data();
     auto* start_of_name = bufptr;
     FlatPtr address = 0;
 
@@ -84,10 +84,9 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes buffer)
         }
         auto& ksym = s_symbols[current_symbol_index];
         ksym.address = kernel_load_base + address;
-        char* name = static_cast<char*>(kmalloc_eternal((bufptr - start_of_name) + 1));
-        memcpy(name, start_of_name, bufptr - start_of_name);
-        name[bufptr - start_of_name] = '\0';
-        ksym.name = name;
+        ksym.name = start_of_name;
+
+        *bufptr = '\0';
 
         if (ksym.address < g_lowest_kernel_symbol_address)
             g_lowest_kernel_symbol_address = ksym.address;
