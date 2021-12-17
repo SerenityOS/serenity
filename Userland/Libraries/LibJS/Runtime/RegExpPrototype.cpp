@@ -664,24 +664,40 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 // 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
+    // 1. Let rx be the this value.
+    // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
+    // 4. Let previousLastIndex be ? Get(rx, "lastIndex").
     auto previous_last_index = TRY(regexp_object->get(vm.names.lastIndex));
-    if (!same_value(previous_last_index, Value(0)))
-        TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
+    // 5. If SameValue(previousLastIndex, +0𝔽) is false, then
+    if (!same_value(previous_last_index, Value(0))) {
+        // a. Perform ? Set(rx, "lastIndex", +0𝔽, true).
+        TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
+    }
+
+    // 6. Let result be ? RegExpExec(rx, S).
     auto result = TRY(regexp_exec(global_object, *regexp_object, move(string)));
 
+    // 7. Let currentLastIndex be ? Get(rx, "lastIndex").
     auto current_last_index = TRY(regexp_object->get(vm.names.lastIndex));
-    if (!same_value(current_last_index, previous_last_index))
-        TRY(regexp_object->set(vm.names.lastIndex, previous_last_index, Object::ShouldThrowExceptions::Yes));
 
+    // 8. If SameValue(currentLastIndex, previousLastIndex) is false, then
+    if (!same_value(current_last_index, previous_last_index)) {
+        // a. Perform ? Set(rx, "lastIndex", previousLastIndex, true).
+        TRY(regexp_object->set(vm.names.lastIndex, previous_last_index, Object::ShouldThrowExceptions::Yes));
+    }
+
+    // 9. If result is null, return -1𝔽.
     if (result.is_null())
         return Value(-1);
 
-    auto* result_object = TRY(result.to_object(global_object));
-    return TRY(result_object->get(vm.names.index));
+    // 10. Return ? Get(result, "index").
+    return TRY(result.get(global_object, vm.names.index));
 }
 
 // 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
