@@ -127,3 +127,10 @@ void current_test_case_did_fail();
         if (!crash.run())                           \
             ::Test::current_test_case_did_fail();   \
     } while (false)
+
+#define EXPECT_CRASH_WITH_SIGNAL(test_message, signal, test_func) \
+    do {                                                          \
+        Test::Crash crash(test_message, test_func, (signal));     \
+        if (!crash.run())                                         \
+            ::Test::current_test_case_did_fail();                 \
+    } while (false)

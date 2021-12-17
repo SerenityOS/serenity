@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <LibTest/CrashTest.h>
 #include <sys/wait.h>
@@ -17,9 +18,10 @@
 
 namespace Test {
 
-Crash::Crash(String test_type, Function<Crash::Failure()> crash_function)
+Crash::Crash(String test_type, Function<Crash::Failure()> crash_function, int crash_signal)
     : m_type(move(test_type))
     , m_crash_function(move(crash_function))
+    , m_crash_signal(crash_signal)
 {
 }
 
@@ -49,7 +51,9 @@ bool Crash::run(RunType run_type)
             return do_report(Failure(WEXITSTATUS(status)));
         }
         if (WIFSIGNALED(status)) {
-            return do_report(WTERMSIG(status));
+            int signal = WTERMSIG(status);
+            VERIFY(signal > 0);
+            return do_report(signal);
         }
         VERIFY_NOT_REACHED();
     }
@@ -57,7 +61,14 @@ bool Crash::run(RunType run_type)
 
 bool Crash::do_report(Report report)
 {
-    const bool pass = report.has<int>();
+    bool pass = false;
+    if (m_crash_signal == ANY_SIGNAL) {
+        pass = report.has<int>();
+    } else if (m_crash_signal > 0) {
+        pass = report.has<int>() && report.get<int>() == m_crash_signal;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
 
     if (pass)
         out("\x1B[32mPASS\x1B[0m: ");
@@ -68,18 +79,27 @@ bool Crash::do_report(Report report)
         [&](const Failure& failure) {
             switch (failure) {
             case Failure::DidNotCrash:
-                outln("Did not crash!");
+                out("Did not crash");
                 break;
             case Failure::UnexpectedError:
-                outln("Unexpected error!");
+                out("Unexpected error");
                 break;
             default:
                 VERIFY_NOT_REACHED();
             }
         },
         [&](const int& signal) {
-            outln("Terminated with signal {}", signal);
+            out("Terminated with signal {}", signal);
         });
+
+    if (!pass) {
+        if (m_crash_signal == ANY_SIGNAL) {
+            out(" while expecting any signal");
+        } else if (m_crash_signal > 0) {
+            out(" while expecting signal {}", m_crash_signal);
+        }
+    }
+    outln();
 
     return pass;
 }
