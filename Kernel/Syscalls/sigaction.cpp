@@ -262,7 +262,7 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> user_ss, Use
     REQUIRE_PROMISE(sigaction);
 
     if (user_old_ss) {
-        stack_t old_ss_value;
+        stack_t old_ss_value {};
         old_ss_value.ss_sp = (void*)Thread::current()->m_alternative_signal_stack;
         old_ss_value.ss_size = Thread::current()->m_alternative_signal_stack_size;
         old_ss_value.ss_flags = 0;
