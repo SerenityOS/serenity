@@ -257,7 +257,7 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
         auto result = TRY(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
         if (!result.is_object() && !result.is_null())
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
 
         return result;
     }
