@@ -20,10 +20,9 @@ ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sch
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
-    struct sched_param desired_param;
-    TRY(copy_from_user(&desired_param, user_param));
+    auto param = TRY(copy_typed_from_user(user_param));
 
-    if (desired_param.sched_priority < THREAD_PRIORITY_MIN || desired_param.sched_priority > THREAD_PRIORITY_MAX)
+    if (param.sched_priority < THREAD_PRIORITY_MIN || param.sched_priority > THREAD_PRIORITY_MAX)
         return EINVAL;
 
     auto* peer = Thread::current();
@@ -37,7 +36,7 @@ ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sch
     if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
         return EPERM;
 
-    peer->set_priority((u32)desired_param.sched_priority);
+    peer->set_priority((u32)param.sched_priority);
     return 0;
 }
 

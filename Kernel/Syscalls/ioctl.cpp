@@ -16,9 +16,7 @@ ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto description = TRY(fds().open_file_description(fd));
     if (request == FIONBIO) {
-        int non_blocking;
-        TRY(copy_from_user(&non_blocking, Userspace<const int*>(arg)));
-        description->set_blocking(non_blocking == 0);
+        description->set_blocking(TRY(copy_typed_from_user(Userspace<int const*>(arg))) == 0);
         return 0;
     }
     TRY(description->file().ioctl(*description, request, arg));

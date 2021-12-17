@@ -162,8 +162,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    struct msghdr msg = {};
-    TRY(copy_from_user(&msg, user_msg));
+    auto msg = TRY(copy_typed_from_user(user_msg));
 
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
