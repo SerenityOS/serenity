@@ -9,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
+#include <AK/FixedArray.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
@@ -77,6 +78,10 @@ public:
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(samples)));
     }
+    static ErrorOr<NonnullRefPtr<Buffer>> create_with_samples(FixedArray<Sample>&& samples)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(samples)));
+    }
     static ErrorOr<NonnullRefPtr<Buffer>> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(move(buffer), buffer_id, sample_count));
@@ -84,18 +89,27 @@ public:
     static NonnullRefPtr<Buffer> create_empty()
     {
         // If we can't allocate an empty buffer, things are in a very bad state.
-        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer({})));
+        return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer(FixedArray<Sample> {})));
     }
 
-    const Sample* samples() const { return (const Sample*)data(); }
+    Sample const* samples() const { return (const Sample*)data(); }
     int sample_count() const { return m_sample_count; }
-    const void* data() const { return m_buffer.data<void>(); }
+    void const* data() const { return m_buffer.data<void>(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
     int id() const { return m_id; }
-    const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }
+    Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
 private:
-    explicit Buffer(const Vector<Sample> samples)
+    explicit Buffer(Vector<Sample>&& samples)
+        // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
+        //        although the sample count is set to 0 to mark this.
+        : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())
+        , m_id(allocate_id())
+        , m_sample_count(samples.size())
+    {
+        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Sample));
+    }
+    explicit Buffer(FixedArray<Sample>&& samples)
         // FIXME: AnonymousBuffers can't be empty, so even for empty buffers we create a buffer of size 1 here,
         //        although the sample count is set to 0 to mark this.
         : m_buffer(Core::AnonymousBuffer::create_with_size(max(samples.size(), 1) * sizeof(Sample)).release_value())
