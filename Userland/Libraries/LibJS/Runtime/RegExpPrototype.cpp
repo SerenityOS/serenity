@@ -283,14 +283,20 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                                    \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                                 \
     {                                                                                                     \
+        /* 1. If Type(R) is not Object, throw a TypeError exception. */                                   \
         auto* regexp_object = TRY(this_object(global_object));                                            \
+        /* 2. If R does not have an [[OriginalFlags]] internal slot, then */                              \
         if (!is<RegExpObject>(regexp_object)) {                                                           \
+            /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */                       \
             if (same_value(regexp_object, global_object.regexp_prototype()))                              \
                 return js_undefined();                                                                    \
+            /* b. Otherwise, throw a TypeError exception. */                                              \
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp"); \
         }                                                                                                 \
-                                                                                                          \
+        /* 3. Let flags be R.[[OriginalFlags]]. */                                                        \
         auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();                           \
+        /* 4. If flags contains codeUnit, return true. */                                                 \
+        /* 5. Return false. */                                                                            \
         return Value(flags.contains(#flag_char##sv));                                                     \
     }
 JS_ENUMERATE_REGEXP_FLAGS
@@ -299,9 +305,26 @@ JS_ENUMERATE_REGEXP_FLAGS
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 {
+
+    // 1. Let R be the this value.
+    // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let result be the empty String.
     StringBuilder builder(8);
 
+    // 4. Let global be ! ToBoolean(? Get(R, "global")).
+    // 5. If global is true, append the code unit 0x0067 (LATIN SMALL LETTER G) as the last code unit of result.
+    // 6. Let ignoreCase be ! ToBoolean(? Get(R, "ignoreCase")).
+    // 7. If ignoreCase is true, append the code unit 0x0069 (LATIN SMALL LETTER I) as the last code unit of result.
+    // 8. Let multiline be ! ToBoolean(? Get(R, "multiline")).
+    // 9. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
+    // 10. Let dotAll be ! ToBoolean(? Get(R, "dotAll")).
+    // 11. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
+    // 12. Let unicode be ! ToBoolean(? Get(R, "unicode")).
+    // 13. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
+    // 14. Let sticky be ! ToBoolean(? Get(R, "sticky")).
+    // 15. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
     auto flag_##flag_name = TRY(regexp_object->get(vm.names.flagName)); \
     if (flag_##flag_name.to_boolean())                                  \
@@ -309,53 +332,82 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
+    // 16. Return result.
     return js_string(vm, builder.to_string());
 }
 
 // 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
+    // 1. Let R be the this value.
+    // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. If R does not have an [[OriginalSource]] internal slot, then
     if (!is<RegExpObject>(regexp_object)) {
+        // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
         if (same_value(regexp_object, global_object.regexp_prototype()))
             return js_string(vm, "(?:)");
+
+        // b. Otherwise, throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
     }
 
+    // 4. Assert: R has an [[OriginalFlags]] internal slot.
+    // 5. Let src be R.[[OriginalSource]].
+    // 6. Let flags be R.[[OriginalFlags]].
+    // 7. Return EscapeRegExpPattern(src, flags).
     return js_string(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
 }
 
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
+    // 1. Let R be the this value.
+    // 2. Perform ? RequireInternalSlot(R, [[RegExpMatcher]]).
     auto* regexp_object = TRY(typed_this_object(global_object));
 
+    // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
+    // 4. Return ? RegExpBuiltinExec(R, S).
     return TRY(regexp_builtin_exec(global_object, *regexp_object, move(string)));
 }
 
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
+    // 1. Let R be the this value.
+    // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let string be ? ToString(S).
     auto string = TRY(vm.argument(0).to_utf16_string(global_object));
 
+    // 4. Let match be ? RegExpExec(R, string).
     auto match = TRY(regexp_exec(global_object, *regexp_object, move(string)));
 
+    // 5. If match is not null, return true; else return false.
     return Value(!match.is_null());
 }
 
 // 22.2.5.16 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
+    // 1. Let R be the this value.
+    // 2. If Type(R) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
+
+    // 3. Let pattern be ? ToString(? Get(R, "source")).
     auto source_attr = TRY(regexp_object->get(vm.names.source));
     auto pattern = TRY(source_attr.to_string(global_object));
 
+    // 4. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_attr = TRY(regexp_object->get(vm.names.flags));
     auto flags = TRY(flags_attr.to_string(global_object));
 
+    // 5. Let result be the string-concatenation of "/", pattern, "/", and flags.
+    // 6. Return result.
     return js_string(vm, String::formatted("/{}/{}", pattern, flags));
 }
 
