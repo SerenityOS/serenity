@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <assert.h> // FIXME: Remove when `_abort` is moved to <stdlib.h>
+#include <signal.h>
 #include <stdlib.h>
 
 TEST_CASE(_abort)
@@ -15,11 +16,19 @@ TEST_CASE(_abort)
         _abort();
         return Test::Crash::Failure::DidNotCrash;
     });
+    EXPECT_CRASH_WITH_SIGNAL("This should _abort with SIGILL signal", SIGILL, [] {
+        _abort();
+        return Test::Crash::Failure::DidNotCrash;
+    });
 }
 
 TEST_CASE(abort)
 {
     EXPECT_CRASH("This should abort", [] {
+        abort();
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_CRASH_WITH_SIGNAL("This should abort with SIGABRT signal", SIGABRT, [] {
         abort();
         return Test::Crash::Failure::DidNotCrash;
     });

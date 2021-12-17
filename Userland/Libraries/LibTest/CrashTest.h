@@ -26,7 +26,9 @@ public:
         UnexpectedError,
     };
 
-    Crash(String test_type, Function<Crash::Failure()> crash_function);
+    static constexpr int ANY_SIGNAL = -1;
+
+    Crash(String test_type, Function<Crash::Failure()> crash_function, int crash_signal = ANY_SIGNAL);
 
     bool run(RunType run_type = RunType::UsingChildProcess);
 
@@ -36,6 +38,7 @@ private:
 
     String m_type;
     Function<Crash::Failure()> m_crash_function;
+    int m_crash_signal;
 };
 
 }
