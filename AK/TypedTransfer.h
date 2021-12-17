@@ -37,7 +37,10 @@ public:
             return 0;
 
         if constexpr (Traits<T>::is_trivial()) {
-            __builtin_memmove(destination, source, count * sizeof(T));
+            if (count == 1)
+                *destination = *source;
+            else
+                __builtin_memmove(destination, source, count * sizeof(T));
             return count;
         }
 
