@@ -478,105 +478,184 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
+    // 1. Let rx be the this value.
+    // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
-    auto string = TRY(string_value.to_utf16_string(global_object));
-    auto string_view = string.view();
 
+    // 3. Let S be ? ToString(string).
+    auto string = TRY(string_value.to_utf16_string(global_object));
+
+    // 4. Let lengthS be the number of code unit elements in S.
+    // 5. Let functionalReplace be IsCallable(replaceValue).
+
+    // 6. If functionalReplace is false, then
     if (!replace_value.is_function()) {
+        // a. Set replaceValue to ? ToString(replaceValue).
         auto replace_string = TRY(replace_value.to_string(global_object));
         replace_value = js_string(vm, move(replace_string));
     }
 
+    // 7. Let global be ! ToBoolean(? Get(rx, "global")).
     bool global = TRY(regexp_object->get(vm.names.global)).to_boolean();
-    bool unicode = false;
+    bool full_unicode = false;
 
+    // 8. If global is true, then
     if (global) {
-        unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
+        // a. Let fullUnicode be ! ToBoolean(? Get(rx, "unicode")).
+        full_unicode = TRY(regexp_object->get(vm.names.unicode)).to_boolean();
 
+        // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
         TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
     }
 
+    // 9. Let results be a new empty List.
     MarkedValueList results(vm.heap());
 
+    // 10. Let done be false.
+    // 11. Repeat, while done is false,
     while (true) {
+        // a. Let result be ? RegExpExec(rx, S).
         auto result = TRY(regexp_exec(global_object, *regexp_object, string));
+
+        // b. If result is null, set done to true.
         if (result.is_null())
             break;
 
-        auto* result_object = TRY(result.to_object(global_object));
-        results.append(result_object);
+        // c. Else,
+
+        // i. Append result to the end of results.
+        results.append(result);
+
+        // ii. If global is false, set done to true.
         if (!global)
             break;
 
-        auto match_object = TRY(result_object->get(0));
-        auto match_str = TRY(match_object.to_string(global_object));
+        // iii. Else,
 
-        if (match_str.is_empty())
-            TRY(increment_last_index(global_object, *regexp_object, string_view, unicode));
+        // 1. Let matchStr be ? ToString(? Get(result, "0")).
+        auto match_value = TRY(result.get(global_object, 0));
+        auto match_str = TRY(match_value.to_string(global_object));
+
+        // 2. If matchStr is the empty String, then
+        if (match_str.is_empty()) {
+            // Stepsp 2a-2c are implemented by increment_last_index.
+            TRY(increment_last_index(global_object, *regexp_object, string.view(), full_unicode));
+        }
     }
 
+    // 12. Let accumulatedResult be the empty String.
     StringBuilder accumulated_result;
+
+    // 13. Let nextSourcePosition be 0.
     size_t next_source_position = 0;
 
-    for (auto& result_value : results) {
-        auto& result = result_value.as_object();
-        size_t result_length = TRY(length_of_array_like(global_object, result));
+    // 14. For each element result of results, do
+    for (auto& result : results) {
+        // a. Let resultLength be ? LengthOfArrayLike(result).
+        size_t result_length = TRY(length_of_array_like(global_object, result.as_object()));
+
+        // b. Let nCaptures be max(resultLength - 1, 0).
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
-        auto matched_value = TRY(result.get(0));
+        // c. Let matched be ? ToString(? Get(result, "0")).
+        auto matched_value = TRY(result.get(global_object, 0));
         auto matched = TRY(matched_value.to_utf16_string(global_object));
+
+        // d. Let matchLength be the number of code units in matched.
         auto matched_length = matched.length_in_code_units();
 
-        auto position_value = TRY(result.get(vm.names.index));
+        // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
+        auto position_value = TRY(result.get(global_object, vm.names.index));
         double position = TRY(position_value.to_integer_or_infinity(global_object));
 
+        // f. Set position to the result of clamping position between 0 and lengthS.
         position = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
 
-        MarkedValueList captures(vm.heap());
-        for (size_t n = 1; n <= n_captures; ++n) {
-            auto capture = TRY(result.get(n));
-            if (!capture.is_undefined())
-                capture = js_string(vm, TRY(capture.to_string(global_object)));
+        // g. Let n be 1.
 
+        // h. Let captures be a new empty List.
+        MarkedValueList captures(vm.heap());
+
+        // i. Repeat, while n ≤ nCaptures,
+        for (size_t n = 1; n <= n_captures; ++n) {
+            // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
+            auto capture = TRY(result.get(global_object, n));
+
+            // ii. If capN is not undefined, then
+            if (!capture.is_undefined()) {
+                // 1. Set capN to ? ToString(capN).
+                capture = js_string(vm, TRY(capture.to_string(global_object)));
+            }
+
+            // iii. Append capN as the last element of captures.
             captures.append(move(capture));
+
+            // iv. NOTE: When n = 1, the preceding step puts the first element into captures (at index 0). More generally, the nth capture (the characters captured by the nth set of capturing parentheses) is at captures[n - 1].
+            // v. Set n to n + 1.
         }
 
-        auto named_captures = TRY(result.get(vm.names.groups));
+        // j. Let namedCaptures be ? Get(result, "groups").
+        auto named_captures = TRY(result.get(global_object, vm.names.groups));
 
         String replacement;
 
+        // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
+            // i. Let replacerArgs be « matched ».
             MarkedValueList replacer_args(vm.heap());
             replacer_args.append(js_string(vm, move(matched)));
+
+            // ii. Append in List order the elements of captures to the end of the List replacerArgs.
             replacer_args.extend(move(captures));
+
+            // iii. Append 𝔽(position) and S to replacerArgs.
             replacer_args.append(Value(position));
             replacer_args.append(js_string(vm, string));
+
+            // iv. If namedCaptures is not undefined, then
             if (!named_captures.is_undefined()) {
+                // 1. Append namedCaptures as the last element of replacerArgs.
                 replacer_args.append(move(named_captures));
             }
 
+            // v. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
             auto replace_result = TRY(vm.call(replace_value.as_function(), js_undefined(), move(replacer_args)));
-            replacement = TRY(replace_result.to_string(global_object));
-        } else {
-            if (!named_captures.is_undefined())
-                named_captures = TRY(named_captures.to_object(global_object));
 
-            replacement = TRY(get_substitution(global_object, matched.view(), string_view, position, captures, named_captures, replace_value));
+            // vi. Let replacement be ? ToString(replValue).
+            replacement = TRY(replace_result.to_string(global_object));
+        }
+        // l. Else,
+        else {
+            /// i. If namedCaptures is not undefined, then
+            if (!named_captures.is_undefined()) {
+                // 1. Set namedCaptures to ? ToObject(namedCaptures).
+                named_captures = TRY(named_captures.to_object(global_object));
+            }
+
+            // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
+            replacement = TRY(get_substitution(global_object, matched.view(), string.view(), position, captures, named_captures, replace_value));
         }
 
+        // m. If position ≥ nextSourcePosition, then
         if (position >= next_source_position) {
-            auto substring = string_view.substring_view(next_source_position, position - next_source_position);
+            // i. NOTE: position should not normally move backwards. If it does, it is an indication of an ill-behaving RegExp subclass or use of an access triggered side-effect to change the global flag or other characteristics of rx. In such cases, the corresponding substitution is ignored.
+
+            // ii. Set accumulatedResult to the string-concatenation of accumulatedResult, the substring of S from nextSourcePosition to position, and replacement.
+            auto substring = string.substring_view(next_source_position, position - next_source_position);
             accumulated_result.append(substring);
             accumulated_result.append(replacement);
 
+            // iii. Set nextSourcePosition to position + matchLength.
             next_source_position = position + matched_length;
         }
     }
 
+    // 15. If nextSourcePosition ≥ lengthS, return accumulatedResult.
     if (next_source_position >= string.length_in_code_units())
         return js_string(vm, accumulated_result.build());
 
-    auto substring = string_view.substring_view(next_source_position);
+    // 16. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
+    auto substring = string.substring_view(next_source_position);
     accumulated_result.append(substring);
 
     return js_string(vm, accumulated_result.build());
