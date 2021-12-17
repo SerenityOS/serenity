@@ -703,87 +703,157 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 // 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
+    // 1. Let rx be the this value.
+    // 2. If Type(rx) is not Object, throw a TypeError exception.
     auto* regexp_object = TRY(this_object(global_object));
-    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
-    auto string_view = string.view();
 
+    // 3. Let S be ? ToString(string).
+    auto string = TRY(vm.argument(0).to_utf16_string(global_object));
+
+    // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
     auto* constructor = TRY(species_constructor(global_object, *regexp_object, *global_object.regexp_constructor()));
 
+    // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
     auto flags = TRY(flags_value.to_string(global_object));
 
-    bool unicode = flags.find('u').has_value();
+    // 6. If flags contains "u", let unicodeMatching be true.
+    // 7. Else, let unicodeMatching be false.
+    bool unicode_matching = flags.find('u').has_value();
+
+    // 8. If flags contains "y", let newFlags be flags.
+    // 9. Else, let newFlags be the string-concatenation of flags and "y".
     auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
 
+    // 10. Let splitter be ? Construct(C, « rx, newFlags »).
     MarkedValueList arguments(vm.heap());
     arguments.append(regexp_object);
     arguments.append(js_string(vm, move(new_flags)));
     auto* splitter = TRY(construct(global_object, *constructor, move(arguments)));
+
+    // 11. Let A be ! ArrayCreate(0).
     auto* array = MUST(Array::create(global_object, 0));
+
+    // 12. Let lengthA be 0.
     size_t array_length = 0;
 
+    // 13. If limit is undefined, let lim be 2^32 - 1; else let lim be ℝ(? ToUint32(limit)).
     auto limit = NumericLimits<u32>::max();
     if (!vm.argument(1).is_undefined())
         limit = TRY(vm.argument(1).to_u32(global_object));
 
+    // 14. If lim is 0, return A.
     if (limit == 0)
         return array;
 
+    // 15. Let size be the length of S.
+    // 16. If size is 0, then
     if (string.is_empty()) {
+        // a. Let z be ? RegExpExec(splitter, S).
         auto result = TRY(regexp_exec(global_object, *splitter, string));
+
+        // b. If z is not null, return A.
         if (!result.is_null())
             return array;
 
+        // c. Perform ! CreateDataPropertyOrThrow(A, "0", S).
         MUST(array->create_data_property_or_throw(0, js_string(vm, move(string))));
+
+        // d. Return A.
         return array;
     }
 
-    size_t last_match_end = 0;   // 'p' in the spec.
-    size_t next_search_from = 0; // 'q' in the spec.
+    // 17. Let p be 0.
+    size_t last_match_end = 0;
 
-    while (next_search_from < string_view.length_in_code_units()) {
+    // 18. Let q be p.
+    size_t next_search_from = 0;
+
+    // 19. Repeat, while q < size,
+    while (next_search_from < string.length_in_code_units()) {
+        // a. Perform ? Set(splitter, "lastIndex", 𝔽(q), true).
         TRY(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
+        // b. Let z be ? RegExpExec(splitter, S).
         auto result = TRY(regexp_exec(global_object, *splitter, string));
+
+        // c. If z is null, set q to AdvanceStringIndex(S, q, unicodeMatching).
         if (result.is_null()) {
-            next_search_from = advance_string_index(string_view, next_search_from, unicode);
+            next_search_from = advance_string_index(string.view(), next_search_from, unicode_matching);
             continue;
         }
 
+        // d. Else,
+
+        // i. Let e be ℝ(? ToLength(? Get(splitter, "lastIndex"))).
         auto last_index_value = TRY(splitter->get(vm.names.lastIndex));
-        auto last_index = TRY(last_index_value.to_length(global_object)); // 'e' in the spec.
-        last_index = min(last_index, string_view.length_in_code_units());
+        auto last_index = TRY(last_index_value.to_length(global_object));
 
+        // ii. Set e to min(e, size).
+        last_index = min(last_index, string.length_in_code_units());
+
+        // iii. If e = p, set q to AdvanceStringIndex(S, q, unicodeMatching).
         if (last_index == last_match_end) {
-            next_search_from = advance_string_index(string_view, next_search_from, unicode);
+            next_search_from = advance_string_index(string.view(), next_search_from, unicode_matching);
             continue;
         }
 
-        auto substring = string_view.substring_view(last_match_end, next_search_from - last_match_end);
-        MUST(array->create_data_property_or_throw(array_length, js_string(vm, move(substring))));
+        // iv. Else,
 
-        if (++array_length == limit)
+        // 1. Let T be the substring of S from p to q.
+        auto substring = string.substring_view(last_match_end, next_search_from - last_match_end);
+
+        // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
+        MUST(array->create_data_property_or_throw(array_length, js_string(vm, substring)));
+
+        // 3. Set lengthA to lengthA + 1.
+        ++array_length;
+
+        // 4. If lengthA = lim, return A.
+        if (array_length == limit)
             return array;
 
-        auto* result_object = TRY(result.to_object(global_object));
-        auto number_of_captures = TRY(length_of_array_like(global_object, *result_object));
+        // 5. Set p to e.
+        last_match_end = last_index;
+
+        // 6. Let numberOfCaptures be ? LengthOfArrayLike(z).
+        auto number_of_captures = TRY(length_of_array_like(global_object, result.as_object()));
+
+        // 7. Set numberOfCaptures to max(numberOfCaptures - 1, 0).
         if (number_of_captures > 0)
             --number_of_captures;
 
+        // 8. Let i be 1.
+        // 9. Repeat, while i ≤ numberOfCaptures,
         for (size_t i = 1; i <= number_of_captures; ++i) {
-            auto next_capture = TRY(result_object->get(i));
+
+            // a. Let nextCapture be ? Get(z, ! ToString(𝔽(i))).
+            auto next_capture = TRY(result.get(global_object, i));
+
+            // b. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), nextCapture).
             MUST(array->create_data_property_or_throw(array_length, next_capture));
-            if (++array_length == limit)
+
+            // c. Set i to i + 1.
+
+            // d. Set lengthA to lengthA + 1.
+            ++array_length;
+
+            // e. If lengthA = lim, return A.
+            if (array_length == limit)
                 return array;
         }
 
-        last_match_end = last_index;
-        next_search_from = last_index;
+        // 10. Set q to p.
+        next_search_from = last_match_end;
     }
 
-    auto substring = string_view.substring_view(last_match_end);
-    MUST(array->create_data_property_or_throw(array_length, js_string(vm, move(substring))));
+    // 20. Let T be the substring of S from p to size.
+    auto substring = string.substring_view(last_match_end);
 
+    // 21. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
+    MUST(array->create_data_property_or_throw(array_length, js_string(vm, substring)));
+
+    // 22. Return A.
     return array;
 }
 
