@@ -95,7 +95,7 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::In
             if (distance >= size())
                 continue;
 
-            auto falloff = (1.0 - double { distance / size() }) * (1.0 / (100 - hardness()));
+            auto falloff = get_falloff(distance);
             auto pixel_color = color;
             pixel_color.set_alpha(falloff * 255);
             bitmap.set_pixel(x, y, bitmap.get_pixel(x, y).blend(pixel_color));
@@ -168,7 +168,7 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_label.set_fixed_size(80, 20);
 
         auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
-        hardness_slider.set_range(1, 99);
+        hardness_slider.set_range(1, 100);
         hardness_slider.set_value(m_hardness);
 
         hardness_slider.on_change = [&](int value) {

@@ -28,6 +28,12 @@ public:
     void set_hardness(int hardness) { m_hardness = hardness; }
     int hardness() const { return m_hardness; }
 
+    double get_falloff(double distance)
+    {
+        double multiplicand = hardness() == 100 ? 1.0 : 1.0 / (100 - hardness());
+        return (1.0 - double { distance / size() }) * multiplicand;
+    }
+
 protected:
     virtual Color color_for(GUI::MouseEvent const& event);
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point);
