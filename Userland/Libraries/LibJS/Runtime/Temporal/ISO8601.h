@@ -90,7 +90,7 @@ public:
     [[nodiscard]] bool parse_duration_designator();
     [[nodiscard]] bool parse_seconds_designator();
     [[nodiscard]] bool parse_date_time_separator();
-    [[nodiscard]] bool parse_duration_time_designator();
+    [[nodiscard]] bool parse_time_designator();
     [[nodiscard]] bool parse_weeks_designator();
     [[nodiscard]] bool parse_years_designator();
     [[nodiscard]] bool parse_utc_designator();
