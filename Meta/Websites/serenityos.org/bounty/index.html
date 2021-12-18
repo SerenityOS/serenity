@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html>
-<head><title>SerenityOS bug bounty program</title></head>
+<head>
+<title>SerenityOS bug bounty program</title>
+<style>
+body {
+    background: black;
+    color: lime;
+    font-family: monospace;
+    font-size: 14pt;
+}
+a {
+    font-weight: bold;
+    text-decoration: underline;
+}
+a:link, a:visited {
+    color: cyan;
+}
+a:active {
+    color: red;
+}
+</style>
+</head>
 <body>
-    <h1>SerenityOS bug bounty program</h1>
+    <h1>SerenityOS bug bounty program :^)</h1>
     <p>
-        Like any respectable software project, SerenityOS also runs a bug bounty program.
+        Like any respectable software project, <a href="https://www.serenityos.org/">SerenityOS</a>
+        also runs a bug bounty program.
         I don't have a huge budget, but I want to reward good honest work.
     </p>
     <p>
-        I will pay <b>$5</b> USD for exploitable bugs in these categories:
+        I will pay <b>$50</b> USD for exploitable bugs in these categories:
     </p>
     <ul>
         <li>Remote code execution.</li>
@@ -19,7 +40,7 @@
     <ul>
         <li>No rewards for bugs you caused yourself.</li>
         <li>The PoC exploit needs to work against the master branch at the time of claim.</li>
-        <li>Max 5 bounties per person.</li>
+        <li>Max 3 bounties per person.</li>
         <li>No duplicates. If a bug is already reported, only the earliest reporter may claim the reward. This includes bugs found by continuous fuzzing systems.</li>
         <li>No rewards for bugs that require unlikely user interaction or social engineering.</li>
         <li>Remote bugs must be exploitable with an unmodified "default setup" of SerenityOS. Bugs in programs that are not started by default don't qualify.</li>
@@ -27,11 +48,7 @@
         <li>SerenityOS always runs with assertions enabled, so you'll need to find a way around them.</li>
     </ul>
     <p>
-        Rewarded bounties will be listed here, and I will also make a video dissecting each
-        exploit and showing what the bug was, and how I fix it.
-    </p>
-    <p>
-    To claim a reward, get in touch with me either on the <a href="https://discord.gg/serenityos">SerenityOS Discord</a> (<b>awesomekling</b>) or via <b>kling@serenityos.org</b>
+    To claim a reward, get in touch with me either on the <a href="https://discord.gg/serenityos">SerenityOS Discord</a> (<i>awesomekling#1985</i>) or via <b><a href="mailto:kling@serenityos.org">kling@serenityos.org</a></b>. (And even if you are not interested in the reward, I'd still like to hear about any exploits!)
     </p>
     <p><b>Past exploits:</b></p>
     <ul>
