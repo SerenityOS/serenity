@@ -37,7 +37,7 @@ void CloneTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const&, Gfx::IntPoint
             if (source_x < 0 || source_x >= bitmap.width() || source_y < 0 || source_y >= bitmap.height())
                 continue;
 
-            auto falloff = (1.0 - double { distance / size() }) * (1.0 / (100 - hardness()));
+            auto falloff = get_falloff(distance);
             auto pixel_color = bitmap.get_pixel(source_x, source_y);
             pixel_color.set_alpha(falloff * 255);
             bitmap.set_pixel(target_x, target_y, bitmap.get_pixel(target_x, target_y).blend(pixel_color));
@@ -165,11 +165,11 @@ GUI::Widget* CloneTool::get_properties_widget()
         hardness_label.set_fixed_size(80, 20);
 
         auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
-        hardness_slider.set_range(1, 99);
+        hardness_slider.set_range(1, 100);
         hardness_slider.on_change = [&](int value) {
             set_hardness(value);
         };
-        hardness_slider.set_value(99);
+        hardness_slider.set_value(100);
         set_secondary_slider(&hardness_slider);
     }
 
