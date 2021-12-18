@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto app_icon = GUI::Icon::default_icon("app-libgfx-demo");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->try_set_main_widget<Canvas>());
     window->show();
