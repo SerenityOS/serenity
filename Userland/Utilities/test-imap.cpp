@@ -9,8 +9,9 @@
 #include <LibCore/File.h>
 #include <LibCore/GetPassword.h>
 #include <LibIMAP/Client.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (pledge("stdio inet tty rpath unix", nullptr) < 0) {
         perror("pledge");
@@ -32,15 +33,10 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(host, "IMAP host", "host");
     args_parser.add_positional_argument(port, "Port to connect to", "port");
     args_parser.add_positional_argument(username, "Username", "username");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (interactive_password) {
-        auto password_or_error = Core::get_password();
-        if (password_or_error.is_error()) {
-            warnln("{}", password_or_error.error());
-            return 1;
-        }
-        password = password_or_error.release_value();
+        password = TRY(Core::get_password());
     } else {
         auto standard_input = Core::File::standard_input();
         password = Core::SecretString::take_ownership(standard_input->read_all());
