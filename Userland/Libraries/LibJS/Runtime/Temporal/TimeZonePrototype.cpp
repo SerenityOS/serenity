@@ -230,10 +230,11 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
 {
     // 1. Let timeZone be the this value.
-    auto time_zone = vm.this_value(global_object);
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = TRY(typed_this_object(global_object));
 
-    // 2. Return ? ToString(timeZone).
-    return js_string(vm, TRY(time_zone.to_string(global_object)));
+    // 3. Return ? ToString(timeZone).
+    return js_string(vm, TRY(Value(time_zone).to_string(global_object)));
 }
 
 }
