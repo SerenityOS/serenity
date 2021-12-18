@@ -66,10 +66,11 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 {
     // 1. Let calendar be the this value.
-    auto calendar = vm.this_value(global_object);
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = TRY(typed_this_object(global_object));
 
-    // 2. Return ? ToString(calendar).
-    return { js_string(vm, TRY(calendar.to_string(global_object))) };
+    // 3. Return ? ToString(calendar).
+    return { js_string(vm, TRY(Value(calendar).to_string(global_object))) };
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields

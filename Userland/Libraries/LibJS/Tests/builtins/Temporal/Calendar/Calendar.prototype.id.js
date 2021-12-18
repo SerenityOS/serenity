@@ -3,8 +3,12 @@ describe("correct behavior", () => {
         const calendar = new Temporal.Calendar("iso8601");
         expect(calendar.id).toBe("iso8601");
     });
+});
 
-    test("works with any this value", () => {
-        expect(Reflect.get(Temporal.Calendar.prototype, "id", "foo")).toBe("foo");
+describe("errors", () => {
+    test("this value must be a Temporal.Calendar object", () => {
+        expect(() => {
+            Reflect.get(Temporal.Calendar.prototype, "id", "foo");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Calendar");
     });
 });
