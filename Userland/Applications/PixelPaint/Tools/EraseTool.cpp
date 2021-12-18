@@ -50,8 +50,9 @@ void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::In
                     continue;
                 if (distance >= size())
                     continue;
+
                 auto old_color = bitmap.get_pixel(x, y);
-                auto falloff = (1.0 - double { distance / size() }) * (1.0 / (100 - hardness()));
+                auto falloff = get_falloff(distance);
                 auto new_color = old_color.interpolate(color, falloff);
                 bitmap.set_pixel(x, y, new_color);
             }
@@ -91,7 +92,7 @@ GUI::Widget* EraseTool::get_properties_widget()
         hardness_label.set_fixed_size(80, 20);
 
         auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
-        hardness_slider.set_range(1, 99);
+        hardness_slider.set_range(1, 100);
         hardness_slider.set_value(hardness());
 
         hardness_slider.on_change = [&](int value) {
