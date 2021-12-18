@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
-    auto app_icon = GUI::Icon::default_icon("app-flappybug");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flappybug"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Flappy Bug");
     window->set_double_buffering_enabled(false);
