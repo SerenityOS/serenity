@@ -88,10 +88,7 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Mem
             return false;
 
         if (make_executable && region->has_been_writable()) {
-            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
-                return true;
-
-            return false;
+            return should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region);
         }
     }
 
