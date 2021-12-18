@@ -19,9 +19,9 @@ if [ "$(id -u)" != 0 ]; then
         exec sudo -E -- "$0" "$@" || die "privilege escalation failed"
     fi
 else
-    if [ -z "$NO_DOAS" ] && type doas > /dev/null 2>&1; then
+    if [ -z "$NO_DOAS" ] && type doas > /dev/null 2>&1 && [ -n "$DOAS_USER" ]; then
         : "${SUDO_UID:=$(id -u "$DOAS_USER")}" "${SUDO_GID:="$(id -g "$DOAS_USER")"}"
-    else
-        : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
     fi
+
+    : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
