@@ -59,7 +59,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
         TRY(fds_info.try_append({ move(description), block_flags }));
     }
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
 
     u32 previous_signal_mask = 0;
     if (params.sigmask)

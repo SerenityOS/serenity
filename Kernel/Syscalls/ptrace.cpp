@@ -170,7 +170,7 @@ ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>
  */
 bool Process::has_tracee_thread(ProcessID tracer_pid)
 {
-    if (auto tracer = this->tracer())
+    if (auto const* tracer = this->tracer())
         return tracer->tracer_pid() == tracer_pid;
     return false;
 }

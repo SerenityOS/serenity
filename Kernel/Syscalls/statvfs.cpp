@@ -58,7 +58,7 @@ ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
     REQUIRE_PROMISE(stdio);
 
     auto description = TRY(fds().open_file_description(fd));
-    auto inode = description->inode();
+    auto const* inode = description->inode();
     if (inode == nullptr)
         return ENOENT;
 
