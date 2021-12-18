@@ -125,6 +125,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
     Core::ArgsParser parser;
