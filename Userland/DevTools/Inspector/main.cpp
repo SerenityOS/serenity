@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pid_t pid;
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-inspector");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-inspector"));
     if (gui_mode) {
     choose_pid:
         auto process_chooser = TRY(GUI::ProcessChooser::try_create("Inspector", "Inspect", app_icon.bitmap_for_size(16)));
