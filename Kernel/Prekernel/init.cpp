@@ -74,12 +74,29 @@ extern "C" [[noreturn]] void init();
 
 u64 generate_secure_seed();
 
+static bool is_drow_kernel(ElfW(Phdr) & program_header)
+{
+    if (program_header.p_align < PAGE_SIZE)
+        return false;
+    if (program_header.p_vaddr != program_header.p_offset)
+        return false;
+    if (program_header.p_filesz != program_header.p_memsz)
+        return false;
+    return true;
+}
+
 extern "C" [[noreturn]] void init()
 {
     if (multiboot_info_ptr->mods_count < 1)
         halt();
 
     multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
+    for (size_t i = 0; i < multiboot_info_ptr->mods_count; i++) {
+        // Note: We require the DROW kernel and other multiboot modules to be placed
+        // on a page boundary.
+        if (kernel_module[i].start & (PAGE_SIZE - 1))
+            halt();
+    }
 
     u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
     // copy the ELF header and program headers because we might end up overwriting them
@@ -89,7 +106,7 @@ extern "C" [[noreturn]] void init()
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
-    FlatPtr kernel_physical_base = 0x200000;
+    FlatPtr kernel_physical_base = (FlatPtr)kernel_image;
 #if ARCH(I386)
     FlatPtr default_kernel_load_base = 0xc0200000;
 #else
@@ -109,6 +126,9 @@ extern "C" [[noreturn]] void init()
         auto& kernel_program_header = kernel_program_headers[i];
         if (kernel_program_header.p_type != PT_LOAD)
             continue;
+        // we require that the ELF kernel is a DROW
+        if (!is_drow_kernel(kernel_program_header))
+            halt();
         auto start = kernel_load_base + kernel_program_header.p_vaddr;
         auto end = start + kernel_program_header.p_memsz;
         if (start < (FlatPtr)end_of_prekernel_image)
@@ -160,20 +180,6 @@ extern "C" [[noreturn]] void init()
     boot_pd_kernel[511] = (FlatPtr)boot_pd_kernel_pt1023 | 0x3;
 
     reload_cr3();
-
-    for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
-        auto& kernel_program_header = kernel_program_headers[i];
-        if (kernel_program_header.p_type != PT_LOAD)
-            continue;
-        __builtin_memmove((u8*)kernel_load_base + kernel_program_header.p_vaddr, kernel_image + kernel_program_header.p_offset, kernel_program_header.p_filesz);
-    }
-
-    for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
-        auto& kernel_program_header = kernel_program_headers[i];
-        if (kernel_program_header.p_type != PT_LOAD)
-            continue;
-        __builtin_memset((u8*)kernel_load_base + kernel_program_header.p_vaddr + kernel_program_header.p_filesz, 0, kernel_program_header.p_memsz - kernel_program_header.p_filesz);
-    }
 
     multiboot_info_ptr->mods_count--;
     multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
