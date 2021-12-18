@@ -30,6 +30,7 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
 }
 LIBC_CHECK_EXCLUDES = {
     'Kernel/',
+    'Meta/Lagom/Tools/ELFBaker/',
     'Userland/Libraries/LibELF/',
     'Userland/Libraries/LibRegex/'
 }
