@@ -440,8 +440,8 @@ ISODate balance_iso_date(double year_, double month_, double day)
 
     // 9. NOTE: To deal with numbers of days greater than the number of days in a year, the following section adds years and subtracts days until the number of days is less than 366 or 365.
 
-    // 10. Let testYear be year + 1.
-    test_year = year + 1;
+    // 10. Let testYear be testYear + 1.
+    test_year += 1;
 
     // 11. Repeat, while day > ! ISODaysInYear(testYear),
     while (day > iso_days_in_year(test_year)) {
