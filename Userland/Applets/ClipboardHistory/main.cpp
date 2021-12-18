@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    auto app_icon = GUI::Icon::default_icon("edit-copy");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("edit-copy"));
 
     auto main_window = TRY(GUI::Window::try_create());
     main_window->set_title("Clipboard history");
