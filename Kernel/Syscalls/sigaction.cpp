@@ -244,8 +244,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
             new_region->clear_to_zero();
 
             // Map the new region using our page directory (they were just allocated and don't have one) if any.
-            if (adjacent_regions.size())
-                TRY(adjacent_regions[0]->map(address_space().page_directory()));
+            TRY(adjacent_regions[0]->map(address_space().page_directory()));
 
             TRY(new_region->map(address_space().page_directory()));
         }
