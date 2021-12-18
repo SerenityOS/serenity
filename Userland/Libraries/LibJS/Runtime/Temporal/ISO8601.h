@@ -128,6 +128,7 @@ public:
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_calendar_time();
     [[nodiscard]] bool parse_calendar_date_time();
+    [[nodiscard]] bool parse_calendar_date_time_time_required();
     [[nodiscard]] bool parse_duration_whole_seconds();
     [[nodiscard]] bool parse_duration_seconds_fraction();
     [[nodiscard]] bool parse_duration_seconds_part();
