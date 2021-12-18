@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_double_buffering_enabled(false);
     window->set_title("Breakout");
 
-    auto app_icon = GUI::Icon::default_icon("app-breakout");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-breakout"));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto game = TRY(window->try_set_main_widget<Breakout::Game>());
