@@ -64,8 +64,7 @@ ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, const UserO
             if (!description.is_blocking()) {
                 if (total_nwritten > 0)
                     return total_nwritten;
-                else
-                    return EAGAIN;
+                return EAGAIN;
             }
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted()) {
