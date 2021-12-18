@@ -461,32 +461,35 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
     // 7. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
 
-    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", "day").
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "day"sv));
+    // 8. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
-    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    // 9. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
+
+    // 10. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
     TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
-    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    // 11. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 11. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
+    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
-    // 12. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(*largest_unit)));
 
-    // 13. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
+    // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
 
-    // NOTE: Result can be reassigned by 14.b, `result` above has the type `Duration*` from calendar_date_until while 14.b has the type `RoundedDuration` from round_duration.
+    // NOTE: Result can be reassigned by 15.a, `result` above has the type `Duration*` from calendar_date_until while 15.a has the type `RoundedDuration` from round_duration.
     //       Thus, we must store the individual parts we're interested in.
     auto years = result->years();
     auto months = result->months();
     auto weeks = result->weeks();
     auto days = result->days();
 
-    // 14. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
+    // 15. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
     if (*smallest_unit != "day"sv || rounding_increment != 1) {
         // a. Set result to ? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate).
         // See NOTE above about why this is done.
@@ -497,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
         days = rounded_result.days;
     }
 
-    // 15. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
+    // 16. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
     // See NOTE above about why `result` isn't used.
     return TRY(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 }
@@ -525,37 +528,40 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
     // 7. Let smallestUnit be ? ToSmallestTemporalUnit(options, disallowedUnits, "day").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, disallowed_units, "day"sv));
 
-    // 8. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", "day").
-    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, "day"sv));
+    // 8. Let defaultLargestUnit be ! LargerOfTwoTemporalUnits("day", smallestUnit).
+    auto default_largest_unit = larger_of_two_temporal_units("day"sv, *smallest_unit);
 
-    // 9. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
+    // 9. Let largestUnit be ? ToLargestTemporalUnit(options, disallowedUnits, "auto", defaultLargestUnit).
+    auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, disallowed_units, "auto"sv, default_largest_unit));
+
+    // 10. Perform ? ValidateTemporalUnitRange(largestUnit, smallestUnit).
     TRY(validate_temporal_unit_range(global_object, *largest_unit, *smallest_unit));
 
-    // 10. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
+    // 11. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 11. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
+    // 12. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
     rounding_mode = negate_temporal_rounding_mode(rounding_mode);
 
-    // 12. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
+    // 13. Let roundingIncrement be ? ToTemporalRoundingIncrement(options, undefined, false).
     auto rounding_increment = TRY(to_temporal_rounding_increment(global_object, *options, {}, false));
 
-    // 13. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
+    // 14. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(*largest_unit)));
 
-    // 14. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
+    // 15. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
 
-    // 15. If smallestUnit is "day" and roundingIncrement = 1, then
+    // 16. If smallestUnit is "day" and roundingIncrement = 1, then
     if (*smallest_unit == "day"sv && rounding_increment == 1) {
         // a. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
         return TRY(create_temporal_duration(global_object, -result->years(), -result->months(), -result->weeks(), -result->days(), 0, 0, 0, 0, 0, 0));
     }
 
-    // 16. Set result to ? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate).
+    // 17. Set result to ? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate).
     auto round_result = TRY(round_duration(global_object, result->years(), result->months(), result->weeks(), result->days(), 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date));
 
-    // 17. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
+    // 18. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
     // NOTE: `result` here refers to `round_result`.
     return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, -round_result.weeks, -round_result.days, 0, 0, 0, 0, 0, 0));
 }
