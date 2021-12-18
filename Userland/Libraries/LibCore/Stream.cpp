@@ -273,7 +273,7 @@ ErrorOr<int> Socket::create_fd(SocketDomain domain, SocketType type)
     return rc;
 }
 
-Result<IPv4Address, SocketError> Socket::resolve_host(String const& host, SocketType type)
+ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
 {
     int socket_type;
     switch (type) {
@@ -297,13 +297,13 @@ Result<IPv4Address, SocketError> Socket::resolve_host(String const& host, Socket
     int rc = getaddrinfo(host.characters(), nullptr, &hints, &results);
     if (rc != 0) {
         if (rc == EAI_SYSTEM) {
-            return SocketError { Error::from_errno(errno) };
-        } else {
-            return SocketError { static_cast<GetAddrInfoError>(rc) };
+            return Error::from_errno(errno);
         }
+
+        return Error::from_string_literal(gai_strerror(rc));
     }
 
-    auto socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);
+    auto* socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);
     NetworkOrdered<u32> network_ordered_address { socket_address->sin_addr.s_addr };
 
     freeaddrinfo(results);
@@ -445,15 +445,10 @@ void PosixSocketHelper::setup_notifier()
         m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Read);
 }
 
-Result<TCPSocket, SocketError> TCPSocket::connect(String const& host, u16 port)
+ErrorOr<TCPSocket> TCPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Stream));
-
-    auto maybe_socket = connect(SocketAddress { ip_address, port });
-    if (maybe_socket.is_error()) {
-        return SocketError { maybe_socket.release_error() };
-    }
-    return maybe_socket.release_value();
+    return connect(SocketAddress { ip_address, port });
 }
 
 ErrorOr<TCPSocket> TCPSocket::connect(SocketAddress const& address)
@@ -500,14 +495,10 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     return static_cast<size_t>(value);
 }
 
-Result<UDPSocket, SocketError> UDPSocket::connect(String const& host, u16 port)
+ErrorOr<UDPSocket> UDPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Datagram));
-    auto maybe_socket = connect(SocketAddress { ip_address, port });
-    if (maybe_socket.is_error()) {
-        return SocketError { maybe_socket.release_error() };
-    }
-    return maybe_socket.release_value();
+    return connect(SocketAddress { ip_address, port });
 }
 
 ErrorOr<UDPSocket> UDPSocket::connect(SocketAddress const& address)

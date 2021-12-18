@@ -81,60 +81,6 @@ public:
     virtual ErrorOr<off_t> size();
 };
 
-enum class GetAddrInfoError {
-    NoAddressInFamily = EAI_ADDRFAMILY,
-    TemporaryFailure = EAI_AGAIN,
-    PermanentFailure = EAI_FAIL,
-    BadFlags = EAI_BADFLAGS,
-    UnsupportedFamily = EAI_FAMILY,
-    OutOfMemory = EAI_MEMORY,
-    NoNetworkAddressesForHost = EAI_NODATA,
-    UnknownService = EAI_NONAME,
-    ServiceNotAvailable = EAI_SERVICE,
-    UnsupportedSocketType = EAI_SOCKTYPE,
-    System = EAI_SYSTEM,
-};
-
-class SocketError {
-public:
-    SocketError(GetAddrInfoError error)
-        : m_value(error)
-    {
-    }
-    SocketError(ErrorOr<void> const& error)
-        : m_value(error)
-    {
-    }
-
-    // TRY() compatibility
-    SocketError release_error() { return *this; }
-    void release_value() { }
-
-    bool is_error() const
-    {
-        return m_value.has<GetAddrInfoError>() || m_value.get<ErrorOr<void>>().is_error();
-    }
-    bool is_success() const { return !is_error(); }
-
-    bool is_kresult() { return m_value.has<ErrorOr<void>>(); }
-    bool is_getaddrinfo_error() { return m_value.has<GetAddrInfoError>(); }
-
-    ErrorOr<void> as_kresult() { return m_value.get<ErrorOr<void>>(); }
-    GetAddrInfoError as_getaddrinfo_error()
-    {
-        return m_value.get<GetAddrInfoError>();
-    }
-
-    StringView getaddrinfo_error_string()
-    {
-        VERIFY(is_getaddrinfo_error());
-        return { gai_strerror(static_cast<int>(as_getaddrinfo_error())) };
-    }
-
-private:
-    Variant<ErrorOr<void>, GetAddrInfoError> m_value;
-};
-
 /// The Socket class is the base class for all concrete BSD-style socket
 /// classes. Sockets are non-seekable streams which can be read byte-wise.
 class Socket : public Stream {
@@ -180,7 +126,7 @@ protected:
     static ErrorOr<int> create_fd(SocketDomain, SocketType);
     // FIXME: This will need to be updated when IPv6 socket arrives. Perhaps a
     //        base class for all address types is appropriate.
-    static Result<IPv4Address, SocketError> resolve_host(String const&, SocketType);
+    static ErrorOr<IPv4Address> resolve_host(String const&, SocketType);
 
     static ErrorOr<void> connect_local(int fd, String const& path);
     static ErrorOr<void> connect_inet(int fd, SocketAddress const&);
@@ -194,7 +140,7 @@ public:
     virtual bool is_connected() = 0;
     /// Reconnects the socket to the given host and port. Returns EALREADY if
     /// is_connected() is true.
-    virtual SocketError reconnect(String const& host, u16 port) = 0;
+    virtual ErrorOr<void> reconnect(String const& host, u16 port) = 0;
     /// Connects the socket to the given socket address (IP address + port).
     /// Returns EALREADY is_connected() is true.
     virtual ErrorOr<void> reconnect(SocketAddress const&) = 0;
@@ -307,7 +253,7 @@ private:
 
 class TCPSocket final : public Socket {
 public:
-    static Result<TCPSocket, SocketError> connect(String const& host, u16 port);
+    static ErrorOr<TCPSocket> connect(String const& host, u16 port);
     static ErrorOr<TCPSocket> connect(SocketAddress const& address);
     static ErrorOr<TCPSocket> adopt_fd(int fd);
 
@@ -364,7 +310,7 @@ private:
 
 class UDPSocket final : public Socket {
 public:
-    static Result<UDPSocket, SocketError> connect(String const& host, u16 port);
+    static ErrorOr<UDPSocket> connect(String const& host, u16 port);
     static ErrorOr<UDPSocket> connect(SocketAddress const& address);
 
     UDPSocket(UDPSocket&& other)
@@ -858,7 +804,7 @@ using BufferedLocalSocket = BufferedSocket<LocalSocket>;
 template<SocketLike T>
 class BasicReusableSocket final : public ReusableSocket {
 public:
-    static Result<BasicReusableSocket<T>, SocketError> connect(String const& host, u16 port)
+    static ErrorOr<BasicReusableSocket<T>> connect(String const& host, u16 port)
     {
         return BasicReusableSocket { TRY(T::connect(host, port)) };
     }
@@ -873,13 +819,13 @@ public:
         return m_socket.is_open();
     }
 
-    virtual SocketError reconnect(String const& host, u16 port) override
+    virtual ErrorOr<void> reconnect(String const& host, u16 port) override
     {
         if (is_connected())
-            return SocketError { Error::from_errno(EALREADY) };
+            return Error::from_errno(EALREADY);
 
         m_socket = TRY(T::connect(host, port));
-        return SocketError { {} };
+        return {};
     }
 
     virtual ErrorOr<void> reconnect(SocketAddress const& address) override
