@@ -1,7 +1,7 @@
 set(SOURCES
     Clipper.cpp
     DepthBuffer.cpp
-    SoftwareRasterizer.cpp
+    Device.cpp
 )
 
 serenity_lib(LibSoftGPU softgpu)

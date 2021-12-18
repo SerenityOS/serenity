@@ -16,7 +16,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/SoftwareRasterizer.h>
+#include <LibSoftGPU/Device.h>
 
 using AK::dbgln;
 

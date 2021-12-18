@@ -58,9 +58,9 @@ struct RasterizerOptions {
     GLenum culled_sides { GL_BACK };
 };
 
-class SoftwareRasterizer final {
+class Device final {
 public:
-    SoftwareRasterizer(const Gfx::IntSize& min_size);
+    Device(const Gfx::IntSize& min_size);
 
     void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units);
     void resize(const Gfx::IntSize& min_size);
