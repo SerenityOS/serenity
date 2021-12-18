@@ -575,10 +575,11 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
 {
     // 1. Let calendar be the this value.
-    auto calendar = vm.this_value(global_object);
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = TRY(typed_this_object(global_object));
 
-    // 2. Return ? ToString(calendar).
-    return js_string(vm, TRY(calendar.to_string(global_object)));
+    // 3. Return ? ToString(calendar).
+    return js_string(vm, TRY(Value(calendar).to_string(global_object)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era
