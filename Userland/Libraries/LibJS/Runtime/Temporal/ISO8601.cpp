@@ -782,17 +782,6 @@ bool ISO8601Parser::parse_time_spec()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-Time
-bool ISO8601Parser::parse_time()
-{
-    // Time :
-    //     TimeSpec TimeZone[opt]
-    if (!parse_time_spec())
-        return false;
-    (void)parse_time_zone();
-    return true;
-}
-
 // https://tc39.es/proposal-temporal/#prod-TimeSpecSeparator
 bool ISO8601Parser::parse_time_spec_separator()
 {
@@ -816,6 +805,18 @@ bool ISO8601Parser::parse_date_time()
         return false;
     (void)parse_time_spec_separator();
     (void)parse_time_zone();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-CalendarTime
+bool ISO8601Parser::parse_calendar_time()
+{
+    // CalendarTime :
+    //     TimeSpec TimeZone[opt] Calendar[opt]
+    if (!parse_time_spec())
+        return false;
+    (void)parse_time_zone();
+    (void)parse_calendar();
     return true;
 }
 
@@ -1173,10 +1174,10 @@ bool ISO8601Parser::parse_temporal_month_day_string()
 {
     // TemporalMonthDayString :
     //     DateSpecMonthDay
-    //     DateTime
-    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `DateTime`,
+    //     CalendarDateTime
+    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `CalendarDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_date_time()
+    return parse_calendar_date_time()
         || parse_date_spec_month_day();
 }
 
@@ -1184,12 +1185,12 @@ bool ISO8601Parser::parse_temporal_month_day_string()
 bool ISO8601Parser::parse_temporal_time_string()
 {
     // TemporalTimeString :
-    //     Time
-    //     DateTime
+    //     CalendarTime
+    //     CalendarDateTime
     // NOTE: Reverse order here because `Time` can be a subset of `DateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_date_time()
-        || parse_time();
+    return parse_calendar_date_time()
+        || parse_calendar_time();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalTimeZoneIdentifier
@@ -1226,10 +1227,10 @@ bool ISO8601Parser::parse_temporal_year_month_string()
 {
     // TemporalYearMonthString :
     //     DateSpecYearMonth
-    //     DateTime
-    // NOTE: Reverse order here because `DateSpecYearMonth` can be a subset of `DateTime`,
+    //     CalendarDateTime
+    // NOTE: Reverse order here because `DateSpecYearMonth` can be a subset of `CalendarDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_date_time()
+    return parse_calendar_date_time()
         || parse_date_spec_year_month();
 }
 
@@ -1256,7 +1257,7 @@ bool ISO8601Parser::parse_temporal_calendar_string()
     //     CalendarName
     //     TemporalInstantString
     //     CalendarDateTime
-    //     Time
+    //     CalendarTime
     //     DateSpecYearMonth
     //     DateSpecMonthDay
     return parse_calendar_name()
@@ -1264,7 +1265,7 @@ bool ISO8601Parser::parse_temporal_calendar_string()
         || parse_calendar_date_time()
         || parse_date_spec_year_month()
         || parse_date_spec_month_day()
-        || parse_time();
+        || parse_calendar_time();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalRelativeToString
