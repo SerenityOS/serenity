@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
     case _SC_NPROCESSORS_ONLN:
         return Processor::processor_count();
     case _SC_OPEN_MAX:
-        return fds().max_open();
+        return OpenFileDescriptions::max_open();
     case _SC_PAGESIZE:
         return PAGE_SIZE;
     case _SC_HOST_NAME_MAX:
