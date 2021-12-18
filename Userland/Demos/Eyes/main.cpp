@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         extra_columns = num_eyes % max_in_row;
     }
 
-    auto app_icon = GUI::Icon::default_icon("app-eyes");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-eyes"));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Eyes");
