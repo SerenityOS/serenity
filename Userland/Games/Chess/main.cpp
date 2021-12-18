@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec"));
 
-    auto app_icon = GUI::Icon::default_icon("app-chess");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-chess"));
 
     auto window = TRY(GUI::Window::try_create());
     auto widget = TRY(window->try_set_main_widget<ChessWidget>());
