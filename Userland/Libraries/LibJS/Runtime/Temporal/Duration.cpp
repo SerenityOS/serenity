@@ -1779,7 +1779,7 @@ String temporal_duration_to_string(double years, double months, double weeks, do
     }
 
     // 21. If any of seconds, milliseconds, microseconds, and nanoseconds are not 0; or years, months, weeks, days, hours, and minutes are all 0; or precision is not "auto"; then
-    if ((seconds != 0 || milliseconds != 0 || microseconds != 0 || nanoseconds != 0) || (years == 0 && months == 0 && weeks == 0 && days == 0 && hours == 0 && minutes == 0) || (precision.has<StringView>() && precision.get<StringView>() != "auto"sv)) {
+    if ((seconds != 0 || milliseconds != 0 || microseconds != 0 || nanoseconds != 0) || (years == 0 && months == 0 && weeks == 0 && days == 0 && hours == 0 && minutes == 0) || (!precision.has<StringView>() || precision.get<StringView>() != "auto"sv)) {
         // a. Let fraction be abs(milliseconds) × 10^6 + abs(microseconds) × 10^3 + abs(nanoseconds).
         auto fraction = fabs(milliseconds) * 1'000'000 + fabs(microseconds) * 1'000 + fabs(nanoseconds);
 
