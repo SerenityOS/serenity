@@ -124,9 +124,9 @@ public:
     [[nodiscard]] bool parse_calendar_name();
     [[nodiscard]] bool parse_calendar();
     [[nodiscard]] bool parse_time_spec();
-    [[nodiscard]] bool parse_time();
     [[nodiscard]] bool parse_time_spec_separator();
     [[nodiscard]] bool parse_date_time();
+    [[nodiscard]] bool parse_calendar_time();
     [[nodiscard]] bool parse_calendar_date_time();
     [[nodiscard]] bool parse_duration_whole_seconds();
     [[nodiscard]] bool parse_duration_seconds_fraction();
