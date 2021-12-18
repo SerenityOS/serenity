@@ -201,10 +201,10 @@ bool ISO8601Parser::parse_date_time_separator()
         || m_state.lexer.consume_specific('t');
 }
 
-// https://tc39.es/proposal-temporal/#prod-DurationTimeDesignator
-bool ISO8601Parser::parse_duration_time_designator()
+// https://tc39.es/proposal-temporal/#prod-TimeDesignator
+bool ISO8601Parser::parse_time_designator()
 {
-    // DurationTimeDesignator : one of
+    // TimeDesignator : one of
     //     T t
     return m_state.lexer.consume_specific('T')
         || m_state.lexer.consume_specific('t');
@@ -812,11 +812,14 @@ bool ISO8601Parser::parse_date_time()
 bool ISO8601Parser::parse_calendar_time()
 {
     // CalendarTime :
-    //     TimeSpec TimeZone[opt] Calendar[opt]
+    //     TimeDesignator[opt] TimeSpec TimeZone[opt] Calendar[opt]
+    StateTransaction transaction { *this };
+    (void)parse_time_designator();
     if (!parse_time_spec())
         return false;
     (void)parse_time_zone();
     (void)parse_calendar();
+    transaction.commit();
     return true;
 }
 
@@ -962,11 +965,11 @@ bool ISO8601Parser::parse_duration_hours_part()
 bool ISO8601Parser::parse_duration_time()
 {
     // DurationTime :
-    //     DurationTimeDesignator DurationHoursPart
-    //     DurationTimeDesignator DurationMinutesPart
-    //     DurationTimeDesignator DurationSecondsPart
+    //     TimeDesignator DurationHoursPart
+    //     TimeDesignator DurationMinutesPart
+    //     TimeDesignator DurationSecondsPart
     StateTransaction transaction { *this };
-    if (!parse_duration_time_designator())
+    if (!parse_time_designator())
         return false;
     auto success = parse_duration_hours_part()
         || parse_duration_minutes_part()
