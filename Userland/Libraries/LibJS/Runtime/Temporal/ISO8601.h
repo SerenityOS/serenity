@@ -21,7 +21,7 @@ struct ParseResult {
     Optional<StringView> time_hour;
     Optional<StringView> time_minute;
     Optional<StringView> time_second;
-    Optional<StringView> time_fractional_part;
+    Optional<StringView> fractional_part;
     Optional<StringView> calendar_name;
     Optional<StringView> utc_designator;
     Optional<StringView> time_zone_utc_offset_sign;
@@ -104,7 +104,6 @@ public:
     [[nodiscard]] bool parse_time_minute();
     [[nodiscard]] bool parse_time_second();
     [[nodiscard]] bool parse_fractional_part();
-    [[nodiscard]] bool parse_time_fractional_part();
     [[nodiscard]] bool parse_fraction();
     [[nodiscard]] bool parse_time_fraction();
     [[nodiscard]] bool parse_time_zone_utc_offset_sign();

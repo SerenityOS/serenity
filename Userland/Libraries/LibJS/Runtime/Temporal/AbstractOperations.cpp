@@ -1079,14 +1079,14 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. Let year, month, day, hour, minute, second, fraction, and calendar be the parts of isoString produced respectively by the DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, TimeFractionalPart, and CalendarName productions, or undefined if not present.
+    // 2. Let year, month, day, hour, minute, second, fraction, and calendar be the parts of isoString produced respectively by the DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, FractionalPart, and CalendarName productions, or undefined if not present.
     auto year_part = parse_result.date_year;
     auto month_part = parse_result.date_month;
     auto day_part = parse_result.date_day;
     auto hour_part = parse_result.time_hour;
     auto minute_part = parse_result.time_minute;
     auto second_part = parse_result.time_second;
-    auto fraction_part = parse_result.time_fractional_part;
+    auto fraction_part = parse_result.fractional_part;
     auto calendar_part = parse_result.calendar_name;
 
     // 3. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
@@ -1145,15 +1145,15 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
-        // b. Let millisecond be the String value equal to the substring of fraction from 0 to 3.
+        // b. Let millisecond be the String value equal to the substring of fraction from 1 to 4.
         // c. Set millisecond to ! ToIntegerOrInfinity(millisecond).
-        millisecond = *fraction.substring(0, 3).to_uint<u16>();
-        // d. Let microsecond be the String value equal to the substring of fraction from 3 to 6.
+        millisecond = *fraction.substring(1, 3).to_uint<u16>();
+        // d. Let microsecond be the String value equal to the substring of fraction from 4 to 7.
         // e. Set microsecond to ! ToIntegerOrInfinity(microsecond).
-        microsecond = *fraction.substring(3, 3).to_uint<u16>();
-        // f. Let nanosecond be the String value equal to the substring of fraction from 6 to 9.
+        microsecond = *fraction.substring(4, 3).to_uint<u16>();
+        // f. Let nanosecond be the String value equal to the substring of fraction from 7 to 10.
         // g. Set nanosecond to ! ToIntegerOrInfinity(nanosecond).
-        nanosecond = *fraction.substring(6, 3).to_uint<u16>();
+        nanosecond = *fraction.substring(7, 3).to_uint<u16>();
     }
     // 14. Else,
     else {
