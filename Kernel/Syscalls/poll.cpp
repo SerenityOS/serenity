@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> use
     REQUIRE_PROMISE(stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    if (params.nfds >= fds().max_open())
+    if (params.nfds >= OpenFileDescriptions::max_open())
         return ENOBUFS;
 
     Thread::BlockTimeout timeout;
