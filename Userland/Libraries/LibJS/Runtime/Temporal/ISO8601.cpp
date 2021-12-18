@@ -834,6 +834,22 @@ bool ISO8601Parser::parse_calendar_date_time()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-CalendarDateTimeTimeRequired
+bool ISO8601Parser::parse_calendar_date_time_time_required()
+{
+    // CalendarDateTimeTimeRequired :
+    //     Date TimeSpecSeparator TimeZone[opt] Calendar[opt]
+    StateTransaction transaction { *this };
+    if (!parse_date())
+        return false;
+    if (!parse_time_spec_separator())
+        return false;
+    (void)parse_time_zone();
+    (void)parse_calendar();
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-DurationWholeSeconds
 bool ISO8601Parser::parse_duration_whole_seconds()
 {
@@ -1189,10 +1205,10 @@ bool ISO8601Parser::parse_temporal_time_string()
 {
     // TemporalTimeString :
     //     CalendarTime
-    //     CalendarDateTime
-    // NOTE: Reverse order here because `Time` can be a subset of `DateTime`,
+    //     CalendarDateTimeTimeRequired
+    // NOTE: Reverse order here because `Time` can be a subset of `CalendarDateTimeTimeRequired`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_calendar_date_time()
+    return parse_calendar_date_time_time_required()
         || parse_calendar_time();
 }
 
