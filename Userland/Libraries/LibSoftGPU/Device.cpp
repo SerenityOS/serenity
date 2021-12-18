@@ -9,7 +9,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
-#include <LibSoftGPU/SoftwareRasterizer.h>
+#include <LibSoftGPU/Device.h>
 
 namespace SoftGPU {
 
@@ -488,14 +488,14 @@ static Gfx::IntSize closest_multiple(const Gfx::IntSize& min_size, size_t step)
     return { width, height };
 }
 
-SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
+Device::Device(const Gfx::IntSize& min_size)
     : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors() }
     , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, RASTERIZER_BLOCK_SIZE))) }
 {
     m_options.scissor_box = m_render_target->rect();
 }
 
-void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
+void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -648,7 +648,7 @@ void SoftwareRasterizer::draw_primitives(GLenum primitive_type, FloatMatrix4x4 c
     }
 }
 
-void SoftwareRasterizer::submit_triangle(const Triangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
+void Device::submit_triangle(const Triangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;
@@ -712,7 +712,7 @@ void SoftwareRasterizer::submit_triangle(const Triangle& triangle, GL::TextureUn
     });
 }
 
-void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
+void Device::resize(const Gfx::IntSize& min_size)
 {
     wait_for_all_threads();
 
@@ -720,7 +720,7 @@ void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
     m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
 }
 
-void SoftwareRasterizer::clear_color(const FloatVector4& color)
+void Device::clear_color(const FloatVector4& color)
 {
     wait_for_all_threads();
 
@@ -741,7 +741,7 @@ void SoftwareRasterizer::clear_color(const FloatVector4& color)
     m_render_target->fill(fill_color);
 }
 
-void SoftwareRasterizer::clear_depth(float depth)
+void Device::clear_depth(float depth)
 {
     wait_for_all_threads();
 
@@ -753,7 +753,7 @@ void SoftwareRasterizer::clear_depth(float depth)
     m_depth_buffer->clear(depth);
 }
 
-void SoftwareRasterizer::blit(Gfx::Bitmap const& source, int x, int y)
+void Device::blit(Gfx::Bitmap const& source, int x, int y)
 {
     wait_for_all_threads();
 
@@ -761,7 +761,7 @@ void SoftwareRasterizer::blit(Gfx::Bitmap const& source, int x, int y)
     painter.blit({ x, y }, source, source.rect(), 1.0f, true);
 }
 
-void SoftwareRasterizer::blit_to(Gfx::Bitmap& target)
+void Device::blit_to(Gfx::Bitmap& target)
 {
     wait_for_all_threads();
 
@@ -769,12 +769,12 @@ void SoftwareRasterizer::blit_to(Gfx::Bitmap& target)
     painter.blit({ 0, 0 }, *m_render_target, m_render_target->rect(), 1.0f, false);
 }
 
-void SoftwareRasterizer::wait_for_all_threads() const
+void Device::wait_for_all_threads() const
 {
     // FIXME: Wait for all render threads to finish when multithreading is being implemented
 }
 
-void SoftwareRasterizer::set_options(const RasterizerOptions& options)
+void Device::set_options(const RasterizerOptions& options)
 {
     wait_for_all_threads();
 
@@ -783,7 +783,7 @@ void SoftwareRasterizer::set_options(const RasterizerOptions& options)
     // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
 
-Gfx::RGBA32 SoftwareRasterizer::get_backbuffer_pixel(int x, int y)
+Gfx::RGBA32 Device::get_backbuffer_pixel(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
     if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
@@ -792,7 +792,7 @@ Gfx::RGBA32 SoftwareRasterizer::get_backbuffer_pixel(int x, int y)
     return m_render_target->scanline(y)[x];
 }
 
-float SoftwareRasterizer::get_depthbuffer_value(int x, int y)
+float Device::get_depthbuffer_value(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
     if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
