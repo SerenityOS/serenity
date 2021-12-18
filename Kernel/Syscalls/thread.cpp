@@ -82,7 +82,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
         this->sys$exit(0);
     }
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     current_thread->set_profiling_suppressed();
     PerformanceManager::add_thread_exit_event(*current_thread);
 
@@ -120,7 +120,7 @@ ErrorOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_valu
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     if (thread == current_thread)
         return EDEADLK;
 
