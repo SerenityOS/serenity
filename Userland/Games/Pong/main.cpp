@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(Pong::Game::game_width, Pong::Game::game_height);
-    auto app_icon = GUI::Icon::default_icon("app-pong");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-pong"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Pong");
     window->set_double_buffering_enabled(false);
