@@ -4,107 +4,143 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/OwnPtr.h"
+#include <LibCore/Stream.h>
 #include <LibIMAP/Client.h>
 
 namespace IMAP {
-Client::Client(StringView host, unsigned int port, bool start_with_tls)
+
+Client::Client(StringView host, u16 port, NonnullRefPtr<TLS::TLSv12> socket)
     : m_host(host)
     , m_port(port)
-    , m_tls(start_with_tls)
-    , m_parser(Parser())
+    , m_tls(true)
+    , m_tls_socket(move(socket))
+    , m_connect_pending(Promise<Empty>::construct())
 {
-    if (start_with_tls) {
-        m_tls_socket = TLS::TLSv12::construct(nullptr);
-        m_tls_socket->set_root_certificates(DefaultRootCACertificates::the().certificates());
-    } else {
-        m_socket = Core::TCPSocket::construct();
-    }
+    setup_callbacks();
 }
 
-RefPtr<Promise<Empty>> Client::connect()
+Client::Client(StringView host, u16 port, NonnullOwnPtr<Core::Stream::Socket> socket)
+    : m_host(host)
+    , m_port(port)
+    , m_tls(false)
+    , m_socket(move(socket))
+    , m_connect_pending(Promise<Empty>::construct())
 {
-    bool success;
+    setup_callbacks();
+}
+
+Client::Client(Client&& other)
+    : m_host(other.m_host)
+    , m_port(other.m_port)
+    , m_tls(other.m_tls)
+    , m_socket(move(other.m_socket))
+    , m_tls_socket(move(other.m_tls_socket))
+    , m_connect_pending(move(other.m_connect_pending))
+{
+    setup_callbacks();
+}
+
+void Client::setup_callbacks()
+{
     if (m_tls) {
-        success = connect_tls();
+        m_tls_socket->on_tls_ready_to_read = [&](TLS::TLSv12&) {
+            auto maybe_error = on_tls_ready_to_receive();
+            if (maybe_error.is_error()) {
+                dbgln("Error receiving from the socket: {}", maybe_error.error());
+                close();
+            }
+        };
+
     } else {
-        success = connect_plaintext();
+        m_socket->on_ready_to_read = [&] {
+            auto maybe_error = on_ready_to_receive();
+            if (maybe_error.is_error()) {
+                dbgln("Error receiving from the socket: {}", maybe_error.error());
+                close();
+            }
+        };
     }
-    if (!success)
-        return {};
-    m_connect_pending = Promise<Empty>::construct();
-    return m_connect_pending;
 }
 
-bool Client::connect_tls()
+ErrorOr<NonnullOwnPtr<Client>> Client::connect_tls(StringView host, u16 port)
 {
-    m_tls_socket->on_tls_ready_to_read = [&](TLS::TLSv12&) {
-        on_tls_ready_to_receive();
-    };
-    m_tls_socket->on_tls_error = [&](TLS::AlertDescription alert) {
+    auto tls_socket = TLS::TLSv12::construct(nullptr);
+    tls_socket->set_root_certificates(DefaultRootCACertificates::the().certificates());
+
+    tls_socket->on_tls_error = [&](TLS::AlertDescription alert) {
         dbgln("failed: {}", alert_name(alert));
     };
-    m_tls_socket->on_tls_connected = [&] {
+    tls_socket->on_tls_connected = [&] {
         dbgln("connected");
     };
-    auto success = m_tls_socket->connect(m_host, m_port);
-    dbgln("connecting to {}:{} {}", m_host, m_port, success);
-    return success;
+
+    auto success = tls_socket->connect(host, port);
+    dbgln("connecting to {}:{} {}", host, port, success);
+
+    return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, tls_socket));
 }
 
-bool Client::connect_plaintext()
+ErrorOr<NonnullOwnPtr<Client>> Client::connect_plaintext(StringView host, u16 port)
 {
-    m_socket->on_ready_to_read = [&] {
-        on_ready_to_receive();
-    };
-    auto success = m_socket->connect(m_host, m_port);
-    dbgln("connecting to {}:{} {}", m_host, m_port, success);
-    return success;
+    auto socket = TRY(Core::Stream::TCPSocket::connect(host, port));
+    dbgln("Connected to {}:{}", host, port);
+    return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, move(socket)));
 }
 
-void Client::on_tls_ready_to_receive()
+ErrorOr<void> Client::on_tls_ready_to_receive()
 {
     if (!m_tls_socket->can_read())
-        return;
+        return {};
     auto data = m_tls_socket->read();
+    // FIXME: Make TLSv12 return the actual error instead of returning a bogus
+    //        one here.
     if (!data.has_value())
-        return;
+        return Error::from_errno(EIO);
 
     // Once we get server hello we can start sending
     if (m_connect_pending) {
         m_connect_pending->resolve({});
         m_connect_pending.clear();
-        return;
+        return {};
     }
 
     m_buffer += data.value();
     if (m_buffer[m_buffer.size() - 1] == '\n') {
         // Don't try parsing until we have a complete line.
         auto response = m_parser.parse(move(m_buffer), m_expecting_response);
-        handle_parsed_response(move(response));
+        MUST(handle_parsed_response(move(response)));
         m_buffer.clear();
     }
+
+    return {};
 }
 
-void Client::on_ready_to_receive()
+ErrorOr<void> Client::on_ready_to_receive()
 {
-    if (!m_socket->can_read())
-        return;
-    m_buffer += m_socket->read_all();
+    if (!TRY(m_socket->can_read_without_blocking()))
+        return {};
+
+    auto pending_bytes = TRY(m_socket->pending_bytes());
+    auto receive_buffer = TRY(m_buffer.get_bytes_for_writing(pending_bytes));
+    TRY(m_socket->read(receive_buffer));
 
     // Once we get server hello we can start sending.
     if (m_connect_pending) {
         m_connect_pending->resolve({});
         m_connect_pending.clear();
         m_buffer.clear();
-        return;
+        return {};
     }
 
     if (m_buffer[m_buffer.size() - 1] == '\n') {
         // Don't try parsing until we have a complete line.
         auto response = m_parser.parse(move(m_buffer), m_expecting_response);
-        handle_parsed_response(move(response));
+        TRY(handle_parsed_response(move(response)));
         m_buffer.clear();
     }
+
+    return {};
 }
 
 static ReadonlyBytes command_byte_buffer(CommandType command)
@@ -170,15 +206,17 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
     VERIFY_NOT_REACHED();
 }
 
-void Client::send_raw(StringView data)
+ErrorOr<void> Client::send_raw(StringView data)
 {
     if (m_tls) {
         m_tls_socket->write(data.bytes());
         m_tls_socket->write("\r\n"sv.bytes());
     } else {
-        m_socket->write(data.bytes());
-        m_socket->write("\r\n"sv.bytes());
+        TRY(m_socket->write(data.bytes()));
+        TRY(m_socket->write("\r\n"sv.bytes()));
     }
+
+    return {};
 }
 
 RefPtr<Promise<Optional<Response>>> Client::send_command(Command&& command)
@@ -190,7 +228,7 @@ RefPtr<Promise<Optional<Response>>> Client::send_command(Command&& command)
     m_pending_promises.append(promise);
 
     if (m_pending_promises.size() == 1)
-        send_next_command();
+        MUST(send_next_command());
 
     return promise;
 }
@@ -245,7 +283,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::select(StringView string)
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-void Client::handle_parsed_response(ParseStatus&& parse_status)
+ErrorOr<void> Client::handle_parsed_response(ParseStatus&& parse_status)
 {
     if (!m_expecting_response) {
         if (!parse_status.successful) {
@@ -268,12 +306,14 @@ void Client::handle_parsed_response(ParseStatus&& parse_status)
         }
 
         if (should_send_next && !m_command_queue.is_empty()) {
-            send_next_command();
+            TRY(send_next_command());
         }
     }
+
+    return {};
 }
 
-void Client::send_next_command()
+ErrorOr<void> Client::send_next_command()
 {
     auto command = m_command_queue.take_first();
     ByteBuffer buffer;
@@ -287,8 +327,9 @@ void Client::send_next_command()
         buffer.append(arg.bytes().data(), arg.length());
     }
 
-    send_raw(buffer);
+    TRY(send_raw(buffer));
     m_expecting_response = true;
+    return {};
 }
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::examine(StringView string)
@@ -358,7 +399,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
 {
     auto promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(promise);
-    send_raw("DONE");
+    MUST(send_raw("DONE"));
     m_expecting_response = true;
     return cast_promise<SolidResponse>(promise);
 }
@@ -415,9 +456,9 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
 
     continue_req->on_resolved = [this, message2 { move(message) }](auto& data) {
         if (!data.has_value()) {
-            handle_parsed_response({ .successful = false, .response = {} });
+            MUST(handle_parsed_response({ .successful = false, .response = {} }));
         } else {
-            send_raw(message2.data);
+            MUST(send_raw(message2.data));
             m_expecting_response = true;
         }
     };
@@ -452,6 +493,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::copy(Sequence sequence_set, Str
 
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
+
 void Client::close()
 {
     if (m_tls) {
@@ -460,4 +502,10 @@ void Client::close()
         m_socket->close();
     }
 }
+
+bool Client::is_open()
+{
+    return m_tls ? m_tls_socket->is_open() : m_socket->is_open();
+}
+
 }
