@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-solitaire");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"));
 
     Config::pledge_domains("Solitaire");
 
