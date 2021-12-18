@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
-    auto app_icon = GUI::Icon::default_icon("app-model-gallery");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-model-gallery"));
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Model Gallery");
