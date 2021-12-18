@@ -56,5 +56,5 @@ TEST_CASE(file_watcher_child_events)
     });
     catchall_timer->start();
 
-    event_loop.exec();
+    event_loop.exec().release_value_but_fixme_should_propagate_errors();
 }

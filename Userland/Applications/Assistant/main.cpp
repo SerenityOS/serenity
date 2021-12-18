@@ -320,5 +320,5 @@ int main(int argc, char** argv)
     window->move_to(window->x(), window->y() - (GUI::Desktop::the().rect().height() * 0.33));
     window->show();
 
-    return app->exec();
+    return app->exec().release_value_but_fixme_should_propagate_errors();
 }

@@ -114,7 +114,7 @@ Application::~Application()
     revoke_weak_ptrs();
 }
 
-int Application::exec()
+ErrorOr<int> Application::exec()
 {
     return m_event_loop->exec();
 }

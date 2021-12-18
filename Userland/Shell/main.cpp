@@ -192,5 +192,5 @@ int main(int argc, char** argv)
 
     Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::Shell::ShellEventType::ReadLine));
 
-    return loop.exec();
+    return loop.exec().release_value_but_fixme_should_propagate_errors();
 }

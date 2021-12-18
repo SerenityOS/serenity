@@ -112,10 +112,10 @@ static int run(Function<void(const char*, size_t)> fn)
             auto& line = line_result.value();
 
             if (line == ".wait") {
-                g_loop.exec();
+                g_loop.exec().release_value_but_fixme_should_propagate_errors();
             } else {
                 fn(line.characters(), line.length());
-                g_loop.pump();
+                g_loop.pump().fixme_should_propagate_errors();
             }
         }
     } else {
@@ -134,7 +134,7 @@ static int run(Function<void(const char*, size_t)> fn)
         }
         auto buffer = file.value()->read_all();
         fn((const char*)buffer.data(), buffer.size());
-        g_loop.exec();
+        g_loop.exec().release_value_but_fixme_should_propagate_errors();
     }
     return 0;
 }
@@ -2056,7 +2056,7 @@ static void tls_test_client_hello()
         FAIL(connect() failed);
         return;
     }
-    loop.exec();
+    loop.exec().release_value_but_fixme_should_propagate_errors();
 }
 
 static int adler32_tests()

@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ClientConnection>());
 
-    auto result = event_loop.exec();
+    auto result = TRY(event_loop.exec());
 
     // FIXME: We exit instead of returning, so that protocol destructors don't get called.
     //        The Protocol base class should probably do proper de-registration instead of

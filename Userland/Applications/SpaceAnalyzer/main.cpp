@@ -149,12 +149,13 @@ static NonnullRefPtr<GUI::Window> create_progress_window()
     return window;
 }
 
-static void update_progress_label(GUI::Label& progresslabel, size_t files_encountered_count)
+static ErrorOr<void> update_progress_label(GUI::Label& progresslabel, size_t files_encountered_count)
 {
     auto text = String::formatted("{} files...", files_encountered_count);
     progresslabel.set_text(text);
 
-    Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
+    TRY(Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents));
+    return {};
 }
 
 struct QueueEntry {
@@ -165,7 +166,7 @@ struct QueueEntry {
     TreeNode* node { nullptr };
 };
 
-static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
+static ErrorOr<void> populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator, GUI::Label& progresslabel)
 {
     VERIFY(!root.m_name.ends_with("/"));
 
@@ -178,7 +179,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
     builder.append("/");
     MountInfo* root_mount_info = find_mount_for_path(builder.to_string(), mounts);
     if (!root_mount_info) {
-        return;
+        return {};
     }
     while (!queue.is_empty()) {
         QueueEntry queue_entry = queue.dequeue();
@@ -204,7 +205,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
             for (auto& child : *queue_entry.node->m_children) {
                 files_encountered_count += 1;
                 if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
-                    update_progress_label(progresslabel, files_encountered_count);
+                    TRY(update_progress_label(progresslabel, files_encountered_count));
 
                 String& name = child.m_name;
                 int name_len = name.length();
@@ -227,16 +228,17 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
     }
 
     update_totals(root);
+    return {};
 }
 
-static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
+static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     statusbar.set_text("");
     auto progress_window = create_progress_window();
     progress_window->show();
 
     auto& progresslabel = *progress_window->main_widget()->find_descendant_of_type_named<GUI::Label>("progresslabel");
-    update_progress_label(progresslabel, 0);
+    TRY(update_progress_label(progresslabel, 0));
 
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
@@ -244,7 +246,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     Vector<MountInfo> mounts;
     fill_mounts(mounts);
     HashMap<int, int> error_accumulator;
-    populate_filesize_tree(*root, mounts, error_accumulator, progresslabel);
+    TRY(populate_filesize_tree(*root, mounts, error_accumulator, progresslabel));
 
     progress_window->close();
 
@@ -274,6 +276,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
         statusbar.set_text("No errors");
     }
     treemapwidget.set_tree(tree);
+    return {};
 }
 
 static bool is_removable(const String& absolute_path)
@@ -320,7 +323,7 @@ int main(int argc, char* argv[])
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
-        analyze(tree, treemapwidget, statusbar);
+        analyze(tree, treemapwidget, statusbar).fixme_should_propagate_errors();
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -370,7 +373,7 @@ int main(int argc, char* argv[])
 
         // TODO: Refreshing data always causes resetting the viewport back to "/".
         // It would be great if we found a way to preserve viewport across refreshes.
-        analyze(tree, treemapwidget, statusbar);
+        analyze(tree, treemapwidget, statusbar).fixme_should_propagate_errors();
     });
     // TODO: Both these menus could've been implemented as one, but it's impossible to change action text after it's shown once.
     auto folder_node_context_menu = GUI::Menu::construct();
@@ -419,8 +422,8 @@ int main(int argc, char* argv[])
     };
 
     // At startup automatically do an analysis of root.
-    analyze(tree, treemapwidget, statusbar);
+    analyze(tree, treemapwidget, statusbar).fixme_should_propagate_errors();
 
     window->show();
-    return app->exec();
+    return app->exec().release_value_but_fixme_should_propagate_errors();
 }

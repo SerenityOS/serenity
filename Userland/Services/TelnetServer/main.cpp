@@ -148,7 +148,7 @@ int main(int argc, char** argv)
         clients.set(id, client);
     };
 
-    int rc = event_loop.exec();
+    int rc = event_loop.exec().release_value_but_fixme_should_propagate_errors();
     if (rc != 0) {
         fprintf(stderr, "event loop exited badly; rc=%d", rc);
         exit(1);

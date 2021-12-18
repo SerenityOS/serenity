@@ -33,7 +33,7 @@ public:
     explicit EventLoop(MakeInspectable = MakeInspectable::No);
     ~EventLoop();
 
-    int exec();
+    ErrorOr<int> exec();
 
     enum class WaitMode {
         WaitForEvents,
@@ -42,9 +42,9 @@ public:
 
     // processe events, generally called by exec() in a loop.
     // this should really only be used for integrating with other event loops
-    void pump(WaitMode = WaitMode::WaitForEvents);
+    ErrorOr<void> pump(WaitMode = WaitMode::WaitForEvents);
 
-    void spin_until(Function<bool()>);
+    ErrorOr<void> spin_until(Function<bool()>);
 
     void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
 
@@ -87,6 +87,27 @@ public:
         post_event(context, make<Core::DeferredInvocationEvent>(context, move(invokee)));
     }
 
+    template<typename Result, typename ReturnValue = Optional<Result>>
+    ReturnValue try_callback(ErrorOr<Result> callback_value)
+    {
+        if (callback_value.is_error()) {
+            m_callback_error = callback_value.error();
+            return {};
+        }
+
+        return callback_value.release_value();
+    }
+
+    void try_callback(ErrorOr<void> callback_value)
+    {
+        if (callback_value.is_error()) {
+            m_callback_error = callback_value.error();
+            return;
+        }
+
+        return callback_value.release_value();
+    }
+
 private:
     void wait_for_event(WaitMode);
     Optional<Time> get_next_timer_expiration();
@@ -110,6 +131,8 @@ private:
 
     bool m_exit_requested { false };
     int m_exit_code { 0 };
+
+    Optional<Error> m_callback_error;
 
     static int s_wake_pipe_fds[2];
 

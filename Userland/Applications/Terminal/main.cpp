@@ -368,7 +368,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     window->show();
-    int result = app->exec();
+    int result = TRY(app->exec());
     dbgln("Exiting terminal, updating utmp");
     utmp_update(ptsname, 0, false);
     return result;

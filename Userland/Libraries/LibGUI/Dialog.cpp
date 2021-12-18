@@ -86,7 +86,7 @@ int Dialog::exec()
 
     set_rect(window_rect);
     show();
-    auto result = m_event_loop->exec();
+    auto result = m_event_loop->exec().release_value_but_fixme_should_propagate_errors();
     m_event_loop = nullptr;
     dbgln("{}: Event loop returned with result {}", *this, result);
     remove_from_parent();

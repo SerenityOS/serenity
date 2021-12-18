@@ -30,7 +30,7 @@ public:
 
     static bool in_teardown();
 
-    int exec();
+    ErrorOr<int> exec();
     void quit(int = 0);
 
     Action* action_for_key_event(const KeyEvent&);

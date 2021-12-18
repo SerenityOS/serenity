@@ -22,7 +22,7 @@ public:
     EventLoop();
     virtual ~EventLoop();
 
-    int exec() { return m_event_loop.exec(); }
+    int exec() { return m_event_loop.exec().release_value_but_fixme_should_propagate_errors(); }
 
 private:
     void drain_mouse();

@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         window->set_has_alpha_channel(true);
         window->set_fullscreen(true);
         window->show();
-        app->exec();
+        app->exec().release_value_but_fixme_should_propagate_errors();
 
         crop_region = container.region();
         if (crop_region.value().is_empty()) {

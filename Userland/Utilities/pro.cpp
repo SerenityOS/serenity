@@ -278,7 +278,7 @@ int main(int argc, char** argv)
 
     dbgln("started request with id {}", request->id());
 
-    auto rc = loop.exec();
+    auto rc = loop.exec().release_value_but_fixme_should_propagate_errors();
     // FIXME: This shouldn't be needed.
     fclose(stdout);
     return rc;

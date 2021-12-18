@@ -21,5 +21,5 @@ TEST_CASE(deferred_invoke)
         event_loop.quit(0);
     });
 
-    event_loop.exec();
+    event_loop.exec().release_value_but_fixme_should_propagate_errors();
 }

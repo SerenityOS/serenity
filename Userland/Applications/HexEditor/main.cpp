@@ -70,5 +70,5 @@ int main(int argc, char** argv)
         hex_editor_widget.open_file(*response.fd, *response.chosen_file);
     }
 
-    return app->exec();
+    return app->exec().release_value_but_fixme_should_propagate_errors();
 }

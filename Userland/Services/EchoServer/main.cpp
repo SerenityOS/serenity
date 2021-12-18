@@ -72,5 +72,5 @@ int main(int argc, char** argv)
 
     outln("Listening on 0.0.0.0:{}", port);
 
-    return event_loop.exec();
+    return event_loop.exec().release_value_but_fixme_should_propagate_errors();
 }

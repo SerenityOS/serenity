@@ -50,5 +50,5 @@ int main(int argc, char** argv)
     }
 
     window->show();
-    return app->exec();
+    return app->exec().release_value_but_fixme_should_propagate_errors();
 }

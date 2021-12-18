@@ -113,5 +113,5 @@ TEST_CASE(test_TLS_hello_handshake)
         FAIL("connect() failed");
         return;
     }
-    loop.exec();
+    loop.exec().release_value_but_fixme_should_propagate_errors();
 }

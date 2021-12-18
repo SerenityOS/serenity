@@ -346,5 +346,5 @@ int main(int argc, char** argv)
         repl.source_file(file_to_source);
     if (!file_to_read.is_empty())
         repl.read_file(file_to_read);
-    return repl.run();
+    return repl.run().release_value_but_fixme_should_propagate_errors();
 }

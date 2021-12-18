@@ -142,7 +142,7 @@ public:
         window->set_frameless(true);
         window->show();
 
-        if (!m_event_loop->exec())
+        if (!m_event_loop->exec().release_value_but_fixme_should_propagate_errors())
             return {};
         return m_col;
     }

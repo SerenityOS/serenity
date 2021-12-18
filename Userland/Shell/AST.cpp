@@ -1719,7 +1719,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             }
         } };
 
-        auto exit_reason = loop.exec();
+        auto exit_reason = loop.exec().release_value_but_fixme_should_propagate_errors();
 
         notifier->on_ready_to_read = nullptr;
 

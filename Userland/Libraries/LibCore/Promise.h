@@ -32,7 +32,7 @@ public:
     Result await()
     {
         while (!is_resolved()) {
-            Core::EventLoop::current().pump();
+            Core::EventLoop::current().pump().fixme_should_propagate_errors();
         }
         return m_pending.release_value();
     }

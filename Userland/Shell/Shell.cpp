@@ -1095,7 +1095,7 @@ void Shell::block_on_job(RefPtr<Job> job)
         return;
 
     while (!job_exited)
-        Core::EventLoop::current().pump();
+        Core::EventLoop::current().pump().fixme_should_propagate_errors();
 
     // If the job is part of a pipeline, wait for the rest of the members too.
     if (auto command = job->command_ptr())

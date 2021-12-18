@@ -49,7 +49,7 @@ void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes
             loop.quit(0);
         });
 
-    loop.exec();
+    loop.exec().release_value_but_fixme_should_propagate_errors();
 }
 
 void ResourceLoader::prefetch_dns(AK::URL const& url)

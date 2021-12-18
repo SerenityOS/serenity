@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         // Trigger it the first time immediately.
         clipboard.on_change({});
 
-        return app->exec();
+        return app->exec().release_value_but_fixme_should_propagate_errors();
     }
 
     auto data_and_type = clipboard.fetch_data_and_type();

@@ -145,5 +145,5 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_about_action("Calendar", app_icon, window));
 
     window->show();
-    app->exec();
+    return app->exec().release_value_but_fixme_should_propagate_errors();
 }

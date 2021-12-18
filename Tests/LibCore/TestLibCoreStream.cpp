@@ -298,7 +298,7 @@ TEST_CASE(local_socket_read)
         EXPECT(server_socket->write(sent_data));
 
         event_loop.quit(0);
-        event_loop.pump();
+        event_loop.pump().fixme_should_propagate_errors();
     };
 
     // NOTE: Doing this on another thread, because otherwise we're at an
@@ -329,7 +329,7 @@ TEST_CASE(local_socket_read)
         },
         [](int) {});
 
-    event_loop.exec();
+    event_loop.exec().release_value_but_fixme_should_propagate_errors();
     ::unlink("/tmp/test-socket");
 }
 
@@ -351,7 +351,7 @@ TEST_CASE(local_socket_write)
         EXPECT_EQ(sent_data, received_data);
 
         event_loop.quit(0);
-        event_loop.pump();
+        event_loop.pump().fixme_should_propagate_errors();
     };
 
     // NOTE: Same reason as in the local_socket_read test.
@@ -368,7 +368,7 @@ TEST_CASE(local_socket_write)
         },
         [](int) {});
 
-    event_loop.exec();
+    event_loop.exec().release_value_but_fixme_should_propagate_errors();
     ::unlink("/tmp/test-socket");
 }
 

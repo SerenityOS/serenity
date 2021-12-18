@@ -85,7 +85,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
         progress_window->set_progress(100.0f * (float)(frame_index + 1) / (float)frame_count);
         progressbar.set_value(frame_index + 1);
         progressbar.set_max(frame_count);
-        Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
+        Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents).fixme_should_propagate_errors();
     });
     progress_window->close();
 

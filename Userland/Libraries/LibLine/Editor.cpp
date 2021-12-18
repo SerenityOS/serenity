@@ -726,7 +726,7 @@ auto Editor::get_line(String const& prompt) -> Result<String, Editor::Error>
     if (!m_incomplete_data.is_empty())
         deferred_invoke([&] { try_update_once(); });
 
-    if (loop.exec() == Retry)
+    if (loop.exec().release_value_but_fixme_should_propagate_errors() == Retry)
         return get_line(prompt);
 
     return m_input_error.has_value() ? Result<String, Editor::Error> { m_input_error.value() } : Result<String, Editor::Error> { m_returned_line };

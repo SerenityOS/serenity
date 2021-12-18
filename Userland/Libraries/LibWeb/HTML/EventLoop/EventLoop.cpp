@@ -76,11 +76,12 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
     //    1. Wait until the condition goal is met.
     Core::EventLoop loop;
     loop.spin_until([&]() -> bool {
-        if (goal_condition())
-            return true;
+            if (goal_condition())
+                return true;
 
-        return goal_condition();
-    });
+            return goal_condition();
+        })
+        .fixme_should_propagate_errors();
 
     // 7. Stop task, allowing whatever algorithm that invoked it to resume.
     // NOTE: This is achieved by returning from the function.

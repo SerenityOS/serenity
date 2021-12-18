@@ -361,26 +361,31 @@ private:
     EventLoop& m_event_loop;
 };
 
-int EventLoop::exec()
+ErrorOr<int> EventLoop::exec()
 {
     EventLoopPusher pusher(*this);
     for (;;) {
         if (m_exit_requested)
             return m_exit_code;
-        pump();
+        TRY(pump());
     }
     VERIFY_NOT_REACHED();
 }
 
-void EventLoop::spin_until(Function<bool()> goal_condition)
+ErrorOr<void> EventLoop::spin_until(Function<bool()> goal_condition)
 {
     EventLoopPusher pusher(*this);
     while (!goal_condition())
-        pump();
+        TRY(pump());
+    return {};
 }
 
-void EventLoop::pump(WaitMode mode)
+ErrorOr<void> EventLoop::pump(WaitMode mode)
 {
+    if (m_callback_error.has_value()) {
+        return m_callback_error.release_value();
+    }
+
     wait_for_event(mode);
 
     decltype(m_queued_events) events;
@@ -400,7 +405,7 @@ void EventLoop::pump(WaitMode mode)
             switch (event.type()) {
             case Event::Quit:
                 VERIFY_NOT_REACHED();
-                return;
+                return {};
             default:
                 dbgln_if(EVENTLOOP_DEBUG, "Event type {} with no receiver :(", event.type());
                 break;
@@ -422,9 +427,11 @@ void EventLoop::pump(WaitMode mode)
                 new_event_queue.unchecked_append(move(events[i]));
             new_event_queue.extend(move(m_queued_events));
             m_queued_events = move(new_event_queue);
-            return;
+            return {};
         }
     }
+
+    return {};
 }
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)

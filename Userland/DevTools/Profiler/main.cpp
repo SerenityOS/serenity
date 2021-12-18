@@ -40,7 +40,7 @@
 
 using namespace Profiler;
 
-static bool generate_profile(pid_t& pid);
+static ErrorOr<bool> generate_profile(pid_t& pid);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     String perfcore_file;
     if (!perfcore_file_arg) {
-        if (!generate_profile(pid))
+        if (!TRY(generate_profile(pid)))
             return 0;
         perfcore_file = String::formatted("/proc/{}/perf_events", pid);
     } else {
@@ -269,7 +269,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
+static ErrorOr<bool> prompt_to_stop_profiling(pid_t pid, const String& process_name)
 {
     auto window = GUI::Window::construct();
     window->set_title(String::formatted("Profiling {}({})", process_name, pid));
@@ -296,10 +296,10 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     };
 
     window->show();
-    return GUI::Application::the()->exec() == 0;
+    return TRY(GUI::Application::the()->exec()) == 0;
 }
 
-bool generate_profile(pid_t& pid)
+ErrorOr<bool> generate_profile(pid_t& pid)
 {
     if (!pid) {
         auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png").release_value_but_fixme_should_propagate_errors());
@@ -330,7 +330,7 @@ bool generate_profile(pid_t& pid)
         return false;
     }
 
-    if (!prompt_to_stop_profiling(pid, process_name))
+    if (!TRY(prompt_to_stop_profiling(pid, process_name)))
         return false;
 
     if (profiling_disable(pid) < 0) {
