@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-profiler");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"));
 
     String perfcore_file;
     if (!perfcore_file_arg) {
@@ -85,9 +86,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
-    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto timeline_header_container = TRY(GUI::Widget::try_create());
     timeline_header_container->set_layout<GUI::VerticalBoxLayout>();
@@ -105,9 +106,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (!matching_event_found)
             continue;
-        auto& timeline_header = timeline_header_container->add<TimelineHeader>(*profile, process);
-        timeline_header.set_shrink_to_fit(true);
-        timeline_header.on_selection_change = [&](bool selected) {
+        auto timeline_header = TRY(timeline_header_container->try_add<TimelineHeader>(*profile, process));
+        timeline_header->set_shrink_to_fit(true);
+        timeline_header->on_selection_change = [&](bool selected) {
             auto end_valid = process.end_valid == EventSerialNumber {} ? EventSerialNumber::max_valid_serial() : process.end_valid;
             if (selected)
                 profile->add_process_filter(process.pid, process.start_valid, end_valid);
@@ -119,82 +120,83 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return IterationDecision::Continue;
             });
         };
-        timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
+
+        (void)TRY(timeline_view->try_add<TimelineTrack>(*timeline_view, *profile, process));
     }
 
-    auto& main_splitter = main_widget.add<GUI::VerticalSplitter>();
+    auto main_splitter = TRY(main_widget->try_add<GUI::VerticalSplitter>());
 
-    [[maybe_unused]] auto& timeline_container = main_splitter.add<TimelineContainer>(*timeline_header_container, *timeline_view);
+    [[maybe_unused]] auto timeline_container = TRY(main_splitter->try_add<TimelineContainer>(*timeline_header_container, *timeline_view));
 
-    auto& tab_widget = main_splitter.add<GUI::TabWidget>();
+    auto tab_widget = TRY(main_splitter->try_add<GUI::TabWidget>());
 
-    auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
-    tree_tab.set_layout<GUI::VerticalBoxLayout>();
-    tree_tab.layout()->set_margins(4);
-    auto& bottom_splitter = tree_tab.add<GUI::VerticalSplitter>();
+    auto tree_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Call Tree"));
+    tree_tab->set_layout<GUI::VerticalBoxLayout>();
+    tree_tab->layout()->set_margins(4);
+    auto bottom_splitter = TRY(tree_tab->try_add<GUI::VerticalSplitter>());
 
-    auto& tree_view = bottom_splitter.add<GUI::TreeView>();
-    tree_view.set_should_fill_selected_rows(true);
-    tree_view.set_column_headers_visible(true);
-    tree_view.set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);
-    tree_view.set_model(profile->model());
+    auto tree_view = TRY(bottom_splitter->try_add<GUI::TreeView>());
+    tree_view->set_should_fill_selected_rows(true);
+    tree_view->set_column_headers_visible(true);
+    tree_view->set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);
+    tree_view->set_model(profile->model());
 
-    auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
-    disassembly_view.set_visible(false);
+    auto disassembly_view = TRY(bottom_splitter->try_add<GUI::TableView>());
+    disassembly_view->set_visible(false);
 
     auto update_disassembly_model = [&] {
-        if (disassembly_view.is_visible() && !tree_view.selection().is_empty()) {
-            profile->set_disassembly_index(tree_view.selection().first());
-            disassembly_view.set_model(profile->disassembly_model());
+        if (disassembly_view->is_visible() && !tree_view->selection().is_empty()) {
+            profile->set_disassembly_index(tree_view->selection().first());
+            disassembly_view->set_model(profile->disassembly_model());
         } else {
-            disassembly_view.set_model(nullptr);
+            disassembly_view->set_model(nullptr);
         }
     };
 
-    tree_view.on_selection_change = [&] {
+    tree_view->on_selection_change = [&] {
         update_disassembly_model();
     };
 
     auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
-        disassembly_view.set_visible(action.is_checked());
+        disassembly_view->set_visible(action.is_checked());
         update_disassembly_model();
     });
 
-    auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
-    samples_tab.set_layout<GUI::VerticalBoxLayout>();
-    samples_tab.layout()->set_margins(4);
+    auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Samples"));
+    samples_tab->set_layout<GUI::VerticalBoxLayout>();
+    samples_tab->layout()->set_margins(4);
 
-    auto& samples_splitter = samples_tab.add<GUI::HorizontalSplitter>();
-    auto& samples_table_view = samples_splitter.add<GUI::TableView>();
-    samples_table_view.set_model(profile->samples_model());
+    auto samples_splitter = TRY(samples_tab->try_add<GUI::HorizontalSplitter>());
+    auto samples_table_view = TRY(samples_splitter->try_add<GUI::TableView>());
+    samples_table_view->set_model(profile->samples_model());
 
-    auto& individual_sample_view = samples_splitter.add<GUI::TableView>();
-    samples_table_view.on_selection_change = [&] {
-        const auto& index = samples_table_view.selection().first();
+    auto individual_sample_view = TRY(samples_splitter->try_add<GUI::TableView>());
+    samples_table_view->on_selection_change = [&] {
+        const auto& index = samples_table_view->selection().first();
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
-        individual_sample_view.set_model(move(model));
+        individual_sample_view->set_model(move(model));
     };
 
-    auto& signposts_tab = tab_widget.add_tab<GUI::Widget>("Signposts");
-    signposts_tab.set_layout<GUI::VerticalBoxLayout>();
-    signposts_tab.layout()->set_margins(4);
+    auto signposts_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Signposts"));
+    signposts_tab->set_layout<GUI::VerticalBoxLayout>();
+    signposts_tab->layout()->set_margins(4);
 
-    auto& signposts_splitter = signposts_tab.add<GUI::HorizontalSplitter>();
-    auto& signposts_table_view = signposts_splitter.add<GUI::TableView>();
-    signposts_table_view.set_model(profile->signposts_model());
+    auto signposts_splitter = TRY(signposts_tab->try_add<GUI::HorizontalSplitter>());
+    auto signposts_table_view = TRY(signposts_splitter->try_add<GUI::TableView>());
+    signposts_table_view->set_model(profile->signposts_model());
 
-    auto& individual_signpost_view = signposts_splitter.add<GUI::TableView>();
-    signposts_table_view.on_selection_change = [&] {
-        const auto& index = signposts_table_view.selection().first();
+    auto individual_signpost_view = TRY(signposts_splitter->try_add<GUI::TableView>());
+    signposts_table_view->on_selection_change = [&] {
+        const auto& index = signposts_table_view->selection().first();
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
-        individual_signpost_view.set_model(move(model));
+        individual_signpost_view->set_model(move(model));
     };
 
-    auto& flamegraph_tab = tab_widget.add_tab<GUI::Widget>("Flame Graph");
-    flamegraph_tab.set_layout<GUI::VerticalBoxLayout>();
-    flamegraph_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    auto flamegraph_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Flame Graph"));
+    flamegraph_tab->set_layout<GUI::VerticalBoxLayout>();
+    flamegraph_tab->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& flamegraph_view = flamegraph_tab.add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount);
+    auto flamegraph_view = TRY(flamegraph_tab->try_add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount));
 
     const u64 start_of_trace = profile->first_timestamp();
     const u64 end_of_trace = start_of_trace + profile->length_in_ms();
@@ -202,12 +204,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
-    auto& statusbar = main_widget.add<GUI::Statusbar>();
+    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
     auto statusbar_update = [&] {
         auto& view = *timeline_view;
         StringBuilder builder;
 
-        auto flamegraph_hovered_index = flamegraph_view.hovered_index();
+        auto flamegraph_hovered_index = flamegraph_view->hovered_index();
         if (flamegraph_hovered_index.is_valid()) {
             auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_string();
             auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount)).to_i32();
@@ -227,43 +229,43 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 builder.appendff(", Duration: {} ms", end - start);
             }
         }
-        statusbar.set_text(builder.to_string());
+        statusbar->set_text(builder.to_string());
     };
     timeline_view->on_selection_change = [&] { statusbar_update(); };
-    flamegraph_view.on_hover_change = [&] { statusbar_update(); };
+    flamegraph_view->on_hover_change = [&] { statusbar_update(); };
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto& view_menu = window->add_menu("&View");
+    auto view_menu = TRY(window->try_add_menu("&View"));
 
     auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checked(false);
-    view_menu.add_action(invert_action);
+    TRY(view_menu->try_add_action(invert_action));
 
     auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
     });
     top_functions_action->set_checked(false);
-    view_menu.add_action(top_functions_action);
+    TRY(view_menu->try_add_action(top_functions_action));
 
     auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
-        tree_view.update();
-        disassembly_view.update();
+        tree_view->update();
+        disassembly_view->update();
     });
     percent_action->set_checked(false);
-    view_menu.add_action(percent_action);
+    TRY(view_menu->try_add_action(percent_action));
 
-    view_menu.add_action(disassembly_action);
+    TRY(view_menu->try_add_action(disassembly_action));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");
-    }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
+    })));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window)));
 
     window->show();
     return app->exec();
