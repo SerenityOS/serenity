@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-catdog");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-catdog"));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
