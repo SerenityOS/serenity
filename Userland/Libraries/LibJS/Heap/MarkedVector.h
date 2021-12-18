@@ -63,8 +63,8 @@ public:
     auto begin() { return span().begin(); }
     auto begin() const { return span().begin(); }
 
-    auto end() { return span().begin(); }
-    auto end() const { return span().begin(); }
+    auto end() { return span().end(); }
+    auto end() const { return span().end(); }
 };
 
 }
