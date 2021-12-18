@@ -7,8 +7,12 @@ describe("correct behavior", () => {
         const calendar = new Temporal.Calendar("iso8601");
         expect(calendar.toJSON()).toBe("iso8601");
     });
+});
 
-    test("works with any this value", () => {
-        expect(Temporal.Calendar.prototype.toJSON.call("foo")).toBe("foo");
+describe("errors", () => {
+    test("this value must be a Temporal.Calendar object", () => {
+        expect(() => {
+            Temporal.Calendar.prototype.toJSON.call("foo");
+        }).toThrowWithMessage(TypeError, "Not an object of type Temporal.Calendar");
     });
 });
