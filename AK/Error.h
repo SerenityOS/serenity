@@ -122,6 +122,8 @@ public:
     ErrorType release_error() { return m_error.release_value(); }
     void release_value() { }
 
+    void fixme_should_propagate_errors() { VERIFY(!is_error()); }
+
 private:
     Optional<ErrorType> m_error;
 };
