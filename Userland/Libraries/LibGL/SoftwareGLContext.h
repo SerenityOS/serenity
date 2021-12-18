@@ -21,7 +21,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
-#include <LibSoftGPU/SoftwareRasterizer.h>
+#include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Vertex.h>
 
 namespace GL {
@@ -233,7 +233,7 @@ private:
     TextureUnit* m_active_texture_unit { &m_texture_units[0] };
     TextureUnit::BoundList m_bound_texture_units;
 
-    SoftGPU::SoftwareRasterizer m_rasterizer;
+    SoftGPU::Device m_rasterizer;
 
     struct Listing {
 
