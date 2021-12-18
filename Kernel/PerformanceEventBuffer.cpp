@@ -23,10 +23,15 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 
 NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread)
 {
-    FlatPtr ebp;
+    FlatPtr base_pointer;
+#if ARCH(I386)
     asm volatile("movl %%ebp, %%eax"
-                 : "=a"(ebp));
-    return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, ebp, type, 0, arg1, arg2, arg3);
+                 : "=a"(base_pointer));
+#else
+    asm volatile("movq %%rbp, %%rax"
+                 : "=a"(base_pointer));
+#endif
+    return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, base_pointer, type, 0, arg1, arg2, arg3);
 }
 
 static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr bp, FlatPtr ip)
