@@ -430,29 +430,17 @@ bool ISO8601Parser::parse_fractional_part()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeFractionalPart
-bool ISO8601Parser::parse_time_fractional_part()
-{
-    // TimeFractionalPart :
-    //     FractionalPart
-    StateTransaction transaction { *this };
-    if (!parse_fractional_part())
-        return false;
-    m_state.parse_result.time_fractional_part = transaction.parsed_string_view();
-    transaction.commit();
-    return true;
-}
-
 // https://tc39.es/proposal-temporal/#prod-Fraction
 bool ISO8601Parser::parse_fraction()
 {
     // Fraction :
-    //     DecimalSeparator TimeFractionalPart
+    //     DecimalSeparator FractionalPart
     StateTransaction transaction { *this };
     if (!parse_decimal_separator())
         return false;
-    if (!parse_time_fractional_part())
+    if (!parse_fractional_part())
         return false;
+    m_state.parse_result.fractional_part = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
