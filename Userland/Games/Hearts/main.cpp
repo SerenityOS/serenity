@@ -27,7 +27,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto app_icon = GUI::Icon::default_icon("app-hearts");
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hearts"));
 
     Config::pledge_domains("Hearts");
 
