@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <LibCore/Promise.h>
+#include <LibCore/Stream.h>
 #include <LibIMAP/Parser.h>
 #include <LibTLS/TLSv12.h>
 
@@ -16,15 +17,23 @@ template<typename T>
 using Promise = Core::Promise<T>;
 
 class Client {
+    AK_MAKE_NONCOPYABLE(Client);
     friend class Parser;
 
 public:
-    Client(StringView host, unsigned port, bool start_with_tls);
+    static ErrorOr<NonnullOwnPtr<Client>> connect_tls(StringView host, u16 port);
+    static ErrorOr<NonnullOwnPtr<Client>> connect_plaintext(StringView host, u16 port);
 
-    RefPtr<Promise<Empty>> connect();
+    Client(Client&&);
+
+    RefPtr<Promise<Empty>> connection_promise()
+    {
+        return m_connect_pending;
+    }
+
     RefPtr<Promise<Optional<Response>>> send_command(Command&&);
     RefPtr<Promise<Optional<Response>>> send_simple_command(CommandType);
-    void send_raw(StringView data);
+    ErrorOr<void> send_raw(StringView data);
     RefPtr<Promise<Optional<SolidResponse>>> login(StringView username, StringView password);
     RefPtr<Promise<Optional<SolidResponse>>> list(StringView reference_name, StringView mailbox_name);
     RefPtr<Promise<Optional<SolidResponse>>> lsub(StringView reference_name, StringView mailbox_name);
@@ -45,37 +54,42 @@ public:
     RefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
     RefPtr<Promise<Optional<SolidResponse>>> append(StringView mailbox, Message&& message, Optional<Vector<String>> flags = {}, Optional<Core::DateTime> date_time = {});
 
+    bool is_open();
     void close();
 
     Function<void(ResponseData&&)> unrequested_response_callback;
 
 private:
-    StringView m_host;
-    unsigned m_port;
-    RefPtr<Core::Socket> m_socket;
-    RefPtr<TLS::TLSv12> m_tls_socket;
+    Client(StringView host, u16 port, NonnullRefPtr<TLS::TLSv12>);
+    Client(StringView host, u16 port, NonnullOwnPtr<Core::Stream::Socket>);
+    void setup_callbacks();
 
-    void on_ready_to_receive();
-    void on_tls_ready_to_receive();
+    ErrorOr<void> on_ready_to_receive();
+    ErrorOr<void> on_tls_ready_to_receive();
+
+    ErrorOr<void> handle_parsed_response(ParseStatus&& parse_status);
+    ErrorOr<void> send_next_command();
+
+    StringView m_host;
+    u16 m_port;
 
     bool m_tls;
-    int m_current_command = 1;
+    // FIXME: Convert this to a single `NonnullOwnPtr<Core::Stream::Socket>`
+    //        once `TLS::TLSv12` is converted to a `Socket` as well.
+    OwnPtr<Core::Stream::Socket> m_socket;
+    RefPtr<TLS::TLSv12> m_tls_socket;
+    RefPtr<Promise<Empty>> m_connect_pending {};
 
-    bool connect_tls();
-    bool connect_plaintext();
+    int m_current_command = 1;
 
     // Sent but response not received
     Vector<RefPtr<Promise<Optional<Response>>>> m_pending_promises;
     // Not yet sent
     Vector<Command> m_command_queue {};
 
-    RefPtr<Promise<Empty>> m_connect_pending {};
-
     ByteBuffer m_buffer;
-    Parser m_parser;
+    Parser m_parser {};
 
     bool m_expecting_response { false };
-    void handle_parsed_response(ParseStatus&& parse_status);
-    void send_next_command();
 };
 }
