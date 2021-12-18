@@ -3,6 +3,7 @@ set(SOURCES
     DepthBuffer.cpp
     Device.cpp
     Image.cpp
+    Sampler.cpp
 )
 
 serenity_lib(LibSoftGPU softgpu)

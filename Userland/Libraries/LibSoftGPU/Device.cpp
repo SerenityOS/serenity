@@ -801,4 +801,15 @@ float Device::get_depthbuffer_value(int x, int y)
     return m_depth_buffer->scanline(y)[x];
 }
 
+NonnullRefPtr<Image> Device::create_image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
+{
+    VERIFY(width > 0);
+    VERIFY(height > 0);
+    VERIFY(depth > 0);
+    VERIFY(levels > 0);
+    VERIFY(layers > 0);
+
+    return adopt_ref(*new Image(format, width, height, depth, levels, layers));
+}
+
 }

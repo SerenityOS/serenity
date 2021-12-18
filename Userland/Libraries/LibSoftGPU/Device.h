@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/Tex/Texture2D.h>
@@ -17,6 +18,8 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/DepthBuffer.h>
+#include <LibSoftGPU/Image.h>
+#include <LibSoftGPU/ImageFormat.h>
 #include <LibSoftGPU/Triangle.h>
 #include <LibSoftGPU/Vertex.h>
 
@@ -73,6 +76,8 @@ public:
     RasterizerOptions options() const { return m_options; }
     Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
     float get_depthbuffer_value(int x, int y);
+
+    NonnullRefPtr<Image> create_image(ImageFormat, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
 private:
     void submit_triangle(Triangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
