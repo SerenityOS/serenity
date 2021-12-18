@@ -1796,7 +1796,6 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
             else if (property.is_one_of("monthCode"sv, "offset"sv, "era"sv))
                 value = TRY(value.to_primitive_string(global_object));
 
-            // NOTE: According to the spec this is step 4c, but I believe that's incorrect. See https://github.com/tc39/proposal-temporal/issues/1910.
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
             MUST(result->create_data_property_or_throw(property, value));
         }
