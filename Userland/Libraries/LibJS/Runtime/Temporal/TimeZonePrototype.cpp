@@ -92,15 +92,16 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 {
     // 1. Let timeZone be the this value.
-    auto time_zone = vm.this_value(global_object);
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = TRY(typed_this_object(global_object));
 
-    // 2. Set instant to ? ToTemporalInstant(instant).
+    // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
-    // 3. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
+    // 4. Let calendar be ? ToTemporalCalendarWithISODefault(calendarLike).
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, vm.argument(1)));
 
-    // 4. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     return TRY(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar));
 }
 
