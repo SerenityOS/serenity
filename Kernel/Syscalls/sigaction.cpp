@@ -15,7 +15,7 @@ ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> se
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sigaction);
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     u32 previous_signal_mask;
     if (set) {
         auto set_value = TRY(copy_typed_from_user(set));
@@ -172,7 +172,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
         auto adjacent_regions = TRY(address_space().try_split_region_around_range(*region, range_to_remap));
 
         size_t new_range_offset_in_vmobject = region->offset_in_vmobject() + (range_to_remap.base().get() - region->range().base().get());
-        auto new_region = TRY(address_space().try_allocate_split_region(*region, range_to_remap, new_range_offset_in_vmobject));
+        auto* new_region = TRY(address_space().try_allocate_split_region(*region, range_to_remap, new_range_offset_in_vmobject));
         new_region->unsafe_clear_access();
         new_region->set_readable(true);
         new_region->set_writable(true);

@@ -47,9 +47,9 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     size_t total_arguments_size = 0;
     size_t total_environment_size = 0;
 
-    for (auto& a : arguments)
+    for (auto const& a : arguments)
         total_arguments_size += a.length() + 1;
-    for (auto& e : environment)
+    for (auto const& e : environment)
         total_environment_size += e.length() + 1;
 
     total_arguments_size += sizeof(char*) * (arguments.size() + 1);
@@ -98,13 +98,13 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     };
 
     Vector<FlatPtr> argv_entries;
-    for (auto& argument : arguments) {
+    for (auto const& argument : arguments) {
         push_string_on_new_stack(argument.view());
         TRY(argv_entries.try_append(new_sp));
     }
 
     Vector<FlatPtr> env_entries;
-    for (auto& variable : environment) {
+    for (auto const& variable : environment) {
         push_string_on_new_stack(variable.view());
         TRY(env_entries.try_append(new_sp));
     }
@@ -464,7 +464,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     interpreter_description = nullptr;
 
     auto signal_trampoline_range = TRY(load_result.space->try_allocate_range({}, PAGE_SIZE));
-    auto signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
+    auto* signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
     signal_trampoline_region->set_syscall_region(true);
 
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
@@ -734,7 +734,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
         if (nread < sizeof(ElfW(Ehdr)))
             return ENOEXEC;
 
-        auto elf_header = (ElfW(Ehdr)*)first_page;
+        auto* elf_header = (ElfW(Ehdr)*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
             return ENOEXEC;
@@ -816,7 +816,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
 
     if (nread < sizeof(ElfW(Ehdr)))
         return ENOEXEC;
-    auto main_program_header = (ElfW(Ehdr)*)first_page;
+    auto const* main_program_header = (ElfW(Ehdr)*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
@@ -834,7 +834,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical());
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     if (current_thread == new_main_thread) {
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that

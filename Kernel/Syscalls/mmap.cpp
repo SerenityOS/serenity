@@ -47,8 +47,8 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     if (!region.vmobject().is_private_inode())
         return false;
 
-    auto& inode_vm = static_cast<Memory::InodeVMObject const&>(region.vmobject());
-    auto& inode = inode_vm.inode();
+    auto const& inode_vm = static_cast<Memory::InodeVMObject const&>(region.vmobject());
+    auto const& inode = inode_vm.inode();
 
     ElfW(Ehdr) header;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
@@ -310,7 +310,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         auto adjacent_regions = TRY(address_space().try_split_region_around_range(*region, range_to_mprotect));
 
         size_t new_range_offset_in_vmobject = region->offset_in_vmobject() + (range_to_mprotect.base().get() - region->range().base().get());
-        auto new_region = TRY(address_space().try_allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject));
+        auto* new_region = TRY(address_space().try_allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject));
         new_region->set_readable(prot & PROT_READ);
         new_region->set_writable(prot & PROT_WRITE);
         new_region->set_executable(prot & PROT_EXEC);
@@ -483,7 +483,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*>
         old_region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
         address_space().deallocate_region(*old_region);
 
-        auto new_region = TRY(address_space().allocate_region_with_vmobject(range, move(new_vmobject), old_offset, old_name->view(), old_prot, false));
+        auto* new_region = TRY(address_space().allocate_region_with_vmobject(range, move(new_vmobject), old_offset, old_name->view(), old_prot, false));
         new_region->set_mmap(true);
         return new_region->vaddr().get();
     }
@@ -520,7 +520,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, 
         return EINVAL;
 
     auto range = TRY(address_space().try_allocate_range({}, size));
-    auto region = TRY(address_space().allocate_region(range, String("Master TLS"), PROT_READ | PROT_WRITE));
+    auto* region = TRY(address_space().allocate_region(range, String("Master TLS"), PROT_READ | PROT_WRITE));
 
     m_master_tls_region = region->make_weak_ptr();
     m_master_tls_size = size;

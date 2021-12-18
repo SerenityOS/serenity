@@ -43,7 +43,7 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall::S
     auto description = TRY(fds().open_file_description(params.fd));
     if (!description->is_inode_watcher())
         return EBADF;
-    auto inode_watcher = description->inode_watcher();
+    auto* inode_watcher = description->inode_watcher();
     auto path = TRY(get_syscall_path_argument(params.user_path));
     auto custody = TRY(VirtualFileSystem::the().resolve_path(path->view(), current_directory()));
     if (!custody->inode().fs().supports_watchers())
