@@ -17,6 +17,8 @@ public:
     KeypadValue(i64, u8);
     KeypadValue(i64);
 
+    explicit KeypadValue(StringView);
+
     KeypadValue operator+(KeypadValue const&);
     KeypadValue operator-(KeypadValue const&);
     KeypadValue operator*(KeypadValue const&);

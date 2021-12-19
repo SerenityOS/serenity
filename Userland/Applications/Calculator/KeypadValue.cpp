@@ -19,6 +19,25 @@ KeypadValue::KeypadValue(i64 value)
 {
 }
 
+KeypadValue::KeypadValue(StringView sv)
+{
+    String str = sv.to_string(); //TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
+    size_t first_index = 0;
+    char* dot_ptr;
+    i64 int_part = strtoll(&str[first_index], &dot_ptr, 10);
+    size_t dot_index = dot_ptr - str.characters();
+    if ((dot_index < str.length()) && (str[dot_index] == '.')) {
+        size_t second_index = dot_index + 1;
+        char* end_ptr;
+        i64 frac_part = strtoll(&str[second_index], &end_ptr, 10);
+        size_t end_index = end_ptr - str.characters();
+        u8 frac_length = end_index - second_index;
+        *this = KeypadValue { int_part } + KeypadValue { frac_part, frac_length };
+    } else {
+        *this = KeypadValue { int_part };
+    }
+};
+
 KeypadValue KeypadValue::operator+(KeypadValue const& rhs)
 {
     return operator_helper<KeypadValue>(*this, rhs, [](KeypadValue const&, KeypadValue const& more_decimal_places, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool) -> KeypadValue {
