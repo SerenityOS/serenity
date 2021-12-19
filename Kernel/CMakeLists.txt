@@ -522,7 +522,8 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
     COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
     COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    COMMAND $<TARGET_FILE:Lagom::ELFBaker> Kernel Kernel.drow
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.drow ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
