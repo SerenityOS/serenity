@@ -232,7 +232,8 @@ size_t FILE::write(const u8* data, size_t size)
     return total_written;
 }
 
-bool FILE::gets(u8* data, size_t size)
+template<typename T>
+bool FILE::gets(T* data, size_t size)
 {
     // gets() is a lot like read(), but it is different enough in how it
     // processes newlines and null-terminates the buffer that it deserves a
@@ -249,7 +250,8 @@ bool FILE::gets(u8* data, size_t size)
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
             size_t queued_size;
-            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            const T* queued_data = bit_cast<const T*>(m_buffer.begin_dequeue(queued_size));
+            queued_size /= sizeof(T);
             if (queued_size == 0) {
                 // Nothing buffered; we're going to have to read some.
                 bool read_some_more = read_into_buffer();
@@ -261,11 +263,17 @@ bool FILE::gets(u8* data, size_t size)
                 return total_read > 0;
             }
             size_t actual_size = min(size - 1, queued_size);
-            u8* newline = reinterpret_cast<u8*>(memchr(queued_data, '\n', actual_size));
-            if (newline)
-                actual_size = newline - queued_data + 1;
-            memcpy(data, queued_data, actual_size);
-            m_buffer.did_dequeue(actual_size);
+            T const* newline = nullptr;
+            for (size_t i = 0; i < actual_size; ++i) {
+                if (queued_data[i] != '\n')
+                    continue;
+
+                newline = &queued_data[i];
+                actual_size = i + 1;
+                break;
+            }
+            memcpy(data, queued_data, actual_size * sizeof(T));
+            m_buffer.did_dequeue(actual_size * sizeof(T));
             total_read += actual_size;
             data += actual_size;
             size -= actual_size;
@@ -273,18 +281,18 @@ bool FILE::gets(u8* data, size_t size)
                 break;
         } else {
             // Sadly, we have to actually read these characters one by one.
-            u8 byte;
-            ssize_t nread = do_read(&byte, 1);
+            T value;
+            ssize_t nread = do_read(bit_cast<u8*>(&value), sizeof(T));
             if (nread <= 0) {
                 *data = 0;
                 return total_read > 0;
             }
-            VERIFY(nread == 1);
-            *data = byte;
+            VERIFY(nread == sizeof(T));
+            *data = value;
             total_read++;
             data++;
             size--;
-            if (byte == '\n')
+            if (value == '\n')
                 break;
         }
     }
@@ -1204,3 +1212,6 @@ void __fpurge(FILE* stream)
     stream->purge();
 }
 }
+
+template bool FILE::gets<u8>(u8*, size_t);
+template bool FILE::gets<u32>(u32*, size_t);
