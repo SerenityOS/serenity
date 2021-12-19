@@ -46,3 +46,29 @@ test("correct this", () => {
 
     expect(thisValue).toBe(A);
 });
+
+describe("class like constructs can be used inside", () => {
+    test("can use new.target", () => {
+        let value = 1;
+        class C {
+            static {
+                value = new.target;
+            }
+        }
+        expect(value).toBeUndefined();
+    });
+
+    test("can use super property lookup", () => {
+        function parent() {}
+        parent.val = 3;
+
+        let hit = false;
+        class C extends parent {
+            static {
+                hit = true;
+                expect(super.val).toBe(3);
+            }
+        }
+        expect(hit).toBeTrue();
+    });
+});
