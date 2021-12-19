@@ -87,4 +87,11 @@ int vwprintf(const wchar_t* __restrict format, va_list args);
 int vfwprintf(FILE* __restrict stream, const wchar_t* __restrict format, va_list args);
 int vswprintf(wchar_t* __restrict wcs, size_t maxlen, const wchar_t* __restrict format, va_list args);
 
+int fwscanf(FILE* __restrict stream, const wchar_t* __restrict format, ...);
+int swscanf(const wchar_t* __restrict ws, const wchar_t* __restrict format, ...);
+int wscanf(const wchar_t* __restrict format, ...);
+int vfwscanf(FILE* __restrict stream, const wchar_t* __restrict format, va_list arg);
+int vswscanf(const wchar_t* __restrict ws, const wchar_t* __restrict format, va_list arg);
+int vwscanf(const wchar_t* __restrict format, va_list arg);
+
 __END_DECLS
