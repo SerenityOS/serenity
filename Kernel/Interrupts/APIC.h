@@ -26,6 +26,7 @@ public:
 
     bool init_bsp();
     void eoi();
+    void setup_ap_boot_environment();
     void boot_aps();
     void enable(u32 cpu);
     void init_finished(u32 cpu);
@@ -90,7 +91,9 @@ private:
 
     OwnPtr<Memory::Region> m_apic_base;
     Vector<OwnPtr<Processor>> m_ap_processor_info;
+    Vector<OwnPtr<Memory::Region>> m_ap_temporary_boot_stacks;
     Vector<Thread*> m_ap_idle_threads;
+    OwnPtr<Memory::Region> m_ap_boot_environment;
     Atomic<u8> m_apic_ap_count { 0 };
     Atomic<u8> m_apic_ap_continue { 0 };
     u32 m_processor_cnt { 0 };
