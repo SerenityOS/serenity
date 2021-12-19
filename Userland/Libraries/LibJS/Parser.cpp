@@ -1548,6 +1548,9 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Typeof, parse_expression(precedence, associativity));
     case TokenType::Void:
         consume();
+        // FIXME: This check is really hiding the fact that we don't deal with different expressions correctly.
+        if (match(TokenType::Yield) && m_state.in_generator_function_context)
+            syntax_error("'yield' is not an identifier in generator function context");
         return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Void, parse_expression(precedence, associativity));
     case TokenType::Delete: {
         consume();
