@@ -2036,29 +2036,109 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
 
 FlyString ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
 {
+    static auto id_start_category = Unicode::property_from_string("ID_Start"sv);
+    static auto id_continue_category = Unicode::property_from_string("ID_Continue"sv);
+    static constexpr const u32 REPLACEMENT_CHARACTER = 0xFFFD;
+    constexpr const u32 ZERO_WIDTH_NON_JOINER { 0x200C };
+    constexpr const u32 ZERO_WIDTH_JOINER { 0x200D };
+
     if (take_starting_angle_bracket && !consume("<"))
         return {};
 
     StringBuilder builder;
-    while (match(TokenType::Char) || match(TokenType::Dollar) || match(TokenType::LeftCurly) || match(TokenType::RightCurly)) {
-        auto c = m_parser_state.current_token.value();
-        if (c == ">")
-            break;
 
-        if (try_skip("\\u"sv)) {
-            if (auto code_point = consume_escaped_code_point(true); code_point.has_value()) {
-                builder.append_code_point(*code_point);
+    auto consume_code_point = [&] {
+        Utf8View utf_8_view { m_parser_state.lexer.source().substring_view(m_parser_state.lexer.tell() - 1) };
+        if (utf_8_view.is_empty())
+            return REPLACEMENT_CHARACTER;
+        u32 code_point = *utf_8_view.begin();
+        auto characters = utf_8_view.byte_offset_of(1);
+
+        while (characters-- > 0)
+            consume();
+
+        return code_point;
+    };
+
+    {
+        // The first character is limited to: https://tc39.es/ecma262/#prod-RegExpIdentifierStart
+        //  RegExpIdentifierStart[UnicodeMode] ::
+        //      IdentifierStartChar
+        //      \ RegExpUnicodeEscapeSequence[+UnicodeMode]
+        //      [~UnicodeMode] UnicodeLeadSurrogate UnicodeTrailSurrogate
+
+        auto code_point = consume_code_point();
+
+        if (code_point == '\\' && match('u')) {
+            consume();
+
+            if (auto maybe_code_point = consume_escaped_code_point(true); maybe_code_point.has_value()) {
+                code_point = *maybe_code_point;
             } else {
                 set_error(Error::InvalidNameForCaptureGroup);
                 return {};
             }
-        } else {
-            builder.append(consume().value());
         }
+
+        if (is_ascii(code_point)) {
+            // The only valid ID_Start unicode characters in ascii are the letters.
+            if (!is_ascii_alpha(code_point) && code_point != '$' && code_point != '_') {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+        } else if (id_start_category.has_value() && !Unicode::code_point_has_property(code_point, *id_start_category)) {
+            set_error(Error::InvalidNameForCaptureGroup);
+            return {};
+        }
+        builder.append_code_point(code_point);
+    }
+
+    bool hit_end = false;
+
+    // Any following characters are limited to:
+    //  RegExpIdentifierPart[UnicodeMode] ::
+    //      IdentifierPartChar
+    //      \ RegExpUnicodeEscapeSequence[+UnicodeMode]
+    //      [~UnicodeMode] UnicodeLeadSurrogate UnicodeTrailSurrogate
+
+    while (match(TokenType::Char) || match(TokenType::Dollar) || match(TokenType::LeftCurly) || match(TokenType::RightCurly)) {
+        auto code_point = consume_code_point();
+
+        if (code_point == '>') {
+            hit_end = true;
+            break;
+        }
+
+        if (code_point == '\\') {
+            if (!try_skip("u")) {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+            if (auto maybe_code_point = consume_escaped_code_point(true); maybe_code_point.has_value()) {
+                code_point = *maybe_code_point;
+            } else {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+        }
+
+        if (is_ascii(code_point)) {
+            // The only valid ID_Continue unicode characters in ascii are the letters and numbers.
+            if (!is_ascii_alphanumeric(code_point) && code_point != '$' && code_point != '_') {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+        } else if (code_point != ZERO_WIDTH_JOINER && code_point != ZERO_WIDTH_NON_JOINER) {
+            if (id_continue_category.has_value() && !Unicode::code_point_has_property(code_point, *id_continue_category)) {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return {};
+            }
+        }
+        builder.append_code_point(code_point);
     }
 
     FlyString name = builder.build();
-    if (!consume(">") || name.is_empty())
+    if (!hit_end || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 
     return name;
