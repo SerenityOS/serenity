@@ -1200,6 +1200,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 TemporaryChange async_function_context_rollback(m_state.await_expression_is_valid, false);
                 TemporaryChange class_field_initializer_rollback(m_state.in_class_field_initializer, true);
                 TemporaryChange class_static_init_block_rollback(m_state.in_class_static_init_block, true);
+                TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, true);
 
                 ScopePusher static_init_scope = ScopePusher::static_init_block_scope(*this, *static_init_block);
                 parse_statement_list(static_init_block);
@@ -1416,7 +1417,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         auto new_start = position();
         auto new_target_result = try_parse_new_target_expression();
         if (!new_target_result.is_null()) {
-            if (!m_state.in_function_context)
+            if (!m_state.in_function_context && !m_state.in_class_static_init_block)
                 syntax_error("'new.target' not allowed outside of a function", new_start);
             return { new_target_result.release_nonnull() };
         }
