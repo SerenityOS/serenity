@@ -2476,6 +2476,9 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
         check_identifier_name_for_assignment_validity(name);
 
+        if (function_kind == FunctionKind::AsyncGenerator && (name == "await"sv || name == "yield"sv))
+            syntax_error(String::formatted("async generator function is not allowed to be called '{}'", name));
+
         if (m_state.in_class_static_init_block && name == "await"sv)
             syntax_error("'await' is a reserved word");
     }

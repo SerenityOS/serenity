@@ -4,6 +4,9 @@ describe("parsing freestanding async functions", () => {
         // Although it does not create an async function it is valid.
         expect(`async
         function foo() {}`).toEval();
+
+        expect(`async function await() {}`).toEval();
+        expect(`async function yield() {}`).toEval();
     });
     test("await expression", () => {
         expect(`async function foo() { await bar(); }`).toEval();
