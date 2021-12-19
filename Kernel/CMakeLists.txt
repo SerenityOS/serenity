@@ -713,13 +713,14 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 endif()
 
 add_custom_command(
-        TARGET Kernel POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-        COMMAND "${CMAKE_COMMAND}" -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
-        COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
-        COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
-        COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
-        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    TARGET Kernel POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+    COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
+    COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
+    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
+    COMMAND $<TARGET_FILE:Lagom::ELFBaker> Kernel Kernel.drow
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel.drow ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
