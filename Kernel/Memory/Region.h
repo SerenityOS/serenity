@@ -89,7 +89,7 @@ public:
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
     [[nodiscard]] bool is_user() const { return !is_kernel(); }
-    [[nodiscard]] bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_mapping_base; }
+    [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= kernel_mapping_base; }
 
     PageFaultResponse handle_fault(PageFault const&);
 
