@@ -48,7 +48,7 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/" \
-    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
+    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel.drow -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex "set print frame-arguments none" \
