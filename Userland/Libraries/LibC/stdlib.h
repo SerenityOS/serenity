@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <bits/wchar.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
@@ -14,7 +15,6 @@ __BEGIN_DECLS
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
-#define MB_CUR_MAX 4
 
 __attribute__((noreturn)) void _abort();
 
