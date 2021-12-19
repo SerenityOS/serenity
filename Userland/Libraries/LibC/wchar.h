@@ -17,6 +17,16 @@ __BEGIN_DECLS
 #    define WEOF (0xffffffffu)
 #endif
 
+#undef WCHAR_MAX
+#undef WCHAR_MIN
+#define WCHAR_MAX __WCHAR_MAX__
+#ifdef __WCHAR_MIN__
+#    define WCHAR_MIN __WCHAR_MIN__
+#else
+// Note: This assumes that wchar_t is a signed type.
+#    define WCHAR_MIN (-WCHAR_MAX - 1)
+#endif
+
 typedef __WINT_TYPE__ wint_t;
 typedef unsigned long int wctype_t;
 
