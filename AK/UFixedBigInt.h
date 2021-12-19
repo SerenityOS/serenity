@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
 #include <AK/Format.h>
@@ -90,9 +91,9 @@ public:
     constexpr size_t clz() const requires(IsSame<T, u64>)
     {
         if (m_high)
-            return __builtin_clzll(m_high);
+            return count_leading_zeroes(m_high);
         else
-            return sizeof(T) * 8 + __builtin_clzll(m_low);
+            return sizeof(T) * 8 + count_leading_zeroes(m_low);
     }
     constexpr size_t clz() const requires(!IsSame<T, u64>)
     {
@@ -104,9 +105,9 @@ public:
     constexpr size_t ctz() const requires(IsSame<T, u64>)
     {
         if (m_low)
-            return __builtin_ctzll(m_low);
+            return count_trailing_zeroes(m_low);
         else
-            return sizeof(T) * 8 + __builtin_ctzll(m_high);
+            return sizeof(T) * 8 + count_trailing_zeroes(m_high);
     }
     constexpr size_t ctz() const requires(!IsSame<T, u64>)
     {
@@ -598,7 +599,7 @@ public:
         R x1 = *this;
         R x2 = *this * *this;
         u64 exp_copy = exp;
-        for (ssize_t i = sizeof(u64) * 8 - __builtin_clzll(exp) - 2; i >= 0; --i) {
+        for (ssize_t i = sizeof(u64) * 8 - count_leading_zeroes(exp) - 2; i >= 0; --i) {
             if (exp_copy & 1u) {
                 x2 *= x1;
                 x1 *= x1;
@@ -642,7 +643,7 @@ public:
 
         U res = 1;
         u64 exp_copy = exp;
-        for (size_t i = sizeof(u64) - __builtin_clzll(exp) - 1u; i < exp; ++i) {
+        for (size_t i = sizeof(u64) - count_leading_zeroes(exp) - 1u; i < exp; ++i) {
             res *= res;
             res %= mod;
             if (exp_copy & 1u) {
@@ -682,7 +683,7 @@ public:
     constexpr size_t logn(u64 base)
     {
         // FIXME: proper rounding
-        return log2() / (sizeof(u64) - __builtin_clzll(base));
+        return log2() / (sizeof(u64) - count_leading_zeroes(base));
     }
     template<Unsigned U>
     requires(sizeof(U) > sizeof(u64)) constexpr size_t logn(U base)

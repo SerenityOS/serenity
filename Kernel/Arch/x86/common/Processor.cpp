@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -771,13 +772,13 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     while (did_wake_count < wake_count) {
         // Try to get a set of idle CPUs and flip them to busy
         u32 idle_mask = s_idle_cpu_mask.load(AK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
-        u32 idle_count = __builtin_popcountl(idle_mask);
+        u32 idle_count = popcount(idle_mask);
         if (idle_count == 0)
             break; // No (more) idle processor available
 
         u32 found_mask = 0;
         for (u32 i = 0; i < idle_count; i++) {
-            u32 cpu = __builtin_ffsl(idle_mask) - 1;
+            u32 cpu = bit_scan_forward(idle_mask) - 1;
             idle_mask &= ~(1u << cpu);
             found_mask |= 1u << cpu;
         }
@@ -785,9 +786,9 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
         idle_mask = s_idle_cpu_mask.fetch_and(~found_mask, AK::MemoryOrder::memory_order_acq_rel) & found_mask;
         if (idle_mask == 0)
             continue; // All of them were flipped to busy, try again
-        idle_count = __builtin_popcountl(idle_mask);
+        idle_count = popcount(idle_mask);
         for (u32 i = 0; i < idle_count; i++) {
-            u32 cpu = __builtin_ffsl(idle_mask) - 1;
+            u32 cpu = bit_scan_forward(idle_mask) - 1;
             idle_mask &= ~(1u << cpu);
 
             // Send an IPI to that CPU to wake it up. There is a possibility

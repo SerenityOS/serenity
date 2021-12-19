@@ -54,30 +54,30 @@ public:
         byte &= bitmask_first_byte[start % 8];
         if (first == last) {
             byte &= bitmask_last_byte[(start + len) % 8];
-            count = __builtin_popcount(byte);
+            count = popcount(byte);
         } else {
-            count = __builtin_popcount(byte);
+            count = popcount(byte);
             // Don't access *last if it's out of bounds
             if (last < &m_data[size_in_bytes()]) {
                 byte = *last;
                 byte &= bitmask_last_byte[(start + len) % 8];
-                count += __builtin_popcount(byte);
+                count += popcount(byte);
             }
             if (++first < last) {
-                const u32* ptr32 = (const u32*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
-                if ((const u8*)ptr32 > last)
-                    ptr32 = (const u32*)last;
-                while (first < (const u8*)ptr32) {
-                    count += __builtin_popcount(*first);
+                const size_t* ptr_large = (const size_t*)(((FlatPtr)first + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1));
+                if ((const u8*)ptr_large > last)
+                    ptr_large = (const size_t*)last;
+                while (first < (const u8*)ptr_large) {
+                    count += popcount(*first);
                     first++;
                 }
-                const u32* last32 = (const u32*)((FlatPtr)last & ~(sizeof(u32) - 1));
-                while (ptr32 < last32) {
-                    count += __builtin_popcountl(*ptr32);
-                    ptr32++;
+                const size_t* last_large = (const size_t*)((FlatPtr)last & ~(sizeof(size_t) - 1));
+                while (ptr_large < last_large) {
+                    count += popcount(*ptr_large);
+                    ptr_large++;
                 }
-                for (first = (const u8*)ptr32; first < last; first++)
-                    count += __builtin_popcount(*first);
+                for (first = (const u8*)ptr_large; first < last; first++)
+                    count += popcount(*first);
             }
         }
 
@@ -100,34 +100,34 @@ public:
             // We will use hint as what it is: a hint. Because we try to
             // scan over entire 32 bit words, we may start searching before
             // the hint!
-            const u32* ptr32 = (const u32*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
-            if ((const u8*)ptr32 < &m_data[0]) {
-                ptr32++;
+            const size_t* ptr_large = (const size_t*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
+            if ((const u8*)ptr_large < &m_data[0]) {
+                ptr_large++;
 
                 // m_data isn't aligned, check first bytes
-                size_t start_ptr32 = (const u8*)ptr32 - &m_data[0];
+                size_t start_ptr_large = (const u8*)ptr_large - &m_data[0];
                 size_t i = 0;
                 u8 byte = VALUE ? 0x00 : 0xff;
-                while (i < start_ptr32 && m_data[i] == byte)
+                while (i < start_ptr_large && m_data[i] == byte)
                     i++;
-                if (i < start_ptr32) {
+                if (i < start_ptr_large) {
                     byte = m_data[i];
                     if constexpr (!VALUE)
                         byte = ~byte;
                     VERIFY(byte != 0);
-                    return i * 8 + __builtin_ffs(byte) - 1;
+                    return i * 8 + bit_scan_forward(byte) - 1;
                 }
             }
 
-            u32 val32 = VALUE ? 0x0 : 0xffffffff;
-            const u32* end32 = (const u32*)((FlatPtr)end & ~(sizeof(u32) - 1));
-            while (ptr32 < end32 && *ptr32 == val32)
-                ptr32++;
+            size_t val_large = VALUE ? 0x0 : NumericLimits<size_t>::max();
+            const size_t* end_large = (const size_t*)((FlatPtr)end & ~(sizeof(size_t) - 1));
+            while (ptr_large < end_large && *ptr_large == val_large)
+                ptr_large++;
 
-            if (ptr32 == end32) {
+            if (ptr_large == end_large) {
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
-                size_t i = (const u8*)ptr32 - &m_data[0];
+                size_t i = (const u8*)ptr_large - &m_data[0];
                 size_t byte_count = m_size / 8;
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
@@ -137,7 +137,7 @@ public:
                         return {}; // We already checked from the beginning
 
                     // Try scanning before the hint
-                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
                     hint = 0;
                     continue;
                 }
@@ -145,16 +145,16 @@ public:
                 if constexpr (!VALUE)
                     byte = ~byte;
                 VERIFY(byte != 0);
-                return i * 8 + __builtin_ffs(byte) - 1;
+                return i * 8 + bit_scan_forward(byte) - 1;
             }
 
             // NOTE: We don't really care about byte ordering. We found *one*
             // free bit, just calculate the position and return it
-            val32 = *ptr32;
+            val_large = *ptr_large;
             if constexpr (!VALUE)
-                val32 = ~val32;
-            VERIFY(val32 != 0);
-            return ((const u8*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
+                val_large = ~val_large;
+            VERIFY(val_large != 0);
+            return ((const u8*)ptr_large - &m_data[0]) * 8 + bit_scan_forward(val_large) - 1;
         }
     }
 
@@ -184,7 +184,7 @@ public:
         if constexpr (!VALUE)
             byte = ~byte;
         VERIFY(byte != 0);
-        return i * 8 + __builtin_ffs(byte) - 1;
+        return i * 8 + bit_scan_forward(byte) - 1;
     }
 
     Optional<size_t> find_first_set() const { return find_first<true>(); }

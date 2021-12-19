@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalPage.h>
@@ -31,7 +32,7 @@ PhysicalZone::PhysicalZone(PhysicalAddress base_address, size_t page_count)
             bucket.bitmap.grow(bitmap_size_for_order, false);
     }
 
-    auto first_order = __builtin_ctz(page_count);
+    auto first_order = count_trailing_zeroes(page_count);
     size_t block_size = 2u << first_order;
     auto& bucket = m_buckets[first_order];
     size_t remaining_chunk_count = chunk_count;

@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Concepts.h"
-#include "Platform.h"
 
 template<Unsigned IntType>
 inline constexpr int popcount(IntType value)
@@ -107,4 +106,26 @@ inline constexpr int count_leading_zeroes_safe(IntType value)
     if (value == 0)
         return 8 * sizeof(IntType);
     return count_leading_zeroes(value);
+}
+
+// The function will return the number of leading zeroes in the type. If
+// the given number is zero, this function will return the number of bits
+// in the IntType.
+template<Integral IntType>
+inline constexpr int bit_scan_forward(IntType value)
+{
+#if defined(__GNUC__) || defined(__clang__)
+    static_assert(sizeof(IntType) <= sizeof(unsigned long long));
+    if constexpr (sizeof(IntType) <= sizeof(unsigned int))
+        return __builtin_ffs(value);
+    if constexpr (sizeof(IntType) == sizeof(unsigned long))
+        return __builtin_ffsl(value);
+    if constexpr (sizeof(IntType) == sizeof(unsigned long long))
+        return __builtin_ffsll(value);
+    VERIFY_NOT_REACHED();
+#else
+    if (value == 0)
+        return 0;
+    return 1 + count_trailing_zeroes(static_cast<MakeUnsigned<IntType>>(value));
+#endif
 }

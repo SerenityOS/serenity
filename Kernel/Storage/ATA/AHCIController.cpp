@@ -5,6 +5,7 @@
  */
 
 #include <AK/Atomic.h>
+#include <AK/BuiltinWrappers.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
@@ -185,12 +186,12 @@ RefPtr<StorageDevice> AHCIController::device(u32 index) const
 {
     NonnullRefPtrVector<StorageDevice> connected_devices;
     u32 pi = hba().control_regs.pi;
-    u32 bit = __builtin_ffsl(pi);
+    u32 bit = bit_scan_forward(pi);
     while (bit) {
         dbgln_if(AHCI_DEBUG, "Checking implemented port {}, pi {:b}", bit - 1, pi);
         pi &= ~(1u << (bit - 1));
         auto checked_device = device_by_port(bit - 1);
-        bit = __builtin_ffsl(pi);
+        bit = bit_scan_forward(pi);
         if (checked_device.is_null())
             continue;
         connected_devices.append(checked_device.release_nonnull());

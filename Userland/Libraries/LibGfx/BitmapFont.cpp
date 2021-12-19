@@ -6,6 +6,7 @@
 
 #include "BitmapFont.h"
 #include "Emoji.h"
+#include <AK/BuiltinWrappers.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/FileStream.h>
@@ -95,7 +96,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::masked_character_set() const
     }
     size_t new_glyph_count { 0 };
     for (size_t i = 0; i < new_range_mask_size; ++i) {
-        new_glyph_count += 256 * __builtin_popcount(new_range_mask[i]);
+        new_glyph_count += 256 * popcount(new_range_mask[i]);
     }
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     auto* new_rows = static_cast<u8*>(calloc(new_glyph_count, bytes_per_glyph));
@@ -191,7 +192,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
     size_t glyph_count { 0 };
     u8* range_mask = const_cast<u8*>(data + sizeof(FontFileHeader));
     for (size_t i = 0; i < header.range_mask_size; ++i)
-        glyph_count += 256 * __builtin_popcount(range_mask[i]);
+        glyph_count += 256 * popcount(range_mask[i]);
     u8* rows = range_mask + header.range_mask_size;
     u8* widths = (u8*)(rows) + glyph_count * bytes_per_glyph;
     return adopt_ref(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));

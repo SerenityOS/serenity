@@ -106,29 +106,6 @@ extern "C" {
 #    endif
 #endif
 
-#ifdef __cplusplus
-ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
-{
-#    if defined(__GNUC__) || defined(__clang__)
-    return __builtin_ctz(val);
-#    else
-    for (u8 i = 0; i < 32; ++i) {
-        if ((val >> i) & 1) {
-            return i;
-        }
-    }
-    return 0;
-#    endif
-}
-
-ALWAYS_INLINE int count_trailing_zeroes_32_safe(unsigned int val)
-{
-    if (val == 0)
-        return 32;
-    return count_trailing_zeroes_32(val);
-}
-#endif
-
 #ifdef AK_OS_BSD_GENERIC
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME

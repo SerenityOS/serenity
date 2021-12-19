@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/Socket.h>
@@ -473,7 +474,7 @@ bool Thread::SignalBlocker::check_pending_signals(bool from_add_blocker)
         if (m_did_unblock)
             return false;
 
-        auto matching_pending_signal = __builtin_ffsl(thread().pending_signals() & m_pending_set);
+        auto matching_pending_signal = bit_scan_forward(thread().pending_signals() & m_pending_set);
         if (matching_pending_signal == 0)
             return false;
 

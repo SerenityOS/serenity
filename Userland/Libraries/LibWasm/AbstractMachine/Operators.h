@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/BitCast.h>
+#include <AK/BuiltinWrappers.h>
 #include <AK/Result.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -176,10 +177,8 @@ struct CountLeadingZeros {
         if (lhs == 0)
             return sizeof(Lhs) * CHAR_BIT;
 
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_clz(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_clzll(lhs);
+        if constexpr (sizeof(Lhs) == 4 || sizeof(Lhs) == 8)
+            return count_leading_zeroes(MakeUnsigned<Lhs>(lhs));
         else
             VERIFY_NOT_REACHED();
     }
@@ -193,10 +192,8 @@ struct CountTrailingZeros {
         if (lhs == 0)
             return sizeof(Lhs) * CHAR_BIT;
 
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_ctz(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_ctzll(lhs);
+        if constexpr (sizeof(Lhs) == 4 || sizeof(Lhs) == 8)
+            return count_trailing_zeroes(MakeUnsigned<Lhs>(lhs));
         else
             VERIFY_NOT_REACHED();
     }
@@ -207,10 +204,8 @@ struct PopCount {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_popcount(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_popcountll(lhs);
+        if constexpr (sizeof(Lhs) == 4 || sizeof(Lhs) == 8)
+            return popcount(MakeUnsigned<Lhs>(lhs));
         else
             VERIFY_NOT_REACHED();
     }

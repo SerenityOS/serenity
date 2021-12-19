@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Function.h>
 #include <AK/Random.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -303,7 +304,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
     auto number = TRY(vm.argument(0).to_u32(global_object));
     if (number == 0)
         return Value(32);
-    return Value(__builtin_clz(number));
+    return Value(count_leading_zeroes(number));
 }
 
 // 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos

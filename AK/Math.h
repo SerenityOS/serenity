@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
@@ -44,21 +45,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
         if (IsSame<T, float>)                     \
             return __builtin_##function##f(args); \
     }
-
-#define INTEGER_BUILTIN(name)                         \
-    template<Integral T>                              \
-    constexpr T name(T x)                             \
-    {                                                 \
-        if constexpr (sizeof(T) == sizeof(long long)) \
-            return __builtin_##name##ll(x);           \
-        if constexpr (sizeof(T) == sizeof(long))      \
-            return __builtin_##name##l(x);            \
-        return __builtin_##name(x);                   \
-    }
-
-INTEGER_BUILTIN(clz);
-INTEGER_BUILTIN(ctz);
-INTEGER_BUILTIN(popcnt);
 
 namespace Division {
 template<FloatingPoint T>
@@ -312,7 +298,7 @@ constexpr T log2(T x)
 template<Integral T>
 constexpr T log2(T x)
 {
-    return x ? 8 * sizeof(T) - clz(x) : 0;
+    return x ? 8 * sizeof(T) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x)) : 0;
 }
 
 template<FloatingPoint T>
@@ -468,6 +454,5 @@ constexpr T pow(T x, T y)
 }
 
 #undef CONSTEXPR_STATE
-#undef INTEGER_BUILTIN
 
 }

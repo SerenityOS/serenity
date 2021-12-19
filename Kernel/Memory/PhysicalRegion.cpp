@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Assertions.h>
@@ -80,7 +81,7 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned pa
 NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
     auto rounded_page_count = next_power_of_two(count);
-    auto order = __builtin_ctz(rounded_page_count);
+    auto order = count_trailing_zeroes(rounded_page_count);
 
     Optional<PhysicalAddress> page_base;
     for (auto& zone : m_usable_zones) {

@@ -8,6 +8,7 @@
 #include "SoftCPU.h"
 #include "Emulator.h"
 #include <AK/Assertions.h>
+#include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
 #include <stdio.h>
 #include <string.h>
@@ -978,7 +979,7 @@ void SoftCPU::BOUND(const X86::Instruction&) { TODO_INSN(); }
 template<typename T>
 ALWAYS_INLINE static T op_bsf(SoftCPU&, T value)
 {
-    return { (typename T::ValueType)__builtin_ctz(value.value()), value.shadow() };
+    return { (typename T::ValueType)bit_scan_forward(value.value()), value.shadow() };
 }
 
 template<typename T>
