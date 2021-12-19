@@ -106,6 +106,19 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
     }
 }
 
+UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
+{
+    SpinlockLocker page_lock(kernel_page_directory().get_lock());
+    SpinlockLocker mm_lock(s_mm_lock);
+
+    auto start = start_of_prekernel_image.page_base().get();
+    auto end = end_of_prekernel_image.page_base().get();
+
+    for (auto i = start; i <= end; i += PAGE_SIZE)
+        release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No, UnsafeIgnoreMissingPageTable::Yes);
+    flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
+}
+
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
@@ -200,7 +213,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
-    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, start_of_prekernel_image, end_of_prekernel_image });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image))) });
 
     if (multiboot_flags & 0x4) {
@@ -570,7 +582,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
-void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, bool is_last_release)
+void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, IsLastPTERelease is_last_pte_release, UnsafeIgnoreMissingPageTable unsafe_ignore_missing_page_table)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(s_mm_lock.is_locked_by_current_processor());
@@ -586,7 +598,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
         auto& pte = page_table[page_table_index];
         pte.clear();
 
-        if (is_last_release || page_table_index == 0x1ff) {
+        if (is_last_pte_release == IsLastPTERelease::Yes || page_table_index == 0x1ff) {
             // If this is the last PTE in a region or the last PTE in a page table then
             // check if we can also release the page table
             bool all_clear = true;
@@ -600,7 +612,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
                 pde.clear();
 
                 auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
-                VERIFY(result);
+                VERIFY(unsafe_ignore_missing_page_table == UnsafeIgnoreMissingPageTable::Yes || result);
             }
         }
     }
