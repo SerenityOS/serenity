@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_
 
 ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator)
 {
-    constexpr FlatPtr userspace_range_base = 0x00800000;
+    constexpr FlatPtr userspace_range_base = USER_RANGE_BASE;
     FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
 
     auto directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PageDirectory));

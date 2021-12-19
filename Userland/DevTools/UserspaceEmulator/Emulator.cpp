@@ -14,6 +14,7 @@
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringUtils.h>
+#include <Kernel/API/MemoryLayout.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -51,7 +52,6 @@ Emulator::Emulator(String const& executable_path, Vector<StringView> const& argu
 {
     m_malloc_tracer = make<MallocTracer>(*this);
 
-    static constexpr FlatPtr userspace_range_base = 0x00800000;
     static constexpr FlatPtr userspace_range_ceiling = 0xbe000000;
 #ifdef UE_ASLR
     static constexpr FlatPtr page_mask = 0xfffff000u;

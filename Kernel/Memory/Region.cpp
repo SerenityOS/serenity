@@ -179,7 +179,7 @@ bool Region::map_individual_page_impl(size_t page_index)
     VERIFY(m_page_directory->get_lock().is_locked_by_current_processor());
     auto page_vaddr = vaddr_from_page_index(page_index);
 
-    bool user_allowed = page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr);
+    bool user_allowed = page_vaddr.get() >= USER_RANGE_BASE && is_user_address(page_vaddr);
     if (is_mmap() && !user_allowed) {
         PANIC("About to map mmap'ed page at a kernel address");
     }
