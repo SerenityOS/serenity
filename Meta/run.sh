@@ -301,7 +301,7 @@ if [ "$SERENITY_ARCH" = "aarch64" ]; then
 else
     SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Prekernel/Prekernel
-    -initrd Kernel/Kernel
+    -initrd Kernel/Kernel.drow
     "
 fi
 
