@@ -38,7 +38,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
             m_has_error = true;
             return argument;
         }
-        res = KeypadValue { AK::sqrt((double)argument) };
+        res = argument.sqrt();
         clear_operation();
         break;
     case Operation::Inverse:
@@ -46,7 +46,7 @@ KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argumen
             m_has_error = true;
             return argument;
         }
-        res = KeypadValue { 1.0 / (double)argument };
+        res = argument.invert();
         clear_operation();
         break;
     case Operation::Percent:
@@ -98,7 +98,7 @@ KeypadValue Calculator::finish_operation(KeypadValue argument)
             m_has_error = true;
             return argument;
         }
-        res = KeypadValue { (double)m_saved_argument / (double)argument };
+        res = m_saved_argument / argument;
         break;
 
     case Operation::Sqrt:
