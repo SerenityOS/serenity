@@ -27,6 +27,7 @@ Otherwise, returns -1 and sets `errno` to describe the error.
 ## Errors
 
 * `EPERM`: The new ID is not equal to the real ID or saved ID, and the user is not superuser.
+* `EINVAL`: The new ID is set to invalid value (-1).
 
 ## See also
 
