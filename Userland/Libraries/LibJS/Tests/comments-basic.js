@@ -26,6 +26,15 @@ i;`;
     expect(source).toEvalTo(2);
 });
 
+test("html comments directly after block comment", () => {
+    expect("0 /* */-->i").not.toEval();
+    expect(`0 /* 
+     */-->i`).toEval();
+    expect(`0 /* 
+     */-->i
+     'a'`).toEvalTo("a");
+});
+
 test("unterminated multi-line comment", () => {
     expect("/*").not.toEval();
     expect("/**").not.toEval();

@@ -530,6 +530,7 @@ Token Lexer::next()
                     consume();
                 } while (!is_eof() && !is_line_terminator());
             } else if (is_block_comment_start()) {
+                size_t start_line_number = m_line_number;
                 consume();
                 do {
                     consume();
@@ -540,6 +541,9 @@ Token Lexer::next()
                 if (is_eof())
                     unterminated_comment = true;
                 consume(); // consume /
+
+                if (start_line_number != m_line_number)
+                    line_has_token_yet = false;
             } else {
                 break;
             }
