@@ -45,7 +45,7 @@ static unsigned int mbstate_expected_bytes(mbstate_t* state)
 
 extern "C" {
 
-size_t wcslen(const wchar_t* str)
+size_t wcslen(wchar_t const* str)
 {
     size_t len = 0;
     while (*(str++))
@@ -53,7 +53,7 @@ size_t wcslen(const wchar_t* str)
     return len;
 }
 
-wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
+wchar_t* wcscpy(wchar_t* dest, wchar_t const* src)
 {
     wchar_t* original_dest = dest;
     while ((*dest++ = *src++) != '\0')
@@ -62,7 +62,7 @@ wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsdup.html
-wchar_t* wcsdup(const wchar_t* str)
+wchar_t* wcsdup(wchar_t const* str)
 {
     size_t length = wcslen(str);
     wchar_t* new_str = (wchar_t*)malloc(sizeof(wchar_t) * (length + 1));
@@ -75,7 +75,7 @@ wchar_t* wcsdup(const wchar_t* str)
     return wcscpy(new_str, str);
 }
 
-wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
+wchar_t* wcsncpy(wchar_t* dest, wchar_t const* src, size_t num)
 {
     wchar_t* original_dest = dest;
     while (((*dest++ = *src++) != '\0') && ((size_t)(dest - original_dest) < num))
@@ -83,7 +83,7 @@ wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
     return original_dest;
 }
 
-size_t wcslcpy(wchar_t* dest, const wchar_t* src, size_t n)
+size_t wcslcpy(wchar_t* dest, wchar_t const* src, size_t n)
 {
     size_t i;
     for (i = 0; i + 1 < n && src[i] != L'\0'; ++i)
@@ -95,28 +95,28 @@ size_t wcslcpy(wchar_t* dest, const wchar_t* src, size_t n)
     return i;
 }
 
-int wcscmp(const wchar_t* s1, const wchar_t* s2)
+int wcscmp(wchar_t const* s1, wchar_t const* s2)
 {
     while (*s1 == *s2++)
         if (*s1++ == 0)
             return 0;
-    return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
+    return *(wchar_t const*)s1 - *(wchar_t const*)--s2;
 }
 
-int wcsncmp(const wchar_t* s1, const wchar_t* s2, size_t n)
+int wcsncmp(wchar_t const* s1, wchar_t const* s2, size_t n)
 {
     if (!n)
         return 0;
     do {
         if (*s1 != *s2++)
-            return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
+            return *(wchar_t const*)s1 - *(wchar_t const*)--s2;
         if (*s1++ == 0)
             break;
     } while (--n);
     return 0;
 }
 
-wchar_t* wcschr(const wchar_t* str, int c)
+wchar_t* wcschr(wchar_t const* str, int c)
 {
     wchar_t ch = c;
     for (;; ++str) {
@@ -127,7 +127,7 @@ wchar_t* wcschr(const wchar_t* str, int c)
     }
 }
 
-wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
+wchar_t* wcsrchr(wchar_t const* str, wchar_t wc)
 {
     wchar_t* last = nullptr;
     wchar_t c;
@@ -138,7 +138,7 @@ wchar_t* wcsrchr(const wchar_t* str, wchar_t wc)
     return last;
 }
 
-wchar_t* wcscat(wchar_t* dest, const wchar_t* src)
+wchar_t* wcscat(wchar_t* dest, wchar_t const* src)
 {
     size_t dest_length = wcslen(dest);
     size_t i;
@@ -148,7 +148,7 @@ wchar_t* wcscat(wchar_t* dest, const wchar_t* src)
     return dest;
 }
 
-wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
+wchar_t* wcsncat(wchar_t* dest, wchar_t const* src, size_t n)
 {
     size_t dest_length = wcslen(dest);
     size_t i;
@@ -158,7 +158,7 @@ wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
     return dest;
 }
 
-wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
+wchar_t* wcstok(wchar_t* str, wchar_t const* delim, wchar_t** ptr)
 {
     wchar_t* used_str = str;
     if (!used_str) {
@@ -203,13 +203,13 @@ wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
     return &used_str[token_start];
 }
 
-long wcstol(const wchar_t*, wchar_t**, int)
+long wcstol(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstol()");
     TODO();
 }
 
-long long wcstoll(const wchar_t*, wchar_t**, int)
+long long wcstoll(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstoll()");
     TODO();
@@ -229,7 +229,7 @@ wint_t btowc(int c)
     return c;
 }
 
-size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
+size_t mbrtowc(wchar_t* pwc, char const* s, size_t n, mbstate_t* state)
 {
     static mbstate_t _anonymous_state = {};
 
@@ -314,7 +314,7 @@ size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
     return consumed_bytes;
 }
 
-size_t mbrlen(const char* s, size_t n, mbstate_t* ps)
+size_t mbrlen(char const* s, size_t n, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
 
@@ -342,14 +342,14 @@ size_t wcrtomb(char* s, wchar_t wc, mbstate_t*)
     }
 }
 
-int wcscoll(const wchar_t* ws1, const wchar_t* ws2)
+int wcscoll(wchar_t const* ws1, wchar_t const* ws2)
 {
     // TODO: Actually implement a sensible sort order for this,
     // because right now we are doing what LC_COLLATE=C would do.
     return wcscmp(ws1, ws2);
 }
 
-size_t wcsxfrm(wchar_t* dest, const wchar_t* src, size_t n)
+size_t wcsxfrm(wchar_t* dest, wchar_t const* src, size_t n)
 {
     // TODO: This needs to be changed when wcscoll is not just doing wcscmp
     return wcslcpy(dest, src, n);
@@ -363,7 +363,7 @@ int wctob(wint_t c)
     return static_cast<unsigned char>(c);
 }
 
-int mbsinit(const mbstate_t* state)
+int mbsinit(mbstate_t const* state)
 {
     if (!state) {
         return 1;
@@ -376,9 +376,9 @@ int mbsinit(const mbstate_t* state)
     return 1;
 }
 
-wchar_t* wcspbrk(const wchar_t* wcs, const wchar_t* accept)
+wchar_t* wcspbrk(wchar_t const* wcs, wchar_t const* accept)
 {
-    for (const wchar_t* cur = accept; *cur; cur++) {
+    for (wchar_t const* cur = accept; *cur; cur++) {
         wchar_t* res = wcschr(wcs, *cur);
         if (res)
             return res;
@@ -387,7 +387,7 @@ wchar_t* wcspbrk(const wchar_t* wcs, const wchar_t* accept)
     return nullptr;
 }
 
-wchar_t* wcsstr(const wchar_t* haystack, const wchar_t* needle)
+wchar_t* wcsstr(wchar_t const* haystack, wchar_t const* needle)
 {
     size_t nlen = wcslen(needle);
 
@@ -407,7 +407,7 @@ wchar_t* wcsstr(const wchar_t* haystack, const wchar_t* needle)
     return nullptr;
 }
 
-wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n)
+wchar_t* wmemchr(wchar_t const* s, wchar_t c, size_t n)
 {
     for (size_t i = 0; i < n; i++) {
         if (s[i] == c)
@@ -417,7 +417,7 @@ wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n)
     return nullptr;
 }
 
-wchar_t* wmemcpy(wchar_t* dest, const wchar_t* src, size_t n)
+wchar_t* wmemcpy(wchar_t* dest, wchar_t const* src, size_t n)
 {
     for (size_t i = 0; i < n; i++)
         dest[i] = src[i];
@@ -434,7 +434,7 @@ wchar_t* wmemset(wchar_t* wcs, wchar_t wc, size_t n)
     return wcs;
 }
 
-wchar_t* wmemmove(wchar_t* dest, const wchar_t* src, size_t n)
+wchar_t* wmemmove(wchar_t* dest, wchar_t const* src, size_t n)
 {
     if (dest > src) {
         for (size_t i = 1; i <= n; i++) {
@@ -449,37 +449,37 @@ wchar_t* wmemmove(wchar_t* dest, const wchar_t* src, size_t n)
     return dest;
 }
 
-unsigned long wcstoul(const wchar_t*, wchar_t**, int)
+unsigned long wcstoul(wchar_t const*, wchar_t**, int)
 {
     dbgln("TODO: Implement wcstoul()");
     TODO();
 }
 
-unsigned long long wcstoull(const wchar_t*, wchar_t**, int)
+unsigned long long wcstoull(wchar_t const*, wchar_t**, int)
 {
     dbgln("TODO: Implement wcstoull()");
     TODO();
 }
 
-float wcstof(const wchar_t*, wchar_t**)
+float wcstof(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstof()");
     TODO();
 }
 
-double wcstod(const wchar_t*, wchar_t**)
+double wcstod(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstod()");
     TODO();
 }
 
-long double wcstold(const wchar_t*, wchar_t**)
+long double wcstold(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstold()");
     TODO();
 }
 
-int swprintf(wchar_t*, size_t, const wchar_t*, ...)
+int swprintf(wchar_t*, size_t, wchar_t const*, ...)
 {
     dbgln("TODO: Implement swprintf()");
     TODO();
@@ -502,7 +502,7 @@ int wcwidth(wchar_t wc)
     return 1;
 }
 
-size_t wcsnrtombs(char* dest, const wchar_t** src, size_t nwc, size_t len, mbstate_t* ps)
+size_t wcsnrtombs(char* dest, wchar_t const** src, size_t nwc, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
 
@@ -548,7 +548,7 @@ size_t wcsnrtombs(char* dest, const wchar_t** src, size_t nwc, size_t len, mbsta
     return written;
 }
 
-size_t mbsnrtowcs(wchar_t* dst, const char** src, size_t nms, size_t len, mbstate_t* ps)
+size_t mbsnrtowcs(wchar_t* dst, char const** src, size_t nms, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
 
@@ -596,7 +596,7 @@ size_t mbsnrtowcs(wchar_t* dst, const char** src, size_t nms, size_t len, mbstat
     return written;
 }
 
-int wmemcmp(const wchar_t* s1, const wchar_t* s2, size_t n)
+int wmemcmp(wchar_t const* s1, wchar_t const* s2, size_t n)
 {
     while (n-- > 0) {
         if (*s1++ != *s2++)
@@ -605,7 +605,7 @@ int wmemcmp(const wchar_t* s1, const wchar_t* s2, size_t n)
     return 0;
 }
 
-size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
+size_t wcsrtombs(char* dest, wchar_t const** src, size_t len, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
 
@@ -616,7 +616,7 @@ size_t wcsrtombs(char* dest, const wchar_t** src, size_t len, mbstate_t* ps)
     return wcsnrtombs(dest, src, SIZE_MAX, len, ps);
 }
 
-size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t* ps)
+size_t mbsrtowcs(wchar_t* dst, char const** src, size_t len, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
 
