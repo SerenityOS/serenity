@@ -2166,6 +2166,11 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
                 return false;
             }
 
+            if (m_parser_state.named_capture_groups.contains(name)) {
+                set_error(Error::DuplicateNamedCapture);
+                return false;
+            }
+
             ByteCode capture_group_bytecode;
             size_t length = 0;
             enter_capture_group_scope();
