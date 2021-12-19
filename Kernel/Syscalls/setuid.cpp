@@ -13,6 +13,9 @@ ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
+    if (new_euid == (uid_t)-1)
+        return EINVAL;
+
     if (new_euid != uid() && new_euid != suid() && !is_superuser())
         return EPERM;
 
@@ -30,6 +33,9 @@ ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
+    if (new_egid == (uid_t)-1)
+        return EINVAL;
+
     if (new_egid != gid() && new_egid != sgid() && !is_superuser())
         return EPERM;
 
@@ -45,6 +51,9 @@ ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
+
+    if (new_uid == (uid_t)-1)
+        return EINVAL;
 
     if (new_uid != uid() && new_uid != euid() && !is_superuser())
         return EPERM;
@@ -63,6 +72,9 @@ ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
+
+    if (new_gid == (uid_t)-1)
+        return EINVAL;
 
     if (new_gid != gid() && new_gid != egid() && !is_superuser())
         return EPERM;
