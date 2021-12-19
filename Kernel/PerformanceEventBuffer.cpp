@@ -286,7 +286,10 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
             seen_first_sample = true;
         auto stack_array = event_object.add_array("stack");
         for (size_t j = 0; j < event.stack_size; ++j) {
-            stack_array.add(event.stack[j]);
+            auto address = event.stack[j];
+            if (!show_kernel_addresses && !Memory::is_user_address(VirtualAddress { address }))
+                address = 0xdeadc0de;
+            stack_array.add(address);
         }
         stack_array.finish();
         event_object.finish();
