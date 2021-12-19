@@ -562,7 +562,7 @@ bool Process::dump_perfcore()
     auto perfcore_filename = String::formatted("{}.profile", base_filename);
     RefPtr<OpenFileDescription> description;
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+        auto description_or_error = VirtualFileSystem::the().open(perfcore_filename, O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
