@@ -16,18 +16,27 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath", nullptr));
+    TRY(Core::System::pledge("stdio cpath rpath"));
 
     bool create_parents = false;
+    String mode_string;
     Vector<const char*> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p');
+    args_parser.add_option(mode_string, "Set new directory permissions", "mode", 'm', "octal-mode");
     args_parser.add_positional_argument(directories, "Directories to create", "directories");
     args_parser.parse(arguments);
 
-    // FIXME: Support -m/--mode option
-    mode_t mode = 0755;
+    mode_t default_mode = 0755;
+    mode_t mode = default_mode;
+
+    if (!mode_string.is_empty()) {
+        if (sscanf(mode_string.characters(), "%ho", &mode) != 1) {
+            warnln("mkdir: invalid mode: {}", mode_string);
+            return 1;
+        }
+    }
 
     bool has_errors = false;
 
@@ -43,9 +52,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         StringBuilder path_builder;
         if (lexical_path.is_absolute())
             path_builder.append("/");
-        for (auto& part : lexical_path.parts_view()) {
+
+        auto& parts = lexical_path.parts_view();
+        size_t num_parts = parts.size();
+
+        for (size_t idx = 0; idx < num_parts; ++idx) {
+            auto& part = parts[idx];
+
             path_builder.append(part);
             auto path = path_builder.build();
+
             struct stat st;
             if (stat(path.characters(), &st) < 0) {
                 if (errno != ENOENT) {
@@ -53,7 +69,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     has_errors = true;
                     break;
                 }
-                if (mkdir(path.characters(), mode) < 0) {
+
+                bool is_final = (idx == (num_parts - 1));
+
+                if (mkdir(path.characters(), is_final ? mode : default_mode) < 0) {
                     perror("mkdir");
                     has_errors = true;
                     break;
