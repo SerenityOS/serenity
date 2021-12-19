@@ -626,4 +626,30 @@ size_t mbsrtowcs(wchar_t* dst, char const** src, size_t len, mbstate_t* ps)
     // SIZE_MAX is as close as we are going to get to "unlimited".
     return mbsnrtowcs(dst, src, SIZE_MAX, len, ps);
 }
+
+size_t wcscspn(wchar_t const* wcs, wchar_t const* reject)
+{
+    for (auto const* wc_pointer = wcs;;) {
+        auto c = *wc_pointer++;
+        wchar_t rc;
+        auto const* reject_copy = reject;
+        do {
+            if ((rc = *reject_copy++) == c)
+                return wc_pointer - 1 - wcs;
+        } while (rc != 0);
+    }
+}
+
+size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
+{
+    for (auto const* wc_pointer = wcs;;) {
+        auto c = *wc_pointer++;
+        wchar_t rc;
+        auto const* accept_copy = accept;
+        do {
+            if ((rc = *accept_copy++) != c)
+                return wc_pointer - 1 - wcs;
+        } while (rc != 0);
+    }
+}
 }
