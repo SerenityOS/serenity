@@ -440,7 +440,6 @@ bool ISO8601Parser::parse_fraction()
         return false;
     if (!parse_fractional_part())
         return false;
-    m_state.parse_result.fractional_part = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
@@ -450,7 +449,12 @@ bool ISO8601Parser::parse_time_fraction()
 {
     // TimeFraction :
     //     Fraction
-    return parse_fraction();
+    StateTransaction transaction { *this };
+    if (!parse_fraction())
+        return false;
+    m_state.parse_result.time_fraction = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
 }
 
 // https://tc39.es/proposal-temporal/#prod-TimeZoneUTCOffsetSign

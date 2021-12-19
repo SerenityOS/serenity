@@ -21,7 +21,7 @@ struct ParseResult {
     Optional<StringView> time_hour;
     Optional<StringView> time_minute;
     Optional<StringView> time_second;
-    Optional<StringView> fractional_part;
+    Optional<StringView> time_fraction;
     Optional<StringView> calendar_name;
     Optional<StringView> utc_designator;
     Optional<StringView> time_zone_utc_offset_sign;
