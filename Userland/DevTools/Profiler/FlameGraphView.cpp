@@ -9,6 +9,7 @@
 #include "LibGfx/Forward.h"
 #include <AK/Function.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
@@ -82,6 +83,13 @@ void FlameGraphView::mousemove_event(GUI::MouseEvent& event)
 
     if (on_hover_change)
         on_hover_change();
+
+    String label = "";
+    if (m_hovered_bar != nullptr && m_hovered_bar->index.is_valid()) {
+        label = bar_label(*m_hovered_bar);
+    }
+    set_tooltip(label);
+    show_or_hide_tooltip();
 
     update();
 }
