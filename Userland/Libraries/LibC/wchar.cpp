@@ -479,12 +479,6 @@ long double wcstold(wchar_t const*, wchar_t**)
     TODO();
 }
 
-int swprintf(wchar_t*, size_t, wchar_t const*, ...)
-{
-    dbgln("TODO: Implement swprintf()");
-    TODO();
-}
-
 int wcwidth(wchar_t wc)
 {
     if (wc == L'\0')
