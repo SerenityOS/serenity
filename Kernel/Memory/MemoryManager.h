@@ -49,19 +49,19 @@ inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 
 enum class UsedMemoryRangeType {
     LowMemory = 0,
-    Prekernel,
     Kernel,
     BootModule,
     PhysicalPages,
+    __Count
 };
 
 static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory",
-    "Prekernel",
     "Kernel",
     "Boot module",
     "Physical Pages"
 };
+static_assert(array_size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
 
 struct UsedMemoryRange {
     UsedMemoryRangeType type {};
@@ -159,6 +159,7 @@ public:
     void set_page_writable_direct(VirtualAddress, bool);
 
     void protect_readonly_after_init_memory();
+    void unmap_prekernel();
     void unmap_text_after_init();
     void protect_ksyms_after_init();
 
@@ -276,7 +277,15 @@ private:
 
     PageTableEntry* pte(PageDirectory&, VirtualAddress);
     PageTableEntry* ensure_pte(PageDirectory&, VirtualAddress);
-    void release_pte(PageDirectory&, VirtualAddress, bool);
+    enum class IsLastPTERelease {
+        Yes,
+        No
+    };
+    enum class UnsafeIgnoreMissingPageTable {
+        Yes,
+        No
+    };
+    void release_pte(PageDirectory&, VirtualAddress, IsLastPTERelease, UnsafeIgnoreMissingPageTable = UnsafeIgnoreMissingPageTable::No);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
 
