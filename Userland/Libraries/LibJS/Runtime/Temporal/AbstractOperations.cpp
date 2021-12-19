@@ -1086,7 +1086,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     auto hour_part = parse_result.time_hour;
     auto minute_part = parse_result.time_minute;
     auto second_part = parse_result.time_second;
-    auto fraction_part = parse_result.fractional_part;
+    auto fraction_part = parse_result.time_fraction;
     auto calendar_part = parse_result.calendar_name;
 
     // 3. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
