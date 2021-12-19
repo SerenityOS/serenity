@@ -44,7 +44,6 @@ set(LIBC_SOURCES
     string.cpp
     strings.cpp
     stubs.cpp
-    syslog.cpp
     sys/auxv.cpp
     sys/file.cpp
     sys/mman.cpp
@@ -52,10 +51,11 @@ set(LIBC_SOURCES
     sys/ptrace.cpp
     sys/select.cpp
     sys/socket.cpp
+    sys/statvfs.cpp
     sys/uio.cpp
     sys/wait.cpp
-    sys/statvfs.cpp
     sys/xattr.cpp
+    syslog.cpp
     termcap.cpp
     termios.cpp
     time.cpp
