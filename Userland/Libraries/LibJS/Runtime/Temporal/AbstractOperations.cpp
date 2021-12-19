@@ -1079,7 +1079,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. Let year, month, day, hour, minute, second, fraction, and calendar be the parts of isoString produced respectively by the DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, FractionalPart, and CalendarName productions, or undefined if not present.
+    // 2. Let year, month, day, hour, minute, second, fraction, and calendar be the parts of isoString produced respectively by the DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, TimeFraction, and CalendarName productions, or undefined if not present.
     auto year_part = parse_result.date_year;
     auto month_part = parse_result.date_month;
     auto day_part = parse_result.date_day;
