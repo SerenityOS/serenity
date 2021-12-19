@@ -95,4 +95,6 @@ int vfwscanf(FILE* __restrict stream, const wchar_t* __restrict format, va_list 
 int vswscanf(const wchar_t* __restrict ws, const wchar_t* __restrict format, va_list arg);
 int vwscanf(const wchar_t* __restrict format, va_list arg);
 
+size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, const wchar_t* __restrict format, const struct tm* __restrict timeptr);
+
 __END_DECLS

@@ -646,4 +646,14 @@ size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
         } while (rc != 0);
     }
 }
+
+size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, wchar_t const* __restrict format, const struct tm* __restrict timeptr)
+{
+    (void)wcs;
+    (void)maxsize;
+    (void)format;
+    (void)timeptr;
+    dbgln("FIXME: Implement wcsftime()");
+    TODO();
+}
 }
