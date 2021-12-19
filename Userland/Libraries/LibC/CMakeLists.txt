@@ -66,6 +66,7 @@ set(LIBC_SOURCES
     utsname.cpp
     wchar.cpp
     wctype.cpp
+    wstdio.cpp
 )
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
