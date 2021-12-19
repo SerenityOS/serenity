@@ -68,6 +68,21 @@ KeypadValue KeypadValue::operator-(void) const
     return { -m_value, m_decimal_places };
 }
 
+KeypadValue KeypadValue::sqrt(void) const
+{
+    return KeypadValue { AK::sqrt((double)(*this)) };
+}
+
+KeypadValue KeypadValue::invert(void) const
+{
+    return KeypadValue { 1.0 / (double)(*this) };
+}
+
+KeypadValue KeypadValue::operator/(KeypadValue const& rhs)
+{
+    return KeypadValue { (double)(*this) / (double)rhs };
+}
+
 bool KeypadValue::operator<(KeypadValue const& rhs)
 {
     return operator_helper<bool>(*this, rhs, [](KeypadValue const&, KeypadValue const&, i64 less_decimal_places_equalized, i64 more_decimal_places_equalized, bool lhs_is_less) {
@@ -139,7 +154,7 @@ KeypadValue::KeypadValue(double d)
     m_value = negative ? (-m_value) : m_value;
 }
 
-KeypadValue::operator double()
+KeypadValue::operator double() const
 {
     double res = (double)m_value / AK::pow(10.0, (double)m_decimal_places);
     return res;
