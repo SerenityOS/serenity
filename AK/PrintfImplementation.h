@@ -19,8 +19,8 @@ extern "C" size_t strlen(const char*);
 
 namespace PrintfImplementation {
 
-template<typename PutChFunc, typename T>
-ALWAYS_INLINE int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zero_pad, u8 field_width)
+template<typename PutChFunc, typename T, typename CharType>
+ALWAYS_INLINE int print_hex(PutChFunc putch, CharType*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zero_pad, u8 field_width)
 {
     int ret = 0;
 
@@ -76,8 +76,8 @@ ALWAYS_INLINE int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper
     return ret;
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_number(PutChFunc putch, char*& bufptr, u32 number, bool left_pad, bool zero_pad, u32 field_width)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_number(PutChFunc putch, CharType*& bufptr, u32 number, bool left_pad, bool zero_pad, u32 field_width)
 {
     u32 divisor = 1000000000;
     char ch;
@@ -117,8 +117,8 @@ ALWAYS_INLINE int print_number(PutChFunc putch, char*& bufptr, u32 number, bool 
     return field_width;
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool left_pad, bool zero_pad, u32 field_width)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_u64(PutChFunc putch, CharType*& bufptr, u64 number, bool left_pad, bool zero_pad, u32 field_width)
 {
     u64 divisor = 10000000000000000000LLU;
     char ch;
@@ -158,8 +158,8 @@ ALWAYS_INLINE int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool lef
     return field_width;
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bool left_pad, bool zero_pad, u32 field_width, u32 fraction_length)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool left_pad, bool zero_pad, u32 field_width, u32 fraction_length)
 {
     int length = 0;
 
@@ -180,8 +180,8 @@ ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bo
     return length + print_u64(putch, bufptr, (i64)fraction, false, true, fraction_length);
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool left_pad, bool zero_pad, u32 field_width)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_i64(PutChFunc putch, CharType*& bufptr, i64 number, bool left_pad, bool zero_pad, u32 field_width)
 {
     // FIXME: This won't work if there is padding. '  -17' becomes '-  17'.
     if (number < 0) {
@@ -191,8 +191,8 @@ ALWAYS_INLINE int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool lef
     return print_u64(putch, bufptr, number, left_pad, zero_pad, field_width);
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, u32 number, bool left_pad, bool zero_pad, u32 field_width)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u32 number, bool left_pad, bool zero_pad, u32 field_width)
 {
     u32 divisor = 134217728;
     char ch;
@@ -232,8 +232,8 @@ ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, u32 number,
     return field_width;
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot, size_t fraction_length, bool has_fraction)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot, size_t fraction_length, bool has_fraction)
 {
     if (has_fraction)
         len = min(len, fraction_length);
@@ -260,8 +260,8 @@ ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, 
     return field_width;
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool left_pad, bool zero_pad, u32 field_width, bool always_sign)
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, int number, bool left_pad, bool zero_pad, u32 field_width, bool always_sign)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -285,9 +285,9 @@ struct ModifierState {
     bool always_sign { false };
 };
 
-template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument>
+template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType = char>
 struct PrintfImpl {
-    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, CharType*& bufptr, const int& nwritten)
         : m_bufptr(bufptr)
         , m_nwritten(nwritten)
         , m_putch(putch)
@@ -376,14 +376,14 @@ struct PrintfImpl {
         char c = NextArgument<int>()(ap);
         return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot, state.fraction_length, state.has_fraction_length);
     }
-    ALWAYS_INLINE int format_unrecognized(char format_op, const char* fmt, const ModifierState&, ArgumentListRefT) const
+    ALWAYS_INLINE int format_unrecognized(CharType format_op, const CharType* fmt, const ModifierState&, ArgumentListRefT) const
     {
         dbgln("printf_internal: Unimplemented format specifier {} (fmt: {})", format_op, fmt);
         return 0;
     }
 
 protected:
-    char*& m_bufptr;
+    CharType*& m_bufptr;
     const int& m_nwritten;
     PutChFunc& m_putch;
 };
@@ -401,15 +401,15 @@ struct VaArgNextArgument {
         ret += impl.format_##c(state, ap); \
         break;
 
-template<typename PutChFunc, template<typename T, typename U, template<typename X, typename Y> typename V> typename Impl = PrintfImpl, typename ArgumentListT = va_list, template<typename T, typename V = decltype(declval<ArgumentListT&>())> typename NextArgument = VaArgNextArgument>
-ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, ArgumentListT ap)
+template<typename PutChFunc, template<typename T, typename U, template<typename X, typename Y> typename V, typename C = char> typename Impl = PrintfImpl, typename ArgumentListT = va_list, template<typename T, typename V = decltype(declval<ArgumentListT&>())> typename NextArgument = VaArgNextArgument, typename CharType = char>
+ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffer, const CharType*& fmt, ArgumentListT ap)
 {
     int ret = 0;
-    char* bufptr = buffer;
+    CharType* bufptr = buffer;
 
-    Impl<PutChFunc, ArgumentListT&, NextArgument> impl { putch, bufptr, ret };
+    Impl<PutChFunc, ArgumentListT&, NextArgument, CharType> impl { putch, bufptr, ret };
 
-    for (const char* p = fmt; *p; ++p) {
+    for (const CharType* p = fmt; *p; ++p) {
         ModifierState state;
         if (*p == '%' && *(p + 1)) {
         one_more:

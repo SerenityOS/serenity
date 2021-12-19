@@ -61,7 +61,6 @@ unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 float wcstof(const wchar_t*, wchar_t**);
 double wcstod(const wchar_t*, wchar_t**);
 long double wcstold(const wchar_t*, wchar_t**);
-int swprintf(wchar_t*, size_t, const wchar_t*, ...);
 int wcwidth(wchar_t);
 size_t wcsrtombs(char*, const wchar_t**, size_t, mbstate_t*);
 size_t mbsrtowcs(wchar_t*, const char**, size_t, mbstate_t*);
@@ -80,5 +79,12 @@ wint_t putwchar(wchar_t wc);
 wchar_t* fgetws(wchar_t* __restrict ws, int n, FILE* __restrict stream);
 int fputws(const wchar_t* __restrict ws, FILE* __restrict stream);
 int fwide(FILE* stream, int mode);
+
+int wprintf(const wchar_t* __restrict format, ...);
+int fwprintf(FILE* __restrict stream, const wchar_t* __restrict format, ...);
+int swprintf(wchar_t* __restrict wcs, size_t maxlen, const wchar_t* __restrict format, ...);
+int vwprintf(const wchar_t* __restrict format, va_list args);
+int vfwprintf(FILE* __restrict stream, const wchar_t* __restrict format, va_list args);
+int vswprintf(wchar_t* __restrict wcs, size_t maxlen, const wchar_t* __restrict format, va_list args);
 
 __END_DECLS
