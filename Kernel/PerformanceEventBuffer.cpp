@@ -196,10 +196,17 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
         }
     }
 
+    bool show_kernel_addresses = Process::current().is_superuser();
     auto array = object.add_array("events");
     bool seen_first_sample = false;
     for (size_t i = 0; i < m_count; ++i) {
-        auto& event = at(i);
+        auto const& event = at(i);
+
+        if (!show_kernel_addresses) {
+            if (event.type == PERF_EVENT_KMALLOC || event.type == PERF_EVENT_KFREE)
+                continue;
+        }
+
         auto event_object = array.add_object();
         switch (event.type) {
         case PERF_EVENT_SAMPLE:
