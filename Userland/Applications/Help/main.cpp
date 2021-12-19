@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    const char* start_page = nullptr;
+    char const* start_page = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(start_page, "Page to open at launch", "page", Core::ArgsParser::Required::No);
@@ -102,12 +102,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<GUI::Action> go_back_action;
     RefPtr<GUI::Action> go_forward_action;
 
-    auto update_actions = [&]() {
+    auto open_page = [&](String const& path) {
         go_back_action->set_enabled(history.can_go_back());
         go_forward_action->set_enabled(history.can_go_forward());
-    };
 
-    auto open_page = [&](const String& path) {
         if (path.is_null()) {
             window->set_title("Help");
             page_view->load_empty_document();
@@ -151,7 +149,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
 
         history.push(path);
-        update_actions();
         open_page(path);
     };
 
@@ -178,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
         auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
-        const auto& mapped_index = search_model.map(index);
+        auto const& mapped_index = search_model.map(index);
         String path = manual_model->page_path(mapped_index);
         if (path.is_null()) {
             page_view->load_empty_document();
@@ -187,7 +184,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         tree_view->selection().clear();
         tree_view->selection().add(mapped_index);
         history.push(path);
-        update_actions();
         open_page(path);
     };
 
@@ -208,19 +204,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
         history.push(path);
-        update_actions();
         open_page(path);
     };
 
     go_back_action = GUI::CommonActions::make_go_back_action([&](auto&) {
         history.go_back();
-        update_actions();
         open_page(history.current());
     });
 
     go_forward_action = GUI::CommonActions::make_go_forward_action([&](auto&) {
         history.go_forward();
-        update_actions();
         open_page(history.current());
     });
 
@@ -230,7 +223,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto go_home_action = GUI::CommonActions::make_go_home_action([&](auto&) {
         String path = "/usr/share/man/man7/Help-index.md";
         history.push(path);
-        update_actions();
         open_page(path);
     });
 
@@ -279,7 +271,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         URL url = URL::create_with_url_or_path(start_page);
         if (url.is_valid() && url.path().ends_with(".md")) {
             history.push(url.path());
-            update_actions();
             open_page(url.path());
             set_start_page = true;
         } else {
