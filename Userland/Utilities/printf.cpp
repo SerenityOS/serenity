@@ -20,8 +20,8 @@
     exit(1);
 }
 
-template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument>
-struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument> {
+template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType>
+requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument, CharType> {
     ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
         : PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>(putch, bufptr, nwritten)
     {
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
     auto previous_argc = 0;
     do {
         previous_argc = argc;
-        PrintfImplementation::printf_internal<decltype(putch), PrintfImpl, ArgvWithCount, ArgvNextArgument>(putch, nullptr, format_string, arg);
+        PrintfImplementation::printf_internal<decltype(putch), PrintfImpl, ArgvWithCount, ArgvNextArgument, char>(putch, nullptr, format_string, arg);
     } while (argc && previous_argc != argc);
 
     return 0;

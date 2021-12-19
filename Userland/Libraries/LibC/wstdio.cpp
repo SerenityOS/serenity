@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
+#include <AK/PrintfImplementation.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <bits/stdio_file_implementation.h>
@@ -117,5 +118,60 @@ int fputws(wchar_t const* __restrict ws, FILE* __restrict stream)
             return WEOF;
     }
     return size;
+}
+
+int wprintf(wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vfwprintf(stdout, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int fwprintf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vfwprintf(stream, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int swprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vswprintf(wcs, max_length, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int vwprintf(wchar_t const* __restrict format, va_list args)
+{
+    return vfwprintf(stdout, format, args);
+}
+
+int vfwprintf(FILE* __restrict stream, wchar_t const* __restrict format, va_list args)
+{
+    auto const* fmt = bit_cast<wchar_t const*>(format);
+    return printf_internal([stream](wchar_t*&, wchar_t wc) {
+        putwc(wc, stream);
+    },
+        nullptr, fmt, args);
+}
+
+int vswprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restrict format, va_list args)
+{
+    auto const* fmt = bit_cast<wchar_t const*>(format);
+    size_t length_so_far = 0;
+    printf_internal([max_length, &length_so_far](wchar_t*& buffer, wchar_t wc) {
+        if (length_so_far > max_length)
+            return;
+        *buffer++ = wc;
+        ++length_so_far;
+    },
+        wcs, fmt, args);
+    return static_cast<int>(length_so_far);
 }
 }
