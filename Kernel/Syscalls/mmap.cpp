@@ -189,11 +189,16 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
         if (map_randomized) {
             return address_space().page_directory().range_allocator().try_allocate_randomized(Memory::page_round_up(size), alignment);
         }
+
         auto range = address_space().try_allocate_range(VirtualAddress(addr), size, alignment);
         if (range.is_error()) {
             if (addr && !map_fixed) {
                 // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
                 range = address_space().try_allocate_range({}, size, alignment);
+            } else if (map_fixed) {
+                // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
+                TRY(address_space().unmap_mmap_range(VirtualAddress(addr), size));
+                range = address_space().try_allocate_range(VirtualAddress(addr), size, alignment);
             }
         }
         return range;
