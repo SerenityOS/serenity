@@ -108,7 +108,16 @@ UNMAP_AFTER_INIT bool CommandLine::is_ide_enabled() const
 
 UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled() const
 {
+    // Note: We can't enable SMP mode without enabling the IOAPIC.
+    if (!is_ioapic_enabled())
+        return false;
     return lookup("smp"sv).value_or("off"sv) == "on"sv;
+}
+
+UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled_without_ioapic_enabled() const
+{
+    auto smp_enabled = lookup("smp"sv).value_or("off"sv) == "on"sv;
+    return smp_enabled && !is_ioapic_enabled();
 }
 
 UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
