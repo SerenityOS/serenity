@@ -17,6 +17,12 @@ static_assert(AssertSize<wchar_t, sizeof(u32)>());
 
 extern "C" {
 
+int fwide(FILE*, int mode)
+{
+    // Nope Nope Nope.
+    return mode;
+}
+
 wint_t fgetwc(FILE* stream)
 {
     VERIFY(stream);
