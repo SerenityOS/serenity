@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
@@ -77,7 +78,7 @@ Thread& Scheduler::pull_next_runnable_thread()
     return g_ready_queues->with([&](auto& ready_queues) -> Thread& {
         auto priority_mask = ready_queues.mask;
         while (priority_mask != 0) {
-            auto priority = __builtin_ffsl(priority_mask);
+            auto priority = bit_scan_forward(priority_mask);
             VERIFY(priority > 0);
             auto& ready_queue = ready_queues.queues[--priority];
             for (auto& thread : ready_queue.thread_list) {
@@ -116,7 +117,7 @@ Thread* Scheduler::peek_next_runnable_thread()
     return g_ready_queues->with([&](auto& ready_queues) -> Thread* {
         auto priority_mask = ready_queues.mask;
         while (priority_mask != 0) {
-            auto priority = __builtin_ffsl(priority_mask);
+            auto priority = bit_scan_forward(priority_mask);
             VERIFY(priority > 0);
             auto& ready_queue = ready_queues.queues[--priority];
             for (auto& thread : ready_queue.thread_list) {

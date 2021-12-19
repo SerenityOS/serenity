@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/String.h>
@@ -326,9 +327,9 @@ static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
             mask_sizes.append(0);
             continue;
         }
-        int trailing_zeros = count_trailing_zeroes_32(mask);
+        int trailing_zeros = count_trailing_zeroes(mask);
         // If mask is exactly `0xFFFFFFFF`, then we might try to count the trailing zeros of 0x00000000 here, so we need the safe version:
-        int size = count_trailing_zeroes_32_safe(~(mask >> trailing_zeros));
+        int size = count_trailing_zeroes_safe(~(mask >> trailing_zeros));
         if (size > 8) {
             // Drop lowest bits if mask is longer than 8 bits.
             trailing_zeros += size - 8;

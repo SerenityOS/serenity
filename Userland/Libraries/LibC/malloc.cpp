@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
@@ -437,7 +438,7 @@ void* malloc(size_t size)
 // _aligned_free(), so it can be easily implemented on top of malloc().
 void* _aligned_malloc(size_t size, size_t alignment)
 {
-    if (__builtin_popcount(alignment) != 1) {
+    if (popcount(alignment) != 1) {
         errno = EINVAL;
         return nullptr;
     }
