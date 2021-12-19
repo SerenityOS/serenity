@@ -56,4 +56,9 @@ wint_t getwc(FILE* stream)
 {
     return fgetwc(stream);
 }
+
+wint_t getwchar()
+{
+    return getwc(stdin);
+}
 }
