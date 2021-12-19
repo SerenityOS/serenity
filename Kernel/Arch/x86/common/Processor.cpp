@@ -471,6 +471,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
 
     auto walk_stack = [&](FlatPtr stack_ptr) {
         static constexpr size_t max_stack_frames = 4096;
+        bool is_walking_userspace_stack = false;
         stack_trace.append(ip);
         size_t count = 1;
         while (stack_ptr && stack_trace.size() < max_stack_frames) {
@@ -479,6 +480,15 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             count++;
             if (max_frames != 0 && count > max_frames)
                 break;
+
+            if (!Memory::is_user_address(VirtualAddress { stack_ptr })) {
+                if (is_walking_userspace_stack) {
+                    dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
+                    break;
+                }
+            } else {
+                is_walking_userspace_stack = true;
+            }
 
             if (Memory::is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
                 if (copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]).is_error() || !retaddr)
