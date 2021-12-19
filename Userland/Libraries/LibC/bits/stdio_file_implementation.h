@@ -40,7 +40,9 @@ public:
     size_t read(u8*, size_t);
     size_t write(const u8*, size_t);
 
-    bool gets(u8*, size_t);
+    template<typename CharType>
+    bool gets(CharType*, size_t);
+
     bool ungetc(u8 byte) { return m_buffer.enqueue_front(byte); }
 
     int seek(off_t offset, int whence);

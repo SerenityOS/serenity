@@ -98,4 +98,24 @@ wint_t putwchar(wchar_t wc)
 {
     return fputwc(wc, stdout);
 }
+
+wchar_t* fgetws(wchar_t* __restrict buffer, int size, FILE* __restrict stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    bool ok = stream->gets(bit_cast<u32*>(buffer), size);
+    return ok ? buffer : nullptr;
+}
+
+int fputws(wchar_t const* __restrict ws, FILE* __restrict stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    int size = 0;
+    for (auto const* p = ws; *p != 0; ++p, ++size) {
+        if (putwc(*p, stream) == WEOF)
+            return WEOF;
+    }
+    return size;
+}
 }
