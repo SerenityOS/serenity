@@ -274,12 +274,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         context_menu->popup(screen_position);
     };
 
+    bool set_start_page = false;
     if (start_page) {
         URL url = URL::create_with_url_or_path(start_page);
         if (url.is_valid() && url.path().ends_with(".md")) {
             history.push(url.path());
             update_actions();
             open_page(url.path());
+            set_start_page = true;
         } else {
             left_tab_bar->set_active_widget(search_view);
             search_box->set_text(start_page);
@@ -288,9 +290,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 search_model.set_filter_term(search_box->text());
             }
         }
-    } else {
-        go_home_action->activate();
     }
+    if (!set_start_page)
+        go_home_action->activate();
 
     auto statusbar = TRY(widget->try_add<GUI::Statusbar>());
     app->on_action_enter = [&statusbar](GUI::Action const& action) {
