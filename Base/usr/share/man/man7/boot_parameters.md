@@ -35,6 +35,12 @@ List of options:
 
 * **`disable_virtio`** - If present on the command line, virtio devices will not be detected, and initialized on boot.
 
+* **`enable_ioapic`** - This parameter expects **`on`** or **`off`** and is by default set to **`on`**.
+  When set to **`off`**, the kernel will initialize the two i8259 PICs.
+  When set to **`on`**, the kernel will try to initialize the IOAPIC (or IOAPICs if there's more than one),
+  but only if **`acpi`** is set to **`limited`** or **`on`**, and a `MADT` (APIC) table is available.
+  Otherwise, the kernel will fallback to use the i8259 PICs.
+
 * **`fbdev`** - This parameter expects **`on`** or **`off`**.
 
 * **`force_pio`** - If present on the command line, the IDE controllers will be force into PIO mode when initialized IDE Channels on boot.
@@ -53,11 +59,12 @@ List of options:
 * **`pci_ecam`** - This parameter expects **`on`** or **`off`**.
 
 * **`root`** - This parameter configures the device to use as the root file system. It defaults to **`/dev/hda`** if unspecified.
-  
+
 * **`smp`** - This parameter expects a binary value of **`on`** or **`off`**. If enabled kernel will
-  use [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) mode
-  for handling interrupts instead of [PIC](https://en.wikipedia.org/wiki/Programmable_interrupt_controller) mode.
-  This parameter defaults to **`off`**.
+  enable available APs (application processors) and use them with the BSP (Bootstrap processor) to
+  schedule and run threads.
+  This parameter defaults to **`off`**. This parameter requires **`enable_ioapic`** to be enabled
+  and and a `MADT` (APIC) table to be available.
 
 * **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/proc/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
   - **`graphical`** (default) - Boots the system in the normal graphical mode.
