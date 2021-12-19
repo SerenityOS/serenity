@@ -174,4 +174,57 @@ int vswprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restr
         wcs, fmt, args);
     return static_cast<int>(length_so_far);
 }
+
+int fwscanf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vfwscanf(stream, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int swscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vswscanf(ws, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int wscanf(wchar_t const* __restrict format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    auto rc = vfwscanf(stdout, format, ap);
+    va_end(ap);
+    return rc;
+}
+
+int vfwscanf(FILE* __restrict stream, wchar_t const* __restrict format, va_list arg)
+{
+    (void)stream;
+    (void)format;
+    (void)arg;
+    dbgln("FIXME: Implement vfwscanf()");
+    TODO();
+}
+
+int vswscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, va_list arg)
+{
+    (void)ws;
+    (void)format;
+    (void)arg;
+    dbgln("FIXME: Implement vswscanf()");
+    TODO();
+}
+
+int vwscanf(wchar_t const* __restrict format, va_list arg)
+{
+    (void)format;
+    (void)arg;
+    dbgln("FIXME: Implement vwscanf()");
+    TODO();
+}
 }
