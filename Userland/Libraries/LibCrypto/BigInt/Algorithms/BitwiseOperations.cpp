@@ -6,6 +6,7 @@
  */
 
 #include "UnsignedBigIntegerAlgorithms.h"
+#include <AK/BuiltinWrappers.h>
 
 namespace Crypto {
 
@@ -153,7 +154,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_not_without_allocation(
     auto last_word_index = right.length() - 1;
     auto last_word = right.words()[last_word_index];
 
-    output.m_words[last_word_index] = ((u32)0xffffffffffffffff >> __builtin_clz(last_word)) & ~last_word;
+    output.m_words[last_word_index] = ((u32)0xffffffffffffffff >> count_leading_zeroes(last_word)) & ~last_word;
 }
 
 /**
