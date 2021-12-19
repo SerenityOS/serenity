@@ -243,7 +243,7 @@ void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
-        MM.release_pte(*m_page_directory, vaddr, i == count - 1);
+        MM.release_pte(*m_page_directory, vaddr, i == count - 1 ? MemoryManager::IsLastPTERelease::Yes : MemoryManager::IsLastPTERelease::No);
     }
     MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
