@@ -4,6 +4,9 @@ describe("parsing freestanding generators", () => {
         expect(`function *foo() {}`).toEval();
         expect(`function
             *foo() {}`).toEval();
+
+        expect(`function *await() {}`).toEval();
+        expect(`function *yield() {}`).toEval();
     });
     test("yield expression", () => {
         expect(`function* foo() { yield; }`).toEval();
