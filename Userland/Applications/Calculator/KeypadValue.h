@@ -27,10 +27,14 @@ public:
     bool operator>(KeypadValue const&);
     bool operator==(KeypadValue const&);
 
-    explicit KeypadValue(double);
-    explicit operator double();
+    KeypadValue sqrt() const;
+    KeypadValue invert() const;
+    KeypadValue operator/(KeypadValue const&);
 
 private:
+    explicit KeypadValue(double);
+    explicit operator double() const;
+
     template<typename T, typename F>
     T operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback);
 
