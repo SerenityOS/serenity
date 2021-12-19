@@ -7,6 +7,7 @@
 #pragma once
 
 #include <bits/stdint.h>
+#include <bits/wchar.h>
 
 #ifndef PAGE_SIZE
 #    define PAGE_SIZE 4096
@@ -72,8 +73,6 @@
 
 #define LLONG_WIDTH 64
 #define ULLONG_WIDTH 64
-
-#define MB_LEN_MAX 16
 
 #define ARG_MAX 65536
 

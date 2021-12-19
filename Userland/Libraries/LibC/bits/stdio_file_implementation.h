@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Types.h>
 #include <LibC/bits/FILE.h>
 #include <LibC/bits/pthread_integration.h>
+#include <LibC/bits/wchar.h>
 #include <sys/types.h>
 
 #pragma once
@@ -85,6 +87,9 @@ private:
         bool enqueue_front(u8 byte);
 
     private:
+        constexpr static auto unget_buffer_size = MB_CUR_MAX;
+        constexpr static u32 ungotten_mask = ((u32)0xffffffff) >> (sizeof(u32) * 8 - unget_buffer_size);
+
         // Note: the fields here are arranged this way
         // to make sizeof(Buffer) smaller.
         u8* m_data { nullptr };
@@ -93,8 +98,8 @@ private:
         size_t m_end { 0 };
 
         int m_mode { -1 };
-        u8 m_unget_buffer { 0 };
-        bool m_ungotten : 1 { false };
+        Array<u8, unget_buffer_size> m_unget_buffer { 0 };
+        u32 m_ungotten : unget_buffer_size { 0 };
         bool m_data_is_malloced : 1 { false };
         // When m_begin == m_end, we want to distinguish whether
         // the buffer is full or empty.

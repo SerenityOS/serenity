@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
@@ -351,7 +352,7 @@ FILE::Buffer::~Buffer()
 
 bool FILE::Buffer::may_use() const
 {
-    return m_ungotten || m_mode != _IONBF;
+    return m_ungotten != 0u || m_mode != _IONBF;
 }
 
 void FILE::Buffer::realize(int fd)
@@ -384,7 +385,7 @@ void FILE::Buffer::drop()
     }
     m_begin = m_end = 0;
     m_empty = true;
-    m_ungotten = false;
+    m_ungotten = 0u;
 }
 
 size_t FILE::Buffer::buffered_size() const
@@ -402,9 +403,10 @@ size_t FILE::Buffer::buffered_size() const
 
 const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
 {
-    if (m_ungotten) {
-        available_size = 1;
-        return &m_unget_buffer;
+    if (m_ungotten != 0u) {
+        auto available_bytes = count_trailing_zeroes(m_ungotten) + 1;
+        available_size = available_bytes;
+        return &m_unget_buffer[unget_buffer_size - available_bytes];
     }
 
     if (m_empty) {
@@ -424,9 +426,10 @@ void FILE::Buffer::did_dequeue(size_t actual_size)
 {
     VERIFY(actual_size > 0);
 
-    if (m_ungotten) {
-        VERIFY(actual_size == 1);
-        m_ungotten = false;
+    if (m_ungotten != 0u) {
+        VERIFY(actual_size <= static_cast<size_t>(popcount(m_ungotten & ungotten_mask)));
+        auto available_bytes = count_trailing_zeroes(m_ungotten);
+        m_ungotten &= (0xffffffffu << (actual_size + available_bytes));
         return;
     }
 
@@ -476,13 +479,21 @@ void FILE::Buffer::did_enqueue(size_t actual_size)
 
 bool FILE::Buffer::enqueue_front(u8 byte)
 {
-    if (m_ungotten) {
-        // Sorry, the place is already taken!
-        return false;
+    size_t placement_index;
+    if (m_ungotten == 0u) {
+        placement_index = 3u;
+        m_ungotten = 1u;
+    } else {
+        auto first_zero_index = count_trailing_zeroes(bit_cast<u32>(~m_ungotten)); // Thanks C.
+        if (first_zero_index >= unget_buffer_size) {
+            // Sorry, the place is already taken!
+            return false;
+        }
+        placement_index = unget_buffer_size - first_zero_index - 1;
+        m_ungotten |= (1 << first_zero_index);
     }
 
-    m_ungotten = true;
-    m_unget_buffer = byte;
+    m_unget_buffer[placement_index] = byte;
     return true;
 }
 

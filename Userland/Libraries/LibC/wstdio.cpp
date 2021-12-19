@@ -120,6 +120,25 @@ int fputws(wchar_t const* __restrict ws, FILE* __restrict stream)
     return size;
 }
 
+wint_t ungetwc(wint_t wc, FILE* stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    StringBuilder sb;
+    sb.append_code_point(static_cast<u32>(wc));
+    auto bytes = sb.string_view().bytes();
+    size_t ok_bytes = 0;
+    for (auto byte : bytes) {
+        if (!stream->ungetc(byte)) {
+            // Discard the half-ungotten bytes.
+            stream->read(const_cast<u8*>(bytes.data()), ok_bytes);
+            return WEOF;
+        }
+        ++ok_bytes;
+    }
+    return wc;
+}
+
 int wprintf(wchar_t const* __restrict format, ...)
 {
     va_list ap;
