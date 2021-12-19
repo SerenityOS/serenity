@@ -51,8 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
-                auto data = atof(StringView(clipboard.data).to_string().characters());
-                widget.set_entry(KeypadValue { data });
+                widget.set_entry(KeypadValue(StringView(clipboard.data)));
             }
         }
     }));
