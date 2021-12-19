@@ -116,11 +116,7 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     for (const auto& bar : m_bars) {
-        auto label_index = bar.index.sibling_at_column(m_text_column);
-        String label = "All";
-        if (label_index.is_valid()) {
-            label = m_model.data(label_index).to_string();
-        }
+        auto label = bar_label(bar);
 
         auto color = m_colors[label.hash() % m_colors.size()];
 
@@ -146,6 +142,16 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
                 Gfx::TextElision::Right);
         }
     }
+}
+
+String FlameGraphView::bar_label(StackBar const& bar) const
+{
+    auto label_index = bar.index.sibling_at_column(m_text_column);
+    String label = "All";
+    if (label_index.is_valid()) {
+        label = m_model.data(label_index).to_string();
+    }
+    return label;
 }
 
 void FlameGraphView::layout_bars()
