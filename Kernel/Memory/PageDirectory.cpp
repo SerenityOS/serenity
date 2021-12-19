@@ -125,13 +125,6 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Vi
         MM.unquickmap_page();
     }
 
-    // Clone bottom 2 MiB of mappings from kernel_page_directory
-    PageDirectoryEntry buffer;
-    auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
-    memcpy(&buffer, kernel_pd, sizeof(PageDirectoryEntry));
-    auto* new_pd = MM.quickmap_pd(*directory, 0);
-    memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
-
     cr3_map().insert(directory->cr3(), directory);
     return directory;
 }
