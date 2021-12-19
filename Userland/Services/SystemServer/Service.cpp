@@ -268,7 +268,7 @@ void Service::did_exit(int exit_code)
             dbgln("Trying again");
             break;
         case 1:
-            dbgln("Third time's a charm?");
+            dbgln("Third time's the charm?");
             break;
         default:
             dbgln("Giving up on {}. Good luck!", name());
