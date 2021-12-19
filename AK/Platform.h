@@ -110,3 +110,5 @@ extern "C" {
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif
+
+#define bit_sizeof(x) (8u * sizeof(x))

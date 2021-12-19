@@ -108,7 +108,7 @@ public:
 
     constexpr bool signbit() const requires(IsSigned<Underlying>)
     {
-        return m_value >> (sizeof(Underlying) * 8 - 1);
+        return m_value >> (bit_sizeof(Underlying) - 1);
     }
 
     constexpr This operator-() const requires(IsSigned<Underlying>)

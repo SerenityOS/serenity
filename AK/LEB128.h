@@ -36,7 +36,7 @@ struct LEB128 {
                 return false;
 
             ValueType masked_byte = byte & ~(1 << 7);
-            const bool shift_too_large_for_result = (num_bytes * 7 > sizeof(ValueType) * 8) && (masked_byte != 0);
+            const bool shift_too_large_for_result = (num_bytes * 7 > bit_sizeof(ValueType)) && (masked_byte != 0);
             if (shift_too_large_for_result)
                 return false;
 

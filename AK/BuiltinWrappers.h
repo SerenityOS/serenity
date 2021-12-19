@@ -22,7 +22,7 @@ inline constexpr int popcount(IntType value)
     VERIFY_NOT_REACHED();
 #else
     int ones = 0;
-    for (size_t i = 0; i < 8 * sizeof(IntType); ++i) {
+    for (size_t i = 0; i < bit_sizeof(IntType); ++i) {
         if ((val >> i) & 1) {
             ++ones;
         }
@@ -50,7 +50,7 @@ template<Unsigned IntType>
 inline constexpr int count_trailing_zeroes(IntType value)
 {
     if (value == 0) [[unlikely]]
-        return 8 * sizeof(IntType);
+        return bit_sizeof(IntType);
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
@@ -61,12 +61,12 @@ inline constexpr int count_trailing_zeroes(IntType value)
         return __builtin_ctzll(value);
     VERIFY_NOT_REACHED();
 #else
-    for (size_t i = 0; i < 8 * sizeof(IntType); ++i) {
+    for (size_t i = 0; i < bit_sizeof(IntType); ++i) {
         if ((val >> i) & 1) {
             return i;
         }
     }
-    return 8 * sizeof(IntType);
+    return bit_sizeof(IntType);
 #endif
 }
 
@@ -83,11 +83,11 @@ template<Unsigned IntType>
 inline constexpr int count_leading_zeroes(IntType value)
 {
     if (value == 0) [[unlikely]]
-        return 8 * sizeof(IntType);
+        return bit_sizeof(IntType);
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
-        return __builtin_clz(value) - (32 - (8 * sizeof(IntType)));
+        return __builtin_clz(value) - (bit_sizeof(unsigned int) - bit_sizeof(IntType));
     if constexpr (sizeof(IntType) == sizeof(unsigned long))
         return __builtin_clzl(value);
     if constexpr (sizeof(IntType) == sizeof(unsigned long long))
@@ -95,12 +95,12 @@ inline constexpr int count_leading_zeroes(IntType value)
     VERIFY_NOT_REACHED();
 #else
     // Wrap around, catch going past zero by noticing that i is greater than the number of bits in the number
-    for (size_t i = (8 * sizeof(IntType)) - 1; i < 8 * sizeof(IntType); --i) {
+    for (size_t i = (bit_sizeof(IntType)) - 1; i < bit_sizeof(IntType); --i) {
         if ((val >> i) & 1) {
             return i;
         }
     }
-    return 8 * sizeof(IntType);
+    return bit_sizeof(IntType);
 #endif
 }
 

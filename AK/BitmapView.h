@@ -205,7 +205,7 @@ public:
             return {};
         }
 
-        size_t bit_size = 8 * sizeof(size_t);
+        size_t bit_size = bit_sizeof(size_t);
 
         size_t* bitmap = (size_t*)m_data;
 

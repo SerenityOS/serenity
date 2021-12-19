@@ -93,28 +93,28 @@ public:
         if (m_high)
             return count_leading_zeroes(m_high);
         else
-            return sizeof(T) * 8 + count_leading_zeroes(m_low);
+            return bit_sizeof(T) + count_leading_zeroes(m_low);
     }
     constexpr size_t clz() const requires(!IsSame<T, u64>)
     {
         if (m_high)
             return m_high.clz();
         else
-            return sizeof(T) * 8 + m_low.clz();
+            return bit_sizeof(T) + m_low.clz();
     }
     constexpr size_t ctz() const requires(IsSame<T, u64>)
     {
         if (m_low)
             return count_trailing_zeroes(m_low);
         else
-            return sizeof(T) * 8 + count_trailing_zeroes(m_high);
+            return bit_sizeof(T) + count_trailing_zeroes(m_high);
     }
     constexpr size_t ctz() const requires(!IsSame<T, u64>)
     {
         if (m_low)
             return m_low.ctz();
         else
-            return sizeof(T) * 8 + m_high.ctz();
+            return bit_sizeof(T) + m_high.ctz();
     }
     constexpr size_t popcnt() const requires(IsSame<T, u64>)
     {
@@ -215,38 +215,38 @@ public:
     template<Unsigned U>
     constexpr R operator<<(const U& shift) const
     {
-        if (shift >= sizeof(R) * 8u)
+        if (shift >= bit_sizeof(R))
             return 0u;
-        if (shift >= sizeof(T) * 8u)
-            return R { 0u, m_low << (shift - sizeof(T) * 8u) };
+        if (shift >= bit_sizeof(T))
+            return R { 0u, m_low << (shift - bit_sizeof(T)) };
         if (!shift)
             return *this;
 
-        T overflow = m_low >> (sizeof(T) * 8u - shift);
+        T overflow = m_low >> (bit_sizeof(T) - shift);
         return R { m_low << shift, (m_high << shift) | overflow };
     }
     template<Unsigned U>
     constexpr R operator>>(const U& shift) const
     {
-        if (shift >= sizeof(R) * 8u)
+        if (shift >= bit_sizeof(R))
             return 0u;
-        if (shift >= sizeof(T) * 8u)
-            return m_high >> (shift - sizeof(T) * 8u);
+        if (shift >= bit_sizeof(T))
+            return m_high >> (shift - bit_sizeof(T));
         if (!shift)
             return *this;
 
-        T underflow = m_high << (sizeof(T) * 8u - shift);
+        T underflow = m_high << (bit_sizeof(T) - shift);
         return R { (m_low >> shift) | underflow, m_high >> shift };
     }
     template<Unsigned U>
     constexpr R rol(const U& shift) const
     {
-        return (*this >> sizeof(T) * 8u - shift) | (*this << shift);
+        return (*this >> bit_sizeof(T) - shift) | (*this << shift);
     }
     template<Unsigned U>
     constexpr R ror(const U& shift) const
     {
-        return (*this << sizeof(T) * 8u - shift) | (*this >> shift);
+        return (*this << bit_sizeof(T) - shift) | (*this >> shift);
     }
 
     constexpr R operator&(const R& other) const
@@ -509,7 +509,7 @@ public:
         remainder = 0u;
         R quotient = 0u;
 
-        for (ssize_t i = sizeof(R) * 8 - clz() - 1; i >= 0; --i) {
+        for (ssize_t i = bit_sizeof(R) - clz() - 1; i >= 0; --i) {
             remainder <<= 1u;
             remainder |= (*this >> (size_t)i) & 1u;
             if (remainder >= divisor) {
@@ -575,7 +575,7 @@ public:
         if (*this == 1u)
             return 1u;
 
-        ssize_t shift = (sizeof(R) * 8 - clz()) & ~1ULL;
+        ssize_t shift = (bit_sizeof(R) - clz()) & ~1ULL;
         // should be equivalent to:
         // long shift = 2;
         // while ((val >> shift) != 0)
@@ -599,7 +599,7 @@ public:
         R x1 = *this;
         R x2 = *this * *this;
         u64 exp_copy = exp;
-        for (ssize_t i = sizeof(u64) * 8 - count_leading_zeroes(exp) - 2; i >= 0; --i) {
+        for (ssize_t i = bit_sizeof(u64) - count_leading_zeroes(exp) - 2; i >= 0; --i) {
             if (exp_copy & 1u) {
                 x2 *= x1;
                 x1 *= x1;
@@ -619,7 +619,7 @@ public:
         R x1 = *this;
         R x2 = *this * *this;
         U exp_copy = exp;
-        for (ssize_t i = sizeof(U) * 8 - exp().clz() - 2; i >= 0; --i) {
+        for (ssize_t i = bit_sizeof(U) - exp().clz() - 2; i >= 0; --i) {
             if (exp_copy & 1u) {
                 x2 *= x1;
                 x1 *= x1;
@@ -749,7 +749,7 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
             VERIFY_NOT_REACHED();
         }
         ssize_t width = m_width.value_or(0);
-        ssize_t lower_length = ceil_div(sizeof(T) * 8, (ssize_t)base);
+        ssize_t lower_length = ceil_div(bit_sizeof(T), (ssize_t)base);
         Formatter<T> formatter { *this };
         formatter.m_width = max(width - lower_length, (ssize_t)0);
         TRY(formatter.format(builder, value.high()));

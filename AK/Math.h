@@ -298,7 +298,7 @@ constexpr T log2(T x)
 template<Integral T>
 constexpr T log2(T x)
 {
-    return 8 * sizeof(T) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x));
+    return bit_sizeof(T) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x));
 }
 
 template<FloatingPoint T>
