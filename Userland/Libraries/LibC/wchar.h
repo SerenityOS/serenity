@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <bits/FILE.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
 
@@ -68,5 +70,8 @@ size_t wcsnrtombs(char*, const wchar_t**, size_t, size_t, mbstate_t*);
 size_t mbsnrtowcs(wchar_t*, const char**, size_t, size_t, mbstate_t*);
 size_t wcscspn(const wchar_t* wcs, const wchar_t* reject);
 size_t wcsspn(const wchar_t* wcs, const wchar_t* accept);
+
+wint_t fgetwc(FILE* stream);
+wint_t getwc(FILE* stream);
 
 __END_DECLS
