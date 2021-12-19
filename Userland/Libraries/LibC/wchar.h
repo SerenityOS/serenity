@@ -78,6 +78,7 @@ wint_t putwc(wchar_t wc, FILE* stream);
 wint_t putwchar(wchar_t wc);
 wchar_t* fgetws(wchar_t* __restrict ws, int n, FILE* __restrict stream);
 int fputws(const wchar_t* __restrict ws, FILE* __restrict stream);
+wint_t ungetwc(wint_t wc, FILE* stream);
 int fwide(FILE* stream, int mode);
 
 int wprintf(const wchar_t* __restrict format, ...);
