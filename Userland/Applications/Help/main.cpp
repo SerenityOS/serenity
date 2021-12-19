@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,9 +46,40 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     char const* start_page = nullptr;
+    unsigned section = 0;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(start_page, "Page to open at launch", "page", Core::ArgsParser::Required::No);
+    // FIXME: These custom Args are a hack. What we want to do is have an optional int arg, then an optional string.
+    // However, when only a string is provided, it gets forwarded to the int argument since that is first, and
+    // parsing fails. This hack instead forwards it to the start_page in that case.
+    args_parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Section of the man page",
+        .name = "section",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](char const* input) {
+            // If it's a number, use it as the section
+            if (auto number = StringView(input).to_int(); number.has_value()) {
+                section = number.value();
+                return true;
+            }
+
+            // Otherwise, use it as the start_page
+            start_page = input;
+            return true;
+        } });
+    args_parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Help page to open. Either an absolute path to the markdown file, or a search query",
+        .name = "page",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](char const* input) {
+            // If start_page was already set by our section arg, then it can't be set again
+            if (start_page)
+                return false;
+            start_page = input;
+            return true;
+        } });
     args_parser.parse(arguments);
 
     auto app_icon = GUI::Icon::default_icon("app-help");
@@ -268,17 +300,48 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool set_start_page = false;
     if (start_page) {
-        URL url = URL::create_with_url_or_path(start_page);
-        if (url.is_valid() && url.path().ends_with(".md")) {
+        if (section != 0) {
+            // > Help [section] [name]
+            String path = String::formatted("/usr/share/man/man{}/{}.md", section, start_page);
+            history.push(path);
+            open_page(path);
+            set_start_page = true;
+        } else if (URL url = URL::create_with_url_or_path(start_page); url.is_valid() && url.path().ends_with(".md")) {
+            // > Help [/path/to/documentation/file.md]
             history.push(url.path());
             open_page(url.path());
             set_start_page = true;
         } else {
-            left_tab_bar->set_active_widget(search_view);
-            search_box->set_text(start_page);
-            if (auto* model = search_list_view->model()) {
-                auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-                search_model.set_filter_term(search_box->text());
+            // > Help [query]
+
+            // First, see if we can find the page by name
+            char const* sections[] = {
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8"
+            };
+            for (auto s : sections) {
+                String path = String::formatted("/usr/share/man/man{}/{}.md", s, start_page);
+                if (Core::File::exists(path)) {
+                    history.push(path);
+                    open_page(path);
+                    set_start_page = true;
+                }
+            }
+
+            // No match, so treat the input as a search query
+            if (!set_start_page) {
+                left_tab_bar->set_active_widget(search_view);
+                search_box->set_text(start_page);
+                if (auto* model = search_list_view->model()) {
+                    auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+                    search_model.set_filter_term(search_box->text());
+                }
             }
         }
     }
