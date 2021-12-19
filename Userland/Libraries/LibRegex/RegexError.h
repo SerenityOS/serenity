@@ -35,6 +35,7 @@ enum class Error : u8 {
     InvalidCaptureGroup = __Regex_InvalidCaptureGroup,               // Content of capture group is invalid.
     InvalidNameForCaptureGroup = __Regex_InvalidNameForCaptureGroup, // Name of capture group is invalid.
     InvalidNameForProperty = __Regex_InvalidNameForProperty,         // Name of property is invalid.
+    DuplicateNamedCapture = __Regex_DuplicateNamedCapture,           // Name of property is invalid.
 };
 
 inline String get_error_string(Error error)
@@ -76,6 +77,8 @@ inline String get_error_string(Error error)
         return "Name of capture group is invalid.";
     case Error::InvalidNameForProperty:
         return "Name of property is invalid.";
+    case Error::DuplicateNamedCapture:
+        return "Duplicate capture group name";
     }
     return "Undefined error.";
 }
