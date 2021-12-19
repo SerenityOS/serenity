@@ -51,6 +51,9 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescrip
         if (looks_like_userspace_heap_region(*region))
             continue;
 #endif
+
+        if (region->access() == Memory::Region::Access::None)
+            continue;
         ++m_num_program_headers;
     }
     ++m_num_program_headers; // +1 for NOTE segment
@@ -128,6 +131,9 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
             continue;
 #endif
 
+        if (region->access() == Memory::Region::Access::None)
+            continue;
+
         ElfW(Phdr) phdr {};
 
         phdr.p_type = PT_LOAD;
@@ -176,6 +182,9 @@ ErrorOr<void> Coredump::write_regions()
         if (looks_like_userspace_heap_region(*region))
             continue;
 #endif
+
+        if (region->access() == Memory::Region::Access::None)
+            continue;
 
         region->set_readable(true);
         region->remap();
@@ -253,6 +262,9 @@ ErrorOr<void> Coredump::create_notes_regions_data(auto& builder) const
         if (looks_like_userspace_heap_region(*region))
             continue;
 #endif
+
+        if (region->access() == Memory::Region::Access::None)
+            continue;
 
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
