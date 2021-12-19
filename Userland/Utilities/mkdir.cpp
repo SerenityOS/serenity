@@ -8,16 +8,15 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio cpath rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio cpath rpath", nullptr));
 
     bool create_parents = false;
     Vector<const char*> directories;
@@ -25,7 +24,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p');
     args_parser.add_positional_argument(directories, "Directories to create", "directories");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     // FIXME: Support -m/--mode option
     mode_t mode = 0755;
