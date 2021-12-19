@@ -38,6 +38,7 @@ enum __Regex_Error {
     __Regex_InvalidCaptureGroup,        // Content of capture group is invalid.
     __Regex_InvalidNameForCaptureGroup, // Name of capture group is invalid.
     __Regex_InvalidNameForProperty,     // Name of property is invalid.
+    __Regex_DuplicateNamedCapture,      // Duplicate named capture group
 };
 
 enum ReError {

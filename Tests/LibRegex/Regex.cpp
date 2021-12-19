@@ -591,6 +591,8 @@ TEST_CASE(ECMA262_parse)
         { "a{9007199254740991,9007199254740992}"sv, regex::Error::InvalidBraceContent },
         { "a{9007199254740992,9007199254740991}"sv, regex::Error::InvalidBraceContent },
         { "a{9007199254740992,9007199254740992}"sv, regex::Error::InvalidBraceContent },
+        { "(?<a>a)(?<a>b)"sv, regex::Error::DuplicateNamedCapture },
+        { "(?<a>a)(?<b>b)(?<a>c)"sv, regex::Error::DuplicateNamedCapture },
     };
 
     for (auto& test : tests) {
