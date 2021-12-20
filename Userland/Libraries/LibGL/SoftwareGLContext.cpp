@@ -91,8 +91,14 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_LIGHTING:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_lighting_enabled } };
+    case GL_MAX_MODELVIEW_STACK_DEPTH:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = MODELVIEW_MATRIX_STACK_LIMIT } };
+    case GL_MAX_PROJECTION_STACK_DEPTH:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = PROJECTION_MATRIX_STACK_LIMIT } };
     case GL_MAX_TEXTURE_SIZE:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = 4096 } };
+    case GL_MAX_TEXTURE_STACK_DEPTH:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = TEXTURE_MATRIX_STACK_LIMIT } };
     case GL_MAX_TEXTURE_UNITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_texture_units.size()) } };
     case GL_PACK_ALIGNMENT:
