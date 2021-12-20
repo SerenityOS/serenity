@@ -15,6 +15,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/Audio/SB16.h>
+#include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -185,6 +186,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     SysFSComponentRegistry::initialize();
     DeviceManagement::the().attach_null_device(*NullDevice::must_initialize());
     DeviceManagement::the().attach_console_device(*ConsoleDevice::must_create());
+    DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
     s_bsp_processor.initialize(0);
 
     CommandLine::initialize();

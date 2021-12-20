@@ -51,6 +51,7 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/ConsoleDevice.cpp
     Devices/Device.cpp
+    Devices/DeviceControlDevice.cpp
     Devices/DeviceManagement.cpp
     Devices/FullDevice.cpp
     Devices/KCOVDevice.cpp
