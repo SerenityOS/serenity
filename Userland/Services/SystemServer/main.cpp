@@ -126,13 +126,13 @@ inline char offset_character_with_number(char base_char, u8 offset)
     return offsetted_char;
 }
 
-static void create_devfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFBLK, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
-static void populate_devfs_block_devices()
+static void populate_devtmpfs_block_devices()
 {
     Core::DirIterator di("/sys/dev/block/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
@@ -146,15 +146,15 @@ static void populate_devfs_block_devices()
         auto minor_number = entry_name[1].to_uint<unsigned>().value();
         switch (major_number) {
         case 29: {
-            create_devfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
+            create_devtmpfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
             break;
         }
         case 30: {
-            create_devfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+            create_devtmpfs_block_device(String::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
             break;
         }
         case 3: {
-            create_devfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
+            create_devtmpfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
             break;
         }
         default:
@@ -164,13 +164,13 @@ static void populate_devfs_block_devices()
     }
 }
 
-static void create_devfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
+static void create_devtmpfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
 {
     if (auto rc = mknod(name.characters(), mode | S_IFCHR, makedev(major, minor)); rc < 0)
         VERIFY_NOT_REACHED();
 }
 
-static void populate_devfs_char_devices()
+static void populate_devtmpfs_char_devices()
 {
     Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
@@ -186,7 +186,7 @@ static void populate_devfs_char_devices()
         case 42: {
             switch (minor_number) {
             case 42: {
-                create_devfs_char_device("/dev/audio", 0220, 42, 42);
+                create_devtmpfs_char_device("/dev/audio", 0220, 42, 42);
                 break;
             }
             default:
@@ -197,7 +197,7 @@ static void populate_devfs_char_devices()
         case 29: {
             switch (minor_number) {
             case 0: {
-                create_devfs_char_device("/dev/full", 0660, 29, 0);
+                create_devtmpfs_char_device("/dev/full", 0660, 29, 0);
                 break;
             }
             default:
@@ -206,17 +206,17 @@ static void populate_devfs_char_devices()
             break;
         }
         case 229: {
-            create_devfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
+            create_devtmpfs_char_device(String::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
             break;
         }
         case 10: {
             switch (minor_number) {
             case 0: {
-                create_devfs_char_device("/dev/mouse0", 0660, 10, 0);
+                create_devtmpfs_char_device("/dev/mouse0", 0660, 10, 0);
                 break;
             }
             case 183: {
-                create_devfs_char_device("/dev/hwrng", 0660, 10, 183);
+                create_devtmpfs_char_device("/dev/hwrng", 0660, 10, 183);
                 break;
             }
             default:
@@ -227,7 +227,7 @@ static void populate_devfs_char_devices()
         case 85: {
             switch (minor_number) {
             case 0: {
-                create_devfs_char_device("/dev/keyboard0", 0660, 85, 0);
+                create_devtmpfs_char_device("/dev/keyboard0", 0660, 85, 0);
                 break;
             }
             default:
@@ -238,19 +238,19 @@ static void populate_devfs_char_devices()
         case 1: {
             switch (minor_number) {
             case 5: {
-                create_devfs_char_device("/dev/zero", 0666, 1, 5);
+                create_devtmpfs_char_device("/dev/zero", 0666, 1, 5);
                 break;
             }
             case 1: {
-                create_devfs_char_device("/dev/mem", 0660, 1, 1);
+                create_devtmpfs_char_device("/dev/mem", 0660, 1, 1);
                 break;
             }
             case 3: {
-                create_devfs_char_device("/dev/null", 0666, 1, 3);
+                create_devtmpfs_char_device("/dev/null", 0666, 1, 3);
                 break;
             }
             case 8: {
-                create_devfs_char_device("/dev/random", 0666, 1, 8);
+                create_devtmpfs_char_device("/dev/random", 0666, 1, 8);
                 break;
             }
             default:
@@ -262,11 +262,11 @@ static void populate_devfs_char_devices()
         case 5: {
             switch (minor_number) {
             case 1: {
-                create_devfs_char_device("/dev/console", 0666, 5, 1);
+                create_devtmpfs_char_device("/dev/console", 0666, 5, 1);
                 break;
             }
             case 2: {
-                create_devfs_char_device("/dev/ptmx", 0666, 5, 2);
+                create_devtmpfs_char_device("/dev/ptmx", 0666, 5, 2);
                 break;
             }
             default:
@@ -277,35 +277,35 @@ static void populate_devfs_char_devices()
         case 4: {
             switch (minor_number) {
             case 0: {
-                create_devfs_char_device("/dev/tty0", 0620, 4, 0);
+                create_devtmpfs_char_device("/dev/tty0", 0620, 4, 0);
                 break;
             }
             case 1: {
-                create_devfs_char_device("/dev/tty1", 0620, 4, 1);
+                create_devtmpfs_char_device("/dev/tty1", 0620, 4, 1);
                 break;
             }
             case 2: {
-                create_devfs_char_device("/dev/tty2", 0620, 4, 2);
+                create_devtmpfs_char_device("/dev/tty2", 0620, 4, 2);
                 break;
             }
             case 3: {
-                create_devfs_char_device("/dev/tty3", 0620, 4, 3);
+                create_devtmpfs_char_device("/dev/tty3", 0620, 4, 3);
                 break;
             }
             case 64: {
-                create_devfs_char_device("/dev/ttyS0", 0620, 4, 64);
+                create_devtmpfs_char_device("/dev/ttyS0", 0620, 4, 64);
                 break;
             }
             case 65: {
-                create_devfs_char_device("/dev/ttyS1", 0620, 4, 65);
+                create_devtmpfs_char_device("/dev/ttyS1", 0620, 4, 65);
                 break;
             }
             case 66: {
-                create_devfs_char_device("/dev/ttyS2", 0620, 4, 66);
+                create_devtmpfs_char_device("/dev/ttyS2", 0620, 4, 66);
                 break;
             }
             case 67: {
-                create_devfs_char_device("/dev/ttyS3", 0666, 4, 67);
+                create_devtmpfs_char_device("/dev/ttyS3", 0666, 4, 67);
                 break;
             }
             default:
@@ -320,12 +320,12 @@ static void populate_devfs_char_devices()
     }
 }
 
-static void populate_devfs()
+static void populate_devtmpfs()
 {
     mode_t old_mask = umask(0);
     printf("Changing umask %#o\n", old_mask);
-    populate_devfs_char_devices();
-    populate_devfs_block_devices();
+    populate_devtmpfs_char_devices();
+    populate_devtmpfs_block_devices();
     umask(old_mask);
 }
 
@@ -341,7 +341,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::symlink("/proc/self/fd/2", "/dev/stderr"));
     TRY(Core::System::symlink("/proc/self/tty", "/dev/tty"));
 
-    populate_devfs();
+    populate_devtmpfs();
 
     TRY(Core::System::mkdir("/dev/pts", 0755));
 
