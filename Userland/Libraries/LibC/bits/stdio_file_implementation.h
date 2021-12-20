@@ -70,7 +70,7 @@ private:
         void realize(int fd);
         void drop();
 
-        bool may_use() const { return m_ungotten || m_mode != _IONBF; }
+        bool may_use() const;
         bool is_not_empty() const { return m_ungotten || !m_empty; }
         size_t buffered_size() const;
 
