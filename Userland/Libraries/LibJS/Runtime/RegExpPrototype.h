@@ -24,17 +24,16 @@ public:
     virtual ~RegExpPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(flags);
-    JS_DECLARE_NATIVE_FUNCTION(source);
-
     JS_DECLARE_NATIVE_FUNCTION(exec);
-    JS_DECLARE_NATIVE_FUNCTION(test);
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(flags);
     JS_DECLARE_NATIVE_FUNCTION(symbol_match);
     JS_DECLARE_NATIVE_FUNCTION(symbol_match_all);
     JS_DECLARE_NATIVE_FUNCTION(symbol_replace);
     JS_DECLARE_NATIVE_FUNCTION(symbol_search);
+    JS_DECLARE_NATIVE_FUNCTION(source);
     JS_DECLARE_NATIVE_FUNCTION(symbol_split);
+    JS_DECLARE_NATIVE_FUNCTION(test);
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(compile);
 
 #define __JS_ENUMERATE(_, flag_name, ...) \
