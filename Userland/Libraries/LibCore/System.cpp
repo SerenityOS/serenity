@@ -537,4 +537,23 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
 #endif
 }
 
+ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+
+    struct utimbuf* buf = nullptr;
+    if (maybe_buf.has_value())
+        buf = &maybe_buf.value();
+#ifdef __serenity__
+    int rc = syscall(SC_utime, path.characters_without_null_termination(), path.length(), buf);
+    HANDLE_SYSCALL_RETURN_VALUE("utime"sv, rc, {});
+#else
+    String path_string = path;
+    if (::utime(path.characters(), buf) < 0)
+        return Error::from_syscall("utime"sv, -errno);
+    return {};
+#endif
+}
+
 }

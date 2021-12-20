@@ -73,5 +73,6 @@ ErrorOr<pid_t> fork();
 ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
+ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 
 }
