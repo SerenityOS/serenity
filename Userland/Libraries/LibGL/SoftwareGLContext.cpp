@@ -256,7 +256,7 @@ void SoftwareGLContext::gl_end()
             triangle.vertices[2] = vertex_list.at(i);
             triangle_list.append(triangle);
         }
-    } else if (m_current_draw_mode == GL_TRIANGLE_FAN) {
+    } else if (m_current_draw_mode == GL_TRIANGLE_FAN || m_current_draw_mode == GL_POLYGON) {
         GLTriangle triangle;
         triangle.vertices[0] = vertex_list.at(0); // Root vertex is always the vertex defined first
 
