@@ -529,7 +529,7 @@ void Parser::parse_module(Program& program)
         if (export_statement.has_statement())
             continue;
         for (auto& entry : export_statement.entries()) {
-            if (entry.kind == ExportStatement::ExportEntry::ModuleRequest)
+            if (entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequest)
                 return;
 
             auto const& exported_name = entry.local_or_import_name;
@@ -3912,8 +3912,58 @@ void Parser::check_identifier_name_for_assignment_validity(StringView name, bool
     }
 }
 
+bool Parser::match_assert_clause() const
+{
+    return !m_state.current_token.trivia_contains_line_terminator() && m_state.current_token.original_value() == "assert"sv;
+}
+
+// AssertClause, https://tc39.es/proposal-import-assertions/#prod-AssertClause
+void Parser::parse_assert_clause(ModuleRequest& request)
+{
+    VERIFY(m_state.current_token.original_value() == "assert"sv);
+    consume(TokenType::Identifier);
+    consume(TokenType::CurlyOpen);
+
+    while (!done() && !match(TokenType::CurlyClose)) {
+        String key;
+        if (match(TokenType::StringLiteral)) {
+            key = parse_string_literal(m_state.current_token)->value().to_string();
+            consume();
+        } else if (match_identifier_name()) {
+            key = consume().value();
+        } else {
+            expected("IdentifierName or StringValue as AssertionKey");
+            consume();
+        }
+
+        consume(TokenType::Colon);
+
+        if (match(TokenType::StringLiteral)) {
+            for (auto& entries : request.assertions) {
+                if (entries.key == key)
+                    syntax_error(String::formatted("Duplicate assertion clauses with name: {}", key));
+            }
+            request.add_assertion(move(key), parse_string_literal(m_state.current_token)->value().to_string());
+        }
+        consume(TokenType::StringLiteral);
+
+        if (match(TokenType::Comma))
+            consume(TokenType::Comma);
+        else
+            break;
+    }
+
+    consume(TokenType::CurlyClose);
+}
+
 NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 {
+    // We use the extended syntax which adds:
+    //  ImportDeclaration:
+    //      import ImportClause FromClause [no LineTerminator here] AssertClause;
+    //      import ModuleSpecifier [no LineTerminator here] AssertClause;
+    // From:  https://tc39.es/proposal-import-assertions/#prod-ImportDeclaration
+
     auto rule_start = push_start();
     if (program.type() != Program::Type::Module)
         syntax_error("Cannot use import statement outside a module");
@@ -3921,8 +3971,11 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     consume(TokenType::Import);
 
     if (match(TokenType::StringLiteral)) {
-        auto module_name = consume(TokenType::StringLiteral).value();
-        return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, module_name);
+        auto module_request = ModuleRequest(consume(TokenType::StringLiteral).value());
+        if (match_assert_clause())
+            parse_assert_clause(module_request);
+
+        return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(module_request));
     }
 
     auto match_imported_binding = [&] {
@@ -4016,7 +4069,10 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     if (from_statement != "from"sv)
         syntax_error(String::formatted("Expected 'from' got {}", from_statement));
 
-    auto module_name = consume(TokenType::StringLiteral).value();
+    auto module_request = ModuleRequest(consume(TokenType::StringLiteral).value());
+
+    if (match_assert_clause())
+        parse_assert_clause(module_request);
 
     Vector<ImportStatement::ImportEntry> entries;
     entries.ensure_capacity(entries_with_location.size());
@@ -4035,11 +4091,16 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
         entries.append(move(entry.entry));
     }
 
-    return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, module_name, move(entries));
+    return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(module_request), move(entries));
 }
 
 NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 {
+    // We use the extended syntax which adds:
+    //  ExportDeclaration:
+    //      export ExportFromClause FromClause [no LineTerminator here] AssertClause ;
+    // From:  https://tc39.es/proposal-import-assertions/#prod-ExportDeclaration
+
     auto rule_start = push_start();
     if (program.type() != Program::Type::Module)
         syntax_error("Cannot use export statement outside a module");
@@ -4062,10 +4123,10 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         ExportStatement::ExportEntry entry;
         Position position;
 
-        void to_module_request(String from_module)
+        void to_module_request(ModuleRequest from_module)
         {
             entry.kind = ExportStatement::ExportEntry::Kind::ModuleRequest;
-            entry.module_request = from_module;
+            entry.module_request = move(from_module);
         }
     };
 
@@ -4200,7 +4261,11 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         if (check_for_from != NotAllowed && match_from()) {
             consume(TokenType::Identifier);
             if (match(TokenType::StringLiteral)) {
-                auto from_specifier = consume().value();
+                auto from_specifier = ModuleRequest(consume().value());
+
+                if (match_assert_clause())
+                    parse_assert_clause(from_specifier);
+
                 for (auto& entry : entries_with_location)
                     entry.to_module_request(from_specifier);
             } else {
