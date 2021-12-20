@@ -18,12 +18,14 @@ static_assert(AssertSize<wchar_t, sizeof(u32)>());
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwide.html
 int fwide(FILE*, int mode)
 {
     // Nope Nope Nope.
     return mode;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgetwc.html
 wint_t fgetwc(FILE* stream)
 {
     VERIFY(stream);
@@ -60,16 +62,19 @@ wint_t fgetwc(FILE* stream)
     return code_point;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getwc.html
 wint_t getwc(FILE* stream)
 {
     return fgetwc(stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getwchar.html
 wint_t getwchar()
 {
     return getwc(stdin);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputwc.html
 wint_t fputwc(wchar_t wc, FILE* stream)
 {
     VERIFY(stream);
@@ -90,16 +95,19 @@ wint_t fputwc(wchar_t wc, FILE* stream)
     return wc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/putwc.html
 wint_t putwc(wchar_t wc, FILE* stream)
 {
     return fputwc(wc, stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/putwchar.html
 wint_t putwchar(wchar_t wc)
 {
     return fputwc(wc, stdout);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgetws.html
 wchar_t* fgetws(wchar_t* __restrict buffer, int size, FILE* __restrict stream)
 {
     VERIFY(stream);
@@ -108,6 +116,7 @@ wchar_t* fgetws(wchar_t* __restrict buffer, int size, FILE* __restrict stream)
     return ok ? buffer : nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputws.html
 int fputws(wchar_t const* __restrict ws, FILE* __restrict stream)
 {
     VERIFY(stream);
@@ -120,6 +129,7 @@ int fputws(wchar_t const* __restrict ws, FILE* __restrict stream)
     return size;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ungetwc.html
 wint_t ungetwc(wint_t wc, FILE* stream)
 {
     VERIFY(stream);
@@ -139,6 +149,7 @@ wint_t ungetwc(wint_t wc, FILE* stream)
     return wc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wprintf.html
 int wprintf(wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -148,6 +159,7 @@ int wprintf(wchar_t const* __restrict format, ...)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwprintf.html
 int fwprintf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -157,6 +169,7 @@ int fwprintf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/swprintf.html
 int swprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -166,11 +179,13 @@ int swprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restri
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vwprintf.html
 int vwprintf(wchar_t const* __restrict format, va_list args)
 {
     return vfwprintf(stdout, format, args);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfwprintf.html
 int vfwprintf(FILE* __restrict stream, wchar_t const* __restrict format, va_list args)
 {
     auto const* fmt = bit_cast<wchar_t const*>(format);
@@ -180,6 +195,7 @@ int vfwprintf(FILE* __restrict stream, wchar_t const* __restrict format, va_list
         nullptr, fmt, args);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vswprintf.html
 int vswprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restrict format, va_list args)
 {
     auto const* fmt = bit_cast<wchar_t const*>(format);
@@ -194,6 +210,7 @@ int vswprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restr
     return static_cast<int>(length_so_far);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwscanf.html
 int fwscanf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -203,6 +220,7 @@ int fwscanf(FILE* __restrict stream, wchar_t const* __restrict format, ...)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/swscanf.html
 int swscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -212,6 +230,7 @@ int swscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, ...)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wscanf.html
 int wscanf(wchar_t const* __restrict format, ...)
 {
     va_list ap;
@@ -221,6 +240,7 @@ int wscanf(wchar_t const* __restrict format, ...)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfwscanf.html
 int vfwscanf(FILE* __restrict stream, wchar_t const* __restrict format, va_list arg)
 {
     (void)stream;
@@ -230,6 +250,7 @@ int vfwscanf(FILE* __restrict stream, wchar_t const* __restrict format, va_list 
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vswscanf.html
 int vswscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, va_list arg)
 {
     (void)ws;
@@ -239,6 +260,7 @@ int vswscanf(wchar_t const* __restrict ws, wchar_t const* __restrict format, va_
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vwscanf.html
 int vwscanf(wchar_t const* __restrict format, va_list arg)
 {
     (void)format;
