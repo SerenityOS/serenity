@@ -48,7 +48,7 @@ void Player::play_file_path(String const& path)
         return;
     }
 
-    if (path.ends_with(".m3u", AK::CaseSensitivity::CaseInsensitive) || path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive)) {
+    if (is_playlist(path)) {
         playlist_loaded(path, m_playlist.load(path));
         return;
     }
@@ -67,6 +67,12 @@ void Player::play_file_path(String const& path)
     m_playback_manager.set_loader(move(loader));
 
     play();
+}
+
+bool Player::is_playlist(String const& path)
+{
+    return (path.ends_with(".m3u", AK::CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive));
 }
 
 void Player::set_play_state(PlayState state)
