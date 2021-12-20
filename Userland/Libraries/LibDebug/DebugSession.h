@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Demangle.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
@@ -26,7 +27,7 @@ namespace Debug {
 
 class DebugSession : public ProcessInspector {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(String const& command, String source_root = {});
+    static OwnPtr<DebugSession> exec_and_attach(String const& command, String source_root = {}, Function<ErrorOr<void>()> setup_child = {});
 
     virtual ~DebugSession() override;
 

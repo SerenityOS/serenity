@@ -53,7 +53,9 @@ void DebugSession::for_each_loaded_library(Function<IterationDecision(LoadedLibr
     }
 }
 
-OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command, String source_root)
+OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
+    String source_root,
+    Function<ErrorOr<void>()> setup_child)
 {
     auto pid = fork();
 
@@ -63,6 +65,14 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command, String
     }
 
     if (!pid) {
+
+        if (setup_child) {
+            if (setup_child().is_error()) {
+                perror("DebugSession::setup_child");
+                exit(1);
+            }
+        }
+
         if (ptrace(PT_TRACE_ME, 0, 0, 0) < 0) {
             perror("PT_TRACE_ME");
             exit(1);
