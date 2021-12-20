@@ -11,6 +11,7 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/poll.html
 int poll(pollfd* fds, nfds_t nfds, int timeout_ms)
 {
     timespec timeout;
