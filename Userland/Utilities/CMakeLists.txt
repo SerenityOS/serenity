@@ -136,6 +136,7 @@ target_link_libraries(test-fuzz LibCore LibGemini LibGfx LibHTTP LibIPC LibJS Li
 target_link_libraries(test-imap LibIMAP)
 target_link_libraries(test-pthread LibThreading)
 target_link_libraries(top LibMain)
+target_link_libraries(touch LibMain)
 target_link_libraries(truncate LibMain)
 target_link_libraries(tt LibPthread)
 target_link_libraries(unzip LibArchive LibCompress)
