@@ -58,13 +58,21 @@ RegExpPrototype::~RegExpPrototype()
 // 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
 size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 {
+    // 1. Assert: index ≤ 2^53 - 1.
+
+    // 2. If unicode is false, return index + 1.
     if (!unicode)
         return index + 1;
 
+    // 3. Let length be the number of code units in S.
+    // 4. If index + 1 ≥ length, return index + 1.
     if (index + 1 >= string.length_in_code_units())
         return index + 1;
 
+    // 5. Let cp be ! CodePointAt(S, index).
     auto code_point = code_point_at(string, index);
+
+    // 6. Return index + cp.[[CodeUnitCount]].
     return index + code_point.code_unit_count;
 }
 
@@ -99,10 +107,17 @@ struct Match {
 // 1.1.4.1.4 GetMatchIndicesArray ( S, match ), https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
 static Value get_match_indices_array(GlobalObject& global_object, Utf16View const& string, Match const& match)
 {
+    // 1. Assert: Type(S) is String.
+    // 2. Assert: match is a Match Record.
+
+    // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
     VERIFY(match.start_index <= string.length_in_code_units());
+
+    // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
     VERIFY(match.end_index >= match.start_index);
     VERIFY(match.end_index <= string.length_in_code_units());
 
+    // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
     return Array::create_from(global_object, { Value(match.start_index), Value(match.end_index) });
 }
 
@@ -125,130 +140,260 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
 
     auto& vm = global_object.vm();
 
+    // 1. Assert: Type(S) is String.
+    // 2. Assert: indices is a List.
+    // 3. Assert: Type(hasGroups) is Boolean.
+
+    // 4. Let n be the number of elements in indices.
+    // 5. Assert: n < 2^32-1.
     VERIFY(indices.size() < NumericLimits<u32>::max());
+
+    // 6. Assert: groupNames is a List with n - 1 elements.
+    // 7. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
+
+    // 8. Set A to ! ArrayCreate(n).
     auto* array = MUST(Array::create(global_object, indices.size()));
 
+    // 9. Assert: The value of A's "length" property is n.
+
+    // 10. If hasGroups is true, then
+    //     a. Let groups be ! ObjectCreate(null).
+    // 11. Else,
+    //     a. Let groups be undefined.
     auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
 
+    // 13. For each integer i such that i ≥ 0 and i < n, do
     for (size_t i = 0; i < indices.size(); ++i) {
+        // a. Let matchIndices be indices[i].
         auto const& match_indices = indices[i];
 
+        // b. If matchIndices is not undefined, then
+        //     i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
+        // c. Else,
+        //     i. Let matchIndicesArray be undefined.
         auto match_indices_array = js_undefined();
         if (match_indices.has_value())
             match_indices_array = get_match_indices_array(global_object, string, *match_indices);
 
+        // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
         MUST(array->create_data_property(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
         auto match_indices_array = get_match_indices_array(global_object, string, entry.value);
 
+        // e. If i > 0 and groupNames[i - 1] is not undefined, then
+        //     i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
         MUST(groups.as_object().create_data_property(entry.key, match_indices_array));
     }
 
+    // 12. Perform ! CreateDataProperty(A, "groups", groups).
+    // NOTE: This step must be performed after the above loops in order for groups to be populated.
     MUST(array->create_data_property(vm.names.groups, groups));
 
+    // 14. Return A.
     return array;
 }
 
-// 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
+// 1.1.4.1.1 RegExpBuiltinExec ( R, S ), https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
 static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
 {
-    // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
+    // 1. Assert: R is an initialized RegExp instance.
+    // 2. Assert: Type(S) is String.
+
+    // 3. Let length be the number of code units in S.
+    // 4. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
 
     auto& regex = regexp_object.regex();
+
+    // 5. Let flags be R.[[OriginalFlags]].
+    // 6. If flags contains "g", let global be true; else let global be false.
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
+    // 7. If flags contains "y", let sticky be true; else let sticky be false.
     bool sticky = regex.options().has_flag_set(ECMAScriptFlags::Sticky);
-    bool unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode);
+    // 8. If flags contains "d", let hasIndices be true, else let hasIndices be false.
     bool has_indices = regexp_object.flags().find('d').has_value();
 
+    // 9. If global is false and sticky is false, set lastIndex to 0.
     if (!global && !sticky)
         last_index = 0;
 
-    auto string_view = string.view();
+    // 10. Let matcher be R.[[RegExpMatcher]].
+
+    // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
+    bool full_unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode);
+
     RegexResult result;
 
+    // 12. Let matchSucceeded be false.
+    // 13. Let Input be a List consisting of all of the characters, in order, of S. If fullUnicode is true, each character is a code unit, otherwise each character is a code point.
+    // 14. Repeat, while matchSucceeded is false,
     while (true) {
+        // a. If lastIndex > length, then
         if (last_index > string.length_in_code_units()) {
-            if (global || sticky)
+            // i. If global is true or sticky is true, then
+            if (global || sticky) {
+                // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
+                TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
+            }
+
+            // ii. Return null.
+            return js_null();
+        }
+
+        // b. Let r be matcher(Input, lastIndex).
+        regex.start_offset = full_unicode ? string.view().code_point_offset_of(last_index) : last_index;
+        result = regex.match(string.view());
+
+        // c. If r is failure, then
+        if (!result.success) {
+            // i. If sticky is true, then
+            if (sticky) {
+                // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
                 TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-            return js_null();
+                // 2. Return null.
+                return js_null();
+            }
+
+            // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
+            last_index = advance_string_index(string.view(), last_index, full_unicode);
         }
-
-        regex.start_offset = unicode ? string_view.code_point_offset_of(last_index) : last_index;
-        result = regex.match(string_view);
-
-        if (result.success)
+        // d. Else,
+        else {
+            // i. Assert: r is a State.
+            // ii. Set matchSucceeded to true.
             break;
-
-        if (sticky) {
-            TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
-
-            return js_null();
         }
-
-        last_index = advance_string_index(string_view, last_index, unicode);
     }
 
     auto& match = result.matches[0];
     auto match_index = match.global_offset;
 
-    // https://tc39.es/ecma262/#sec-notation:
-    // The endIndex is one plus the index of the last input character matched so far by the pattern.
+    // 15. Let e be r's endIndex value.
+    // https://tc39.es/ecma262/#sec-notation: The endIndex is one plus the index of the last input character matched so far by the pattern.
     auto end_index = match_index + match.view.length();
 
-    if (unicode) {
-        match_index = string_view.code_unit_offset_of(match.global_offset);
-        end_index = string_view.code_unit_offset_of(end_index);
+    // 17. If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
+    if (full_unicode) {
+        match_index = string.view().code_unit_offset_of(match.global_offset);
+        end_index = string.view().code_unit_offset_of(end_index);
     }
 
-    if (global || sticky)
+    // 18. If global is true or sticky is true, then
+    if (global || sticky) {
+        // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
         TRY(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
+    }
 
+    // 19. Let n be the number of elements in r's captures List. (This is the same value as 22.2.2.1's NcapturingParens.)
+    // 20. Assert: n < 2^32 - 1.
     VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
+
+    // 21. Let A be ! ArrayCreate(n + 1).
     auto* array = MUST(Array::create(global_object, result.n_named_capture_groups + 1));
 
-    Vector<Optional<Match>> indices { Match::create(match) };
+    // 22. Assert: The mathematical value of A's "length" property is n + 1.
+
+    // 23. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
+    MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
+
+    // 25. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    auto match_indices = Match::create(match);
+
+    // 26. Let indices be a new empty List.
+    Vector<Optional<Match>> indices;
+
+    // 27. Let groupNames be a new empty List.
     HashMap<FlyString, Match> group_names;
 
+    // 28. Add match as the last element of indices.
+    indices.append(move(match_indices));
+
+    // 29. Let matchedValue be ! GetMatchString(S, match).
+    // 30. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
+    MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
+
+    // 31. If R contains any GroupName, then
+    //     a. Let groups be ! OrdinaryObjectCreate(null).
+    //     b. Let hasGroups be true.
+    // 32. Else,
+    //     a. Let groups be undefined.
+    //     b. Let hasGroups be false.
     bool has_groups = result.n_named_capture_groups != 0;
     Object* groups_object = has_groups ? Object::create(global_object, nullptr) : nullptr;
 
-    for (size_t i = 0; i < result.n_capture_groups; ++i) {
-        auto capture_value = js_undefined();
-        auto& capture = result.capture_group_matches[0][i + 1];
+    // 34. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
+    for (size_t i = 1; i <= result.n_capture_groups; ++i) {
+        // a. Let captureI be ith element of r's captures List.
+        auto& capture = result.capture_group_matches[0][i];
+
+        Value captured_value;
+
+        // b. If captureI is undefined, then
         if (capture.view.is_null()) {
+            // i. Let capturedValue be undefined.
+            captured_value = js_undefined();
+            // ii. Append undefined to indices.
             indices.append({});
-        } else {
-            capture_value = js_string(vm, capture.view.u16_view());
+        }
+        // c. Else,
+        else {
+            // i. Let captureStart be captureI's startIndex.
+            // ii. Let captureEnd be captureI's endIndex.
+            // iii. If fullUnicode is true, then
+            //     1. Set captureStart to ! GetStringIndex(S, Input, captureStart).
+            //     2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
+            // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
+            // v. Let capturedValue be ! GetMatchString(S, capture).
+            captured_value = js_string(vm, capture.view.u16_view());
+            // vi Append capture to indices.
             indices.append(Match::create(capture));
         }
-        MUST(array->create_data_property_or_throw(i + 1, capture_value));
 
+        // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).
+        MUST(array->create_data_property_or_throw(i, captured_value));
+
+        // e. If the ith capture of R was defined with a GroupName, then
         if (capture.capture_group_name.has_value()) {
+            // i. Let s be the CapturingGroupName of the corresponding RegExpIdentifierName.
             auto group_name = capture.capture_group_name.release_value();
-            MUST(groups_object->create_data_property_or_throw(group_name, js_string(vm, capture.view.u16_view())));
+
+            // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
+            MUST(groups_object->create_data_property_or_throw(group_name, captured_value));
+
+            // iii. Append s to groupNames.
             group_names.set(move(group_name), Match::create(capture));
+        }
+        // f. Else,
+        else {
+            // i. Append undefined to groupNames.
+            // See the note in MakeIndicesArray for why this step is skipped.
         }
     }
 
+    // 33. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+    // NOTE: This step must be performed after the above loop in order for groups to be populated.
     Value groups = has_groups ? groups_object : js_undefined();
     MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
+    // 35. If hasIndices is true, then
     if (has_indices) {
-        auto indices_array = make_indices_array(global_object, string_view, indices, group_names, has_groups);
-        TRY(array->create_data_property(vm.names.indices, indices_array));
+        // a. Let indicesArray be ! MakeIndicesArray(S, indices, groupNames, hasGroups).
+        auto indices_array = make_indices_array(global_object, string.view(), indices, group_names, has_groups);
+        // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
+        MUST(array->create_data_property(vm.names.indices, indices_array));
     }
 
-    MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
-    MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
+    // 24. Perform ! CreateDataPropertyOrThrow(A, "input", S).
+    // NOTE: This step is performed last to allow the string to be moved into the js_string invocation.
     MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
 
+    // 36. Return A.
     return array;
 }
 
@@ -257,19 +402,27 @@ ThrowCompletionOr<Value> regexp_exec(GlobalObject& global_object, Object& regexp
 {
     auto& vm = global_object.vm();
 
+    // 1. Let exec be ? Get(R, "exec").
     auto exec = TRY(regexp_object.get(vm.names.exec));
+
+    // 2. If IsCallable(exec) is true, then
     if (exec.is_function()) {
+        // a. Let result be ? Call(exec, R, « S »).
         auto result = TRY(vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string))));
 
+        // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
 
+        // c. Return result.
         return result;
     }
 
+    // 3. Perform ? RequireInternalSlot(R, [[RegExpMatcher]]).
     if (!is<RegExpObject>(regexp_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "RegExp");
 
+    // 4. Return ? RegExpBuiltinExec(R, S).
     return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
 }
 
