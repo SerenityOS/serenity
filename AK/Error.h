@@ -15,6 +15,7 @@
 #    include <LibC/errno_codes.h>
 #else
 #    include <errno.h>
+#    include <string.h>
 #endif
 
 namespace AK {
