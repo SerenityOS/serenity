@@ -119,6 +119,9 @@ void MainWidget::special_key_action(int key_code)
     case Key_C:
         m_knobs_widget->cycle_waveform();
         break;
+    case Key_Space:
+        m_player_widget->toggle_paused();
+        break;
     }
 }
 

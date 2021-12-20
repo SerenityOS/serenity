@@ -18,6 +18,7 @@ public:
 
     void add_track();
     void next_track();
+    void toggle_paused();
 
 private:
     explicit PlayerWidget(TrackManager&, AudioPlayerLoop&);
