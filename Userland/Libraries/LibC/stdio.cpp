@@ -341,6 +341,11 @@ FILE::Buffer::~Buffer()
         free(m_data);
 }
 
+bool FILE::Buffer::may_use() const
+{
+    return m_ungotten || m_mode != _IONBF;
+}
+
 void FILE::Buffer::realize(int fd)
 {
     if (m_mode == -1)
