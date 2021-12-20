@@ -32,8 +32,8 @@ struct Context {
 };
 
 struct ValidationError : public Error {
-    ValidationError(String error)
-        : Error(Error::from_string_literal(error))
+    ValidationError(String error, StringView where = __builtin_FUNCTION())
+        : Error(Error::from_string_literal(error, where))
         , error_string(move(error))
     {
     }

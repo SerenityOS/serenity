@@ -21,37 +21,41 @@ namespace AK {
 
 class Error {
 public:
-    static Error from_errno(int code) { return Error(code); }
+    static Error from_errno(int code, StringView where = __builtin_FUNCTION()) { return Error(code, where); }
     static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
-    static Error from_string_literal(StringView string_literal) { return Error(string_literal); }
+    static Error from_string_literal(StringView string_literal, StringView where = __builtin_FUNCTION()) { return Error(string_literal, where); }
 
     bool is_errno() const { return m_code != 0; }
     bool is_syscall() const { return m_syscall; }
 
     int code() const { return m_code; }
     StringView string_literal() const { return m_string_literal; }
+    StringView where() const { return m_where; }
 
 protected:
-    Error(int code)
+    Error(int code, StringView where)
         : m_code(code)
+        , m_where(where)
     {
     }
 
 private:
-    Error(StringView string_literal)
+    Error(StringView string_literal, StringView where)
         : m_string_literal(string_literal)
+        , m_where(where)
     {
     }
 
     Error(StringView syscall_name, int rc)
         : m_code(-rc)
-        , m_string_literal(syscall_name)
+        , m_where(syscall_name)
         , m_syscall(true)
     {
     }
 
     int m_code { 0 };
     StringView m_string_literal;
+    StringView m_where;
     bool m_syscall { false };
 };
 

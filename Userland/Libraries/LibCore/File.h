@@ -62,8 +62,8 @@ public:
     };
 
     struct CopyError : public Error {
-        CopyError(int error_code, bool t)
-            : Error(error_code)
+        CopyError(int error_code, bool t, StringView where = __builtin_FUNCTION())
+            : Error(error_code, where)
             , tried_recursing(t)
         {
         }
@@ -79,8 +79,8 @@ public:
     static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
     struct RemoveError : public Error {
-        RemoveError(String f, int error_code)
-            : Error(error_code)
+        RemoveError(String f, int error_code, StringView where = __builtin_FUNCTION())
+            : Error(error_code, where)
             , file(move(f))
         {
         }
