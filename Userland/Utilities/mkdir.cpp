@@ -7,6 +7,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -32,7 +33,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     mode_t mode = default_mode;
 
     if (!mode_string.is_empty()) {
-        if (sscanf(mode_string.characters(), "%ho", &mode) != 1) {
+        mode = AK::StringUtils::convert_to_uint_from_octal<u16>(mode_string).value_or(01000);
+        if (mode > 0777) {
             warnln("mkdir: invalid mode: {}", mode_string);
             return 1;
         }

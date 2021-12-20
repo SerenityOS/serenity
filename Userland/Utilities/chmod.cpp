@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringUtils.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -50,6 +51,12 @@ public:
 
     mode_t& get_removal_mask() { return removal_mask; }
     mode_t& get_applying_mask() { return applying_mask; }
+
+    void set_mode(mode_t mode)
+    {
+        this->applying_mask = mode;
+        this->removal_mask = ~mode;
+    }
 };
 
 Optional<Mask> string_to_mode(char access_scope, StringView access_string);
@@ -69,12 +76,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     /* compute a mask */
 
-    if (arguments.strings[1][0] >= '0' && arguments.strings[1][0] <= '7') {
-        if (sscanf(arguments.strings[1].to_string().characters(), "%ho", &mask.get_applying_mask()) != 1) {
-            perror("sscanf");
+    auto mode_string = arguments.strings[1];
+    if (mode_string[0] >= '0' && mode_string[0] <= '7') {
+        mode_t mode = AK::StringUtils::convert_to_uint_from_octal<u16>(mode_string).value_or(01000);
+        if (mode > 0777) {
+            warnln("chmod: invalid mode: {}", mode_string);
             return 1;
         }
-        mask.get_removal_mask() = ~mask.get_applying_mask();
+        mask.set_mode(mode);
     } else {
         auto access_strings = arguments.strings[1].split_view(',');
         for (auto access_string : access_strings) {
