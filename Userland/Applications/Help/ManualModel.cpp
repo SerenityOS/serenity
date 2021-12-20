@@ -8,10 +8,7 @@
 #include "ManualNode.h"
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Try.h>
-#include <LibCore/File.h>
-#include <LibGUI/FilteringProxyModel.h>
 
 static ManualSectionNode s_sections[] = {
     { "1", "User programs" },
@@ -47,6 +44,17 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
         }
     }
     return {};
+}
+
+String ManualModel::page_name(const GUI::ModelIndex& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    if (!node->is_page())
+        return {};
+    auto* page = static_cast<const ManualPageNode*>(node);
+    return page->name();
 }
 
 String ManualModel::page_path(const GUI::ModelIndex& index) const
@@ -165,6 +173,10 @@ void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, co
 
 TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
 {
+    auto name = page_name(index);
+    if (name.contains(term.as_string()))
+        return TriState::True;
+
     auto view_result = page_view(page_path(index));
     if (view_result.is_error() || view_result.value().is_empty())
         return TriState::False;
