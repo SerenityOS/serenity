@@ -56,6 +56,8 @@ template<typename T = unsigned>
 Optional<T> convert_to_uint(StringView, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
 Optional<T> convert_to_uint_from_hex(StringView, TrimWhitespace = TrimWhitespace::Yes);
+template<typename T = unsigned>
+Optional<T> convert_to_uint_from_octal(StringView, TrimWhitespace = TrimWhitespace::Yes);
 bool equals_ignoring_case(StringView, StringView);
 bool ends_with(StringView a, StringView b, CaseSensitivity);
 bool starts_with(StringView, StringView, CaseSensitivity);
