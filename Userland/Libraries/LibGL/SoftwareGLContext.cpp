@@ -23,8 +23,9 @@ using AK::dbgln;
 
 namespace GL {
 
-// FIXME: We should set this up when we create the context!
-static constexpr size_t MATRIX_STACK_LIMIT = 1024;
+static constexpr size_t MODELVIEW_MATRIX_STACK_LIMIT = 64;
+static constexpr size_t PROJECTION_MATRIX_STACK_LIMIT = 8;
+static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
 
 #define APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(name, ...)       \
     if (should_append_to_listing()) {                             \
@@ -286,6 +287,12 @@ void SoftwareGLContext::gl_end()
         triangle.vertices[1].position = mvp * triangle.vertices[1].position;
         triangle.vertices[2].position = mvp * triangle.vertices[2].position;
 
+        // Apply texture transformation
+        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
+        triangle.vertices[0].tex_coord = m_texture_matrix * triangle.vertices[0].tex_coord;
+        triangle.vertices[1].tex_coord = m_texture_matrix * triangle.vertices[1].tex_coord;
+        triangle.vertices[2].tex_coord = m_texture_matrix * triangle.vertices[2].tex_coord;
+
         // At this point, we're in clip space
         // Here's where we do the clipping. This is a really crude implementation of the
         // https://learnopengl.com/Getting-started/Coordinate-Systems
@@ -386,12 +393,14 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
         0, 0, -1, 0
     };
 
-    if (m_current_matrix_mode == GL_PROJECTION) {
+    if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * frustum;
-    } else if (m_current_matrix_mode == GL_MODELVIEW) {
-        dbgln_if(GL_DEBUG, "glFrustum(): frustum created with curr_matrix_mode == GL_MODELVIEW!!!");
+    else if (m_current_matrix_mode == GL_MODELVIEW)
         m_projection_matrix = m_model_view_matrix * frustum;
-    }
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * frustum;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -415,11 +424,14 @@ void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom,
         0, 0, 0, 1
     };
 
-    if (m_current_matrix_mode == GL_PROJECTION) {
+    if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * projection;
-    } else if (m_current_matrix_mode == GL_MODELVIEW) {
+    else if (m_current_matrix_mode == GL_MODELVIEW)
         m_projection_matrix = m_model_view_matrix * projection;
-    }
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * projection;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 GLenum SoftwareGLContext::gl_get_error()
@@ -465,6 +477,8 @@ void SoftwareGLContext::gl_load_identity()
         m_projection_matrix = FloatMatrix4x4::identity();
     else if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = FloatMatrix4x4::identity();
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = FloatMatrix4x4::identity();
     else
         VERIFY_NOT_REACHED();
 }
@@ -479,6 +493,8 @@ void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
         m_projection_matrix = matrix;
     else if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = matrix;
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = matrix;
     else
         VERIFY_NOT_REACHED();
 }
@@ -488,7 +504,7 @@ void SoftwareGLContext::gl_matrix_mode(GLenum mode)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_matrix_mode, mode);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(mode < GL_MODELVIEW || mode > GL_PROJECTION, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(mode < GL_MODELVIEW || mode > GL_TEXTURE, GL_INVALID_ENUM);
 
     m_current_matrix_mode = mode;
 }
@@ -503,16 +519,19 @@ void SoftwareGLContext::gl_push_matrix()
 
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
-        RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() >= MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
+        RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() >= PROJECTION_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
         m_projection_matrix_stack.append(m_projection_matrix);
         break;
     case GL_MODELVIEW:
-        RETURN_WITH_ERROR_IF(m_model_view_matrix_stack.size() >= MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
+        RETURN_WITH_ERROR_IF(m_model_view_matrix_stack.size() >= MODELVIEW_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
         m_model_view_matrix_stack.append(m_model_view_matrix);
         break;
+    case GL_TEXTURE:
+        RETURN_WITH_ERROR_IF(m_texture_matrix_stack.size() >= TEXTURE_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
+        m_texture_matrix_stack.append(m_texture_matrix);
+        break;
     default:
-        dbgln_if(GL_DEBUG, "glPushMatrix(): Attempt to push matrix with invalid matrix mode {})", m_current_matrix_mode);
-        return;
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -524,7 +543,6 @@ void SoftwareGLContext::gl_pop_matrix()
 
     dbgln_if(GL_DEBUG, "glPopMatrix(): Popping matrix from matrix stack (matrix_mode = {})", m_current_matrix_mode);
 
-    // FIXME: Make sure stack::top() doesn't cause any  nasty issues if it's empty (that could result in a lockup/hang)
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
         RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
@@ -534,9 +552,12 @@ void SoftwareGLContext::gl_pop_matrix()
         RETURN_WITH_ERROR_IF(m_model_view_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
         m_model_view_matrix = m_model_view_matrix_stack.take_last();
         break;
+    case GL_TEXTURE:
+        RETURN_WITH_ERROR_IF(m_texture_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
+        m_texture_matrix = m_texture_matrix_stack.take_last();
+        break;
     default:
-        dbgln_if(GL_DEBUG, "glPopMatrix(): Attempt to pop matrix with invalid matrix mode, {}", m_current_matrix_mode);
-        return;
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -546,16 +567,14 @@ void SoftwareGLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    switch (m_current_matrix_mode) {
-    case GL_PROJECTION:
-        m_projection_matrix = m_projection_matrix * matrix;
-        break;
-    case GL_MODELVIEW:
+    if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = m_model_view_matrix * matrix;
-        break;
-    default:
-        dbgln_if(GL_DEBUG, "glMultMatrix(): Attempt to mult matrix with unsupported matrix mode {}", m_current_matrix_mode);
-    }
+    else if (m_current_matrix_mode == GL_PROJECTION)
+        m_projection_matrix = m_projection_matrix * matrix;
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * matrix;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
@@ -572,6 +591,10 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
         m_model_view_matrix = m_model_view_matrix * rotation_mat;
     else if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * rotation_mat;
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * rotation_mat;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
@@ -580,11 +603,16 @@ void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    if (m_current_matrix_mode == GL_MODELVIEW) {
-        m_model_view_matrix = m_model_view_matrix * Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-    } else if (m_current_matrix_mode == GL_PROJECTION) {
-        m_projection_matrix = m_projection_matrix * Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-    }
+    auto scale_matrix = Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+
+    if (m_current_matrix_mode == GL_MODELVIEW)
+        m_model_view_matrix = m_model_view_matrix * scale_matrix;
+    else if (m_current_matrix_mode == GL_PROJECTION)
+        m_projection_matrix = m_projection_matrix * scale_matrix;
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * scale_matrix;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
@@ -593,11 +621,16 @@ void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    if (m_current_matrix_mode == GL_MODELVIEW) {
-        m_model_view_matrix = m_model_view_matrix * Gfx::translation_matrix(FloatVector3 { (float)x, (float)y, (float)z });
-    } else if (m_current_matrix_mode == GL_PROJECTION) {
-        m_projection_matrix = m_projection_matrix * Gfx::translation_matrix(FloatVector3 { (float)x, (float)y, (float)z });
-    }
+    auto translation_matrix = Gfx::translation_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+
+    if (m_current_matrix_mode == GL_MODELVIEW)
+        m_model_view_matrix = m_model_view_matrix * translation_matrix;
+    else if (m_current_matrix_mode == GL_PROJECTION)
+        m_projection_matrix = m_projection_matrix * translation_matrix;
+    else if (m_current_matrix_mode == GL_TEXTURE)
+        m_texture_matrix = m_texture_matrix * translation_matrix;
+    else
+        VERIFY_NOT_REACHED();
 }
 
 void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
