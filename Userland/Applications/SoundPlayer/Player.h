@@ -33,6 +33,7 @@ public:
     virtual ~Player() { }
 
     void play_file_path(String const& path);
+    bool is_playlist(String const& path);
 
     Playlist& playlist() { return m_playlist; }
     String const& loaded_filename() const { return m_loaded_filename; }
