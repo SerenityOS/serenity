@@ -112,3 +112,8 @@ void PlayerWidget::next_track()
 {
     m_track_dropdown->set_selected_index(m_track_manager.next_track_index());
 }
+
+void PlayerWidget::toggle_paused()
+{
+    m_play_button->click();
+}
