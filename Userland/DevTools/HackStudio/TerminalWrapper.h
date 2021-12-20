@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <LibGUI/Widget.h>
 #include <LibVT/TerminalWidget.h>
 
@@ -22,6 +23,13 @@ public:
 
     bool user_spawned() const { return m_user_spawned; }
     VT::TerminalWidget& terminal() { return *m_terminal_widget; }
+
+    enum class WaitForChildOnExit {
+        No,
+        Yes,
+    };
+    ErrorOr<int> setup_master_pseudoterminal(WaitForChildOnExit = WaitForChildOnExit::Yes);
+    static ErrorOr<void> setup_slave_pseudoterminal(int master_fd);
 
     Function<void()> on_command_exit;
 
