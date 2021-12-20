@@ -185,6 +185,7 @@ private:
     bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
     bool match_export_or_import() const;
+    bool match_assert_clause() const;
     bool match_declaration() const;
     bool try_match_let_declaration() const;
     bool match_variable_declaration() const;
@@ -220,6 +221,7 @@ private:
 
     bool parse_directive(ScopeNode& body);
     void parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions = AllowLabelledFunction::No);
+    void parse_assert_clause(ModuleRequest& request);
 
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
