@@ -1081,7 +1081,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
 
     m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO");
-    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
+    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console", false);
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
 
     m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
