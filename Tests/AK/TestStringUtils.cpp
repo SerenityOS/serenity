@@ -226,6 +226,60 @@ TEST_CASE(convert_to_uint)
     EXPECT(!actual_u64.has_value());
 }
 
+TEST_CASE(convert_to_uint_from_octal)
+{
+    auto value = AK::StringUtils::convert_to_uint_from_octal<u16>(StringView());
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("a");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("+");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("-");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("+1");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("-1");
+    EXPECT(!value.has_value());
+
+    value = AK::StringUtils::convert_to_uint_from_octal<u16>("8");
+    EXPECT(!value.has_value());
+
+    auto actual = AK::StringUtils::convert_to_uint_from_octal<u16>("77777777");
+    EXPECT(!actual.has_value());
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>("0");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 0u);
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>("1");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 1u);
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>("0755");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 0755u);
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>("755");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 0755u);
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>(" \t644 \n\n");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 0644u);
+
+    actual = AK::StringUtils::convert_to_uint_from_octal<u16>("177777");
+    EXPECT_EQ(actual.has_value(), true);
+    EXPECT_EQ(actual.value(), 0177777u);
+}
+
 TEST_CASE(ends_with)
 {
     String test_string = "ABCDEF";

@@ -191,6 +191,41 @@ template Optional<u16> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 template Optional<u32> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 template Optional<u64> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 
+template<typename T>
+Optional<T> convert_to_uint_from_octal(StringView str, TrimWhitespace trim_whitespace)
+{
+    auto string = trim_whitespace == TrimWhitespace::Yes
+        ? str.trim_whitespace()
+        : str;
+    if (string.is_empty())
+        return {};
+
+    T value = 0;
+    const auto count = string.length();
+    const T upper_bound = NumericLimits<T>::max();
+
+    for (size_t i = 0; i < count; i++) {
+        char digit = string[i];
+        u8 digit_val;
+        if (value > (upper_bound >> 3))
+            return {};
+
+        if (digit >= '0' && digit <= '7') {
+            digit_val = digit - '0';
+        } else {
+            return {};
+        }
+
+        value = (value << 3) + digit_val;
+    }
+    return value;
+}
+
+template Optional<u8> convert_to_uint_from_octal(StringView str, TrimWhitespace);
+template Optional<u16> convert_to_uint_from_octal(StringView str, TrimWhitespace);
+template Optional<u32> convert_to_uint_from_octal(StringView str, TrimWhitespace);
+template Optional<u64> convert_to_uint_from_octal(StringView str, TrimWhitespace);
+
 bool equals_ignoring_case(StringView a, StringView b)
 {
     if (a.length() != b.length())
