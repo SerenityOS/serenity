@@ -171,7 +171,7 @@ private:
     GLint m_clear_stencil { 0 };
 
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 0.0f };
+    FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 1.0f };
     FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
 
     Vector<GLVertex, 96> vertex_list;

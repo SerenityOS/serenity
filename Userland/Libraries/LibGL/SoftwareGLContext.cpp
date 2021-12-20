@@ -608,7 +608,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
-    vertex.tex_coord = { m_current_vertex_tex_coord.x(), m_current_vertex_tex_coord.y() };
+    vertex.tex_coord = m_current_vertex_tex_coord;
     vertex.normal = m_current_vertex_normal;
 
     vertex_list.append(vertex);

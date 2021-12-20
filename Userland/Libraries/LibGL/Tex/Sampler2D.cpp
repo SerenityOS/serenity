@@ -50,7 +50,7 @@ static constexpr float wrap(float value, GLint mode, int num_texels)
     }
 }
 
-FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
+FloatVector4 Sampler2D::sample(FloatVector4 const& uv) const
 {
     // FIXME: Calculate the correct mipmap level here, need to receive uv derivatives for that
     unsigned lod = 0;
