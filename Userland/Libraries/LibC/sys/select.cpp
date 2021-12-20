@@ -15,6 +15,7 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/select.html
 int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval* timeout_tv)
 {
     timespec* timeout_ts = nullptr;
@@ -26,6 +27,7 @@ int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timev
     return pselect(nfds, readfds, writefds, exceptfds, timeout_ts, nullptr);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/pselect.html
 int pselect(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const timespec* timeout, const sigset_t* sigmask)
 {
     Vector<pollfd, FD_SETSIZE> fds;
