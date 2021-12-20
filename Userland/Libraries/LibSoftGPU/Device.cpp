@@ -812,4 +812,11 @@ NonnullRefPtr<Image> Device::create_image(ImageFormat format, unsigned width, un
     return adopt_ref(*new Image(format, width, height, depth, levels, layers));
 }
 
+void Device::set_sampler_config(unsigned sampler, SamplerConfig const& config)
+{
+    VERIFY(sampler < num_samplers);
+
+    m_samplers[sampler].set_config(config);
+}
+
 }
