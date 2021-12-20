@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (result.error().tried_recursing)
                 warnln("cp: -R not specified; omitting directory '{}'", source);
             else
-                warnln("cp: unable to copy '{}' to '{}': {}", source, destination_path, static_cast<Error const&>(result.error()));
+                warnln("cp: unable to copy '{}' to '{}': {}", source, destination_path, strerror(result.error().code()));
             return 1;
         }
 
