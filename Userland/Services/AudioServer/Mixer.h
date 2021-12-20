@@ -52,7 +52,8 @@ public:
             return false;
 
         sample = m_current->samples()[m_position++];
-        --m_remaining_samples;
+        if (m_remaining_samples > 0)
+            --m_remaining_samples;
         ++m_played_samples;
 
         if (m_position >= m_current->sample_count()) {
