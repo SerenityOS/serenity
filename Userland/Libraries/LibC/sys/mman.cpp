@@ -24,6 +24,7 @@ void* serenity_mmap(void* addr, size_t size, int prot, int flags, int fd, off_t 
     return (void*)rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mmap.html
 void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
 {
     return serenity_mmap(addr, size, prot, flags, fd, offset, PAGE_SIZE, nullptr);
@@ -45,12 +46,14 @@ void* mremap(void* old_address, size_t old_size, size_t new_size, int flags)
     return (void*)rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/munmap.html
 int munmap(void* addr, size_t size)
 {
     int rc = syscall(SC_munmap, addr, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mprotect.html
 int mprotect(void* addr, size_t size, int prot)
 {
     int rc = syscall(SC_mprotect, addr, size, prot);
@@ -84,12 +87,14 @@ void* allocate_tls(const char* initial_data, size_t size)
     return (void*)rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mlock.html
 int mlock(const void*, size_t)
 {
     dbgln("FIXME: Implement mlock()");
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/msync.html
 int msync(void* address, size_t size, int flags)
 {
     int rc = syscall(SC_msync, address, size, flags);
