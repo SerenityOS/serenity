@@ -20,6 +20,7 @@
 #include <LibSoftGPU/DepthBuffer.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
+#include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Triangle.h>
 #include <LibSoftGPU/Vertex.h>
 
@@ -61,6 +62,8 @@ struct RasterizerOptions {
     GLenum culled_sides { GL_BACK };
 };
 
+inline static constexpr size_t const num_samplers = 32;
+
 class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
@@ -79,6 +82,8 @@ public:
 
     NonnullRefPtr<Image> create_image(ImageFormat, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
+    void set_sampler_config(unsigned, SamplerConfig const&);
+
 private:
     void submit_triangle(Triangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
 
@@ -90,6 +95,7 @@ private:
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
     Vector<Vertex> m_clipped_vertices;
+    Sampler m_samplers[num_samplers];
 };
 
 }
