@@ -60,6 +60,8 @@ public:
     void set_requested_debugger_action(DebuggerAction);
     void reset_breakpoints() { m_breakpoints.clear(); }
 
+    void set_child_setup_callback(Function<ErrorOr<void>()> callback) { m_child_setup_callback = move(callback); }
+
 private:
     class DebuggingState {
     public:
@@ -119,6 +121,7 @@ private:
     Function<HasControlPassedToUser(const PtraceRegisters&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;
     Function<void()> m_on_exit_callback;
+    Function<ErrorOr<void>()> m_child_setup_callback;
 };
 
 }

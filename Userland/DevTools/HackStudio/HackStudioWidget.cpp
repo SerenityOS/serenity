@@ -797,6 +797,20 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         }
 
         Debugger::the().set_executable_path(get_project_executable_path());
+
+        m_terminal_wrapper->clear_including_history();
+
+        // The debugger calls wait() on the debugee, so the TerminalWrapper can't do that.
+        auto ptm_res = m_terminal_wrapper->setup_master_pseudoterminal(TerminalWrapper::WaitForChildOnExit::No);
+        if (ptm_res.is_error()) {
+            perror("setup_master_pseudoterminal");
+            return;
+        }
+
+        Debugger::the().set_child_setup_callback([this, ptm_res]() {
+            return m_terminal_wrapper->setup_slave_pseudoterminal(ptm_res.value());
+        });
+
         m_debugger_thread = Threading::Thread::construct(Debugger::start_static);
         m_debugger_thread->start();
         m_stop_action->set_enabled(true);

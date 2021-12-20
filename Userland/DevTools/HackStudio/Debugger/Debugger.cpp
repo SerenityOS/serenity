@@ -112,7 +112,13 @@ void Debugger::stop()
 
 void Debugger::start()
 {
-    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root);
+
+    auto child_setup_callback = [this]() {
+        if (m_child_setup_callback)
+            return m_child_setup_callback();
+        return ErrorOr<void> {};
+    };
+    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback));
     VERIFY(!!m_debug_session);
 
     for (const auto& breakpoint : m_breakpoints) {
