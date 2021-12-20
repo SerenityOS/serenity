@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/BitCast.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <bits/stdio_file_implementation.h>
@@ -60,5 +61,35 @@ wint_t getwc(FILE* stream)
 wint_t getwchar()
 {
     return getwc(stdin);
+}
+
+wint_t fputwc(wchar_t wc, FILE* stream)
+{
+    VERIFY(stream);
+    // Negative wide chars are weird
+    if constexpr (IsSigned<wchar_t>) {
+        if (wc < 0) {
+            errno = EILSEQ;
+            return WEOF;
+        }
+    }
+    StringBuilder sb;
+    sb.append_code_point(static_cast<u32>(wc));
+    auto bytes = sb.string_view().bytes();
+    ScopedFileLock lock(stream);
+    size_t nwritten = stream->write(bytes.data(), bytes.size());
+    if (nwritten < bytes.size())
+        return WEOF;
+    return wc;
+}
+
+wint_t putwc(wchar_t wc, FILE* stream)
+{
+    return fputwc(wc, stream);
+}
+
+wint_t putwchar(wchar_t wc)
+{
+    return fputwc(wc, stdout);
 }
 }

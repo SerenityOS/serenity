@@ -74,5 +74,8 @@ size_t wcsspn(const wchar_t* wcs, const wchar_t* accept);
 wint_t fgetwc(FILE* stream);
 wint_t getwc(FILE* stream);
 wint_t getwchar(void);
+wint_t fputwc(wchar_t wc, FILE* stream);
+wint_t putwc(wchar_t wc, FILE* stream);
+wint_t putwchar(wchar_t wc);
 
 __END_DECLS
