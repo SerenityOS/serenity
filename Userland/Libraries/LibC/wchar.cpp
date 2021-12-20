@@ -45,6 +45,7 @@ static unsigned int mbstate_expected_bytes(mbstate_t* state)
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcslen.html
 size_t wcslen(wchar_t const* str)
 {
     size_t len = 0;
@@ -53,6 +54,7 @@ size_t wcslen(wchar_t const* str)
     return len;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscpy.html
 wchar_t* wcscpy(wchar_t* dest, wchar_t const* src)
 {
     wchar_t* original_dest = dest;
@@ -75,6 +77,7 @@ wchar_t* wcsdup(wchar_t const* str)
     return wcscpy(new_str, str);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsncpy.html
 wchar_t* wcsncpy(wchar_t* dest, wchar_t const* src, size_t num)
 {
     wchar_t* original_dest = dest;
@@ -95,6 +98,7 @@ size_t wcslcpy(wchar_t* dest, wchar_t const* src, size_t n)
     return i;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscmp.html
 int wcscmp(wchar_t const* s1, wchar_t const* s2)
 {
     while (*s1 == *s2++)
@@ -103,6 +107,7 @@ int wcscmp(wchar_t const* s1, wchar_t const* s2)
     return *(wchar_t const*)s1 - *(wchar_t const*)--s2;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsncmp.html
 int wcsncmp(wchar_t const* s1, wchar_t const* s2, size_t n)
 {
     if (!n)
@@ -116,6 +121,7 @@ int wcsncmp(wchar_t const* s1, wchar_t const* s2, size_t n)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcschr.html
 wchar_t* wcschr(wchar_t const* str, int c)
 {
     wchar_t ch = c;
@@ -127,6 +133,7 @@ wchar_t* wcschr(wchar_t const* str, int c)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsrchr.html
 wchar_t* wcsrchr(wchar_t const* str, wchar_t wc)
 {
     wchar_t* last = nullptr;
@@ -138,6 +145,7 @@ wchar_t* wcsrchr(wchar_t const* str, wchar_t wc)
     return last;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscat.html
 wchar_t* wcscat(wchar_t* dest, wchar_t const* src)
 {
     size_t dest_length = wcslen(dest);
@@ -148,6 +156,7 @@ wchar_t* wcscat(wchar_t* dest, wchar_t const* src)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsncat.html
 wchar_t* wcsncat(wchar_t* dest, wchar_t const* src, size_t n)
 {
     size_t dest_length = wcslen(dest);
@@ -158,6 +167,7 @@ wchar_t* wcsncat(wchar_t* dest, wchar_t const* src, size_t n)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstok.html
 wchar_t* wcstok(wchar_t* str, wchar_t const* delim, wchar_t** ptr)
 {
     wchar_t* used_str = str;
@@ -203,18 +213,21 @@ wchar_t* wcstok(wchar_t* str, wchar_t const* delim, wchar_t** ptr)
     return &used_str[token_start];
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstol.html
 long wcstol(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstol()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstoll.html
 long long wcstoll(wchar_t const*, wchar_t**, int)
 {
     dbgln("FIXME: Implement wcstoll()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/btowc.html
 wint_t btowc(int c)
 {
     if (c == EOF) {
@@ -229,6 +242,7 @@ wint_t btowc(int c)
     return c;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbrtowc.html
 size_t mbrtowc(wchar_t* pwc, char const* s, size_t n, mbstate_t* state)
 {
     static mbstate_t _anonymous_state = {};
@@ -314,6 +328,7 @@ size_t mbrtowc(wchar_t* pwc, char const* s, size_t n, mbstate_t* state)
     return consumed_bytes;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbrlen.html
 size_t mbrlen(char const* s, size_t n, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
@@ -324,6 +339,7 @@ size_t mbrlen(char const* s, size_t n, mbstate_t* ps)
     return mbrtowc(nullptr, s, n, ps);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcrtomb.html
 size_t wcrtomb(char* s, wchar_t wc, mbstate_t*)
 {
     if (s == nullptr)
@@ -342,6 +358,7 @@ size_t wcrtomb(char* s, wchar_t wc, mbstate_t*)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscoll.html
 int wcscoll(wchar_t const* ws1, wchar_t const* ws2)
 {
     // TODO: Actually implement a sensible sort order for this,
@@ -349,12 +366,14 @@ int wcscoll(wchar_t const* ws1, wchar_t const* ws2)
     return wcscmp(ws1, ws2);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsxfrm.html
 size_t wcsxfrm(wchar_t* dest, wchar_t const* src, size_t n)
 {
     // TODO: This needs to be changed when wcscoll is not just doing wcscmp
     return wcslcpy(dest, src, n);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wctob.html
 int wctob(wint_t c)
 {
     if (c > 0x7f)
@@ -363,6 +382,7 @@ int wctob(wint_t c)
     return static_cast<unsigned char>(c);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbsinit.html
 int mbsinit(mbstate_t const* state)
 {
     if (!state) {
@@ -376,6 +396,7 @@ int mbsinit(mbstate_t const* state)
     return 1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcspbrk.html
 wchar_t* wcspbrk(wchar_t const* wcs, wchar_t const* accept)
 {
     for (wchar_t const* cur = accept; *cur; cur++) {
@@ -387,6 +408,7 @@ wchar_t* wcspbrk(wchar_t const* wcs, wchar_t const* accept)
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsstr.html
 wchar_t* wcsstr(wchar_t const* haystack, wchar_t const* needle)
 {
     size_t nlen = wcslen(needle);
@@ -407,6 +429,7 @@ wchar_t* wcsstr(wchar_t const* haystack, wchar_t const* needle)
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wmemchr.html
 wchar_t* wmemchr(wchar_t const* s, wchar_t c, size_t n)
 {
     for (size_t i = 0; i < n; i++) {
@@ -417,6 +440,7 @@ wchar_t* wmemchr(wchar_t const* s, wchar_t c, size_t n)
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wmemcpy.html
 wchar_t* wmemcpy(wchar_t* dest, wchar_t const* src, size_t n)
 {
     for (size_t i = 0; i < n; i++)
@@ -425,6 +449,7 @@ wchar_t* wmemcpy(wchar_t* dest, wchar_t const* src, size_t n)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wmemset.html
 wchar_t* wmemset(wchar_t* wcs, wchar_t wc, size_t n)
 {
     for (size_t i = 0; i < n; i++) {
@@ -434,6 +459,7 @@ wchar_t* wmemset(wchar_t* wcs, wchar_t wc, size_t n)
     return wcs;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wmemmove.html
 wchar_t* wmemmove(wchar_t* dest, wchar_t const* src, size_t n)
 {
     if (dest > src) {
@@ -449,36 +475,42 @@ wchar_t* wmemmove(wchar_t* dest, wchar_t const* src, size_t n)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstoul.html
 unsigned long wcstoul(wchar_t const*, wchar_t**, int)
 {
     dbgln("TODO: Implement wcstoul()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstoull.html
 unsigned long long wcstoull(wchar_t const*, wchar_t**, int)
 {
     dbgln("TODO: Implement wcstoull()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstof.html
 float wcstof(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstof()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstod.html
 double wcstod(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstod()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstold.html
 long double wcstold(wchar_t const*, wchar_t**)
 {
     dbgln("TODO: Implement wcstold()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcwidth.html
 int wcwidth(wchar_t wc)
 {
     if (wc == L'\0')
@@ -496,6 +528,7 @@ int wcwidth(wchar_t wc)
     return 1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsnrtombs.html
 size_t wcsnrtombs(char* dest, wchar_t const** src, size_t nwc, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
@@ -542,6 +575,7 @@ size_t wcsnrtombs(char* dest, wchar_t const** src, size_t nwc, size_t len, mbsta
     return written;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbsnrtowcs.html
 size_t mbsnrtowcs(wchar_t* dst, char const** src, size_t nms, size_t len, mbstate_t* ps)
 {
     static mbstate_t _anonymous_state = {};
@@ -590,6 +624,7 @@ size_t mbsnrtowcs(wchar_t* dst, char const** src, size_t nms, size_t len, mbstat
     return written;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wmemcmp.html
 int wmemcmp(wchar_t const* s1, wchar_t const* s2, size_t n)
 {
     while (n-- > 0) {
@@ -599,6 +634,7 @@ int wmemcmp(wchar_t const* s1, wchar_t const* s2, size_t n)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsrtombs.html
 size_t wcsrtombs(char* dest, wchar_t const** src, size_t len, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
@@ -610,6 +646,7 @@ size_t wcsrtombs(char* dest, wchar_t const** src, size_t len, mbstate_t* ps)
     return wcsnrtombs(dest, src, SIZE_MAX, len, ps);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbsrtowcs.html
 size_t mbsrtowcs(wchar_t* dst, char const** src, size_t len, mbstate_t* ps)
 {
     static mbstate_t anonymous_state = {};
@@ -621,6 +658,7 @@ size_t mbsrtowcs(wchar_t* dst, char const** src, size_t len, mbstate_t* ps)
     return mbsnrtowcs(dst, src, SIZE_MAX, len, ps);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcscspn.html
 size_t wcscspn(wchar_t const* wcs, wchar_t const* reject)
 {
     for (auto const* wc_pointer = wcs;;) {
@@ -634,6 +672,7 @@ size_t wcscspn(wchar_t const* wcs, wchar_t const* reject)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsspn.html
 size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
 {
     for (auto const* wc_pointer = wcs;;) {
@@ -647,6 +686,7 @@ size_t wcsspn(wchar_t const* wcs, wchar_t const* accept)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcsftime.html
 size_t wcsftime(wchar_t* __restrict wcs, size_t maxsize, wchar_t const* __restrict format, const struct tm* __restrict timeptr)
 {
     (void)wcs;
