@@ -94,11 +94,13 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     VERIFY_NOT_REACHED();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_self.html
 int pthread_self()
 {
     return __pthread_self();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_create.html
 int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
 {
     if (!thread)
@@ -130,33 +132,39 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
     return create_thread(thread, start_routine, argument_to_start_routine, used_attributes);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_exit.html
 void pthread_exit(void* value_ptr)
 {
     exit_thread(value_ptr, s_stack_location, s_stack_size);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
 void pthread_cleanup_push([[maybe_unused]] void (*routine)(void*), [[maybe_unused]] void* arg)
 {
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_pop.html
 void pthread_cleanup_pop([[maybe_unused]] int execute)
 {
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_join.html
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
     int rc = syscall(SC_join_thread, thread, exit_value_ptr);
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_kill.html
 int pthread_kill(pthread_t thread, int sig)
 {
     int rc = syscall(SC_kill_thread, thread, sig);
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_detach.html
 int pthread_detach(pthread_t thread)
 {
     int rc = syscall(SC_detach_thread, thread);
@@ -169,38 +177,44 @@ int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
         return errno;
     return 0;
 }
-
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_init.html
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
     return __pthread_mutex_init(mutex, attributes);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_destroy.html
 int pthread_mutex_destroy(pthread_mutex_t*)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_lock.html
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
     return __pthread_mutex_lock(mutex);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_trylock.html
 int pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
     return __pthread_mutex_trylock(mutex);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_unlock.html
 int pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
     return __pthread_mutex_unlock(mutex);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutexattr_init.html
 int pthread_mutexattr_init(pthread_mutexattr_t* attr)
 {
     attr->type = PTHREAD_MUTEX_NORMAL;
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutexattr_destroy.html
 int pthread_mutexattr_destroy(pthread_mutexattr_t*)
 {
     return 0;
@@ -216,12 +230,14 @@ int pthread_mutexattr_settype(pthread_mutexattr_t* attr, int type)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutexattr_gettype.html
 int pthread_mutexattr_gettype(pthread_mutexattr_t* attr, int* type)
 {
     *type = attr->type;
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_init.html
 int pthread_attr_init(pthread_attr_t* attributes)
 {
     auto* impl = new PthreadAttrImpl {};
@@ -238,6 +254,7 @@ int pthread_attr_init(pthread_attr_t* attributes)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_destroy.html
 int pthread_attr_destroy(pthread_attr_t* attributes)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -245,6 +262,7 @@ int pthread_attr_destroy(pthread_attr_t* attributes)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getdetachstate.html
 int pthread_attr_getdetachstate(const pthread_attr_t* attributes, int* p_detach_state)
 {
     auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
@@ -256,6 +274,7 @@ int pthread_attr_getdetachstate(const pthread_attr_t* attributes, int* p_detach_
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setdetachstate.html
 int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -279,6 +298,7 @@ int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getguardsize.html
 int pthread_attr_getguardsize(const pthread_attr_t* attributes, size_t* p_guard_size)
 {
     auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
@@ -290,6 +310,7 @@ int pthread_attr_getguardsize(const pthread_attr_t* attributes, size_t* p_guard_
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setguardsize.html
 int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -321,6 +342,7 @@ int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getschedparam.html
 int pthread_attr_getschedparam(const pthread_attr_t* attributes, struct sched_param* p_sched_param)
 {
     auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
@@ -332,6 +354,7 @@ int pthread_attr_getschedparam(const pthread_attr_t* attributes, struct sched_pa
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setschedparam.html
 int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_param* p_sched_param)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -354,6 +377,7 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getstack.html
 int pthread_attr_getstack(const pthread_attr_t* attributes, void** p_stack_ptr, size_t* p_stack_size)
 {
     auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
@@ -367,6 +391,7 @@ int pthread_attr_getstack(const pthread_attr_t* attributes, void** p_stack_ptr, 
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setstack.html
 int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stack_size)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -397,6 +422,7 @@ int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stac
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getstacksize.html
 int pthread_attr_getstacksize(const pthread_attr_t* attributes, size_t* p_stack_size)
 {
     auto* attributes_impl = *(reinterpret_cast<const PthreadAttrImpl* const*>(attributes));
@@ -408,6 +434,7 @@ int pthread_attr_getstacksize(const pthread_attr_t* attributes, size_t* p_stack_
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setstacksize.html
 int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
 {
     auto* attributes_impl = *(reinterpret_cast<PthreadAttrImpl**>(attributes));
@@ -431,53 +458,62 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_getscope.html
 int pthread_attr_getscope([[maybe_unused]] const pthread_attr_t* attributes, [[maybe_unused]] int* contention_scope)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_attr_setscope.html
 int pthread_attr_setscope([[maybe_unused]] pthread_attr_t* attributes, [[maybe_unused]] int contention_scope)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getschedparam.html
 int pthread_getschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int* policy, [[maybe_unused]] struct sched_param* param)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setschedparam.html
 int pthread_setschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int policy, [[maybe_unused]] const struct sched_param* param)
 {
     return 0;
 }
 
-// libgcc expects this function to exist in libpthread, even
-// if it is not implemented.
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cancel.html
+// NOTE: libgcc expects this function to exist in libpthread, even if it is not implemented.
 int pthread_cancel(pthread_t)
 {
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_create.html
 int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
 {
     return __pthread_key_create(key, destructor);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_delete.html
 int pthread_key_delete(pthread_key_t key)
 {
     return __pthread_key_delete(key);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getspecific.html
 void* pthread_getspecific(pthread_key_t key)
 {
     return __pthread_getspecific(key);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setspecific.html
 int pthread_setspecific(pthread_key_t key, const void* value)
 {
     return __pthread_setspecific(key, value);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setname_np.html
 int pthread_setname_np(pthread_t thread, const char* name)
 {
     if (!name)
@@ -486,12 +522,14 @@ int pthread_setname_np(pthread_t thread, const char* name)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_getname_np.html
 int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 {
     int rc = syscall(SC_get_thread_name, thread, buffer, buffer_size);
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setcancelstate.html
 int pthread_setcancelstate(int state, int* oldstate)
 {
     if (oldstate)
@@ -502,6 +540,7 @@ int pthread_setcancelstate(int state, int* oldstate)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setcanceltype.html
 int pthread_setcanceltype(int type, int* oldtype)
 {
     if (oldtype)
@@ -513,6 +552,7 @@ int pthread_setcanceltype(int type, int* oldtype)
 }
 
 constexpr static pid_t spinlock_unlock_sentinel = 0;
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_spin_destroy.html
 int pthread_spin_destroy(pthread_spinlock_t* lock)
 {
     auto current = AK::atomic_load(&lock->m_lock);
@@ -523,12 +563,14 @@ int pthread_spin_destroy(pthread_spinlock_t* lock)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_spin_init.html
 int pthread_spin_init(pthread_spinlock_t* lock, [[maybe_unused]] int shared)
 {
     lock->m_lock = spinlock_unlock_sentinel;
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_spin_lock.html
 int pthread_spin_lock(pthread_spinlock_t* lock)
 {
     const auto desired = gettid();
@@ -545,6 +587,7 @@ int pthread_spin_lock(pthread_spinlock_t* lock)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_spin_trylock.html
 int pthread_spin_trylock(pthread_spinlock_t* lock)
 {
     // We expect the current value to be unlocked, as the specification
@@ -559,6 +602,7 @@ int pthread_spin_trylock(pthread_spinlock_t* lock)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_spin_unlock.html
 int pthread_spin_unlock(pthread_spinlock_t* lock)
 {
     auto current = AK::atomic_load(&lock->m_lock);
@@ -570,6 +614,7 @@ int pthread_spin_unlock(pthread_spinlock_t* lock)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_equal.html
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
     return t1 == t2;
@@ -577,6 +622,7 @@ int pthread_equal(pthread_t t1, pthread_t t2)
 
 // FIXME: Use the fancy futex mechanism above to write an rw lock.
 //        For the time being, let's just use a less-than-good lock to get things working.
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_destroy.html
 int pthread_rwlock_destroy(pthread_rwlock_t* rl)
 {
     if (!rl)
@@ -596,6 +642,7 @@ constexpr static u32 reader_wake_mask = 1 << 30;
 constexpr static u32 writer_wake_mask = 1 << 31;
 constexpr static u32 writer_locked_mask = 1 << 17;
 constexpr static u32 writer_intent_mask = 1 << 16;
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_init.html
 int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, const pthread_rwlockattr_t* __restrict attr)
 {
     // Just ignore the attributes. use defaults for now.
@@ -702,6 +749,7 @@ static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct t
     return value_if_timeout;
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_rdlock.html
 int pthread_rwlock_rdlock(pthread_rwlock_t* lockp)
 {
     if (!lockp)
@@ -709,6 +757,8 @@ int pthread_rwlock_rdlock(pthread_rwlock_t* lockp)
 
     return rwlock_rdlock_maybe_timed(reinterpret_cast<u32*>(lockp), nullptr, false, 0, 0);
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_timedrdlock.html
 int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict lockp, const struct timespec* __restrict timespec)
 {
     if (!lockp)
@@ -721,6 +771,8 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict lockp, const struct 
         return 1;
     return rc;
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_timedwrlock.html
 int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict lockp, const struct timespec* __restrict timespec)
 {
     if (!lockp)
@@ -733,6 +785,8 @@ int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict lockp, const struct 
         return 1;
     return rc;
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_tryrdlock.html
 int pthread_rwlock_tryrdlock(pthread_rwlock_t* lockp)
 {
     if (!lockp)
@@ -740,6 +794,8 @@ int pthread_rwlock_tryrdlock(pthread_rwlock_t* lockp)
 
     return rwlock_rdlock_maybe_timed(reinterpret_cast<u32*>(lockp), nullptr, true, EBUSY, 0);
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_trywrlock.html
 int pthread_rwlock_trywrlock(pthread_rwlock_t* lockp)
 {
     if (!lockp)
@@ -747,6 +803,8 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t* lockp)
 
     return rwlock_wrlock_maybe_timed(lockp, nullptr, true, EBUSY, 0);
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_unlock.html
 int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
 {
     if (!lockval_p)
@@ -789,6 +847,8 @@ int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
     // Finally, unlocked at last!
     return 0;
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlock_wrlock.html
 int pthread_rwlock_wrlock(pthread_rwlock_t* lockp)
 {
     if (!lockp)
@@ -796,23 +856,32 @@ int pthread_rwlock_wrlock(pthread_rwlock_t* lockp)
 
     return rwlock_wrlock_maybe_timed(lockp, nullptr, false, 0, 0);
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlockattr_destroy.html
 int pthread_rwlockattr_destroy(pthread_rwlockattr_t*)
 {
     return 0;
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlockattr_getpshared.html
 int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict)
 {
     VERIFY_NOT_REACHED();
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlockattr_init.html
 int pthread_rwlockattr_init(pthread_rwlockattr_t*)
 {
     VERIFY_NOT_REACHED();
 }
+
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_rwlockattr_setpshared.html
 int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
 {
     VERIFY_NOT_REACHED();
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_atfork.html
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
 {
     if (prepare)
