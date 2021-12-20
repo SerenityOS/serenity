@@ -20,7 +20,7 @@ struct GLColor {
 struct GLVertex {
     FloatVector4 position;
     FloatVector4 color;
-    FloatVector2 tex_coord;
+    FloatVector4 tex_coord;
     FloatVector3 normal;
 };
 

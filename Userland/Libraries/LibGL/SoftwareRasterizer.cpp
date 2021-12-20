@@ -496,7 +496,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 
 void SoftwareRasterizer::submit_triangle(GLTriangle const& triangle, TextureUnit::BoundList const& bound_texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](const FloatVector2& uv, const FloatVector4& color, float z) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;
 
         for (auto const& texture_unit : bound_texture_units) {
