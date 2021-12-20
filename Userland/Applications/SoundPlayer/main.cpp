@@ -43,6 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (arguments.argc > 1) {
         StringView path = arguments.strings[1];
         player->play_file_path(path);
+        if (player->is_playlist(path))
+            player->set_loop_mode(Player::LoopMode::Playlist);
     }
 
     auto file_menu = TRY(window->try_add_menu("&File"));
@@ -61,10 +63,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto playback_menu = TRY(window->try_add_menu("&Playback"));
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
-    auto loop_none = TRY(GUI::Action::try_create("&No Loop", [&](auto&) {
+    auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::None);
-    }));
-    loop_none->set_checked(true);
+    });
     loop_actions.add_action(loop_none);
     TRY(playback_menu->try_add_action(loop_none));
 
@@ -90,8 +91,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
     });
-    if (player->loop_mode() == Player::LoopMode::Playlist)
+    if (player->loop_mode() == Player::LoopMode::Playlist) {
         playlist_toggle->set_checked(true);
+        loop_playlist->set_checked(true);
+    } else {
+        loop_none->set_checked(true);
+    }
     TRY(playback_menu->try_add_action(playlist_toggle));
 
     auto shuffle_mode = GUI::Action::create_checkable("S&huffle Playlist", [&](auto& action) {
