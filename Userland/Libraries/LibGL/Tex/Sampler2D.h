@@ -31,7 +31,7 @@ public:
     void set_wrap_s_mode(GLint value) { m_wrap_s_mode = value; }
     void set_wrap_t_mode(GLint value) { m_wrap_t_mode = value; }
 
-    FloatVector4 sample(FloatVector2 const& uv) const;
+    FloatVector4 sample(FloatVector4 const& uv) const;
 
 private:
     Texture2D const& m_texture;
