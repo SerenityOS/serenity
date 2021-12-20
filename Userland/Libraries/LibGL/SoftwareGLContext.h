@@ -161,10 +161,12 @@ private:
     GLenum m_current_matrix_mode;
     FloatMatrix4x4 m_projection_matrix = FloatMatrix4x4::identity();
     FloatMatrix4x4 m_model_view_matrix = FloatMatrix4x4::identity();
-    FloatMatrix4x4 m_current_matrix = FloatMatrix4x4::identity();
+    FloatMatrix4x4 m_texture_matrix = FloatMatrix4x4::identity();
 
     Vector<FloatMatrix4x4> m_projection_matrix_stack;
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
+    // FIXME: implement multi-texturing: the texture matrix stack should live inside a texture unit
+    Vector<FloatMatrix4x4> m_texture_matrix_stack;
 
     FloatVector4 m_clear_color { 0.0f, 0.0f, 0.0f, 0.0f };
     double m_clear_depth { 1.0 };
