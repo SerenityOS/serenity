@@ -3510,6 +3510,16 @@ Value ExportStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     return {};
 }
 
+static void dump_assert_clauses(ModuleRequest const& request)
+{
+    if (!request.assertions.is_empty()) {
+        out("[ ");
+        for (auto& assertion : request.assertions)
+            out("{}: {}, ", assertion.key, assertion.value);
+        out(" ]");
+    }
+}
+
 void ExportStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -3525,7 +3535,12 @@ void ExportStatement::dump(int indent) const
 
     for (auto& entry : m_entries) {
         print_indent(indent + 2);
-        outln("ModuleRequest: {}, ImportName: {}, LocalName: {}, ExportName: {}", string_or_null(entry.module_request), entry.kind == ExportEntry::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null", entry.kind != ExportEntry::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null", string_or_null(entry.export_name));
+        out("ModuleRequest: {}", entry.module_request.module_specifier);
+        dump_assert_clauses(entry.module_request);
+        outln(", ImportName: {}, LocalName: {}, ExportName: {}",
+            entry.kind == ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
+            entry.kind != ExportEntry::Kind::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null",
+            string_or_null(entry.export_name));
     }
 }
 
@@ -3535,9 +3550,11 @@ void ImportStatement::dump(int indent) const
     print_indent(indent + 1);
     if (m_entries.is_empty()) {
         // direct from "module" import
-        outln("Entire module '{}'", m_module_request);
+        outln("Entire module '{}'", m_module_request.module_specifier);
+        dump_assert_clauses(m_module_request);
     } else {
-        outln("(ExportEntries) from {}", m_module_request);
+        outln("(ExportEntries) from {}", m_module_request.module_specifier);
+        dump_assert_clauses(m_module_request);
 
         for (auto& entry : m_entries) {
             print_indent(indent + 2);

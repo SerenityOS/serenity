@@ -217,6 +217,29 @@ private:
     NonnullRefPtrVector<FunctionDeclaration> m_functions_hoistable_with_annexB_extension;
 };
 
+// 2.9 ModuleRequest Records, https://tc39.es/proposal-import-assertions/#sec-modulerequest-record
+struct ModuleRequest {
+    struct Assertion {
+        String key;
+        String value;
+    };
+
+    ModuleRequest() = default;
+
+    explicit ModuleRequest(String specifier)
+        : module_specifier(move(specifier))
+    {
+    }
+
+    void add_assertion(String key, String value)
+    {
+        assertions.empend(move(key), move(value));
+    }
+
+    String module_specifier;      // [[Specifier]]
+    Vector<Assertion> assertions; // [[Assertions]]
+};
+
 class ImportStatement final : public Statement {
 public:
     struct ImportEntry {
@@ -224,9 +247,9 @@ public:
         String local_name;
     };
 
-    explicit ImportStatement(SourceRange source_range, StringView from_module, Vector<ImportEntry> entries = {})
+    explicit ImportStatement(SourceRange source_range, ModuleRequest from_module, Vector<ImportEntry> entries = {})
         : Statement(source_range)
-        , m_module_request(from_module)
+        , m_module_request(move(from_module))
         , m_entries(move(entries))
     {
     }
@@ -238,14 +261,14 @@ public:
     bool has_bound_name(StringView name) const;
 
 private:
-    String m_module_request;
+    ModuleRequest m_module_request;
     Vector<ImportEntry> m_entries;
 };
 
 class ExportStatement final : public Statement {
 public:
     struct ExportEntry {
-        enum Kind {
+        enum class Kind {
             ModuleRequest,
             LocalExport
         } kind;
@@ -253,13 +276,13 @@ public:
         String export_name;
 
         // Only if module request
-        String module_request;
+        ModuleRequest module_request;
 
         // Has just one of ones below
         String local_or_import_name;
 
         ExportEntry(String export_name, String local_name)
-            : kind(LocalExport)
+            : kind(Kind::LocalExport)
             , export_name(move(export_name))
             , local_or_import_name(move(local_name))
         {
