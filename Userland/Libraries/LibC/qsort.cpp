@@ -59,6 +59,7 @@ private:
     size_t m_element_size;
 };
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/qsort.html
 void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
     if (nmemb <= 1) {
