@@ -251,7 +251,7 @@ public:
         return sum;
     }
 
-    bool is_empty() const { return size() == 0; }
+    bool is_empty() const { return m_chunks.size() == 0 || size() == 0; }
 
     DisjointSpans<T> spans() const&
     {
