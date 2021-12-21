@@ -1093,7 +1093,13 @@ int Shell::builtin_kill(int argc, const char** argv)
     command.position = m_source_position.has_value() ? m_source_position->position : Optional<AST::Position> {};
 
     auto exit_code = 1;
-    if (auto job = run_command(command)) {
+    auto job_result = run_command(command);
+    if (job_result.is_error()) {
+        warnln("kill: Failed to run {}: {}", command.argv.first(), job_result.error());
+        return exit_code;
+    }
+
+    if (auto job = job_result.release_value()) {
         block_on_job(job);
         exit_code = job->exit_code();
     }
