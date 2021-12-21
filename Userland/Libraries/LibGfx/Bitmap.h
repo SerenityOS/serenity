@@ -23,7 +23,8 @@
     __ENUMERATE_IMAGE_FORMAT(ico, ".ico")  \
     __ENUMERATE_IMAGE_FORMAT(jpg, ".jpg")  \
     __ENUMERATE_IMAGE_FORMAT(jpg, ".jpeg") \
-    __ENUMERATE_IMAGE_FORMAT(dds, ".dds")
+    __ENUMERATE_IMAGE_FORMAT(dds, ".dds")  \
+    __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")
 
 namespace Gfx {
 

@@ -28,6 +28,7 @@ set(SOURCES
     PNGWriter.cpp
     PPMLoader.cpp
     Point.cpp
+    QOILoader.cpp
     Rect.cpp
     ShareableBitmap.cpp
     Size.cpp
