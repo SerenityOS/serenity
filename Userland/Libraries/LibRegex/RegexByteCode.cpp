@@ -502,7 +502,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
             auto ch = input.view.substring_view(state.string_position, 1)[0];
 
-            auto matching_range = binary_search(range_data, ch, nullptr, [insensitive = input.regex_options & AllFlags::Insensitive](auto needle, CharRange range) {
+            auto const* matching_range = binary_search(range_data, ch, nullptr, [insensitive = input.regex_options & AllFlags::Insensitive](auto needle, CharRange range) {
                 auto from = range.from;
                 auto to = range.to;
                 if (insensitive) {

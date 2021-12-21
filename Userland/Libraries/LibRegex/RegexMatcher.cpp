@@ -130,13 +130,13 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
     size_t lines_to_skip = 0;
 
     bool unicode = input.regex_options.has_flag_set(AllFlags::Unicode);
-    for (auto& view : views)
+    for (auto const& view : views)
         const_cast<RegexStringView&>(view).set_unicode(unicode);
 
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
         if (views.size() > 1 && input.start_offset > views.first().length()) {
             dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
-            for (auto& view : views) {
+            for (auto const& view : views) {
                 if (input.start_offset < view.length() + 1)
                     break;
                 ++lines_to_skip;
@@ -181,7 +181,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
         continue_search = false;
 
-    for (auto& view : views) {
+    for (auto const& view : views) {
         if (lines_to_skip != 0) {
             ++input.line;
             --lines_to_skip;
