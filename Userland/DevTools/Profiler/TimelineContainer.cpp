@@ -22,7 +22,7 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     update_widget_sizes();
     update_widget_positions();
 
-    int initial_height = min(300, timeline_view.height() + frame_thickness() * 2);
+    int initial_height = min(300, timeline_view.height() + horizontal_scrollbar().max_height() + frame_thickness() * 2);
     set_fixed_height(initial_height);
 
     m_timeline_view->on_scale_change = [this] {
