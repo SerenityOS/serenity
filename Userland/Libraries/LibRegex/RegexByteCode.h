@@ -556,7 +556,7 @@ public:
     }
 
     ALWAYS_INLINE char const* name() const;
-    static char const* name(OpCodeId const);
+    static char const* name(OpCodeId);
 
     ALWAYS_INLINE void set_state(MatchState& state) { m_state = &state; }
 
@@ -568,12 +568,12 @@ public:
         return *m_state;
     }
 
-    String const to_string() const
+    String to_string() const
     {
         return String::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
-    virtual String const arguments_string() const = 0;
+    virtual String arguments_string() const = 0;
 
     ALWAYS_INLINE ByteCode const& bytecode() const { return *m_bytecode; }
 
@@ -587,7 +587,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Exit; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_FailForks final : public OpCode {
@@ -596,7 +596,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
-    String const arguments_string() const override { return String::formatted("count={}", count()); }
+    String arguments_string() const override { return String::formatted("count={}", count()); }
 };
 
 class OpCode_Save final : public OpCode {
@@ -604,7 +604,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Save; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_Restore final : public OpCode {
@@ -612,7 +612,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Restore; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_GoBack final : public OpCode {
@@ -621,7 +621,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::GoBack; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
-    String const arguments_string() const override { return String::formatted("count={}", count()); }
+    String arguments_string() const override { return String::formatted("count={}", count()); }
 };
 
 class OpCode_Jump final : public OpCode {
@@ -630,7 +630,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Jump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         return String::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
     }
@@ -642,7 +642,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkJump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
@@ -660,7 +660,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkStay; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
@@ -677,7 +677,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBegin; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_CheckEnd final : public OpCode {
@@ -685,7 +685,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckEnd; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_CheckBoundary final : public OpCode {
@@ -695,7 +695,7 @@ public:
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
-    String const arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+    String arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_ClearCaptureGroup final : public OpCode {
@@ -704,7 +704,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    String const arguments_string() const override { return String::formatted("id={}", id()); }
+    String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
@@ -713,7 +713,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    String const arguments_string() const override { return String::formatted("id={}", id()); }
+    String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
@@ -722,7 +722,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    String const arguments_string() const override { return String::formatted("id={}", id()); }
+    String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightNamedCaptureGroup final : public OpCode {
@@ -733,7 +733,7 @@ public:
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
     ALWAYS_INLINE size_t id() const { return argument(2); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         return String::formatted("name={}, length={}", name(), length());
     }
@@ -746,8 +746,8 @@ public:
     ALWAYS_INLINE size_t size() const override { return arguments_size() + 3; }
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
-    String const arguments_string() const override;
-    Vector<String> const variable_arguments_to_string(Optional<MatchInput> input = {}) const;
+    String arguments_string() const override;
+    Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
 
 private:
@@ -769,7 +769,7 @@ public:
     ALWAYS_INLINE size_t offset() const { return argument(0); }
     ALWAYS_INLINE u64 count() const { return argument(1); }
     ALWAYS_INLINE size_t id() const { return argument(2); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         auto reps = id() < state().repetition_marks.size() ? state().repetition_marks.at(id()) : 0;
         return String::formatted("offset={} count={} id={} rep={}, sp: {}", offset(), count() + 1, id(), reps + 1, state().string_position);
@@ -782,7 +782,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ResetRepeat; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         auto reps = id() < state().repetition_marks.size() ? state().repetition_marks.at(id()) : 0;
         return String::formatted("id={} rep={}", id(), reps + 1);
@@ -794,7 +794,7 @@ public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Checkpoint; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    String const arguments_string() const override { return ""; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_JumpNonEmpty final : public OpCode {
@@ -805,7 +805,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     ALWAYS_INLINE ssize_t checkpoint() const { return argument(1); }
     ALWAYS_INLINE OpCodeId form() const { return (OpCodeId)argument(2); }
-    String const arguments_string() const override
+    String arguments_string() const override
     {
         return String::formatted("{} offset={} [&{}], cp={} [&{}]",
             opcode_id_name(form()),
