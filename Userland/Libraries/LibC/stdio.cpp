@@ -628,6 +628,7 @@ void __stdio_init()
     __stdio_is_initialized = true;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/setvbuf.html
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
     VERIFY(stream);
@@ -640,6 +641,7 @@ int setvbuf(FILE* stream, char* buf, int mode, size_t size)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/setbuf.html
 void setbuf(FILE* stream, char* buf)
 {
     setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
@@ -650,6 +652,7 @@ void setlinebuf(FILE* stream)
     setvbuf(stream, nullptr, _IOLBF, 0);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fileno.html
 int fileno(FILE* stream)
 {
     VERIFY(stream);
@@ -657,6 +660,7 @@ int fileno(FILE* stream)
     return stream->fileno();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/feof.html
 int feof(FILE* stream)
 {
     VERIFY(stream);
@@ -664,6 +668,7 @@ int feof(FILE* stream)
     return stream->eof();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fflush.html
 int fflush(FILE* stream)
 {
     if (!stream) {
@@ -674,6 +679,7 @@ int fflush(FILE* stream)
     return stream->flush() ? 0 : EOF;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgets.html
 char* fgets(char* buffer, int size, FILE* stream)
 {
     VERIFY(stream);
@@ -682,6 +688,7 @@ char* fgets(char* buffer, int size, FILE* stream)
     return ok ? buffer : nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgetc.html
 int fgetc(FILE* stream)
 {
     VERIFY(stream);
@@ -702,6 +709,7 @@ int fgetc_unlocked(FILE* stream)
     return EOF;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getc.html
 int getc(FILE* stream)
 {
     return fgetc(stream);
@@ -712,11 +720,13 @@ int getc_unlocked(FILE* stream)
     return fgetc_unlocked(stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getchar.html
 int getchar()
 {
     return getc(stdin);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getdelim.html
 ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream)
 {
     if (!lineptr || !n) {
@@ -763,11 +773,13 @@ ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getline.html
 ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 {
     return getdelim(lineptr, n, '\n', stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ungetc.html
 int ungetc(int c, FILE* stream)
 {
     VERIFY(stream);
@@ -776,6 +788,7 @@ int ungetc(int c, FILE* stream)
     return ok ? c : EOF;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputc.html
 int fputc(int ch, FILE* stream)
 {
     VERIFY(stream);
@@ -788,16 +801,19 @@ int fputc(int ch, FILE* stream)
     return byte;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/putc.html
 int putc(int ch, FILE* stream)
 {
     return fputc(ch, stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/putchar.html
 int putchar(int ch)
 {
     return putc(ch, stdout);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputs.html
 int fputs(const char* s, FILE* stream)
 {
     VERIFY(stream);
@@ -809,6 +825,7 @@ int fputs(const char* s, FILE* stream)
     return 1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html
 int puts(const char* s)
 {
     int rc = fputs(s, stdout);
@@ -817,6 +834,7 @@ int puts(const char* s)
     return fputc('\n', stdout);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/clearerr.html
 void clearerr(FILE* stream)
 {
     VERIFY(stream);
@@ -824,6 +842,7 @@ void clearerr(FILE* stream)
     stream->clear_err();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ferror.html
 int ferror(FILE* stream)
 {
     VERIFY(stream);
@@ -842,6 +861,7 @@ size_t fread_unlocked(void* ptr, size_t size, size_t nmemb, FILE* stream)
     return nread / size;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fread.html
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
@@ -849,6 +869,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     return fread_unlocked(ptr, size, nmemb, stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwrite.html
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
@@ -861,6 +882,7 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
     return nwritten / size;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fseek.html
 int fseek(FILE* stream, long offset, int whence)
 {
     VERIFY(stream);
@@ -868,6 +890,7 @@ int fseek(FILE* stream, long offset, int whence)
     return stream->seek(offset, whence);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fseeko.html
 int fseeko(FILE* stream, off_t offset, int whence)
 {
     VERIFY(stream);
@@ -875,6 +898,7 @@ int fseeko(FILE* stream, off_t offset, int whence)
     return stream->seek(offset, whence);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ftell.html
 long ftell(FILE* stream)
 {
     VERIFY(stream);
@@ -882,6 +906,7 @@ long ftell(FILE* stream)
     return stream->tell();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ftello.html
 off_t ftello(FILE* stream)
 {
     VERIFY(stream);
@@ -889,6 +914,7 @@ off_t ftello(FILE* stream)
     return stream->tell();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fgetpos.html
 int fgetpos(FILE* stream, fpos_t* pos)
 {
     VERIFY(stream);
@@ -903,6 +929,7 @@ int fgetpos(FILE* stream, fpos_t* pos)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fsetpos.html
 int fsetpos(FILE* stream, const fpos_t* pos)
 {
     VERIFY(stream);
@@ -912,6 +939,7 @@ int fsetpos(FILE* stream, const fpos_t* pos)
     return stream->seek(*pos, SEEK_SET);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/rewind.html
 void rewind(FILE* stream)
 {
     fseek(stream, 0, SEEK_SET);
@@ -929,12 +957,14 @@ ALWAYS_INLINE static void stream_putch(char*&, char ch)
     fputc(ch, __current_stream);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfprintf.html
 int vfprintf(FILE* stream, const char* fmt, va_list ap)
 {
     __current_stream = stream;
     return printf_internal(stream_putch, nullptr, fmt, ap);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fprintf.html
 int fprintf(FILE* stream, const char* fmt, ...)
 {
     va_list ap;
@@ -944,11 +974,13 @@ int fprintf(FILE* stream, const char* fmt, ...)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vprintf.html
 int vprintf(const char* fmt, va_list ap)
 {
     return printf_internal(stdout_putch, nullptr, fmt, ap);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/printf.html
 int printf(const char* fmt, ...)
 {
     va_list ap;
@@ -958,6 +990,7 @@ int printf(const char* fmt, ...)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vasprintf.html
 int vasprintf(char** strp, const char* fmt, va_list ap)
 {
     StringBuilder builder;
@@ -968,6 +1001,7 @@ int vasprintf(char** strp, const char* fmt, va_list ap)
     return length;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/asprintf.html
 int asprintf(char** strp, const char* fmt, ...)
 {
     StringBuilder builder;
@@ -986,6 +1020,7 @@ static void buffer_putch(char*& bufptr, char ch)
     *bufptr++ = ch;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsprintf.html
 int vsprintf(char* buffer, const char* fmt, va_list ap)
 {
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
@@ -993,6 +1028,7 @@ int vsprintf(char* buffer, const char* fmt, va_list ap)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sprintf.html
 int sprintf(char* buffer, const char* fmt, ...)
 {
     va_list ap;
@@ -1011,6 +1047,7 @@ ALWAYS_INLINE void sized_buffer_putch(char*& bufptr, char ch)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsnprintf.html
 int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
 {
     if (size) {
@@ -1027,6 +1064,7 @@ int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/snprintf.html
 int snprintf(char* buffer, size_t size, const char* fmt, ...)
 {
     va_list ap;
@@ -1036,6 +1074,7 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/perror.html
 void perror(const char* s)
 {
     int saved_errno = errno;
@@ -1080,6 +1119,7 @@ static int parse_mode(const char* mode)
     return flags;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fopen.html
 FILE* fopen(const char* pathname, const char* mode)
 {
     int flags = parse_mode(mode);
@@ -1089,6 +1129,7 @@ FILE* fopen(const char* pathname, const char* mode)
     return FILE::create(fd, flags);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/freopen.html
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 {
     VERIFY(stream);
@@ -1106,6 +1147,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
     return stream;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fdopen.html
 FILE* fdopen(int fd, const char* mode)
 {
     int flags = parse_mode(mode);
@@ -1120,6 +1162,7 @@ static inline bool is_default_stream(FILE* stream)
     return stream == stdin || stream == stdout || stream == stderr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fclose.html
 int fclose(FILE* stream)
 {
     VERIFY(stream);
@@ -1138,6 +1181,7 @@ int fclose(FILE* stream)
     return ok ? 0 : EOF;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html
 int rename(const char* oldpath, const char* newpath)
 {
     if (!oldpath || !newpath) {
@@ -1154,12 +1198,14 @@ void dbgputstr(const char* characters, size_t length)
     syscall(SC_dbgputstr, characters, length);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/tmpnam.html
 char* tmpnam(char*)
 {
     dbgln("FIXME: Implement tmpnam()");
     TODO();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/popen.html
 FILE* popen(const char* command, const char* type)
 {
     if (!type || (*type != 'r' && *type != 'w')) {
@@ -1217,6 +1263,7 @@ FILE* popen(const char* command, const char* type)
     return file;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/pclose.html
 int pclose(FILE* stream)
 {
     VERIFY(stream);
@@ -1229,6 +1276,7 @@ int pclose(FILE* stream)
     return wstatus;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/remove.html
 int remove(const char* pathname)
 {
     if (unlink(pathname) < 0) {
@@ -1239,6 +1287,7 @@ int remove(const char* pathname)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/scanf.html
 int scanf(const char* fmt, ...)
 {
     va_list ap;
@@ -1248,6 +1297,7 @@ int scanf(const char* fmt, ...)
     return count;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fscanf.html
 int fscanf(FILE* stream, const char* fmt, ...)
 {
     va_list ap;
@@ -1257,6 +1307,7 @@ int fscanf(FILE* stream, const char* fmt, ...)
     return count;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/sscanf.html
 int sscanf(const char* buffer, const char* fmt, ...)
 {
     va_list ap;
@@ -1266,6 +1317,7 @@ int sscanf(const char* buffer, const char* fmt, ...)
     return count;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfscanf.html
 int vfscanf(FILE* stream, const char* fmt, va_list ap)
 {
     char buffer[BUFSIZ];
@@ -1274,21 +1326,25 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     return vsscanf(buffer, fmt, ap);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vscanf.html
 int vscanf(const char* fmt, va_list ap)
 {
     return vfscanf(stdin, fmt, ap);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/flockfile.html
 void flockfile([[maybe_unused]] FILE* filehandle)
 {
     dbgln("FIXME: Implement flockfile()");
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/funlockfile.html
 void funlockfile([[maybe_unused]] FILE* filehandle)
 {
     dbgln("FIXME: Implement funlockfile()");
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/tmpfile.html
 FILE* tmpfile()
 {
     char tmp_path[] = "/tmp/XXXXXX";
