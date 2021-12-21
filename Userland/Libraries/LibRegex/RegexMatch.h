@@ -376,7 +376,7 @@ public:
 
     bool equals(RegexStringView other) const
     {
-        return other.m_view.visit([&](auto const& view) { return operator==(view); });
+        return other.m_view.visit([this](auto const& view) { return operator==(view); });
     }
 
     bool equals_ignoring_case(RegexStringView other) const
