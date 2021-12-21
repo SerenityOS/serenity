@@ -182,7 +182,7 @@ ThrowCompletionOr<bool> Object::create_data_property_or_throw(PropertyKey const&
     return success;
 }
 
-// 7.3.6 CreateNonEnumerableDataPropertyOrThrow ( O, P, V ), https://tc39.es/proposal-error-cause/#sec-createnonenumerabledatapropertyorthrow
+// 7.3.8 CreateNonEnumerableDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createnonenumerabledatapropertyorthrow
 ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(PropertyKey const& property_name, Value value)
 {
     VERIFY(!value.is_empty());
@@ -195,7 +195,7 @@ ThrowCompletionOr<bool> Object::create_non_enumerable_data_property_or_throw(Pro
     return define_property_or_throw(property_name, new_description);
 }
 
-// 7.3.8 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
+// 7.3.9 DefinePropertyOrThrow ( O, P, desc ), https://tc39.es/ecma262/#sec-definepropertyorthrow
 ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyKey const& property_name, PropertyDescriptor const& property_descriptor)
 {
     auto& vm = this->vm();
@@ -218,7 +218,7 @@ ThrowCompletionOr<bool> Object::define_property_or_throw(PropertyKey const& prop
     return success;
 }
 
-// 7.3.9 DeletePropertyOrThrow ( O, P ), https://tc39.es/ecma262/#sec-deletepropertyorthrow
+// 7.3.10 DeletePropertyOrThrow ( O, P ), https://tc39.es/ecma262/#sec-deletepropertyorthrow
 ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyKey const& property_name)
 {
     auto& vm = this->vm();
@@ -241,7 +241,7 @@ ThrowCompletionOr<bool> Object::delete_property_or_throw(PropertyKey const& prop
     return success;
 }
 
-// 7.3.11 HasProperty ( O, P ), https://tc39.es/ecma262/#sec-hasproperty
+// 7.3.12 HasProperty ( O, P ), https://tc39.es/ecma262/#sec-hasproperty
 ThrowCompletionOr<bool> Object::has_property(PropertyKey const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
@@ -253,7 +253,7 @@ ThrowCompletionOr<bool> Object::has_property(PropertyKey const& property_name) c
     return internal_has_property(property_name);
 }
 
-// 7.3.12 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
+// 7.3.13 HasOwnProperty ( O, P ), https://tc39.es/ecma262/#sec-hasownproperty
 ThrowCompletionOr<bool> Object::has_own_property(PropertyKey const& property_name) const
 {
     // 1. Assert: Type(O) is Object.
@@ -272,7 +272,7 @@ ThrowCompletionOr<bool> Object::has_own_property(PropertyKey const& property_nam
     return true;
 }
 
-// 7.3.15 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
+// 7.3.16 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
 ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
 {
     auto& global_object = this->global_object();
@@ -339,7 +339,7 @@ ThrowCompletionOr<bool> Object::set_integrity_level(IntegrityLevel level)
     return true;
 }
 
-// 7.3.16 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
+// 7.3.17 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
 ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
 {
     // 1. Assert: Type(O) is Object.
@@ -384,7 +384,7 @@ ThrowCompletionOr<bool> Object::test_integrity_level(IntegrityLevel level) const
     return true;
 }
 
-// 7.3.23 EnumerableOwnPropertyNames ( O, kind ), https://tc39.es/ecma262/#sec-enumerableownpropertynames
+// 7.3.24 EnumerableOwnPropertyNames ( O, kind ), https://tc39.es/ecma262/#sec-enumerableownpropertynames
 ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(PropertyKind kind) const
 {
     // NOTE: This has been flattened for readability, so some `else` branches in the
@@ -444,7 +444,7 @@ ThrowCompletionOr<MarkedValueList> Object::enumerable_own_property_names(Propert
     return { move(properties) };
 }
 
-// 7.3.25 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
+// 7.3.26 CopyDataProperties ( target, source, excludedItems ), https://tc39.es/ecma262/#sec-copydataproperties
 ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<PropertyKey> const& seen_names, GlobalObject& global_object)
 {
     if (source.is_nullish())
@@ -467,7 +467,7 @@ ThrowCompletionOr<Object*> Object::copy_data_properties(Value source, HashTable<
     return this;
 }
 
-// 7.3.26 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
+// 7.3.27 PrivateElementFind ( O, P ), https://tc39.es/ecma262/#sec-privateelementfind
 PrivateElement* Object::private_element_find(PrivateName const& name)
 {
     if (!m_private_elements)
@@ -483,7 +483,7 @@ PrivateElement* Object::private_element_find(PrivateName const& name)
     return &(*element);
 }
 
-// 7.3.27 PrivateFieldAdd ( O, P, value ), https://tc39.es/ecma262/#sec-privatefieldadd
+// 7.3.28 PrivateFieldAdd ( O, P, value ), https://tc39.es/ecma262/#sec-privatefieldadd
 ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value value)
 {
     if (auto* entry = private_element_find(name); entry)
@@ -494,7 +494,7 @@ ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value
     return {};
 }
 
-// 7.3.28 PrivateMethodOrAccessorAdd ( O, method ), https://tc39.es/ecma262/#sec-privatemethodoraccessoradd
+// 7.3.29 PrivateMethodOrAccessorAdd ( O, method ), https://tc39.es/ecma262/#sec-privatemethodoraccessoradd
 ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement element)
 {
     VERIFY(element.kind == PrivateElement::Kind::Method || element.kind == PrivateElement::Kind::Accessor);
@@ -506,7 +506,7 @@ ThrowCompletionOr<void> Object::private_method_or_accessor_add(PrivateElement el
     return {};
 }
 
-// 7.3.29 PrivateGet ( O, P ), https://tc39.es/ecma262/#sec-privateget
+// 7.3.30 PrivateGet ( O, P ), https://tc39.es/ecma262/#sec-privateget
 ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
 {
     auto* entry = private_element_find(name);
@@ -527,7 +527,7 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
     return TRY(vm().call(*getter, this));
 }
 
-// 7.3.30 PrivateSet ( O, P, value ), https://tc39.es/ecma262/#sec-privateset
+// 7.3.31 PrivateSet ( O, P, value ), https://tc39.es/ecma262/#sec-privateset
 ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value)
 {
     auto* entry = private_element_find(name);
@@ -553,7 +553,7 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     return {};
 }
 
-// 7.3.31 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
+// 7.3.32 DefineField ( receiver, fieldRecord ), https://tc39.es/ecma262/#sec-definefield
 ThrowCompletionOr<void> Object::define_field(Variant<PropertyKey, PrivateName> name, ECMAScriptFunctionObject* initializer)
 {
     Value init_value = js_undefined();
