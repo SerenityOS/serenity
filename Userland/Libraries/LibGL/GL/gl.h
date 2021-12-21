@@ -170,9 +170,6 @@ extern "C" {
 
 // Format enums
 #define GL_COLOR_INDEX 0x1900
-#define GL_LUMINANCE 0x1909
-#define GL_LUMINANCE_ALPHA 0x190A
-#define GL_BITMAP 0x1A00
 #define GL_STENCIL_INDEX 0x1901
 #define GL_DEPTH_COMPONENT 0x1902
 #define GL_RED 0x1903
@@ -181,6 +178,11 @@ extern "C" {
 #define GL_ALPHA 0x1906
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
+#define GL_LUMINANCE 0x1909
+#define GL_LUMINANCE_ALPHA 0x190A
+#define GL_BGR 0x190B
+#define GL_BGRA 0x190C
+#define GL_BITMAP 0x1A00
 
 // Lighting related defines
 #define GL_LIGHTING 0x0B50
@@ -207,12 +209,6 @@ extern "C" {
 #define GL_POINT 0x1B00
 #define GL_LINE 0x1B01
 #define GL_FILL 0x1B02
-
-// Pixel formats
-#define GL_RGB 0x1907
-#define GL_RGBA 0x1908
-#define GL_BGR 0x190B
-#define GL_BGRA 0x190C
 
 // Source pixel data format
 #define GL_UNSIGNED_BYTE 0x1401
