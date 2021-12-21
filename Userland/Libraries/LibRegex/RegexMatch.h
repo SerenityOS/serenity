@@ -121,9 +121,9 @@ public:
             [&](auto const&) {
                 if (code_point <= 0x7f)
                     return 1;
-                else if (code_point <= 0x07ff)
+                if (code_point <= 0x07ff)
                     return 2;
-                else if (code_point <= 0xffff)
+                if (code_point <= 0xffff)
                     return 3;
                 return 4;
             });
