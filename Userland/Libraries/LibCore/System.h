@@ -76,6 +76,7 @@ ErrorOr<void> setuid(uid_t);
 ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
+ErrorOr<void> setpgid(pid_t pid, pid_t pgid);
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);

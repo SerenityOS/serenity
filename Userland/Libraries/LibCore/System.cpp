@@ -477,6 +477,13 @@ ErrorOr<void> setegid(gid_t gid)
     return {};
 }
 
+ErrorOr<void> setpgid(pid_t pid, pid_t pgid)
+{
+    if (::setpgid(pid, pgid) < 0)
+        return Error::from_syscall("setpgid"sv, -errno);
+    return {};
+}
+
 ErrorOr<bool> isatty(int fd)
 {
     int rc = ::isatty(fd);
