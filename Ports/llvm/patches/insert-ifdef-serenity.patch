@@ -99,3 +99,15 @@ index 8bd384ec7..a28e938ec 100644
    // FIXME: Add TCP support for Windows.
    return make_error<StringError>("-" + OutOfProcessExecutorConnect.ArgStr +
                                       " not supported on non-unix platforms",
+diff -ruN llvm-orig/llvm-project-llvmorg-12.0.0/llvm/include/llvm/Support/SwapByteOrder.h llvm-project-llvmorg-12.0.0/llvm/include/llvm/Support/SwapByteOrder.h
+--- llvm-orig/llvm-project-llvmorg-12.0.0/llvm/include/llvm/Support/SwapByteOrder.h    2021-04-06 19:38:18.000000000 +0300
++++ llvm-project-llvmorg-12.0.0/llvm/include/llvm/Support/SwapByteOrder.h      2021-06-09 16:00:20.111549941 +0300
+@@ -22,7 +22,7 @@
+ #endif
+ 
+ #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) ||            \
+-    defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
++    defined(__Fuchsia__) || defined(__EMSCRIPTEN__) || defined(__serenity__)
+ #include <endian.h>
+ #elif defined(_AIX)
+ #include <sys/machine.h>
