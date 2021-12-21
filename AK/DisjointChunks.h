@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AllOf.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
@@ -124,7 +125,10 @@ public:
         return size;
     }
 
-    bool is_empty() const { return size() == 0; }
+    bool is_empty() const
+    {
+        return all_of(m_spans, [](auto& span) { return span.is_empty(); });
+    }
 
     DisjointSpans slice(size_t start, size_t length) const
     {
@@ -256,7 +260,10 @@ public:
         return sum;
     }
 
-    bool is_empty() const { return m_chunks.size() == 0 || size() == 0; }
+    bool is_empty() const
+    {
+        return all_of(m_chunks, [](auto& chunk) { return chunk.is_empty(); });
+    }
 
     DisjointSpans<T> spans() const&
     {
