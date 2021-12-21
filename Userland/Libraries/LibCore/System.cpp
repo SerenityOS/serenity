@@ -550,7 +550,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
     HANDLE_SYSCALL_RETURN_VALUE("utime"sv, rc, {});
 #else
     String path_string = path;
-    if (::utime(path.characters(), buf) < 0)
+    if (::utime(path_string.characters(), buf) < 0)
         return Error::from_syscall("utime"sv, -errno);
     return {};
 #endif
