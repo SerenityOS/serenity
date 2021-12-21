@@ -32,6 +32,8 @@ typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks(ByteCod
     BasicBlockList block_boundaries;
     size_t end_of_last_block = 0;
 
+    auto bytecode_size = bytecode.size();
+
     MatchState state;
     state.instruction_position = 0;
     auto check_jump = [&]<typename T>(OpCode const& opcode) {
@@ -88,14 +90,14 @@ typename Regex<Parser>::BasicBlockList Regex<Parser>::split_basic_blocks(ByteCod
         }
 
         auto next_ip = state.instruction_position + opcode.size();
-        if (next_ip < bytecode.size())
+        if (next_ip < bytecode_size)
             state.instruction_position = next_ip;
         else
             break;
     }
 
-    if (end_of_last_block < bytecode.size())
-        block_boundaries.append({ end_of_last_block, bytecode.size() });
+    if (end_of_last_block < bytecode_size)
+        block_boundaries.append({ end_of_last_block, bytecode_size });
 
     quick_sort(block_boundaries, [](auto& a, auto& b) { return a.start < b.start; });
 
@@ -382,6 +384,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
 
     if (!needed_patches.is_empty()) {
         MatchState state;
+        auto bytecode_size = bytecode.size();
         state.instruction_position = 0;
         struct Patch {
             ssize_t value;
@@ -389,7 +392,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
             bool should_negate { false };
         };
         for (;;) {
-            if (state.instruction_position >= bytecode.size())
+            if (state.instruction_position >= bytecode_size)
                 break;
 
             auto& opcode = bytecode.get_opcode(state);
@@ -470,6 +473,9 @@ void Optimizer::append_alternation(ByteCode& target, ByteCode&& left, ByteCode&&
         target.extend(move(right));
         return;
     }
+
+    left.flatten();
+    right.flatten();
 
     auto left_blocks = Regex<PosixBasicParser>::split_basic_blocks(left);
     auto right_blocks = Regex<PosixBasicParser>::split_basic_blocks(right);
