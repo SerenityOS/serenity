@@ -451,7 +451,7 @@ public:
     Match() = default;
     ~Match() = default;
 
-    Match(RegexStringView const view_, size_t const line_, size_t const column_, size_t const global_offset_)
+    Match(RegexStringView view_, size_t const line_, size_t const column_, size_t const global_offset_)
         : view(view_)
         , line(line_)
         , column(column_)
@@ -460,7 +460,7 @@ public:
     {
     }
 
-    Match(String const string_, size_t const line_, size_t const column_, size_t const global_offset_)
+    Match(String string_, size_t const line_, size_t const column_, size_t const global_offset_)
         : string(move(string_))
         , view(string.value().view())
         , line(line_)
