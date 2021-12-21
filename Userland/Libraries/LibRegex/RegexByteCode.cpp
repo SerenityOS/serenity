@@ -812,7 +812,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_script_extension(MatchInput const& in
     }
 }
 
-String const OpCode_Compare::arguments_string() const
+String OpCode_Compare::arguments_string() const
 {
     return String::formatted("argc={}, args={} ", arguments_count(), arguments_size());
 }
@@ -855,7 +855,7 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
     return result;
 }
 
-Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
+Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
 {
     Vector<String> result;
 

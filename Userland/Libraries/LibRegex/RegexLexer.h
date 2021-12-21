@@ -56,7 +56,7 @@ public:
     size_t position() const { return m_position; }
 
     char const* name() const;
-    static char const* name(TokenType const);
+    static char const* name(TokenType);
 
 private:
     TokenType m_type { TokenType::Eof };
@@ -67,7 +67,7 @@ private:
 class Lexer : public GenericLexer {
 public:
     Lexer();
-    explicit Lexer(StringView const source);
+    explicit Lexer(StringView source);
     Token next();
     void reset();
     void back(size_t offset);
