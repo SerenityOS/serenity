@@ -5,19 +5,20 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <string.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool list = false;
     bool search = false;
-    const char* keyword = nullptr;
+    StringView keyword;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(keyword, "Error number or string to search", "keyword", Core::ArgsParser::Required::No);
     args_parser.add_option(list, "List all errno values", "list", 'l');
     args_parser.add_option(search, "Search for error descriptions containing keyword", "search", 's');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (list) {
         for (int i = 0; i < sys_nerr; i++) {
@@ -26,7 +27,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (keyword == nullptr)
+    if (keyword.is_empty())
         return 0;
 
     if (search) {
@@ -39,14 +40,14 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto maybe_errno = StringView { keyword }.to_int();
+    auto maybe_errno = keyword.to_int();
     if (!maybe_errno.has_value()) {
         warnln("ERROR: Not understood: {}", keyword);
         return 1;
     }
 
     auto error = String::formatted("{}", strerror(maybe_errno.value()));
-    if (error == "Unknown error") {
+    if (error == "Unknown error"sv) {
         warnln("ERROR: Unknown errno: {}", keyword);
         return 1;
     }
