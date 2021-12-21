@@ -22,6 +22,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibLine/Editor.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -535,6 +536,9 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
 
     take_error();
 
+    // If we end up executing nothing, let's return a failing exit code.
+    last_return_code = 128;
+
     ScopedValueRollback source_position_rollback { m_source_position };
     if (source_position_override.has_value())
         m_source_position = move(source_position_override);
@@ -580,7 +584,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     return last_return_code;
 }
 
-RefPtr<Job> Shell::run_command(const AST::Command& command)
+ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 {
     FileDescriptionCollector fds;
 
@@ -597,13 +601,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     // Resolve redirections.
     NonnullRefPtrVector<AST::Rewiring> rewirings;
-    auto resolve_redirection = [&](auto& redirection) -> IterationDecision {
-        auto rewiring_result = redirection.apply();
-        if (rewiring_result.is_error()) {
-            warnln("error: {}", rewiring_result.error());
-            return IterationDecision::Break;
-        }
-        auto& rewiring = rewiring_result.value();
+    auto resolve_redirection = [&](auto& redirection) -> ErrorOr<void> {
+        auto rewiring = TRY(redirection.apply());
 
         if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseNew)
             rewirings.append(*rewiring);
@@ -620,10 +619,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
             int pipe_fd[2];
             int rc = pipe(pipe_fd);
-            if (rc < 0) {
-                perror("pipe(RedirRefresh)");
-                return IterationDecision::Break;
-            }
+            if (rc < 0)
+                return Error::from_syscall("pipe"sv, rc);
             rewiring->new_fd = pipe_fd[1];
             rewiring->other_pipe_end->new_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
             fds.add(pipe_fd[1]);
@@ -632,26 +629,22 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
             int pipe_fd[2];
             int rc = pipe(pipe_fd);
-            if (rc < 0) {
-                perror("pipe(RedirRefresh)");
-                return IterationDecision::Break;
-            }
+            if (rc < 0)
+                return Error::from_syscall("pipe"sv, rc);
             rewiring->old_fd = pipe_fd[1];
             rewiring->other_pipe_end->old_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
             fds.add(pipe_fd[1]);
         }
-        return IterationDecision::Continue;
+        return {};
     };
 
-    auto apply_rewirings = [&] {
+    auto apply_rewirings = [&]() -> ErrorOr<void> {
         for (auto& rewiring : rewirings) {
 
             dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
-            if (rc < 0) {
-                perror("dup2(run)");
-                return IterationDecision::Break;
-            }
+            if (rc < 0)
+                return Error::from_syscall("dup2"sv, rc);
             // {new,old}_fd is closed via the `fds` collector, but rewiring.other_pipe_end->{new,old}_fd
             // isn't yet in that collector when the first child spawns.
             if (rewiring.other_pipe_end) {
@@ -664,21 +657,16 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
                 }
             }
         }
-
-        return IterationDecision::Continue;
+        return {};
     };
 
     TemporaryChange signal_handler_install { m_should_reinstall_signal_handlers, false };
 
-    for (auto& redirection : m_global_redirections) {
-        if (resolve_redirection(redirection) == IterationDecision::Break)
-            return nullptr;
-    }
+    for (auto& redirection : m_global_redirections)
+        TRY(resolve_redirection(redirection));
 
-    for (auto& redirection : command.redirections) {
-        if (resolve_redirection(redirection) == IterationDecision::Break)
-            return nullptr;
-    }
+    for (auto& redirection : command.redirections)
+        TRY(resolve_redirection(redirection));
 
     if (command.should_wait && run_builtin(command, rewirings, last_return_code)) {
         for (auto& next_in_chain : command.next_chain)
@@ -690,13 +678,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (can_be_run_in_current_process && has_function(command.argv.first())) {
         SavedFileDescriptors fds { rewirings };
 
-        for (auto& rewiring : rewirings) {
-            int rc = dup2(rewiring.old_fd, rewiring.new_fd);
-            if (rc < 0) {
-                perror("dup2(run)");
-                return nullptr;
-            }
-        }
+        for (auto& rewiring : rewirings)
+            TRY(Core::System::dup2(rewiring.old_fd, rewiring.new_fd));
 
         if (invoke_function(command, last_return_code)) {
             for (auto& next_in_chain : command.next_chain)
@@ -725,17 +708,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     argv.append(nullptr);
 
-    int sync_pipe[2];
-    if (pipe(sync_pipe) < 0) {
-        perror("pipe");
-        return nullptr;
-    }
-
-    pid_t child = fork();
-    if (child < 0) {
-        perror("fork");
-        return nullptr;
-    }
+    auto sync_pipe = TRY(Core::System::pipe2(0));
+    auto child = TRY(Core::System::fork());
 
     if (child == 0) {
         close(sync_pipe[1]);
@@ -744,15 +718,17 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
         TemporaryChange signal_handler_install { m_should_reinstall_signal_handlers, true };
 
-        if (apply_rewirings() == IterationDecision::Break)
+        if (auto result = apply_rewirings(); result.is_error()) {
+            warnln("Shell: Failed to apply rewirings in {}: {}", copy_argv[0], result.error());
             _exit(126);
+        }
 
         fds.collect();
 
         u8 c;
         while (read(sync_pipe[0], &c, 1) < 0) {
             if (errno != EINTR) {
-                perror("read");
+                warnln("Shell: Failed to sync in {}: {}", copy_argv[0], Error::from_syscall("read"sv, -errno));
                 // There's nothing interesting we can do here.
                 break;
             }
@@ -804,8 +780,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
     if (!m_is_subshell || command.pipeline) {
-        if (setpgid(child, pgid) < 0 && m_is_interactive)
-            perror("setpgid");
+        auto result = Core::System::setpgid(child, pgid);
+        if (result.is_error() && m_is_interactive)
+            warnln("Shell: {}", result.error());
 
         if (!m_is_subshell) {
             // There's no reason to care about the errors here
@@ -819,7 +796,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     while (write(sync_pipe[1], "x", 1) < 0) {
         if (errno != EINTR) {
-            perror("write");
+            warnln("Shell: Failed to sync with {}: {}", copy_argv[0], Error::from_syscall("write"sv, -errno));
             // There's nothing interesting we can do here.
             break;
         }
@@ -993,7 +970,13 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
                 }
             }
         }
-        auto job = run_command(command);
+        auto job_result = run_command(command);
+        if (job_result.is_error()) {
+            raise_error(ShellError::LaunchError, String::formatted("{} while running '{}'", job_result.error(), command.argv.first()), command.position);
+            break;
+        }
+
+        auto job = job_result.release_value();
         if (!job)
             continue;
 
@@ -1691,32 +1674,41 @@ bool Shell::has_history_event(StringView source)
 
 bool Shell::read_single_line()
 {
-    restore_ios();
-    bring_cursor_to_beginning_of_a_line();
-    auto line_result = m_editor->get_line(prompt());
+    while (true) {
+        restore_ios();
+        bring_cursor_to_beginning_of_a_line();
+        auto line_result = m_editor->get_line(prompt());
 
-    if (line_result.is_error()) {
-        if (line_result.error() == Line::Editor::Error::Eof || line_result.error() == Line::Editor::Error::Empty) {
-            // Pretend the user tried to execute builtin_exit()
-            run_command("exit");
-            return read_single_line();
-        } else {
+        if (line_result.is_error()) {
+            auto is_eof = line_result.error() == Line::Editor::Error::Eof;
+            auto is_empty = line_result.error() == Line::Editor::Error::Empty;
+
+            if (is_eof || is_empty) {
+                // Pretend the user tried to execute builtin_exit()
+                auto exit_code = run_command("exit");
+                if (exit_code != 0) {
+                    // If we didn't end up actually calling exit(), and the command didn't succeed, just pretend it's all okay
+                    // unless we can't, then just quit anyway.
+                    if (!is_empty)
+                        continue;
+                }
+            }
             Core::EventLoop::current().quit(1);
             return false;
         }
-    }
 
-    auto& line = line_result.value();
+        auto& line = line_result.value();
 
-    if (line.is_empty())
+        if (line.is_empty())
+            return true;
+
+        run_command(line);
+
+        if (!has_history_event(line))
+            m_editor->add_to_history(line);
+
         return true;
-
-    run_command(line);
-
-    if (!has_history_event(line))
-        m_editor->add_to_history(line);
-
-    return true;
+    }
 }
 
 void Shell::custom_event(Core::CustomEvent& event)
@@ -2000,6 +1992,9 @@ void Shell::possibly_print_error() const
         break;
     case ShellError::OutOfMemory:
         warnln("Shell: Hit an OOM situation");
+        break;
+    case ShellError::LaunchError:
+        warnln("Shell: {}", m_error_description);
         break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:

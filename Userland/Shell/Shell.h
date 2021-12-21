@@ -87,7 +87,7 @@ public:
 
     int run_command(StringView, Optional<SourcePosition> = {});
     bool is_runnable(StringView);
-    RefPtr<Job> run_command(const AST::Command&);
+    ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
@@ -234,6 +234,7 @@ public:
         InvalidSliceContentsError,
         OpenFailure,
         OutOfMemory,
+        LaunchError,
     };
 
     void raise_error(ShellError kind, String description, Optional<AST::Position> position = {})
