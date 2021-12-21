@@ -31,16 +31,6 @@ symbol versioning, which our dynamic linker does not support.
 - [X] Resolves issue(s) with our side of things
 - [ ] Hack
 
-## `remove-wstring.patch`
-
-Removes `std::wstring`s from the source code, as our libstdc++ does not support it.
-
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
 ## `toolchain.patch`
 
 Adds support for the `$arch-pc-serenity` target to the Clang front end. This makes the compiler
