@@ -263,6 +263,7 @@ char* secure_getenv(const char* name)
     return getenv(name);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/unsetenv.html
 int unsetenv(const char* name)
 {
     auto new_var_len = strlen(name);
@@ -303,6 +304,7 @@ int clearenv()
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/setenv.html
 int setenv(const char* name, const char* value, int overwrite)
 {
     if (!overwrite && getenv(name))
@@ -314,6 +316,7 @@ int setenv(const char* name, const char* value, int overwrite)
     return putenv(var);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/putenv.html
 int putenv(char* new_var)
 {
     char* new_eq = strchr(new_var, '=');
@@ -383,6 +386,7 @@ void setprogname(const char* progname)
     __progname = progname;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtod.html
 double strtod(const char* str, char** endptr)
 {
     // Parse spaces, sign, and base
@@ -664,22 +668,26 @@ double strtod(const char* str, char** endptr)
     return value;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtold.html
 long double strtold(const char* str, char** endptr)
 {
     assert(sizeof(double) == sizeof(long double));
     return strtod(str, endptr);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtof.html
 float strtof(const char* str, char** endptr)
 {
     return strtod(str, endptr);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/atof.html
 double atof(const char* str)
 {
     return strtod(str, nullptr);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/atoi.html
 int atoi(const char* str)
 {
     long value = strtol(str, nullptr, 10);
@@ -689,17 +697,20 @@ int atoi(const char* str)
     return value;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/atol.html
 long atol(const char* str)
 {
     return strtol(str, nullptr, 10);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/atoll.html
 long long atoll(const char* str)
 {
     return strtoll(str, nullptr, 10);
 }
 
 static char ptsname_buf[32];
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ptsname.html
 char* ptsname(int fd)
 {
     if (ptsname_r(fd, ptsname_buf, sizeof(ptsname_buf)) < 0)
@@ -715,42 +726,50 @@ int ptsname_r(int fd, char* buffer, size_t size)
 
 static unsigned long s_next_rand = 1;
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/rand.html
 int rand()
 {
     s_next_rand = s_next_rand * 1103515245 + 12345;
     return ((unsigned)(s_next_rand / ((RAND_MAX + 1) * 2)) % (RAND_MAX + 1));
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/srand.html
 void srand(unsigned seed)
 {
     s_next_rand = seed;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/abs.html
 int abs(int i)
 {
     return i < 0 ? -i : i;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/labs.html
 long int labs(long int i)
 {
     return i < 0 ? -i : i;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/llabs.html
 long long int llabs(long long int i)
 {
     return i < 0 ? -i : i;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/random.html
 long int random()
 {
     return rand();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/srandom.html
 void srandom(unsigned seed)
 {
     srand(seed);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/system.html
 int system(const char* command)
 {
     if (!command)
@@ -765,6 +784,7 @@ int system(const char* command)
     return WEXITSTATUS(wstatus);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mktemp.html
 char* mktemp(char* pattern)
 {
     auto error = generate_unique_filename(pattern, [&] {
@@ -781,6 +801,7 @@ char* mktemp(char* pattern)
     return pattern;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkstemp.html
 int mkstemp(char* pattern)
 {
     int fd = -1;
@@ -797,6 +818,7 @@ int mkstemp(char* pattern)
     return fd;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdtemp.html
 char* mkdtemp(char* pattern)
 {
     auto error = generate_unique_filename(pattern, [&] {
@@ -811,6 +833,7 @@ char* mkdtemp(char* pattern)
     return pattern;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/bsearch.html
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
     char* start = static_cast<char*>(const_cast<void*>(base));
@@ -829,6 +852,7 @@ void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int 
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/div.html
 div_t div(int numerator, int denominator)
 {
     div_t result;
@@ -842,6 +866,7 @@ div_t div(int numerator, int denominator)
     return result;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/ldiv.html
 ldiv_t ldiv(long numerator, long denominator)
 {
     ldiv_t result;
@@ -855,6 +880,7 @@ ldiv_t ldiv(long numerator, long denominator)
     return result;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/lldiv.html
 lldiv_t lldiv(long long numerator, long long denominator)
 {
     lldiv_t result;
@@ -868,6 +894,7 @@ lldiv_t lldiv(long long numerator, long long denominator)
     return result;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mblen.html
 int mblen(char const* s, size_t n)
 {
     // POSIX: Equivalent to mbtowc(NULL, s, n), but we mustn't change the state of mbtowc.
@@ -890,12 +917,14 @@ int mblen(char const* s, size_t n)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbstowcs.html
 size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n)
 {
     static mbstate_t state = {};
     return mbsrtowcs(pwcs, &s, n, &state);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbtowc.html
 int mbtowc(wchar_t* pwc, const char* s, size_t n)
 {
     static mbstate_t internal_state = {};
@@ -918,6 +947,7 @@ int mbtowc(wchar_t* pwc, const char* s, size_t n)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wctomb.html
 int wctomb(char* s, wchar_t wc)
 {
     static mbstate_t _internal_state = {};
@@ -929,6 +959,7 @@ int wctomb(char* s, wchar_t wc)
     return static_cast<int>(wcrtomb(s, wc, &_internal_state));
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstombs.html
 size_t wcstombs(char* dest, const wchar_t* src, size_t max)
 {
     char* original_dest = dest;
@@ -951,6 +982,7 @@ size_t wcstombs(char* dest, const wchar_t* src, size_t max)
     return max;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtol.html
 long strtol(const char* str, char** endptr, int base)
 {
     long long value = strtoll(str, endptr, base);
@@ -964,6 +996,7 @@ long strtol(const char* str, char** endptr, int base)
     return value;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoul.html
 unsigned long strtoul(const char* str, char** endptr, int base)
 {
     unsigned long long value = strtoull(str, endptr, base);
@@ -974,6 +1007,7 @@ unsigned long strtoul(const char* str, char** endptr, int base)
     return value;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoll.html
 long long strtoll(const char* str, char** endptr, int base)
 {
     // Parse spaces and sign
@@ -1051,6 +1085,7 @@ long long strtoll(const char* str, char** endptr, int base)
     return digits.number();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoull.html
 unsigned long long strtoull(const char* str, char** endptr, int base)
 {
     // Parse spaces and sign
@@ -1153,6 +1188,7 @@ uint32_t arc4random_uniform(uint32_t max_bounds)
     return AK::get_random_uniform(max_bounds);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
 char* realpath(const char* pathname, char* buffer)
 {
     if (!pathname) {
@@ -1202,6 +1238,7 @@ char* realpath(const char* pathname, char* buffer)
     return buffer;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_openpt.html
 int posix_openpt(int flags)
 {
     if (flags & ~(O_RDWR | O_NOCTTY | O_CLOEXEC)) {
@@ -1212,17 +1249,20 @@ int posix_openpt(int flags)
     return open("/dev/ptmx", flags);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/grantpt.html
 int grantpt([[maybe_unused]] int fd)
 {
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlockpt.html
 int unlockpt([[maybe_unused]] int fd)
 {
     return 0;
 }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/_Exit.html
 void _Exit(int status)
 {
     _exit(status);
