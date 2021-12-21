@@ -281,37 +281,37 @@ DaysAndTime balance_time(double hour, double minute, double second, double milli
     microsecond += floor(nanosecond / 1000);
 
     // 3. Set nanosecond to nanosecond modulo 1000.
-    nanosecond = modulo(nanosecond, 1000.0);
+    nanosecond = modulo(nanosecond, 1000);
 
     // 4. Set millisecond to millisecond + floor(microsecond / 1000).
     millisecond += floor(microsecond / 1000);
 
     // 5. Set microsecond to microsecond modulo 1000.
-    microsecond = modulo(microsecond, 1000.0);
+    microsecond = modulo(microsecond, 1000);
 
     // 6. Set second to second + floor(millisecond / 1000).
     second += floor(millisecond / 1000);
 
     // 7. Set millisecond to millisecond modulo 1000.
-    millisecond = modulo(millisecond, 1000.0);
+    millisecond = modulo(millisecond, 1000);
 
     // 8. Set minute to minute + floor(second / 60).
     minute += floor(second / 60);
 
     // 9. Set second to second modulo 60.
-    second = modulo(second, 60.0);
+    second = modulo(second, 60);
 
     // 10. Set hour to hour + floor(minute / 60).
     hour += floor(minute / 60);
 
     // 11. Set minute to minute modulo 60.
-    minute = modulo(minute, 60.0);
+    minute = modulo(minute, 60);
 
     // 12. Let days be floor(hour / 24).
     auto days = floor(hour / 24);
 
     // 13. Set hour to hour modulo 24.
-    hour = modulo(hour, 24.0);
+    hour = modulo(hour, 24);
 
     // 14. Return the Record { [[Days]]: days, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return DaysAndTime {

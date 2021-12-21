@@ -311,7 +311,7 @@ u16 ms_from_time(double t)
 u8 week_day(double t)
 {
     // 𝔽(ℝ(Day(t) + 4𝔽) modulo 7)
-    return static_cast<u8>(modulo(day(t) + 4, 7.0));
+    return static_cast<u8>(modulo(day(t) + 4, 7));
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
