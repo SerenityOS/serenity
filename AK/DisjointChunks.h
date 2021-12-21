@@ -100,9 +100,20 @@ public:
     T const& at(size_t index) const { return const_cast<DisjointSpans&>(*this).at(index); }
     T& at(size_t index)
     {
+        auto value = find(index);
+        VERIFY(value != nullptr);
+        return *value;
+    }
+    T* find(size_t index)
+    {
         auto span_and_offset = span_around(index);
-        VERIFY(span_and_offset.offset < span_and_offset.span.size());
-        return span_and_offset.span.at(span_and_offset.offset);
+        if (span_and_offset.offset >= span_and_offset.span.size())
+            return nullptr;
+        return &span_and_offset.span.at(span_and_offset.offset);
+    }
+    T const* find(size_t index) const
+    {
+        return const_cast<DisjointSpans*>(this)->find(index);
     }
 
     size_t size() const
@@ -194,7 +205,12 @@ public:
         if (m_chunks.size() == 1)
             return m_chunks.first().insert(index, value);
         auto chunk_and_offset = chunk_around(index);
-        chunk_and_offset.chunk.insert(chunk_and_offset.offset, move(value));
+        if (!chunk_and_offset.chunk) {
+            m_chunks.empend();
+            chunk_and_offset.chunk = &m_chunks.last();
+        }
+
+        chunk_and_offset.chunk->insert(chunk_and_offset.offset, move(value));
     }
 
     void clear() { m_chunks.clear(); }
@@ -204,11 +220,27 @@ public:
     T const& at(size_t index) const { return const_cast<DisjointChunks&>(*this).at(index); }
     T& at(size_t index)
     {
-        if (m_chunks.size() == 1)
-            return m_chunks.first().at(index);
+        auto value = find(index);
+        VERIFY(value != nullptr);
+        return *value;
+    }
+
+    T* find(size_t index)
+    {
+        if (m_chunks.size() == 1) {
+            if (m_chunks.first().size() > index)
+                return &m_chunks.first().at(index);
+            return nullptr;
+        }
         auto chunk_and_offset = chunk_around(index);
-        VERIFY(chunk_and_offset.offset < chunk_and_offset.chunk.size());
-        return chunk_and_offset.chunk.at(chunk_and_offset.offset);
+        if (!chunk_and_offset.chunk || chunk_and_offset.offset >= chunk_and_offset.chunk->size())
+            return nullptr;
+        return &chunk_and_offset.chunk->at(chunk_and_offset.offset);
+    }
+
+    T const* find(size_t index) const
+    {
+        return const_cast<DisjointChunks*>(this)->find(index);
     }
 
     size_t size() const
@@ -319,11 +351,14 @@ public:
 
 private:
     struct ChunkAndOffset {
-        ChunkType& chunk;
+        ChunkType* chunk;
         size_t offset;
     };
     ChunkAndOffset chunk_around(size_t index)
     {
+        if (m_chunks.is_empty())
+            return { nullptr, index };
+
         size_t offset = 0;
         for (auto& chunk : m_chunks) {
             if (chunk.is_empty())
@@ -334,10 +369,10 @@ private:
                 continue;
             }
 
-            return { chunk, index - offset };
+            return { &chunk, index - offset };
         }
 
-        return { m_chunks.last(), index - (offset - m_chunks.last().size()) };
+        return { &m_chunks.last(), index - (offset - m_chunks.last().size()) };
     }
 
     Vector<ChunkType> m_chunks;
