@@ -83,6 +83,7 @@ private:
     MaybeLoaderError decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
     ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    MaybeLoaderError load_seektable(FlacRawMetadataBlock&);
 
     // Converters for special coding used in frame headers
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);
@@ -113,6 +114,7 @@ private:
     // Whatever the last get_more_samples() call couldn't return gets stored here.
     Vector<Sample, FLAC_BUFFER_SIZE> m_unread_data;
     u64 m_current_sample_or_frame { 0 };
+    Vector<FlacSeekPoint> m_seektable;
 };
 
 }

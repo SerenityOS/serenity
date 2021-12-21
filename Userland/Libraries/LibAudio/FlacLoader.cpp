@@ -118,18 +118,40 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
     // Parse other blocks
-    // TODO: For a simple first implementation, all other blocks are skipped as allowed by the FLAC specification.
-    // Especially the SEEKTABLE block may become useful in a more sophisticated version.
     [[maybe_unused]] u16 meta_blocks_parsed = 1;
     [[maybe_unused]] u16 total_meta_blocks = meta_blocks_parsed;
     FlacRawMetadataBlock block = streaminfo;
     while (!block.is_last_block) {
         block = TRY(next_meta_block(*bit_input));
+        switch (block.type) {
+        case (FlacMetadataBlockType::SEEKTABLE):
+            TRY(load_seektable(block));
+            break;
+        default:
+            // TODO: Parse the remaining metadata block types.
+            //       Currently only STREAMINFO and SEEKTABLE are handled.
+            break;
+        }
         ++total_meta_blocks;
     }
 
     dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<double>(m_total_samples) / static_cast<double>(m_sample_rate), md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
 
+    return {};
+}
+
+MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
+{
+    auto memory_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(block.data.bytes()));
+    auto seektable_bytes = LOADER_TRY(BigEndianInputBitStream::construct(*memory_stream));
+    for (size_t i = 0; i < block.length / 18; ++i) {
+        FlacSeekPoint seekpoint {
+            .sample_index = LOADER_TRY(seektable_bytes->read_bits<u64>(64)),
+            .byte_offset = LOADER_TRY(seektable_bytes->read_bits<u64>(64)),
+            .num_samples = LOADER_TRY(seektable_bytes->read_bits<u16>(16))
+        };
+        m_seektable.append(seekpoint);
+    }
     return {};
 }
 
