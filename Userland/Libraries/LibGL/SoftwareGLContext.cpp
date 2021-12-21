@@ -2064,41 +2064,11 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_pixels, width, height, format, type, data);
 
-    RETURN_WITH_ERROR_IF(!(format == GL_COLOR_INDEX
-                             || format == GL_STENCIL_INDEX
-                             || format == GL_DEPTH_COMPONENT
-                             || format == GL_RGBA
-                             || format == GL_BGRA
-                             || format == GL_RED
-                             || format == GL_GREEN
-                             || format == GL_BLUE
-                             || format == GL_ALPHA
-                             || format == GL_RGB
-                             || format == GL_BGR
-                             || format == GL_LUMINANCE
-                             || format == GL_LUMINANCE_ALPHA),
-        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(format < GL_COLOR_INDEX || format > GL_BGRA, GL_INVALID_ENUM);
 
-    RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE
-                             || type == GL_BYTE
-                             || type == GL_BITMAP
-                             || type == GL_UNSIGNED_SHORT
-                             || type == GL_SHORT
-                             || type == GL_UNSIGNED_INT
-                             || type == GL_INT
-                             || type == GL_FLOAT
-                             || type == GL_UNSIGNED_BYTE_3_3_2
-                             || type == GL_UNSIGNED_BYTE_2_3_3_REV
-                             || type == GL_UNSIGNED_SHORT_5_6_5
-                             || type == GL_UNSIGNED_SHORT_5_6_5_REV
-                             || type == GL_UNSIGNED_SHORT_4_4_4_4
-                             || type == GL_UNSIGNED_SHORT_4_4_4_4_REV
-                             || type == GL_UNSIGNED_SHORT_5_5_5_1
-                             || type == GL_UNSIGNED_SHORT_1_5_5_5_REV
-                             || type == GL_UNSIGNED_INT_8_8_8_8
-                             || type == GL_UNSIGNED_INT_8_8_8_8_REV
-                             || type == GL_UNSIGNED_INT_10_10_10_2
-                             || type == GL_UNSIGNED_INT_2_10_10_10_REV),
+    RETURN_WITH_ERROR_IF((type < GL_BYTE || type > GL_FLOAT)
+            && (type < GL_UNSIGNED_BYTE_3_3_2 || type > GL_UNSIGNED_INT_10_10_10_2)
+            && (type < GL_UNSIGNED_BYTE_2_3_3_REV || type > GL_UNSIGNED_INT_2_10_10_10_REV),
         GL_INVALID_ENUM);
 
     RETURN_WITH_ERROR_IF(type == GL_BITMAP && !(format == GL_COLOR_INDEX || format == GL_STENCIL_INDEX), GL_INVALID_ENUM);
@@ -2139,8 +2109,11 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: we only support RGBA + GL_UNSIGNED_BYTE, implement all the others!
-    if (format != GL_RGBA || type != GL_UNSIGNED_BYTE) {
-        dbgln("gl_draw_pixels: unsupported format {:#x} or type {:#x}", format, type);
+    if (format != GL_RGBA) {
+        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for format {:#x} not implemented", format);
+        return;
+    } else if (type != GL_UNSIGNED_BYTE) {
+        dbgln_if(GL_DEBUG, "gl_draw_pixels(): support for type {:#x} not implemented", type);
         return;
     }
 
