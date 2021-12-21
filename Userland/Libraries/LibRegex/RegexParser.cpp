@@ -1014,10 +1014,7 @@ bool ECMA262Parser::parse_term(ByteCode& stack, size_t& match_length_minimum, bo
             return false;
 
         VERIFY(did_parse_one);
-        if (!parse_quantifier(atom_stack, minimum_atom_length, unicode, named))
-            return false;
-
-        return true;
+        return parse_quantifier(atom_stack, minimum_atom_length, unicode, named);
     };
 
     if (!parse_with_quantifier())
@@ -1372,10 +1369,7 @@ bool ECMA262Parser::parse_extended_atom(ByteCode&, size_t&, bool)
     // Note: This includes only rules *not* present in parse_atom()
     VERIFY(m_should_use_browser_extended_grammar);
 
-    if (parse_invalid_braced_quantifier())
-        return true; // FAIL FAIL FAIL
-
-    return false;
+    return parse_invalid_braced_quantifier(); // FAIL FAIL FAIL
 }
 
 bool ECMA262Parser::parse_invalid_braced_quantifier()
