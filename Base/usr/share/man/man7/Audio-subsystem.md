@@ -22,7 +22,7 @@ There are two complementary audio libraries.
 
 #### LibAudio
 
-LibAudio is the baseline audio library that provides common audio abstractions, such as audio buffers and samples. Additionally, an important feature of LibAudio are the Loaders and Writers. The Loader class provides a multitude of audio formats (currently: WAV and FLAC), can auto-detect the format of a file or stream and abstracts away the low-level complications of parsing and reading these formats. The various writer classes (currently: WAV) provide an abstraction over exporting audio in specific formats to disk.
+LibAudio is the baseline audio library that provides common audio abstractions, such as audio buffers and samples. Additionally, an important feature of LibAudio are the Loaders and Writers. The Loader class provides a multitude of audio formats (currently: WAV, FLAC and MP3), can auto-detect the format of a file or stream and abstracts away the low-level complications of parsing and reading these formats. The various writer classes (currently: WAV) provide an abstraction over exporting audio in specific formats to disk.
 
 #### LibDSP
 
