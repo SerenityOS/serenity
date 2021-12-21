@@ -13,8 +13,11 @@
 TEST_CASE(basic)
 {
     DisjointChunks<size_t> chunks;
+    EXPECT(chunks.is_empty());
     chunks.append({});
+    EXPECT(chunks.is_empty());
     chunks.last_chunk().append(0);
+    EXPECT(!chunks.is_empty());
     chunks.append({});
     chunks.last_chunk().append(1);
     chunks.last_chunk().append(2);
