@@ -7,6 +7,7 @@
 
 #include "RegexParser.h"
 #include "RegexDebug.h"
+#include <AK/AnyOf.h>
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
@@ -138,12 +139,7 @@ ALWAYS_INLINE bool Parser::try_skip(StringView str)
 
 ALWAYS_INLINE bool Parser::lookahead_any(StringView str)
 {
-    for (auto ch : str) {
-        if (match(ch))
-            return true;
-    }
-
-    return false;
+    return AK::any_of(str, [this](auto ch) { return match(ch); });
 }
 
 ALWAYS_INLINE unsigned char Parser::skip()
