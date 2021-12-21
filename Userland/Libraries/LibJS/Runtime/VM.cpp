@@ -462,7 +462,7 @@ Reference VM::resolve_binding(FlyString const& name, Environment* environment)
     return get_identifier_reference(environment, name, strict);
 }
 
-// 7.3.32 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
+// 7.3.33 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements
 ThrowCompletionOr<void> VM::initialize_instance_elements(Object& object, ECMAScriptFunctionObject& constructor)
 {
     for (auto& method : constructor.private_methods())

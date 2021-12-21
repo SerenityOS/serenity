@@ -43,7 +43,7 @@ ThrowCompletionOr<Value> require_object_coercible(GlobalObject& global_object, V
     return value;
 }
 
-// 7.3.13 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
+// 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
 ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedValueList> arguments_list)
 {
     auto& vm = global_object.vm();
@@ -60,7 +60,7 @@ ThrowCompletionOr<Value> call_impl(GlobalObject& global_object, Value function, 
     return function.as_function().internal_call(this_value, move(*arguments_list));
 }
 
-// 7.3.14 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
+// 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
 ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedValueList> arguments_list, FunctionObject* new_target)
 {
     // 1. If newTarget is not present, set newTarget to F.
@@ -75,7 +75,7 @@ ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject
     return function.internal_construct(move(*arguments_list), *new_target);
 }
 
-// 7.3.18 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
+// 7.3.19 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
 ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Object const& object)
 {
     auto& vm = global_object.vm();
@@ -83,7 +83,7 @@ ThrowCompletionOr<size_t> length_of_array_like(GlobalObject& global_object, Obje
     return result.to_length(global_object);
 }
 
-// 7.3.19 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
+// 7.3.20 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& global_object, Value value, Function<ThrowCompletionOr<void>(Value)> check_value)
 {
     auto& vm = global_object.vm();
@@ -124,7 +124,7 @@ ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject& glo
     return ThrowCompletionOr(move(list));
 }
 
-// 7.3.22 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
+// 7.3.23 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
 ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
 {
     auto& vm = global_object.vm();
@@ -155,7 +155,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject& global_obje
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
 }
 
-// 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
+// 7.3.25 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
 ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, FunctionObject const& function)
 {
     auto& vm = global_object.vm();

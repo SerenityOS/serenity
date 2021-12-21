@@ -26,7 +26,7 @@ ThrowCompletionOr<Array*> Array::create(GlobalObject& global_object, size_t leng
     return array;
 }
 
-// 7.3.17 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
+// 7.3.18 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
 Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elements)
 {
     // 1. Assert: elements is a List whose elements are all ECMAScript language values.
