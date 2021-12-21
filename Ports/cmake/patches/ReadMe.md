@@ -1,16 +1,5 @@
 # Patches for CMake (and submodules) on SerenityOS
 
-## `0000-no_wide_string.patch`
-
-We don't support wide strings, and our libstdc++ doesn't have `std::wstring`.
-This patch is a big hack to wipe wide strings out of the codebase; naturally, it very likely breaks unicode.
-
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
 ## `0010-don-t-use-siginfo.patch`
 
 We don't support SIGINFO. This patch removes uses of SIGINFO.
