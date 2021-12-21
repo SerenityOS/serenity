@@ -538,7 +538,6 @@ char const* execution_result_name(ExecutionResult result);
 char const* opcode_id_name(OpCodeId opcode_id);
 char const* boundary_check_type_name(BoundaryCheckType);
 char const* character_compare_type_name(CharacterCompareType result);
-char const* execution_result_name(ExecutionResult result);
 
 class OpCode {
 public:
