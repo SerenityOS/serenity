@@ -30,7 +30,7 @@ Error::Error(Object& prototype)
 {
 }
 
-// 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/proposal-error-cause/#sec-errorobjects-install-error-cause
+// 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/ecma262/#sec-installerrorcause
 ThrowCompletionOr<void> Error::install_error_cause(Value options)
 {
     auto& vm = this->vm();
@@ -44,7 +44,7 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
         MUST(create_non_enumerable_data_property_or_throw(vm.names.cause, cause));
     }
 
-    // Return NormalCompletion(undefined).
+    // 2. Return NormalCompletion(undefined).
     return {};
 }
 
