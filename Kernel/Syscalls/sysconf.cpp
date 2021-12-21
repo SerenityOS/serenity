@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -30,6 +31,8 @@ ErrorOr<FlatPtr> Process::sys$sysconf(int name)
         return 4096; // idk
     case _SC_CLK_TCK:
         return TimeManagement::the().ticks_per_second();
+    case _SC_SYMLOOP_MAX:
+        return Kernel::VirtualFileSystem::symlink_recursion_limit;
     default:
         return EINVAL;
     }
