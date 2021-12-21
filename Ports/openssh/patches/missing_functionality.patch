@@ -150,19 +150,6 @@ index 554ceb0b..67464ef2 100644
  #include <netinet/ip.h>
  #include <netinet/tcp.h>
  #include <arpa/inet.h>
-diff --git a/openbsd-compat/bsd-misc.c b/openbsd-compat/bsd-misc.c
-index 059b6d3b..2a248c81 100644
---- a/openbsd-compat/bsd-misc.c
-+++ b/openbsd-compat/bsd-misc.c
-@@ -362,7 +362,7 @@ pledge(const char *promises, const char *paths[])
- }
- #endif
- 
--#ifndef HAVE_MBTOWC
-+#if !defined(HAVE_MBTOWC) && !defined(__serenity__)
- /* a mbtowc that only supports ASCII */
- int
- mbtowc(wchar_t *pwc, const char *s, size_t n)
 diff --git a/openbsd-compat/getrrsetbyname-ldns.c b/openbsd-compat/getrrsetbyname-ldns.c
 index 4647b623..d684f6fb 100644
 --- a/openbsd-compat/getrrsetbyname-ldns.c
