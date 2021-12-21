@@ -36,6 +36,7 @@ void delete_node_recursive(struct search_tree_node* node)
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/tsearch.html
 void* tsearch(const void* key, void** rootp, int (*comparator)(const void*, const void*))
 {
     if (!rootp)
@@ -69,6 +70,7 @@ void* tsearch(const void* key, void** rootp, int (*comparator)(const void*, cons
     VERIFY_NOT_REACHED();
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/tfind.html
 void* tfind(const void* key, void* const* rootp, int (*comparator)(const void*, const void*))
 {
     if (!rootp)
@@ -90,6 +92,7 @@ void* tfind(const void* key, void* const* rootp, int (*comparator)(const void*, 
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/tdelete.html
 void* tdelete(const void*, void**, int (*)(const void*, const void*))
 {
     dbgln("FIXME: Implement tdelete()");
@@ -113,6 +116,7 @@ static void twalk_internal(const struct search_tree_node* node, void (*action)(c
     action(node, endorder, depth);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/twalk.html
 void twalk(const void* rootp, void (*action)(const void*, VISIT, int))
 {
     auto node = static_cast<const struct search_tree_node*>(rootp);
