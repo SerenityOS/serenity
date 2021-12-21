@@ -186,10 +186,10 @@ ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
 OpCode& ByteCode::get_opcode(MatchState& state) const
 {
     OpCodeId opcode_id;
-    if (state.instruction_position >= size())
-        opcode_id = OpCodeId::Exit;
+    if (auto opcode_ptr = static_cast<DisjointChunks<ByteCodeValueType> const&>(*this).find(state.instruction_position))
+        opcode_id = (OpCodeId)*opcode_ptr;
     else
-        opcode_id = (OpCodeId)at(state.instruction_position);
+        opcode_id = OpCodeId::Exit;
 
     auto& opcode = get_opcode_by_id(opcode_id);
     opcode.set_state(state);
