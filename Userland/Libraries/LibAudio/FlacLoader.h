@@ -52,7 +52,7 @@ public:
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
     virtual MaybeLoaderError reset() override;
-    virtual MaybeLoaderError seek(const int position) override;
+    virtual MaybeLoaderError seek(int sample_index) override;
 
     virtual int loaded_samples() override { return static_cast<int>(m_loaded_samples); }
     virtual int total_samples() override { return static_cast<int>(m_total_samples); }
