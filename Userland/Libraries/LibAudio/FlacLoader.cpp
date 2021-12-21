@@ -202,8 +202,18 @@ MaybeLoaderError FlacLoaderPlugin::reset()
     return {};
 }
 
-MaybeLoaderError FlacLoaderPlugin::seek(const int position)
+MaybeLoaderError FlacLoaderPlugin::seek(const int sample_index)
 {
+    // FIXME: This sample_index is not correct. It assumes a constant sample rate.
+    // FIXME: This makes a seektable a requirement for seeking. Seektables are optional according to the spec.
+    FlacSeekPoint target_seekpoint;
+    for (auto seekpoint : m_seektable) {
+        if (seekpoint.sample_index > (u64)sample_index)
+            break;
+        target_seekpoint = seekpoint;
+    }
+
+    auto position = target_seekpoint.byte_offset + m_data_start_location;
     if (!m_stream->seek(position))
         return LoaderError { LoaderError::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
     return {};
@@ -216,6 +226,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     if (remaining_samples <= 0)
         return Buffer::create_empty();
 
+    // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
     samples.ensure_capacity(samples_to_read);
     while (samples_to_read > 0) {
