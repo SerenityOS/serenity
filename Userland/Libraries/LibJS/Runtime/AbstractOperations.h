@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibCrypto/Forward.h>
 #include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -89,6 +90,15 @@ auto modulo(T x, U y) requires(IsArithmetic<T>, IsArithmetic<U>)
     } else {
         return ((x % y) + y) % y;
     }
+}
+
+auto modulo(Crypto::BigInteger auto const& x, Crypto::BigInteger auto const& y)
+{
+    VERIFY(y != "0"_bigint);
+    auto result = x.divided_by(y).remainder;
+    if (result.is_negative())
+        result = result.plus(y);
+    return result;
 }
 
 }
