@@ -4,25 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/String.h"
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (argc < 2) {
+    if (arguments.strings.size() < 2) {
         warnln("usage: fgrep <str>");
         return 1;
     }
     for (;;) {
-        char buf[4096];
-        auto* str = fgets(buf, sizeof(buf), stdin);
-        if (str && strstr(str, argv[1]))
-            write(1, buf, strlen(buf));
+        char buffer[4096];
+        auto str = StringView(fgets(buffer, sizeof(buffer), stdin));
+        if (str.contains(arguments.strings[1]))
+            TRY(Core::System::write(1, str.bytes()));
         if (feof(stdin))
             return 0;
-        VERIFY(str);
+        VERIFY(str.to_string().characters());
     }
 }
