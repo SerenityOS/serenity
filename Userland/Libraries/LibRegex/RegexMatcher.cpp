@@ -272,12 +272,12 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                     bool has_zero_length = state.string_position == view_index;
                     view_index = state.string_position - (has_zero_length ? 0 : 1);
                     continue;
-
-                } else if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+                }
+                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
                     append_match(input, state, view_index);
                     break;
-
-                } else if (state.string_position < view_length) {
+                }
+                if (state.string_position < view_length) {
                     return { false, 0, {}, {}, {}, operations };
                 }
 
