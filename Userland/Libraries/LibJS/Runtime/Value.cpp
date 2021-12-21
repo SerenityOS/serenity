@@ -747,7 +747,7 @@ ThrowCompletionOr<Value> Value::get(GlobalObject& global_object, PropertyKey con
     return TRY(object->internal_get(property_name, *this));
 }
 
-// 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
+// 7.3.11 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
 ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object, PropertyKey const& property_name) const
 {
     auto& vm = global_object.vm();
@@ -1157,7 +1157,7 @@ ThrowCompletionOr<Value> instance_of(GlobalObject& global_object, Value lhs, Val
     return TRY(ordinary_has_instance(global_object, lhs, rhs));
 }
 
-// 7.3.21 OrdinaryHasInstance ( C, O ), https://tc39.es/ecma262/#sec-ordinaryhasinstance
+// 7.3.22 OrdinaryHasInstance ( C, O ), https://tc39.es/ecma262/#sec-ordinaryhasinstance
 ThrowCompletionOr<Value> ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
@@ -1468,7 +1468,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
         return TriState::False;
 }
 
-// 7.3.20 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
+// 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
 ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_name, Optional<MarkedValueList> arguments)
 {
     auto& vm = global_object.vm();
