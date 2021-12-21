@@ -28,6 +28,7 @@ static char foldcase(char ch)
     return ch;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcasecmp.html
 int strcasecmp(const char* s1, const char* s2)
 {
     for (; foldcase(*s1) == foldcase(*s2); ++s1, ++s2) {
@@ -37,6 +38,7 @@ int strcasecmp(const char* s1, const char* s2)
     return foldcase(*(const unsigned char*)s1) < foldcase(*(const unsigned char*)s2) ? -1 : 1;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncasecmp.html
 int strncasecmp(const char* s1, const char* s2, size_t n)
 {
     if (!n)
