@@ -20,6 +20,7 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strspn.html
 size_t strspn(const char* s, const char* accept)
 {
     const char* p = s;
@@ -33,6 +34,7 @@ cont:
     return p - 1 - s;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcspn.html
 size_t strcspn(const char* s, const char* reject)
 {
     for (auto* p = s;;) {
@@ -46,6 +48,7 @@ size_t strcspn(const char* s, const char* reject)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strlen.html
 size_t strlen(const char* str)
 {
     size_t len = 0;
@@ -54,6 +57,7 @@ size_t strlen(const char* str)
     return len;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strnlen.html
 size_t strnlen(const char* str, size_t maxlen)
 {
     size_t len = 0;
@@ -62,6 +66,7 @@ size_t strnlen(const char* str, size_t maxlen)
     return len;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strdup.html
 char* strdup(const char* str)
 {
     size_t len = strlen(str);
@@ -71,6 +76,7 @@ char* strdup(const char* str)
     return new_str;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strndup.html
 char* strndup(const char* str, size_t maxlen)
 {
     size_t len = strnlen(str, maxlen);
@@ -80,6 +86,7 @@ char* strndup(const char* str, size_t maxlen)
     return new_str;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcmp.html
 int strcmp(const char* s1, const char* s2)
 {
     while (*s1 == *s2++)
@@ -88,6 +95,7 @@ int strcmp(const char* s1, const char* s2)
     return *(const unsigned char*)s1 - *(const unsigned char*)--s2;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncmp.html
 int strncmp(const char* s1, const char* s2, size_t n)
 {
     if (!n)
@@ -101,6 +109,7 @@ int strncmp(const char* s1, const char* s2, size_t n)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcmp.html
 int memcmp(const void* v1, const void* v2, size_t n)
 {
     auto* s1 = (const uint8_t*)v1;
@@ -112,6 +121,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcpy.html
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     void* original_dest = dest_ptr;
@@ -121,6 +131,7 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
     return original_dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
 void* memset(void* dest_ptr, int c, size_t n)
 {
     size_t dest = (size_t)dest_ptr;
@@ -153,6 +164,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     return dest_ptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memmove.html
 void* memmove(void* dest, const void* src, size_t n)
 {
     if (((FlatPtr)dest - (FlatPtr)src) >= n)
@@ -170,6 +182,7 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcpy.html
 char* strcpy(char* dest, const char* src)
 {
     char* original_dest = dest;
@@ -178,6 +191,7 @@ char* strcpy(char* dest, const char* src)
     return original_dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
 char* strncpy(char* dest, const char* src, size_t n)
 {
     size_t i;
@@ -201,6 +215,7 @@ size_t strlcpy(char* dest, const char* src, size_t n)
     return i;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strchr.html
 char* strchr(const char* str, int c)
 {
     char ch = c;
@@ -221,6 +236,7 @@ char* strchrnul(const char* str, int c)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memchr.html
 void* memchr(const void* ptr, int c, size_t size)
 {
     char ch = c;
@@ -232,6 +248,7 @@ void* memchr(const void* ptr, int c, size_t size)
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strrchr.html
 char* strrchr(const char* str, int ch)
 {
     char* last = nullptr;
@@ -243,6 +260,7 @@ char* strrchr(const char* str, int ch)
     return last;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcat.html
 char* strcat(char* dest, const char* src)
 {
     size_t dest_length = strlen(dest);
@@ -253,6 +271,7 @@ char* strcat(char* dest, const char* src)
     return dest;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncat.html
 char* strncat(char* dest, const char* src, size_t n)
 {
     size_t dest_length = strlen(dest);
@@ -272,6 +291,7 @@ static_assert(array_size(sys_errlist) == (EMAXERRNO + 1));
 
 int sys_nerr = EMAXERRNO;
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strerror_r.html
 int strerror_r(int errnum, char* buf, size_t buflen)
 {
     auto saved_errno = errno;
@@ -292,6 +312,7 @@ int strerror_r(int errnum, char* buf, size_t buflen)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strerror.html
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
@@ -300,6 +321,7 @@ char* strerror(int errnum)
     return const_cast<char*>(sys_errlist[errnum]);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strsignal.html
 char* strsignal(int signum)
 {
     if (signum >= NSIG) {
@@ -309,6 +331,7 @@ char* strsignal(int signum)
     return const_cast<char*>(sys_siglist[signum]);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strstr.html
 char* strstr(const char* haystack, const char* needle)
 {
     char nch;
@@ -327,6 +350,7 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strpbrk.html
 char* strpbrk(const char* s, const char* accept)
 {
     while (*s)
@@ -335,6 +359,7 @@ char* strpbrk(const char* s, const char* accept)
     return nullptr;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtok_r.html
 char* strtok_r(char* str, const char* delim, char** saved_str)
 {
     if (!str) {
@@ -387,17 +412,20 @@ char* strtok_r(char* str, const char* delim, char** saved_str)
     return &str[token_start];
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtok.html
 char* strtok(char* str, const char* delim)
 {
     static char* saved_str;
     return strtok_r(str, delim, &saved_str);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcoll.html
 int strcoll(const char* s1, const char* s2)
 {
     return strcmp(s1, s2);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strxfrm.html
 size_t strxfrm(char* dest, const char* src, size_t n)
 {
     size_t i;
