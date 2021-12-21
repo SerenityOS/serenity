@@ -14,6 +14,7 @@
 #include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
+#include <LibGfx/QOILoader.h>
 
 namespace Gfx {
 
@@ -58,6 +59,10 @@ RefPtr<ImageDecoder> ImageDecoder::try_create(ReadonlyBytes bytes)
             return plugin;
 
         plugin = make<DDSImageDecoderPlugin>(data, size);
+        if (plugin->sniff())
+            return plugin;
+
+        plugin = make<QOIImageDecoderPlugin>(data, size);
         if (plugin->sniff())
             return plugin;
 
