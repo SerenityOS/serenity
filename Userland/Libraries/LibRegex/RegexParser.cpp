@@ -641,8 +641,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
 
         consume(TokenType::RightCurly, Error::MismatchingBrace);
         return !has_error();
-
-    } else if (match(TokenType::Plus)) {
+    }
+    if (match(TokenType::Plus)) {
         consume();
 
         bool nongreedy = match(TokenType::Questionmark);
@@ -652,8 +652,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         // Note: don't touch match_length_minimum, it's already correct
         ByteCode::transform_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
-
-    } else if (match(TokenType::Asterisk)) {
+    }
+    if (match(TokenType::Asterisk)) {
         consume();
         match_length_minimum = 0;
 
@@ -664,8 +664,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         ByteCode::transform_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
 
         return !has_error();
-
-    } else if (match(TokenType::Questionmark)) {
+    }
+    if (match(TokenType::Questionmark)) {
         consume();
         match_length_minimum = 0;
 
@@ -933,22 +933,22 @@ bool ECMA262Parser::parse_internal(ByteCode& stack, size_t& match_length_minimum
 {
     if (m_parser_state.regex_options.has_flag_set(AllFlags::Unicode)) {
         return parse_pattern(stack, match_length_minimum, true, true);
-    } else {
-        ByteCode new_stack;
-        size_t new_match_length = 0;
-        auto res = parse_pattern(new_stack, new_match_length, false, false);
-        if (m_parser_state.named_capture_groups_count > 0) {
-            reset();
-            return parse_pattern(stack, match_length_minimum, false, true);
-        }
-
-        if (!res)
-            return false;
-
-        stack.extend(new_stack);
-        match_length_minimum = new_match_length;
-        return res;
     }
+
+    ByteCode new_stack;
+    size_t new_match_length = 0;
+    auto res = parse_pattern(new_stack, new_match_length, false, false);
+    if (m_parser_state.named_capture_groups_count > 0) {
+        reset();
+        return parse_pattern(stack, match_length_minimum, false, true);
+    }
+
+    if (!res)
+        return false;
+
+    stack.extend(new_stack);
+    match_length_minimum = new_match_length;
+    return res;
 }
 
 bool ECMA262Parser::parse_pattern(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
@@ -1352,9 +1352,8 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u8)token.value()[0] } });
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     if (match_ordinary_characters()) {
@@ -1525,15 +1524,16 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
             return true;
-        } else if (!unicode) {
+        }
+        if (!unicode) {
             // '\x' is allowed in non-unicode mode, just matches 'x'.
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'x' } });
             return true;
-        } else {
-            set_error(Error::InvalidPattern);
-            return false;
         }
+
+        set_error(Error::InvalidPattern);
+        return false;
     }
 
     if (try_skip("u")) {
@@ -1874,8 +1874,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                         [&](Script script) {
                             if (script.is_extension)
                                 return CharClassRangeElement { .script = script.script, .is_negated = negated, .is_character_class = true, .is_script_extension = true };
-                            else
-                                return CharClassRangeElement { .script = script.script, .is_negated = negated, .is_character_class = true, .is_script = true };
+
+                            return CharClassRangeElement { .script = script.script, .is_negated = negated, .is_character_class = true, .is_script = true };
                         },
                         [](Empty&) -> CharClassRangeElement { VERIFY_NOT_REACHED(); });
                 }
@@ -1973,10 +1973,10 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                     ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, (ByteCodeValueType)'-' });
                     empend_atom(*second_atom);
                     continue;
-                } else {
-                    set_error(Error::InvalidRange);
-                    return false;
                 }
+
+                set_error(Error::InvalidRange);
+                return false;
             }
 
             if (first_atom.value().code_point > second_atom.value().code_point) {

@@ -142,12 +142,12 @@ int regexec(const regex_t* reg, const char* string, size_t nmatch, regmatch_t pm
             }
         }
         return REG_NOERR;
-    } else {
-        if (nmatch && pmatch) {
-            pmatch[0].rm_so = -1;
-            pmatch[0].rm_eo = -1;
-            pmatch[0].rm_cnt = 0;
-        }
+    }
+
+    if (nmatch && pmatch) {
+        pmatch[0].rm_so = -1;
+        pmatch[0].rm_eo = -1;
+        pmatch[0].rm_cnt = 0;
     }
 
     return REG_NOMATCH;
