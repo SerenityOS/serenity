@@ -950,11 +950,6 @@ public:
             VERIFY(Processor::in_critical());
 
             SpinlockLocker block_lock2(m_block_lock);
-            if (should_be_stopped() || state() == Stopped) {
-                dbgln("Thread should be stopped, current state: {}", state_string());
-                set_state(Thread::Blocked);
-                continue;
-            }
             if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
                 block_lock2.unlock();
                 dbgln("Thread should not be unblocking, current state: {}", state_string());

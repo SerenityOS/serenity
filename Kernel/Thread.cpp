@@ -208,12 +208,6 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32
         VERIFY(Processor::in_critical());
 
         SpinlockLocker block_lock2(m_block_lock);
-        if (should_be_stopped() || state() == Stopped) {
-            dbgln("Thread should be stopped, current state: {}", state_string());
-            set_state(Thread::Blocked);
-            continue;
-        }
-
         VERIFY(!m_blocking_lock);
         m_blocking_lock = previous_blocking_lock;
         break;
