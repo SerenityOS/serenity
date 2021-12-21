@@ -213,7 +213,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     if constexpr (REGEX_DEBUG) {
         RegexDebug dbg;
         dbg.print_bytecode(*this);
-        for (auto& block : basic_blocks)
+        for (auto const& block : basic_blocks)
             dbgln("block from {} to {}", block.start, block.end);
     }
 
@@ -264,7 +264,7 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
     auto is_an_eligible_jump = [](OpCode const& opcode, size_t ip, size_t block_start, AlternateForm alternate_form) {
         switch (opcode.opcode_id()) {
         case OpCodeId::JumpNonEmpty: {
-            auto& op = static_cast<OpCode_JumpNonEmpty const&>(opcode);
+            auto const& op = static_cast<OpCode_JumpNonEmpty const&>(opcode);
             auto form = op.form();
             if (form != OpCodeId::Jump && alternate_form == AlternateForm::DirectLoopWithHeader)
                 return false;
