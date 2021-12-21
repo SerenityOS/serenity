@@ -150,10 +150,10 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     auto millisecond = ms_from_time(epoch_milliseconds);
 
     // 11. Let microsecond be floor(remainderNs / 1000) modulo 1000.
-    auto microsecond = modulo(floor(remainder_ns / 1000), 1000.0);
+    auto microsecond = modulo(floor(remainder_ns / 1000), 1000);
 
     // 12. Let nanosecond be remainderNs modulo 1000.
-    auto nanosecond = modulo(remainder_ns, 1000.0);
+    auto nanosecond = modulo(remainder_ns, 1000);
 
     // 13. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day, [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return { .year = year, .month = month, .day = day, .hour = hour, .minute = minute, .second = second, .millisecond = millisecond, .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };
