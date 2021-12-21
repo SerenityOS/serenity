@@ -26,9 +26,9 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
     QOIHeader header;
     stream >> Bytes { &header, sizeof(header) };
     if (stream.handle_any_error())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: end of stream while reading header"sv);
+        return Error::from_string_literal("Invalid QOI image: end of stream while reading header"sv);
     if (StringView { header.magic, array_size(header.magic) } != QOI_MAGIC)
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: incorrect header magic"sv);
+        return Error::from_string_literal("Invalid QOI image: incorrect header magic"sv);
     header.width = AK::convert_between_host_and_big_endian(header.width);
     header.height = AK::convert_between_host_and_big_endian(header.height);
     return header;
@@ -112,7 +112,7 @@ static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream& stream)
     u8 byte;
     stream >> byte;
     if (stream.handle_any_error())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: end of stream while reading QOI_OP_RUN chunk"sv);
+        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RUN chunk"sv);
     VERIFY((byte & QOI_MASK_2) == QOI_OP_RUN);
     u8 run = byte & ~QOI_MASK_2;
 
@@ -121,7 +121,7 @@ static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream& stream)
 
     // Note that the run-lengths 63 and 64 (b111110 and b111111) are illegal as they are occupied by the QOI_OP_RGB and QOI_OP_RGBA tags.
     if (run == QOI_OP_RGB || run == QOI_OP_RGBA)
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: illegal run length"sv);
+        return Error::from_string_literal("Invalid QOI image: illegal run length"sv);
 
     VERIFY(run >= 1 && run <= 62);
     return run;
@@ -132,11 +132,11 @@ static ErrorOr<void> decode_qoi_end_marker(InputMemoryStream& stream)
     u8 bytes[array_size(END_MARKER)];
     stream >> Bytes { &bytes, array_size(bytes) };
     if (stream.handle_any_error())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: end of stream while reading end marker"sv);
+        return Error::from_string_literal("Invalid QOI image: end of stream while reading end marker"sv);
     if (!stream.eof())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: expected end of stream but more bytes are available"sv);
+        return Error::from_string_literal("Invalid QOI image: expected end of stream but more bytes are available"sv);
     if (memcmp(&END_MARKER, &bytes, array_size(bytes)) != 0)
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: incorrect end marker"sv);
+        return Error::from_string_literal("Invalid QOI image: incorrect end marker"sv);
     return {};
 }
 
@@ -144,9 +144,9 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
 {
     // FIXME: Why is Gfx::Bitmap's size signed? Makes no sense whatsoever.
     if (width > NumericLimits<int>::max())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Cannot create bitmap for QOI image of valid size, width exceeds maximum Gfx::Bitmap width"sv);
+        return Error::from_string_literal("Cannot create bitmap for QOI image of valid size, width exceeds maximum Gfx::Bitmap width"sv);
     if (height > NumericLimits<int>::max())
-        return Error::from_string_literal("QOIImageDecoderPlugin: Cannot create bitmap for QOI image of valid size, height exceeds maximum Gfx::Bitmap height"sv);
+        return Error::from_string_literal("Cannot create bitmap for QOI image of valid size, height exceeds maximum Gfx::Bitmap height"sv);
 
     auto bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }));
 
@@ -161,7 +161,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
             if (run == 0) {
                 u8 tag = stream.peek_or_error();
                 if (stream.handle_any_error())
-                    return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: end of stream while reading chunk tag"sv);
+                    return Error::from_string_literal("Invalid QOI image: end of stream while reading chunk tag"sv);
                 if (tag == QOI_OP_RGB)
                     pixel = TRY(decode_qoi_op_rgb(stream));
                 else if (tag == QOI_OP_RGBA)
@@ -175,7 +175,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
                 else if ((tag & QOI_MASK_2) == QOI_OP_RUN)
                     run = TRY(decode_qoi_op_run(stream));
                 else
-                    return Error::from_string_literal("QOIImageDecoderPlugin: Invalid QOI image: unknown chunk tag"sv);
+                    return Error::from_string_literal("Invalid QOI image: unknown chunk tag"sv);
             }
             auto index_position = (pixel.red() * 3 + pixel.green() * 5 + pixel.blue() * 7 + pixel.alpha() * 11) % 64;
             previous_pixels[index_position] = pixel;
@@ -230,7 +230,7 @@ bool QOIImageDecoderPlugin::sniff()
 ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("QOIImageDecoderPlugin: Invalid frame index"sv);
+        return Error::from_string_literal("Invalid frame index"sv);
 
     if (m_context->state == QOILoadingContext::State::NotDecoded) {
         InputMemoryStream stream { { m_context->data, m_context->data_size } };
