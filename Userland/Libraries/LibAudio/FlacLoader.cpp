@@ -152,6 +152,7 @@ MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
         };
         m_seektable.append(seekpoint);
     }
+    dbgln_if(AFLACLOADER_DEBUG, "Loaded seektable of size {}", m_seektable.size());
     return {};
 }
 
@@ -166,6 +167,14 @@ ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(Big
 
     u32 block_length = LOADER_TRY(bit_input.read_bits<u32>(24));
     m_data_start_location += 3;
+    // Blocks can be zero-sized, which would trip up the raw data reader below.
+    if (block_length == 0)
+        return FlacRawMetadataBlock {
+            .is_last_block = is_last_block,
+            .type = type,
+            .length = 0,
+            .data = LOADER_TRY(ByteBuffer::create_uninitialized(0))
+        };
     auto block_data_result = ByteBuffer::create_uninitialized(block_length);
     FLAC_VERIFY(!block_data_result.is_error(), LoaderError::Category::IO, "Out of memory");
     auto block_data = block_data_result.release_value();
@@ -188,10 +197,44 @@ MaybeLoaderError FlacLoaderPlugin::reset()
     return {};
 }
 
-MaybeLoaderError FlacLoaderPlugin::seek(const int position)
+MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
 {
-    if (m_stream->seek(position, Core::Stream::SeekMode::SetPosition).is_error())
-        return LoaderError { LoaderError::Category::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
+    auto sample_index = static_cast<size_t>(int_sample_index);
+    if (sample_index == m_loaded_samples)
+        return {};
+
+    auto maybe_target_seekpoint = m_seektable.last_matching([sample_index](auto& seekpoint) { return seekpoint.sample_index <= sample_index; });
+    // No seektable or no fitting entry: Perform normal forward read
+    if (!maybe_target_seekpoint.has_value()) {
+        if (sample_index < m_loaded_samples) {
+            LOADER_TRY(m_stream->seek(m_data_start_location, Core::Stream::SeekMode::SetPosition));
+            m_loaded_samples = 0;
+        }
+        auto to_read = sample_index - m_loaded_samples;
+        if (to_read == 0)
+            return {};
+        dbgln_if(AFLACLOADER_DEBUG, "Seeking {} samples manually", to_read);
+        (void)TRY(get_more_samples(to_read));
+    } else {
+        auto target_seekpoint = maybe_target_seekpoint.release_value();
+
+        // When a small seek happens, we may already be closer to the target than the seekpoint.
+        if (sample_index - target_seekpoint.sample_index > sample_index - m_loaded_samples) {
+            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target: seeking {} samples manually", sample_index - m_loaded_samples);
+            (void)TRY(get_more_samples(sample_index - m_loaded_samples));
+            return {};
+        }
+
+        dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}, sample count {}", target_seekpoint.sample_index, target_seekpoint.byte_offset, target_seekpoint.num_samples);
+        auto position = target_seekpoint.byte_offset + m_data_start_location;
+        if (m_stream->seek(static_cast<i64>(position), Core::Stream::SeekMode::SetPosition).is_error())
+            return LoaderError { LoaderError::Category::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
+
+        auto remaining_samples_after_seekpoint = sample_index - m_data_start_location;
+        if (remaining_samples_after_seekpoint > 0)
+            (void)TRY(get_more_samples(remaining_samples_after_seekpoint));
+        m_loaded_samples = target_seekpoint.sample_index;
+    }
     return {};
 }
 
@@ -201,6 +244,7 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     if (remaining_samples <= 0)
         return Buffer::create_empty();
 
+    // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
     auto samples = FixedArray<Sample>::must_create_but_fixme_should_propagate_errors(samples_to_read);
     size_t sample_index = 0;
