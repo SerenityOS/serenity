@@ -284,16 +284,11 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& in
     auto isword = [](auto ch) { return is_ascii_alphanumeric(ch) || ch == '_'; };
     auto is_word_boundary = [&] {
         if (state.string_position == input.view.length()) {
-            if (state.string_position > 0 && isword(input.view[state.string_position_in_code_units - 1]))
-                return true;
-            return false;
+            return (state.string_position > 0 && isword(input.view[state.string_position_in_code_units - 1]));
         }
 
         if (state.string_position == 0) {
-            if (isword(input.view[0]))
-                return true;
-
-            return false;
+            return (isword(input.view[0]));
         }
 
         return !!(isword(input.view[state.string_position_in_code_units]) ^ isword(input.view[state.string_position_in_code_units - 1]));
