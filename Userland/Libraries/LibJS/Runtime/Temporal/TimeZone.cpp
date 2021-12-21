@@ -121,7 +121,7 @@ ISODateTime get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds)
     // 1. Assert: epochNanoseconds is an integer.
 
     // 2. Let remainderNs be epochNanoseconds modulo 10^6.
-    auto remainder_ns_bigint = epoch_nanoseconds.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).remainder;
+    auto remainder_ns_bigint = modulo(epoch_nanoseconds.big_integer(), Crypto::UnsignedBigInteger { 1'000'000 });
     auto remainder_ns = remainder_ns_bigint.to_double();
 
     // 3. Let epochMilliseconds be (epochNanoseconds − remainderNs) / 10^6.

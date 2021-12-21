@@ -10,6 +10,12 @@ describe("correct behavior", () => {
         expect(zonedDateTime.toString()).toBe("2021-11-03T01:33:05.1002003+00:00[UTC]");
     });
 
+    test("negative epoch nanoseconds", () => {
+        const timeZone = new Temporal.TimeZone("UTC");
+        const zonedDateTime = new Temporal.ZonedDateTime(-999_999_999n, timeZone);
+        expect(zonedDateTime.toString()).toBe("1969-12-31T23:59:59.000000001+00:00[UTC]");
+    });
+
     test("fractionalSecondDigits option", () => {
         const plainDateTime = new Temporal.PlainDateTime(2021, 11, 3, 1, 33, 5, 100, 200, 300);
         const timeZone = new Temporal.TimeZone("UTC");
