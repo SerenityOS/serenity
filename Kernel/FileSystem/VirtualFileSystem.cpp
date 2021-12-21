@@ -24,7 +24,6 @@
 namespace Kernel {
 
 static Singleton<VirtualFileSystem> s_the;
-static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
 static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 
 UNMAP_AFTER_INIT void VirtualFileSystem::initialize()
