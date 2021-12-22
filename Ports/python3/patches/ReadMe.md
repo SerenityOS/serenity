@@ -1,9 +1,5 @@
 # Patches for Python 3.9 on SerenityOS
 
-## `remove-missing-si-errno.patch`
-
-Removes a reference to `si_errno` in `siginfo_t`, as we currently don't have that implemented.
-
 ## `include-sys-uio.patch`
 
 Ensures `struct iovec` is defined, required by the socket module.
