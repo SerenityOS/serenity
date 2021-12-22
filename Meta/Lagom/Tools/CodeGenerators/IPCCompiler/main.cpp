@@ -462,7 +462,7 @@ private:
                 parameter_generator.set("parameter.type", parameter.type);
                 parameter_generator.set("parameter.name", parameter.name);
                 parameter_generator.append(R"~~~(
-    @parameter.type@ m_@parameter.name@;
+    @parameter.type@ m_@parameter.name@ {};
 )~~~");
             }
 
