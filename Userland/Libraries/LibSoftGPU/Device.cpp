@@ -634,7 +634,7 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == GL_CCW ? area < 0 : area > 0);
+            bool is_front = (m_options.front_face == WindingOrder::CounterClockwise ? area < 0 : area > 0);
 
             if (is_front && (m_options.culled_sides == GL_FRONT || m_options.culled_sides == GL_FRONT_AND_BACK))
                 continue;
