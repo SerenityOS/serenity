@@ -41,22 +41,17 @@ struct RasterizerOptions {
     float depth_max { 1 };
     GLenum depth_func { GL_LESS };
     GLenum polygon_mode { GL_FILL };
-    FloatVector4 fog_color {
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-    };
-    GLfloat fog_density { 1.0f };
+    FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
+    float fog_density { 1.0f };
     GLenum fog_mode { GL_EXP };
-    GLboolean fog_enabled { false };
-    GLfloat fog_start { 0.0f };
-    GLfloat fog_end { 1.0f };
+    bool fog_enabled { false };
+    float fog_start { 0.0f };
+    float fog_end { 1.0f };
     bool scissor_enabled { false };
     Gfx::IntRect scissor_box;
     GLenum draw_buffer { GL_BACK };
-    GLfloat depth_offset_factor { 0 };
-    GLfloat depth_offset_constant { 0 };
+    float depth_offset_factor { 0 };
+    float depth_offset_constant { 0 };
     bool enable_culling { false };
     GLenum front_face { GL_CCW };
     GLenum culled_sides { GL_BACK };
