@@ -510,11 +510,8 @@ bool Profile::process_filter_contains(pid_t pid, EventSerialNumber serial)
     if (!has_process_filter())
         return true;
 
-    for (auto const& process_filter : m_process_filters)
-        if (pid == process_filter.pid && serial >= process_filter.start_valid && serial <= process_filter.end_valid)
-            return true;
-
-    return false;
+    return AK::any_of(m_process_filters,
+        [&](auto const& process_filter) { return pid == process_filter.pid && serial >= process_filter.start_valid && serial <= process_filter.end_valid; });
 }
 
 void Profile::set_inverted(bool inverted)
