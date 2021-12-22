@@ -687,13 +687,13 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
         if (m_options.fog_enabled) {
             float factor = 0.0f;
             switch (m_options.fog_mode) {
-            case GL_LINEAR:
+            case FogMode::Linear:
                 factor = (m_options.fog_end - z) / (m_options.fog_end - m_options.fog_start);
                 break;
-            case GL_EXP:
+            case FogMode::Exp:
                 factor = exp(-((m_options.fog_density * z)));
                 break;
-            case GL_EXP2:
+            case FogMode::Exp2:
                 factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
                 break;
             default:

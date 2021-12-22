@@ -62,6 +62,12 @@ enum class DepthTestFunction {
     Greater,
 };
 
+enum FogMode {
+    Linear,
+    Exp,
+    Exp2
+};
+
 enum class WindingOrder {
     Clockwise,
     CounterClockwise,
@@ -84,7 +90,7 @@ struct RasterizerOptions {
     GLenum polygon_mode { GL_FILL };
     FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
     float fog_density { 1.0f };
-    GLenum fog_mode { GL_EXP };
+    FogMode fog_mode { FogMode::Exp };
     bool fog_enabled { false };
     float fog_start { 0.0f };
     float fog_end { 1.0f };
