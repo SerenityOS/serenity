@@ -15,7 +15,7 @@ extern "C" {
 
 void* serenity_mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset, size_t alignment, const char* name)
 {
-    Syscall::SC_mmap_params params { (uintptr_t)addr, size, alignment, prot, flags, fd, offset, { name, name ? strlen(name) : 0 } };
+    Syscall::SC_mmap_params params { addr, size, alignment, prot, flags, fd, offset, { name, name ? strlen(name) : 0 } };
     ptrdiff_t rc = syscall(SC_mmap, &params);
     if (rc < 0 && rc > -EMAXERRNO) {
         errno = -rc;
@@ -37,7 +37,7 @@ void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t
 
 void* mremap(void* old_address, size_t old_size, size_t new_size, int flags)
 {
-    Syscall::SC_mremap_params params { (uintptr_t)old_address, old_size, new_size, flags };
+    Syscall::SC_mremap_params params { old_address, old_size, new_size, flags };
     ptrdiff_t rc = syscall(SC_mremap, &params);
     if (rc < 0 && rc > -EMAXERRNO) {
         errno = -rc;
