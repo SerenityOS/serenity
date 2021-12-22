@@ -27,6 +27,8 @@ namespace Kernel {
 
 class DeviceManagement {
 
+    using DevicesList = MutexProtected<IntrusiveList<&Device::m_list_node>>;
+
 public:
     DeviceManagement();
     static void initialize();
@@ -47,7 +49,7 @@ public:
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
-    Device* get_device(MajorNumber major, MinorNumber minor);
+    RefPtr<Device> get_device(MajorNumber major, MinorNumber minor);
 
     NullDevice const& null_device() const;
     NullDevice& null_device();
@@ -77,7 +79,7 @@ private:
     RefPtr<DeviceControlDevice> m_device_control_device;
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     NonnullRefPtrVector<CharacterDevice, 1> m_audio_devices;
-    MutexProtected<HashMap<u64, Device*>> m_devices;
+    DevicesList m_devices_list;
 
     mutable Spinlock m_event_queue_lock;
     CircularQueue<DeviceEvent, 100> m_event_queue;

@@ -29,6 +29,8 @@
 namespace Kernel {
 
 class Device : public File {
+    friend class DeviceManagement;
+
 protected:
     enum class State {
         Normal,
@@ -79,6 +81,7 @@ private:
     Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
     RefPtr<SysFSDeviceComponent> m_sysfs_component;
+    IntrusiveListNode<Device, NonnullRefPtr<Device>> m_list_node;
 };
 
 }

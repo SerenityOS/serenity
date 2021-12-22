@@ -47,13 +47,14 @@ DeviceManagement& DeviceManagement::the()
     return *s_the;
 }
 
-Device* DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
+RefPtr<Device> DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
 {
-    return m_devices.with_exclusive([&](auto& map) -> Device* {
-        auto it = map.find(encoded_device(major.value(), minor.value()));
-        if (it == map.end())
-            return nullptr;
-        return it->value;
+    return m_devices_list.with_exclusive([&](auto& list) -> RefPtr<Device> {
+        for (auto& device : list) {
+            if (device.major() == major && device.minor() == minor)
+                return device;
+        }
+        return {};
     });
 }
 
@@ -67,10 +68,8 @@ Optional<DeviceEvent> DeviceManagement::dequeue_top_device_event(Badge<DeviceCon
 
 void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 {
-    u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with_exclusive([&](auto& map) -> void {
-        VERIFY(map.contains(device_id));
-        map.remove(encoded_device(device.major(), device.minor()));
+    m_devices_list.with_exclusive([&](auto& list) -> void {
+        list.remove(device);
     });
 
     {
@@ -84,17 +83,8 @@ void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 
 void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 {
-    u64 device_id = encoded_device(device.major(), device.minor());
-    m_devices.with_exclusive([&](auto& map) -> void {
-        if (map.contains(device_id)) {
-            dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());
-            VERIFY_NOT_REACHED();
-        }
-        auto result = map.set(device_id, &device);
-        if (result != AK::HashSetResult::InsertedNewEntry) {
-            dbgln("Failed to register {},{}: {}", device.major(), device.minor(), device.class_name());
-            VERIFY_NOT_REACHED();
-        }
+    m_devices_list.with_exclusive([&](auto& list) -> void {
+        list.append(device);
     });
 
     {
@@ -108,9 +98,10 @@ void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 
 void DeviceManagement::for_each(Function<void(Device&)> callback)
 {
-    m_devices.with_exclusive([&](auto& map) -> void {
-        for (auto& entry : map)
-            callback(*entry.value);
+    m_devices_list.with_exclusive([&](auto& list) -> void {
+        for (auto& device : list) {
+            callback(device);
+        }
     });
 }
 

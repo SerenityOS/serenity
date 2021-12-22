@@ -44,7 +44,7 @@ public:
     DevPtsFS const& fs() const { return static_cast<DevPtsFS const&>(Inode::fs()); }
 
 private:
-    DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY*);
+    DevPtsFSInode(DevPtsFS&, InodeIndex, RefPtr<SlavePTY>);
 
     // ^Inode
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
