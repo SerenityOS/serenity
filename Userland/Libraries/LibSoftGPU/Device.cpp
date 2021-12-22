@@ -396,11 +396,11 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 }
             }
 
-            if (options.enable_alpha_test && options.alpha_test_func != GL_ALWAYS) {
+            if (options.enable_alpha_test && options.alpha_test_func != AlphaTestFunction::Always) {
                 // FIXME: I'm not sure if this is the right place to test this.
                 // If we tested this right at the beginning of our rasterizer routine
                 // we could skip a lot of work but the GL spec might disagree.
-                if (options.alpha_test_func == GL_NEVER)
+                if (options.alpha_test_func == AlphaTestFunction::Never)
                     continue;
 
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
@@ -412,24 +412,27 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                         bool passed = true;
 
                         switch (options.alpha_test_func) {
-                        case GL_LESS:
+                        case AlphaTestFunction::Less:
                             passed = src->w() < options.alpha_test_ref_value;
                             break;
-                        case GL_EQUAL:
+                        case AlphaTestFunction::Equal:
                             passed = src->w() == options.alpha_test_ref_value;
                             break;
-                        case GL_LEQUAL:
+                        case AlphaTestFunction::LessOrEqual:
                             passed = src->w() <= options.alpha_test_ref_value;
                             break;
-                        case GL_GREATER:
+                        case AlphaTestFunction::Greater:
                             passed = src->w() > options.alpha_test_ref_value;
                             break;
-                        case GL_NOTEQUAL:
+                        case AlphaTestFunction::NotEqual:
                             passed = src->w() != options.alpha_test_ref_value;
                             break;
-                        case GL_GEQUAL:
+                        case AlphaTestFunction::GreaterOrEqual:
                             passed = src->w() >= options.alpha_test_ref_value;
                             break;
+                        case AlphaTestFunction::Never:
+                        case AlphaTestFunction::Always:
+                            VERIFY_NOT_REACHED();
                         }
 
                         if (!passed)

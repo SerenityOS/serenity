@@ -26,12 +26,23 @@
 
 namespace SoftGPU {
 
+enum class AlphaTestFunction {
+    Never,
+    Always,
+    Less,
+    LessOrEqual,
+    Equal,
+    NotEqual,
+    GreaterOrEqual,
+    Greater,
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
     bool enable_depth_write { true };
     bool enable_alpha_test { false };
-    GLenum alpha_test_func { GL_ALWAYS };
+    AlphaTestFunction alpha_test_func { AlphaTestFunction::Always };
     float alpha_test_ref_value { 0 };
     bool enable_blending { false };
     GLenum blend_source_factor { GL_ONE };
