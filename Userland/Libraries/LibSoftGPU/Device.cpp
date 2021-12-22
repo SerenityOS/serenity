@@ -498,7 +498,7 @@ Device::Device(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
-void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -517,7 +517,7 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
     m_processed_triangles.clear_with_capacity();
 
     // Let's construct some triangles
-    if (primitive_type == GL_TRIANGLES) {
+    if (primitive_type == PrimitiveType::Triangles) {
         Triangle triangle;
         for (size_t i = 0; i < vertices.size(); i += 3) {
             triangle.vertices[0] = vertices.at(i);
@@ -526,7 +526,7 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
 
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == GL_QUADS) {
+    } else if (primitive_type == PrimitiveType::Quads) {
         // We need to construct two triangles to form the quad
         Triangle triangle;
         VERIFY(vertices.size() % 4 == 0);
@@ -543,7 +543,7 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
             triangle.vertices[2] = vertices.at(i);
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == GL_TRIANGLE_FAN || primitive_type == GL_POLYGON) {
+    } else if (primitive_type == PrimitiveType::TriangleFan) {
         Triangle triangle;
         triangle.vertices[0] = vertices.at(0); // Root vertex is always the vertex defined first
 
@@ -553,7 +553,7 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
             triangle.vertices[2] = vertices.at(i + 1);
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == GL_TRIANGLE_STRIP) {
+    } else if (primitive_type == PrimitiveType::TriangleStrip) {
         Triangle triangle;
         for (size_t i = 0; i < vertices.size() - 2; i++) {
             triangle.vertices[0] = vertices.at(i);
