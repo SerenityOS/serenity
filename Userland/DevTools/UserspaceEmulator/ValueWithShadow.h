@@ -100,7 +100,7 @@ public:
             return (m_shadow & 0x01) != 0x01;
     }
 
-    void operator=(const ValueWithShadow<T>&);
+    ValueAndShadowReference<T>& operator=(const ValueWithShadow<T>&);
 
     T& value() { return m_value; }
     T& shadow() { return m_shadow; }
@@ -162,10 +162,11 @@ inline ValueWithShadow<T>::ValueWithShadow(const ValueAndShadowReference<T>& oth
 }
 
 template<typename T>
-inline void ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& other)
+inline ValueAndShadowReference<T>& ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& other)
 {
     m_value = other.value();
     m_shadow = other.shadow();
+    return *this;
 }
 
 }
