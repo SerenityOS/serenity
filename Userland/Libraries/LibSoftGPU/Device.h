@@ -68,7 +68,7 @@ class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
 
-    void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units);
+    void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
@@ -85,7 +85,7 @@ public:
     void set_sampler_config(unsigned, SamplerConfig const&);
 
 private:
-    void submit_triangle(Triangle const& triangle, GL::TextureUnit::BoundList const& bound_texture_units);
+    void submit_triangle(Triangle const& triangle, Vector<size_t> const& enabled_texture_units);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;

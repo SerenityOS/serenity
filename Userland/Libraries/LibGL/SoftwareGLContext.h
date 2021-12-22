@@ -235,7 +235,6 @@ private:
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
     Array<TextureUnit, 32> m_texture_units;
     TextureUnit* m_active_texture_unit { &m_texture_units[0] };
-    TextureUnit::BoundList m_bound_texture_units;
 
     SoftGPU::Device m_rasterizer;
     bool m_sampler_config_is_dirty { true };
