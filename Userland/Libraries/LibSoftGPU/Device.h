@@ -9,9 +9,6 @@
 #include <AK/Array.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
-#include <LibGL/GL/gl.h>
-#include <LibGL/Tex/Texture2D.h>
-#include <LibGL/Tex/TextureUnit.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
@@ -79,6 +76,13 @@ enum class WindingOrder {
     CounterClockwise,
 };
 
+enum class PrimitiveType {
+    Triangles,
+    TriangleStrip,
+    TriangleFan,
+    Quads,
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
@@ -117,7 +121,7 @@ class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
 
-    void draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
