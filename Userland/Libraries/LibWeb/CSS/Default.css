@@ -233,3 +233,13 @@ input[type=text] {
 option {
     display: none;
 }
+
+details {
+    display: block;
+    padding-left: 1em;
+}
+
+summary {
+    display: block;
+    font-weight: bold;
+}
