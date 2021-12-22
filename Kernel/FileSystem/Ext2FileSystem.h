@@ -77,7 +77,7 @@ private:
 
     mutable Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
     mutable HashMap<String, InodeIndex> m_lookup_cache;
-    ext2_inode m_raw_inode;
+    ext2_inode m_raw_inode {};
 };
 
 class Ext2FS final : public BlockBasedFileSystem {
@@ -159,7 +159,7 @@ private:
 
     u64 m_block_group_count { 0 };
 
-    mutable ext2_super_block m_super_block;
+    mutable ext2_super_block m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
 
     mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;
