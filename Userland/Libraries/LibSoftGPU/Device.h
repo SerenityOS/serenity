@@ -84,7 +84,8 @@ struct RasterizerOptions {
     float depth_offset_constant { 0 };
     bool enable_culling { false };
     WindingOrder front_face { WindingOrder::CounterClockwise };
-    GLenum culled_sides { GL_BACK };
+    bool cull_back { true };
+    bool cull_front { false };
 };
 
 inline static constexpr size_t const num_samplers = 32;

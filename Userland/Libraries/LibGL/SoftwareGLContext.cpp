@@ -917,7 +917,8 @@ void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
     m_culled_sides = cull_mode;
 
     auto rasterizer_options = m_rasterizer.options();
-    rasterizer_options.culled_sides = cull_mode;
+    rasterizer_options.cull_back = cull_mode == GL_BACK || cull_mode == GL_FRONT_AND_BACK;
+    rasterizer_options.cull_front = cull_mode == GL_FRONT || cull_mode == GL_FRONT_AND_BACK;
     m_rasterizer.set_options(rasterizer_options);
 }
 
