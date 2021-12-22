@@ -1317,7 +1317,9 @@ void SoftwareGLContext::gl_draw_buffer(GLenum buffer)
     m_current_draw_buffer = buffer;
 
     auto rasterizer_options = m_rasterizer.options();
-    rasterizer_options.draw_buffer = m_current_draw_buffer;
+    // FIXME: We only have a single draw buffer in SoftGPU at the moment,
+    // so we simply disable color writes if GL_NONE is selected
+    rasterizer_options.enable_color_write = m_current_draw_buffer != GL_NONE;
     m_rasterizer.set_options(rasterizer_options);
 }
 

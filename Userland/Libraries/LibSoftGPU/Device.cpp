@@ -348,7 +348,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             }
 
             // We will not update the color buffer at all
-            if (!options.color_mask || options.draw_buffer == GL_NONE)
+            if (!options.color_mask || !options.enable_color_write)
                 continue;
 
             // Draw the pixels according to the previously generated mask
