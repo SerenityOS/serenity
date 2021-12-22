@@ -122,12 +122,12 @@ private:
     OwnPtr<MallocTracer> m_malloc_tracer;
 
     void setup_stack(Vector<ELF::AuxiliaryValue>);
-    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const;
+    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String const& executable_path, int executable_fd) const;
     void register_signal_handlers();
     void setup_signal_trampoline();
 
     void emit_profile_sample(AK::OutputStream&);
-    void emit_profile_event(AK::OutputStream&, StringView event_name, String contents);
+    void emit_profile_event(AK::OutputStream&, StringView event_name, String const& contents);
 
     int virt$accept4(FlatPtr);
     int virt$access(FlatPtr, size_t, int);
@@ -243,7 +243,7 @@ private:
     MmapRegion const* load_library_from_address(FlatPtr address);
     MmapRegion const* first_region_for_object(StringView name);
     String create_backtrace_line(FlatPtr address);
-    String create_instruction_line(FlatPtr address, X86::Instruction insn);
+    String create_instruction_line(FlatPtr address, X86::Instruction const& insn);
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
