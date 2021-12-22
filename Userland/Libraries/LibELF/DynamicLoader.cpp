@@ -292,8 +292,10 @@ void DynamicLoader::load_program_headers()
     int reservation_mmap_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
     if (m_elf_image.is_dynamic())
         reservation_mmap_flags |= MAP_RANDOMIZED;
+#ifdef MAP_FIXED_NOREPLACE
     else
-        reservation_mmap_flags |= MAP_FIXED;
+        reservation_mmap_flags |= MAP_FIXED_NOREPLACE;
+#endif
 
     // First, we make a dummy reservation mapping, in order to allocate enough VM
     // to hold all regions contiguously in the address space.
@@ -308,6 +310,8 @@ void DynamicLoader::load_program_headers()
         perror("mmap reservation");
         VERIFY_NOT_REACHED();
     }
+
+    VERIFY(requested_load_address == nullptr || reservation == requested_load_address);
 
     m_base_address = VirtualAddress { reservation };
 
