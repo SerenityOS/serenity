@@ -64,4 +64,26 @@ describe("errors", () => {
             "Invalid time string '2021-07-06T23:42:01Z': must not contain a UTC designator"
         );
     });
+
+    test("ambiguous string must contain a time designator", () => {
+        const values = [
+            // YYYY-MM or HHMM-UU
+            "2021-12",
+            // MMDD or HHMM
+            "1214",
+            "0229",
+            "1130",
+            // MM-DD or HH-UU
+            "12-14",
+            // YYYYMM or HHMMSS
+            "202112",
+        ];
+        for (const value of values) {
+            expect(() => {
+                Temporal.PlainTime.from(value);
+            }).toThrowWithMessage(RangeError, `Invalid time string '${value}'`);
+            // Doesn't throw
+            Temporal.PlainTime.from(`T${value}`);
+        }
+    });
 });
