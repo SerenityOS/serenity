@@ -50,7 +50,7 @@ FlameGraphView::FlameGraphView(GUI::Model& model, int text_column, int width_col
     layout_bars();
 }
 
-GUI::ModelIndex const FlameGraphView::hovered_index() const
+GUI::ModelIndex FlameGraphView::hovered_index() const
 {
     if (!m_hovered_bar)
         return GUI::ModelIndex();
