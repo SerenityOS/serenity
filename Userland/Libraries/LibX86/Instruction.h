@@ -205,14 +205,14 @@ struct InstructionDescriptor {
     // a non-null slashes member that's indexed by the three R/M bits.
     InstructionDescriptor* slashes { nullptr };
 
-    unsigned imm1_bytes_for_address_size(bool a32)
+    unsigned imm1_bytes_for_address_size(bool a32) const
     {
         if (imm1_bytes == CurrentAddressSize)
             return a32 ? 4 : 2;
         return imm1_bytes;
     }
 
-    unsigned imm2_bytes_for_address_size(bool a32)
+    unsigned imm2_bytes_for_address_size(bool a32) const
     {
         if (imm2_bytes == CurrentAddressSize)
             return a32 ? 4 : 2;
