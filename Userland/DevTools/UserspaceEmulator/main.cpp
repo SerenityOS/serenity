@@ -65,7 +65,7 @@ int main(int argc, char** argv, char** env)
     if (dump_profile) {
         profile_output_file = fopen(profile_dump_path.characters(), "w+");
         if (profile_output_file == nullptr) {
-            auto error_string = strerror(errno);
+            char const* error_string = strerror(errno);
             warnln("Failed to open '{}' for writing: {}", profile_dump_path, error_string);
             return 1;
         }
