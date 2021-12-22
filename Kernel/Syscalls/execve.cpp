@@ -503,14 +503,11 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     set_dumpable(!executable_is_setid);
 
-    {
-        // We must disable global profiling (especially kfree tracing) here because
-        // we might otherwise end up walking the stack into the process' space that
-        // is about to be destroyed.
-        TemporaryChange global_profiling_disabler(g_profiling_all_threads, false);
-        m_space = load_result.space.release_nonnull();
-    }
-    Memory::MemoryManager::enter_address_space(*m_space);
+    // We make sure to enter the new address space before destroying the old one.
+    // This ensures that the process always has a valid page directory.
+    Memory::MemoryManager::enter_address_space(*load_result.space);
+
+    m_space = load_result.space.release_nonnull();
 
     m_executable = main_program_description->custody();
     m_arguments = move(arguments);
