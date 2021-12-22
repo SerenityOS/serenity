@@ -1130,9 +1130,39 @@ void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
     m_blend_source_factor = src_factor;
     m_blend_destination_factor = dst_factor;
 
+    auto map_gl_blend_factor_to_device = [](GLenum factor) constexpr
+    {
+        switch (factor) {
+        case GL_ZERO:
+            return SoftGPU::BlendFactor::Zero;
+        case GL_ONE:
+            return SoftGPU::BlendFactor::One;
+        case GL_SRC_ALPHA:
+            return SoftGPU::BlendFactor::SrcAlpha;
+        case GL_ONE_MINUS_SRC_ALPHA:
+            return SoftGPU::BlendFactor::OneMinusSrcAlpha;
+        case GL_SRC_COLOR:
+            return SoftGPU::BlendFactor::SrcColor;
+        case GL_ONE_MINUS_SRC_COLOR:
+            return SoftGPU::BlendFactor::OneMinusSrcColor;
+        case GL_DST_ALPHA:
+            return SoftGPU::BlendFactor::DstAlpha;
+        case GL_ONE_MINUS_DST_ALPHA:
+            return SoftGPU::BlendFactor::OneMinusDstAlpha;
+        case GL_DST_COLOR:
+            return SoftGPU::BlendFactor::DstColor;
+        case GL_ONE_MINUS_DST_COLOR:
+            return SoftGPU::BlendFactor::OneMinusDstColor;
+        case GL_SRC_ALPHA_SATURATE:
+            return SoftGPU::BlendFactor::SrcAlphaSaturate;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
     auto options = m_rasterizer.options();
-    options.blend_source_factor = m_blend_source_factor;
-    options.blend_destination_factor = m_blend_destination_factor;
+    options.blend_source_factor = map_gl_blend_factor_to_device(m_blend_source_factor);
+    options.blend_destination_factor = map_gl_blend_factor_to_device(m_blend_destination_factor);
     m_rasterizer.set_options(options);
 }
 
