@@ -423,8 +423,8 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     quick_sort(all_processes, [](auto& a, auto& b) {
         if (a.pid == b.pid)
             return a.start_valid < b.start_valid;
-        else
-            return a.pid < b.pid;
+
+        return a.pid < b.pid;
     });
 
     Vector<Process> processes;
