@@ -31,9 +31,19 @@ extern "C" {
 
 #define MAP_FAILED ((void*)-1)
 
+#define MADV_NORMAL 0x0
 #define MADV_SET_VOLATILE 0x1
 #define MADV_SET_NONVOLATILE 0x2
 #define MADV_DONTNEED 0x3
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_madvise.html
+#define POSIX_MADV_NORMAL MADV_NORMAL
+#define POSIX_MADV_DONTNEED MADV_DONTNEED
+
+// Unsupported posix_madvise() advise:
+//  POSIX_MADV_SEQUENTIAL
+//  POSIX_MADV_RANDOM
+//  POSIX_MADV_WILLNEED
 
 #define MS_SYNC 1
 #define MS_ASYNC 2
