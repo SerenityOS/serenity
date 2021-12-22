@@ -32,9 +32,9 @@ extern OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
-        return adopt_ref(*new ProfileNode(process, move(object_name), move(symbol), address, offset, timestamp, pid));
+        return adopt_ref(*new ProfileNode(process, object_name, move(symbol), address, offset, timestamp, pid));
     }
 
     static NonnullRefPtr<ProfileNode> create_process_node(Process const& process)
@@ -72,7 +72,7 @@ public:
         m_children.append(child);
     }
 
-    ProfileNode& find_or_create_child(FlyString object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    ProfileNode& find_or_create_child(FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
@@ -80,7 +80,7 @@ public:
                 return child;
             }
         }
-        auto new_child = ProfileNode::create(m_process, move(object_name), move(symbol), address, offset, timestamp, pid);
+        auto new_child = ProfileNode::create(m_process, object_name, move(symbol), address, offset, timestamp, pid);
         add_child(new_child);
         return new_child;
     };
@@ -110,7 +110,7 @@ public:
 
 private:
     explicit ProfileNode(Process const&);
-    explicit ProfileNode(Process const&, const String& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&, FlyString const& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
 
     bool m_root { false };
     Process const& m_process;
