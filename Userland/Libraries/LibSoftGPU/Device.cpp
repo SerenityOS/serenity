@@ -495,7 +495,7 @@ Device::Device(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
-void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, GL::TextureUnit::BoundList const& bound_texture_units)
+void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -644,38 +644,31 @@ void Device::draw_primitives(GLenum primitive_type, FloatMatrix4x4 const& transf
             swap(triangle.vertices[0], triangle.vertices[1]);
         }
 
-        submit_triangle(triangle, bound_texture_units);
+        submit_triangle(triangle, enabled_texture_units);
     }
 }
 
-void Device::submit_triangle(const Triangle& triangle, GL::TextureUnit::BoundList const& bound_texture_units)
+void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& enabled_texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &bound_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
         FloatVector4 fragment = color;
 
-        for (auto const& texture_unit : bound_texture_units) {
+        for (size_t i : enabled_texture_units) {
             // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
-            FloatVector4 texel;
-            switch (texture_unit.currently_bound_target()) {
-            case GL_TEXTURE_2D:
-                if (!texture_unit.texture_2d_enabled() || texture_unit.texture_3d_enabled() || texture_unit.texture_cube_map_enabled())
-                    continue;
-                texel = texture_unit.bound_texture_2d()->sampler().sample(uv);
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
+            auto const& sampler = m_samplers[i];
+
+            FloatVector4 texel = sampler.sample_2d({ uv.x(), uv.y() });
 
             // FIXME: Implement more blend modes
-            switch (texture_unit.env_mode()) {
-            case GL_MODULATE:
+            switch (sampler.config().fixed_function_texture_env_mode) {
+            case TextureEnvMode::Modulate:
             default:
                 fragment = fragment * texel;
                 break;
-            case GL_REPLACE:
+            case TextureEnvMode::Replace:
                 fragment = texel;
                 break;
-            case GL_DECAL: {
+            case TextureEnvMode::Decal: {
                 float src_alpha = fragment.w();
                 float one_minus_src_alpha = 1 - src_alpha;
                 fragment.set_x(texel.x() * src_alpha + fragment.x() * one_minus_src_alpha);
