@@ -32,6 +32,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(group);
     JS_DECLARE_NATIVE_FUNCTION(group_collapsed);
     JS_DECLARE_NATIVE_FUNCTION(group_end);
+    JS_DECLARE_NATIVE_FUNCTION(time);
+    JS_DECLARE_NATIVE_FUNCTION(time_log);
+    JS_DECLARE_NATIVE_FUNCTION(time_end);
 };
 
 }

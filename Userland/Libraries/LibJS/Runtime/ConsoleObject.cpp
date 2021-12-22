@@ -35,6 +35,9 @@ void ConsoleObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.group, group, 0, attr);
     define_native_function(vm.names.groupCollapsed, group_collapsed, 0, attr);
     define_native_function(vm.names.groupEnd, group_end, 0, attr);
+    define_native_function(vm.names.time, time, 0, attr);
+    define_native_function(vm.names.timeLog, time_log, 0, attr);
+    define_native_function(vm.names.timeEnd, time_end, 0, attr);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -117,6 +120,24 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::group_collapsed)
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::group_end)
 {
     return global_object.console().group_end();
+}
+
+// 1.4.1. time(label), https://console.spec.whatwg.org/#time
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::time)
+{
+    return global_object.console().time();
+}
+
+// 1.4.2. timeLog(label, ...data), https://console.spec.whatwg.org/#timelog
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::time_log)
+{
+    return global_object.console().time_log();
+}
+
+// 1.4.3. timeEnd(label), https://console.spec.whatwg.org/#timeend
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::time_end)
+{
+    return global_object.console().time_end();
 }
 
 }
