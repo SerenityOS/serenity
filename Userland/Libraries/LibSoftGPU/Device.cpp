@@ -60,7 +60,7 @@ static Gfx::IntRect scissor_box_to_window_coordinates(Gfx::IntRect const& scisso
     return scissor_box.translated(0, window_rect.height() - 2 * scissor_box.y() - scissor_box.height());
 }
 
-static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, float& src_alpha, float& dst_alpha, float& src_color, float& dst_color)
+static constexpr void setup_blend_factors(BlendFactor mode, FloatVector4& constant, float& src_alpha, float& dst_alpha, float& src_color, float& dst_color)
 {
     constant = { 0.0f, 0.0f, 0.0f, 0.0f };
     src_alpha = 0;
@@ -69,40 +69,40 @@ static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, f
     dst_color = 0;
 
     switch (mode) {
-    case GL_ZERO:
+    case BlendFactor::Zero:
         break;
-    case GL_ONE:
+    case BlendFactor::One:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
-    case GL_SRC_COLOR:
+    case BlendFactor::SrcColor:
         src_color = 1;
         break;
-    case GL_ONE_MINUS_SRC_COLOR:
+    case BlendFactor::OneMinusSrcColor:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         src_color = -1;
         break;
-    case GL_SRC_ALPHA:
+    case BlendFactor::SrcAlpha:
         src_alpha = 1;
         break;
-    case GL_ONE_MINUS_SRC_ALPHA:
+    case BlendFactor::OneMinusSrcAlpha:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         src_alpha = -1;
         break;
-    case GL_DST_ALPHA:
+    case BlendFactor::DstAlpha:
         dst_alpha = 1;
         break;
-    case GL_ONE_MINUS_DST_ALPHA:
+    case BlendFactor::OneMinusDstAlpha:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         dst_alpha = -1;
         break;
-    case GL_DST_COLOR:
+    case BlendFactor::DstColor:
         dst_color = 1;
         break;
-    case GL_ONE_MINUS_DST_COLOR:
+    case BlendFactor::OneMinusDstColor:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         dst_color = -1;
         break;
-    case GL_SRC_ALPHA_SATURATE:
+    case BlendFactor::SrcAlphaSaturate:
         // FIXME: How do we implement this?
         break;
     default:

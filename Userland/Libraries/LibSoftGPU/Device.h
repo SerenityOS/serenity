@@ -37,6 +37,20 @@ enum class AlphaTestFunction {
     Greater,
 };
 
+enum class BlendFactor {
+    Zero,
+    One,
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    SrcColor,
+    OneMinusSrcColor,
+    DstAlpha,
+    OneMinusDstAlpha,
+    DstColor,
+    OneMinusDstColor,
+    SrcAlphaSaturate,
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
@@ -45,8 +59,8 @@ struct RasterizerOptions {
     AlphaTestFunction alpha_test_func { AlphaTestFunction::Always };
     float alpha_test_ref_value { 0 };
     bool enable_blending { false };
-    GLenum blend_source_factor { GL_ONE };
-    GLenum blend_destination_factor { GL_ONE };
+    BlendFactor blend_source_factor { BlendFactor::One };
+    BlendFactor blend_destination_factor { BlendFactor::One };
     u32 color_mask { 0xffffffff };
     float depth_min { 0 };
     float depth_max { 1 };
