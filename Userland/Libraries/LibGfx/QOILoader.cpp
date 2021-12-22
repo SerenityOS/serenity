@@ -34,14 +34,16 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
     return header;
 }
 
-static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream)
+static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, Color pixel)
 {
     u8 bytes[4];
     stream >> Bytes { &bytes, array_size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGB chunk"sv);
     VERIFY(bytes[0] == QOI_OP_RGB);
-    return Color { bytes[1], bytes[2], bytes[3] };
+
+    // The alpha value remains unchanged from the previous pixel.
+    return Color { bytes[1], bytes[2], bytes[3], pixel.alpha() };
 }
 
 static ErrorOr<Color> decode_qoi_op_rgba(InputMemoryStream& stream)
@@ -163,7 +165,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
                 if (stream.handle_any_error())
                     return Error::from_string_literal("Invalid QOI image: end of stream while reading chunk tag"sv);
                 if (tag == QOI_OP_RGB)
-                    pixel = TRY(decode_qoi_op_rgb(stream));
+                    pixel = TRY(decode_qoi_op_rgb(stream, pixel));
                 else if (tag == QOI_OP_RGBA)
                     pixel = TRY(decode_qoi_op_rgba(stream));
                 else if ((tag & QOI_MASK_2) == QOI_OP_INDEX)
