@@ -146,9 +146,9 @@ ErrorOr<VirtualRange> VirtualRangeAllocator::try_allocate_specific(VirtualAddres
     SpinlockLocker lock(m_lock);
     auto available_range = m_available_ranges.find_largest_not_above(base.get());
     if (!available_range)
-        return ENOMEM;
+        return EEXIST;
     if (!available_range->contains(allocated_range))
-        return ENOMEM;
+        return EEXIST;
     if (*available_range == allocated_range) {
         m_available_ranges.remove(available_range->base().get());
         return allocated_range;
