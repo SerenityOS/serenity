@@ -77,6 +77,12 @@ int madvise(void* address, size_t size, int advice)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_madvise.html
+int posix_madvise(void* address, size_t len, int advice)
+{
+    return madvise(address, len, advice);
+}
+
 void* allocate_tls(const char* initial_data, size_t size)
 {
     ptrdiff_t rc = syscall(SC_allocate_tls, initial_data, size);
