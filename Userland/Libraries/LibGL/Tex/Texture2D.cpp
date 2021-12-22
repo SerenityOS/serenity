@@ -106,6 +106,39 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
 
         pixel_byte_array += row_remainder_bytes;
     }
+
+    if (!device_image().is_null()) {
+        SoftGPU::ImageDataLayout layout;
+        layout.column_stride = pixel_size_bytes;
+        layout.row_stride = physical_width_bytes + (byte_alignment - physical_width_bytes % byte_alignment) % byte_alignment;
+        layout.depth_stride = 0;
+        if (type == GL_UNSIGNED_SHORT_5_6_5) {
+            layout.format = SoftGPU::ImageFormat::RGB565;
+        } else if (type == GL_UNSIGNED_BYTE) {
+            if (format == GL_RGB)
+                layout.format = SoftGPU::ImageFormat::RGB888;
+            else if (format == GL_BGR)
+                layout.format = SoftGPU::ImageFormat::BGR888;
+            else if (format == GL_RGBA)
+                layout.format = SoftGPU::ImageFormat::RGBA8888;
+            else if (format == GL_BGRA)
+                layout.format = SoftGPU::ImageFormat::BGRA8888;
+        }
+
+        Vector3<unsigned> offset {
+            static_cast<unsigned>(xoffset),
+            static_cast<unsigned>(yoffset),
+            0
+        };
+
+        Vector3<unsigned> size {
+            static_cast<unsigned>(width),
+            static_cast<unsigned>(height),
+            1
+        };
+
+        device_image()->write_texels(0, lod, offset, size, pixels, layout);
+    }
 }
 
 }

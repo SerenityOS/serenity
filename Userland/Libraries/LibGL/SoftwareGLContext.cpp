@@ -764,6 +764,29 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
+    if (level == 0) {
+        // FIXME: OpenGL has the concept of texture and mipmap completeness. A texture has to fulfill certain criteria to be considered complete.
+        // Trying to render while an incomplete texture is bound will result in an error.
+        // Here we simply create a complete device image when mipmap level 0 is attached to the texture object. This has the unfortunate side effect
+        // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
+        // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
+        // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
+        SoftGPU::ImageFormat device_format;
+        switch (internal_format) {
+        case GL_RGB:
+            device_format = SoftGPU::ImageFormat::RGB888;
+            break;
+
+        case GL_RGBA:
+            device_format = SoftGPU::ImageFormat::RGBA8888;
+            break;
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(device_format, width, height, 1, 999, 1));
+    }
+
     m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, border, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
