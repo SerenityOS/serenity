@@ -135,13 +135,16 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& glo
 
     // 19. Let calendar be r.[[ca]].
     // 20. Set dateTimeFormat.[[Calendar]] to calendar.
-    date_time_format.set_calendar(result.ca.release_value());
+    if (result.ca.has_value())
+        date_time_format.set_calendar(result.ca.release_value());
 
     // 21. Set dateTimeFormat.[[HourCycle]] to r.[[hc]].
-    date_time_format.set_hour_cycle(result.hc.release_value());
+    if (result.hc.has_value())
+        date_time_format.set_hour_cycle(result.hc.release_value());
 
     // 22. Set dateTimeFormat.[[NumberingSystem]] to r.[[nu]].
-    date_time_format.set_numbering_system(result.nu.release_value());
+    if (result.nu.has_value())
+        date_time_format.set_numbering_system(result.nu.release_value());
 
     // 23. Let dataLocale be r.[[dataLocale]].
     auto data_locale = move(result.data_locale);
