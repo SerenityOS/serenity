@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -78,17 +79,21 @@ public:
     ThrowCompletionOr<Value> group();
     ThrowCompletionOr<Value> group_collapsed();
     ThrowCompletionOr<Value> group_end();
+    ThrowCompletionOr<Value> time();
+    ThrowCompletionOr<Value> time_log();
+    ThrowCompletionOr<Value> time_end();
 
     void output_debug_message(LogLevel log_level, String output) const;
 
 private:
     ThrowCompletionOr<String> value_vector_to_string(Vector<Value>&);
+    ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
 
     GlobalObject& m_global_object;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
-
+    HashMap<String, Core::ElapsedTimer> m_timer_table;
     Vector<Group> m_group_stack;
 };
 

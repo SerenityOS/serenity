@@ -8,6 +8,7 @@
 
 #include <LibJS/Console.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 
 namespace JS {
 
@@ -299,6 +300,99 @@ ThrowCompletionOr<Value> Console::group_end()
     return js_undefined();
 }
 
+// 1.4.1. time(label), https://console.spec.whatwg.org/#time
+ThrowCompletionOr<Value> Console::time()
+{
+    // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-time
+    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+
+    // 1. If the associated timer table contains an entry with key label, return, optionally reporting
+    // a warning to the console indicating that a timer with label `label` has already been started.
+    if (m_timer_table.contains(label)) {
+        if (m_client)
+            TRY(m_client->printer(LogLevel::Warn, { Vector<Value> { js_string(vm(), String::formatted("Timer '{}' already exists.", label)) } }));
+        return js_undefined();
+    }
+
+    // 2. Otherwise, set the value of the entry with key label in the associated timer table to the current time.
+    m_timer_table.set(label, Core::ElapsedTimer::start_new());
+    return js_undefined();
+}
+
+// 1.4.2. timeLog(label, ...data), https://console.spec.whatwg.org/#timelog
+ThrowCompletionOr<Value> Console::time_log()
+{
+    // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timelog
+    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+
+    // 1. Let timerTable be the associated timer table.
+
+    // 2. Let startTime be timerTable[label].
+    auto maybe_start_time = m_timer_table.find(label);
+
+    // NOTE: Warn if the timer doesn't exist. Not part of the spec yet, but discussed here: https://github.com/whatwg/console/issues/134
+    if (maybe_start_time == m_timer_table.end()) {
+        if (m_client)
+            TRY(m_client->printer(LogLevel::Warn, { Vector<Value> { js_string(vm(), String::formatted("Timer '{}' does not exist.", label)) } }));
+        return js_undefined();
+    }
+    auto start_time = maybe_start_time->value;
+
+    // 3. Let duration be a string representing the difference between the current time and startTime, in an implementation-defined format.
+    auto duration = TRY(format_time_since(start_time));
+
+    // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
+    auto concat = String::formatted("{}: {}", label, duration);
+
+    // 5. Prepend concat to data.
+    Vector<Value> data;
+    data.ensure_capacity(vm().argument_count());
+    data.append(js_string(vm(), concat));
+    for (size_t i = 1; i < vm().argument_count(); ++i)
+        data.append(vm().argument(i));
+
+    // 6. Perform Printer("timeLog", data).
+    if (m_client)
+        TRY(m_client->printer(LogLevel::TimeLog, data));
+    return js_undefined();
+}
+
+// 1.4.3. timeEnd(label), https://console.spec.whatwg.org/#timeend
+ThrowCompletionOr<Value> Console::time_end()
+{
+    // NOTE: "default" is the default value in the IDL. https://console.spec.whatwg.org/#ref-for-timeend
+    auto label = vm().argument_count() ? TRY(vm().argument(0).to_string(global_object())) : "default";
+
+    // 1. Let timerTable be the associated timer table.
+
+    // 2. Let startTime be timerTable[label].
+    auto maybe_start_time = m_timer_table.find(label);
+
+    // NOTE: Warn if the timer doesn't exist. Not part of the spec yet, but discussed here: https://github.com/whatwg/console/issues/134
+    if (maybe_start_time == m_timer_table.end()) {
+        if (m_client)
+            TRY(m_client->printer(LogLevel::Warn, { Vector<Value> { js_string(vm(), String::formatted("Timer '{}' does not exist.", label)) } }));
+        return js_undefined();
+    }
+    auto start_time = maybe_start_time->value;
+
+    // 3. Remove timerTable[label].
+    m_timer_table.remove(label);
+
+    // 4. Let duration be a string representing the difference between the current time and startTime, in an implementation-defined format.
+    auto duration = TRY(format_time_since(start_time));
+
+    // 5. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
+    auto concat = String::formatted("{}: {}", label, duration);
+
+    // 6. Perform Printer("timeEnd", « concat »).
+    if (m_client) {
+        Vector<Value> concat_as_vector { js_string(vm(), concat) };
+        TRY(m_client->printer(LogLevel::TimeEnd, concat_as_vector));
+    }
+    return js_undefined();
+}
+
 Vector<Value> Console::vm_arguments()
 {
     Vector<Value> arguments;
@@ -343,6 +437,31 @@ ThrowCompletionOr<String> Console::value_vector_to_string(Vector<Value>& values)
             builder.append(' ');
         builder.append(TRY(item.to_string(global_object())));
     }
+    return builder.to_string();
+}
+
+ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
+{
+    auto elapsed_ms = timer.elapsed_time().to_milliseconds();
+    auto duration = TRY(Temporal::balance_duration(global_object(), 0, 0, 0, 0, elapsed_ms, 0, *js_bigint(vm(), "0"_sbigint), "year"));
+
+    auto append = [&](StringBuilder& builder, auto format, auto... number) {
+        if (!builder.is_empty())
+            builder.append(' ');
+        builder.appendff(format, number...);
+    };
+    StringBuilder builder;
+    if (duration.days > 0)
+        append(builder, "{:.0} day(s)", duration.days);
+    if (duration.hours > 0)
+        append(builder, "{:.0} hour(s)", duration.hours);
+    if (duration.minutes > 0)
+        append(builder, "{:.0} minute(s)", duration.minutes);
+    if (duration.seconds > 0 || duration.milliseconds > 0) {
+        double combined_seconds = duration.seconds + (0.001 * duration.milliseconds);
+        append(builder, "{:.3} seconds", combined_seconds);
+    }
+
     return builder.to_string();
 }
 

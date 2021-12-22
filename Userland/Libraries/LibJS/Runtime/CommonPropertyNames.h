@@ -445,6 +445,9 @@ namespace JS {
     P(tanh)                                  \
     P(test)                                  \
     P(then)                                  \
+    P(time)                                  \
+    P(timeEnd)                               \
+    P(timeLog)                               \
     P(timeStyle)                             \
     P(timeZone)                              \
     P(timeZoneName)                          \
