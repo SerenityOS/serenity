@@ -1159,7 +1159,36 @@ void SoftwareGLContext::gl_alpha_func(GLenum func, GLclampf ref)
     m_alpha_test_ref_value = ref;
 
     auto options = m_rasterizer.options();
-    options.alpha_test_func = m_alpha_test_func;
+
+    switch (func) {
+    case GL_NEVER:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::Never;
+        break;
+    case GL_ALWAYS:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::Always;
+        break;
+    case GL_LESS:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::Less;
+        break;
+    case GL_LEQUAL:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::LessOrEqual;
+        break;
+    case GL_EQUAL:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::Equal;
+        break;
+    case GL_NOTEQUAL:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::NotEqual;
+        break;
+    case GL_GEQUAL:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::GreaterOrEqual;
+        break;
+    case GL_GREATER:
+        options.alpha_test_func = SoftGPU::AlphaTestFunction::Greater;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     options.alpha_test_ref_value = m_alpha_test_ref_value;
     m_rasterizer.set_options(options);
 }
