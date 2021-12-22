@@ -132,6 +132,10 @@ public:
     virtual void present() override;
 
 private:
+    void sync_device_config();
+    void sync_device_sampler_config();
+
+private:
     template<typename T>
     T* store_in_listing(T value)
     {
@@ -234,6 +238,7 @@ private:
     TextureUnit::BoundList m_bound_texture_units;
 
     SoftGPU::Device m_rasterizer;
+    bool m_sampler_config_is_dirty { true };
 
     struct Listing {
 

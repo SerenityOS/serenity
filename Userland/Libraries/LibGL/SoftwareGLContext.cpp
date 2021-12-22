@@ -230,6 +230,7 @@ void SoftwareGLContext::gl_end()
             m_bound_texture_units.append(texture_unit);
     }
 
+    sync_device_config();
     m_rasterizer.draw_primitives(m_current_draw_mode, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, m_bound_texture_units);
 
     m_vertex_list.clear_with_capacity();
@@ -578,15 +579,19 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(true);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_2D:
         m_active_texture_unit->set_texture_2d_enabled(true);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_3D:
         m_active_texture_unit->set_texture_3d_enabled(true);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_CUBE_MAP:
         m_active_texture_unit->set_texture_cube_map_enabled(true);
+        m_sampler_config_is_dirty = true;
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
@@ -645,15 +650,19 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         break;
     case GL_TEXTURE_1D:
         m_active_texture_unit->set_texture_1d_enabled(false);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_2D:
         m_active_texture_unit->set_texture_2d_enabled(false);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_3D:
         m_active_texture_unit->set_texture_3d_enabled(false);
+        m_sampler_config_is_dirty = true;
         break;
     case GL_TEXTURE_CUBE_MAP:
         m_active_texture_unit->set_texture_cube_map_enabled(false);
+        m_sampler_config_is_dirty = true;
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
@@ -785,6 +794,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
             VERIFY_NOT_REACHED();
         }
         m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(device_format, width, height, 1, 999, 1));
+        m_sampler_config_is_dirty = true;
     }
 
     m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, border, format, type, data, m_unpack_row_length, m_unpack_alignment);
@@ -881,6 +891,8 @@ void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat pa
             VERIFY_NOT_REACHED();
         }
     }
+
+    m_sampler_config_is_dirty = true;
 }
 
 void SoftwareGLContext::gl_front_face(GLenum face)
@@ -1550,6 +1562,7 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
         switch (target) {
         case GL_TEXTURE_2D:
             m_active_texture_unit->bind_texture_to_target(target, nullptr);
+            m_sampler_config_is_dirty = true;
             return;
         default:
             VERIFY_NOT_REACHED();
@@ -1586,6 +1599,8 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
         m_active_texture_unit->bind_texture_to_target(target, texture_object);
         break;
     }
+
+    m_sampler_config_is_dirty = true;
 }
 
 void SoftwareGLContext::gl_active_texture(GLenum texture)
@@ -2487,4 +2502,123 @@ void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
 }
+
+void SoftwareGLContext::sync_device_config()
+{
+    sync_device_sampler_config();
+}
+
+void SoftwareGLContext::sync_device_sampler_config()
+{
+    if (!m_sampler_config_is_dirty)
+        return;
+
+    m_sampler_config_is_dirty = false;
+
+    for (unsigned i = 0; i < m_texture_units.size(); ++i) {
+        SoftGPU::SamplerConfig config;
+
+        if (!m_texture_units[i].texture_2d_enabled())
+            continue;
+
+        auto texture = m_texture_units[i].bound_texture_2d();
+
+        config.bound_image = texture.is_null() ? nullptr : texture->device_image();
+
+        auto const& sampler = texture->sampler();
+
+        switch (sampler.min_filter()) {
+        case GL_NEAREST:
+            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
+            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            break;
+        case GL_LINEAR:
+            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
+            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            break;
+        case GL_NEAREST_MIPMAP_NEAREST:
+            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
+            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            break;
+        case GL_NEAREST_MIPMAP_LINEAR:
+            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
+            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            break;
+        case GL_LINEAR_MIPMAP_LINEAR:
+            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
+            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        switch (sampler.mag_filter()) {
+        case GL_NEAREST:
+            config.texture_mag_filter = SoftGPU::TextureFilter::Nearest;
+            break;
+        case GL_LINEAR:
+            config.texture_mag_filter = SoftGPU::TextureFilter::Linear;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        switch (sampler.wrap_s_mode()) {
+        case GL_CLAMP:
+            config.texture_wrap_u = SoftGPU::TextureWrapMode::Clamp;
+            break;
+        case GL_CLAMP_TO_BORDER:
+            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToBorder;
+            break;
+        case GL_CLAMP_TO_EDGE:
+            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToEdge;
+            break;
+        case GL_REPEAT:
+            config.texture_wrap_u = SoftGPU::TextureWrapMode::Repeat;
+            break;
+        case GL_MIRRORED_REPEAT:
+            config.texture_wrap_u = SoftGPU::TextureWrapMode::MirroredRepeat;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        switch (sampler.wrap_t_mode()) {
+        case GL_CLAMP:
+            config.texture_wrap_v = SoftGPU::TextureWrapMode::Clamp;
+            break;
+        case GL_CLAMP_TO_BORDER:
+            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToBorder;
+            break;
+        case GL_CLAMP_TO_EDGE:
+            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToEdge;
+            break;
+        case GL_REPEAT:
+            config.texture_wrap_v = SoftGPU::TextureWrapMode::Repeat;
+            break;
+        case GL_MIRRORED_REPEAT:
+            config.texture_wrap_v = SoftGPU::TextureWrapMode::MirroredRepeat;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        switch (m_texture_units[i].env_mode()) {
+        case GL_MODULATE:
+            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Modulate;
+            break;
+        case GL_REPLACE:
+            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Replace;
+            break;
+        case GL_DECAL:
+            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Decal;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        m_rasterizer.set_sampler_config(i, config);
+    }
+}
+
 }
