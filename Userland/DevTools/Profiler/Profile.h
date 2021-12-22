@@ -266,7 +266,7 @@ public:
     void for_each_signpost(Callback callback) const
     {
         for (auto index : m_signpost_indices) {
-            auto& event = m_events[index];
+            auto const& event = m_events[index];
             if (callback(event) == IterationDecision::Break)
                 break;
         }

@@ -71,7 +71,7 @@ void Profile::rebuild_tree()
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
     auto find_or_create_process_node = [this, &roots](pid_t pid, EventSerialNumber serial) -> ProfileNode& {
-        auto* process = find_process(pid, serial);
+        auto const* process = find_process(pid, serial);
         if (!process) {
             dbgln("Profile contains event for unknown process with pid={}, serial={}", pid, serial.to_number());
             VERIFY_NOT_REACHED();
@@ -145,10 +145,10 @@ void Profile::rebuild_tree()
             auto& process_node = find_or_create_process_node(event.pid, event.serial);
             process_node.increment_event_count();
             for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
-                auto& object_name = frame.object_name;
-                auto& symbol = frame.symbol;
-                auto& address = frame.address;
-                auto& offset = frame.offset;
+                auto const& object_name = frame.object_name;
+                auto const& symbol = frame.symbol;
+                auto const& address = frame.address;
+                auto const& offset = frame.offset;
 
                 if (symbol.is_empty())
                     return IterationDecision::Break;
@@ -223,7 +223,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
     if (json.is_error() || !json.value().is_object())
         return Error::from_string_literal("Invalid perfcore format (not a JSON object)"sv);
 
-    auto& object = json.value().as_object();
+    auto const& object = json.value().as_object();
 
     if (!g_kernel_debuginfo_object.has_value()) {
         auto debuginfo_file_or_error = Core::MappedFile::map("/boot/Kernel.debug");
@@ -234,29 +234,29 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         }
     }
 
-    auto strings_value = object.get_ptr("strings"sv);
+    auto const* strings_value = object.get_ptr("strings"sv);
     if (!strings_value || !strings_value->is_array())
         return Error::from_string_literal("Malformed profile (strings is not an array)"sv);
 
     HashMap<FlatPtr, String> profile_strings;
     for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
-        auto& value = strings_value->as_array().at(string_id);
+        auto const& value = strings_value->as_array().at(string_id);
         profile_strings.set(string_id, value.to_string());
     }
 
-    auto events_value = object.get_ptr("events");
+    auto const* events_value = object.get_ptr("events");
     if (!events_value || !events_value->is_array())
         return Error::from_string_literal("Malformed profile (events is not an array)"sv);
 
-    auto& perf_events = events_value->as_array();
+    auto const& perf_events = events_value->as_array();
 
     NonnullOwnPtrVector<Process> all_processes;
     HashMap<pid_t, Process*> current_processes;
     Vector<Event> events;
     EventSerialNumber next_serial;
 
-    for (auto& perf_event_value : perf_events.values()) {
-        auto& perf_event = perf_event_value.as_object();
+    for (auto const& perf_event_value : perf_events.values()) {
+        auto const& perf_event = perf_event_value.as_object();
 
         Event event;
 
@@ -332,7 +332,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 .executable = executable,
             };
 
-            auto old_process = current_processes.get(event.pid).value();
+            auto* old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
@@ -349,7 +349,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             all_processes.append(move(sampled_process));
             continue;
         } else if (type_string == "process_exit"sv) {
-            auto old_process = current_processes.get(event.pid).value();
+            auto* old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
@@ -375,11 +375,11 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
         auto maybe_kernel_base = Symbolication::kernel_base();
 
-        auto* stack = perf_event.get_ptr("stack");
+        auto const* stack = perf_event.get_ptr("stack");
         VERIFY(stack);
-        auto& stack_array = stack->as_array();
+        auto const& stack_array = stack->as_array();
         for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
-            auto& frame = stack_array.at(i);
+            auto const& frame = stack_array.at(i);
             auto ptr = frame.to_number<u64>();
             u32 offset = 0;
             FlyString object_name;
@@ -397,7 +397,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 LibraryMetadata* library_metadata {};
                 if (it != current_processes.end())
                     library_metadata = &it->value->library_metadata;
-                if (auto* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
+                if (auto const* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
                     object_name = library->name;
                     symbol = library->symbolicate(ptr, &offset);
                 } else {
