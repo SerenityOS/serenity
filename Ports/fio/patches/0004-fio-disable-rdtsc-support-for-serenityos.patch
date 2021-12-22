@@ -1,0 +1,25 @@
+From fdf16439ed5ecb36f762dc2b66102424920e26c1 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Tue, 21 Dec 2021 23:48:46 -0800
+Subject: [PATCH 4/4] Port: fio - Disable rdtsc support for serenity
+
+---
+ arch/arch-x86.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arch-x86.h b/arch/arch-x86.h
+index c6bcb54..c1005b1 100644
+--- a/arch/arch-x86.h
++++ b/arch/arch-x86.h
+@@ -35,6 +35,7 @@ static inline unsigned long long get_cpu_clock(void)
+ }
+ 
+ #define ARCH_HAVE_FFZ
+-#define ARCH_HAVE_CPU_CLOCK
++// Serenity OS doesn't allow you to read rdtsc.
++// #define ARCH_HAVE_CPU_CLOCK
+ 
+ #endif
+-- 
+2.32.0
+
