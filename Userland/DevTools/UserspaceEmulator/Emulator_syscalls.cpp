@@ -1493,7 +1493,7 @@ int Emulator::virt$clock_nanosleep(FlatPtr params_addr)
     mmu().copy_from_vm(&requested_sleep, (FlatPtr)params.requested_sleep, sizeof(timespec));
     params.requested_sleep = &requested_sleep;
 
-    auto remaining_vm_addr = params.remaining_sleep;
+    auto* remaining_vm_addr = params.remaining_sleep;
     timespec remaining { 0, 0 };
     params.remaining_sleep = &remaining;
 

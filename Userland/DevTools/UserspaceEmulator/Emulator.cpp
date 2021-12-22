@@ -102,14 +102,14 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 
     Vector<u32> argv_entries;
 
-    for (auto& argument : m_arguments) {
+    for (auto const& argument : m_arguments) {
         m_cpu.push_string(argument);
         argv_entries.append(m_cpu.esp().value());
     }
 
     Vector<u32> env_entries;
 
-    for (auto& variable : m_environment) {
+    for (auto const& variable : m_environment) {
         m_cpu.push_string(variable.characters());
         env_entries.append(m_cpu.esp().value());
     }
@@ -461,7 +461,7 @@ String Emulator::create_backtrace_line(FlatPtr address)
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
 {
-    for (auto& address : backtrace) {
+    for (auto const& address : backtrace) {
         reportln("{}", create_backtrace_line(address));
     }
 }
