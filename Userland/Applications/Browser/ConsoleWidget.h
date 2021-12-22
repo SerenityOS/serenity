@@ -33,6 +33,8 @@ private:
 
     void request_console_messages();
     void clear_output();
+    void begin_group(StringView label, bool start_expanded);
+    void end_group();
 
     RefPtr<GUI::TextBox> m_input;
     RefPtr<Web::OutOfProcessWebView> m_output_view;
@@ -40,6 +42,13 @@ private:
     i32 m_highest_notified_message_index { -1 };
     i32 m_highest_received_message_index { -1 };
     bool m_waiting_for_messages { false };
+
+    struct Group {
+        int id { 0 };
+        String label;
+    };
+    Vector<Group> m_group_stack;
+    int m_next_group_id { 1 };
 };
 
 }

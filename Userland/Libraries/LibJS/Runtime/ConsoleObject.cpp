@@ -32,6 +32,9 @@ void ConsoleObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.countReset, count_reset, 0, attr);
     define_native_function(vm.names.clear, clear, 0, attr);
     define_native_function(vm.names.assert, assert_, 0, attr);
+    define_native_function(vm.names.group, group, 0, attr);
+    define_native_function(vm.names.groupCollapsed, group_collapsed, 0, attr);
+    define_native_function(vm.names.groupEnd, group_end, 0, attr);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -96,6 +99,24 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::clear)
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::assert_)
 {
     return global_object.console().assert_();
+}
+
+// 1.3.1. group(...data), https://console.spec.whatwg.org/#group
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::group)
+{
+    return global_object.console().group();
+}
+
+// 1.3.2. groupCollapsed(...data), https://console.spec.whatwg.org/#groupcollapsed
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::group_collapsed)
+{
+    return global_object.console().group_collapsed();
+}
+
+// 1.3.3. groupEnd(), https://console.spec.whatwg.org/#groupend
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::group_end)
+{
+    return global_object.console().group_end();
 }
 
 }

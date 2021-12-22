@@ -43,6 +43,10 @@ public:
         Warn,
     };
 
+    struct Group {
+        String label;
+    };
+
     struct Trace {
         String label;
         Vector<String> stack;
@@ -71,14 +75,21 @@ public:
     ThrowCompletionOr<Value> count();
     ThrowCompletionOr<Value> count_reset();
     ThrowCompletionOr<Value> assert_();
+    ThrowCompletionOr<Value> group();
+    ThrowCompletionOr<Value> group_collapsed();
+    ThrowCompletionOr<Value> group_end();
 
     void output_debug_message(LogLevel log_level, String output) const;
 
 private:
+    ThrowCompletionOr<String> value_vector_to_string(Vector<Value>&);
+
     GlobalObject& m_global_object;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
+
+    Vector<Group> m_group_stack;
 };
 
 class ConsoleClient {
@@ -88,11 +99,14 @@ public:
     {
     }
 
+    using PrinterArguments = Variant<Console::Group, Console::Trace, Vector<Value>>;
+
     ThrowCompletionOr<Value> logger(Console::LogLevel log_level, Vector<Value>& args);
     ThrowCompletionOr<Vector<Value>> formatter(Vector<Value>& args);
-    virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, Variant<Vector<Value>, Console::Trace>) = 0;
+    virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, PrinterArguments) = 0;
 
     virtual void clear() = 0;
+    virtual void end_group() = 0;
 
 protected:
     virtual ~ConsoleClient() = default;
