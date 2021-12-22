@@ -123,7 +123,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     REQUIRE_PROMISE(stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
-    FlatPtr addr = params.addr;
+    auto addr = (FlatPtr)params.addr;
     auto size = params.size;
     auto alignment = params.alignment ? params.alignment : PAGE_SIZE;
     auto prot = params.prot;

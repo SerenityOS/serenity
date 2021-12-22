@@ -877,7 +877,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
         if (params.addr) {
             // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
             if (params.flags & MAP_FIXED)
-                virt$munmap(params.addr, requested_size);
+                virt$munmap((FlatPtr)params.addr, requested_size);
             result = m_range_allocator.allocate_specific(VirtualAddress { params.addr }, requested_size);
         } else {
             // mmap(nullptr, …, MAP_FIXED) is technically okay, but tends to be a bug.
@@ -926,7 +926,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     // FIXME: Support regions that have been split in the past (e.g. due to mprotect or munmap).
-    if (auto* region = mmu().find_region({ m_cpu.ds(), params.old_address })) {
+    if (auto* region = mmu().find_region({ m_cpu.ds(), (FlatPtr)params.old_address })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
         VERIFY(region->size() == params.old_size);

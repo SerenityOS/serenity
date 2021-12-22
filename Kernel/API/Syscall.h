@@ -239,7 +239,7 @@ struct StringListArgument {
 };
 
 struct SC_mmap_params {
-    uintptr_t addr;
+    void* addr;
     size_t size;
     size_t alignment;
     int32_t prot;
@@ -250,7 +250,7 @@ struct SC_mmap_params {
 };
 
 struct SC_mremap_params {
-    uintptr_t old_address;
+    void* old_address;
     size_t old_size;
     size_t new_size;
     int32_t flags;
