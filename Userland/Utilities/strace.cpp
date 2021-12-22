@@ -452,10 +452,10 @@ static void format_getrandom(FormattedSyscallBuilder& builder, void* buffer, siz
     builder.add_arguments(buffer, size, flags);
 }
 
-static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p)
+static void format_realpath(FormattedSyscallBuilder& builder, Syscall::SC_realpath_params* params_p, size_t length)
 {
     auto params = copy_from_process(params_p).release_value_but_fixme_should_propagate_errors();
-    builder.add_arguments(StringArgument { params.path }, StringArgument { { params.buffer.data, params.buffer.size } });
+    builder.add_arguments(StringArgument { params.path }, StringArgument { { params.buffer.data, min(params.buffer.size, length) } });
 }
 
 static void format_exit(FormattedSyscallBuilder& builder, int status)
@@ -748,7 +748,7 @@ static void format_syscall(FormattedSyscallBuilder& builder, Syscall::Function s
         result_type = Ssize;
         break;
     case SC_realpath:
-        format_realpath(builder, (Syscall::SC_realpath_params*)arg1);
+        format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res);
         break;
     case SC_recvmsg:
         format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
