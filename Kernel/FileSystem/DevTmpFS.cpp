@@ -318,7 +318,8 @@ ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, User
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
+    auto device_search_type = node_type() == DevTmpFSInode::Type::BlockDevice ? DeviceManagement::DeviceSearchType::BlockDevice : DeviceManagement::DeviceSearchType::CharacterDevice;
+    RefPtr<Device> device = DeviceManagement::the().get_device(device_search_type, m_major_number, m_minor_number);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_read(*description, offset))
@@ -333,7 +334,8 @@ ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, con
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    RefPtr<Device> device = DeviceManagement::the().get_device(m_major_number, m_minor_number);
+    auto device_search_type = node_type() == DevTmpFSInode::Type::BlockDevice ? DeviceManagement::DeviceSearchType::BlockDevice : DeviceManagement::DeviceSearchType::CharacterDevice;
+    RefPtr<Device> device = DeviceManagement::the().get_device(device_search_type, m_major_number, m_minor_number);
     if (!device)
         return Error::from_errno(ENODEV);
     if (!device->can_write(*description, offset))

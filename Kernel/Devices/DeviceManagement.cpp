@@ -47,12 +47,14 @@ DeviceManagement& DeviceManagement::the()
     return *s_the;
 }
 
-RefPtr<Device> DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
+RefPtr<Device> DeviceManagement::get_device(DeviceSearchType device_search_type, MajorNumber major, MinorNumber minor)
 {
+    bool is_searching_for_block_device = (device_search_type == DeviceSearchType::BlockDevice);
     return m_devices_list.with_exclusive([&](auto& list) -> RefPtr<Device> {
         for (auto& device : list) {
-            if (device.major() == major && device.minor() == minor)
+            if (device.major() == major && device.minor() == minor && device.is_block_device() == is_searching_for_block_device) {
                 return device;
+            }
         }
         return {};
     });

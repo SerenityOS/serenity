@@ -49,7 +49,12 @@ public:
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
-    RefPtr<Device> get_device(MajorNumber major, MinorNumber minor);
+
+    enum class DeviceSearchType {
+        BlockDevice,
+        CharacterDevice,
+    };
+    RefPtr<Device> get_device(DeviceSearchType device_search_type, MajorNumber major, MinorNumber minor);
 
     NullDevice const& null_device() const;
     NullDevice& null_device();

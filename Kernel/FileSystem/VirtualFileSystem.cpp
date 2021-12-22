@@ -268,7 +268,9 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView p
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
-        auto device = DeviceManagement::the().get_device(metadata.major_device, metadata.minor_device);
+
+        auto device_search_type = metadata.is_block_device() ? DeviceManagement::DeviceSearchType::BlockDevice : DeviceManagement::DeviceSearchType::CharacterDevice;
+        auto device = DeviceManagement::the().get_device(device_search_type, metadata.major_device, metadata.minor_device);
         if (!device) {
             return ENODEV;
         }
