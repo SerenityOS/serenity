@@ -70,7 +70,7 @@ Emulator::Emulator(String const& executable_path, Vector<StringView> const& argu
     setup_signal_trampoline();
 }
 
-Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const
+Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String const& executable_path, int executable_fd) const
 {
     // FIXME: This is not fully compatible with the auxiliary vector the kernel generates, this is just the bare
     //        minimum to get the loader going.
@@ -486,7 +486,7 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     output.write_or_error(builder.string_view().bytes());
 }
 
-void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, String contents)
+void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, String const& contents)
 {
     StringBuilder builder;
     timeval tv {};
@@ -496,7 +496,7 @@ void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_nam
     output.write_or_error(builder.string_view().bytes());
 }
 
-String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)
+String Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
 {
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())
