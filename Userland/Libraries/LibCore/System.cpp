@@ -151,7 +151,7 @@ ErrorOr<int> fcntl(int fd, int command, ...)
 ErrorOr<void*> mmap(void* address, size_t size, int protection, int flags, int fd, off_t offset, [[maybe_unused]] size_t alignment, [[maybe_unused]] StringView name)
 {
 #ifdef __serenity__
-    Syscall::SC_mmap_params params { (uintptr_t)address, size, alignment, protection, flags, fd, offset, { name.characters_without_null_termination(), name.length() } };
+    Syscall::SC_mmap_params params { address, size, alignment, protection, flags, fd, offset, { name.characters_without_null_termination(), name.length() } };
     ptrdiff_t rc = syscall(SC_mmap, &params);
     if (rc < 0 && rc > -EMAXERRNO)
         return Error::from_syscall("mmap"sv, rc);
