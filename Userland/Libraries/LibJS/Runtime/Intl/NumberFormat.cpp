@@ -437,7 +437,8 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_o
     number_format.set_data_locale(move(result.data_locale));
 
     // 13. Set numberFormat.[[NumberingSystem]] to r.[[nu]].
-    number_format.set_numbering_system(result.nu.release_value());
+    if (result.nu.has_value())
+        number_format.set_numbering_system(result.nu.release_value());
 
     // 14. Perform ? SetNumberFormatUnitOptions(numberFormat, options).
     TRY(set_number_format_unit_options(global_object, number_format, *options));
