@@ -175,3 +175,20 @@ function(remove_path_if_version_changed version version_file cache_path)
         file(WRITE "${version_file}" "${version}")
     endif()
 endfunction()
+
+function(invoke_generator name generator version_file prefix header implementation)
+    cmake_parse_arguments(invoke_generator "" "" "arguments" ${ARGN})
+
+    add_custom_command(
+        OUTPUT "${header}" "${implementation}"
+        COMMAND $<TARGET_FILE:${generator}> -h "${header}.tmp" -c "${implementation}.tmp" ${invoke_generator_arguments}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${header}.tmp" "${header}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${implementation}.tmp" "${implementation}"
+        COMMAND "${CMAKE_COMMAND}" -E remove "${header}.tmp" "${implementation}.tmp"
+        VERBATIM
+        DEPENDS ${generator} "${version_file}"
+    )
+
+    add_custom_target("generate_${prefix}${name}" DEPENDS "${header}" "${implementation}")
+    add_dependencies(all_generated "generate_${prefix}${name}")
+endfunction()
