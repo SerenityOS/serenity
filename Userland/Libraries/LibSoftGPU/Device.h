@@ -51,6 +51,17 @@ enum class BlendFactor {
     SrcAlphaSaturate,
 };
 
+enum class DepthTestFunction {
+    Never,
+    Always,
+    Less,
+    LessOrEqual,
+    Equal,
+    NotEqual,
+    GreaterOrEqual,
+    Greater,
+};
+
 enum class WindingOrder {
     Clockwise,
     CounterClockwise,
@@ -69,7 +80,7 @@ struct RasterizerOptions {
     u32 color_mask { 0xffffffff };
     float depth_min { 0 };
     float depth_max { 1 };
-    GLenum depth_func { GL_LESS };
+    DepthTestFunction depth_func { DepthTestFunction::Less };
     GLenum polygon_mode { GL_FILL };
     FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
     float fog_density { 1.0f };

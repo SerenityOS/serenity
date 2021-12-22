@@ -2130,7 +2130,36 @@ void SoftwareGLContext::gl_depth_func(GLenum func)
         GL_INVALID_ENUM);
 
     auto options = m_rasterizer.options();
-    options.depth_func = func;
+
+    switch (func) {
+    case GL_NEVER:
+        options.depth_func = SoftGPU::DepthTestFunction::Never;
+        break;
+    case GL_ALWAYS:
+        options.depth_func = SoftGPU::DepthTestFunction::Always;
+        break;
+    case GL_LESS:
+        options.depth_func = SoftGPU::DepthTestFunction::Less;
+        break;
+    case GL_LEQUAL:
+        options.depth_func = SoftGPU::DepthTestFunction::LessOrEqual;
+        break;
+    case GL_EQUAL:
+        options.depth_func = SoftGPU::DepthTestFunction::Equal;
+        break;
+    case GL_NOTEQUAL:
+        options.depth_func = SoftGPU::DepthTestFunction::NotEqual;
+        break;
+    case GL_GEQUAL:
+        options.depth_func = SoftGPU::DepthTestFunction::GreaterOrEqual;
+        break;
+    case GL_GREATER:
+        options.depth_func = SoftGPU::DepthTestFunction::Greater;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     m_rasterizer.set_options(options);
 }
 
