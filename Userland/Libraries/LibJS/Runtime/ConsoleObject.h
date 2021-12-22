@@ -29,6 +29,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(count_reset);
     JS_DECLARE_NATIVE_FUNCTION(clear);
     JS_DECLARE_NATIVE_FUNCTION(assert_);
+    JS_DECLARE_NATIVE_FUNCTION(group);
+    JS_DECLARE_NATIVE_FUNCTION(group_collapsed);
+    JS_DECLARE_NATIVE_FUNCTION(group_end);
 };
 
 }

@@ -69,13 +69,25 @@ void WebContentConsoleClient::handle_input(String const& js_source)
 
 void WebContentConsoleClient::print_html(String const& line)
 {
-    m_message_log.append({ .type = ConsoleOutput::Type::HTML, .html = line });
+    m_message_log.append({ .type = ConsoleOutput::Type::HTML, .data = line });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
 }
 
 void WebContentConsoleClient::clear_output()
 {
-    m_message_log.append({ .type = ConsoleOutput::Type::Clear, .html = "" });
+    m_message_log.append({ .type = ConsoleOutput::Type::Clear, .data = "" });
+    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+}
+
+void WebContentConsoleClient::begin_group(String const& label, bool start_expanded)
+{
+    m_message_log.append({ .type = start_expanded ? ConsoleOutput::Type::BeginGroup : ConsoleOutput::Type::BeginGroupCollapsed, .data = label });
+    m_client.async_did_output_js_console_message(m_message_log.size() - 1);
+}
+
+void WebContentConsoleClient::end_group()
+{
+    m_message_log.append({ .type = ConsoleOutput::Type::EndGroup, .data = "" });
     m_client.async_did_output_js_console_message(m_message_log.size() - 1);
 }
 
@@ -107,9 +119,18 @@ void WebContentConsoleClient::send_messages(i32 start_index)
         case ConsoleOutput::Type::Clear:
             message_types.append("clear");
             break;
+        case ConsoleOutput::Type::BeginGroup:
+            message_types.append("group");
+            break;
+        case ConsoleOutput::Type::BeginGroupCollapsed:
+            message_types.append("groupCollapsed");
+            break;
+        case ConsoleOutput::Type::EndGroup:
+            message_types.append("groupEnd");
+            break;
         }
 
-        messages.append(message.html);
+        messages.append(message.data);
     }
 
     m_client.async_did_get_js_console_messages(start_index, message_types, messages);
@@ -121,7 +142,7 @@ void WebContentConsoleClient::clear()
 }
 
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
-JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, Variant<Vector<JS::Value>, JS::Console::Trace> arguments)
+JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
@@ -135,6 +156,12 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
         html.append("</span>");
 
         print_html(html.string_view());
+        return JS::js_undefined();
+    }
+
+    if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
+        auto group = arguments.get<JS::Console::Group>();
+        begin_group(group.label, log_level == JS::Console::LogLevel::Group);
         return JS::js_undefined();
     }
 

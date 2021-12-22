@@ -240,6 +240,9 @@ namespace JS {
     P(getYear)                               \
     P(global)                                \
     P(globalThis)                            \
+    P(group)                                 \
+    P(groupCollapsed)                        \
+    P(groupEnd)                              \
     P(groups)                                \
     P(has)                                   \
     P(hasIndices)                            \

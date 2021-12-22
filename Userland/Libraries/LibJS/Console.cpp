@@ -79,7 +79,8 @@ ThrowCompletionOr<Value> Console::warn()
 // 1.1.2. clear(), https://console.spec.whatwg.org/#clear
 Value Console::clear()
 {
-    // 1. TODO: Empty the appropriate group stack.
+    // 1. Empty the appropriate group stack.
+    m_group_stack.clear();
 
     // 2. If possible for the environment, clear the console. (Otherwise, do nothing.)
     if (m_client)
@@ -107,12 +108,7 @@ ThrowCompletionOr<Value> Console::trace()
         StringBuilder builder;
         auto data = vm_arguments();
         auto formatted_data = TRY(m_client->formatter(data));
-        for (auto const& item : formatted_data) {
-            if (!builder.is_empty())
-                builder.append(' ');
-            builder.append(TRY(item.to_string(global_object())));
-        }
-        trace.label = builder.to_string();
+        trace.label = TRY(value_vector_to_string(formatted_data));
     }
 
     // 3. Perform Printer("trace", « trace »).
@@ -221,6 +217,88 @@ ThrowCompletionOr<Value> Console::assert_()
     return js_undefined();
 }
 
+// 1.3.1. group(...data), https://console.spec.whatwg.org/#group
+ThrowCompletionOr<Value> Console::group()
+{
+    // 1. Let group be a new group.
+    Group group;
+
+    // 2. If data is not empty, let groupLabel be the result of Formatter(data).
+    String group_label;
+    auto data = vm_arguments();
+    if (!data.is_empty()) {
+        auto formatted_data = TRY(m_client->formatter(data));
+        group_label = TRY(value_vector_to_string(formatted_data));
+    }
+    // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
+    else {
+        group_label = "Group";
+    }
+
+    // 3. Incorporate groupLabel as a label for group.
+    group.label = group_label;
+
+    // 4. Optionally, if the environment supports interactive groups, group should be expanded by default.
+    // NOTE: This is handled in Printer.
+
+    // 5. Perform Printer("group", « group »).
+    if (m_client)
+        TRY(m_client->printer(LogLevel::Group, group));
+
+    // 6. Push group onto the appropriate group stack.
+    m_group_stack.append(group);
+
+    return js_undefined();
+}
+
+// 1.3.2. groupCollapsed(...data), https://console.spec.whatwg.org/#groupcollapsed
+ThrowCompletionOr<Value> Console::group_collapsed()
+{
+    // 1. Let group be a new group.
+    Group group;
+
+    // 2. If data is not empty, let groupLabel be the result of Formatter(data).
+    String group_label;
+    auto data = vm_arguments();
+    if (!data.is_empty()) {
+        auto formatted_data = TRY(m_client->formatter(data));
+        group_label = TRY(value_vector_to_string(formatted_data));
+    }
+    // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
+    else {
+        group_label = "Group";
+    }
+
+    // 3. Incorporate groupLabel as a label for group.
+    group.label = group_label;
+
+    // 4. Optionally, if the environment supports interactive groups, group should be collapsed by default.
+    // NOTE: This is handled in Printer.
+
+    // 5. Perform Printer("groupCollapsed", « group »).
+    if (m_client)
+        TRY(m_client->printer(LogLevel::GroupCollapsed, group));
+
+    // 6. Push group onto the appropriate group stack.
+    m_group_stack.append(group);
+
+    return js_undefined();
+}
+
+// 1.3.3. groupEnd(), https://console.spec.whatwg.org/#groupend
+ThrowCompletionOr<Value> Console::group_end()
+{
+    if (m_group_stack.is_empty())
+        return js_undefined();
+
+    // 1. Pop the last group from the group stack.
+    m_group_stack.take_last();
+    if (m_client)
+        m_client->end_group();
+
+    return js_undefined();
+}
+
 Vector<Value> Console::vm_arguments()
 {
     Vector<Value> arguments;
@@ -255,6 +333,17 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
         break;
     }
 #endif
+}
+
+ThrowCompletionOr<String> Console::value_vector_to_string(Vector<Value>& values)
+{
+    StringBuilder builder;
+    for (auto const& item : values) {
+        if (!builder.is_empty())
+            builder.append(' ');
+        builder.append(TRY(item.to_string(global_object())));
+    }
+    return builder.to_string();
 }
 
 VM& ConsoleClient::vm()

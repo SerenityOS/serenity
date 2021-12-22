@@ -25,7 +25,7 @@ public:
 
 private:
     virtual void clear() override;
-    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, Variant<Vector<JS::Value>, JS::Console::Trace>) override;
+    virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
@@ -33,14 +33,19 @@ private:
 
     void clear_output();
     void print_html(String const& line);
+    void begin_group(String const& label, bool start_expanded);
+    virtual void end_group() override;
 
     struct ConsoleOutput {
         enum class Type {
             HTML,
-            Clear
+            Clear,
+            BeginGroup,
+            BeginGroupCollapsed,
+            EndGroup,
         };
         Type type;
-        String html;
+        String data;
     };
     Vector<ConsoleOutput> m_message_log;
 };
