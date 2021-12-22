@@ -1249,7 +1249,6 @@ private:
 
     void update_code_cache();
 
-private:
     Emulator& m_emulator;
     SoftFPU m_fpu;
 
