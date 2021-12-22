@@ -96,9 +96,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     timeline_header_container->set_shrink_to_fit(true);
 
     auto timeline_view = TRY(TimelineView::try_create(*profile));
-    for (auto& process : profile->processes()) {
+    for (auto const& process : profile->processes()) {
         bool matching_event_found = false;
-        for (auto& event : profile->events()) {
+        for (auto const& event : profile->events()) {
             if (event.pid == process.pid && process.valid_at(event.serial)) {
                 matching_event_found = true;
                 break;

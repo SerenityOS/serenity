@@ -156,7 +156,7 @@ void TimelineTrack::recompute_histograms_if_needed(HistogramInputs const& inputs
     m_kernel_histogram = Histogram { inputs.start, inputs.end, inputs.columns };
     m_user_histogram = Histogram { inputs.start, inputs.end, inputs.columns };
 
-    for (auto& event : m_profile.events()) {
+    for (auto const& event : m_profile.events()) {
         if (event.pid != m_process.pid)
             continue;
 
