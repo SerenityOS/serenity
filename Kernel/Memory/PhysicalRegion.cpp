@@ -63,7 +63,7 @@ void PhysicalRegion::initialize_zones()
     m_large_zones = make_zones(large_zone_size);
 
     // Then divide any remaining space into 1 MiB zones (with 256 pages each)
-    m_small_zones = make_zones(small_zone_size);
+    make_zones(small_zone_size);
 }
 
 OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned page_count)
