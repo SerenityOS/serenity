@@ -285,26 +285,26 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
                         bool pass = false;
                         switch (options.depth_func) {
-                        case GL_ALWAYS:
+                        case DepthTestFunction::Always:
                             pass = true;
                             break;
-                        case GL_NEVER:
+                        case DepthTestFunction::Never:
                             pass = false;
                             break;
-                        case GL_GREATER:
+                        case DepthTestFunction::Greater:
                             pass = z > *depth;
                             break;
-                        case GL_GEQUAL:
+                        case DepthTestFunction::GreaterOrEqual:
                             pass = z >= *depth;
                             break;
-                        case GL_NOTEQUAL:
+                        case DepthTestFunction::NotEqual:
 #ifdef __SSE__
                             pass = z != *depth;
 #else
                             pass = bit_cast<u32>(z) != bit_cast<u32>(*depth);
 #endif
                             break;
-                        case GL_EQUAL:
+                        case DepthTestFunction::Equal:
 #ifdef __SSE__
                             pass = z == *depth;
 #else
@@ -322,10 +322,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             pass = bit_cast<u32>(z) == bit_cast<u32>(*depth);
 #endif
                             break;
-                        case GL_LEQUAL:
+                        case DepthTestFunction::LessOrEqual:
                             pass = z <= *depth;
                             break;
-                        case GL_LESS:
+                        case DepthTestFunction::Less:
                             pass = z < *depth;
                             break;
                         }
