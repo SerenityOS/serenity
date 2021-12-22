@@ -15,11 +15,13 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/umask.html
 mode_t umask(mode_t mask)
 {
     return syscall(SC_umask, mask);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdir.html
 int mkdir(const char* pathname, mode_t mode)
 {
     if (!pathname) {
@@ -30,6 +32,7 @@ int mkdir(const char* pathname, mode_t mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/chmod.html
 int chmod(const char* pathname, mode_t mode)
 {
     if (!pathname) {
@@ -40,12 +43,14 @@ int chmod(const char* pathname, mode_t mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fchmod.html
 int fchmod(int fd, mode_t mode)
 {
     int rc = syscall(SC_fchmod, fd, mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkfifo.html
 int mkfifo(const char* pathname, mode_t mode)
 {
     return mknod(pathname, mode | S_IFIFO, 0);
@@ -62,22 +67,26 @@ static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follo
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/lstat.html
 int lstat(const char* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, false);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/stat.html
 int stat(const char* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, true);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstat.html
 int fstat(int fd, struct stat* statbuf)
 {
     int rc = syscall(SC_fstat, fd, statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstatat.html
 int fstatat(int fd, const char* path, struct stat* statbuf, int flags)
 {
     return do_stat(fd, path, statbuf, !(flags & AT_SYMLINK_NOFOLLOW));
