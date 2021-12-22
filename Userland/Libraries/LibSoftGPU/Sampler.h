@@ -32,6 +32,12 @@ enum class TextureWrapMode {
     ClampToEdge,
 };
 
+enum class TextureEnvMode {
+    Modulate,
+    Replace,
+    Decal,
+};
+
 struct SamplerConfig final {
     RefPtr<Image> bound_image;
     MipMapFilter mipmap_filter { MipMapFilter::Nearest };
@@ -41,6 +47,7 @@ struct SamplerConfig final {
     TextureWrapMode texture_wrap_v { TextureWrapMode::Repeat };
     TextureWrapMode texture_wrap_w { TextureWrapMode::Repeat };
     FloatVector4 border_color { 0, 0, 0, 1 };
+    TextureEnvMode fixed_function_texture_env_mode { TextureEnvMode::Modulate };
 };
 
 class Sampler final {
@@ -48,6 +55,7 @@ public:
     FloatVector4 sample_2d(FloatVector2 const& uv) const;
 
     void set_config(SamplerConfig const& config) { m_config = config; }
+    SamplerConfig const& config() const { return m_config; }
 
 private:
     SamplerConfig m_config;
