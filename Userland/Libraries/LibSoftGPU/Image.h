@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
+#include <LibSoftGPU/ImageDataLayout.h>
 #include <LibSoftGPU/ImageFormat.h>
 
 namespace SoftGPU {
@@ -37,6 +38,9 @@ public:
     {
         pack_color(color, texel_pointer(layer, level, x, y, z), m_format);
     }
+
+    void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, ImageDataLayout const& layout);
+    void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, ImageDataLayout const& layout) const;
 
 private:
     void const* texel_pointer(unsigned layer, unsigned level, unsigned x, unsigned y, unsigned z) const
