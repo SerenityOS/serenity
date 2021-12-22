@@ -31,10 +31,8 @@ constexpr bool page_round_up_would_wrap(FlatPtr x)
 
 constexpr FlatPtr page_round_up(FlatPtr x)
 {
-    FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
-    // Rounding up >0xfffff000 wraps back to 0. That's never what we want.
-    VERIFY(x == 0 || rounded != 0);
-    return rounded;
+    VERIFY(!page_round_up_would_wrap(x));
+    return (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
 }
 
 constexpr FlatPtr page_round_down(FlatPtr x)

@@ -587,6 +587,10 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
     if (address.ptr() % PAGE_SIZE != 0)
         return EINVAL;
 
+    if (Memory::page_round_up_would_wrap(size)) {
+        return EINVAL;
+    }
+
     // Note: This is not specified
     size = Memory::page_round_up(size);
 
