@@ -5,14 +5,15 @@ bt - view the backtrace of the specified process
 ## Synopsis
 
 ```**sh
-$ bt <pid>
+$ bt <pid-or-coredump>
 ```
 
 ## Description
 
-This program is used to inspect the current executable state of a process.
-It will read the stack of each thread in the process, and symbolicate the
-addresses for each frame in the stack producing a backtrace.
+This program is used to inspect the current executable state of a process, or
+to display the backtrace of a crashed process. It will read the stack of each
+thread in the process, and symbolicate the addresses for each frame in the
+stack producing a backtrace.
 
 **NOTE**:
 
@@ -23,7 +24,7 @@ addresses for each frame in the stack producing a backtrace.
 
 ## Arguments
 
-* `pid`: Process ID
+* `pid-or-coredump`: Process ID, or path to coredump file
 
 ## Examples
 
@@ -37,6 +38,12 @@ Use [`watch`(1)](watch.md) to emit a backtrace of pid 124, every second:
 
 ```sh
 $ watch -n 1 -- bt 124
+```
+
+View the backtrace of a crashed process:
+
+```sh
+$ bt /tmp/coredump/CatDog_13_476763780
 ```
 
 ## See also

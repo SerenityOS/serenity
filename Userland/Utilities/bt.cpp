@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,19 +12,14 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
+#include <LibCoredump/Backtrace.h>
 #include <LibMain/Main.h>
 #include <LibSymbolication/Symbolication.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+static ErrorOr<int> symbolicate_process(pid_t pid)
 {
-    TRY(Core::System::pledge("stdio rpath"));
     auto hostname = TRY(Core::System::gethostname());
-
-    Core::ArgsParser args_parser;
-    pid_t pid = 0;
-    args_parser.add_positional_argument(pid, "PID", "pid");
-    args_parser.parse(arguments);
     Core::EventLoop loop;
 
     Core::DirIterator iterator(String::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
@@ -79,4 +75,61 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("");
     }
     return 0;
+}
+
+static ErrorOr<int> symbolicate_coredump(String path)
+{
+    auto coredump = Coredump::Reader::create(path);
+    if (!coredump) {
+        warnln("Could not open coredump '{}'", path);
+        return 1;
+    }
+
+    auto const& metadata = coredump->metadata();
+    if (auto assert_message = metadata.get("assertion"); assert_message.has_value())
+        outln("ASSERTION FAILED: {}\n", *assert_message);
+    else if (auto pledge_violation = metadata.get("pledge_violation"); pledge_violation.has_value())
+        outln("Has not pledged {}\n", *pledge_violation);
+
+    auto fault_address = metadata.get("fault_address");
+    auto fault_type = metadata.get("fault_type");
+    auto fault_access = metadata.get("fault_access");
+    if (fault_address.has_value() && fault_type.has_value() && fault_access.has_value())
+        outln("{} fault on {} at address {}\n", *fault_address, *fault_type, *fault_access);
+
+    bool is_tty = isatty(STDOUT_FILENO);
+    size_t thread_index = 0;
+    coredump->for_each_thread_info([&](auto const& thread_info) {
+        Coredump::Backtrace backtrace(*coredump, thread_info, [&](size_t frame_index, size_t frame_count) {
+            if (is_tty)
+                warn("\033]9;{};{};\033\\", frame_index, frame_count);
+        });
+        if (is_tty)
+            warn("\033]9;-1;\033\\");
+
+        if (thread_index != 0)
+            outln("");
+        outln("--- Backtrace for thread #{} (TID {}) ---", thread_index++, thread_info.tid);
+        for (auto const& entry : backtrace.entries())
+            outln("{}", entry.to_string(is_tty));
+
+        return IterationDecision::Continue;
+    });
+    return 0;
+}
+
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    TRY(Core::System::pledge("stdio rpath"));
+
+    Core::ArgsParser args_parser;
+    String pid_or_coredump;
+    args_parser.set_general_help("View the backtrace of a specified process");
+    args_parser.add_positional_argument(pid_or_coredump, "PID or path to coredump", "pid-or-coredump");
+    args_parser.parse(arguments);
+
+    if (auto maybe_pid = pid_or_coredump.to_int<pid_t>(); maybe_pid.has_value())
+        return symbolicate_process(*maybe_pid);
+    else
+        return symbolicate_coredump(move(pid_or_coredump));
 }
