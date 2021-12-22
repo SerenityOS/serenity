@@ -216,6 +216,11 @@ function(lagom_test source)
     )
 endfunction()
 
+if (NOT TARGET all_generated)
+    # Meta target to run all code-gen steps in the build.
+    add_custom_target(all_generated)
+endif()
+
 # AK/Core
 # Note: AK is included in LagomCore for the host build instead of LibC per the target build
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
@@ -240,6 +245,19 @@ if (APPLE)
     target_link_options(LagomMain PRIVATE -undefined dynamic_lookup)
 endif()
 
+# TimeZone
+# This is needed even if Lagom is not enabled because it is depended upon by code generators.
+if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+    include(time_zone_data)
+else()
+    set(ENABLE_TIME_ZONE_DATABASE_DOWNLOAD OFF)
+endif()
+file(GLOB LIBTIMEZONE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTimeZone/*.cpp")
+lagom_lib(TimeZone timezone
+    SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
+)
+target_compile_definitions(LagomTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
@@ -255,12 +273,6 @@ if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
 endif()
 
 if (BUILD_LAGOM)
-
-    if (NOT TARGET all_generated)
-        # Meta target to run all code-gen steps in the build.
-        add_custom_target(all_generated)
-    endif()
-
     # Lagom Libraries
 
     # Archive
