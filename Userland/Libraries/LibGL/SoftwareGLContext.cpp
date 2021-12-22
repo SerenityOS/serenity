@@ -2356,7 +2356,17 @@ void SoftwareGLContext::gl_fogi(GLenum pname, GLint param)
 
     switch (pname) {
     case GL_FOG_MODE:
-        options.fog_mode = param;
+        switch (param) {
+        case GL_LINEAR:
+            options.fog_mode = SoftGPU::FogMode::Linear;
+            break;
+        case GL_EXP:
+            options.fog_mode = SoftGPU::FogMode::Exp;
+            break;
+        case GL_EXP2:
+            options.fog_mode = SoftGPU::FogMode::Exp2;
+            break;
+        }
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
