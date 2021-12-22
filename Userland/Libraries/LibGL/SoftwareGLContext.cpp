@@ -231,7 +231,27 @@ void SoftwareGLContext::gl_end()
     }
 
     sync_device_config();
-    m_rasterizer.draw_primitives(m_current_draw_mode, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
+
+    SoftGPU::PrimitiveType primitive_type;
+    switch (m_current_draw_mode) {
+    case GL_TRIANGLES:
+        primitive_type = SoftGPU::PrimitiveType::Triangles;
+        break;
+    case GL_TRIANGLE_STRIP:
+        primitive_type = SoftGPU::PrimitiveType::TriangleStrip;
+        break;
+    case GL_TRIANGLE_FAN:
+    case GL_POLYGON:
+        primitive_type = SoftGPU::PrimitiveType::TriangleFan;
+        break;
+    case GL_QUADS:
+        primitive_type = SoftGPU::PrimitiveType::Quads;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_rasterizer.draw_primitives(primitive_type, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
