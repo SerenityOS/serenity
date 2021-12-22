@@ -54,6 +54,7 @@ public:
     virtual u16 num_channels() override { return m_num_channels; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
     virtual RefPtr<Core::File> file() override { return m_file; }
+    virtual bool stream_complete() override { return m_loaded_samples >= m_total_samples; }
 
 private:
     MaybeLoaderError parse_header();

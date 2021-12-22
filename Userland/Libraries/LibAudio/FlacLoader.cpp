@@ -216,6 +216,7 @@ MaybeLoaderError FlacLoaderPlugin::seek(const int sample_index)
     auto position = target_seekpoint.byte_offset + m_data_start_location;
     if (!m_stream->seek(position))
         return LoaderError { LoaderError::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
+    m_sample_index = target_seekpoint.sample_index;
     return {};
 }
 
@@ -226,10 +227,9 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     if (remaining_samples <= 0)
         return Buffer::create_empty();
 
-    // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
     size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
     samples.ensure_capacity(samples_to_read);
-    while (samples_to_read > 0) {
+    while (samples_to_read > 0 && m_sample_index < m_total_samples) {
         if (!m_current_frame.has_value())
             TRY(next_frame());
 
@@ -245,11 +245,13 @@ LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
             if (m_current_frame_data.size() == 0) {
                 m_current_frame.clear();
             }
+            m_sample_index += samples_to_read;
             samples_to_read = 0;
         }
     }
 
     m_loaded_samples += samples.size();
+    m_sample_index += samples.size();
     auto maybe_buffer = Buffer::create_with_samples(move(samples));
     if (maybe_buffer.is_error())
         return LoaderError { LoaderError::Category::Internal, m_loaded_samples, "Couldn't allocate sample buffer" };

@@ -106,17 +106,14 @@ void PlaybackManager::next_buffer()
     if (m_paused)
         return;
 
-    u32 audio_server_remaining_samples = m_connection->get_remaining_samples();
-    bool all_samples_loaded = (m_loader->loaded_samples() >= m_loader->total_samples());
-    bool audio_server_done = (audio_server_remaining_samples == 0);
-
-    if (all_samples_loaded && audio_server_done) {
+    if (m_loader->stream_complete()) {
         stop();
         if (on_finished_playing)
             on_finished_playing();
         return;
     }
 
+    u32 audio_server_remaining_samples = m_connection->get_remaining_samples();
     if (audio_server_remaining_samples < m_device_samples_per_buffer) {
         auto maybe_buffer = m_loader->get_more_samples(m_source_buffer_size_bytes);
         if (!maybe_buffer.is_error()) {

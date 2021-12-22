@@ -102,6 +102,7 @@ public:
     virtual u16 num_channels() override { return m_num_channels; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
     virtual RefPtr<Core::File> file() override { return m_file; }
+    virtual bool stream_complete() override { return m_sample_index >= m_total_samples; }
 
     bool is_fixed_blocksize_stream() const { return m_min_block_size == m_max_block_size; }
     bool sample_count_unknown() const { return m_total_samples == 0; }
@@ -144,6 +145,7 @@ private:
     // Frames are units of encoded audio data, both of these are 24-bit
     u32 m_min_frame_size { 0 }; //24 bit
     u32 m_max_frame_size { 0 }; // 24 bit
+    u64 m_sample_index { 0 };
     u64 m_total_samples { 0 };  // 36 bit
     u8 m_md5_checksum[128 / 8]; // 128 bit (!)
     size_t m_loaded_samples { 0 };
