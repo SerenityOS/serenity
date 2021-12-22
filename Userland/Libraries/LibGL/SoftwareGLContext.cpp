@@ -2293,7 +2293,19 @@ void SoftwareGLContext::gl_polygon_mode(GLenum face, GLenum mode)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto options = m_rasterizer.options();
-    options.polygon_mode = mode;
+
+    // FIXME: This must support different polygon modes for front- and backside
+    switch (mode) {
+    case GL_POINT:
+        options.polygon_mode = SoftGPU::PolygonMode::Point;
+        break;
+    case GL_LINE:
+        options.polygon_mode = SoftGPU::PolygonMode::Line;
+        break;
+    case GL_FILL:
+        options.polygon_mode = SoftGPU::PolygonMode::Fill;
+        break;
+    }
 
     m_rasterizer.set_options(options);
 }
