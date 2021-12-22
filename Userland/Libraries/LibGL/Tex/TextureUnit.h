@@ -36,9 +36,6 @@ public:
     bool texture_cube_map_enabled() const { return m_texture_cube_map_enabled; };
     void set_texture_cube_map_enabled(bool texture_cube_map_enabled) { m_texture_cube_map_enabled = texture_cube_map_enabled; }
 
-    IntrusiveListNode<TextureUnit> m_bound_node;
-    using BoundList = IntrusiveList<&TextureUnit::m_bound_node>;
-
 private:
     mutable RefPtr<Texture2D> m_texture_target_2d { nullptr };
     mutable RefPtr<Texture> m_currently_bound_texture { nullptr };

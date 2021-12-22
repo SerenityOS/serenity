@@ -224,14 +224,14 @@ void SoftwareGLContext::gl_end()
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
-    m_bound_texture_units.clear();
-    for (auto& texture_unit : m_texture_units) {
-        if (texture_unit.is_bound())
-            m_bound_texture_units.append(texture_unit);
+    Vector<size_t, 32> enabled_texture_units;
+    for (size_t i = 0; i < m_texture_units.size(); ++i) {
+        if (m_texture_units[i].texture_2d_enabled())
+            enabled_texture_units.append(i);
     }
 
     sync_device_config();
-    m_rasterizer.draw_primitives(m_current_draw_mode, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, m_bound_texture_units);
+    m_rasterizer.draw_primitives(m_current_draw_mode, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
