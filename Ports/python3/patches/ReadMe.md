@@ -1,8 +1,8 @@
 # Patches for Python 3.9 on SerenityOS
 
-## `define-have-sigset-t.patch`
+## `remove-missing-si-errno.patch`
 
-Ensures `HAVE_SIGSET_T` is defined, as we *do* have `sigset_t` but it's not detected properly due to some related functions being missing.
+Removes a reference to `si_errno` in `siginfo_t`, as we currently don't have that implemented.
 
 ## `include-sys-uio.patch`
 
