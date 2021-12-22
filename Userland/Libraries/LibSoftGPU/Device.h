@@ -79,7 +79,7 @@ struct RasterizerOptions {
     float fog_end { 1.0f };
     bool scissor_enabled { false };
     Gfx::IntRect scissor_box;
-    GLenum draw_buffer { GL_BACK };
+    bool enable_color_write { true };
     float depth_offset_factor { 0 };
     float depth_offset_constant { 0 };
     bool enable_culling { false };
