@@ -65,8 +65,16 @@ jobs:
 
       - name: Create build directory
         run: |
+          mkdir -p libjs-test262/Build/TZDB
           mkdir -p libjs-test262/Build/UCD
           mkdir -p libjs-test262/Build/CLDR
+
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
       - name: UnicodeData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
