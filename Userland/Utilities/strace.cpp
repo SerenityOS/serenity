@@ -634,7 +634,8 @@ static void format_recvmsg(FormattedSyscallBuilder& builder, int socket, struct 
 struct MmapFlags : BitflagBase {
     static constexpr auto options = {
         BITFLAG(MAP_SHARED), BITFLAG(MAP_PRIVATE), BITFLAG(MAP_FIXED), BITFLAG(MAP_ANONYMOUS),
-        BITFLAG(MAP_RANDOMIZED), BITFLAG(MAP_STACK), BITFLAG(MAP_NORESERVE), BITFLAG(MAP_PURGEABLE)
+        BITFLAG(MAP_RANDOMIZED), BITFLAG(MAP_STACK), BITFLAG(MAP_NORESERVE), BITFLAG(MAP_PURGEABLE),
+        BITFLAG(MAP_FIXED_NOREPLACE)
     };
     static constexpr StringView default_ = "MAP_FILE";
 };

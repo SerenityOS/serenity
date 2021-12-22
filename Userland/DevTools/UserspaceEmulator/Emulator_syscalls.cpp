@@ -873,10 +873,11 @@ u32 Emulator::virt$mmap(u32 params_addr)
     Optional<Range> result;
     if (params.flags & MAP_RANDOMIZED) {
         result = m_range_allocator.allocate_randomized(requested_size, params.alignment);
-    } else if (params.flags & MAP_FIXED) {
+    } else if (params.flags & MAP_FIXED || params.flags & MAP_FIXED_NOREPLACE) {
         if (params.addr) {
             // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
-            virt$munmap(params.addr, requested_size);
+            if (params.flags & MAP_FIXED)
+                virt$munmap(params.addr, requested_size);
             result = m_range_allocator.allocate_specific(VirtualAddress { params.addr }, requested_size);
         } else {
             // mmap(nullptr, …, MAP_FIXED) is technically okay, but tends to be a bug.

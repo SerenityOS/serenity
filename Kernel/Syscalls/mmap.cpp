@@ -135,7 +135,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
         REQUIRE_PROMISE(prot_exec);
     }
 
-    if (prot & MAP_FIXED) {
+    if (prot & MAP_FIXED || prot & MAP_FIXED_NOREPLACE) {
         REQUIRE_PROMISE(map_fixed);
     }
 
@@ -167,6 +167,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     bool map_fixed = flags & MAP_FIXED;
     bool map_noreserve = flags & MAP_NORESERVE;
     bool map_randomized = flags & MAP_RANDOMIZED;
+    bool map_fixed_noreplace = flags & MAP_FIXED_NOREPLACE;
 
     if (map_shared && map_private)
         return EINVAL;
@@ -174,7 +175,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     if (!map_shared && !map_private)
         return EINVAL;
 
-    if (map_fixed && map_randomized)
+    if ((map_fixed || map_fixed_noreplace) && map_randomized)
         return EINVAL;
 
     if (!validate_mmap_prot(prot, map_stack, map_anonymous))
@@ -186,19 +187,18 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     Memory::Region* region = nullptr;
 
     auto range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
-        if (map_randomized) {
+        if (map_randomized)
             return address_space().page_directory().range_allocator().try_allocate_randomized(Memory::page_round_up(size), alignment);
-        }
+
+        // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
+        if (map_fixed)
+            TRY(address_space().unmap_mmap_range(VirtualAddress(addr), size));
 
         auto range = address_space().try_allocate_range(VirtualAddress(addr), size, alignment);
         if (range.is_error()) {
-            if (addr && !map_fixed) {
+            if (addr && !(map_fixed || map_fixed_noreplace)) {
                 // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
                 range = address_space().try_allocate_range({}, size, alignment);
-            } else if (map_fixed) {
-                // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
-                TRY(address_space().unmap_mmap_range(VirtualAddress(addr), size));
-                range = address_space().try_allocate_range(VirtualAddress(addr), size, alignment);
             }
         }
         return range;
