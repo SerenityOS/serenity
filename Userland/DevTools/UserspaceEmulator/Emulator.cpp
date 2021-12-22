@@ -341,7 +341,8 @@ void Emulator::handle_repl()
         if (parts.size() == 1) {
             did_receive_signal(SIGINT);
             return;
-        } else if (parts.size() == 2) {
+        }
+        if (parts.size() == 2) {
             auto number = AK::StringUtils::convert_to_int<i32>(parts[1]);
             if (number.has_value()) {
                 did_receive_signal(number.value());
@@ -451,12 +452,13 @@ String Emulator::create_backtrace_line(FlatPtr address)
     auto maybe_symbol = symbol_at(address);
     if (!maybe_symbol.has_value()) {
         return String::formatted("=={}==    {:p}", getpid(), address);
-    } else if (!maybe_symbol->source_position.has_value()) {
-        return String::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
-    } else {
-        auto const& source_position = maybe_symbol->source_position.value();
-        return String::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
     }
+    if (!maybe_symbol->source_position.has_value()) {
+        return String::formatted("=={}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
+    }
+
+    auto const& source_position = maybe_symbol->source_position.value();
+    return String::formatted("=={}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
 }
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
@@ -499,8 +501,8 @@ String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)
     auto symbol = symbol_at(address);
     if (!symbol.has_value() || !symbol->source_position.has_value())
         return String::formatted("{:p}: {}", address, insn.to_string(address));
-    else
-        return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
+
+    return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum)
