@@ -1,3 +1,5 @@
+include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
+
 set(UCD_VERSION 14.0.0)
 set(CLDR_VERSION 40.0.0)
 
@@ -67,23 +69,6 @@ set(CLDR_NUMBERS_PATH "${CLDR_PATH}/${CLDR_NUMBERS_SOURCE}")
 set(CLDR_UNITS_SOURCE cldr-units-modern)
 set(CLDR_UNITS_PATH "${CLDR_PATH}/${CLDR_UNITS_SOURCE}")
 
-function(remove_unicode_data_if_version_changed version version_file cache_path)
-    set(version_differs YES)
-
-    if (EXISTS "${version_file}")
-        file(STRINGS "${version_file}" active_version)
-        if (version STREQUAL active_version)
-            set(version_differs NO)
-        endif()
-    endif()
-
-    if (version_differs)
-        message(STATUS "Removing outdated ${cache_path} for version ${version}")
-        file(REMOVE_RECURSE "${cache_path}")
-        file(WRITE "${version_file}" "${version}")
-    endif()
-endfunction()
-
 function(download_ucd_file url path)
     if (NOT EXISTS "${path}")
         get_filename_component(file "${path}" NAME)
@@ -120,8 +105,8 @@ function(invoke_generator name generator header implementation)
 endfunction()
 
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
-    remove_unicode_data_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
-    remove_unicode_data_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
+    remove_path_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
+    remove_path_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
 
     download_ucd_file("${UNICODE_DATA_URL}" "${UNICODE_DATA_PATH}")
     download_ucd_file("${SPECIAL_CASING_URL}" "${SPECIAL_CASING_PATH}")
