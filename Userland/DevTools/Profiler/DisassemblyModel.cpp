@@ -67,8 +67,8 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             g_kernel_debug_info = make<Debug::DebugInfo>(g_kernel_debuginfo_object->elf, String::empty(), base_address);
         debug_info = g_kernel_debug_info.ptr();
     } else {
-        auto& process = node.process();
-        auto library_data = process.library_metadata.library_containing(node.address());
+        auto const& process = node.process();
+        auto const* library_data = process.library_metadata.library_containing(node.address());
         if (!library_data) {
             dbgln("no library data for address {:p}", node.address());
             return;
@@ -114,7 +114,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     FlatPtr last_instruction_offset = 0;
     if (!is_function_address) {
         FlatPtr last_instruction_address = 0;
-        for (auto& event : node.events_per_address())
+        for (auto const& event : node.events_per_address())
             last_instruction_address = max(event.key, last_instruction_address);
         last_instruction_offset = last_instruction_address - node.address();
     }
@@ -188,7 +188,7 @@ static Optional<ColorPair> color_pair_for(const InstructionData& insn)
 
 GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto& insn = m_instructions[index.row()];
+    auto const& insn = m_instructions[index.row()];
 
     if (role == GUI::ModelRole::BackgroundColor) {
         auto colors = color_pair_for(insn);
@@ -228,7 +228,7 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
         if (index.column() == Column::SourceLocation) {
             StringBuilder builder;
             auto first = true;
-            for (auto& entry : insn.source_position_with_inlines.inline_chain) {
+            for (auto const& entry : insn.source_position_with_inlines.inline_chain) {
                 if (first)
                     first = false;
                 else
@@ -238,7 +238,7 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
             if (insn.source_position_with_inlines.source_position.has_value()) {
                 if (!first)
                     builder.append(" => ");
-                auto& entry = insn.source_position_with_inlines.source_position.value();
+                auto const& entry = insn.source_position_with_inlines.source_position.value();
                 builder.appendff("{}:{}", entry.file_path, entry.line_number);
             }
             return builder.build();

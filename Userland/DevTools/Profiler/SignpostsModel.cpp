@@ -54,7 +54,7 @@ String SignpostsModel::column_name(int column) const
 GUI::Variant SignpostsModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     u32 event_index = m_profile.filtered_signpost_indices()[index.row()];
-    auto& event = m_profile.events().at(event_index);
+    auto const& event = m_profile.events().at(event_index);
 
     if (role == GUI::ModelRole::Custom) {
         return event_index;
@@ -71,7 +71,7 @@ GUI::Variant SignpostsModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
             return event.tid;
 
         if (index.column() == Column::ExecutableName) {
-            if (auto* process = m_profile.find_process(event.pid, event.serial))
+            if (auto const* process = m_profile.find_process(event.pid, event.serial))
                 return process->executable;
             return "";
         }

@@ -186,12 +186,12 @@ void FlameGraphView::layout_children(GUI::ModelIndex& index, int depth, int left
     if (!index.is_valid()) {
         // We're at the root, so calculate the event count across all roots
         for (auto i = 0; i < m_model.row_count(index); ++i) {
-            auto& root = *static_cast<ProfileNode*>(m_model.index(i).internal_data());
+            auto const& root = *static_cast<ProfileNode const*>(m_model.index(i).internal_data());
             node_event_count += root.event_count();
         }
         m_bars.append({ {}, { left, y, available_width, bar_height }, false });
     } else {
-        auto node = static_cast<ProfileNode*>(index.internal_data());
+        auto const* node = static_cast<ProfileNode const*>(index.internal_data());
 
         bool selected = !selected_nodes.is_empty();
         if (selected) {
@@ -220,7 +220,7 @@ void FlameGraphView::layout_children(GUI::ModelIndex& index, int depth, int left
             return;
         }
 
-        auto child = static_cast<ProfileNode*>(child_index.internal_data());
+        auto const* child = static_cast<ProfileNode const*>(child_index.internal_data());
         float child_width = width_per_sample * child->event_count();
         layout_children(child_index, depth + 1, static_cast<int>(new_left), static_cast<int>(new_left + child_width), selected_nodes);
         new_left += child_width;

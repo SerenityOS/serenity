@@ -23,7 +23,7 @@ IndividualSampleModel::~IndividualSampleModel()
 
 int IndividualSampleModel::row_count(const GUI::ModelIndex&) const
 {
-    auto& event = m_profile.events().at(m_event_index);
+    auto const& event = m_profile.events().at(m_event_index);
     return event.frames.size();
 }
 
@@ -48,8 +48,8 @@ String IndividualSampleModel::column_name(int column) const
 
 GUI::Variant IndividualSampleModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto& event = m_profile.events().at(m_event_index);
-    auto& frame = event.frames[event.frames.size() - index.row() - 1];
+    auto const& event = m_profile.events().at(m_event_index);
+    auto const& frame = event.frames[event.frames.size() - index.row() - 1];
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)

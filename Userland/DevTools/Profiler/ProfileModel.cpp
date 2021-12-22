@@ -135,7 +135,7 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         if (index.column() == Column::SymbolAddress) {
             if (node->is_root())
                 return "";
-            auto library = node->process().library_metadata.library_containing(node->address());
+            auto const* library = node->process().library_metadata.library_containing(node->address());
             if (!library)
                 return "";
             return String::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
