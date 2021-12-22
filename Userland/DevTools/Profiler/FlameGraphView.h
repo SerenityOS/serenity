@@ -25,7 +25,7 @@ public:
 
     Function<void()> on_hover_change;
 
-    GUI::ModelIndex const hovered_index() const;
+    GUI::ModelIndex hovered_index() const;
 
 protected:
     virtual void model_did_update(unsigned flags) override;
