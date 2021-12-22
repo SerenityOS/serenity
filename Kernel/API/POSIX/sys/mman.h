@@ -23,6 +23,7 @@ extern "C" {
 #define MAP_NORESERVE 0x80
 #define MAP_RANDOMIZED 0x100
 #define MAP_PURGEABLE 0x200
+#define MAP_FIXED_NOREPLACE 0x400
 
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2
