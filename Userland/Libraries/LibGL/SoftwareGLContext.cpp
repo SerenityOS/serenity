@@ -904,7 +904,7 @@ void SoftwareGLContext::gl_front_face(GLenum face)
     m_front_face = face;
 
     auto rasterizer_options = m_rasterizer.options();
-    rasterizer_options.front_face = face;
+    rasterizer_options.front_face = (face == GL_CW) ? SoftGPU::WindingOrder::Clockwise : SoftGPU::WindingOrder::CounterClockwise;
     m_rasterizer.set_options(rasterizer_options);
 }
 

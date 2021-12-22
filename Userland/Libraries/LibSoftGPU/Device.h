@@ -51,6 +51,11 @@ enum class BlendFactor {
     SrcAlphaSaturate,
 };
 
+enum class WindingOrder {
+    Clockwise,
+    CounterClockwise,
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
@@ -78,7 +83,7 @@ struct RasterizerOptions {
     float depth_offset_factor { 0 };
     float depth_offset_constant { 0 };
     bool enable_culling { false };
-    GLenum front_face { GL_CCW };
+    WindingOrder front_face { WindingOrder::CounterClockwise };
     GLenum culled_sides { GL_BACK };
 };
 
