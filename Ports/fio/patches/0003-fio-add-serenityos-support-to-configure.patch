@@ -1,0 +1,26 @@
+From 99f1cf657e539078c7347c3ddc4a1537d5332e15 Mon Sep 17 00:00:00 2001
+From: Brian Gianforcaro <b.gianfo@gmail.com>
+Date: Tue, 21 Dec 2021 23:48:09 -0800
+Subject: [PATCH 3/4] Port: Add SerenityOS support to configure
+
+---
+ configure | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configure b/configure
+index 84ccce0..04bac14 100755
+--- a/configure
++++ b/configure
+@@ -323,6 +323,9 @@ elif check_define __NetBSD__ ; then
+ elif check_define __sun__ ; then
+   targetos='SunOS'
+   CFLAGS="$CFLAGS -D_REENTRANT"
++elif check_define __serenity__ ; then
++  targetos='SerenityOS'
++  no_shm="yes"
+ elif check_define _WIN32 ; then
+   targetos='CYGWIN'
+ else
+-- 
+2.32.0
+
