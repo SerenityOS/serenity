@@ -64,7 +64,7 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) = 0;
 
 protected:
-    BlockDevice(unsigned major, unsigned minor, size_t block_size = PAGE_SIZE)
+    BlockDevice(MajorNumber major, MinorNumber minor, size_t block_size = PAGE_SIZE)
         : Device(major, minor)
         , m_block_size(block_size)
     {

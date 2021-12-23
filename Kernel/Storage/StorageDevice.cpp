@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(int major, int minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
+StorageDevice::StorageDevice(MajorNumber major, MinorNumber minor, size_t sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> device_name)
     : BlockDevice(major, minor, sector_size)
     , m_early_storage_device_name(move(device_name))
     , m_max_addressable_block(max_addressable_block)

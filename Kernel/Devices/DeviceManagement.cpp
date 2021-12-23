@@ -42,10 +42,10 @@ DeviceManagement& DeviceManagement::the()
     return *s_the;
 }
 
-Device* DeviceManagement::get_device(unsigned major, unsigned minor)
+Device* DeviceManagement::get_device(MajorNumber major, MinorNumber minor)
 {
     return m_devices.with_exclusive([&](auto& map) -> Device* {
-        auto it = map.find(encoded_device(major, minor));
+        auto it = map.find(encoded_device(major.value(), minor.value()));
         if (it == map.end())
             return nullptr;
         return it->value;
@@ -54,7 +54,7 @@ Device* DeviceManagement::get_device(unsigned major, unsigned minor)
 
 void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 {
-    u32 device_id = encoded_device(device.major(), device.minor());
+    u64 device_id = encoded_device(device.major(), device.minor());
     m_devices.with_exclusive([&](auto& map) -> void {
         VERIFY(map.contains(device_id));
         map.remove(encoded_device(device.major(), device.minor()));
@@ -63,7 +63,7 @@ void DeviceManagement::before_device_removal(Badge<Device>, Device& device)
 
 void DeviceManagement::after_inserting_device(Badge<Device>, Device& device)
 {
-    u32 device_id = encoded_device(device.major(), device.minor());
+    u64 device_id = encoded_device(device.major(), device.minor());
     m_devices.with_exclusive([&](auto& map) -> void {
         if (map.contains(device_id)) {
             dbgln("Already registered {},{}: {}", device.major(), device.minor(), device.class_name());

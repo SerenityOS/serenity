@@ -54,7 +54,7 @@ public:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) final;
 
 protected:
-    StorageDevice(int, int, size_t, u64, NonnullOwnPtr<KString>);
+    StorageDevice(MajorNumber, MinorNumber, size_t, u64, NonnullOwnPtr<KString>);
     // ^DiskDevice
     virtual StringView class_name() const override;
 

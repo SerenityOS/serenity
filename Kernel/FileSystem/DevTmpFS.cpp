@@ -48,7 +48,7 @@ DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs)
 {
 }
 
-DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, unsigned major_number, unsigned minor_number)
+DevTmpFSInode::DevTmpFSInode(DevTmpFS& fs, MajorNumber major_number, MinorNumber minor_number)
     : Inode(fs, fs.allocate_inode_index())
     , m_major_number(major_number)
     , m_minor_number(minor_number)
@@ -263,8 +263,8 @@ ErrorOr<NonnullRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView na
     }
     if (metadata.is_device()) {
         auto name_kstring = TRY(KString::try_create(name));
-        unsigned major = major_from_encoded_device(device_mode);
-        unsigned minor = minor_from_encoded_device(device_mode);
+        auto major = major_from_encoded_device(device_mode);
+        auto minor = minor_from_encoded_device(device_mode);
         auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
         TRY(new_device_inode->chmod(mode));
         m_nodes.append(*new_device_inode);
@@ -298,7 +298,7 @@ ErrorOr<void> DevTmpFSRootDirectoryInode::chown(UserID, GroupID)
     return EPERM;
 }
 
-DevTmpFSDeviceInode::DevTmpFSDeviceInode(DevTmpFS& fs, unsigned major_number, unsigned minor_number, bool block_device, NonnullOwnPtr<KString> name)
+DevTmpFSDeviceInode::DevTmpFSDeviceInode(DevTmpFS& fs, MajorNumber major_number, MinorNumber minor_number, bool block_device, NonnullOwnPtr<KString> name)
     : DevTmpFSInode(fs, major_number, minor_number)
     , m_name(move(name))
     , m_block_device(block_device)

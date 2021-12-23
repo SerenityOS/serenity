@@ -24,7 +24,7 @@
 namespace Kernel {
 
 static Singleton<StorageManagement> s_the;
-static Atomic<size_t> s_device_minor_number;
+static Atomic<u32> s_device_minor_number;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID="sv;
 
@@ -179,11 +179,11 @@ RefPtr<BlockDevice> StorageManagement::boot_block_device() const
     return m_boot_block_device.strong_ref();
 }
 
-int StorageManagement::major_number()
+MajorNumber StorageManagement::storage_type_major_number()
 {
     return 3;
 }
-int StorageManagement::minor_number()
+MinorNumber StorageManagement::generate_storage_minor_number()
 {
     auto minor_number = s_device_minor_number.load();
     s_device_minor_number++;

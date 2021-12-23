@@ -42,7 +42,7 @@ public:
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
-    Device* get_device(unsigned major, unsigned minor);
+    Device* get_device(MajorNumber major, MinorNumber minor);
 
     NullDevice const& null_device() const;
     NullDevice& null_device();
@@ -63,7 +63,7 @@ private:
     RefPtr<ConsoleDevice> m_console_device;
     // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     NonnullRefPtrVector<CharacterDevice, 1> m_audio_devices;
-    MutexProtected<HashMap<u32, Device*>> m_devices;
+    MutexProtected<HashMap<u64, Device*>> m_devices;
 };
 
 }
