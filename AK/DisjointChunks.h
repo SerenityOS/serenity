@@ -200,6 +200,11 @@ public:
     ChunkType const& first_chunk() const { return m_chunks.first(); }
     ChunkType const& last_chunk() const { return m_chunks.last(); }
 
+    void ensure_capacity(size_t needed_capacity)
+    {
+        m_chunks.ensure_capacity(needed_capacity);
+    }
+
     void insert(size_t index, T value)
     {
         if (m_chunks.size() == 1)
