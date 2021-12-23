@@ -10,6 +10,7 @@
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -31,9 +32,17 @@ UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice()
 {
 }
 
-ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t)
+ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& buffer, size_t length)
 {
-    TODO();
+    if (!MM.is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress(offset), length)) {
+        dbgln("MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
+        return EINVAL;
+    }
+    auto mapping = Memory::map_typed<u8>(PhysicalAddress(offset), length);
+
+    auto bytes = ReadonlyBytes { mapping.ptr(), length };
+    TRY(buffer.write(bytes));
+    return length;
 }
 
 ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
@@ -41,7 +50,7 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescriptio
     auto viewed_address = PhysicalAddress(offset);
 
     dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes", viewed_address, range.size());
-    if (!MM.is_allowed_to_mmap_physical_memory_to_userspace(viewed_address, range)) {
+    if (!MM.is_allowed_to_read_physical_memory_for_userspace(viewed_address, range.size())) {
         dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes failed due to violation of access", viewed_address, range.size());
         return EINVAL;
     }

@@ -230,7 +230,7 @@ public:
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
     Vector<UsedMemoryRange> const& used_memory_ranges() { return m_used_memory_ranges; }
-    bool is_allowed_to_mmap_physical_memory_to_userspace(PhysicalAddress, VirtualRange const&) const;
+    bool is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress, size_t read_length) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
     PhysicalAddress get_physical_address(PhysicalPage const&);
