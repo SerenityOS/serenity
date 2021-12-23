@@ -58,7 +58,10 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
 SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     : m_frontbuffer(frontbuffer)
     , m_rasterizer(frontbuffer.size())
+    , m_device_info(m_rasterizer.info())
 {
+    m_texture_units.resize(m_device_info.num_texture_units);
+    m_active_texture_unit = &m_texture_units[0];
 }
 
 Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
@@ -333,9 +336,9 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
 
     switch (name) {
     case GL_VENDOR:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>("The SerenityOS Developers"));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.vendor_name.characters()));
     case GL_RENDERER:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>("SerenityOS OpenGL"));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.device_name.characters()));
     case GL_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:
