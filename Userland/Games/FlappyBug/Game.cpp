@@ -8,8 +8,9 @@
 
 namespace FlappyBug {
 
-Game::Game(Bug bug)
+Game::Game(Bug bug, Cloud cloud)
     : m_bug(move(bug))
+    , m_cloud(move(cloud))
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
     start_timer(16);
