@@ -122,19 +122,28 @@ public:
     };
 
     struct Cloud {
-        Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png").release_value_but_fixme_should_propagate_errors(),
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png").release_value_but_fixme_should_propagate_errors(),
-            Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png").release_value_but_fixme_should_propagate_errors(),
-        };
+        Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps;
         float x {};
         float y {};
         int bitmap_id {};
 
-        Cloud()
+    private:
+        Cloud(Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps_value)
+            : cloud_bitmaps(move(cloud_bitmaps_value))
         {
             reset();
             x = get_random_uniform(game_width);
+        }
+
+    public:
+        static ErrorOr<Cloud> construct()
+        {
+            Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
+                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_0.png")),
+                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_1.png")),
+                TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/cloud_2.png")),
+            };
+            return Cloud(move(cloud_bitmaps));
         }
 
         void reset()
@@ -168,7 +177,7 @@ private:
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 
-    Game(Bug);
+    Game(Bug, Cloud);
 };
 
 }
