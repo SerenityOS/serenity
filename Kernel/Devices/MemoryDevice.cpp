@@ -49,6 +49,16 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescriptio
 {
     auto viewed_address = PhysicalAddress(offset);
 
+    // Note: This check happens to guard against possible memory leak.
+    // For example, if we try to mmap physical memory from 0x1000 to 0x2000 and you
+    // can actually mmap only from 0x1001, then we would fail as usual.
+    // However, in such case if we mmap from 0x1002, we are technically not violating
+    // any rules, besides the fact that we mapped an entire page with two bytes which we
+    // were not supposed to see. To prevent that, if we use mmap(2) syscall, we should
+    // always consider the start page to be aligned on PAGE_SIZE, or to be more precise
+    // is to be set to the page base of that start address.
+    VERIFY(viewed_address == viewed_address.page_base());
+
     dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes", viewed_address, range.size());
     if (!MM.is_allowed_to_read_physical_memory_for_userspace(viewed_address, range.size())) {
         dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes failed due to violation of access", viewed_address, range.size());
