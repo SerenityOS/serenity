@@ -28,18 +28,6 @@ diff -ur stress-ng-master/core-helper.c stress-ng-master-2/core-helper.c
  }
 
  /*
-diff -ur stress-ng-master/core-job.c stress-ng-master-2/core-job.c
---- stress-ng-master/core-job.c	2020-11-07 10:52:22.000000000 -0800
-+++ stress-ng-master-2/core-job.c	2020-11-08 22:32:06.607668500 -0800
-@@ -28,7 +28,7 @@
- #define RUN_SEQUENTIAL	(0x01)
- #define RUN_PARALLEL	(0x02)
- 
--#define ISBLANK(ch)	isblank((int)(ch))
-+#define ISBLANK(ch)	(ch == ' ' || ch == '\t')
- 
- /*
-  *  stress_chop()
 diff -ur stress-ng-master/core-sched.c stress-ng-master-2/core-sched.c
 --- stress-ng-master/core-sched.c	2020-11-07 10:52:22.000000000 -0800
 +++ stress-ng-master-2/core-sched.c	2020-11-08 23:21:44.497668500 -0800
