@@ -42,7 +42,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         new_uid = number.value();
     } else {
         auto passwd = TRY(Core::System::getpwnam(parts[0]));
-        new_uid = passwd.pw_uid;
+        if (!passwd.has_value()) {
+            warnln("Unknown user '{}'", parts[0]);
+            return 1;
+        }
+        new_uid = passwd->pw_uid;
     }
 
     if (parts.size() == 2) {
@@ -51,7 +55,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             new_gid = number.value();
         } else {
             auto group = TRY(Core::System::getgrnam(parts[1]));
-            new_gid = group.gr_gid;
+            if (!group.has_value()) {
+                warnln("Unknown group '{}'", parts[1]);
+                return 1;
+            }
+            new_gid = group->gr_gid;
         }
     }
 
