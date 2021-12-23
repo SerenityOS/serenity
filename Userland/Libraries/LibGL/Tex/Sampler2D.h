@@ -7,20 +7,11 @@
 #pragma once
 
 #include <LibGL/GL/gl.h>
-#include <LibGfx/Vector2.h>
-#include <LibGfx/Vector4.h>
 
 namespace GL {
 
-class Texture2D;
-
 class Sampler2D final {
 public:
-    Sampler2D(Texture2D const& texture)
-        : m_texture(texture)
-    {
-    }
-
     GLint min_filter() const { return m_min_filter; }
     GLint mag_filter() const { return m_mag_filter; }
     GLint wrap_s_mode() const { return m_wrap_s_mode; }
@@ -31,11 +22,7 @@ public:
     void set_wrap_s_mode(GLint value) { m_wrap_s_mode = value; }
     void set_wrap_t_mode(GLint value) { m_wrap_t_mode = value; }
 
-    FloatVector4 sample(FloatVector4 const& uv) const;
-
 private:
-    Texture2D const& m_texture;
-
     GLint m_min_filter { GL_NEAREST_MIPMAP_LINEAR };
     GLint m_mag_filter { GL_LINEAR };
     GLint m_wrap_s_mode { GL_REPEAT };
