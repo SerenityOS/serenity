@@ -44,10 +44,25 @@ public:
         const float x { 50 };
         const float radius { 16 };
         const float starting_y { 200 };
-        NonnullRefPtr<Gfx::Bitmap> falling_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/falling.png").release_value_but_fixme_should_propagate_errors() };
-        NonnullRefPtr<Gfx::Bitmap> flapping_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/flapping.png").release_value_but_fixme_should_propagate_errors() };
+        NonnullRefPtr<Gfx::Bitmap> falling_bitmap;
+        NonnullRefPtr<Gfx::Bitmap> flapping_bitmap;
         float y {};
         float velocity {};
+
+    private:
+        Bug(NonnullRefPtr<Gfx::Bitmap> falling_bitmap_value, NonnullRefPtr<Gfx::Bitmap> flapping_bitmap_value)
+            : falling_bitmap(move(falling_bitmap_value))
+            , flapping_bitmap(move(flapping_bitmap_value))
+        {
+        }
+
+    public:
+        static ErrorOr<Bug> construct()
+        {
+            NonnullRefPtr<Gfx::Bitmap> falling_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/falling.png"));
+            NonnullRefPtr<Gfx::Bitmap> flapping_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/flapping.png"));
+            return Bug(move(falling_bitmap), move(flapping_bitmap));
+        }
 
         void reset()
         {
@@ -153,7 +168,7 @@ private:
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 
-    Game();
+    Game(Bug);
 };
 
 }
