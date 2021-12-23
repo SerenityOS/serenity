@@ -69,7 +69,7 @@ public:
             y = starting_y;
         }
 
-        RefPtr<Gfx::Bitmap> current_bitmap() const
+        NonnullRefPtr<Gfx::Bitmap> current_bitmap() const
         {
             return velocity < 0 ? falling_bitmap : flapping_bitmap;
         }
@@ -153,7 +153,7 @@ public:
             y = get_random_uniform(game_height / 2) + bitmap()->height();
         }
 
-        RefPtr<Gfx::Bitmap> bitmap() const
+        NonnullRefPtr<Gfx::Bitmap> bitmap() const
         {
             return cloud_bitmaps[bitmap_id];
         }
