@@ -34,6 +34,8 @@ ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int fl
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
 #ifdef __APPLE__
 ErrorOr<sig_t> signal(int signal, sig_t handler);
+#elif defined(__OpenBSD__)
+ErrorOr<sig_t> signal(int signal, sig_t handler);
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
 #endif

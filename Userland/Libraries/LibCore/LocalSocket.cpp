@@ -14,6 +14,8 @@
 
 #if defined(__FreeBSD__)
 #    include <sys/ucred.h>
+#elif defined(__OpenBSD__)
+#    include <sys/socket.h>
 #endif
 
 #ifndef SOCK_NONBLOCK
@@ -65,6 +67,9 @@ pid_t LocalSocket::peer_pid() const
 #elif defined(__FreeBSD__)
     struct xucred creds = {};
     socklen_t creds_size = sizeof(creds);
+#elif defined(__OpenBSD__)
+    struct sockpeercred creds = {};
+    socklen_t creds_size = sizeof(creds);
 #else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
@@ -74,6 +79,10 @@ pid_t LocalSocket::peer_pid() const
     if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0) {
 #elif defined(__FreeBSD__)
     if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size) < 0) {
+#elif defined(__OpenBSD__)
+    int error;
+    error = getsockopt(fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size);
+    if (error < 0) {
 #else
     if (getsockopt(fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
 #endif
