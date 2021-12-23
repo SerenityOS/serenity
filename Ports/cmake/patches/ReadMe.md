@@ -59,16 +59,6 @@ Everyone gets this wrong. most platforms are very lax with these includes, but w
 - [ ] Resolves issue(s) with our side of things
 - [ ] Hack
 
-## `0016-conflicting-0.patch` and `0017-conflicting-1.patch`
-
-These two defines make GCC very sad. reasons are unknown at this time.
-
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
 ## `0026-curl-struct-stat.patch`
 
 For unknown reasons, `curl_setup_once.h` does not include `sys/stat.h`. this patch includes `sys/stat.h`.
