@@ -8,7 +8,8 @@
 
 namespace FlappyBug {
 
-Game::Game()
+Game::Game(Bug bug)
+    : m_bug(move(bug))
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
     start_timer(16);
