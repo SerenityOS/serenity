@@ -30,7 +30,6 @@
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
-#include <Kernel/Firmware/ACPI/MultiProcessorParser.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

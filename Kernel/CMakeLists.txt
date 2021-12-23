@@ -126,8 +126,8 @@ set(KERNEL_SOURCES
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
-    Firmware/ACPI/MultiProcessorParser.cpp
     Firmware/ACPI/Parser.cpp
+    Firmware/MultiProcessor/Parser.cpp
     Firmware/BIOS.cpp
     Firmware/PowerStateSwitch.cpp
     Firmware/SysFSFirmware.cpp
