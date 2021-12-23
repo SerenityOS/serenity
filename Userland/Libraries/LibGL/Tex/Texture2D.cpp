@@ -19,7 +19,6 @@ void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei w
     auto& mip = m_mipmaps[lod];
     mip.set_width(width);
     mip.set_height(height);
-    mip.pixel_data().resize(width * height);
 
     // No pixel data was supplied leave the texture memory uninitialized.
     if (pixels == nullptr)
@@ -39,6 +38,12 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
     VERIFY(xoffset >= 0 && yoffset >= 0 && xoffset + width <= mip.width() && yoffset + height <= mip.height());
     VERIFY(pixels_per_row == 0 || pixels_per_row >= xoffset + width);
 
+    // FIXME: We currently depend on the first glTexImage2D call to attach an image to mipmap level 0, which initializes the GPU image
+    // Ideally we would create separate GPU images for each level and merge them into a final image
+    // once used for rendering for the first time.
+    if (device_image().is_null())
+        return;
+
     u8 pixel_size_bytes;
     switch (type) {
     case GL_UNSIGNED_BYTE:
@@ -54,91 +59,38 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
     // Calculate row offset at end to fit alignment
     int const physical_width = pixels_per_row > 0 ? pixels_per_row : width;
     size_t const physical_width_bytes = physical_width * pixel_size_bytes;
-    size_t const row_remainder_bytes = (physical_width - width) * pixel_size_bytes
-        + (byte_alignment - physical_width_bytes % byte_alignment) % byte_alignment;
 
-    u8 const* pixel_byte_array = reinterpret_cast<u8 const*>(pixels);
+    SoftGPU::ImageDataLayout layout;
+    layout.column_stride = pixel_size_bytes;
+    layout.row_stride = physical_width_bytes + (byte_alignment - physical_width_bytes % byte_alignment) % byte_alignment;
+    layout.depth_stride = 0;
 
-    auto get_next_pixel = [type, format](u8 const** pixels) -> u32 {
-        // Split bytes up into RGBA components
-        u8 c1, c2, c3, c4;
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            c1 = *((*pixels)++);
-            c2 = *((*pixels)++);
-            c3 = *((*pixels)++);
-            if (format == GL_RGBA || format == GL_BGRA) {
-                c4 = *((*pixels)++);
-            } else {
-                c4 = 255;
-            }
-            break;
-        case GL_UNSIGNED_SHORT_5_6_5: {
-            u16 const s = *reinterpret_cast<u16 const*>((*pixels) += 2);
-            c1 = (s & 0xf800) >> 8;
-            c2 = (s & 0x7e0) >> 3;
-            c3 = (s & 0x1f) << 3;
-            c4 = 255;
-            break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
-        }
+    if (type == GL_UNSIGNED_SHORT_5_6_5) {
+        layout.format = SoftGPU::ImageFormat::RGB565;
+    } else if (type == GL_UNSIGNED_BYTE) {
+        if (format == GL_RGB)
+            layout.format = SoftGPU::ImageFormat::RGB888;
+        else if (format == GL_BGR)
+            layout.format = SoftGPU::ImageFormat::BGR888;
+        else if (format == GL_RGBA)
+            layout.format = SoftGPU::ImageFormat::RGBA8888;
+        else if (format == GL_BGRA)
+            layout.format = SoftGPU::ImageFormat::BGRA8888;
+    }
 
-        // Reorder components into BGRA pixel
-        switch (format) {
-        case GL_BGR:
-        case GL_BGRA:
-            return ((c4 << 24) | (c3 << 16) | (c2 << 8) | c1);
-        case GL_RGB:
-        case GL_RGBA:
-            return ((c4 << 24) | (c1 << 16) | (c2 << 8) | c3);
-        default:
-            VERIFY_NOT_REACHED();
-        }
+    Vector3<unsigned> offset {
+        static_cast<unsigned>(xoffset),
+        static_cast<unsigned>(yoffset),
+        0
     };
 
-    for (auto y = yoffset; y < yoffset + height; y++) {
-        for (auto x = xoffset; x < xoffset + width; x++) {
-            u32 pixel = get_next_pixel(&pixel_byte_array);
-            mip.pixel_data()[y * mip.width() + x] = pixel;
-        }
+    Vector3<unsigned> size {
+        static_cast<unsigned>(width),
+        static_cast<unsigned>(height),
+        1
+    };
 
-        pixel_byte_array += row_remainder_bytes;
-    }
-
-    if (!device_image().is_null()) {
-        SoftGPU::ImageDataLayout layout;
-        layout.column_stride = pixel_size_bytes;
-        layout.row_stride = physical_width_bytes + (byte_alignment - physical_width_bytes % byte_alignment) % byte_alignment;
-        layout.depth_stride = 0;
-        if (type == GL_UNSIGNED_SHORT_5_6_5) {
-            layout.format = SoftGPU::ImageFormat::RGB565;
-        } else if (type == GL_UNSIGNED_BYTE) {
-            if (format == GL_RGB)
-                layout.format = SoftGPU::ImageFormat::RGB888;
-            else if (format == GL_BGR)
-                layout.format = SoftGPU::ImageFormat::BGR888;
-            else if (format == GL_RGBA)
-                layout.format = SoftGPU::ImageFormat::RGBA8888;
-            else if (format == GL_BGRA)
-                layout.format = SoftGPU::ImageFormat::BGRA8888;
-        }
-
-        Vector3<unsigned> offset {
-            static_cast<unsigned>(xoffset),
-            static_cast<unsigned>(yoffset),
-            0
-        };
-
-        Vector3<unsigned> size {
-            static_cast<unsigned>(width),
-            static_cast<unsigned>(height),
-            1
-        };
-
-        device_image()->write_texels(0, lod, offset, size, pixels, layout);
-    }
+    device_image()->write_texels(0, lod, offset, size, pixels, layout);
 }
 
 }
