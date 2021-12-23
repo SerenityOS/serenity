@@ -264,7 +264,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
     PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
     if (png_decoder.sniff()) {
         auto decoded_png_frame = png_decoder.frame(0);
-        if (!decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
+        if (decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
             return false;
         }
