@@ -23,7 +23,7 @@ public:
     virtual void enable_interrupts() = 0;
 
 protected:
-    HIDDevice(unsigned major, unsigned minor)
+    HIDDevice(MajorNumber major, MinorNumber minor)
         : CharacterDevice(major, minor)
     {
     }

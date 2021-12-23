@@ -47,7 +47,7 @@ public:
 
 protected:
     explicit DevTmpFSInode(DevTmpFS&);
-    DevTmpFSInode(DevTmpFS&, unsigned, unsigned);
+    DevTmpFSInode(DevTmpFS&, MajorNumber, MinorNumber);
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
@@ -64,8 +64,8 @@ protected:
     mode_t m_mode { 0600 };
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
-    const unsigned m_major_number { 0 };
-    const unsigned m_minor_number { 0 };
+    const MajorNumber m_major_number { 0 };
+    const MinorNumber m_minor_number { 0 };
 
     enum class Type {
         BlockDevice,
@@ -90,7 +90,7 @@ public:
     virtual ~DevTmpFSDeviceInode() override;
 
 private:
-    DevTmpFSDeviceInode(DevTmpFS&, unsigned, unsigned, bool, NonnullOwnPtr<KString> name);
+    DevTmpFSDeviceInode(DevTmpFS&, MajorNumber, MinorNumber, bool, NonnullOwnPtr<KString> name);
     // ^DevTmpFSInode
     virtual Type node_type() const override { return m_block_device ? Type::BlockDevice : Type::CharacterDevice; }
 

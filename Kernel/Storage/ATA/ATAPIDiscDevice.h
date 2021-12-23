@@ -26,7 +26,7 @@ public:
     virtual CommandSet command_set() const override { return CommandSet::SCSI; }
 
 private:
-    ATAPIDiscDevice(const ATAController&, Address, unsigned, u16, u64, NonnullOwnPtr<KString>);
+    ATAPIDiscDevice(const ATAController&, Address, MinorNumber, u16, u64, NonnullOwnPtr<KString>);
 
     // ^DiskDevice
     virtual StringView class_name() const override;
