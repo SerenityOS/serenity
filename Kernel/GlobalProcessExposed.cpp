@@ -681,8 +681,8 @@ private:
         JsonArraySerializer array { builder };
         DeviceManagement::the().for_each([&array](auto& device) {
             auto obj = array.add_object();
-            obj.add("major", device.major());
-            obj.add("minor", device.minor());
+            obj.add("major", device.major().value());
+            obj.add("minor", device.minor().value());
             obj.add("class_name", device.class_name());
 
             if (device.is_block_device())

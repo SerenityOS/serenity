@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-TTY::TTY(unsigned major, unsigned minor)
+TTY::TTY(MajorNumber major, MinorNumber minor)
     : CharacterDevice(major, minor)
 {
     set_default_termios();
