@@ -80,3 +80,59 @@ TEST_CASE(spans)
 
     EXPECT_EQ(it, cross_chunk_slice.end());
 }
+
+#define INIT_ITERATIONS (1'000'000)
+#define ITERATIONS (100)
+
+static DisjointChunks<int> basic_really_empty_chunks;
+
+BENCHMARK_CASE(basic_really_empty)
+{
+    DisjointChunks<int> chunks;
+    for (size_t i = 0; i < ITERATIONS; ++i)
+        EXPECT(chunks.is_empty());
+}
+
+static DisjointChunks<int> basic_really_empty_large_chunks = []() {
+    DisjointChunks<int> chunks;
+    chunks.ensure_capacity(INIT_ITERATIONS);
+    for (size_t i = 0; i < INIT_ITERATIONS; ++i)
+        chunks.append({});
+    return chunks;
+}();
+
+BENCHMARK_CASE(basic_really_empty_large)
+{
+    for (size_t i = 0; i < ITERATIONS; ++i)
+        EXPECT(basic_really_empty_large_chunks.is_empty());
+}
+
+static DisjointChunks<int> basic_mostly_empty_chunks = []() {
+    DisjointChunks<int> chunks;
+    chunks.ensure_capacity(INIT_ITERATIONS + 1);
+    for (size_t i = 0; i < INIT_ITERATIONS; ++i)
+        chunks.append({});
+    chunks.append({ 1, 2, 3 });
+    return chunks;
+}();
+
+BENCHMARK_CASE(basic_mostly_empty)
+{
+    for (size_t i = 0; i < ITERATIONS; ++i) {
+        EXPECT(!basic_mostly_empty_chunks.is_empty());
+    }
+}
+
+static DisjointChunks<int> basic_full_chunks = []() {
+    DisjointChunks<int> chunks;
+    chunks.ensure_capacity(INIT_ITERATIONS + 1);
+    for (size_t i = 0; i < INIT_ITERATIONS; ++i)
+        chunks.append({ 1, 2, 3 });
+    return chunks;
+}();
+
+BENCHMARK_CASE(basic_full)
+{
+    for (size_t i = 0; i < ITERATIONS; ++i)
+        EXPECT(!basic_full_chunks.is_empty());
+}
