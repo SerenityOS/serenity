@@ -65,6 +65,9 @@ pid_t LocalSocket::peer_pid() const
 #elif defined(__FreeBSD__)
     struct xucred creds = {};
     socklen_t creds_size = sizeof(creds);
+#elif defined(__OpenBSD__)
+    struct sockpeercred creds = {};
+    socklen_t creds_size = sizeof(creds);
 #else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
