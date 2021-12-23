@@ -7,15 +7,6 @@
  #include <sys/stat.h>
  
  // DOS directory entries.
-@@ -179,7 +180,7 @@
-     struct dirent **dir;
-     struct dos_file_list *ret;
- 
--    int n = scandir(path, &dir, 0, dos_unix_sort);
-+    int n = 0; //scandir(path, &dir, 0, dos_unix_sort);
-     if(n <= 0)
-         return 0;
- 
 @@ -589,7 +590,7 @@
  static struct dos_file_list *find_first_file(char *fspec)
  {
