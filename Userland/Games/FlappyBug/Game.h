@@ -28,8 +28,6 @@ public:
     Function<u32(u32)> on_game_end;
 
 private:
-    Game();
-
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -154,6 +152,8 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/background.png").release_value_but_fixme_should_propagate_errors() };
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
+
+    Game();
 };
 
 }
