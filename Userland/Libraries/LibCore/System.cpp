@@ -393,7 +393,7 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 #endif
 }
 
-ErrorOr<struct passwd> getpwnam(StringView name)
+ErrorOr<Optional<struct passwd>> getpwnam(StringView name)
 {
     ::setpwent();
     if (errno)
@@ -408,10 +408,10 @@ ErrorOr<struct passwd> getpwnam(StringView name)
     if (errno)
         return Error::from_syscall("getpwnam"sv, -errno);
     else
-        return Error::from_string_literal("getpwnam: Unknown username"sv);
+        return Optional<struct passwd> {};
 }
 
-ErrorOr<struct group> getgrnam(StringView name)
+ErrorOr<Optional<struct group>> getgrnam(StringView name)
 {
     ::setgrent();
     if (errno)
@@ -426,7 +426,7 @@ ErrorOr<struct group> getgrnam(StringView name)
     if (errno)
         return Error::from_syscall("getgrnam"sv, -errno);
     else
-        return Error::from_string_literal("getgrnam: Unknown username"sv);
+        return Optional<struct group> {};
 }
 
 ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
