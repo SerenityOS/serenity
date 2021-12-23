@@ -15,6 +15,7 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/DepthBuffer.h>
+#include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
@@ -62,6 +63,8 @@ class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
 
+    DeviceInfo info() const;
+
     void draw_primitives(PrimitiveType, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
@@ -89,7 +92,7 @@ private:
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
     Vector<Vertex> m_clipped_vertices;
-    Sampler m_samplers[num_samplers];
+    Array<Sampler, num_samplers> m_samplers;
 };
 
 }

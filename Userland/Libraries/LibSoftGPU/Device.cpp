@@ -498,6 +498,15 @@ Device::Device(const Gfx::IntSize& min_size)
     m_options.scissor_box = m_render_target->rect();
 }
 
+DeviceInfo Device::info() const
+{
+    return {
+        .vendor_name = "SerenityOS",
+        .device_name = "SoftGPU",
+        .num_texture_units = num_samplers
+    };
+}
+
 void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
@@ -810,8 +819,6 @@ NonnullRefPtr<Image> Device::create_image(ImageFormat format, unsigned width, un
 
 void Device::set_sampler_config(unsigned sampler, SamplerConfig const& config)
 {
-    VERIFY(sampler < num_samplers);
-
     m_samplers[sampler].set_config(config);
 }
 
