@@ -144,7 +144,7 @@ create_build_dir() {
 pick_gcc() {
     local BEST_VERSION=0
     local BEST_GCC_CANDIDATE=""
-    for GCC_CANDIDATE in gcc gcc-10 gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
+    for GCC_CANDIDATE in egcc gcc gcc-10 gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
         if ! command -v $GCC_CANDIDATE >/dev/null 2>&1; then
             continue
         fi
