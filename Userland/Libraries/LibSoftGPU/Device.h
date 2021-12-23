@@ -15,6 +15,7 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/DepthBuffer.h>
+#include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
 #include <LibSoftGPU/Sampler.h>
@@ -22,66 +23,6 @@
 #include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
-
-enum class AlphaTestFunction {
-    Never,
-    Always,
-    Less,
-    LessOrEqual,
-    Equal,
-    NotEqual,
-    GreaterOrEqual,
-    Greater,
-};
-
-enum class BlendFactor {
-    Zero,
-    One,
-    SrcAlpha,
-    OneMinusSrcAlpha,
-    SrcColor,
-    OneMinusSrcColor,
-    DstAlpha,
-    OneMinusDstAlpha,
-    DstColor,
-    OneMinusDstColor,
-    SrcAlphaSaturate,
-};
-
-enum class DepthTestFunction {
-    Never,
-    Always,
-    Less,
-    LessOrEqual,
-    Equal,
-    NotEqual,
-    GreaterOrEqual,
-    Greater,
-};
-
-enum FogMode {
-    Linear,
-    Exp,
-    Exp2
-};
-
-enum class PolygonMode {
-    Point,
-    Line,
-    Fill,
-};
-
-enum class WindingOrder {
-    Clockwise,
-    CounterClockwise,
-};
-
-enum class PrimitiveType {
-    Triangles,
-    TriangleStrip,
-    TriangleFan,
-    Quads,
-};
 
 struct RasterizerOptions {
     bool shade_smooth { true };
