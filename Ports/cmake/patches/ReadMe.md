@@ -20,16 +20,6 @@ We don't support SIGINFO. This patch removes uses of SIGINFO.
 - [X] Resolves issue(s) with our side of things
 - [ ] Hack
 
-## `0011-Fixed-your-code-rot-cmake.patch`
-
-This purely fixes code issues with cmake. very funny patch.
-
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0012-bin-bash.patch`
 
 This patch swaps out `/bin/sh` for `/bin/bash` in two scripts that need it.
