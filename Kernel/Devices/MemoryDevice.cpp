@@ -36,11 +36,6 @@ ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer
     TODO();
 }
 
-void MemoryDevice::did_seek(OpenFileDescription&, off_t)
-{
-    TODO();
-}
-
 ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto viewed_address = PhysicalAddress(offset);
