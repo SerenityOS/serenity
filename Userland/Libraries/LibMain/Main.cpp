@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     });
     if (result.is_error()) {
         auto error = result.release_error();
-        warnln("Runtime error: {}", error);
+        warnln("\033[31;1mRuntime error\033[0m: {}", error);
 #ifdef __serenity__
         dbgln("\033[31;1mExiting with runtime error\033[0m: {}", error);
 #endif
