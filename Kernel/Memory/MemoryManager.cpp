@@ -209,7 +209,7 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
     m_reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, m_physical_memory_ranges.last().start.get() + m_physical_memory_ranges.last().length - range.start.get() });
 }
 
-bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, VirtualRange const& range) const
+bool MemoryManager::is_allowed_to_mmap_physical_memory_to_userspace(PhysicalAddress start_address, VirtualRange const& range) const
 {
     // Note: Guard against overflow in case someone tries to mmap on the edge of
     // the RAM

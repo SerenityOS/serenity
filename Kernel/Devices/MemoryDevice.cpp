@@ -46,7 +46,7 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescriptio
     auto viewed_address = PhysicalAddress(offset);
 
     dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes", viewed_address, range.size());
-    if (!MM.is_allowed_to_mmap_to_userspace(viewed_address, range)) {
+    if (!MM.is_allowed_to_mmap_physical_memory_to_userspace(viewed_address, range)) {
         dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes failed due to violation of access", viewed_address, range.size());
         return EINVAL;
     }
