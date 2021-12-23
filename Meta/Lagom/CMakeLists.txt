@@ -224,8 +224,10 @@ lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
     LIBS Threads::Threads
 )
-if (NOT APPLE)
-    target_link_libraries(LagomCore crypt) # Core::Account uses crypt() but it's not in libcrypt on macOS
+if (APPLE OR ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+    target_link_libraries(LagomCore) # Core::Account uses crypt() but it's not in libcrypt on macOS
+else()
+    target_link_libraries(LagomCore crypt)
 endif()
 
 # Main

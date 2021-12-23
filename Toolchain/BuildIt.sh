@@ -384,9 +384,6 @@ pushd "$DIR/Build/$ARCH"
 
         echo "XXX build gcc and libgcc"
         buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
-        if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
-        fi
         buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
         echo "XXX install gcc and libgcc"
         buildstep "gcc+libgcc/install" "$MAKE" install-gcc install-target-libgcc || exit 1
@@ -397,9 +394,6 @@ pushd "$DIR/Build/$ARCH"
         buildstep "libstdc++/install" "$MAKE" install-target-libstdc++-v3 || exit 1
     popd
 
-    if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-        cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
-    fi
 popd
 
 
