@@ -27,12 +27,6 @@ public:
     static constexpr u8 LOG2_MAX_TEXTURE_SIZE = 11;
 
 public:
-    Texture2D()
-        : m_sampler(*this)
-    {
-    }
-    ~Texture2D() { }
-
     virtual bool is_texture_2d() const override { return true; }
 
     void upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment);
