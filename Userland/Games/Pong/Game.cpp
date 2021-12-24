@@ -72,10 +72,12 @@ void Game::paint_event(GUI::PaintEvent& event)
 void Game::keyup_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
+    case Key_W:
     case Key_Up:
         m_up_key_held = false;
         m_player1_paddle.moving_up = false;
         break;
+    case Key_S:
     case Key_Down:
         m_down_key_held = false;
         m_player1_paddle.moving_down = false;
@@ -91,12 +93,14 @@ void Game::keydown_event(GUI::KeyEvent& event)
     case Key_Escape:
         GUI::Application::the()->quit();
         break;
+    case Key_W:
     case Key_Up:
         m_up_key_held = true;
         m_player1_paddle.moving_up = true;
         m_player1_paddle.moving_down = false;
         m_cursor_paddle_target_y.clear();
         break;
+    case Key_S:
     case Key_Down:
         m_down_key_held = true;
         m_player1_paddle.moving_up = false;
