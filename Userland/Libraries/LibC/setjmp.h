@@ -79,4 +79,16 @@ __attribute__((noreturn)) void longjmp(jmp_buf, int val);
 int sigsetjmp(sigjmp_buf, int savesigs);
 __attribute__((noreturn)) void siglongjmp(sigjmp_buf, int val);
 
+/**
+ * _setjmp() and _longjmp() are specified as behaving the exactly the same as
+ * setjmp() and longjmp(), except they are not supposed to modify the signal mask.
+ *
+ * Our implementations already follow this restriction, so we just map them directly
+ * to the same functions.
+ *
+ * https://pubs.opengroup.org/onlinepubs/9699969599/functions/_setjmp.html
+ */
+int _setjmp(jmp_buf);
+__attribute__((noreturn)) void _longjmp(jmp_buf, int val);
+
 __END_DECLS
