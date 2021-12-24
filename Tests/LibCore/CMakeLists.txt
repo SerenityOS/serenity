@@ -4,6 +4,7 @@ set(TEST_SOURCES
     TestLibCoreIODevice.cpp
     TestLibCoreDeferredInvoke.cpp
     TestLibCoreStream.cpp
+    TestLibCoreFilePermissionsMask.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
