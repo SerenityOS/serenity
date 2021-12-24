@@ -180,7 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
     process_table_view.set_column_headers_visible(true);
-    process_table_view.set_model(GUI::SortingProxyModel::create(process_model));
+    process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
         process_table_view.set_column_visible(column, false);
     process_table_view.set_column_visible(ProcessModel::Column::Icon, true);
@@ -549,7 +549,7 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
         df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
         df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
 
-        fs_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields))));
+        fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields)))));
 
         fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
 
@@ -647,7 +647,7 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                     return String::formatted("{:02x}", revision_id);
                 });
 
-            pci_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields))));
+            pci_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields)))));
             pci_table_view.model()->invalidate();
         }
     };

@@ -96,7 +96,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     m_view = *widget.find_descendant_of_type_named<GUI::MultiView>("view");
     m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
-    m_view->set_model(SortingProxyModel::create(*m_model));
+    m_view->set_model(MUST(SortingProxyModel::create(*m_model)));
     m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
     m_view->set_column_visible(FileSystemModel::Column::User, true);
