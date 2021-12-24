@@ -129,6 +129,7 @@ public:
     virtual void gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GLfloat w) override;
     virtual void gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap) override;
     virtual void gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) override;
+    virtual void gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum pname, GLint* params) override;
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) override;
 
     virtual void present() override;

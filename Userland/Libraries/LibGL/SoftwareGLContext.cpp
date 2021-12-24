@@ -2658,6 +2658,27 @@ void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum 
         target, level, internalformat, x, y, width, height, border);
 }
 
+void SoftwareGLContext::gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum pname, GLint* params)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    // FIXME: support targets other than GL_TEXTURE_2D
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+    // FIXME: support other parameter names
+    RETURN_WITH_ERROR_IF(pname < GL_TEXTURE_WIDTH || pname > GL_TEXTURE_HEIGHT, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    // FIXME: GL_INVALID_VALUE is generated if target is GL_TEXTURE_BUFFER and level is not zero
+    // FIXME: GL_INVALID_OPERATION is generated if GL_TEXTURE_COMPRESSED_IMAGE_SIZE is queried on texture images with an uncompressed internal format or on proxy targets
+
+    switch (pname) {
+    case GL_TEXTURE_HEIGHT:
+        *params = m_active_texture_unit->bound_texture_2d()->height_at_lod(level);
+        break;
+    case GL_TEXTURE_WIDTH:
+        *params = m_active_texture_unit->bound_texture_2d()->width_at_lod(level);
+        break;
+    }
+}
+
 void SoftwareGLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_rect, x1, y1, x2, y2);
