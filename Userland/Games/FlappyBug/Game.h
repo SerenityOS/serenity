@@ -19,7 +19,7 @@
 namespace FlappyBug {
 
 class Game final : public GUI::Frame {
-    C_OBJECT(Game);
+    C_OBJECT_ABSTRACT(Game)
 
 public:
     static const int game_width = 560;
@@ -173,11 +173,14 @@ private:
     float m_last_score {};
     float m_difficulty {};
     float m_restart_cooldown {};
-    NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/background.png").release_value_but_fixme_should_propagate_errors() };
+    NonnullRefPtr<Gfx::Bitmap> m_background_bitmap;
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 
-    Game(Bug, Cloud);
+    Game(Bug, Cloud, NonnullRefPtr<Gfx::Bitmap>);
+
+public:
+    static ErrorOr<NonnullRefPtr<Game>> try_create();
 };
 
 }

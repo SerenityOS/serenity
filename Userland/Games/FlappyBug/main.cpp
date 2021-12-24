@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Flappy Bug");
     window->set_double_buffering_enabled(false);
     window->set_resizable(false);
-    auto widget = TRY(window->try_set_main_widget<FlappyBug::Game>(TRY(FlappyBug::Game::Bug::construct()), TRY(FlappyBug::Game::Cloud::construct())));
+    auto widget = TRY(window->try_set_main_widget<FlappyBug::Game>());
 
     widget->on_game_end = [&](u32 score) {
         if (score <= high_score)

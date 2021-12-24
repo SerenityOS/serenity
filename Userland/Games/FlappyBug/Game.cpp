@@ -8,13 +8,22 @@
 
 namespace FlappyBug {
 
-Game::Game(Bug bug, Cloud cloud)
+Game::Game(Bug bug, Cloud cloud, NonnullRefPtr<Gfx::Bitmap> background_bitmap)
     : m_bug(move(bug))
     , m_cloud(move(cloud))
+    , m_background_bitmap(move(background_bitmap))
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
     start_timer(16);
     reset();
+}
+
+ErrorOr<NonnullRefPtr<Game>> Game::try_create()
+{
+    Bug bug = TRY(Bug::construct());
+    Cloud cloud = TRY(Cloud::construct());
+    NonnullRefPtr<Gfx::Bitmap> background_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/flappybug/background.png"));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(bug), move(cloud), move(background_bitmap)));
 }
 
 void Game::reset()
