@@ -43,9 +43,9 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
             }
         }
 
-        if (auto cfg_entry = inverted_cfg.get(*entry.value.begin()); cfg_entry.has_value()) {
-            auto& predecssor_entry = *cfg_entry;
-            if (predecssor_entry.size() != 1)
+        if (auto cfg_iter = inverted_cfg.find(*entry.value.begin()); cfg_iter != inverted_cfg.end()) {
+            auto& predecessor_entry = cfg_iter->value;
+            if (predecessor_entry.size() != 1)
                 continue;
         }
 
@@ -99,10 +99,10 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         Vector<BasicBlock const*> successors { current_block };
         for (;;) {
             auto last = successors.last();
-            auto entry = cfg.get(last);
-            if (!entry.has_value())
+            auto entry = cfg.find(last);
+            if (entry == cfg.end())
                 break;
-            auto& successor = *entry->begin();
+            auto& successor = *entry->value.begin();
             successors.append(successor);
             auto it = blocks_to_merge.find(successor);
             if (it == blocks_to_merge.end())
@@ -112,10 +112,10 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
 
         auto blocks_to_merge_copy = blocks_to_merge;
         for (auto& last : blocks_to_merge) {
-            auto entry = cfg.get(last);
-            if (!entry.has_value())
+            auto entry = cfg.find(last);
+            if (entry == cfg.end())
                 continue;
-            auto successor = *entry->begin();
+            auto successor = *entry->value.begin();
             if (auto it = successors.find(successor); !it.is_end()) {
                 successors.insert(it.index(), last);
                 blocks_to_merge_copy.remove(last);
