@@ -302,8 +302,6 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
     auto number = TRY(vm.argument(0).to_u32(global_object));
-    if (number == 0)
-        return Value(32);
     return Value(count_leading_zeroes(number));
 }
 

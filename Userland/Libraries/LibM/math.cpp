@@ -279,7 +279,7 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
         return extractor.d;
     }
 
-    unsigned leading_mantissa_zeroes = extractor.mantissa == 0 ? 32 : count_leading_zeroes(extractor.mantissa);
+    unsigned leading_mantissa_zeroes = count_leading_zeroes(extractor.mantissa);
     int shift = min((int)leading_mantissa_zeroes, exponent);
     exponent = max(exponent - shift, 0);
 
