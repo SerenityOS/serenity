@@ -149,7 +149,7 @@ void MemoryManager::unmap_text_after_init()
     dmesgln("Unmapped {} KiB of kernel text after init! :^)", (end - start) / KiB);
 }
 
-void MemoryManager::protect_ksyms_after_init()
+UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
 {
     SpinlockLocker mm_lock(s_mm_lock);
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
