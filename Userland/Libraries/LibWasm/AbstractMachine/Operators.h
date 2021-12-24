@@ -186,9 +186,6 @@ struct CountTrailingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
     {
-        if (lhs == 0)
-            return sizeof(Lhs) * CHAR_BIT;
-
         if constexpr (sizeof(Lhs) == 4 || sizeof(Lhs) == 8)
             return count_trailing_zeroes(MakeUnsigned<Lhs>(lhs));
         else
