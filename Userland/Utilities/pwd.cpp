@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <AK/Format.h>
+#include <AK/String.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    char* cwd = getcwd(nullptr, 0);
-    puts(cwd);
-    free(cwd);
+    TRY(Core::System::pledge("stdio"));
+    outln(TRY(Core::System::getcwd()));
     return 0;
 }
