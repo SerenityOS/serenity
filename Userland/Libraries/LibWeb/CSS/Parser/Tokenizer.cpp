@@ -663,8 +663,7 @@ String Tokenizer::consume_a_name()
         }
 
         // the stream starts with a valid escape
-        auto next = peek_code_point();
-        if (!is_eof(next) && is_valid_escape_sequence({ input, next })) {
+        if (is_valid_escape_sequence(start_of_input_stream_twin())) {
             // Consume an escaped code point. Append the returned code point to result.
             result.append_code_point(consume_escaped_code_point());
             continue;
@@ -705,14 +704,11 @@ Token Tokenizer::consume_a_url_token()
 
     // 3. Repeatedly consume the next input code point from the stream:
     for (;;) {
-        // NOTE: We peek here instead of consuming, so that we can peek a twin later
-        // to determine if it's a valid escape sequence.
-        auto input = peek_code_point();
+        auto input = next_code_point();
 
         // U+0029 RIGHT PARENTHESIS ())
         if (is_right_paren(input)) {
             // Return the <url-token>.
-            (void)next_code_point(); // Not to spec, see NOTE above.
             return make_token();
         }
 
@@ -755,7 +751,6 @@ Token Tokenizer::consume_a_url_token()
         if (is_quotation_mark(input) || is_apostrophe(input) || is_left_paren(input) || is_non_printable(input)) {
             // This is a parse error. Consume the remnants of a bad url, create a <bad-url-token>, and return it.
             log_parse_error();
-            (void)next_code_point(); // Not to spec, see NOTE above.
             consume_the_remnants_of_a_bad_url();
             return create_new_token(Token::Type::BadUrl);
         }
@@ -763,13 +758,12 @@ Token Tokenizer::consume_a_url_token()
         // U+005C REVERSE SOLIDUS (\)
         if (is_reverse_solidus(input)) {
             // If the stream starts with a valid escape,
-            if (is_valid_escape_sequence(peek_twin())) {
+            if (is_valid_escape_sequence(start_of_input_stream_twin())) {
                 // consume an escaped code point and append the returned code point to the <url-token>’s value.
                 builder.append_code_point(consume_escaped_code_point());
             } else {
                 // Otherwise, this is a parse error.
                 log_parse_error();
-                (void)next_code_point(); // Not to spec, see NOTE above.
                 // Consume the remnants of a bad url, create a <bad-url-token>, and return it.
                 consume_the_remnants_of_a_bad_url();
                 return create_new_token(Token::Type::BadUrl);
@@ -779,7 +773,6 @@ Token Tokenizer::consume_a_url_token()
         // anything else
         // Append the current input code point to the <url-token>’s value.
         builder.append_code_point(input);
-        (void)next_code_point(); // Not to spec, see NOTE above.
     }
 }
 
@@ -793,31 +786,25 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
 
     // Repeatedly consume the next input code point from the stream:
     for (;;) {
-        // NOTE: We peek instead of consuming so is_valid_escape_sequence() can peek a twin.
-        //       So, we have to consume the code point later.
-        auto input = peek_code_point();
+        auto input = next_code_point();
 
         // U+0029 RIGHT PARENTHESIS ())
         // EOF
         if (is_eof(input) || is_right_paren(input)) {
-            (void)next_code_point(); // Not to spec, see NOTE above.
             // Return.
             return;
         }
 
         // the input stream starts with a valid escape
-        if (is_valid_escape_sequence(peek_twin())) {
+        if (is_valid_escape_sequence(start_of_input_stream_twin())) {
             // Consume an escaped code point.
             // This allows an escaped right parenthesis ("\)") to be encountered without ending
             // the <bad-url-token>. This is otherwise identical to the "anything else" clause.
-            (void)next_code_point(); // Not to spec, see NOTE above.
             (void)consume_escaped_code_point();
         }
 
         // anything else
         // Do nothing.
-
-        (void)next_code_point(); // Not to spec, see NOTE above.
     }
 }
 
@@ -1298,7 +1285,7 @@ Token Tokenizer::consume_a_token()
         dbgln_if(CSS_TOKENIZER_DEBUG, "is reverse solidus");
         // If the input stream starts with a valid escape, reconsume the current input code point,
         // consume an ident-like token, and return it.
-        if (is_valid_escape_sequence({ input, peek_code_point() })) {
+        if (is_valid_escape_sequence(start_of_input_stream_twin())) {
             reconsume_current_input_code_point();
             return consume_an_ident_like_token();
         }
