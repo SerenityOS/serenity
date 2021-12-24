@@ -1,5 +1,15 @@
 # Patches for CMake (and submodules) on SerenityOS
 
+## `0001-cmnghttp2-check-for-HAVE_SIZEOF_SSIZE_T-and-not-HAVE.patch`
+
+Fixes an issue where the first configure of cmake would generate an invalid config.h file somewhere, leading to the first run of `./package.sh` failing due to what `0016-conflicting-0.patch` and `0017-conflicting-1.patch` attempt to fix.
+
+### Status
+- [ ] Local?
+- [X] Should be merged to upstream?
+- [ ] Resolves issues(s) with our side of things
+- [ ] Hack
+
 ## `0010-don-t-use-siginfo.patch`
 
 We don't support SIGINFO. This patch removes uses of SIGINFO.
