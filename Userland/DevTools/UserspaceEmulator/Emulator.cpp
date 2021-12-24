@@ -34,6 +34,8 @@ namespace UserspaceEmulator {
 static constexpr u32 stack_location = 0x10000000;
 static constexpr size_t stack_size = 1 * MiB;
 
+static constexpr u32 signal_trampoline_location = 0xb0000000;
+
 static Emulator* s_the;
 
 Emulator& Emulator::the()
@@ -95,6 +97,7 @@ Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_bas
 
 void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 {
+    m_range_allocator.reserve_user_range(VirtualAddress(stack_location), stack_size);
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
@@ -183,7 +186,9 @@ bool Emulator::load_elf()
         VERIFY(program_header.type() != PT_TLS);
 
         if (program_header.type() == PT_LOAD) {
-            auto region = make<SimpleRegion>(program_header.vaddr().offset(interpreter_load_offset).get(), program_header.size_in_memory());
+            auto start_address = program_header.vaddr().offset(interpreter_load_offset);
+            m_range_allocator.reserve_user_range(start_address, program_header.size_in_memory());
+            auto region = make<SimpleRegion>(start_address.get(), program_header.size_in_memory());
             if (program_header.is_executable() && !program_header.is_writable())
                 region->set_text(true);
             memcpy(region->data(), program_header.raw_data(), program_header.size_in_image());
@@ -666,7 +671,8 @@ extern "C" void asm_signal_trampoline_end(void);
 
 void Emulator::setup_signal_trampoline()
 {
-    auto trampoline_region = make<SimpleRegion>(0xb0000000, 4096);
+    m_range_allocator.reserve_user_range(VirtualAddress(signal_trampoline_location), 4096);
+    auto trampoline_region = make<SimpleRegion>(signal_trampoline_location, 4096);
 
     u8* trampoline = (u8*)asm_signal_trampoline;
     u8* trampoline_end = (u8*)asm_signal_trampoline_end;

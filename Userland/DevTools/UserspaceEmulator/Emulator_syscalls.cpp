@@ -1533,7 +1533,9 @@ u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
     // TODO: This matches what Thread::make_thread_specific_region does. The kernel
     // ends up allocating one more page. Figure out if this is intentional.
     auto region_size = align_up_to(size, PAGE_SIZE) + PAGE_SIZE;
-    auto tcb_region = make<SimpleRegion>(0x20000000, region_size);
+    constexpr auto tls_location = VirtualAddress(0x20000000);
+    m_range_allocator.reserve_user_range(tls_location, region_size);
+    auto tcb_region = make<SimpleRegion>(tls_location.get(), region_size);
 
     size_t offset = 0;
     while (size - offset > 0) {

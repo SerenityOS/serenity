@@ -181,4 +181,11 @@ void RangeAllocator::deallocate(const Range& range)
     }
 }
 
+void RangeAllocator::reserve_user_range(VirtualAddress begin, size_t size)
+{
+    auto end = round_up_to_power_of_two(begin.offset(size).get(), PAGE_SIZE);
+    auto allocated_range = allocate_specific(begin.page_base(), end - begin.page_base().get());
+    VERIFY(allocated_range.has_value());
+}
+
 }
