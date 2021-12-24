@@ -1,0 +1,29 @@
+--- tuxracer-0.61-original/configure	2021-12-23 14:26:17.978567580 +0000
++++ tuxracer-0.61/configure	2021-12-24 12:12:08.718881004 +0000
+@@ -1674,7 +1674,7 @@
+ 
+ ; return 0; }
+ EOF
+-if { (eval echo configure:1678: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
++if [ "$ac_func" = "isnan" ]; then
+   rm -rf conftest*
+   eval "ac_cv_func_$ac_func=yes"
+ else
+@@ -3415,7 +3415,7 @@
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   ac_save_LIBS="$LIBS"
+-LIBS="-lSDL_mixer  $LIBS"
++LIBS="-lSDL2_mixer  $LIBS"
+ cat > conftest.$ac_ext <<EOF
+ #line 3423 "configure"
+ #include "confdefs.h"
+@@ -3452,7 +3452,7 @@
+ 
+ 	if test "x$have_SDL_mixer" = "xyes" ; then 
+ 	    TR_CPPFLAGS="$TR_CPPFLAGS -DHAVE_SDL_MIXER=1" 
+-	    TR_LIBS="$TR_LIBS -lSDL_mixer"
++	    TR_LIBS="$TR_LIBS -lSDL2_mixer"
+ 	else
+ 	    echo "*** SDL_mixer not found.  Configuring without audio support."
+ 	fi
