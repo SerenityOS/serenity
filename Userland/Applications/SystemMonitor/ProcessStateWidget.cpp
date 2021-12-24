@@ -10,7 +10,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
