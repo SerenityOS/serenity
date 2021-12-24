@@ -107,7 +107,7 @@ ThemeWidget::ThemeWidget()
     m_cursors_tableview->set_highlight_key_column(false);
 
     auto mouse_cursor_model = MouseCursorModel::create();
-    auto sorting_proxy_model = GUI::SortingProxyModel::create(mouse_cursor_model);
+    auto sorting_proxy_model = MUST(GUI::SortingProxyModel::create(mouse_cursor_model));
     sorting_proxy_model->set_sort_role(GUI::ModelRole::Display);
 
     m_cursors_tableview->set_model(sorting_proxy_model);

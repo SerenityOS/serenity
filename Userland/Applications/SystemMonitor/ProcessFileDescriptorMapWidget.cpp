@@ -38,7 +38,7 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
     });
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_fds_fields));
-    m_table_view->set_model(GUI::SortingProxyModel::create(*m_model));
+    m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_model)));
 }
 
 ProcessFileDescriptorMapWidget::~ProcessFileDescriptorMapWidget()

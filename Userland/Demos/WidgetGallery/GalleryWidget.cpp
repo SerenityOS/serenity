@@ -296,7 +296,7 @@ GalleryWidget::GalleryWidget()
     m_cursors_tableview->set_column_headers_visible(false);
     m_cursors_tableview->set_highlight_key_column(false);
 
-    auto sorting_proxy_model = GUI::SortingProxyModel::create(MouseCursorModel::create());
+    auto sorting_proxy_model = MUST(GUI::SortingProxyModel::create(MouseCursorModel::create()));
     sorting_proxy_model->set_sort_role(GUI::ModelRole::Display);
 
     m_cursors_tableview->set_model(sorting_proxy_model);
@@ -319,7 +319,7 @@ GalleryWidget::GalleryWidget()
     m_icons_tableview->set_column_headers_visible(false);
     m_icons_tableview->set_highlight_key_column(false);
 
-    auto sorting_proxy_icons_model = GUI::SortingProxyModel::create(FileIconsModel::create());
+    auto sorting_proxy_icons_model = MUST(GUI::SortingProxyModel::create(FileIconsModel::create()));
     sorting_proxy_icons_model->set_sort_role(GUI::ModelRole::Display);
 
     m_icons_tableview->set_model(sorting_proxy_icons_model);
