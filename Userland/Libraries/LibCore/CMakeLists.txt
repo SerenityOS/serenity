@@ -11,6 +11,7 @@ set(SOURCES
     EventLoop.cpp
     FileWatcher.cpp
     File.cpp
+    FilePermissionsMask.cpp
     GetPassword.cpp
     IODevice.cpp
     LocalServer.cpp
