@@ -79,6 +79,9 @@ private:
     [[nodiscard]] U32Twin peek_twin() const;
     [[nodiscard]] U32Triplet peek_triplet() const;
 
+    [[nodiscard]] U32Twin start_of_input_stream_twin();
+    [[nodiscard]] U32Triplet start_of_input_stream_triplet();
+
     [[nodiscard]] static Token create_new_token(Token::Type);
     [[nodiscard]] static Token create_value_token(Token::Type, String value);
     [[nodiscard]] static Token create_value_token(Token::Type, u32 value);

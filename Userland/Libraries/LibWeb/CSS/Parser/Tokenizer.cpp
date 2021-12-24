@@ -309,6 +309,30 @@ U32Triplet Tokenizer::peek_triplet() const
     return values;
 }
 
+U32Twin Tokenizer::start_of_input_stream_twin()
+{
+    U32Twin twin;
+    // FIXME: Reconsuming just to read the current code point again is weird.
+    reconsume_current_input_code_point();
+    twin.first = next_code_point();
+    twin.second = peek_code_point();
+
+    return twin;
+}
+
+U32Triplet Tokenizer::start_of_input_stream_triplet()
+{
+    U32Triplet triplet;
+    // FIXME: Reconsuming just to read the current code point again is weird.
+    reconsume_current_input_code_point();
+    triplet.first = next_code_point();
+    auto next_two = peek_twin();
+    triplet.second = next_two.first;
+    triplet.third = next_two.second;
+
+    return triplet;
+}
+
 Token Tokenizer::create_new_token(Token::Type type)
 {
     Token token = {};
