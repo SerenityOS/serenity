@@ -26,16 +26,7 @@ struct KmallocGlobalData;
 
 namespace Kernel::Memory {
 
-constexpr bool page_round_up_would_wrap(FlatPtr x)
-{
-    return x > (explode_byte(0xFF) & ~0xFFF);
-}
-
-constexpr FlatPtr page_round_up(FlatPtr x)
-{
-    VERIFY(!page_round_up_would_wrap(x));
-    return (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
-}
+ErrorOr<FlatPtr> page_round_up(FlatPtr x);
 
 constexpr FlatPtr page_round_down(FlatPtr x)
 {
@@ -340,17 +331,11 @@ inline bool PhysicalPage::is_lazy_committed_page() const
 
 inline ErrorOr<Memory::VirtualRange> expand_range_to_page_boundaries(FlatPtr address, size_t size)
 {
-    if (Memory::page_round_up_would_wrap(size))
-        return EINVAL;
-
     if ((address + size) < address)
         return EINVAL;
 
-    if (Memory::page_round_up_would_wrap(address + size))
-        return EINVAL;
-
     auto base = VirtualAddress { address }.page_base();
-    auto end = Memory::page_round_up(address + size);
+    auto end = TRY(Memory::page_round_up(address + size));
 
     return Memory::VirtualRange { base, end - base.get() };
 }

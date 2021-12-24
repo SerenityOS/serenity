@@ -20,8 +20,11 @@ inline bool KBufferBuilder::check_expand(size_t size)
     size_t new_buffer_size = m_size + size;
     if (Checked<size_t>::addition_would_overflow(new_buffer_size, 1 * MiB))
         return false;
-    new_buffer_size = Memory::page_round_up(new_buffer_size + 1 * MiB);
-    auto new_buffer_or_error = KBuffer::try_create_with_size(new_buffer_size);
+    auto rounded_new_buffer_size_or_error = Memory::page_round_up(new_buffer_size + 1 * MiB);
+    if (rounded_new_buffer_size_or_error.is_error()) {
+        return false;
+    }
+    auto new_buffer_or_error = KBuffer::try_create_with_size(rounded_new_buffer_size_or_error.value());
     if (new_buffer_or_error.is_error())
         return false;
     auto new_buffer = new_buffer_or_error.release_value();

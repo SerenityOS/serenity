@@ -131,7 +131,12 @@ UNMAP_AFTER_INIT void Device::initialize()
             auto& mapping = m_mmio[cfg.bar];
             mapping.size = PCI::get_BAR_space_size(pci_address(), cfg.bar);
             if (!mapping.base && mapping.size) {
-                auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), cfg.bar))), Memory::page_round_up(mapping.size), "VirtIO MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
+                auto region_size_or_error = Memory::page_round_up(mapping.size);
+                if (region_size_or_error.is_error()) {
+                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to round up size={} to pages", m_class_name, mapping.size);
+                    continue;
+                }
+                auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), cfg.bar))), region_size_or_error.value(), "VirtIO MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
                 if (region_or_error.is_error()) {
                     dbgln_if(VIRTIO_DEBUG, "{}: Failed to map bar {} - (size={}) {}", m_class_name, cfg.bar, mapping.size, region_or_error.error());
                 } else {

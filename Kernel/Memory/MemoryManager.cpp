@@ -45,6 +45,14 @@ __attribute__((section(".super_pages"))) static u8 super_pages[4 * MiB];
 
 namespace Kernel::Memory {
 
+ErrorOr<FlatPtr> page_round_up(FlatPtr x)
+{
+    if (x > (explode_byte(0xFF) & ~0xFFF)) {
+        return Error::from_errno(EINVAL);
+    }
+    return (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
+}
+
 // NOTE: We can NOT use Singleton for this class, because
 // MemoryManager::initialize is called *before* global constructors are
 // run. If we do, then Singleton would get re-initialized, causing
@@ -137,7 +145,7 @@ void MemoryManager::unmap_text_after_init()
     SpinlockLocker mm_lock(s_mm_lock);
 
     auto start = page_round_down((FlatPtr)&start_of_unmap_after_init);
-    auto end = page_round_up((FlatPtr)&end_of_unmap_after_init);
+    auto end = page_round_up((FlatPtr)&end_of_unmap_after_init).release_value_but_fixme_should_propagate_errors();
 
     // Unmap the entire .unmap_after_init section
     for (auto i = start; i < end; i += PAGE_SIZE) {
@@ -155,7 +163,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_ksyms_after_init()
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
 
     auto start = page_round_down((FlatPtr)start_of_kernel_ksyms);
-    auto end = page_round_up((FlatPtr)end_of_kernel_ksyms);
+    auto end = page_round_up((FlatPtr)end_of_kernel_ksyms).release_value_but_fixme_should_propagate_errors();
 
     for (auto i = start; i < end; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -213,7 +221,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
-    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image))) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
     if (multiboot_flags & 0x4) {
         auto* bootmods_start = multiboot_copy_boot_modules_array;
@@ -380,7 +388,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
     // Calculate how many bytes the array will consume
     auto physical_page_array_size = m_physical_page_entries_count * sizeof(PhysicalPageEntry);
-    auto physical_page_array_pages = page_round_up(physical_page_array_size) / PAGE_SIZE;
+    auto physical_page_array_pages = page_round_up(physical_page_array_size).release_value_but_fixme_should_propagate_errors() / PAGE_SIZE;
     VERIFY(physical_page_array_pages * PAGE_SIZE >= physical_page_array_size);
 
     // Calculate how many page tables we will need to be able to map them all

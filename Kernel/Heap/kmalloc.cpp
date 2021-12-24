@@ -226,7 +226,11 @@ struct KmallocGlobalData {
         if (padded_allocation_request.has_overflow()) {
             PANIC("Integer overflow during kmalloc heap expansion");
         }
-        size_t new_subheap_size = max(minimum_subheap_size, Memory::page_round_up(padded_allocation_request.value()));
+        auto rounded_allocation_request = Memory::page_round_up(padded_allocation_request.value());
+        if (rounded_allocation_request.is_error()) {
+            PANIC("Integer overflow computing pages for kmalloc heap expansion");
+        }
+        size_t new_subheap_size = max(minimum_subheap_size, rounded_allocation_request.value());
 
         dbgln("Unable to allocate {}, expanding kmalloc heap", allocation_request);
 

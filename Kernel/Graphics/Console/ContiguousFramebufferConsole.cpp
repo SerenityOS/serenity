@@ -27,8 +27,9 @@ void ContiguousFramebufferConsole::set_resolution(size_t width, size_t height, s
     m_height = height;
     m_pitch = pitch;
 
-    dbgln("Framebuffer Console: taking {} bytes", Memory::page_round_up(pitch * height));
-    auto region_or_error = MM.allocate_kernel_region(m_framebuffer_address, Memory::page_round_up(pitch * height), "Framebuffer Console", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::Yes);
+    size_t size = Memory::page_round_up(pitch * height).release_value_but_fixme_should_propagate_errors();
+    dbgln("Framebuffer Console: taking {} bytes", size);
+    auto region_or_error = MM.allocate_kernel_region(m_framebuffer_address, size, "Framebuffer Console", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::Yes);
     VERIFY(!region_or_error.is_error());
     m_framebuffer_region = region_or_error.release_value();
 

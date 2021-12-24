@@ -17,7 +17,7 @@ Queue::Queue(u16 queue_size, u16 notify_offset)
     size_t size_of_descriptors = sizeof(QueueDescriptor) * queue_size;
     size_t size_of_driver = sizeof(QueueDriver) + queue_size * sizeof(u16);
     size_t size_of_device = sizeof(QueueDevice) + queue_size * sizeof(QueueDeviceItem);
-    auto queue_region_size = Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device);
+    auto queue_region_size = Memory::page_round_up(size_of_descriptors + size_of_driver + size_of_device).release_value_but_fixme_should_propagate_errors();
     if (queue_region_size <= PAGE_SIZE)
         m_queue_region = MM.allocate_kernel_region(queue_region_size, "VirtIO Queue", Memory::Region::Access::ReadWrite).release_value();
     else

@@ -22,7 +22,8 @@ static constexpr u16 pcm_sample_rate_maximum = 48000;
 
 static ErrorOr<OwnPtr<Memory::Region>> allocate_physical_buffer(size_t size, StringView name)
 {
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(Memory::page_round_up(size)));
+    auto rounded_size = TRY(Memory::page_round_up(size));
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(rounded_size));
     return TRY(MM.allocate_kernel_region_with_vmobject(move(vmobject), vmobject->size(), name, Memory::Region::Access::Write));
 }
 

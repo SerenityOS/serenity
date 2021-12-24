@@ -36,14 +36,15 @@ ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescr
     if (offset != 0)
         return ENXIO;
     auto framebuffer_length = TRY(buffer_length(0));
-    if (range.size() != Memory::page_round_up(framebuffer_length))
+    framebuffer_length = TRY(Memory::page_round_up(framebuffer_length));
+    if (range.size() != framebuffer_length)
         return EOVERFLOW;
 
-    m_userspace_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_length)));
-    m_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_length)));
-    m_swapped_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_length), AllocationStrategy::AllocateNow));
-    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_length), "Framebuffer", Memory::Region::Access::ReadWrite));
-    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_length), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
+    m_userspace_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, framebuffer_length));
+    m_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, framebuffer_length));
+    m_swapped_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(framebuffer_length, AllocationStrategy::AllocateNow));
+    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, framebuffer_length, "Framebuffer", Memory::Region::Access::ReadWrite));
+    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, framebuffer_length, "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
 
     RefPtr<Memory::VMObject> chosen_vmobject;
     if (m_graphical_writes_enabled) {
@@ -68,7 +69,8 @@ void FramebufferDevice::deactivate_writes()
         return;
     auto framebuffer_length_or_error = buffer_length(0);
     VERIFY(!framebuffer_length_or_error.is_error());
-    memcpy(m_swapped_framebuffer_region->vaddr().as_ptr(), m_real_framebuffer_region->vaddr().as_ptr(), Memory::page_round_up(framebuffer_length_or_error.release_value()));
+    size_t rounded_framebuffer_length = Memory::page_round_up(framebuffer_length_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
+    memcpy(m_swapped_framebuffer_region->vaddr().as_ptr(), m_real_framebuffer_region->vaddr().as_ptr(), rounded_framebuffer_length);
     auto vmobject = m_swapped_framebuffer_vmobject;
     m_userspace_framebuffer_region->set_vmobject(vmobject.release_nonnull());
     m_userspace_framebuffer_region->remap();
@@ -85,7 +87,8 @@ void FramebufferDevice::activate_writes()
     auto framebuffer_length_or_error = buffer_length(0);
     VERIFY(!framebuffer_length_or_error.is_error());
 
-    memcpy(m_real_framebuffer_region->vaddr().as_ptr(), m_swapped_framebuffer_region->vaddr().as_ptr(), Memory::page_round_up(framebuffer_length_or_error.release_value()));
+    size_t rounded_framebuffer_length = Memory::page_round_up(framebuffer_length_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
+    memcpy(m_real_framebuffer_region->vaddr().as_ptr(), m_swapped_framebuffer_region->vaddr().as_ptr(), rounded_framebuffer_length);
     auto vmobject = m_userspace_real_framebuffer_vmobject;
     m_userspace_framebuffer_region->set_vmobject(vmobject.release_nonnull());
     m_userspace_framebuffer_region->remap();
@@ -97,10 +100,11 @@ UNMAP_AFTER_INIT ErrorOr<void> FramebufferDevice::try_to_initialize()
     // FIXME: Would be nice to be able to unify this with mmap above, but this
     //        function is UNMAP_AFTER_INIT for the time being.
     auto framebuffer_length = TRY(buffer_length(0));
-    m_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_length)));
-    m_swapped_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_length), AllocationStrategy::AllocateNow));
-    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_length), "Framebuffer", Memory::Region::Access::ReadWrite));
-    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_length), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
+    framebuffer_length = TRY(Memory::page_round_up(framebuffer_length));
+    m_real_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, framebuffer_length));
+    m_swapped_framebuffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(framebuffer_length, AllocationStrategy::AllocateNow));
+    m_real_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, framebuffer_length, "Framebuffer", Memory::Region::Access::ReadWrite));
+    m_swapped_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, framebuffer_length, "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite));
     return {};
 }
 

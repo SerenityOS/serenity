@@ -27,7 +27,7 @@ template<typename T>
 static TypedMapping<T> map_typed(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
 {
     TypedMapping<T> table;
-    size_t mapping_length = page_round_up(paddr.offset_in_page() + length);
+    size_t mapping_length = page_round_up(paddr.offset_in_page() + length).release_value_but_fixme_should_propagate_errors();
     auto region_or_error = MM.allocate_kernel_region(paddr.page_base(), mapping_length, {}, access);
     if (region_or_error.is_error())
         TODO();
