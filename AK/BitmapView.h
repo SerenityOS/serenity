@@ -268,7 +268,7 @@ public:
                     }
 
                     // Deleting trailing ones.
-                    u32 trailing_ones = count_trailing_zeroes(~bucket);
+                    u32 trailing_ones = count_trailing_ones(bucket);
                     bucket >>= trailing_ones;
                     viewed_bits += trailing_ones;
                     free_chunks = 0;

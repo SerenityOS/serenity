@@ -328,7 +328,7 @@ static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
             continue;
         }
         int trailing_zeros = count_trailing_zeroes(mask);
-        int size = count_trailing_zeroes(~(mask >> trailing_zeros));
+        int size = count_trailing_ones(mask >> trailing_zeros);
         if (size > 8) {
             // Drop lowest bits if mask is longer than 8 bits.
             trailing_zeros += size - 8;

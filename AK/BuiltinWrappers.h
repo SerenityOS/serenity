@@ -58,6 +58,12 @@ inline constexpr int count_trailing_zeroes(IntType value)
 #endif
 }
 
+template<Unsigned IntType>
+inline constexpr int count_trailing_ones(IntType value)
+{
+    return count_trailing_zeroes(static_cast<IntType>(~value));
+}
+
 // The function will return the number of leading zeroes in the type. If
 // the given number is zero, this function will return the number of bits
 // in the IntType.
