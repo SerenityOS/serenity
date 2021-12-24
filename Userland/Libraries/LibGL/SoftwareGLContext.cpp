@@ -2541,6 +2541,20 @@ void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
     m_current_vertex_normal = { nx, ny, nz };
 }
 
+void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(type != GL_BYTE
+            && type != GL_SHORT
+            && type != GL_INT
+            && type != GL_FLOAT
+            && type != GL_DOUBLE,
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
+
+    dbgln_if(GL_DEBUG, "gl_normal_pointer({:#x}, {}, {:p}): unimplemented", type, stride, pointer);
+}
+
 void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
@@ -2690,6 +2704,65 @@ void SoftwareGLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble 
     gl_vertex(x2, y2, 0.0, 0.0);
     gl_vertex(x1, y2, 0.0, 0.0);
     gl_end();
+}
+
+void SoftwareGLContext::gl_tex_gen(GLenum coord, GLenum pname, GLdouble param)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_gen, coord, pname, param);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(coord < GL_S || coord > GL_Q, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(pname != GL_TEXTURE_GEN_MODE, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(param != GL_EYE_LINEAR
+            && param != GL_OBJECT_LINEAR
+            && param != GL_SPHERE_MAP
+            && param != GL_NORMAL_MAP
+            && param != GL_REFLECTION_MAP,
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF((coord == GL_R || coord == GL_Q) && param == GL_SPHERE_MAP, GL_INVALID_ENUM);
+
+    dbgln_if(GL_DEBUG, "gl_tex_gen({:#x}, {:#x}, {}): unimplemented", coord, pname, param);
+}
+
+void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_gen_floatv, coord, pname, params);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(coord < GL_S || coord > GL_Q, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(pname != GL_TEXTURE_GEN_MODE
+            && pname != GL_OBJECT_PLANE
+            && pname != GL_EYE_PLANE,
+        GL_INVALID_ENUM);
+
+    switch (pname) {
+    case GL_TEXTURE_GEN_MODE: {
+        auto param = static_cast<GLenum>(params[0]);
+        RETURN_WITH_ERROR_IF(param != GL_EYE_LINEAR
+                && param != GL_OBJECT_LINEAR
+                && param != GL_SPHERE_MAP
+                && param != GL_NORMAL_MAP
+                && param != GL_REFLECTION_MAP,
+            GL_INVALID_ENUM);
+        RETURN_WITH_ERROR_IF((coord == GL_R || coord == GL_Q) && param == GL_SPHERE_MAP, GL_INVALID_ENUM);
+
+        dbgln_if(GL_DEBUG, "gl_tex_gen_floatv({:#x}, {:#x}, {:p}): unimplemented", coord, pname, params);
+        break;
+    }
+    case GL_OBJECT_PLANE:
+    case GL_EYE_PLANE: {
+        GLfloat coefficient_p1 = params[0];
+        GLfloat coefficient_p2 = params[1];
+        GLfloat coefficient_p3 = params[2];
+        GLfloat coefficient_p4 = params[3];
+
+        dbgln_if(GL_DEBUG, "gl_tex_gen_floatv({:#x}, {:#x}, {:p}): unimplemented coefficients {} {} {} {}",
+            coord, pname, params, coefficient_p1, coefficient_p2, coefficient_p3, coefficient_p4);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void SoftwareGLContext::present()
