@@ -12,6 +12,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 #include <ctype.h>
@@ -143,7 +145,7 @@ private:
     ByteBuffer m_buffer;
 };
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* url_str = nullptr;
     bool save_at_provided_name = false;
@@ -172,7 +174,7 @@ int main(int argc, char** argv)
             return true;
         } });
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (data) {
         method = "POST";
