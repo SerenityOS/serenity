@@ -67,6 +67,11 @@ static constexpr Matrix4x4<O> transpose_input_matrix(I const* matrix)
     // clang-format on
 }
 
+void glMultMatrixd(GLdouble const* matrix)
+{
+    g_gl_context->gl_mult_matrix(transpose_input_matrix<double, float>(matrix));
+}
+
 void glMultMatrixf(GLfloat const* matrix)
 {
     g_gl_context->gl_mult_matrix(transpose_input_matrix<float, float>(matrix));
