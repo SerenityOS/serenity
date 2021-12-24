@@ -301,6 +301,17 @@ ErrorOr<String> gethostname()
     return String(&hostname[0]);
 }
 
+ErrorOr<String> getcwd()
+{
+    auto* cwd = ::getcwd(nullptr, 0);
+    if (!cwd)
+        return Error::from_syscall("getcwd"sv, -errno);
+
+    String string_cwd(cwd);
+    free(cwd);
+    return string_cwd;
+}
+
 ErrorOr<void> ioctl(int fd, unsigned request, ...)
 {
     va_list ap;
