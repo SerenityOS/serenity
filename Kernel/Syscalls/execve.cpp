@@ -166,8 +166,8 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
 
     size_t executable_size = inode.size();
-
-    auto region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF memory range calculation", Memory::Region::Access::Read));
+    size_t rounded_executable_size = TRY(Memory::page_round_up(executable_size));
+    auto region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, rounded_executable_size, "ELF memory range calculation", Memory::Region::Access::Read));
     auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
     if (!elf_image.is_valid()) {
         return EINVAL;
@@ -261,8 +261,9 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
     }
 
     size_t executable_size = inode.size();
+    size_t rounded_executable_size = TRY(Memory::page_round_up(executable_size));
 
-    auto executable_region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF loading", Memory::Region::Access::Read));
+    auto executable_region = TRY(MM.allocate_kernel_region_with_vmobject(*vmobject, rounded_executable_size, "ELF loading", Memory::Region::Access::Read));
     auto elf_image = ELF::Image(executable_region->vaddr().as_ptr(), executable_size);
 
     if (!elf_image.is_valid())
@@ -313,7 +314,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
-        auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+        size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
+        auto range_end = VirtualAddress { rounded_range_end };
 
         auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
         auto region = TRY(new_space->allocate_region(range, region_name, prot, AllocationStrategy::Reserve));
@@ -349,7 +351,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             prot |= PROT_EXEC;
 
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
-        auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+        size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
+        auto range_end = VirtualAddress { rounded_range_end };
         auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get()));
         auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name->view(), prot, true));
 

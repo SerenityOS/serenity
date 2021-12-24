@@ -21,7 +21,7 @@ RefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest&
 ScatterGatherList::ScatterGatherList(NonnullRefPtr<AnonymousVMObject> vm_object, AsyncBlockDeviceRequest& request, size_t device_block_size)
     : m_vm_object(move(vm_object))
 {
-    auto region_or_error = MM.allocate_kernel_region_with_vmobject(m_vm_object, page_round_up((request.block_count() * device_block_size)), "AHCI Scattered DMA", Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes);
+    auto region_or_error = MM.allocate_kernel_region_with_vmobject(m_vm_object, page_round_up((request.block_count() * device_block_size)).release_value_but_fixme_should_propagate_errors(), "AHCI Scattered DMA", Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes);
     if (region_or_error.is_error())
         TODO();
     m_dma_region = region_or_error.release_value();

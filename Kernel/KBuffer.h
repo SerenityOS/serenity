@@ -26,7 +26,8 @@ class [[nodiscard]] KBuffer {
 public:
     static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto region = TRY(MM.allocate_kernel_region(Memory::page_round_up(size), name, access, strategy));
+        auto rounded_size = TRY(Memory::page_round_up(size));
+        auto region = TRY(MM.allocate_kernel_region(rounded_size, name, access, strategy));
         return TRY(adopt_nonnull_own_or_enomem(new (nothrow) KBuffer { size, move(region) }));
     }
 

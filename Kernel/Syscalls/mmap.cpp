@@ -142,10 +142,8 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     if (alignment & ~PAGE_MASK)
         return EINVAL;
 
-    if (Memory::page_round_up_would_wrap(size))
-        return EINVAL;
-
-    if (!Memory::is_user_range(VirtualAddress(addr), Memory::page_round_up(size)))
+    size_t rounded_size = TRY(Memory::page_round_up(size));
+    if (!Memory::is_user_range(VirtualAddress(addr), rounded_size))
         return EFAULT;
 
     OwnPtr<KString> name;
@@ -188,7 +186,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
 
     auto range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
         if (map_randomized)
-            return address_space().page_directory().range_allocator().try_allocate_randomized(Memory::page_round_up(size), alignment);
+            return address_space().page_directory().range_allocator().try_allocate_randomized(rounded_size, alignment);
 
         // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
         if (map_fixed)
@@ -208,9 +206,9 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         RefPtr<Memory::AnonymousVMObject> vmobject;
         if (flags & MAP_PURGEABLE) {
-            vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy));
+            vmobject = TRY(Memory::AnonymousVMObject::try_create_purgeable_with_size(rounded_size, strategy));
         } else {
-            vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy));
+            vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(rounded_size, strategy));
         }
 
         region = TRY(address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), 0, {}, prot, map_shared));
@@ -587,15 +585,11 @@ ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int f
     if (address.ptr() % PAGE_SIZE != 0)
         return EINVAL;
 
-    if (Memory::page_round_up_would_wrap(size)) {
-        return EINVAL;
-    }
-
     // Note: This is not specified
-    size = Memory::page_round_up(size);
+    auto rounded_size = TRY(Memory::page_round_up(size));
 
     // FIXME: We probably want to sync all mappings in the address+size range.
-    auto* region = address_space().find_region_containing(Memory::VirtualRange { address.vaddr(), size });
+    auto* region = address_space().find_region_containing(Memory::VirtualRange { address.vaddr(), rounded_size });
     // All regions from address upto address+size shall be mapped
     if (!region)
         return ENOMEM;

@@ -334,7 +334,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
     constexpr u64 apic_startup_region_base = 0x8000;
     VERIFY(apic_startup_region_base + apic_ap_start_size < USER_RANGE_BASE);
-    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))));
+    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))).release_value_but_fixme_should_propagate_errors());
     memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs

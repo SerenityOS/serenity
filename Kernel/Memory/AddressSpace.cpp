@@ -131,7 +131,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 ErrorOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
-    size = page_round_up(size);
+    size = TRY(page_round_up(size));
     if (vaddr.is_null())
         return page_directory().range_allocator().try_allocate_anywhere(size, alignment);
     return page_directory().range_allocator().try_allocate_specific(vaddr, size);
@@ -222,8 +222,8 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
     if (!found_region)
         return nullptr;
     auto& region = *found_region;
-    size_t size = page_round_up(range.size());
-    if (region->size() != size)
+    auto rounded_range_size = page_round_up(range.size());
+    if (rounded_range_size.is_error() || region->size() != rounded_range_size.value())
         return nullptr;
     m_region_lookup_cache.range = range;
     m_region_lookup_cache.region = *region;

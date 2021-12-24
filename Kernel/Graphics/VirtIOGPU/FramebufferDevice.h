@@ -40,7 +40,7 @@ public:
     static size_t calculate_framebuffer_size(size_t width, size_t height)
     {
         // VirtIO resources can only map on page boundaries!
-        return Memory::page_round_up(sizeof(u32) * width * height);
+        return Memory::page_round_up(sizeof(u32) * width * height).value();
     }
 
     u8* framebuffer_data();

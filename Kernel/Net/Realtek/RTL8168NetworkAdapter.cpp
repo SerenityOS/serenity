@@ -246,8 +246,8 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address addre
     , PCI::Device(address)
     , IRQHandler(irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
-    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)), "RTL8168 RX", Memory::Region::Access::ReadWrite).release_value())
-    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)), "RTL8168 TX", Memory::Region::Access::ReadWrite).release_value())
+    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX", Memory::Region::Access::ReadWrite).release_value())
+    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX", Memory::Region::Access::ReadWrite).release_value())
 {
     dmesgln("RTL8168: Found @ {}", pci_address());
     dmesgln("RTL8168: I/O port base: {}", m_io_base);
@@ -1095,7 +1095,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_rx_descriptors()
     auto* rx_descriptors = (RXDescriptor*)m_rx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
-        auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE), "RTL8168 RX buffer", Memory::Region::Access::ReadWrite).release_value();
+        auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX buffer", Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
         m_rx_buffers_regions.append(move(region));
 
@@ -1113,7 +1113,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
     auto* tx_descriptors = (TXDescriptor*)m_tx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];
-        auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE), "RTL8168 TX buffer", Memory::Region::Access::ReadWrite).release_value();
+        auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX buffer", Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
         m_tx_buffers_regions.append(move(region));
 

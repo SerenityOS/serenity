@@ -38,18 +38,11 @@ VirtualRange VirtualRange::intersect(VirtualRange const& other) const
 
 ErrorOr<VirtualRange> VirtualRange::expand_to_page_boundaries(FlatPtr address, size_t size)
 {
-    if (page_round_up_would_wrap(size))
-        return EINVAL;
-
     if ((address + size) < address)
         return EINVAL;
 
-    if (page_round_up_would_wrap(address + size))
-        return EINVAL;
-
     auto base = VirtualAddress { address }.page_base();
-    auto end = page_round_up(address + size);
-
+    auto end = TRY(page_round_up(address + size));
     return VirtualRange { base, end - base.get() };
 }
 
