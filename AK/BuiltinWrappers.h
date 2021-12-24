@@ -32,13 +32,13 @@ inline constexpr int popcount(IntType value)
 }
 
 // The function will return the number of trailing zeroes in the type. If
-// the given number if zero, this function may contain undefined
-// behavior, or it may return the number of bits in the number. If
-// this function can be called with zero, the use of
-// count_trailing_zeroes_safe is preferred.
+// the given number is zero, this function will return the number of bits
+// bits in the IntType.
 template<Unsigned IntType>
 inline constexpr int count_trailing_zeroes(IntType value)
 {
+    if (value == 0) [[unlikely]]
+        return 8 * sizeof(IntType);
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
