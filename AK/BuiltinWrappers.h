@@ -97,17 +97,6 @@ inline constexpr int count_leading_zeroes(IntType value)
 #endif
 }
 
-// The function will return the number of leading zeroes in the type. If
-// the given number is zero, this function will return the number of bits
-// in the IntType.
-template<Unsigned IntType>
-inline constexpr int count_leading_zeroes_safe(IntType value)
-{
-    if (value == 0)
-        return 8 * sizeof(IntType);
-    return count_leading_zeroes(value);
-}
-
 // The function will return the index of leading one bit in the type. If
 // the given number is zero, this function will return zero.
 template<Integral IntType>
