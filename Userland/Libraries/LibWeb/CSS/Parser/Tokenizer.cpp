@@ -844,7 +844,7 @@ Token Tokenizer::consume_a_numeric_token()
     auto number = consume_a_number();
 
     // If the next 3 input code points would start an identifier, then:
-    if (would_start_an_identifier()) {
+    if (would_start_an_identifier(peek_triplet())) {
         // 1. Create a <dimension-token> with the same value and type flag as number,
         //    and a unit set initially to the empty string.
         auto token = create_new_token(Token::Type::Dimension);
@@ -946,11 +946,6 @@ bool Tokenizer::is_valid_escape_sequence(U32Twin values)
 
     // Otherwise, return true.
     return true;
-}
-
-bool Tokenizer::would_start_an_identifier()
-{
-    return would_start_an_identifier(peek_triplet());
 }
 
 // https://www.w3.org/TR/css-syntax-3/#would-start-an-identifier
@@ -1143,7 +1138,7 @@ Token Tokenizer::consume_a_token()
 
             // 2. If the next 3 input code points would start an identifier, set the <hash-token>’s
             //    type flag to "id".
-            if (would_start_an_identifier())
+            if (would_start_an_identifier(peek_triplet()))
                 token.m_hash_type = Token::HashType::Id;
 
             // 3. Consume a name, and set the <hash-token>’s value to the returned string.
@@ -1222,7 +1217,7 @@ Token Tokenizer::consume_a_token()
 
         // Otherwise, if the input stream starts with an identifier, reconsume the current
         // input code point, consume an ident-like token, and return it.
-        if (would_start_an_identifier()) {
+        if (would_start_an_identifier(start_of_input_stream_triplet())) {
             reconsume_current_input_code_point();
             return consume_an_ident_like_token();
         }
@@ -1282,7 +1277,7 @@ Token Tokenizer::consume_a_token()
         dbgln_if(CSS_TOKENIZER_DEBUG, "is at");
         // If the next 3 input code points would start an identifier, consume a name, create
         // an <at-keyword-token> with its value set to the returned value, and return it.
-        if (would_start_an_identifier()) {
+        if (would_start_an_identifier(peek_triplet())) {
             auto name = consume_a_name();
             return create_value_token(Token::Type::AtKeyword, name);
         }
