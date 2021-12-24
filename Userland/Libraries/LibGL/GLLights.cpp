@@ -41,7 +41,6 @@ void glLightModelfv(GLenum pname, GLfloat const* params)
 
 void glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
-    VERIFY(face == GL_SHININESS);
     g_gl_context->gl_materialv(face, pname, &param);
 }
 
