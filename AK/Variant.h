@@ -208,6 +208,18 @@ public:
     }
 
     template<typename... NewTs>
+    Variant(Variant<NewTs...>&& old) requires((can_contain<NewTs>() && ...))
+        : Variant(move(old).template downcast<Ts...>())
+    {
+    }
+
+    template<typename... NewTs>
+    Variant(const Variant<NewTs...>& old) requires((can_contain<NewTs>() && ...))
+        : Variant(old.template downcast<Ts...>())
+    {
+    }
+
+    template<typename... NewTs>
     friend struct Variant;
 
     Variant() requires(!can_contain<Empty>()) = delete;
@@ -387,18 +399,6 @@ public:
         });
         VERIFY(instance.m_index != instance.invalid_index);
         return instance;
-    }
-
-    template<typename... NewTs>
-    explicit operator Variant<NewTs...>() &&
-    {
-        return downcast<NewTs...>();
-    }
-
-    template<typename... NewTs>
-    explicit operator Variant<NewTs...>() const&
-    {
-        return downcast<NewTs...>();
     }
 
 private:
