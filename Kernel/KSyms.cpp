@@ -25,7 +25,7 @@ __attribute__((section(".kernel_symbols"))) char kernel_symbols[5 * MiB] {};
 static KernelSymbol* s_symbols;
 static size_t s_symbol_count = 0;
 
-static u8 parse_hex_digit(char nibble)
+UNMAP_AFTER_INIT static u8 parse_hex_digit(char nibble)
 {
     if (nibble >= '0' && nibble <= '9')
         return nibble - '0';

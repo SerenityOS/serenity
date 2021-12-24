@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
 {
 }
 
-void PTYMultiplexer::initialize()
+UNMAP_AFTER_INIT void PTYMultiplexer::initialize()
 {
     the().after_inserting();
 }
