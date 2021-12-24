@@ -118,6 +118,7 @@ use_genext2fs=0
 if [ "$(uname -s)" = "Darwin" ]; then
   mount_cmd="fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20"
 elif [ "$(uname -s)" = "OpenBSD" ]; then
+  VND=$(vnconfig _disk_image)
   mount_cmd="mount -t ext2fs "/dev/${VND}i" mnt/"
 elif [ "$(uname -s)" = "FreeBSD" ]; then
   MD=$(mdconfig _disk_image)
