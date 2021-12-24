@@ -85,7 +85,6 @@ private:
         // Note: The block size of all the current hash functions is 512 bits.
         Vector<u8, 64> v_key;
         v_key.resize(block_size);
-        __builtin_memset(v_key.data(), 0, block_size);
         auto key_buffer = v_key.span();
         // m_key_data is zero'd, so copying the data in
         // the first few bytes leaves the rest zero, which
