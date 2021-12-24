@@ -881,11 +881,6 @@ Token Tokenizer::consume_a_numeric_token()
     return token;
 }
 
-bool Tokenizer::would_start_a_number() const
-{
-    return would_start_a_number(peek_triplet());
-}
-
 // https://www.w3.org/TR/css-syntax-3/#starts-with-a-number
 bool Tokenizer::would_start_a_number(U32Triplet values)
 {
@@ -1189,7 +1184,7 @@ Token Tokenizer::consume_a_token()
         dbgln_if(CSS_TOKENIZER_DEBUG, "is plus sign");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token and return it.
-        if (would_start_a_number()) {
+        if (would_start_a_number(start_of_input_stream_triplet())) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }
@@ -1210,7 +1205,7 @@ Token Tokenizer::consume_a_token()
         dbgln_if(CSS_TOKENIZER_DEBUG, "is hyphen minus");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token, and return it.
-        if (would_start_a_number()) {
+        if (would_start_a_number(start_of_input_stream_triplet())) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }
@@ -1241,7 +1236,7 @@ Token Tokenizer::consume_a_token()
         dbgln_if(CSS_TOKENIZER_DEBUG, "is full stop");
         // If the input stream starts with a number, reconsume the current input code point,
         // consume a numeric token, and return it.
-        if (would_start_a_number()) {
+        if (would_start_a_number(start_of_input_stream_triplet())) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
         }
