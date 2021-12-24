@@ -39,7 +39,6 @@ private:
     bool ready_to_start() const;
     void player_input();
 
-public:
     struct Bug {
         const float x { 50 };
         const float radius { 16 };
@@ -164,7 +163,6 @@ public:
         }
     };
 
-private:
     Bug m_bug;
     Obstacle m_obstacle;
     Cloud m_cloud;
