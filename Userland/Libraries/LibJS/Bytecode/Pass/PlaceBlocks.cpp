@@ -26,7 +26,11 @@ void PlaceBlocks::perform(PassPipelineExecutable& executable)
         reachable_blocks.set(block);
         replaced_blocks.append(*const_cast<BasicBlock*>(block));
 
-        for (auto& entry : cfg.get(block).value_or({}))
+        auto children = cfg.find(block);
+        if (children == cfg.end())
+            return;
+
+        for (auto& entry : children->value)
             visit(entry);
     };
 
