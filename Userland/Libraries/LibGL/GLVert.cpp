@@ -140,6 +140,16 @@ void glVertex4sv(const GLshort* v)
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
 
+void glTexCoord2d(GLdouble s, GLdouble t)
+{
+    g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
+}
+
+void glTexCoord2dv(GLdouble const* v)
+{
+    g_gl_context->gl_tex_coord(v[0], v[1], 0.0f, 0.0f);
+}
+
 void glTexCoord2f(GLfloat s, GLfloat t)
 {
     g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
@@ -163,6 +173,11 @@ void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 void glNormal3fv(GLfloat const* v)
 {
     g_gl_context->gl_normal(v[0], v[1], v[2]);
+}
+
+void glNormalPointer(GLenum type, GLsizei stride, void const* pointer)
+{
+    g_gl_context->gl_normal_pointer(type, stride, pointer);
 }
 
 void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)

@@ -108,6 +108,7 @@ public:
     virtual void gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) = 0;
     virtual void gl_stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) = 0;
     virtual void gl_normal(GLfloat nx, GLfloat ny, GLfloat nz) = 0;
+    virtual void gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer) = 0;
     virtual void gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w) = 0;
     virtual void gl_materialv(GLenum face, GLenum pname, GLfloat const* params) = 0;
     virtual void gl_line_width(GLfloat width) = 0;
@@ -118,6 +119,8 @@ public:
     virtual void gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) = 0;
     virtual void gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum pname, GLint* params) = 0;
     virtual void gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) = 0;
+    virtual void gl_tex_gen(GLenum coord, GLenum pname, GLdouble param) = 0;
+    virtual void gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* params) = 0;
 
     virtual void present() = 0;
 };
