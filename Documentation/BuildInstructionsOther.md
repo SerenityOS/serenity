@@ -88,7 +88,7 @@ apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync
 ## OpenBSD prerequisites
 
 ```console
-doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu sudo
+doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu sudo e2fsprogs
 ```
 
 ## FreeBSD prerequisites
