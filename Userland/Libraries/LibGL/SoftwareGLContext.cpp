@@ -2658,6 +2658,19 @@ void SoftwareGLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum 
         target, level, internalformat, x, y, width, height, border);
 }
 
+void SoftwareGLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_rect, x1, y1, x2, y2);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    gl_begin(GL_POLYGON);
+    gl_vertex(x1, y1, 0.0, 0.0);
+    gl_vertex(x2, y1, 0.0, 0.0);
+    gl_vertex(x2, y2, 0.0, 0.0);
+    gl_vertex(x1, y2, 0.0, 0.0);
+    gl_end();
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
