@@ -565,9 +565,15 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     } else if (primitive_type == PrimitiveType::TriangleStrip) {
         Triangle triangle;
         for (size_t i = 0; i < vertices.size() - 2; i++) {
-            triangle.vertices[0] = vertices.at(i);
-            triangle.vertices[1] = vertices.at(i + 1);
-            triangle.vertices[2] = vertices.at(i + 2);
+            if (i % 2 == 0) {
+                triangle.vertices[0] = vertices.at(i);
+                triangle.vertices[1] = vertices.at(i + 1);
+                triangle.vertices[2] = vertices.at(i + 2);
+            } else {
+                triangle.vertices[0] = vertices.at(i + 1);
+                triangle.vertices[1] = vertices.at(i);
+                triangle.vertices[2] = vertices.at(i + 2);
+            }
             m_triangle_list.append(triangle);
         }
     }
