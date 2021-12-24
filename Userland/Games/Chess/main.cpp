@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    widget->set_piece_set(Config::read_string("Chess", "Style", "PieceSet", "stelar7"));
+    TRY(widget->set_piece_set(Config::read_string("Chess", "Style", "PieceSet", "stelar7")));
     widget->set_board_theme(Config::read_string("Chess", "Style", "BoardTheme", "Beige"));
     widget->set_coordinates(Config::read_bool("Chess", "Style", "Coordinates", true));
     widget->set_show_available_moves(Config::read_bool("Chess", "Style", "ShowAvailableMoves", true));
@@ -117,7 +117,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     while (di.has_next()) {
         auto set = di.next_path();
         auto action = GUI::Action::create_checkable(set, [&](auto& action) {
-            widget->set_piece_set(action.text());
+            auto error_or_void = widget->set_piece_set(action.text());
+            if (error_or_void.is_error()) {
+                GUI::MessageBox::show(window, String::formatted("Failed to load chess piece set \"{}\"", action.text()), "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
             widget->update();
             Config::write_string("Chess", "Style", "PieceSet", action.text());
         });

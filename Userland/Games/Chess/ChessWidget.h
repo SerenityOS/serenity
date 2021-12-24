@@ -15,7 +15,7 @@
 #include <LibGfx/Bitmap.h>
 
 class ChessWidget final : public GUI::Frame {
-    C_OBJECT(ChessWidget);
+    C_OBJECT_ABSTRACT(ChessWidget)
 
 public:
     virtual ~ChessWidget() override;
@@ -35,14 +35,14 @@ public:
     Chess::Color side() const { return m_side; };
     void set_side(Chess::Color side) { m_side = side; };
 
-    void set_piece_set(StringView set);
+    ErrorOr<void> set_piece_set(StringView set);
     const String& piece_set() const { return m_piece_set; };
 
     Chess::Square mouse_to_square(GUI::MouseEvent& event) const;
 
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
-    RefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
+    NonnullRefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
 
     bool show_available_moves() const { return m_show_available_moves; }
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
@@ -104,6 +104,8 @@ public:
         bool operator==(const BoardMarking& other) const { return from == other.from && to == other.to; }
     };
 
+    static ErrorOr<NonnullRefPtr<ChessWidget>> try_create();
+
 private:
     ChessWidget();
 
@@ -119,7 +121,7 @@ private:
     Color m_marking_alternate_color { Color::from_rgba(0x66ffaa00) };
     Color m_marking_secondary_color { Color::from_rgba(0x6655dd55) };
     Chess::Color m_side { Chess::Color::White };
-    HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
+    HashMap<Chess::Piece, NonnullRefPtr<Gfx::Bitmap>> m_pieces;
     String m_piece_set;
     Chess::Square m_moving_square { 50, 50 };
     Gfx::IntPoint m_drag_point;

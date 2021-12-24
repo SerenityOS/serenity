@@ -19,7 +19,13 @@
 
 ChessWidget::ChessWidget()
 {
-    set_piece_set("stelar7");
+}
+
+ErrorOr<NonnullRefPtr<ChessWidget>> ChessWidget::try_create()
+{
+    NonnullRefPtr<ChessWidget> chess_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ChessWidget()));
+    TRY(chess_widget->set_piece_set("stelar7"));
+    return chess_widget;
 }
 
 ChessWidget::~ChessWidget()
@@ -366,31 +372,44 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
 
 static String set_path = String("/res/icons/chess/sets/");
 
-static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_piece(StringView set, StringView image)
 {
     StringBuilder builder;
     builder.append(set_path);
     builder.append(set);
     builder.append('/');
     builder.append(image);
-    return Gfx::Bitmap::try_load_from_file(builder.build()).release_value_but_fixme_should_propagate_errors();
+    return Gfx::Bitmap::try_load_from_file(builder.build());
 }
 
-void ChessWidget::set_piece_set(StringView set)
+ErrorOr<void> ChessWidget::set_piece_set(StringView set)
 {
+    auto white_pawn = TRY(get_piece(set, "white-pawn.png"));
+    auto black_pawn = TRY(get_piece(set, "black-pawn.png"));
+    auto white_knight = TRY(get_piece(set, "white-knight.png"));
+    auto black_knight = TRY(get_piece(set, "black-knight.png"));
+    auto white_bishop = TRY(get_piece(set, "white-bishop.png"));
+    auto black_bishop = TRY(get_piece(set, "black-bishop.png"));
+    auto white_rook = TRY(get_piece(set, "white-rook.png"));
+    auto black_rook = TRY(get_piece(set, "black-rook.png"));
+    auto white_queen = TRY(get_piece(set, "white-queen.png"));
+    auto black_queen = TRY(get_piece(set, "black-queen.png"));
+    auto white_king = TRY(get_piece(set, "white-king.png"));
+    auto black_king = TRY(get_piece(set, "black-king.png"));
     m_piece_set = set;
-    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"));
-    m_pieces.set({ Chess::Color::White, Chess::Type::King }, get_piece(set, "white-king.png"));
-    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, white_pawn);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, black_pawn);
+    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, white_knight);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, black_knight);
+    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, white_bishop);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, black_bishop);
+    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, white_rook);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, black_rook);
+    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, white_queen);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, black_queen);
+    m_pieces.set({ Chess::Color::White, Chess::Type::King }, white_king);
+    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, black_king);
+    return {};
 }
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
@@ -409,9 +428,9 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     }
 }
 
-RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) const
+NonnullRefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) const
 {
-    return m_pieces.get(piece).value();
+    return m_pieces.find(piece)->value;
 }
 
 void ChessWidget::reset()
