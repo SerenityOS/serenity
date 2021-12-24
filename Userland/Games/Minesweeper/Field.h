@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Noncopyable.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
@@ -37,8 +38,73 @@ public:
     void for_each_neighbor(Callback);
 };
 
+struct Bitmaps {
+    NonnullRefPtr<Gfx::Bitmap> m_mine_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_flag_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_badflag_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_consider_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_default_face_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_good_face_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_bad_face_bitmap;
+    Array<NonnullRefPtr<Gfx::Bitmap>, 8> m_number_bitmap;
+
+private:
+    Bitmaps(NonnullRefPtr<Gfx::Bitmap> mine_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> flag_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> badflag_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> consider_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> default_face_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> good_face_bitmap,
+        NonnullRefPtr<Gfx::Bitmap> bad_face_bitmap,
+        Array<NonnullRefPtr<Gfx::Bitmap>, 8> number_bitmap)
+        : m_mine_bitmap(move(mine_bitmap))
+        , m_flag_bitmap(move(flag_bitmap))
+        , m_badflag_bitmap(move(badflag_bitmap))
+        , m_consider_bitmap(move(consider_bitmap))
+        , m_default_face_bitmap(move(default_face_bitmap))
+        , m_good_face_bitmap(move(good_face_bitmap))
+        , m_bad_face_bitmap(move(bad_face_bitmap))
+        , m_number_bitmap(move(number_bitmap))
+    {
+    }
+
+public:
+    static ErrorOr<Bitmaps> construct()
+    {
+        NonnullRefPtr<Gfx::Bitmap> mine_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/mine.png"));
+        NonnullRefPtr<Gfx::Bitmap> flag_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/flag.png"));
+        NonnullRefPtr<Gfx::Bitmap> badflag_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/badflag.png"));
+        NonnullRefPtr<Gfx::Bitmap> consider_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/consider.png"));
+        NonnullRefPtr<Gfx::Bitmap> default_face_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-default.png"));
+        NonnullRefPtr<Gfx::Bitmap> good_face_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-good.png"));
+        NonnullRefPtr<Gfx::Bitmap> bad_face_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/minesweeper/face-bad.png"));
+        auto number_bitmap_entry = [](size_t n) {
+            return Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/minesweeper/{}.png", n + 1));
+        };
+        Array<NonnullRefPtr<Gfx::Bitmap>, 8> number_bitmap = {
+            TRY(number_bitmap_entry(0)),
+            TRY(number_bitmap_entry(1)),
+            TRY(number_bitmap_entry(2)),
+            TRY(number_bitmap_entry(3)),
+            TRY(number_bitmap_entry(4)),
+            TRY(number_bitmap_entry(5)),
+            TRY(number_bitmap_entry(6)),
+            TRY(number_bitmap_entry(7))
+        };
+        return Bitmaps(
+            move(mine_bitmap),
+            move(flag_bitmap),
+            move(badflag_bitmap),
+            move(consider_bitmap),
+            move(default_face_bitmap),
+            move(good_face_bitmap),
+            move(bad_face_bitmap),
+            move(number_bitmap));
+    }
+};
+
 class Field final : public GUI::Frame {
-    C_OBJECT(Field)
+    C_OBJECT_ABSTRACT(Field)
     friend class Square;
     friend class SquareLabel;
 
@@ -105,8 +171,10 @@ public:
 
     void reset();
 
+    static ErrorOr<NonnullRefPtr<Field>> try_create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+
 private:
-    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Bitmaps bitmaps, Function<void(Gfx::IntSize)> on_size_changed);
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
@@ -142,14 +210,7 @@ private:
     size_t m_mine_count { 0 };
     size_t m_unswept_empties { 0 };
     Vector<OwnPtr<Square>> m_squares;
-    RefPtr<Gfx::Bitmap> m_mine_bitmap;
-    RefPtr<Gfx::Bitmap> m_flag_bitmap;
-    RefPtr<Gfx::Bitmap> m_badflag_bitmap;
-    RefPtr<Gfx::Bitmap> m_consider_bitmap;
-    RefPtr<Gfx::Bitmap> m_default_face_bitmap;
-    RefPtr<Gfx::Bitmap> m_good_face_bitmap;
-    RefPtr<Gfx::Bitmap> m_bad_face_bitmap;
-    RefPtr<Gfx::Bitmap> m_number_bitmap[8];
+    Bitmaps m_bitmaps;
     Gfx::Palette m_mine_palette;
     GUI::Button& m_face_button;
     GUI::Label& m_flag_label;
