@@ -14,7 +14,9 @@
     mov (%esp), %ebx
     ret
 
+.global _setjmp
 .global setjmp
+_setjmp:
 setjmp:
     xor %eax, %eax          // Grab val argument (hardcoded to zero)
     jmp .Lsigset_common
@@ -57,7 +59,9 @@ sigsetjmp:
     xor %eax, %eax
     ret
 
+.global _longjmp
 .global longjmp
+_longjmp:
 longjmp:
     mov 4(%esp), %ecx       // Grab jmp_buf argument
     mov 8(%esp), %eax       // Grab val argument
