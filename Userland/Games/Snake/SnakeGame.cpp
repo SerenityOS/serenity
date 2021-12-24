@@ -13,17 +13,25 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 
-SnakeGame::SnakeGame()
+SnakeGame::SnakeGame(Vector<NonnullRefPtr<Gfx::Bitmap>> fruit_bitmaps)
+    : m_fruit_bitmaps(move(fruit_bitmaps))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png").release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png").release_value_but_fixme_should_propagate_errors());
     reset();
 
     m_high_score = Config::read_i32("Snake", "Snake", "HighScore", 0);
     m_high_score_text = String::formatted("Best: {}", m_high_score);
+}
+
+ErrorOr<NonnullRefPtr<SnakeGame>> SnakeGame::try_create()
+{
+    Vector<NonnullRefPtr<Gfx::Bitmap>> fruit_bitmaps = {
+        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png")),
+        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png")),
+        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png")),
+        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png")),
+    };
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SnakeGame(move(fruit_bitmaps)));
 }
 
 SnakeGame::~SnakeGame()
@@ -209,7 +217,7 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
     }
 
-    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type].rect());
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type]->rect());
 
     painter.draw_text(high_score_rect(), m_high_score_text, Gfx::TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
     painter.draw_text(score_rect(), m_score_text, Gfx::TextAlignment::TopLeft, Color::White);

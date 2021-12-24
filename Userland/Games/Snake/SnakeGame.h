@@ -7,19 +7,22 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/Vector.h>
 #include <LibGUI/Frame.h>
 
 class SnakeGame : public GUI::Frame {
-    C_OBJECT(SnakeGame);
+    C_OBJECT_ABSTRACT(SnakeGame)
 
 public:
     virtual ~SnakeGame() override;
 
     void reset();
 
+    static ErrorOr<NonnullRefPtr<SnakeGame>> try_create();
+
 private:
-    SnakeGame();
+    SnakeGame(Vector<NonnullRefPtr<Gfx::Bitmap>>);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
@@ -68,5 +71,5 @@ private:
     unsigned m_high_score { 0 };
     String m_high_score_text;
 
-    NonnullRefPtrVector<Gfx::Bitmap> m_fruit_bitmaps;
+    Vector<NonnullRefPtr<Gfx::Bitmap>> m_fruit_bitmaps;
 };
