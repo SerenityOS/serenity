@@ -105,6 +105,18 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_texture_units.size()) } };
     case GL_PACK_ALIGNMENT:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_pack_alignment } };
+    case GL_PACK_IMAGE_HEIGHT:
+        return ContextParameter { .type = GL_BOOL, .value = { .integer_value = 0 } };
+    case GL_PACK_LSB_FIRST:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
+    case GL_PACK_ROW_LENGTH:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
+    case GL_PACK_SKIP_PIXELS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
+    case GL_PACK_SKIP_ROWS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
+    case GL_PACK_SWAP_BYTES:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
     case GL_RED_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_SCISSOR_BOX: {
@@ -135,8 +147,18 @@ Optional<ContextParameter> SoftwareGLContext::get_context_parameter(GLenum name)
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = m_active_texture_unit->texture_cube_map_enabled() } };
     case GL_UNPACK_ALIGNMENT:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_unpack_alignment } };
+    case GL_UNPACK_IMAGE_HEIGHT:
+        return ContextParameter { .type = GL_BOOL, .value = { .integer_value = 0 } };
+    case GL_UNPACK_LSB_FIRST:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
     case GL_UNPACK_ROW_LENGTH:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = m_unpack_row_length } };
+    case GL_UNPACK_SKIP_PIXELS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
+    case GL_UNPACK_SKIP_ROWS:
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = 0 } };
+    case GL_UNPACK_SWAP_BYTES:
+        return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = false } };
     default:
         dbgln_if(GL_DEBUG, "get_context_parameter({:#x}): unknown context parameter", name);
         return {};
