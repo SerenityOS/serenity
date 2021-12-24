@@ -6,6 +6,7 @@ set(SOURCES
     GLFog.cpp
     GLLights.cpp
     GLLists.cpp
+    GLMap.cpp
     GLMat.cpp
     GLStencil.cpp
     GLTexture.cpp
