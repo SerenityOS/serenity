@@ -132,7 +132,7 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
 DirectoryView::DirectoryView(Mode mode)
     : m_mode(mode)
     , m_model(GUI::FileSystemModel::create({}))
-    , m_sorting_model(GUI::SortingProxyModel::create(m_model))
+    , m_sorting_model(MUST(GUI::SortingProxyModel::create(m_model)))
 {
     set_active_widget(nullptr);
     set_grabbable_margins(2);

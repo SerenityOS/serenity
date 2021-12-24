@@ -99,7 +99,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     pid_vm_fields.empend("cow_pages", "# CoW", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
     m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
-    m_table_view->set_model(GUI::SortingProxyModel::create(*m_json_model));
+    m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_json_model)));
 
     m_table_view->set_column_painting_delegate(7, make<PagemapPaintingDelegate>());
 

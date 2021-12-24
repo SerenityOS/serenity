@@ -65,7 +65,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
         m_adapter_model = GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields));
-        m_adapter_table_view->set_model(GUI::SortingProxyModel::create(*m_adapter_model));
+        m_adapter_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_adapter_model)));
 
         auto& tcp_sockets_group_box = add<GUI::GroupBox>("TCP Sockets");
         tcp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
@@ -86,7 +86,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_tcp_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
         m_tcp_socket_model = GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields));
-        m_tcp_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_tcp_socket_model));
+        m_tcp_socket_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_tcp_socket_model)));
 
         auto& udp_sockets_group_box = add<GUI::GroupBox>("UDP Sockets");
         udp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
@@ -100,7 +100,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_udp_fields.empend("local_address", "Local", Gfx::TextAlignment::CenterLeft);
         net_udp_fields.empend("local_port", "Port", Gfx::TextAlignment::CenterRight);
         m_udp_socket_model = GUI::JsonArrayModel::create("/proc/net/udp", move(net_udp_fields));
-        m_udp_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_udp_socket_model));
+        m_udp_socket_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_udp_socket_model)));
 
         m_update_timer = add<Core::Timer>(
             1000, [this] {
