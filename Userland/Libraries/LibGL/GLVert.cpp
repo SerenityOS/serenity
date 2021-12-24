@@ -164,3 +164,13 @@ void glNormal3fv(GLfloat const* v)
 {
     g_gl_context->gl_normal(v[0], v[1], v[2]);
 }
+
+void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+{
+    g_gl_context->gl_rect(x1, y1, x2, y2);
+}
+
+void glRecti(GLint x1, GLint y1, GLint x2, GLint y2)
+{
+    g_gl_context->gl_rect(x1, y1, x2, y2);
+}
