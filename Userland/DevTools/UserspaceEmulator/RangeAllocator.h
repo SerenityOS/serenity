@@ -22,6 +22,8 @@ public:
     Optional<Range> allocate_randomized(size_t, size_t alignment);
     void deallocate(const Range&);
 
+    void reserve_user_range(VirtualAddress, size_t);
+
     void dump() const;
 
     bool contains(const Range& range) const { return m_total_range.contains(range); }
