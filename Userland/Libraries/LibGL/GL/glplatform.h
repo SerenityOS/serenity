@@ -35,6 +35,7 @@ typedef unsigned long long GLuint64;
 typedef int GLsizei;
 typedef void GLvoid;
 typedef float GLfloat;
+typedef double GLclampd;
 typedef float GLclampf;
 typedef double GLdouble;
 typedef unsigned int GLenum;

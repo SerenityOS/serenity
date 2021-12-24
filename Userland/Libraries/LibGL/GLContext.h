@@ -8,6 +8,7 @@
 #pragma once
 
 #include "GL/gl.h"
+#include "GL/glext.h"
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
