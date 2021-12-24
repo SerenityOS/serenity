@@ -181,7 +181,7 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear, mask);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT), GL_INVALID_ENUM);
 
     if (mask & GL_COLOR_BUFFER_BIT)
         m_rasterizer.clear_color(m_clear_color);
@@ -190,6 +190,8 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
         m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
 
     // FIXME: implement GL_STENCIL_BUFFER_BIT
+    if (mask & GL_STENCIL_BUFFER_BIT)
+        dbgln_if(GL_DEBUG, "gl_clear(): GL_STENCIL_BUFFER_BIT is unimplemented");
 }
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
