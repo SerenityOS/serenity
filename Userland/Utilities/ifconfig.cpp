@@ -45,7 +45,12 @@ int main(int argc, char** argv)
         }
 
         auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+        auto json_or_error = JsonValue::from_string(file_contents);
+        if (json_or_error.is_error()) {
+            outln("Failed to decode JSON: {}", json_or_error.error());
+            return 1;
+        }
+        auto json = json_or_error.release_value();
         json.as_array().for_each([](auto& value) {
             auto& if_object = value.as_object();
 
