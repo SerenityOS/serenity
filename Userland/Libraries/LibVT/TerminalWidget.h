@@ -201,6 +201,8 @@ private:
         Down
     };
 
+    void set_auto_scroll_direction(AutoScrollDirection);
+
     AutoScrollDirection m_auto_scroll_direction { AutoScrollDirection::None };
 
     RefPtr<Core::Timer> m_cursor_blink_timer;

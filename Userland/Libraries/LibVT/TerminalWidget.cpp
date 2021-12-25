@@ -176,7 +176,7 @@ void TerminalWidget::set_logical_focus(bool focus)
         m_cursor_blink_state = true;
         m_cursor_blink_timer->start();
     }
-    m_auto_scroll_direction = AutoScrollDirection::None;
+    set_auto_scroll_direction(AutoScrollDirection::None);
     invalidate_cursor();
     update();
 }
@@ -774,7 +774,7 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
             m_active_href_id = {};
             update();
         }
-        m_auto_scroll_direction = AutoScrollDirection::None;
+        set_auto_scroll_direction(AutoScrollDirection::None);
     }
 }
 
@@ -873,11 +873,11 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
     auto adjusted_position = event.position().translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     if (adjusted_position.y() < 0)
-        m_auto_scroll_direction = AutoScrollDirection::Up;
+        set_auto_scroll_direction(AutoScrollDirection::Up);
     else if (adjusted_position.y() > m_terminal.rows() * m_line_height)
-        m_auto_scroll_direction = AutoScrollDirection::Down;
+        set_auto_scroll_direction(AutoScrollDirection::Down);
     else
-        m_auto_scroll_direction = AutoScrollDirection::None;
+        set_auto_scroll_direction(AutoScrollDirection::None);
 
     VT::Position old_selection_end = m_selection.end();
     VT::Position old_selection_start = m_selection.start();
@@ -915,7 +915,7 @@ void TerminalWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     if (!is_scrollable())
         return;
-    m_auto_scroll_direction = AutoScrollDirection::None;
+    set_auto_scroll_direction(AutoScrollDirection::None);
     m_scrollbar->set_value(m_scrollbar->value() + event.wheel_delta() * scroll_length());
     GUI::Frame::mousewheel_event(event);
 }
@@ -1286,4 +1286,11 @@ void TerminalWidget::send_non_user_input(ReadonlyBytes bytes)
         VERIFY_NOT_REACHED();
     }
 }
+
+void TerminalWidget::set_auto_scroll_direction(AutoScrollDirection direction)
+{
+    m_auto_scroll_direction = direction;
+    m_auto_scroll_timer->set_active(direction != AutoScrollDirection::None);
+}
+
 }
