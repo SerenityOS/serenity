@@ -127,6 +127,8 @@ struct KmallocGlobalData {
 
         expansion_data->next_virtual_address = expansion_data->next_virtual_address.offset(new_subheap_size);
 
+        auto cpu_supports_nx = Processor::current().has_feature(CPUFeature::NX);
+
         SpinlockLocker mm_locker(Memory::s_mm_lock);
         SpinlockLocker pd_locker(MM.kernel_page_directory().get_lock());
 
@@ -146,6 +148,8 @@ struct KmallocGlobalData {
             pte->set_global(true);
             pte->set_user_allowed(false);
             pte->set_writable(true);
+            if (cpu_supports_nx)
+                pte->set_execute_disabled(true);
             pte->set_present(true);
         }
 
