@@ -164,8 +164,8 @@ set(KERNEL_SOURCES
     MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
-    Net/E1000ENetworkAdapter.cpp
-    Net/E1000NetworkAdapter.cpp
+    Net/Intel/E1000ENetworkAdapter.cpp
+    Net/Intel/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp

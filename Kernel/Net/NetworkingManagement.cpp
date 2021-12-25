@@ -11,8 +11,8 @@
 #include <Kernel/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/Net/E1000ENetworkAdapter.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
+#include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NE2000NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
