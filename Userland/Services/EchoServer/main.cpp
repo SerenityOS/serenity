@@ -9,28 +9,20 @@
 #include <AK/IPv4Address.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio unix inet id accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio unix inet id accept", nullptr));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     int port = 7;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(port, "Port to listen on", "port", 'p', "port");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if ((u16)port != port) {
         warnln("Invalid port number: {}", port);

@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(EchoServer)
-target_link_libraries(EchoServer LibCore)
+target_link_libraries(EchoServer LibCore LibMain)
