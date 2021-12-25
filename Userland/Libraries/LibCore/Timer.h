@@ -37,6 +37,8 @@ public:
     void restart(int interval_ms);
     void stop();
 
+    void set_active(bool);
+
     bool is_active() const { return m_active; }
     int interval() const { return m_interval_ms; }
     void set_interval(int interval_ms)

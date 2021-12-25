@@ -58,6 +58,14 @@ void Timer::stop()
     m_active = false;
 }
 
+void Timer::set_active(bool active)
+{
+    if (active)
+        start();
+    else
+        stop();
+}
+
 void Timer::timer_event(TimerEvent&)
 {
     if (m_single_shot)
