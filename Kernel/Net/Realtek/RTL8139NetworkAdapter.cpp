@@ -9,7 +9,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <Kernel/Net/Realtek/RTL8139NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
