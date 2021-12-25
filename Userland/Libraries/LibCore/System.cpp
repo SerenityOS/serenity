@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,12 +9,10 @@
 #include <AK/String.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
-#include <fcntl.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
-#include <sys/socket.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -112,6 +111,16 @@ ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
     if (rc < 0)
         return Error::from_syscall("ptrace"sv, -errno);
     return rc;
+}
+#endif
+
+#ifndef AK_OS_MACOS
+ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, int flags)
+{
+    auto fd = ::accept4(sockfd, address, address_length, flags);
+    if (fd < 0)
+        return Error::from_syscall("accept4"sv, -errno);
+    return fd;
 }
 #endif
 
@@ -571,6 +580,133 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
         return Error::from_syscall("utime"sv, -errno);
     return {};
 #endif
+}
+
+ErrorOr<int> socket(int domain, int type, int protocol)
+{
+    auto fd = ::socket(domain, type, protocol);
+    if (fd < 0)
+        return Error::from_syscall("socket"sv, -errno);
+    return fd;
+}
+
+ErrorOr<void> bind(int sockfd, struct sockaddr const* address, socklen_t address_length)
+{
+    if (::bind(sockfd, address, address_length) < 0)
+        return Error::from_syscall("bind"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> listen(int sockfd, int backlog)
+{
+    if (::listen(sockfd, backlog) < 0)
+        return Error::from_syscall("listen"sv, -errno);
+    return {};
+}
+
+ErrorOr<int> accept(int sockfd, struct sockaddr* address, socklen_t* address_length)
+{
+    auto fd = ::accept(sockfd, address, address_length);
+    if (fd < 0)
+        return Error::from_syscall("accept"sv, -errno);
+    return fd;
+}
+
+ErrorOr<void> connect(int sockfd, struct sockaddr const* address, socklen_t address_length)
+{
+    if (::connect(sockfd, address, address_length) < 0)
+        return Error::from_syscall("connect"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> shutdown(int sockfd, int how)
+{
+    if (::shutdown(sockfd, how) < 0)
+        return Error::from_syscall("shutdown"sv, -errno);
+    return {};
+}
+
+ErrorOr<ssize_t> send(int sockfd, void const* buffer, size_t buffer_length, int flags)
+{
+    auto sent = ::send(sockfd, buffer, buffer_length, flags);
+    if (sent < 0)
+        return Error::from_syscall("send"sv, -errno);
+    return sent;
+}
+
+ErrorOr<ssize_t> sendmsg(int sockfd, const struct msghdr* message, int flags)
+{
+    auto sent = ::sendmsg(sockfd, message, flags);
+    if (sent < 0)
+        return Error::from_syscall("sendmsg"sv, -errno);
+    return sent;
+}
+
+ErrorOr<ssize_t> sendto(int sockfd, void const* source, size_t source_length, int flags, struct sockaddr const* destination, socklen_t destination_length)
+{
+    auto sent = ::sendto(sockfd, source, source_length, flags, destination, destination_length);
+    if (sent < 0)
+        return Error::from_syscall("sendto"sv, -errno);
+    return sent;
+}
+
+ErrorOr<ssize_t> recv(int sockfd, void* buffer, size_t length, int flags)
+{
+    auto received = ::recv(sockfd, buffer, length, flags);
+    if (received < 0)
+        return Error::from_syscall("recv"sv, -errno);
+    return received;
+}
+
+ErrorOr<ssize_t> recvmsg(int sockfd, struct msghdr* message, int flags)
+{
+    auto received = ::recvmsg(sockfd, message, flags);
+    if (received < 0)
+        return Error::from_syscall("recvmsg"sv, -errno);
+    return received;
+}
+
+ErrorOr<ssize_t> recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, struct sockaddr* address, socklen_t* address_length)
+{
+    auto received = ::recvfrom(sockfd, buffer, buffer_length, flags, address, address_length);
+    if (received < 0)
+        return Error::from_syscall("recvfrom"sv, -errno);
+    return received;
+}
+
+ErrorOr<void> getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_size)
+{
+    if (::getsockopt(sockfd, level, option, value, value_size) < 0)
+        return Error::from_syscall("getsockopt"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> setsockopt(int sockfd, int level, int option, void const* value, socklen_t value_size)
+{
+    if (::setsockopt(sockfd, level, option, value, value_size) < 0)
+        return Error::from_syscall("setsockopt"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> getsockname(int sockfd, struct sockaddr* address, socklen_t* address_length)
+{
+    if (::getsockname(sockfd, address, address_length) < 0)
+        return Error::from_syscall("getsockname"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> getpeername(int sockfd, struct sockaddr* address, socklen_t* address_length)
+{
+    if (::getpeername(sockfd, address, address_length) < 0)
+        return Error::from_syscall("getpeername"sv, -errno);
+    return {};
+}
+
+ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2])
+{
+    if (::socketpair(domain, type, protocol, sv) < 0)
+        return Error::from_syscall("socketpair"sv, -errno);
+    return {};
 }
 
 }

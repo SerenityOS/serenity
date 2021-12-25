@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,10 +9,13 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
 #include <signal.h>
 #include <spawn.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <termios.h>
@@ -30,6 +34,10 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
 ErrorOr<void> setgroups(Span<gid_t const>);
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
+#endif
+
+#ifndef AK_OS_MACOS
+ErrorOr<int> accept4(int sockfd, struct sockaddr*, socklen_t*, int flags);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
@@ -77,5 +85,23 @@ ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
+
+ErrorOr<int> socket(int domain, int type, int protocol);
+ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);
+ErrorOr<void> listen(int sockfd, int backlog);
+ErrorOr<int> accept(int sockfd, struct sockaddr*, socklen_t*);
+ErrorOr<void> connect(int sockfd, struct sockaddr const*, socklen_t);
+ErrorOr<void> shutdown(int sockfd, int how);
+ErrorOr<ssize_t> send(int sockfd, void const*, size_t, int flags);
+ErrorOr<ssize_t> sendmsg(int sockfd, const struct msghdr*, int flags);
+ErrorOr<ssize_t> sendto(int sockfd, void const*, size_t, int flags, struct sockaddr const*, socklen_t);
+ErrorOr<ssize_t> recv(int sockfd, void*, size_t, int flags);
+ErrorOr<ssize_t> recvmsg(int sockfd, struct msghdr*, int flags);
+ErrorOr<ssize_t> recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen_t*);
+ErrorOr<void> getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_size);
+ErrorOr<void> setsockopt(int sockfd, int level, int option, void const* value, socklen_t value_size);
+ErrorOr<void> getsockname(int sockfd, struct sockaddr*, socklen_t*);
+ErrorOr<void> getpeername(int sockfd, struct sockaddr*, socklen_t*);
+ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 
 }
