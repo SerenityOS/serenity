@@ -14,7 +14,7 @@
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/NE2000NetworkAdapter.h>
+#include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>

@@ -8,7 +8,7 @@
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Net/NE2000NetworkAdapter.h>
+#include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
 
