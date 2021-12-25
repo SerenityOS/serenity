@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,53 +8,47 @@
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/TCPSocket.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
-#ifndef SOCK_NONBLOCK
-#    include <sys/ioctl.h>
-#endif
 namespace Core {
 
-TCPServer::TCPServer(Object* parent)
-    : Object(parent)
+ErrorOr<NonnullRefPtr<TCPServer>> TCPServer::try_create(Object* parent)
 {
 #ifdef SOCK_NONBLOCK
-    m_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    int fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0));
 #else
-    m_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
     int option = 1;
-    ioctl(m_fd, FIONBIO, &option);
-    fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+    TRY(Core::System::ioctl(fd, FIONBIO, &option));
+    TRY(Core::System::fcntl(fd, F_SETFD, FD_CLOEXEC));
 #endif
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPServer(fd, parent));
+}
+
+TCPServer::TCPServer(int fd, Object* parent)
+    : Object(parent)
+    , m_fd(fd)
+{
     VERIFY(m_fd >= 0);
 }
 
 TCPServer::~TCPServer()
 {
-    ::close(m_fd);
+    MUST(Core::System::close(m_fd));
 }
 
-bool TCPServer::listen(const IPv4Address& address, u16 port)
+ErrorOr<void> TCPServer::listen(IPv4Address const& address, u16 port)
 {
     if (m_listening)
-        return false;
+        return Error::from_errno(EADDRINUSE);
 
     auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
-    if (::bind(m_fd, (const sockaddr*)&in, sizeof(in)) < 0) {
-        perror("TCPServer::listen: bind");
-        return false;
-    }
-
-    if (::listen(m_fd, 5) < 0) {
-        perror("TCPServer::listen: listen");
-        return false;
-    }
+    TRY(Core::System::bind(m_fd, (sockaddr const*)&in, sizeof(in)));
+    TRY(Core::System::listen(m_fd, 5));
     m_listening = true;
 
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
@@ -61,18 +56,17 @@ bool TCPServer::listen(const IPv4Address& address, u16 port)
         if (on_ready_to_accept)
             on_ready_to_accept();
     };
-    return true;
+    return {};
 }
 
-void TCPServer::set_blocking(bool blocking)
+ErrorOr<void> TCPServer::set_blocking(bool blocking)
 {
-    int flags = fcntl(m_fd, F_GETFL, 0);
-    VERIFY(flags >= 0);
+    int flags = TRY(Core::System::fcntl(m_fd, F_GETFL, 0));
     if (blocking)
-        flags = fcntl(m_fd, F_SETFL, flags & ~O_NONBLOCK);
+        TRY(Core::System::fcntl(m_fd, F_SETFL, flags & ~O_NONBLOCK));
     else
-        flags = fcntl(m_fd, F_SETFL, flags | O_NONBLOCK);
-    VERIFY(flags == 0);
+        TRY(Core::System::fcntl(m_fd, F_SETFL, flags | O_NONBLOCK));
+    return {};
 }
 
 ErrorOr<Stream::TCPSocket> TCPServer::accept()
@@ -81,14 +75,10 @@ ErrorOr<Stream::TCPSocket> TCPServer::accept()
     sockaddr_in in;
     socklen_t in_size = sizeof(in);
 #ifndef AK_OS_MACOS
-    int accepted_fd = ::accept4(m_fd, (sockaddr*)&in, &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    int accepted_fd = TRY(Core::System::accept4(m_fd, (sockaddr*)&in, &in_size, SOCK_NONBLOCK | SOCK_CLOEXEC));
 #else
-    int accepted_fd = ::accept(m_fd, (sockaddr*)&in, &in_size);
+    int accepted_fd = TRY(Core::System::accept(m_fd, (sockaddr*)&in, &in_size));
 #endif
-
-    if (accepted_fd < 0) {
-        return Error::from_errno(errno);
-    }
 
     auto socket = TRY(Stream::TCPSocket::adopt_fd(accepted_fd));
 

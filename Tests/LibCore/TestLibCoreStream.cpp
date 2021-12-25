@@ -148,9 +148,11 @@ TEST_CASE(tcp_socket_read)
     //       Core::EventLoop through Core::Notifier.
     Core::EventLoop event_loop;
 
-    auto tcp_server = Core::TCPServer::construct();
-    EXPECT(tcp_server->listen({ 127, 0, 0, 1 }, 9090));
-    tcp_server->set_blocking(true);
+    auto maybe_tcp_server = Core::TCPServer::try_create();
+    EXPECT(!maybe_tcp_server.is_error());
+    auto tcp_server = maybe_tcp_server.release_value();
+    EXPECT(!tcp_server->listen({ 127, 0, 0, 1 }, 9090).is_error());
+    EXPECT(!tcp_server->set_blocking(true).is_error());
 
     auto maybe_client_socket = Core::Stream::TCPSocket::connect({ { 127, 0, 0, 1 }, 9090 });
     EXPECT(!maybe_client_socket.is_error());
@@ -181,9 +183,11 @@ TEST_CASE(tcp_socket_write)
 {
     Core::EventLoop event_loop;
 
-    auto tcp_server = Core::TCPServer::construct();
-    EXPECT(tcp_server->listen({ 127, 0, 0, 1 }, 9090));
-    tcp_server->set_blocking(true);
+    auto maybe_tcp_server = Core::TCPServer::try_create();
+    EXPECT(!maybe_tcp_server.is_error());
+    auto tcp_server = maybe_tcp_server.release_value();
+    EXPECT(!tcp_server->listen({ 127, 0, 0, 1 }, 9090).is_error());
+    EXPECT(!tcp_server->set_blocking(true).is_error());
 
     auto maybe_client_socket = Core::Stream::TCPSocket::connect({ { 127, 0, 0, 1 }, 9090 });
     EXPECT(!maybe_client_socket.is_error());
@@ -210,9 +214,11 @@ TEST_CASE(tcp_socket_eof)
 {
     Core::EventLoop event_loop;
 
-    auto tcp_server = Core::TCPServer::construct();
-    EXPECT(tcp_server->listen({ 127, 0, 0, 1 }, 9090));
-    tcp_server->set_blocking(true);
+    auto maybe_tcp_server = Core::TCPServer::try_create();
+    EXPECT(!maybe_tcp_server.is_error());
+    auto tcp_server = maybe_tcp_server.release_value();
+    EXPECT(!tcp_server->listen({ 127, 0, 0, 1 }, 9090).is_error());
+    EXPECT(!tcp_server->set_blocking(true).is_error());
 
     auto maybe_client_socket = Core::Stream::TCPSocket::connect({ { 127, 0, 0, 1 }, 9090 });
     EXPECT(!maybe_client_socket.is_error());
@@ -404,9 +410,11 @@ TEST_CASE(buffered_tcp_socket_read)
 {
     Core::EventLoop event_loop;
 
-    auto tcp_server = Core::TCPServer::construct();
-    EXPECT(tcp_server->listen({ 127, 0, 0, 1 }, 9090));
-    tcp_server->set_blocking(true);
+    auto maybe_tcp_server = Core::TCPServer::try_create();
+    EXPECT(!maybe_tcp_server.is_error());
+    auto tcp_server = maybe_tcp_server.release_value();
+    EXPECT(!tcp_server->listen({ 127, 0, 0, 1 }, 9090).is_error());
+    EXPECT(!tcp_server->set_blocking(true).is_error());
 
     auto maybe_client_socket = Core::Stream::TCPSocket::connect({ { 127, 0, 0, 1 }, 9090 });
     EXPECT(!maybe_client_socket.is_error());

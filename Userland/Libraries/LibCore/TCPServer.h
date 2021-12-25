@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,13 +15,14 @@
 namespace Core {
 
 class TCPServer : public Object {
-    C_OBJECT(TCPServer)
+    C_OBJECT_ABSTRACT(TCPServer)
 public:
+    static ErrorOr<NonnullRefPtr<TCPServer>> try_create(Object* parent = nullptr);
     virtual ~TCPServer() override;
 
     bool is_listening() const { return m_listening; }
-    bool listen(const IPv4Address& address, u16 port);
-    void set_blocking(bool blocking);
+    ErrorOr<void> listen(IPv4Address const& address, u16 port);
+    ErrorOr<void> set_blocking(bool blocking);
 
     ErrorOr<Stream::TCPSocket> accept();
 
@@ -30,7 +32,7 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
-    explicit TCPServer(Object* parent = nullptr);
+    explicit TCPServer(int fd, Object* parent = nullptr);
 
     int m_fd { -1 };
     bool m_listening { false };

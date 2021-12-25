@@ -89,10 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         client->start();
     };
 
-    if (!server->listen(ipv4_address.value(), port)) {
-        warnln("Failed to listen on {}:{}", ipv4_address.value(), port);
-        return 1;
-    }
+    TRY(server->listen(ipv4_address.value(), port));
 
     outln("Listening on {}:{}", ipv4_address.value(), port);
 
