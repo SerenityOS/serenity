@@ -97,12 +97,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Core::EventLoop event_loop;
-    auto server = Core::TCPServer::construct();
-
-    if (!server->listen({}, port)) {
-        warnln("Listening on 0.0.0.0:{} failed", port);
-        exit(1);
-    }
+    auto server = TRY(Core::TCPServer::try_create());
+    TRY(server->listen({}, port));
 
     HashMap<int, NonnullRefPtr<Client>> clients;
     int next_id = 0;
