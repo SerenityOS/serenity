@@ -225,7 +225,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
 
-    window->set_main_widget<AudioWidget>();
+    auto audio_widget = TRY(window->try_set_main_widget<AudioWidget>());
     window->show();
 
     // This positioning code depends on the window actually existing.
