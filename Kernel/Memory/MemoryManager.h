@@ -22,6 +22,8 @@ namespace Kernel {
 class PageDirectoryEntry;
 }
 
+struct KmallocGlobalData;
+
 namespace Kernel::Memory {
 
 constexpr bool page_round_up_would_wrap(FlatPtr x)
@@ -140,6 +142,7 @@ class MemoryManager {
     friend class AnonymousVMObject;
     friend class Region;
     friend class VMObject;
+    friend struct ::KmallocGlobalData;
 
 public:
     static MemoryManager& the();
