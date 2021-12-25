@@ -183,6 +183,9 @@ void WindowSwitcher::draw()
     }
 
     for (size_t index = 0; index < m_windows.size(); ++index) {
+        // FIXME: Ideally we wouldn't be in draw() without having pruned destroyed windows from the list already.
+        if (m_windows.at(index) == nullptr)
+            continue;
         auto& window = *m_windows.at(index);
         auto item_rect = this->item_rect(index);
         Color text_color;
