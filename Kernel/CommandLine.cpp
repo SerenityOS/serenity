@@ -84,6 +84,7 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
     const auto& args = m_string.split_view(' ');
     m_params.ensure_capacity(args.size());
     add_arguments(args);
+    m_cached_audiate_syscalls = lookup("audiate_syscalls"sv) == Optional<StringView>("on"sv);
 }
 
 Optional<StringView> CommandLine::lookup(StringView key) const

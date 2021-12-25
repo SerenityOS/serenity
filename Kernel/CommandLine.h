@@ -57,6 +57,7 @@ public:
     Optional<StringView> lookup(StringView key) const;
     [[nodiscard]] bool contains(StringView key) const;
 
+    [[nodiscard]] bool is_audiate_syscalls_enabled_cached() const { return m_cached_audiate_syscalls; };
     [[nodiscard]] bool is_boot_profiling_enabled() const;
     [[nodiscard]] bool is_ide_enabled() const;
     [[nodiscard]] bool is_ioapic_enabled() const;
@@ -91,6 +92,7 @@ private:
 
     String m_string;
     HashMap<StringView, StringView> m_params;
+    bool m_cached_audiate_syscalls;
 };
 
 const CommandLine& kernel_command_line();

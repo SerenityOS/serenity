@@ -21,6 +21,10 @@ List of options:
 * **`ahci_reset_mode`** - This parameter expects one of the following values. **`controller`** - Reset just the AHCI controller on boot.
    **`none`** - Don't perform any AHCI reset.  **`complete`** - Reset the AHCI controller, and all AHCI ports on boot.
 
+* **`audiate_syscalls`** - This parameter expects a binary value of **`on`** or **`off`**. If enabled, *every single syscall* will emit a beep.
+   The frequency of the beep depends on the syscall function used. Because this eats a lot of resources, it is best used in a text-only environment, like this:
+   `./Meta/serenity.sh run i686 "fbdev=no audiate_syscalls=on"`
+
 * **`boot_prof`** - If present on the command line, global system profiling will be enabled
    as soon as possible during the boot sequence. Allowing you to profile startup of all applications.
 

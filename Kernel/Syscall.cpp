@@ -4,9 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/CommandLine.h>
+#include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
@@ -162,6 +165,33 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
 
 }
 
+static const Array<u16, Syscall::Function::__Count> s_syscall_notes {
+    // To be *slightly* musically-meaningful, we have to acknowledge that tones sound equidistant
+    // when they have a constant *factor* between their frequencies.
+    // An octave is factor 2, a semitone is factor 2**(1/12).
+    // The following python code was used to generate the initial list:
+    //     for i in range(151):
+    //         freq = 80 * (2 ** (i / 24))
+    //         print('{},'.format(round(freq)))
+    // 80 Hz to 6089 Hz seem to be a good range, hence the scaling.
+    // clang-format off
+    80, 82, 85, 87, 90, 92, 95, 98, 101, 104, 107, 110,
+    113, 116, 120, 123, 127, 131, 135, 138, 143, 147, 151, 155,
+    160, 165, 170, 174, 180, 185, 190, 196, 202, 207, 214, 220,
+    226, 233, 240, 247, 254, 261, 269, 277, 285, 293, 302, 311,
+    320, 329, 339, 349, 359, 370, 381, 392, 403, 415, 427, 440,
+    453, 466, 479, 494, 508, 523, 538, 554, 570, 587, 604, 622,
+    640, 659, 678, 698, 718, 739, 761, 783, 806, 830, 854, 879,
+    905, 932, 959, 987, 1016, 1046, 1076, 1108, 1140, 1174, 1208, 1244,
+    1280, 1318, 1356, 1396, 1437, 1479, 1522, 1567, 1613, 1660, 1709, 1759,
+    1810, 1863, 1918, 1974, 2032, 2091, 2153, 2216, 2281, 2348, 2416, 2487,
+    2560, 2635, 2712, 2792, 2874, 2958, 3044, 3134, 3225, 3320, 3417, 3517,
+    3620, 3726, 3836, 3948, 4064, 4183, 4305, 4432, 4561, 4695, 4833, 4974,
+    5120, 5270, 5424, 5583, 5747, 5915, 6089
+    // clang-format on
+    // The next frequencies are 6267, 6451, 6640, 6834, 7035, 7241, 7453, 7671, and 7896.
+};
+
 NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
     // Make sure SMAP protection is enabled on syscall entry.
@@ -210,6 +240,13 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     FlatPtr arg3;
     FlatPtr arg4;
     regs.capture_syscall_params(function, arg1, arg2, arg3, arg4);
+
+    if (kernel_command_line().is_audiate_syscalls_enabled_cached() && function < Syscall::Function::__Count) {
+        PCSpeaker::tone_on(s_syscall_notes[function]);
+        auto result = Thread::current()->sleep(Time::from_milliseconds(20));
+        (void)result;
+        PCSpeaker::tone_off();
+    }
 
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3, arg4);
 
