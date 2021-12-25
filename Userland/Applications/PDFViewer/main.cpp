@@ -24,6 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
