@@ -180,6 +180,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
         m_pci_interrupt_overrides = mp_parser->get_pci_interrupt_redirections();
     }
 
+    APIC::initialize();
     APIC::the().init_bsp();
 }
 
