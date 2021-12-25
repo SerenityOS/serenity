@@ -203,7 +203,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
-    APIC::initialize();
     InterruptManagement::initialize();
     ACPI::initialize();
 

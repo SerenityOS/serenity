@@ -142,13 +142,15 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
         VERIFY(!s_the.is_initialized());
         s_the.ensure_instance();
 
-        // Initialize the APIC timers after the other timers as the
-        // initialization needs to briefly enable interrupts, which then
-        // would trigger a deadlock trying to get the s_the instance while
-        // creating it.
-        if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
-            dmesgln("Time: Using APIC timer as system timer");
-            s_the->set_system_timer(*apic_timer);
+        if (APIC::initialized()) {
+            // Initialize the APIC timers after the other timers as the
+            // initialization needs to briefly enable interrupts, which then
+            // would trigger a deadlock trying to get the s_the instance while
+            // creating it.
+            if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
+                dmesgln("Time: Using APIC timer as system timer");
+                s_the->set_system_timer(*apic_timer);
+            }
         }
 
         s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
