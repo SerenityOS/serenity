@@ -8,7 +8,6 @@
 #include <AK/String.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
-#include <cstring>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
@@ -107,6 +106,13 @@ ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int fl
     HANDLE_SYSCALL_RETURN_VALUE("mount", rc, {});
 }
 
+ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
+{
+    auto rc = ::ptrace(request, tid, address, data);
+    if (rc < 0)
+        return Error::from_syscall("ptrace"sv, -errno);
+    return rc;
+}
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action)
