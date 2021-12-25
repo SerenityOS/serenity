@@ -58,6 +58,7 @@ struct KmallocGlobalData {
     void add_subheap(u8* storage, size_t storage_size)
     {
         dbgln("Adding kmalloc subheap @ {} with size {}", storage, storage_size);
+        static_assert(sizeof(KmallocSubheap) <= PAGE_SIZE);
         auto* subheap = new (storage) KmallocSubheap(storage + PAGE_SIZE, storage_size - PAGE_SIZE);
         subheaps.append(*subheap);
     }
