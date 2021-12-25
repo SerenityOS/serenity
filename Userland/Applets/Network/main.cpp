@@ -20,10 +20,20 @@
 #include <stdio.h>
 
 class NetworkWidget final : public GUI::ImageWidget {
-    C_OBJECT(NetworkWidget);
+    C_OBJECT_ABSTRACT(NetworkWidget)
+
+public:
+    static ErrorOr<NonnullRefPtr<NetworkWidget>> try_create(bool notifications)
+    {
+        NonnullRefPtr<Gfx::Bitmap> connected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png"));
+        NonnullRefPtr<Gfx::Bitmap> disconnected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png"));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) NetworkWidget(notifications, move(connected_icon), move(disconnected_icon)));
+    }
 
 private:
-    NetworkWidget(bool notifications)
+    NetworkWidget(bool notifications, NonnullRefPtr<Gfx::Bitmap> connected_icon, NonnullRefPtr<Gfx::Bitmap> disconnected_icon)
+        : m_connected_icon(move(connected_icon))
+        , m_disconnected_icon(move(disconnected_icon))
     {
         m_notifications = notifications;
         update_widget();
@@ -153,8 +163,8 @@ private:
     String m_adapter_info;
     bool m_connected = false;
     bool m_notifications = true;
-    RefPtr<Gfx::Bitmap> m_connected_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png").release_value_but_fixme_should_propagate_errors();
-    RefPtr<Gfx::Bitmap> m_disconnected_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png").release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_connected_icon;
+    NonnullRefPtr<Gfx::Bitmap> m_disconnected_icon;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
