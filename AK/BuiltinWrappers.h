@@ -37,6 +37,12 @@ inline constexpr int count_ones(IntType value)
     return popcount(value);
 }
 
+template<Unsigned IntType>
+inline constexpr int count_zeroes(IntType value)
+{
+    return popcount(static_cast<IntType>(~value));
+}
+
 // The function will return the number of trailing zeroes in the type. If
 // the given number is zero, this function will return the number of bits
 // bits in the IntType.
