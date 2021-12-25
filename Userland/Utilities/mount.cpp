@@ -124,7 +124,12 @@ static bool print_mounts()
     }
 
     auto content = df->read_all();
-    auto json = JsonValue::from_string(content).release_value_but_fixme_should_propagate_errors();
+    auto json_or_error = JsonValue::from_string(content);
+    if (json_or_error.is_error()) {
+        warnln("Failed to decode JSON: {}", json_or_error.error());
+        return false;
+    }
+    auto json = json_or_error.release_value();
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
