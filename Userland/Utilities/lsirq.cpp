@@ -39,7 +39,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     outln("      CPU0");
     auto file_contents = proc_interrupts->read_all();
-    auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+    auto json_or_error = JsonValue::from_string(file_contents);
+    if (json_or_error.is_error()) {
+        warnln("Error: {}", json_or_error.error());
+        return 1;
+    }
+    auto json = json_or_error.release_value();
     json.as_array().for_each([](auto& value) {
         auto& handler = value.as_object();
         auto purpose = handler.get("purpose").to_string();
