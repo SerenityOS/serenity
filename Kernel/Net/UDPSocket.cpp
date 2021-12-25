@@ -29,16 +29,13 @@ MutexProtected<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
     return *s_map;
 }
 
-SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
+RefPtr<UDPSocket> UDPSocket::from_port(u16 port)
 {
-    return sockets_by_port().with_shared([&](const auto& table) -> SocketHandle<UDPSocket> {
-        RefPtr<UDPSocket> socket;
+    return sockets_by_port().with_shared([&](const auto& table) -> RefPtr<UDPSocket> {
         auto it = table.find(port);
         if (it == table.end())
             return {};
-        socket = (*it).value;
-        VERIFY(socket);
-        return { *socket };
+        return (*it).value;
     });
 }
 
