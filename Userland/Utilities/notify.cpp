@@ -25,8 +25,14 @@ int main(int argc, char** argv)
     auto notification = GUI::Notification::construct();
     notification->set_text(message);
     notification->set_title(title);
-    if (icon_path)
-        notification->set_icon(Gfx::Bitmap::try_load_from_file(icon_path).release_value_but_fixme_should_propagate_errors());
+    if (icon_path) {
+        ErrorOr<NonnullRefPtr<Gfx::Bitmap>> icon_or_error = Gfx::Bitmap::try_load_from_file(icon_path);
+        if (icon_or_error.is_error()) {
+            warnln("Failed to load icon: {}", icon_or_error.error());
+            return 1;
+        }
+        notification->set_icon(icon_or_error.release_value());
+    }
     notification->show();
 
     return 0;
