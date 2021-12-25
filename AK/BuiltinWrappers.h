@@ -9,7 +9,7 @@
 #include "Concepts.h"
 
 template<Unsigned IntType>
-inline constexpr int popcount(IntType value)
+inline constexpr size_t popcount(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
@@ -21,7 +21,7 @@ inline constexpr int popcount(IntType value)
         return __builtin_popcountll(value);
     VERIFY_NOT_REACHED();
 #else
-    int ones = 0;
+    size_t ones = 0;
     for (size_t i = 0; i < bit_sizeof(IntType); ++i) {
         if ((val >> i) & 1) {
             ++ones;
@@ -32,13 +32,13 @@ inline constexpr int popcount(IntType value)
 }
 
 template<Unsigned IntType>
-inline constexpr int count_ones(IntType value)
+inline constexpr size_t count_ones(IntType value)
 {
     return popcount(value);
 }
 
 template<Unsigned IntType>
-inline constexpr int count_zeroes(IntType value)
+inline constexpr size_t count_zeroes(IntType value)
 {
     return popcount(static_cast<IntType>(~value));
 }
@@ -47,7 +47,7 @@ inline constexpr int count_zeroes(IntType value)
 // the given number is zero, this function will return the number of bits
 // bits in the IntType.
 template<Unsigned IntType>
-inline constexpr int count_trailing_zeroes(IntType value)
+inline constexpr size_t count_trailing_zeroes(IntType value)
 {
     if (value == 0) [[unlikely]]
         return bit_sizeof(IntType);
@@ -71,7 +71,7 @@ inline constexpr int count_trailing_zeroes(IntType value)
 }
 
 template<Unsigned IntType>
-inline constexpr int count_trailing_ones(IntType value)
+inline constexpr size_t count_trailing_ones(IntType value)
 {
     return count_trailing_zeroes(static_cast<IntType>(~value));
 }
@@ -80,7 +80,7 @@ inline constexpr int count_trailing_ones(IntType value)
 // the given number is zero, this function will return the number of bits
 // in the IntType.
 template<Unsigned IntType>
-inline constexpr int count_leading_zeroes(IntType value)
+inline constexpr size_t count_leading_zeroes(IntType value)
 {
     if (value == 0) [[unlikely]]
         return bit_sizeof(IntType);
@@ -105,7 +105,7 @@ inline constexpr int count_leading_zeroes(IntType value)
 }
 
 template<Unsigned IntType>
-inline constexpr int count_leading_ones(IntType value)
+inline constexpr size_t count_leading_ones(IntType value)
 {
     return count_leading_zeroes(static_cast<IntType>(~value));
 }
@@ -113,7 +113,7 @@ inline constexpr int count_leading_ones(IntType value)
 // The function will return the index of leading one bit in the type. If
 // the given number is zero, this function will return zero.
 template<Integral IntType>
-inline constexpr int bit_scan_forward(IntType value)
+inline constexpr size_t bit_scan_forward(IntType value)
 {
 #if defined(__GNUC__) || defined(__clang__)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
