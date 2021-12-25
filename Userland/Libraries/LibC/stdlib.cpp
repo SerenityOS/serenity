@@ -1166,21 +1166,51 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
     return digits.number();
 }
 
-// Serenity's PRNG is not cryptographically secure. Do not rely on this for
-// any real crypto! These functions (for now) are for compatibility.
-// TODO: In the future, rand can be made deterministic and this not.
 uint32_t arc4random(void)
 {
     uint32_t buf;
-    syscall(SC_getrandom, &buf, sizeof(buf), 0);
+    arc4random_buf(&buf, sizeof(buf));
     return buf;
 }
 
+static pthread_mutex_t s_randomness_mutex = PTHREAD_MUTEX_INITIALIZER;
+static u8* s_randomness_buffer;
+static size_t s_randomness_index;
+
 void arc4random_buf(void* buffer, size_t buffer_size)
 {
-    // arc4random_buf should never fail, but user supplied buffers could fail.
-    // However, if the user passes a garbage buffer, that's on them.
-    syscall(SC_getrandom, buffer, buffer_size, 0);
+    pthread_mutex_lock(&s_randomness_mutex);
+
+    size_t bytes_needed = buffer_size;
+    auto* ptr = static_cast<u8*>(buffer);
+
+    while (bytes_needed > 0) {
+        if (!s_randomness_buffer || s_randomness_index >= PAGE_SIZE) {
+            if (!s_randomness_buffer) {
+                s_randomness_buffer = static_cast<u8*>(mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_RANDOMIZED, 0, 0));
+                VERIFY(s_randomness_buffer != MAP_FAILED);
+                __pthread_fork_atfork_register_child(
+                    [] {
+                        munmap(s_randomness_buffer, PAGE_SIZE);
+                        s_randomness_buffer = nullptr;
+                        s_randomness_index = 0;
+                    });
+            }
+            syscall(SC_getrandom, s_randomness_buffer, PAGE_SIZE);
+            s_randomness_index = 0;
+        }
+
+        size_t available_bytes = PAGE_SIZE - s_randomness_index;
+        size_t bytes_to_copy = min(bytes_needed, available_bytes);
+
+        memcpy(ptr, s_randomness_buffer + s_randomness_index, bytes_to_copy);
+
+        s_randomness_index += bytes_to_copy;
+        bytes_needed -= bytes_to_copy;
+        ptr += bytes_to_copy;
+    }
+
+    pthread_mutex_unlock(&s_randomness_mutex);
 }
 
 uint32_t arc4random_uniform(uint32_t max_bounds)
