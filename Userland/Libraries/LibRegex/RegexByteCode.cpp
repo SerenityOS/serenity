@@ -139,6 +139,7 @@ static void reverse_string_position(MatchState& state, RegexStringView view, siz
 static void save_string_position(MatchInput const& input, MatchState const& state)
 {
     input.saved_positions.append(state.string_position);
+    input.saved_forks_since_last_save.append(state.forks_since_last_save);
     input.saved_code_unit_positions.append(state.string_position_in_code_units);
 }
 
@@ -149,6 +150,7 @@ static bool restore_string_position(MatchInput const& input, MatchState& state)
 
     state.string_position = input.saved_positions.take_last();
     state.string_position_in_code_units = input.saved_code_unit_positions.take_last();
+    state.forks_since_last_save = input.saved_forks_since_last_save.take_last();
     return true;
 }
 
@@ -207,6 +209,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, Matc
 ALWAYS_INLINE ExecutionResult OpCode_Save::execute(MatchInput const& input, MatchState& state) const
 {
     save_string_position(input, state);
+    state.forks_since_last_save = 0;
     return ExecutionResult::Continue;
 }
 
@@ -226,11 +229,9 @@ ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const& input, Ma
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(MatchInput const& input, MatchState&) const
+ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(MatchInput const& input, MatchState& state) const
 {
-    VERIFY(count() > 0);
-
-    input.fail_counter += count() - 1;
+    input.fail_counter += state.forks_since_last_save;
     return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
@@ -243,6 +244,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(MatchInput const&, MatchState
 ALWAYS_INLINE ExecutionResult OpCode_ForkJump::execute(MatchInput const&, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
+    state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioHigh;
 }
 
@@ -250,12 +252,14 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceJump::execute(MatchInput const& 
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     input.fork_to_replace = state.instruction_position;
+    state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioHigh;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(MatchInput const&, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
+    state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioLow;
 }
 
@@ -263,6 +267,7 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& 
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     input.fork_to_replace = state.instruction_position;
+    state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioLow;
 }
 

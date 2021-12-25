@@ -267,20 +267,19 @@ public:
             // JUMP _A
             // LABEL _L
             // REGEXP BODY
-            // FAIL 2
+            // FAIL
             // LABEL _A
             // SAVE
             // FORKJUMP _L
             // RESTORE
             auto body_length = lookaround_body.size();
             empend((ByteCodeValueType)OpCodeId::Jump);
-            empend((ByteCodeValueType)body_length + 2); // JUMP to label _A
+            empend((ByteCodeValueType)body_length + 1); // JUMP to label _A
             extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::FailForks);
-            empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
             empend((ByteCodeValueType)OpCodeId::ForkJump);
-            empend((ByteCodeValueType) - (body_length + 5)); // JUMP to label _L
+            empend((ByteCodeValueType) - (body_length + 4)); // JUMP to label _L
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         }
@@ -300,22 +299,21 @@ public:
             // LABEL _L
             // GOBACK match_length(BODY)
             // REGEXP BODY
-            // FAIL 2
+            // FAIL
             // LABEL _A
             // SAVE
             // FORKJUMP _L
             // RESTORE
             auto body_length = lookaround_body.size();
             empend((ByteCodeValueType)OpCodeId::Jump);
-            empend((ByteCodeValueType)body_length + 4); // JUMP to label _A
+            empend((ByteCodeValueType)body_length + 3); // JUMP to label _A
             empend((ByteCodeValueType)OpCodeId::GoBack);
             empend((ByteCodeValueType)match_length);
             extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::FailForks);
-            empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
             empend((ByteCodeValueType)OpCodeId::ForkJump);
-            empend((ByteCodeValueType) - (body_length + 7)); // JUMP to label _L
+            empend((ByteCodeValueType) - (body_length + 6)); // JUMP to label _L
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         }
@@ -593,9 +591,8 @@ class OpCode_FailForks final : public OpCode {
 public:
     ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
-    ALWAYS_INLINE size_t size() const override { return 2; }
-    ALWAYS_INLINE size_t count() const { return argument(0); }
-    String arguments_string() const override { return String::formatted("count={}", count()); }
+    ALWAYS_INLINE size_t size() const override { return 1; }
+    String arguments_string() const override { return String::empty(); }
 };
 
 class OpCode_Save final : public OpCode {

@@ -514,6 +514,7 @@ struct MatchInput {
     mutable size_t fail_counter { 0 };
     mutable Vector<size_t> saved_positions;
     mutable Vector<size_t> saved_code_unit_positions;
+    mutable Vector<size_t> saved_forks_since_last_save;
     mutable HashMap<u64, u64> checkpoints;
     mutable Optional<size_t> fork_to_replace;
 };
@@ -524,6 +525,7 @@ struct MatchState {
     size_t string_position_in_code_units { 0 };
     size_t instruction_position { 0 };
     size_t fork_at_position { 0 };
+    size_t forks_since_last_save { 0 };
     Optional<size_t> initiating_fork;
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;

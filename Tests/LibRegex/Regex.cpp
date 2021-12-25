@@ -973,3 +973,14 @@ TEST_CASE(posix_basic_dollar_is_literal)
         EXPECT_EQ(re.match("123abc$", PosixFlags::Global).success, true);
     }
 }
+
+TEST_CASE(negative_lookahead)
+{
+    {
+        // Negative lookahead with more than 2 forks difference between lookahead init and finish.
+        Regex<ECMA262> re(":(?!\\^\\)|1)", ECMAScriptFlags::Global);
+        EXPECT_EQ(re.match(":^)").success, false);
+        EXPECT_EQ(re.match(":1").success, false);
+        EXPECT_EQ(re.match(":foobar").success, true);
+    }
+}
