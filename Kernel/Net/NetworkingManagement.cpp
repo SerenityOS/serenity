@@ -16,8 +16,8 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
-#include <Kernel/Net/RTL8168NetworkAdapter.h>
+#include <Kernel/Net/Realtek/RTL8139NetworkAdapter.h>
+#include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
