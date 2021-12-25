@@ -136,7 +136,10 @@ private:
         }
 
         auto file_contents = m_proc_stat->read_all();
-        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+        auto json_or_error = JsonValue::from_string(file_contents);
+        if (json_or_error.is_error())
+            return false;
+        auto json = json_or_error.release_value();
         auto const& obj = json.as_object();
         total = obj.get("total_time").to_u64();
         idle = obj.get("idle_time").to_u64();
@@ -157,7 +160,10 @@ private:
         }
 
         auto file_contents = m_proc_mem->read_all();
-        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+        auto json_or_error = JsonValue::from_string(file_contents);
+        if (json_or_error.is_error())
+            return false;
+        auto json = json_or_error.release_value();
         auto const& obj = json.as_object();
         unsigned kmalloc_allocated = obj.get("kmalloc_allocated").to_u32();
         unsigned kmalloc_available = obj.get("kmalloc_available").to_u32();
