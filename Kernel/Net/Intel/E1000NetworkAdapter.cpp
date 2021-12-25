@@ -39,7 +39,7 @@ namespace Kernel {
 #define REG_RADV 0x282C             // RX Int. Absolute Delay Timer
 #define REG_RSRPD 0x2C00            // RX Small Packet Detect Interrupt
 #define REG_TIPG 0x0410             // Transmit Inter Packet Gap
-#define ECTRL_SLU 0x40              //set link up
+#define ECTRL_SLU 0x40              // set link up
 #define RCTL_EN (1 << 1)            // Receiver Enable
 #define RCTL_SBP (1 << 2)           // Store Bad Packets
 #define RCTL_UPE (1 << 3)           // Unicast Promiscuous Enabled
