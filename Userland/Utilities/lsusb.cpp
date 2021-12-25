@@ -46,7 +46,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto contents = proc_usb_device->read_all();
-        auto json = JsonValue::from_string(contents).release_value_but_fixme_should_propagate_errors();
+        auto json_or_error = JsonValue::from_string(contents);
+        if (json_or_error.is_error()) {
+            warnln("Failed to decode JSON: {}", json_or_error.error());
+            continue;
+        }
+        auto json = json_or_error.release_value();
 
         json.as_array().for_each([usb_db](auto& value) {
             auto& device_descriptor = value.as_object();
