@@ -17,7 +17,7 @@ public:
     static ErrorOr<NonnullRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~UDPSocket() override;
 
-    static SocketHandle<UDPSocket> from_port(u16);
+    static RefPtr<UDPSocket> from_port(u16);
     static void for_each(Function<void(const UDPSocket&)>);
 
 private:

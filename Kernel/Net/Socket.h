@@ -183,44 +183,6 @@ private:
     NonnullRefPtrVector<Socket> m_pending;
 };
 
-template<typename SocketType>
-class SocketHandle {
-public:
-    SocketHandle() = default;
-
-    SocketHandle(NonnullRefPtr<SocketType>&& socket)
-        : m_socket(move(socket))
-    {
-        if (m_socket)
-            m_socket->mutex().lock();
-    }
-
-    SocketHandle(SocketHandle&& other)
-        : m_socket(move(other.m_socket))
-    {
-    }
-
-    ~SocketHandle()
-    {
-        if (m_socket)
-            m_socket->mutex().unlock();
-    }
-
-    SocketHandle(const SocketHandle&) = delete;
-    SocketHandle& operator=(const SocketHandle&) = delete;
-
-    operator bool() const { return m_socket; }
-
-    SocketType* operator->() { return &socket(); }
-    const SocketType* operator->() const { return &socket(); }
-
-    SocketType& socket() { return *m_socket; }
-    const SocketType& socket() const { return *m_socket; }
-
-private:
-    RefPtr<SocketType> m_socket;
-};
-
 // This is a special variant of TRY() that also updates the socket's SO_ERROR field on error.
 #define SOCKET_TRY(expression)                           \
     ({                                                   \
