@@ -52,32 +52,61 @@ NumberPrototype::~NumberPrototype()
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue
 static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, Value value)
 {
+    // 1. If Type(value) is Number, return value.
     if (value.is_number())
         return value;
-    if (value.is_object() && is<NumberObject>(value.as_object()))
+
+    // 2. If Type(value) is Object and value has a [[NumberData]] internal slot, then
+    if (value.is_object() && is<NumberObject>(value.as_object())) {
+        // a. Let n be value.[[NumberData]].
+        // b. Assert: Type(n) is Number.
+        // c. Return n.
         return Value(static_cast<NumberObject&>(value.as_object()).number());
+    }
+
     auto& vm = global_object.vm();
+
+    // 3. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Number");
 }
 
 // 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
+    // 1. Let x be ? thisNumberValue(this value).
     auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
+
+    // 2. Let f be ? ToIntegerOrInfinity(fractionDigits).
+    // 3. Assert: If fractionDigits is undefined, then f is 0.
     auto fraction_digits = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+
+    // 4. If f is not finite, throw a RangeError exception.
     if (!Value(fraction_digits).is_finite_number())
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
+    // 5. If f < 0 or f > 100, throw a RangeError exception.
     if (fraction_digits < 0 || fraction_digits > 100)
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
+    // 6. If x is not finite, return ! Number::toString(x).
     if (!number_value.is_finite_number())
         return js_string(vm, TRY(number_value.to_string(global_object)));
 
+    // 7. Set x to ℝ(x).
     auto number = number_value.as_double();
+
+    // 8. Let s be the empty String.
+    // 9. If x < 0, then
+    //    a. Set s to "-".
+    //    b. Set x to -x.
+
+    // 10. If x ≥ 10^21, then
     if (fabs(number) >= 1e+21)
         return js_string(vm, MUST(number_value.to_string(global_object)));
 
+    // 11. Else,
+    //    a-c. NOTE: The number to string formatting algorithm is handled by String::formatted().
+    // 12. Return the string-concatenation of s and m.
     return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
 }
 
@@ -107,16 +136,27 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_locale_string)
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
+    // 1. Let x be ? thisNumberValue(this value).
     auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
-    double radix_argument = 10;
-    auto argument = vm.argument(0);
-    if (!vm.argument(0).is_undefined())
-        radix_argument = TRY(argument.to_integer_or_infinity(global_object));
-    int radix = (int)radix_argument;
 
-    if (radix < 2 || radix > 36)
+    double radix_mv;
+
+    // 2. If radix is undefined, let radixMV be 10.
+    if (vm.argument(0).is_undefined())
+        radix_mv = 10;
+    // 3. Else, let radixMV be ? ToIntegerOrInfinity(radix).
+    else
+        radix_mv = TRY(vm.argument(0).to_integer_or_infinity(global_object));
+
+    // 4. If radixMV < 2 or radixMV > 36, throw a RangeError exception.
+    if (radix_mv < 2 || radix_mv > 36)
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidRadix);
 
+    // 5. If radixMV = 10, return ! ToString(x).
+    if (radix_mv == 10)
+        return js_string(vm, MUST(number_value.to_string(global_object)));
+
+    // 6. Return the String representation of this Number value using the radix specified by radixMV. Letters a-z are used for digits with values 10 through 35. The precise algorithm is implementation-defined, however the algorithm should be a generalization of that specified in 6.1.6.1.20.
     if (number_value.is_positive_infinity())
         return js_string(vm, "Infinity");
     if (number_value.is_negative_infinity())
@@ -134,6 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     u64 int_part = floor(number);
     double decimal_part = number - int_part;
 
+    int radix = (int)radix_mv;
     Vector<char> backwards_characters;
 
     if (int_part == 0) {
@@ -177,6 +218,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 // 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
+    // 1. Return ? thisNumberValue(this value).
     return this_number_value(global_object, vm.this_value(global_object));
 }
 
