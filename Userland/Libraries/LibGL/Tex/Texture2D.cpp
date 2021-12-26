@@ -10,7 +10,7 @@
 
 namespace GL {
 
-void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLint, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment)
+void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment)
 {
     // NOTE: Some target, format, and internal formats are currently unsupported.
     // Considering we control this library, and `gl.h` itself, we don't need to add any

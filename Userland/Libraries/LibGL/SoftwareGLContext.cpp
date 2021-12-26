@@ -818,7 +818,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     // Check if width and height are a power of 2
     RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
     if (level == 0) {
         // FIXME: OpenGL has the concept of texture and mipmap completeness. A texture has to fulfill certain criteria to be considered complete.
@@ -844,7 +844,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         m_sampler_config_is_dirty = true;
     }
 
-    m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, border, format, type, data, m_unpack_row_length, m_unpack_alignment);
+    m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
 void SoftwareGLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data)
