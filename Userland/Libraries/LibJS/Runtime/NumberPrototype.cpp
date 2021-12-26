@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 {
     auto number_value = TRY(this_number_value(global_object, vm.this_value(global_object)));
     auto fraction_digits = TRY(vm.argument(0).to_integer_or_infinity(global_object));
-    if (!vm.argument(0).is_finite_number())
+    if (!Value(fraction_digits).is_finite_number())
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFractionDigits);
 
     if (fraction_digits < 0 || fraction_digits > 100)
