@@ -1,4 +1,0 @@
-endpoint FileSystemAccessClient
-{
-    handle_prompt_end(i32 error, Optional<IPC::File> fd, Optional<String> chosen_file) =|
-}

@@ -1,9 +1,0 @@
-interface HTMLFrameElement : HTMLElement {
-
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString scrolling;
-    [Reflect] attribute DOMString src;
-    [Reflect=frameborder] attribute DOMString frameBorder;
-    [Reflect=longdesc] attribute DOMString longDesc;
-
-};

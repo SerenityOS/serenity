@@ -1,7 +1,0 @@
-[Exposed=(Window,Worker)]
-interface Crypto {
-  [SecureContext] readonly attribute SubtleCrypto subtle;
-
-  // FIXME: the argument and the return value should be of type ArrayBufferView
-  any getRandomValues(any array);
-};

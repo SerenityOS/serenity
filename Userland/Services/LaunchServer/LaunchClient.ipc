@@ -1,5 +1,0 @@
-#include <AK/URL.h>
-
-endpoint LaunchClient
-{
-}

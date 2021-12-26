@@ -1,6 +1,0 @@
-interface HTMLModElement : HTMLElement {
-
-    [Reflect] attribute DOMString cite;
-    [Reflect=datetime] attribute DOMString dateTime;
-
-};

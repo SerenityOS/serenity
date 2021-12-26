@@ -1,5 +1,0 @@
-interface HTMLHeadingElement : HTMLElement {
-
-    [Reflect] attribute DOMString align;
-
-};

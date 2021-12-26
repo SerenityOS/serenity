@@ -1,6 +1,0 @@
-interface DOMParser {
-    constructor();
-
-    // FIXME: "type" should use the DOMParserSupportedType enum.
-    Document parseFromString(DOMString string, DOMString type);
-};

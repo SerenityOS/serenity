@@ -1,3 +1,0 @@
-interface Text : CharacterData {
-    constructor(optional DOMString data = "");
-};

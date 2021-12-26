@@ -1,9 +1,0 @@
-interface EventTarget {
-
-    // FIXME: Both of these should take in options
-    undefined addEventListener(DOMString type, EventListener? callback);
-    undefined removeEventListener(DOMString type, EventListener? callback);
-
-    [ImplementedAs=dispatch_event_binding] boolean dispatchEvent(Event event);
-
-};

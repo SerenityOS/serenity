@@ -1,5 +1,0 @@
-interface HTMLLegendElement : HTMLElement {
-
-    [Reflect] attribute DOMString align;
-
-};

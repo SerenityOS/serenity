@@ -1,6 +1,0 @@
-[Exposed=Window] interface IdleDeadline {
-
-    double timeRemaining();
-    readonly attribute boolean didTimeout;
-
-};

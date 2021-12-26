@@ -1,5 +1,0 @@
-interface HTMLOutputElement : HTMLElement {
-
-    readonly attribute DOMString type;
-
-};

@@ -1,6 +1,0 @@
-#include <LibCore/AnonymousBuffer.h>
-#include <LibGfx/ShareableBitmap.h>
-
-endpoint ImageDecoderClient
-{
-}

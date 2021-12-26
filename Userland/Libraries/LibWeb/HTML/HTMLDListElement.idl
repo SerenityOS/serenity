@@ -1,5 +1,0 @@
-interface HTMLDListElement : HTMLElement {
-
-    [Reflect] attribute boolean compact;
-
-};

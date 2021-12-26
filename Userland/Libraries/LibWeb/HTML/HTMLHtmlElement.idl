@@ -1,5 +1,0 @@
-interface HTMLHtmlElement : HTMLElement {
-
-    [Reflect] attribute DOMString version;
-
-};
