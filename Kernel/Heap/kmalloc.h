@@ -41,7 +41,6 @@ enum class align_val_t : size_t {};
 void kmalloc_init();
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_eternal(size_t);
 
-void kfree(void*);
 void kfree_sized(void*, size_t);
 
 struct kmalloc_stats {

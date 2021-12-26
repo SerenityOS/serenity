@@ -274,14 +274,10 @@ void* kmalloc(size_t size)
 
 void kfree_sized(void* ptr, size_t size)
 {
-    (void)size;
-    return kfree(ptr);
-}
-
-void kfree(void* ptr)
-{
     if (!ptr)
         return;
+
+    VERIFY(size > 0);
 
     kmalloc_verify_nospinlock_held();
     SpinlockLocker lock(s_lock);
