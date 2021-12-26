@@ -303,7 +303,6 @@ size_t kmalloc_good_size(size_t size)
 
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
-    VERIFY(alignment <= 4096);
     Checked<size_t> real_allocation_size = size;
     real_allocation_size += alignment;
     real_allocation_size += sizeof(ptrdiff_t) + sizeof(size_t);
