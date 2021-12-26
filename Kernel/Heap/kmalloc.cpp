@@ -79,7 +79,7 @@ struct KmallocGlobalData {
         return allocate(size);
     }
 
-    void deallocate(void* ptr)
+    void deallocate(void* ptr, size_t size)
     {
         VERIFY(!expansion_in_progress);
 
@@ -90,7 +90,7 @@ struct KmallocGlobalData {
             }
         }
 
-        PANIC("Bogus pointer {:p} passed to kfree()", ptr);
+        PANIC("Bogus pointer passed to kfree_sized({:p}, {})", ptr, size);
     }
 
     size_t allocated_bytes() const
@@ -292,7 +292,7 @@ void kfree_sized(void* ptr, size_t size)
             PerformanceManager::add_kfree_perf_event(*current_thread, 0, (FlatPtr)ptr);
     }
 
-    g_kmalloc_global->deallocate(ptr);
+    g_kmalloc_global->deallocate(ptr, size);
     --g_nested_kfree_calls;
 }
 
