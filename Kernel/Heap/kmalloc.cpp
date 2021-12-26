@@ -48,6 +48,8 @@ struct KmallocSubheap {
 };
 
 struct KmallocGlobalData {
+    static constexpr size_t minimum_subheap_size = 1 * MiB;
+
     KmallocGlobalData(u8* initial_heap, size_t initial_heap_size)
     {
         add_subheap(initial_heap, initial_heap_size);
@@ -69,7 +71,7 @@ struct KmallocGlobalData {
                 return ptr;
         }
 
-        if (!try_expand()) {
+        if (!try_expand(size)) {
             PANIC("OOM when trying to expand kmalloc heap.");
         }
 
@@ -106,13 +108,21 @@ struct KmallocGlobalData {
         return total;
     }
 
-    bool try_expand()
+    bool try_expand(size_t allocation_request)
     {
         VERIFY(!expansion_in_progress);
         TemporaryChange change(expansion_in_progress, true);
 
         auto new_subheap_base = expansion_data->next_virtual_address;
-        size_t new_subheap_size = 1 * MiB;
+        Checked<size_t> padded_allocation_request = allocation_request;
+        padded_allocation_request *= 2;
+        padded_allocation_request += PAGE_SIZE;
+        if (padded_allocation_request.has_overflow()) {
+            PANIC("Integer overflow during kmalloc heap expansion");
+        }
+        size_t new_subheap_size = max(minimum_subheap_size, Memory::page_round_up(padded_allocation_request.value()));
+
+        dbgln("Unable to allocate {}, expanding kmalloc heap", allocation_request);
 
         if (!expansion_data->virtual_range.contains(new_subheap_base, new_subheap_size)) {
             // FIXME: Dare to return false and allow kmalloc() to fail!
