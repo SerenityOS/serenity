@@ -119,11 +119,15 @@ public:
         auto* ptr = block->allocate();
         if (block->is_full())
             m_full_blocks.append(*block);
+
+        memset(ptr, KMALLOC_SCRUB_BYTE, m_slab_size);
         return ptr;
     }
 
     void deallocate(void* ptr)
     {
+        memset(ptr, KFREE_SCRUB_BYTE, m_slab_size);
+
         auto* block = (KmallocSlabBlock*)((FlatPtr)ptr & KmallocSlabBlock::block_mask);
         bool block_was_full = block->is_full();
         block->deallocate(ptr);
