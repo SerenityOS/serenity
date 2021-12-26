@@ -305,15 +305,19 @@ size_t kmalloc_good_size(size_t size)
     return size;
 }
 
-[[gnu::malloc, gnu::alloc_size(1), gnu::alloc_align(2)]] static void* kmalloc_aligned_cxx(size_t size, size_t alignment)
+void* kmalloc_aligned(size_t size, size_t alignment)
 {
     VERIFY(alignment <= 4096);
-    void* ptr = kmalloc(size + alignment + sizeof(ptrdiff_t));
+    Checked<size_t> real_allocation_size = size;
+    real_allocation_size += alignment;
+    real_allocation_size += sizeof(ptrdiff_t) + sizeof(size_t);
+    void* ptr = kmalloc(real_allocation_size.value());
     if (ptr == nullptr)
         return nullptr;
     size_t max_addr = (size_t)ptr + alignment;
     void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
     ((ptrdiff_t*)aligned_ptr)[-1] = (ptrdiff_t)((u8*)aligned_ptr - (u8*)ptr);
+    ((size_t*)aligned_ptr)[-2] = real_allocation_size.value();
     return aligned_ptr;
 }
 
@@ -331,14 +335,14 @@ void* operator new(size_t size, const std::nothrow_t&) noexcept
 
 void* operator new(size_t size, std::align_val_t al)
 {
-    void* ptr = kmalloc_aligned_cxx(size, (size_t)al);
+    void* ptr = kmalloc_aligned(size, (size_t)al);
     VERIFY(ptr);
     return ptr;
 }
 
 void* operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
 {
-    return kmalloc_aligned_cxx(size, (size_t)al);
+    return kmalloc_aligned(size, (size_t)al);
 }
 
 void* operator new[](size_t size)
