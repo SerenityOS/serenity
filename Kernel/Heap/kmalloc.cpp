@@ -136,15 +136,8 @@ struct KmallocGlobalData {
         for (auto vaddr = new_subheap_base; !physical_pages.is_empty(); vaddr = vaddr.offset(PAGE_SIZE)) {
             // FIXME: We currently leak physical memory when mapping it into the kmalloc heap.
             auto& page = physical_pages.take_one().leak_ref();
-            auto* pte = MM.ensure_pte(MM.kernel_page_directory(), vaddr);
-            if (!pte) {
-                // FIXME: If ensure_pte() fails due to lazy page directory construction, it returns nullptr
-                //        and we're in trouble. Find a way to avoid getting into that situation.
-                //        Perhaps we could do a dry run through the address range and ensure_pte() for each
-                //        virtual address to ensure that each PTE is available. Not maximally efficient,
-                //        but could work.. Needs more thought.
-                PANIC("Unable to acquire PTE during heap expansion");
-            }
+            auto* pte = MM.pte(MM.kernel_page_directory(), vaddr);
+            VERIFY(pte);
             pte->set_physical_page_base(page.paddr().get());
             pte->set_global(true);
             pte->set_user_allowed(false);
@@ -158,6 +151,25 @@ struct KmallocGlobalData {
 
         add_subheap(new_subheap_base.as_ptr(), new_subheap_size);
         return true;
+    }
+
+    void enable_expansion()
+    {
+        // FIXME: This range can be much bigger on 64-bit, but we need to figure something out for 32-bit.
+        auto virtual_range = MM.kernel_page_directory().range_allocator().try_allocate_anywhere(64 * MiB, 1 * MiB);
+
+        expansion_data = KmallocGlobalData::ExpansionData {
+            .virtual_range = virtual_range.value(),
+            .next_virtual_address = virtual_range.value().base(),
+        };
+
+        // Make sure the entire kmalloc VM range is backed by page tables.
+        // This avoids having to deal with lazy page table allocation during heap expansion.
+        SpinlockLocker mm_locker(Memory::s_mm_lock);
+        SpinlockLocker pd_locker(MM.kernel_page_directory().get_lock());
+        for (auto vaddr = virtual_range.value().base(); vaddr < virtual_range.value().end(); vaddr = vaddr.offset(PAGE_SIZE)) {
+            MM.ensure_pte(MM.kernel_page_directory(), vaddr);
+        }
     }
 
     struct ExpansionData {
@@ -189,12 +201,7 @@ READONLY_AFTER_INIT static u8* s_end_of_eternal_range;
 
 void kmalloc_enable_expand()
 {
-    // FIXME: This range can be much bigger on 64-bit, but we need to figure something out for 32-bit.
-    auto virtual_range = MM.kernel_page_directory().range_allocator().try_allocate_anywhere(64 * MiB, 1 * MiB);
-    g_kmalloc_global->expansion_data = KmallocGlobalData::ExpansionData {
-        .virtual_range = virtual_range.value(),
-        .next_virtual_address = virtual_range.value().base(),
-    };
+    g_kmalloc_global->enable_expansion();
 }
 
 static inline void kmalloc_verify_nospinlock_held()
