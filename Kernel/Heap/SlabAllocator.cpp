@@ -68,7 +68,7 @@ public:
     {
         VERIFY(ptr);
         if (ptr < m_base || ptr >= m_end) {
-            kfree(ptr);
+            kfree_sized(ptr, slab_size());
             return;
         }
         FreeSlab* free_slab = (FreeSlab*)ptr;
