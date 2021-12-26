@@ -10,7 +10,6 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
-#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/AES.h>
@@ -120,7 +119,7 @@ private:
     Spinlock m_lock;
 };
 
-class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
+class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {
     AK_MAKE_ETERNAL;
 
 public:
@@ -130,8 +129,6 @@ public:
     void wait_for_entropy();
 
     void wake_if_ready();
-
-    Spinlock& get_lock() { return resource().get_lock(); }
 
 private:
     WaitQueue m_seed_queue;
@@ -168,7 +165,7 @@ public:
         SpinlockLocker lock(kernel_rng.get_lock());
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
         Event<T> event = { read_tsc(), m_source, event_data };
-        kernel_rng.resource().add_random_event(event, m_pool);
+        kernel_rng.add_random_event(event, m_pool);
         m_pool++;
         kernel_rng.wake_if_ready();
     }
