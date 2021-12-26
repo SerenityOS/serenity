@@ -105,6 +105,8 @@ public:
     void* allocate()
     {
         if (m_usable_blocks.is_empty()) {
+            // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
+            //        Handle this with a custom VM+page allocator instead of using kmalloc_aligned().
             auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
             if (!slot) {
                 // FIXME: Dare to return nullptr!
