@@ -10,12 +10,16 @@
 
 namespace SoftGPU {
 
-constexpr static float fracf(float value)
+// See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
+// FIXME: make this dynamically configurable through ConfigServer
+static constexpr bool CLAMP_DEPRECATED_BEHAVIOR = false;
+
+static constexpr float fracf(float value)
 {
     return value - floorf(value);
 }
 
-constexpr static float wrap_repeat(float value)
+static constexpr float wrap_repeat(float value)
 {
     return fracf(value);
 }
@@ -39,7 +43,7 @@ static constexpr float wrap_mirrored_repeat(float value, unsigned num_texels)
     return wrap_clamp_to_edge(iseven ? frac : 1 - frac, num_texels);
 }
 
-constexpr static float wrap(float value, TextureWrapMode mode, unsigned num_texels)
+static constexpr float wrap(float value, TextureWrapMode mode, unsigned num_texels)
 {
     switch (mode) {
     case TextureWrapMode::Repeat:
@@ -47,7 +51,10 @@ constexpr static float wrap(float value, TextureWrapMode mode, unsigned num_texe
     case TextureWrapMode::MirroredRepeat:
         return wrap_mirrored_repeat(value, num_texels);
     case TextureWrapMode::Clamp:
-        return wrap_clamp(value);
+        if constexpr (CLAMP_DEPRECATED_BEHAVIOR) {
+            return wrap_clamp(value);
+        }
+        return wrap_clamp_to_edge(value, num_texels);
     case TextureWrapMode::ClampToBorder:
     case TextureWrapMode::ClampToEdge:
         return wrap_clamp_to_edge(value, num_texels);
