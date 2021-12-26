@@ -10,7 +10,6 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
 #include <Kernel/Memory/PageFaultResponse.h>
 #include <Kernel/Memory/VirtualRangeAllocator.h>

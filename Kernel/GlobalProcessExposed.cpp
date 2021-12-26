@@ -412,14 +412,6 @@ private:
         json.add("super_physical_available", system_memory.super_physical_pages - system_memory.super_physical_pages_used);
         json.add("kmalloc_call_count", stats.kmalloc_call_count);
         json.add("kfree_call_count", stats.kfree_call_count);
-        TRY(slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) -> ErrorOr<void> {
-            auto prefix = TRY(KString::formatted("slab_{}", slab_size));
-            auto formatted_num_allocated = TRY(KString::formatted("{}_num_allocated", prefix));
-            auto formatted_num_free = TRY(KString::formatted("{}_num_free", prefix));
-            json.add(formatted_num_allocated->view(), num_allocated);
-            json.add(formatted_num_free->view(), num_free);
-            return {};
-        }));
         json.finish();
         return {};
     }

@@ -33,7 +33,6 @@
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/SysFSFirmware.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -179,7 +178,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
         (*ctor)();
     kmalloc_init();
-    slab_alloc_init();
 
     load_kernel_symbol_table();
 

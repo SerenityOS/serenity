@@ -368,8 +368,6 @@ void page_fault_handler(TrapFrame* trap)
         constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         constexpr FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
         constexpr FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
-        constexpr FlatPtr slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
-        constexpr FlatPtr slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
@@ -378,10 +376,6 @@ void page_fault_handler(TrapFrame* trap)
             dbgln("Note: Address {} looks like it may be uninitialized kmalloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be recently kfree()'d memory", VirtualAddress(fault_address));
-        } else if ((fault_address & 0xffff0000) == (slab_alloc_scrub_pattern & 0xffff0000)) {
-            dbgln("Note: Address {} looks like it may be uninitialized slab_alloc() memory", VirtualAddress(fault_address));
-        } else if ((fault_address & 0xffff0000) == (slab_dealloc_scrub_pattern & 0xffff0000)) {
-            dbgln("Note: Address {} looks like it may be recently slab_dealloc()'d memory", VirtualAddress(fault_address));
         } else if (fault_address < 4096) {
             dbgln("Note: Address {} looks like a possible nullptr dereference", VirtualAddress(fault_address));
         } else if constexpr (SANITIZE_PTRS) {

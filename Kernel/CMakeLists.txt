@@ -14,7 +14,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
 endif()
 
 set(KERNEL_HEAP_SOURCES
-    Heap/SlabAllocator.cpp
     Heap/kmalloc.cpp
 )
 
@@ -446,7 +445,6 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         ../Kernel/Devices/KCOVInstance.cpp
         ../Kernel/FileSystem/File.cpp
         ../Kernel/FileSystem/OpenFileDescription.cpp
-        ../Kernel/Heap/SlabAllocator.cpp
         ../Kernel/init.cpp
         ../Kernel/SanCov.cpp
         # GCC assumes that the caller saves registers for functions according

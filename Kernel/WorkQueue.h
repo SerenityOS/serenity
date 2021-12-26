@@ -9,7 +9,6 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
