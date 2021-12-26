@@ -20,7 +20,6 @@ namespace Kernel {
 // FIXME: Custody needs some locking.
 
 class Custody : public RefCountedBase {
-    MAKE_SLAB_ALLOCATED(Custody)
 public:
     bool unref() const;
 

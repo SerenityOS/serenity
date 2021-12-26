@@ -32,7 +32,6 @@ class Region final
     : public Weakable<Region> {
     friend class MemoryManager;
 
-    MAKE_SLAB_ALLOCATED(Region)
 public:
     enum Access : u8 {
         None = 0,

@@ -24,7 +24,6 @@ public:
 };
 
 class OpenFileDescription : public RefCounted<OpenFileDescription> {
-    MAKE_SLAB_ALLOCATED(OpenFileDescription)
 public:
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);

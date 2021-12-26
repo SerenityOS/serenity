@@ -46,8 +46,6 @@ private:
     explicit WorkQueue(StringView);
 
     struct WorkItem {
-        MAKE_SLAB_ALLOCATED(WorkItem);
-
     public:
         IntrusiveListNode<WorkItem> m_node;
         Function<void()> function;
