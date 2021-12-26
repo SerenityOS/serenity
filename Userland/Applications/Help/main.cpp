@@ -331,6 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     history.push(path);
                     open_page(path);
                     set_start_page = true;
+                    break;
                 }
             }
 
