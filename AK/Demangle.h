@@ -6,9 +6,11 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <cxxabi.h>
+#ifndef KERNEL
+
+#    include <AK/String.h>
+#    include <AK/StringView.h>
+#    include <cxxabi.h>
 
 namespace AK {
 
@@ -25,3 +27,5 @@ inline String demangle(StringView name)
 }
 
 using AK::demangle;
+
+#endif
