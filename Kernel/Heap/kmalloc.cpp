@@ -47,6 +47,95 @@ struct KmallocSubheap {
     Heap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE> allocator;
 };
 
+class KmallocSlabBlock {
+public:
+    static constexpr size_t block_size = 64 * KiB;
+    static constexpr FlatPtr block_mask = ~(block_size - 1);
+
+    KmallocSlabBlock(size_t slab_size)
+    {
+        size_t slab_count = (block_size - sizeof(KmallocSlabBlock)) / slab_size;
+        for (size_t i = 0; i < slab_count; ++i) {
+            auto* freelist_entry = (FreelistEntry*)(void*)(&m_data[i * slab_size]);
+            freelist_entry->next = m_freelist;
+            m_freelist = freelist_entry;
+        }
+    }
+
+    void* allocate()
+    {
+        VERIFY(m_freelist);
+        return exchange(m_freelist, m_freelist->next);
+    }
+
+    void deallocate(void* ptr)
+    {
+        VERIFY(ptr >= &m_data && ptr < ((u8*)this + block_size));
+        auto* freelist_entry = (FreelistEntry*)ptr;
+        freelist_entry->next = m_freelist;
+        m_freelist = freelist_entry;
+    }
+
+    bool is_full() const
+    {
+        return m_freelist == nullptr;
+    }
+
+    IntrusiveListNode<KmallocSlabBlock> list_node;
+
+private:
+    struct FreelistEntry {
+        FreelistEntry* next;
+    };
+
+    FreelistEntry* m_freelist { nullptr };
+
+    [[gnu::aligned(16)]] u8 m_data[];
+};
+
+class KmallocSlabheap {
+public:
+    KmallocSlabheap(size_t slab_size)
+        : m_slab_size(slab_size)
+    {
+    }
+
+    size_t slab_size() const { return m_slab_size; }
+
+    void* allocate()
+    {
+        if (m_usable_blocks.is_empty()) {
+            auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
+            if (!slot) {
+                // FIXME: Dare to return nullptr!
+                PANIC("OOM while growing slabheap ({})", m_slab_size);
+            }
+            auto* block = new (slot) KmallocSlabBlock(m_slab_size);
+            m_usable_blocks.append(*block);
+        }
+        auto* block = m_usable_blocks.first();
+        auto* ptr = block->allocate();
+        if (block->is_full())
+            m_full_blocks.append(*block);
+        return ptr;
+    }
+
+    void deallocate(void* ptr)
+    {
+        auto* block = (KmallocSlabBlock*)((FlatPtr)ptr & KmallocSlabBlock::block_mask);
+        bool block_was_full = block->is_full();
+        block->deallocate(ptr);
+        if (block_was_full)
+            m_usable_blocks.append(*block);
+    }
+
+private:
+    size_t m_slab_size { 0 };
+
+    IntrusiveList<&KmallocSlabBlock::list_node> m_usable_blocks;
+    IntrusiveList<&KmallocSlabBlock::list_node> m_full_blocks;
+};
+
 struct KmallocGlobalData {
     static constexpr size_t minimum_subheap_size = 1 * MiB;
 
@@ -67,6 +156,11 @@ struct KmallocGlobalData {
     {
         VERIFY(!expansion_in_progress);
 
+        for (auto& slabheap : slabheaps) {
+            if (size <= slabheap.slab_size())
+                return slabheap.allocate();
+        }
+
         for (auto& subheap : subheaps) {
             if (auto* ptr = subheap.allocator.allocate(size))
                 return ptr;
@@ -82,6 +176,11 @@ struct KmallocGlobalData {
     void deallocate(void* ptr, size_t size)
     {
         VERIFY(!expansion_in_progress);
+
+        for (auto& slabheap : slabheaps) {
+            if (size <= slabheap.slab_size())
+                return slabheap.deallocate(ptr);
+        }
 
         for (auto& subheap : subheaps) {
             if (subheap.allocator.contains(ptr)) {
@@ -190,6 +289,8 @@ struct KmallocGlobalData {
     Optional<ExpansionData> expansion_data;
 
     IntrusiveList<&KmallocSubheap::list_node> subheaps;
+
+    KmallocSlabheap slabheaps[6] = { 16, 32, 64, 128, 256, 512 };
 
     bool expansion_in_progress { false };
 };
