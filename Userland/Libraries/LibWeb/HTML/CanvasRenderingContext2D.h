@@ -81,8 +81,8 @@ private:
     WeakPtr<HTMLCanvasElement> m_element;
 
     Gfx::AffineTransform m_transform;
-    Gfx::Color m_fill_style;
-    Gfx::Color m_stroke_style;
+    Gfx::Color m_fill_style { Gfx::Color::Black };
+    Gfx::Color m_stroke_style { Gfx::Color::Black };
     float m_line_width { 1 };
 
     Gfx::Path m_path;
