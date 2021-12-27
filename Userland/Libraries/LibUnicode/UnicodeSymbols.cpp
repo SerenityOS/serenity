@@ -11,6 +11,7 @@
 #        include <LibDl/dlfcn.h>
 #        include <LibDl/dlfcn_integration.h>
 #    else
+#        include <AK/Platform.h>
 #        include <dlfcn.h>
 #    endif
 #else
@@ -66,7 +67,11 @@ Symbols const& Symbols::ensure_loaded()
         dest = reinterpret_cast<T>(MUST(__dlsym(libunicodedata, name)));
     };
 #    else
-    static void* libunicodedata = dlopen(nullptr, RTLD_NOW);
+#        if defined(AK_OS_MACOS)
+    static void* libunicodedata = dlopen("liblagom-unicode.dylib", RTLD_NOW);
+#        else
+    static void* libunicodedata = dlopen("liblagom-unicode.so", RTLD_NOW);
+#        endif
     VERIFY(libunicodedata);
 
     auto load_symbol = [&]<typename T>(T& dest, char const* name) {
