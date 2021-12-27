@@ -1,18 +1,6 @@
-diff -Naur lua-5.3.5/Makefile lua-5.3.5.serenity/Makefile
---- lua-5.3.5/Makefile	2016-12-20 11:26:08.000000000 -0500
-+++ lua-5.3.5.serenity/Makefile	2020-04-18 03:41:23.000000000 -0400
-@@ -36,7 +36,7 @@
- # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
- 
- # Convenience platforms targets.
--PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris
-+PLATS= aix bsd c89 freebsd generic linux macosx mingw posix solaris serenity
- 
- # What to install.
- TO_BIN= lua luac
-diff -Naur lua-5.3.5/src/Makefile lua-5.3.5.serenity/src/Makefile
---- lua-5.3.5/src/Makefile	2018-06-25 13:46:36.000000000 -0400
-+++ lua-5.3.5.serenity/src/Makefile	2020-04-18 03:51:15.000000000 -0400
+diff -Naur lua-5.3.6/src/Makefile lua-5.3.6.serenity/src/Makefile
+--- lua-5.3.6/src/Makefile	2020-07-13 20:38:14.000000000 +0200
++++ lua-5.3.6.serenity/src/Makefile	2021-12-27 21:33:37.015610414 +0100
 @@ -26,7 +26,7 @@
  
  # == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
@@ -22,16 +10,22 @@ diff -Naur lua-5.3.5/src/Makefile lua-5.3.5.serenity/src/Makefile
  
  LUA_A=	liblua.a
  CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
-@@ -124,6 +124,15 @@
+@@ -100,7 +100,6 @@
+ 	@echo '*** C89 does not guarantee 64-bit integers for Lua.'
+ 	@echo ''
+ 
+-
+ freebsd:
+ 	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_LINUX -I/usr/include/edit" SYSLIBS="-Wl,-E -ledit" CC="cc"
+ 
+@@ -124,6 +123,13 @@
  solaris:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
  
 +serenity:
-+   # FIXME: Replace these with $CC, $AR, $RANLIB
 +	$(MAKE) $(ALL) \
-+		CC="i686-pc-serenity-gcc -std=gnu99" \
-+		AR="i686-pc-serenity-ar rcu" \
-+		RANLIB="i686-pc-serenity-ranlib" \
++		CC="$(CC) -std=gnu99" \
++		AR="$(AR) rcu" \
 +		SYSCFLAGS="-DLUA_USE_DLOPEN" \
 +		SYSLIBS="-ldl"
 +
