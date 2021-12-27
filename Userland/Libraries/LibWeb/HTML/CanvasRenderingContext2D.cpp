@@ -313,4 +313,11 @@ void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float
     did_draw(Gfx::FloatRect(x, y, image_data.width(), image_data.height()));
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-save
+void CanvasRenderingContext2D::save()
+{
+    // The save() method steps are to push a copy of the current drawing state onto the drawing state stack.
+    m_drawing_state_stack.append(m_drawing_state);
+}
+
 }
