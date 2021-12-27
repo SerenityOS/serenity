@@ -56,6 +56,9 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
+    auto& view_menu = window.add_menu("&View");
+    view_menu.add_action(*m_toggle_sidebar_action);
+
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"), &window));
 }
@@ -66,10 +69,9 @@ void PDFViewerWidget::create_toolbar()
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto open_outline_action = GUI::Action::create(
-        "Open &Sidebar", { Mod_Ctrl, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
-            m_sidebar->set_fixed_width(m_sidebar_open ? 0 : 200);
-            action.set_text(m_sidebar_open ? "Open &Sidebar" : "Close &Sidebar");
+            m_sidebar->set_fixed_width(m_sidebar_open ? 200 : 0);
         },
         nullptr);
     open_outline_action->set_enabled(false);
