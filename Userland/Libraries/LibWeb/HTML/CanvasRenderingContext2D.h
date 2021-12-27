@@ -69,6 +69,8 @@ public:
     RefPtr<ImageData> create_image_data(int width, int height) const;
     void put_image_data(const ImageData&, float x, float y);
 
+    void save();
+
     HTMLCanvasElement* canvas() { return m_element; }
 
 private:
@@ -89,6 +91,7 @@ private:
     };
 
     DrawingState m_drawing_state;
+    Vector<DrawingState> m_drawing_state_stack;
 
     Gfx::Path m_path;
 };
