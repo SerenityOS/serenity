@@ -320,4 +320,13 @@ void CanvasRenderingContext2D::save()
     m_drawing_state_stack.append(m_drawing_state);
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-restore
+void CanvasRenderingContext2D::restore()
+{
+    // The restore() method steps are to pop the top entry in the drawing state stack, and reset the drawing state it describes. If there is no saved state, then the method must do nothing.
+    if (m_drawing_state_stack.is_empty())
+        return;
+    m_drawing_state = m_drawing_state_stack.take_last();
+}
+
 }

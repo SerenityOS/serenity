@@ -32,6 +32,7 @@ interface CanvasRenderingContext2D {
     undefined putImageData(ImageData imagedata, double dx, double dy);
 
     undefined save();
+    undefined restore();
 
     readonly attribute HTMLCanvasElement canvas;
 
