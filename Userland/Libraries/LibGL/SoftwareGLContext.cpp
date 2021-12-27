@@ -244,6 +244,7 @@ void SoftwareGLContext::gl_end()
         && m_current_draw_mode != GL_TRIANGLE_FAN
         && m_current_draw_mode != GL_TRIANGLE_STRIP
         && m_current_draw_mode != GL_QUADS
+        && m_current_draw_mode != GL_QUAD_STRIP
         && m_current_draw_mode != GL_POLYGON) {
 
         m_vertex_list.clear_with_capacity();
@@ -265,6 +266,7 @@ void SoftwareGLContext::gl_end()
         primitive_type = SoftGPU::PrimitiveType::Triangles;
         break;
     case GL_TRIANGLE_STRIP:
+    case GL_QUAD_STRIP:
         primitive_type = SoftGPU::PrimitiveType::TriangleStrip;
         break;
     case GL_TRIANGLE_FAN:
@@ -1981,11 +1983,12 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_arrays, mode, first, count);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES,GL_QUAD_STRIP)
+    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES)
     RETURN_WITH_ERROR_IF(!(mode == GL_TRIANGLE_STRIP
                              || mode == GL_TRIANGLE_FAN
                              || mode == GL_TRIANGLES
                              || mode == GL_QUADS
+                             || mode == GL_QUAD_STRIP
                              || mode == GL_POLYGON),
         GL_INVALID_ENUM);
 
@@ -2022,11 +2025,12 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_elements, mode, count, type, indices);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES,GL_QUAD_STRIP)
+    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES)
     RETURN_WITH_ERROR_IF(!(mode == GL_TRIANGLE_STRIP
                              || mode == GL_TRIANGLE_FAN
                              || mode == GL_TRIANGLES
                              || mode == GL_QUADS
+                             || mode == GL_QUAD_STRIP
                              || mode == GL_POLYGON),
         GL_INVALID_ENUM);
 
