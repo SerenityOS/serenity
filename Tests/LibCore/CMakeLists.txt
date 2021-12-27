@@ -1,8 +1,9 @@
 set(TEST_SOURCES
     TestLibCoreArgsParser.cpp
+    TestLibCoreDeferredInvoke.cpp
+    TestLibCoreEventLoopErrors.cpp
     TestLibCoreFileWatcher.cpp
     TestLibCoreIODevice.cpp
-    TestLibCoreDeferredInvoke.cpp
     TestLibCoreStream.cpp
 )
 
