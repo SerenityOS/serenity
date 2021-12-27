@@ -72,6 +72,7 @@ public:
     void save();
     void restore();
     void reset();
+    bool is_context_lost();
 
     void reset_to_default_state();
 
@@ -96,6 +97,9 @@ private:
 
     DrawingState m_drawing_state;
     Vector<DrawingState> m_drawing_state_stack;
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-context-lost
+    bool m_context_lost { false };
 
     Gfx::Path m_path;
 };

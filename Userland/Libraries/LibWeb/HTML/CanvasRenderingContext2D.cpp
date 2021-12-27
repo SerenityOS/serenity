@@ -336,6 +336,13 @@ void CanvasRenderingContext2D::reset()
     reset_to_default_state();
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-iscontextlost
+bool CanvasRenderingContext2D::is_context_lost()
+{
+    // The isContextLost() method steps are to return this's context lost.
+    return m_context_lost;
+}
+
 // https://html.spec.whatwg.org/multipage/canvas.html#reset-the-rendering-context-to-its-default-state
 void CanvasRenderingContext2D::reset_to_default_state()
 {

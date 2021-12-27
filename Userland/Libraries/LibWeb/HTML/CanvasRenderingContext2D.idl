@@ -34,6 +34,7 @@ interface CanvasRenderingContext2D {
     undefined save();
     undefined restore();
     undefined reset();
+    boolean isContextLost();
 
     readonly attribute HTMLCanvasElement canvas;
 
