@@ -14,6 +14,7 @@ set(SOURCES
         ProfileModel.cpp
         SamplesModel.cpp
         SignpostsModel.cpp
+        SourceModel.cpp
         TimelineContainer.cpp
         TimelineHeader.cpp
         TimelineTrack.cpp

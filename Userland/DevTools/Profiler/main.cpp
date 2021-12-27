@@ -153,13 +153,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
+    auto source_view = TRY(bottom_splitter->try_add<GUI::TableView>());
+    source_view->set_visible(false);
+
+    auto update_source_model = [&] {
+        if (source_view->is_visible() && !tree_view->selection().is_empty()) {
+            profile->set_source_index(tree_view->selection().first());
+            source_view->set_model(profile->source_model());
+        } else {
+            source_view->set_model(nullptr);
+        }
+    };
+
     tree_view->on_selection_change = [&] {
         update_disassembly_model();
+        update_source_model();
     };
 
     auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         disassembly_view->set_visible(action.is_checked());
         update_disassembly_model();
+    });
+
+    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png").release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+        source_view->set_visible(action.is_checked());
+        update_source_model();
     });
 
     auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Samples"));
@@ -255,11 +273,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         profile->set_show_percentages(action.is_checked());
         tree_view->update();
         disassembly_view->update();
+        source_view->update();
     });
     percent_action->set_checked(false);
     TRY(view_menu->try_add_action(percent_action));
 
     TRY(view_menu->try_add_action(disassembly_action));
+    TRY(view_menu->try_add_action(source_action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
