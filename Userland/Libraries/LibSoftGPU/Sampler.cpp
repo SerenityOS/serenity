@@ -24,7 +24,7 @@ static constexpr float wrap_repeat(float value)
     return fracf(value);
 }
 
-static constexpr float wrap_clamp(float value)
+[[maybe_unused]] static constexpr float wrap_clamp(float value)
 {
     return clamp(value, 0.0f, 1.0f);
 }
