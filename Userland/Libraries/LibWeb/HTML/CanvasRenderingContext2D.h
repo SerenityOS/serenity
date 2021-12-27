@@ -71,6 +71,9 @@ public:
 
     void save();
     void restore();
+    void reset();
+
+    void reset_to_default_state();
 
     HTMLCanvasElement* canvas() { return m_element; }
 

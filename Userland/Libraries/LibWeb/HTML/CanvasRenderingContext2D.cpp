@@ -329,4 +329,33 @@ void CanvasRenderingContext2D::restore()
     m_drawing_state = m_drawing_state_stack.take_last();
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset
+void CanvasRenderingContext2D::reset()
+{
+    // The reset() method steps are to reset the rendering context to its default state.
+    reset_to_default_state();
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#reset-the-rendering-context-to-its-default-state
+void CanvasRenderingContext2D::reset_to_default_state()
+{
+    auto painter = this->painter();
+
+    // 1. Clear canvas's bitmap to transparent black.
+    if (painter)
+        painter->clear_rect(painter->target()->rect(), Color::Transparent);
+
+    // 2. Empty the list of subpaths in context's current default path.
+    m_path.clear();
+
+    // 3. Clear the context's drawing state stack.
+    m_drawing_state_stack.clear();
+
+    // 4. Reset everything that drawing state consists of to their initial values.
+    m_drawing_state = {};
+
+    if (painter)
+        did_draw(painter->target()->rect().to_type<float>());
+}
+
 }
