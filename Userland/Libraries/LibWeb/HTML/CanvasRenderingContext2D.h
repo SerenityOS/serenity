@@ -46,8 +46,8 @@ public:
     void translate(float x, float y);
     void rotate(float degrees);
 
-    void set_line_width(float line_width) { m_line_width = line_width; }
-    float line_width() const { return m_line_width; }
+    void set_line_width(float line_width) { m_drawing_state.line_width = line_width; }
+    float line_width() const { return m_drawing_state.line_width; }
 
     void begin_path();
     void close_path();
@@ -80,10 +80,15 @@ private:
 
     WeakPtr<HTMLCanvasElement> m_element;
 
-    Gfx::AffineTransform m_transform;
-    Gfx::Color m_fill_style { Gfx::Color::Black };
-    Gfx::Color m_stroke_style { Gfx::Color::Black };
-    float m_line_width { 1 };
+    // https://html.spec.whatwg.org/multipage/canvas.html#drawing-state
+    struct DrawingState {
+        Gfx::AffineTransform transform;
+        Gfx::Color fill_style { Gfx::Color::Black };
+        Gfx::Color stroke_style { Gfx::Color::Black };
+        float line_width { 1 };
+    };
+
+    DrawingState m_drawing_state;
 
     Gfx::Path m_path;
 };

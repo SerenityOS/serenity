@@ -26,12 +26,12 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 
 void CanvasRenderingContext2D::set_fill_style(String style)
 {
-    m_fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
+    m_drawing_state.fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
 String CanvasRenderingContext2D::fill_style() const
 {
-    return m_fill_style.to_string();
+    return m_drawing_state.fill_style.to_string();
 }
 
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
@@ -40,8 +40,8 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     if (!painter)
         return;
 
-    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
-    painter->fill_rect(enclosing_int_rect(rect), m_fill_style);
+    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
+    painter->fill_rect(enclosing_int_rect(rect), m_drawing_state.fill_style);
     did_draw(rect);
 }
 
@@ -51,19 +51,19 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
     if (!painter)
         return;
 
-    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
+    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
     painter->clear_rect(enclosing_int_rect(rect), Color());
     did_draw(rect);
 }
 
 void CanvasRenderingContext2D::set_stroke_style(String style)
 {
-    m_stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
+    m_drawing_state.stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
 String CanvasRenderingContext2D::stroke_style() const
 {
-    return m_stroke_style.to_string();
+    return m_drawing_state.stroke_style.to_string();
 }
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
@@ -72,17 +72,17 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     if (!painter)
         return;
 
-    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
+    auto rect = m_drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
 
-    auto top_left = m_transform.map(Gfx::FloatPoint(x, y)).to_type<int>();
-    auto top_right = m_transform.map(Gfx::FloatPoint(x + width - 1, y)).to_type<int>();
-    auto bottom_left = m_transform.map(Gfx::FloatPoint(x, y + height - 1)).to_type<int>();
-    auto bottom_right = m_transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_type<int>();
+    auto top_left = m_drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_type<int>();
+    auto top_right = m_drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_type<int>();
+    auto bottom_left = m_drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_type<int>();
+    auto bottom_right = m_drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_type<int>();
 
-    painter->draw_line(top_left, top_right, m_stroke_style, m_line_width);
-    painter->draw_line(top_right, bottom_right, m_stroke_style, m_line_width);
-    painter->draw_line(bottom_right, bottom_left, m_stroke_style, m_line_width);
-    painter->draw_line(bottom_left, top_left, m_stroke_style, m_line_width);
+    painter->draw_line(top_left, top_right, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    painter->draw_line(top_right, bottom_right, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    painter->draw_line(bottom_right, bottom_left, m_drawing_state.stroke_style, m_drawing_state.line_width);
+    painter->draw_line(bottom_left, top_left, m_drawing_state.stroke_style, m_drawing_state.line_width);
 
     did_draw(rect);
 }
@@ -98,7 +98,7 @@ void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element,
 
     auto src_rect = image_element.bitmap()->rect();
     Gfx::FloatRect dst_rect = { x, y, (float)image_element.bitmap()->width(), (float)image_element.bitmap()->height() };
-    auto rect = m_transform.map(dst_rect);
+    auto rect = m_drawing_state.transform.map(dst_rect);
 
     painter->draw_scaled_bitmap(rounded_int_rect(rect), *image_element.bitmap(), src_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 }
@@ -106,19 +106,19 @@ void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element,
 void CanvasRenderingContext2D::scale(float sx, float sy)
 {
     dbgln("CanvasRenderingContext2D::scale({}, {})", sx, sy);
-    m_transform.scale(sx, sy);
+    m_drawing_state.transform.scale(sx, sy);
 }
 
 void CanvasRenderingContext2D::translate(float tx, float ty)
 {
     dbgln("CanvasRenderingContext2D::translate({}, {})", tx, ty);
-    m_transform.translate(tx, ty);
+    m_drawing_state.transform.translate(tx, ty);
 }
 
 void CanvasRenderingContext2D::rotate(float radians)
 {
     dbgln("CanvasRenderingContext2D::rotate({})", radians);
-    m_transform.rotate_radians(radians);
+    m_drawing_state.transform.rotate_radians(radians);
 }
 
 void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
@@ -155,8 +155,8 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
 
     // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
     auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
-    auto transformed_rect = m_transform.map(text_rect);
-    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_fill_style);
+    auto transformed_rect = m_drawing_state.transform.map(text_rect);
+    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_drawing_state.fill_style);
     did_draw(transformed_rect.to_type<float>());
 }
 
@@ -270,7 +270,7 @@ void CanvasRenderingContext2D::stroke()
     if (!painter)
         return;
 
-    painter->stroke_path(m_path, m_stroke_style, m_line_width);
+    painter->stroke_path(m_path, m_drawing_state.stroke_style, m_drawing_state.line_width);
     did_draw(m_path.bounding_box());
 }
 
@@ -282,7 +282,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
 
     auto path = m_path;
     path.close_all_subpaths();
-    painter->fill_path(path, m_fill_style, winding);
+    painter->fill_path(path, m_drawing_state.fill_style, winding);
     did_draw(m_path.bounding_box());
 }
 
