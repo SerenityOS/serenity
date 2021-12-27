@@ -70,6 +70,7 @@ public:
     void put_image_data(const ImageData&, float x, float y);
 
     void save();
+    void restore();
 
     HTMLCanvasElement* canvas() { return m_element; }
 
