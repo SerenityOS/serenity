@@ -333,7 +333,7 @@ TEST_CASE(local_socket_read)
 
             return 0;
         },
-        [](int) {});
+        nullptr);
 
     event_loop.exec();
     ::unlink("/tmp/test-socket");
@@ -372,7 +372,7 @@ TEST_CASE(local_socket_write)
 
             return 0;
         },
-        [](int) {});
+        nullptr);
 
     event_loop.exec();
     ::unlink("/tmp/test-socket");
