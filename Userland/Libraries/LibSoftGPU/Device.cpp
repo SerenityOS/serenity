@@ -118,6 +118,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     VERIFY((render_target.width() % RASTERIZER_BLOCK_SIZE) == 0);
     VERIFY((render_target.height() % RASTERIZER_BLOCK_SIZE) == 0);
 
+    // Return if alpha testing is a no-op
+    if (options.enable_alpha_test && options.alpha_test_func == AlphaTestFunction::Never)
+        return;
+
     // Calculate area of the triangle for later tests
     IntVector2 v0 { (int)triangle.vertices[0].position.x(), (int)triangle.vertices[0].position.y() };
     IntVector2 v1 { (int)triangle.vertices[1].position.x(), (int)triangle.vertices[1].position.y() };
@@ -203,7 +207,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
     static_assert(RASTERIZER_BLOCK_SIZE <= sizeof(decltype(*pixel_mask)) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
 
-    FloatVector4 pixel_buffer[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
+    FloatVector4 pixel_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
+    float depth_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
     // FIXME: implement stencil testing
 
@@ -335,8 +340,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
                         }
 
-                        if (options.enable_depth_write)
-                            *depth = z;
+                        depth_staging[y][x] = z;
 
                         z_pass_count++;
                     }
@@ -347,10 +351,6 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
             }
 
-            // We will not update the color buffer at all
-            if (!options.color_mask || !options.enable_color_write)
-                continue;
-
             // Draw the pixels according to the previously generated mask
             auto coords = b0;
             for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
@@ -359,7 +359,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
                 }
 
-                auto* pixel = pixel_buffer[y];
+                auto* pixel = pixel_staging[y];
                 for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, pixel++) {
                     if (~pixel_mask[y] & (1 << x))
                         continue;
@@ -397,14 +397,11 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             }
 
             if (options.enable_alpha_test && options.alpha_test_func != AlphaTestFunction::Always) {
-                // FIXME: I'm not sure if this is the right place to test this.
-                // If we tested this right at the beginning of our rasterizer routine
-                // we could skip a lot of work but the GL spec might disagree.
-                if (options.alpha_test_func == AlphaTestFunction::Never)
-                    continue;
-
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
+                    if (pixel_mask[y] == 0)
+                        continue;
+
+                    auto src = pixel_staging[y];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++) {
                         if (~pixel_mask[y] & (1 << x))
                             continue;
@@ -441,11 +438,31 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 }
             }
 
-            if (options.enable_blending) {
-                // Blend color values from pixel_buffer into render_target
+            // Write to depth buffer
+            if (options.enable_depth_test && options.enable_depth_write) {
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
-                    auto dst = &render_target.scanline(y + y0)[x0];
+                    if (pixel_mask[y] == 0)
+                        continue;
+
+                    auto* depth = &depth_buffer.scanline(y0 + y)[x0];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, depth++) {
+                        if (~pixel_mask[y] & (1 << x))
+                            continue;
+
+                        *depth = depth_staging[y][x];
+                    }
+                }
+            }
+
+            // We will not update the color buffer at all
+            if (!options.color_mask || !options.enable_color_write)
+                continue;
+
+            if (options.enable_blending) {
+                // Blend color values from pixel_staging into render_target
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    auto src = pixel_staging[y];
+                    auto dst = &render_target.scanline(y0 + y)[x0];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
                         if (~pixel_mask[y] & (1 << x))
                             continue;
@@ -468,9 +485,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     }
                 }
             } else {
-                // Copy color values from pixel_buffer into render_target
+                // Copy color values from pixel_staging into render_target
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
+                    auto src = pixel_staging[y];
                     auto dst = &render_target.scanline(y + y0)[x0];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
                         if (~pixel_mask[y] & (1 << x))
