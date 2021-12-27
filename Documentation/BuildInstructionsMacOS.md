@@ -2,7 +2,12 @@
 
 # Prerequisites
 
-This installation guide assumes that you have Homebrew, Xcode and `xcode-tools` installed.
+This installation guide assumes that you have [Homebrew](https://brew.sh) and Xcode installed. You need to open Xcode atleast once for it to install the required tools.
+
+Before you build, you must set your command line tools to Xcode's tools instead of the ones installed via Homebrew:
+```console
+sudo xcode-select --switch /Applications/Xcode.app
+```
 
 Make sure you also have all the following dependencies installed:
 
