@@ -12,6 +12,7 @@
 #include "ProfileModel.h"
 #include "SamplesModel.h"
 #include "SignpostsModel.h"
+#include "SourceModel.h"
 #include <AK/Bitmap.h>
 #include <AK/FlyString.h>
 #include <AK/JsonArray.h>
@@ -147,6 +148,7 @@ public:
     GUI::Model& samples_model();
     GUI::Model& signposts_model();
     GUI::Model* disassembly_model();
+    GUI::Model* source_model();
 
     const Process* find_process(pid_t pid, EventSerialNumber serial) const
     {
@@ -157,6 +159,7 @@ public:
     }
 
     void set_disassembly_index(const GUI::ModelIndex&);
+    void set_source_index(const GUI::ModelIndex&);
 
     const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 
@@ -281,8 +284,10 @@ private:
     RefPtr<SamplesModel> m_samples_model;
     RefPtr<SignpostsModel> m_signposts_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
+    RefPtr<SourceModel> m_source_model;
 
     GUI::ModelIndex m_disassembly_index;
+    GUI::ModelIndex m_source_index;
 
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     Vector<size_t> m_filtered_event_indices;
