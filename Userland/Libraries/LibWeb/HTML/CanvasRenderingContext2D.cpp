@@ -63,7 +63,7 @@ void CanvasRenderingContext2D::set_stroke_style(String style)
 
 String CanvasRenderingContext2D::stroke_style() const
 {
-    return m_fill_style.to_string();
+    return m_stroke_style.to_string();
 }
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
