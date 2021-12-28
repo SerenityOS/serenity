@@ -271,9 +271,9 @@ public:
 
     void status_line()
     {
-        out(m_tty, "\e[7m ");
+        out(m_tty, "\e[0;7m ");
         render_status_line(m_prompt);
-        out(m_tty, " \e[27m");
+        out(m_tty, " \e[0m");
     }
 
     bool read_line()
