@@ -95,7 +95,13 @@ struct in6_addr {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
     }
 
-extern struct in6_addr in6addr_any;
+#define IN6ADDR_LOOPBACK_INIT                          \
+    {                                                  \
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 \
+    }
+
+extern const struct in6_addr in6addr_any;
+extern const struct in6_addr in6addr_loopback;
 
 struct sockaddr_in6 {
     sa_family_t sin6_family;   // AF_INET6.
