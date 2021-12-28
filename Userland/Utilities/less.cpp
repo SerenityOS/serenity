@@ -12,6 +12,8 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <csignal>
 #include <ctype.h>
 #include <fcntl.h>
@@ -25,36 +27,34 @@ static struct termios g_save;
 // Flag set by a SIGWINCH signal handler to notify the main loop that the window has been resized.
 static Atomic<bool> g_resized { false };
 
-static void setup_tty(bool switch_buffer)
+static ErrorOr<void> setup_tty(bool switch_buffer)
 {
     // Save previous tty settings.
-    if (tcgetattr(STDOUT_FILENO, &g_save) == -1) {
-        perror("tcgetattr(3)");
-    }
+    g_save = TRY(Core::System::tcgetattr(STDOUT_FILENO));
 
     struct termios raw = g_save;
     raw.c_lflag &= ~(ECHO | ICANON);
 
     // Disable echo and line buffering
-    if (tcsetattr(STDOUT_FILENO, TCSAFLUSH, &raw) == -1) {
-        perror("tcsetattr(3)");
-    }
+    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, raw));
 
     if (switch_buffer) {
         // Save cursor and switch to alternate buffer.
         out("\e[s\e[?1047h");
     }
+
+    return {};
 }
 
-static void teardown_tty(bool switch_buffer)
+static ErrorOr<void> teardown_tty(bool switch_buffer)
 {
-    if (tcsetattr(STDOUT_FILENO, TCSAFLUSH, &g_save) == -1) {
-        perror("tcsetattr(3)");
-    }
+    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save));
 
     if (switch_buffer) {
         out("\e[?1047l\e[u");
     }
+
+    return {};
 }
 
 static Vector<StringView> wrap_line(String const& string, size_t width)
@@ -509,12 +509,9 @@ static void cat_file(FILE* file)
     }
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath tty sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath tty sigaction", nullptr));
 
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
@@ -522,7 +519,7 @@ int main(int argc, char** argv)
     bool quit_at_eof = false;
     bool emulate_more = false;
 
-    if (LexicalPath::basename(argv[0]) == "more"sv)
+    if (LexicalPath::basename(arguments.strings[0]) == "more"sv)
         emulate_more = true;
 
     Core::ArgsParser args_parser;
@@ -531,7 +528,7 @@ int main(int argc, char** argv)
     args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
     args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
     args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     FILE* file;
     if (String("-") == filename) {
@@ -547,10 +544,7 @@ int main(int argc, char** argv)
         g_resized = true;
     });
 
-    if (pledge("stdio tty", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio tty", nullptr));
 
     if (emulate_more) {
         // Configure options that match more's behavior
@@ -564,7 +558,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    setup_tty(!dont_switch_buffer);
+    TRY(setup_tty(!dont_switch_buffer));
 
     Pager pager(filename, file, stdout, prompt);
     pager.init();
@@ -634,6 +628,6 @@ int main(int argc, char** argv)
 
     pager.clear_status();
 
-    teardown_tty(!dont_switch_buffer);
+    TRY(teardown_tty(!dont_switch_buffer));
     return 0;
 }
