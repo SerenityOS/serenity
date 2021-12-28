@@ -20,15 +20,6 @@ File::~File()
 {
 }
 
-bool File::unref() const
-{
-    if (deref_base())
-        return false;
-    const_cast<File&>(*this).will_be_destroyed();
-    delete this;
-    return true;
-}
-
 ErrorOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
 {
     auto description = OpenFileDescription::try_create(*this);
