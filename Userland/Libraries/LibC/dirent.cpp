@@ -21,6 +21,7 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/opendir.html
 DIR* opendir(const char* name)
 {
     int fd = open(name, O_RDONLY | O_DIRECTORY);
@@ -29,6 +30,7 @@ DIR* opendir(const char* name)
     return fdopendir(fd);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fdopendir.html
 DIR* fdopendir(int fd)
 {
     if (fd == -1)
@@ -41,6 +43,7 @@ DIR* fdopendir(int fd)
     return dirp;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/closedir.html
 int closedir(DIR* dirp)
 {
     if (!dirp || dirp->fd == -1)
@@ -53,6 +56,7 @@ int closedir(DIR* dirp)
     return rc;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/rewinddir.html
 void rewinddir(DIR* dirp)
 {
     free(dirp->buffer);
@@ -133,6 +137,7 @@ static int allocate_dirp_buffer(DIR* dirp)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/readdir.html
 dirent* readdir(DIR* dirp)
 {
     if (!dirp)
@@ -166,6 +171,7 @@ static bool compare_sys_struct_dirent(sys_dirent* sys_ent, struct dirent* str_en
         && strncmp(sys_ent->name, str_ent->d_name, namelen) == 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/readdir_r.html
 int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result)
 {
     if (!dirp || dirp->fd == -1) {
@@ -209,12 +215,14 @@ int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result)
     return 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/dirfd.html
 int dirfd(DIR* dirp)
 {
     VERIFY(dirp);
     return dirp->fd;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/scandir.html
 int scandir(const char* dir_name,
     struct dirent*** namelist,
     int (*select)(const struct dirent*),
