@@ -1617,8 +1617,6 @@ public:
     Expression const& object() const { return *m_object; }
     Expression const& property() const { return *m_property; }
 
-    PropertyKey computed_property_name(Interpreter&, GlobalObject&) const;
-
     String to_string_approximation() const;
 
     bool ends_in_private_name() const;

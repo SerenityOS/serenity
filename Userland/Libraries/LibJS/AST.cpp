@@ -2727,18 +2727,6 @@ void MemberExpression::dump(int indent) const
     m_property->dump(indent + 1);
 }
 
-PropertyKey MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
-{
-    if (!is_computed())
-        return verify_cast<Identifier>(*m_property).string();
-
-    auto value = m_property->execute(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
-    VERIFY(!value.is_empty());
-    return PropertyKey::from_value(global_object, value);
-}
-
 String MemberExpression::to_string_approximation() const
 {
     String object_string = "<object>";
