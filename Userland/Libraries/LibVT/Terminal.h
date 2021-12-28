@@ -388,9 +388,14 @@ protected:
         if (max_history_size() == 0)
             return;
 
+        // If m_history can expand, add the new line to the end of the list.
+        // If there is an overflow wrap, the end is at the index before the start.
         if (m_history.size() < max_history_size()) {
-            VERIFY(m_history_start == 0);
-            m_history.append(move(line));
+            if (m_history_start == 0)
+                m_history.append(move(line));
+            else
+                m_history.insert(m_history_start - 1, move(line));
+
             return;
         }
         m_history.ptr_at(m_history_start) = move(line);
