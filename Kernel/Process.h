@@ -86,7 +86,7 @@ using FutexQueues = HashMap<FlatPtr, RefPtr<FutexQueue>>;
 struct LoadResult;
 
 class Process final
-    : public AK::RefCountedBase
+    : public ListedRefCounted<Process, LockType::Spinlock>
     , public Weakable<Process> {
 
     class ProtectedValues {
@@ -183,7 +183,6 @@ public:
     static ErrorOr<NonnullRefPtr<Process>> try_create_user_process(RefPtr<Thread>& first_thread, StringView path, UserID, GroupID, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY*);
     static void register_new(Process&);
 
-    bool unref() const;
     ~Process();
 
     RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
@@ -808,6 +807,7 @@ private:
 
 public:
     using List = IntrusiveListRelaxedConst<&Process::m_list_node>;
+    static SpinlockProtected<Process::List>& all_instances();
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.
@@ -818,13 +818,11 @@ static_assert(AssertSize<Process, (PAGE_SIZE * 2)>());
 
 extern RecursiveSpinlock g_profiling_lock;
 
-SpinlockProtected<Process::List>& processes();
-
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    processes().with([&](const auto& list) {
+    Process::all_instances().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -838,7 +836,7 @@ template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_child(Callback callback)
 {
     ProcessID my_pid = pid();
-    processes().with([&](const auto& list) {
+    Process::all_instances().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -879,7 +877,7 @@ inline IterationDecision Process::for_each_thread(Callback callback)
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
-    processes().with([&](const auto& list) {
+    Process::all_instances().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
