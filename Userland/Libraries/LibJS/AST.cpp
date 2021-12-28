@@ -1629,10 +1629,10 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
                 instance_fields.append(move(*class_field_definition_ptr));
         } else if (element.class_element_kind() == ClassElement::ElementKind::StaticInitializer) {
             // We use Completion to hold the ClassStaticBlockDefinition Record.
-            VERIFY(element_value.has<Completion>() && element_value.get<Completion>().has_value());
-            auto element_object = element_value.get<Completion>().value();
-            VERIFY(is<ECMAScriptFunctionObject>(element_object.as_object()));
-            static_elements.append(static_cast<ECMAScriptFunctionObject*>(&element_object.as_object()));
+            VERIFY(element_value.has<Completion>() && element_value.get<Completion>().value().has_value());
+            auto& element_object = element_value.get<Completion>().value()->as_object();
+            VERIFY(is<ECMAScriptFunctionObject>(element_object));
+            static_elements.append(static_cast<ECMAScriptFunctionObject*>(&element_object));
         }
     }
 
