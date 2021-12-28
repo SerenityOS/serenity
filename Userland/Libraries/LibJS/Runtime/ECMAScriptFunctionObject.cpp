@@ -246,23 +246,23 @@ ThrowCompletionOr<Object*> ECMAScriptFunctionObject::internal_construct(MarkedVa
     if (result.type() == Completion::Type::Return) {
         // FIXME: This is leftover from untangling the call/construct mess - doesn't belong here in any way, but removing it breaks derived classes.
         // Likely fixed by making ClassDefinitionEvaluation fully spec compliant.
-        if (kind == ConstructorKind::Derived && result.value().is_object()) {
+        if (kind == ConstructorKind::Derived && result.value()->is_object()) {
             auto prototype = TRY(new_target.get(vm.names.prototype));
             if (prototype.is_object())
-                TRY(result.value().as_object().internal_set_prototype_of(&prototype.as_object()));
+                TRY(result.value()->as_object().internal_set_prototype_of(&prototype.as_object()));
         }
         // EOF (End of FIXME)
 
         // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
-        if (result.value().is_object())
-            return &result.value().as_object();
+        if (result.value()->is_object())
+            return &result.value()->as_object();
 
         // b. If kind is base, return NormalCompletion(thisArgument).
         if (kind == ConstructorKind::Base)
             return this_argument;
 
         // c. If result.[[Value]] is not undefined, throw a TypeError exception.
-        if (!result.value().is_undefined())
+        if (!result.value()->is_undefined())
             return vm.throw_completion<TypeError>(global_object, ErrorType::DerivedConstructorReturningInvalidValue);
     }
     // 11. Else, ReturnIfAbrupt(result).
@@ -788,7 +788,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         VERIFY(result_and_frame.frame != nullptr);
         if (result_and_frame.value.is_error()) {
-            vm.throw_exception(bytecode_interpreter->global_object(), result_and_frame.value.release_error().value());
+            vm.throw_exception(bytecode_interpreter->global_object(), *result_and_frame.value.release_error().value());
             return throw_completion(vm.exception()->value());
         }
         auto result = result_and_frame.value.release_value();
@@ -844,7 +844,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 4. Else,
             else {
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-                MUST(call(global_object(), promise_capability.reject, js_undefined(), declaration_result.throw_completion().value()));
+                MUST(call(global_object(), promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
             }
 
             // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.

@@ -60,12 +60,10 @@ public:
     }
 
     [[nodiscard]] Type type() const { return m_type; }
-
-    [[nodiscard]] bool has_value() const { return m_value.has_value(); }
-    [[nodiscard]] Value value() const { return *m_value; }
-
-    [[nodiscard]] bool has_target() const { return m_target.has_value(); }
-    [[nodiscard]] FlyString const& target() const { return *m_target; }
+    [[nodiscard]] Optional<Value>& value() { return m_value; }
+    [[nodiscard]] Optional<Value> const& value() const { return m_value; }
+    [[nodiscard]] Optional<FlyString>& target() { return m_target; }
+    [[nodiscard]] Optional<FlyString> const& target() const { return m_target; }
 
     // "abrupt completion refers to any completion with a [[Type]] value other than normal"
     [[nodiscard]] bool is_abrupt() const { return m_type != Type::Normal; }

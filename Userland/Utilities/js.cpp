@@ -942,7 +942,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                 auto result = bytecode_interpreter.run(executable);
                 // Since all the error handling code uses vm.exception() we just rethrow any exception we got here.
                 if (result.is_error())
-                    vm->throw_exception(interpreter.global_object(), result.throw_completion().value());
+                    vm->throw_exception(interpreter.global_object(), *result.throw_completion().value());
             } else {
                 return true;
             }

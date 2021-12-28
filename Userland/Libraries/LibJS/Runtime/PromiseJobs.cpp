@@ -89,14 +89,14 @@ ThrowCompletionOr<Value> PromiseReactionJob::call()
         // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's reject function @ {}", this, reject_function);
-        return vm.call(*reject_function, js_undefined(), handler_result.value());
+        return vm.call(*reject_function, js_undefined(), *handler_result.value());
     }
     // i. Else,
     else {
         // i. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
         auto* resolve_function = promise_capability.value().resolve;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob @ {}]: Calling PromiseCapability's resolve function @ {}", this, resolve_function);
-        return vm.call(*resolve_function, js_undefined(), handler_result.value());
+        return vm.call(*resolve_function, js_undefined(), *handler_result.value());
     }
 
     // j. Return Completion(status).
@@ -142,8 +142,8 @@ ThrowCompletionOr<Value> PromiseResolveThenableJob::call()
         vm.stop_unwind();
 
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-        dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, then_call_result.throw_completion().value());
-        auto status = JS::call(global_object, &reject_function, js_undefined(), then_call_result.throw_completion().value());
+        dbgln_if(PROMISE_DEBUG, "[PromiseResolveThenableJob @ {}]: then_call_result is an abrupt completion, calling reject function with value {}", this, *then_call_result.throw_completion().value());
+        auto status = JS::call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
 
         // ii. Return Completion(status).
         return status;

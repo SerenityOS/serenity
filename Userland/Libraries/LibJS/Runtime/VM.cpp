@@ -361,7 +361,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 auto next_object_or_error = iterator_next(*iterator);
                 if (next_object_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    return JS::throw_completion(next_object_or_error.release_error().value());
+                    return JS::throw_completion(*next_object_or_error.release_error().value());
                 }
                 auto* next_object = next_object_or_error.release_value();
 
@@ -380,7 +380,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             auto next_object_or_error = iterator_next(*iterator);
             if (next_object_or_error.is_throw_completion()) {
                 iterator_done = true;
-                return JS::throw_completion(next_object_or_error.release_error().value());
+                return JS::throw_completion(*next_object_or_error.release_error().value());
             }
             auto* next_object = next_object_or_error.release_value();
 
@@ -392,7 +392,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
                 auto value_or_error = next_object->get(names.value);
                 if (value_or_error.is_throw_completion()) {
                     iterator_done = true;
-                    return JS::throw_completion(value_or_error.release_error().value());
+                    return JS::throw_completion(*value_or_error.release_error().value());
                 }
                 value = value_or_error.release_value();
             }

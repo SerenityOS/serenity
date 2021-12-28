@@ -51,7 +51,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             auto error_message = value.to_string(cell->sheet().global_object());
 
             if (error_message.is_throw_completion())
-                return to_string_as_exception(error_message.release_error().value());
+                return to_string_as_exception(*error_message.release_error().value());
 
             builder.append(error_message.release_value());
             return builder.to_string();
@@ -64,7 +64,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
 
         auto display = cell->typed_display();
         if (display.is_error())
-            return to_string_as_exception(display.release_error().value());
+            return to_string_as_exception(*display.release_error().value());
 
         return display.release_value();
     }

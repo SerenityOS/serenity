@@ -127,7 +127,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     }
 
     // 21. If result.[[Type]] is normal and result.[[Value]] is empty, then
-    if (result.type() == Completion::Type::Normal && !result.has_value()) {
+    if (result.type() == Completion::Type::Normal && !result.value().has_value()) {
         // a. Set result to NormalCompletion(undefined).
         result = normal_completion(js_undefined());
     }
@@ -144,7 +144,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
         return vm.throw_completion<TypeError>(global_object, ErrorType::ShadowRealmEvaluateAbruptCompletion);
 
     // 25. Return ? GetWrappedValue(callerRealm, result.[[Value]]).
-    return get_wrapped_value(global_object, caller_realm, result.value());
+    return get_wrapped_value(global_object, caller_realm, *result.value());
 
     // NOTE: Also see "Editor's Note" in the spec regarding the TypeError above.
 }
