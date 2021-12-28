@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -56,39 +57,41 @@ static void teardown_tty(bool switch_buffer)
     }
 }
 
-static Vector<String> wrap_line(Utf8View const& string, size_t width)
+static Vector<StringView> wrap_line(String const& string, size_t width)
 {
-    Vector<String> lines;
+    Utf8View utf8(string);
+    Vector<size_t> splits;
 
-    StringBuilder builder;
     size_t offset = 0;
 
     bool in_ansi = false;
-    for (auto codepoint : string) {
+    // for (auto codepoint : string) {
+    for (auto it = utf8.begin(); it != utf8.end(); ++it) {
         if (offset >= width) {
-            builder.append('\n');
-            lines.append(builder.build());
-            builder.clear();
+            splits.append(utf8.byte_offset_of(it));
             offset = 0;
         }
 
-        builder.append(codepoint);
-
-        if (codepoint == '\e')
+        if (*it == '\e')
             in_ansi = true;
 
         if (!in_ansi)
             // FIXME: calculate the printed width of the character.
             offset++;
 
-        if (isalpha(codepoint))
+        if (isalpha(*it))
             in_ansi = false;
     }
 
-    if (builder.length() > 0)
-        lines.append(builder.build());
+    Vector<StringView> spans;
+    size_t span_start = 0;
+    for (auto split : splits) {
+        spans.append(string.substring_view(span_start, split - span_start));
+        span_start = split;
+    }
+    spans.append(string.substring_view(span_start));
 
-    return lines;
+    return spans;
 }
 
 class Pager {
@@ -123,27 +126,36 @@ public:
 
     void up_n(size_t n)
     {
-        if (m_line == 0)
+        if (m_line == 0 && m_subline == 0)
             return;
 
-        m_line = (m_line > n) ? m_line - n : 0;
+        line_subline_add(m_line, m_subline, -n);
 
-        // Clear screen and reset cursor position.
-        out("\e[2J\e[0G\e[0d");
-        write_range(m_line, m_height - 1);
-        status_line();
-        fflush(m_tty);
+        full_redraw();
     }
 
     void down_n(size_t n)
     {
+        if (at_end())
+            return;
+
         clear_status();
 
-        while (m_lines.size() < m_line + n + m_height - 1) {
-            if (!read_line())
-                break;
+        read_enough_for_line(m_line + n);
+
+        size_t real_n = line_subline_add(m_line, m_subline, n);
+
+        // If we are moving less than a screen down, just draw the extra lines
+        // for efficency and more(1) compatibility.
+        if (n < m_height - 1) {
+            size_t line = m_line;
+            size_t subline = m_subline;
+            line_subline_add(line, subline, (m_height - 1) - real_n, false);
+            write_range(line, subline, real_n);
+        } else {
+            write_range(m_line, m_subline, m_height - 1);
         }
-        m_line += write_range(min(m_line + m_height - 1, m_line + (m_lines.size() - m_line)), n);
+
         status_line();
 
         fflush(m_tty);
@@ -151,14 +163,19 @@ public:
 
     void top()
     {
-        up_n(m_line);
+        m_line = 0;
+        m_subline = 0;
+        full_redraw();
     }
 
     void bottom()
     {
         while (read_line())
             ;
-        down_n(m_lines.size() - m_line);
+
+        m_line = end_line();
+        m_subline = end_subline();
+        full_redraw();
     }
 
     void up_half_page()
@@ -173,19 +190,20 @@ public:
 
     void go_to_line(size_t line_num)
     {
-        if (line_num < m_line) {
-            up_n(m_line - line_num);
-        } else {
-            down_n(line_num - m_line);
-        }
+        read_enough_for_line(line_num);
+
+        m_line = line_num;
+        m_subline = 0;
+        bound_cursor();
+        full_redraw();
     }
 
     void init()
     {
-        resize();
+        resize(false);
     }
 
-    void resize()
+    void resize(bool clear = true)
     {
         // First, we get the current size of the window.
         struct winsize window;
@@ -214,21 +232,35 @@ public:
             --additional_lines;
         }
 
+        reflow();
+        bound_cursor();
+
         // Next, we repaint the whole screen. We need to figure out what line was at the top
         // of the screen, and seek there and re-display everything again.
-        clear_status();
-        out("\e[2J\e[0G\e[0d");
-        write_range(m_line, m_height - 1);
-        status_line();
-        fflush(m_tty);
+        if (clear) {
+            full_redraw();
+        } else {
+            redraw();
+        }
     }
 
-    size_t write_range(size_t start, size_t length)
+    size_t write_range(size_t line, size_t subline, size_t length)
     {
-        size_t lines = min(length, m_lines.size() - start);
-        for (size_t i = 0; i < lines; ++i) {
-            out(m_tty, "{}", m_lines[start + i]);
+        size_t lines = 0;
+        for (size_t i = line; i < m_lines.size(); ++i) {
+            for (auto string : sublines(i)) {
+                if (subline > 0) {
+                    --subline;
+                    continue;
+                }
+                if (lines >= length)
+                    return lines;
+
+                outln(m_tty, "{}", string);
+                ++lines;
+            }
         }
+
         return lines;
     }
 
@@ -253,17 +285,43 @@ public:
         if (size == -1)
             return false;
 
-        m_lines.extend(wrap_line(Utf8View { StringView { line } }, m_width));
+        // Strip trailing newline.
+        if (line[size - 1] == '\n')
+            --size;
+
+        m_lines.append(String(line, size));
         free(line);
         return true;
     }
 
     bool at_end()
     {
-        return (m_line + m_height - 1) >= m_lines.size() && feof(m_file);
+        return feof(m_file) && m_line == end_line() && m_subline == end_subline();
     }
 
 private:
+    void redraw()
+    {
+        write_range(m_line, m_subline, m_height - 1);
+        status_line();
+        fflush(m_tty);
+    }
+
+    void full_redraw()
+    {
+        out("\e[2J\e[0G\e[0d");
+        redraw();
+    }
+
+    void read_enough_for_line(size_t line)
+    {
+        // This might read a bounded number of extra lines.
+        while (m_lines.size() < line + m_height - 1) {
+            if (!read_line())
+                break;
+        }
+    }
+
     size_t render_status_line(StringView prompt, size_t off = 0, char end = '\0', bool ignored = false)
     {
         for (; prompt[off] != end && off < prompt.length(); ++off) {
@@ -315,9 +373,99 @@ private:
         return off;
     }
 
+    Vector<StringView> const& sublines(size_t line)
+    {
+        return m_subline_cache.ensure(line, [&]() {
+            return wrap_line(m_lines[line], m_width);
+        });
+    }
+
+    size_t line_subline_add(size_t& line, size_t& subline, int delta, bool bounded = true)
+    {
+        int unit = delta / AK::abs(delta);
+        size_t i;
+        for (i = 0; i < (size_t)AK::abs(delta); ++i) {
+            if (subline == 0 && unit == -1) {
+                if (line == 0)
+                    return i;
+
+                line--;
+                subline = sublines(line).size() - 1;
+            } else if (subline == sublines(line).size() - 1 && unit == 1) {
+                if (bounded && feof(m_file) && line == end_line() && subline == end_subline())
+                    return i;
+
+                if (line >= m_lines.size() - 1)
+                    return i;
+
+                line++;
+                subline = 0;
+            } else {
+                subline += unit;
+            }
+        }
+        return i;
+    }
+
+    void bound_cursor()
+    {
+        if (!feof(m_file))
+            return;
+
+        if (m_line == end_line() && m_subline >= end_subline()) {
+            m_subline = end_subline();
+        } else if (m_line > end_line()) {
+            m_line = end_line();
+            m_subline = end_subline();
+        }
+    }
+
+    void calculate_end()
+    {
+        size_t end_line = m_lines.size() - 1;
+        size_t end_subline = sublines(end_line).size() - 1;
+        line_subline_add(end_line, end_subline, -(m_height - 1), false);
+        m_end_line = end_line;
+        m_end_subline = end_subline;
+    }
+
+    // Only valid after all lines are read.
+    size_t end_line()
+    {
+        if (!m_end_line.has_value())
+            calculate_end();
+
+        return m_end_line.value();
+    }
+
+    // Only valid after all lines are read.
+    size_t end_subline()
+    {
+        if (!m_end_subline.has_value())
+            calculate_end();
+
+        return m_end_subline.value();
+    }
+
+    void reflow()
+    {
+        m_subline_cache.clear();
+        m_end_line = {};
+        m_end_subline = {};
+
+        m_subline = 0;
+    }
+
     // FIXME: Don't save scrollback when emulating more.
     Vector<String> m_lines;
+
     size_t m_line { 0 };
+    size_t m_subline { 0 };
+
+    HashMap<size_t, Vector<StringView>> m_subline_cache;
+    Optional<size_t> m_end_line;
+    Optional<size_t> m_end_subline;
+
     FILE* m_file;
     FILE* m_tty;
 
