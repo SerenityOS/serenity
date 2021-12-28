@@ -131,7 +131,7 @@ void Device::after_inserting()
     });
 }
 
-void Device::before_removing()
+void Device::will_be_destroyed()
 {
     VERIFY(m_sysfs_component);
     SysFSComponentRegistry::the().devices_list().with_exclusive([&](auto& list) -> void {

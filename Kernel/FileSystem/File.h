@@ -75,7 +75,7 @@ class File
     , public Weakable<File> {
 public:
     virtual bool unref() const;
-    virtual void before_removing() { }
+    virtual void will_be_destroyed() { }
     virtual ~File();
 
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options);

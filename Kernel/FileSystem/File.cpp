@@ -24,7 +24,7 @@ bool File::unref() const
 {
     if (deref_base())
         return false;
-    const_cast<File&>(*this).before_removing();
+    const_cast<File&>(*this).will_be_destroyed();
     delete this;
     return true;
 }
