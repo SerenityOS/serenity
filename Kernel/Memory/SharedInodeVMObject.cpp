@@ -13,6 +13,9 @@ namespace Kernel::Memory {
 ErrorOr<NonnullRefPtr<SharedInodeVMObject>> SharedInodeVMObject::try_create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
+    if (size == 0)
+        return EINVAL;
+
     if (auto shared_vmobject = inode.shared_vmobject())
         return shared_vmobject.release_nonnull();
     auto vmobject = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedInodeVMObject(inode, size)));

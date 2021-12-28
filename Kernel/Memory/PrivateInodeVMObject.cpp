@@ -11,7 +11,11 @@ namespace Kernel::Memory {
 
 ErrorOr<NonnullRefPtr<PrivateInodeVMObject>> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, inode.size()));
+    auto size = inode.size();
+    if (size == 0)
+        return EINVAL;
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) PrivateInodeVMObject(inode, size));
 }
 
 ErrorOr<NonnullRefPtr<VMObject>> PrivateInodeVMObject::try_clone()
