@@ -176,7 +176,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrK
             m_content = move(tmp);
         }
         m_metadata.size = new_size;
-        notify_watchers();
+        set_metadata_dirty(true);
     }
 
     TRY(buffer.read(m_content->data() + offset, size)); // TODO: partial reads?
@@ -210,12 +210,6 @@ TmpFSInode::Child* TmpFSInode::find_child_by_name(StringView name)
     return nullptr;
 }
 
-void TmpFSInode::notify_watchers()
-{
-    set_metadata_dirty(true);
-    set_metadata_dirty(false);
-}
-
 ErrorOr<void> TmpFSInode::flush_metadata()
 {
     // We don't really have any metadata that could become dirty.
@@ -232,7 +226,7 @@ ErrorOr<void> TmpFSInode::chmod(mode_t mode)
     MutexLocker locker(m_inode_lock);
 
     m_metadata.mode = mode;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 
@@ -242,7 +236,7 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
 
     m_metadata.uid = uid;
     m_metadata.gid = gid;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 
@@ -332,7 +326,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
     }
 
     m_metadata.size = size;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 
@@ -341,7 +335,7 @@ ErrorOr<void> TmpFSInode::set_atime(time_t time)
     MutexLocker locker(m_inode_lock);
 
     m_metadata.atime = time;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 
@@ -350,7 +344,7 @@ ErrorOr<void> TmpFSInode::set_ctime(time_t time)
     MutexLocker locker(m_inode_lock);
 
     m_metadata.ctime = time;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 
@@ -359,7 +353,7 @@ ErrorOr<void> TmpFSInode::set_mtime(time_t t)
     MutexLocker locker(m_inode_lock);
 
     m_metadata.mtime = t;
-    notify_watchers();
+    set_metadata_dirty(true);
     return {};
 }
 

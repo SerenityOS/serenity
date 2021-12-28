@@ -73,7 +73,6 @@ private:
     TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, InodeIdentifier parent);
     static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, InodeIdentifier parent);
     static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create_root(TmpFS&);
-    void notify_watchers();
 
     struct Child {
         NonnullOwnPtr<KString> name;
