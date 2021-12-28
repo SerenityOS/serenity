@@ -110,13 +110,20 @@ HunkLocation parse_hunk_location(const String& location_line)
 
     auto original_pair = parse_start_and_length_pair(location_line.substring(original_location_start_index, original_location_end_index - original_location_start_index + 1));
     auto target_pair = parse_start_and_length_pair(location_line.substring(target_location_start_index, target_location_end_index - target_location_start_index + 1));
+
+    if (original_pair.start == (size_t)-1) {
+        return { {}, original_pair.length, target_pair.start, target_pair.length };
+    }
+
     return { original_pair.start, original_pair.length, target_pair.start, target_pair.length };
 }
 
 void HunkLocation::apply_offset(size_t offset, HunkLocation::LocationType type)
 {
     if (type == LocationType::Original || type == LocationType::Both) {
-        original_start_line += offset;
+        if (original_start_line.has_value())
+            original_start_line = original_start_line.value() + offset;
+
         original_length -= offset;
     }
     if (type == LocationType::Target || type == LocationType::Both) {

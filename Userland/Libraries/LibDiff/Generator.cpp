@@ -83,7 +83,7 @@ Vector<Hunk> from_text(StringView old_text, StringView new_text)
             if (cur_hunk.added_lines.size() > 0)
                 cur_hunk.target_start_line++;
             if (cur_hunk.removed_lines.size() > 0)
-                cur_hunk.original_start_line++;
+                cur_hunk.original_start_line.value()++;
             hunks.append(cur_hunk);
             in_hunk = false;
         }

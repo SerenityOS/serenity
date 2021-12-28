@@ -35,9 +35,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         StringBuilder sb;
         // Source line(s)
-        sb.appendff("{}", original_start);
+        sb.appendff("{}", original_start.value());
         if (num_removed > 1)
-            sb.appendff(",{}", original_start + num_removed - 1);
+            sb.appendff(",{}", original_start.value() + num_removed - 1);
 
         // Action
         if (num_added > 0 && num_removed > 0)

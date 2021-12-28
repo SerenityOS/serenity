@@ -12,7 +12,7 @@
 namespace Diff {
 
 struct HunkLocation {
-    size_t original_start_line { 0 };
+    Optional<size_t> original_start_line { 0 };
     size_t original_length { 0 };
     size_t target_start_line { 0 };
     size_t target_length { 0 };
@@ -26,7 +26,7 @@ struct HunkLocation {
 };
 
 struct Hunk {
-    size_t original_start_line { 0 };
+    Optional<size_t> original_start_line { 0 };
     size_t target_start_line { 0 };
     Vector<String> removed_lines;
     Vector<String> added_lines;

@@ -39,11 +39,17 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     size_t y_offset = 10;
     size_t current_original_line_index = 0;
     for (const auto& hunk : m_hunks) {
-        for (size_t i = current_original_line_index; i < hunk.original_start_line; ++i) {
-            draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
-            y_offset += line_height();
+        if (hunk.original_start_line.has_value()) {
+            for (size_t i = current_original_line_index; i < hunk.original_start_line.value(); ++i) {
+                draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
+                y_offset += line_height();
+            }
+            current_original_line_index = hunk.original_start_line.value() + hunk.removed_lines.size();
+        } else {
+            auto line_width = font().width("This file is new to the git repository");
+            auto position = Gfx::IntRect { (event.rect().width() / 4) - (line_width / 2) - 5, 20, line_width, font().glyph_height() };
+            painter.draw_text(position, "This file is new to the git repository");
         }
-        current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
 
         size_t left_y_offset = y_offset;
         for (const auto& removed_line : hunk.removed_lines) {
@@ -208,13 +214,16 @@ void DiffViewer::update_content_size()
     size_t num_lines = 0;
     size_t current_original_line_index = 0;
     for (const auto& hunk : m_hunks) {
-        num_lines += ((int)hunk.original_start_line - (int)current_original_line_index);
+        if (!hunk.original_start_line.has_value())
+            return;
+
+        num_lines += ((int)hunk.original_start_line.value() - (int)current_original_line_index);
 
         num_lines += hunk.removed_lines.size();
         if (hunk.added_lines.size() > hunk.removed_lines.size()) {
             num_lines += ((int)hunk.added_lines.size() - (int)hunk.removed_lines.size());
         }
-        current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
+        current_original_line_index = hunk.original_start_line.value() + hunk.removed_lines.size();
     }
     num_lines += ((int)m_original_lines.size() - (int)current_original_line_index);
 
