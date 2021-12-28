@@ -70,9 +70,9 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
         VERIFY(pair.size() == 2 || pair.size() == 1);
 
         if (pair.size() == 1) {
-            m_params.set(move(pair[0]), ""sv);
+            m_params.set(pair[0], ""sv);
         } else {
-            m_params.set(move(pair[0]), move(pair[1]));
+            m_params.set(pair[0], pair[1]);
         }
     }
 }
