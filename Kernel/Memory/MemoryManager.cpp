@@ -101,13 +101,13 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
     // Disable writing to the kernel text and rodata segments.
-    for (auto i = start_of_kernel_text; i < start_of_kernel_data; i += PAGE_SIZE) {
+    for (auto const* i = start_of_kernel_text; i < start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
     if (Processor::current().has_feature(CPUFeature::NX)) {
         // Disable execution of the kernel data, bss and heap segments.
-        for (auto i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
+        for (auto const* i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -216,7 +216,7 @@ bool MemoryManager::is_allowed_to_read_physical_memory_for_userspace(PhysicalAdd
     if (start_address.offset_addition_would_overflow(read_length))
         return false;
     auto end_address = start_address.offset(read_length);
-    for (auto& current_range : m_reserved_memory_ranges) {
+    for (auto const& current_range : m_reserved_memory_ranges) {
         if (current_range.start > start_address)
             continue;
         if (current_range.start.offset(current_range.length) < end_address)
@@ -990,7 +990,7 @@ void MemoryManager::enter_process_address_space(Process& process)
 
 void MemoryManager::enter_address_space(AddressSpace& space)
 {
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     VERIFY(current_thread != nullptr);
     SpinlockLocker lock(s_mm_lock);
 
@@ -1129,15 +1129,15 @@ void MemoryManager::dump_kernel_regions()
 {
     dbgln("Kernel regions:");
 #if ARCH(I386)
-    auto addr_padding = "";
+    char const* addr_padding = "";
 #else
-    auto addr_padding = "        ";
+    char const* addr_padding = "        ";
 #endif
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
-    for (auto* region_ptr : m_kernel_regions) {
-        auto& region = *region_ptr;
+    for (auto const* region_ptr : m_kernel_regions) {
+        auto const& region = *region_ptr;
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
