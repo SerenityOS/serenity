@@ -5,9 +5,10 @@
  */
 
 #include "SourceModel.h"
+#include "Gradient.h"
 #include "Profile.h"
 #include <LibDebug/DebugInfo.h>
-#include <LibGUI/Painter.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibSymbolication/Symbolication.h>
 #include <stdio.h>
 
@@ -52,23 +53,6 @@ public:
 private:
     Vector<Line> m_lines;
 };
-
-static Gfx::Bitmap const& heat_gradient()
-{
-    static RefPtr<Gfx::Bitmap> bitmap;
-    if (!bitmap) {
-        bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 101, 1 }).release_value_but_fixme_should_propagate_errors();
-        GUI::Painter painter(*bitmap);
-        painter.fill_rect_with_gradient(Orientation::Horizontal, bitmap->rect(), Color::from_rgb(0xffc080), Color::from_rgb(0xff3000));
-    }
-    return *bitmap;
-}
-
-static Color color_for_percent(int percent)
-{
-    VERIFY(percent >= 0 && percent <= 100);
-    return heat_gradient().get_pixel(percent, 0);
-}
 
 SourceModel::SourceModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)

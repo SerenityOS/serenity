@@ -5,34 +5,17 @@
  */
 
 #include "DisassemblyModel.h"
+#include "Gradient.h"
 #include "Profile.h"
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
-#include <LibGUI/Painter.h>
 #include <LibSymbolication/Symbolication.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 
 namespace Profiler {
-
-static Gfx::Bitmap const& heat_gradient()
-{
-    static RefPtr<Gfx::Bitmap> bitmap;
-    if (!bitmap) {
-        bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 101, 1 }).release_value_but_fixme_should_propagate_errors();
-        GUI::Painter painter(*bitmap);
-        painter.fill_rect_with_gradient(Orientation::Horizontal, bitmap->rect(), Color::from_rgb(0xffc080), Color::from_rgb(0xff3000));
-    }
-    return *bitmap;
-}
-
-static Color color_for_percent(int percent)
-{
-    VERIFY(percent >= 0 && percent <= 100);
-    return heat_gradient().get_pixel(percent, 0);
-}
 
 static Optional<MappedObject> s_kernel_binary;
 
