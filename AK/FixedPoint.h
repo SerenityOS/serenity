@@ -14,7 +14,8 @@
 namespace AK {
 
 // FIXME: this always uses round to nearest break-tie to even
-template<size_t precision, Integral Underlying = i32>
+// FIXME: use the Integral concept to constrain Underlying
+template<size_t precision, typename Underlying>
 class FixedPoint {
     using This = FixedPoint<precision, Underlying>;
     constexpr static Underlying radix_mask = (1 << precision) - 1;
