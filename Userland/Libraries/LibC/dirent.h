@@ -35,6 +35,7 @@ struct dirent* readdir(DIR*);
 int readdir_r(DIR*, struct dirent*, struct dirent**);
 int dirfd(DIR*);
 
+int alphasort(const struct dirent** d1, const struct dirent** d2);
 int scandir(const char* dirp, struct dirent*** namelist,
     int (*filter)(const struct dirent*),
     int (*compar)(const struct dirent**, const struct dirent**));

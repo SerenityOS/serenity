@@ -222,6 +222,12 @@ int dirfd(DIR* dirp)
     return dirp->fd;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
+int alphasort(const struct dirent** d1, const struct dirent** d2)
+{
+    return strcoll((*d1)->d_name, (*d2)->d_name);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/scandir.html
 int scandir(const char* dir_name,
     struct dirent*** namelist,
