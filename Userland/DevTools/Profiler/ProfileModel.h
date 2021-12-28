@@ -30,12 +30,12 @@ public:
 
     virtual ~ProfileModel() override;
 
-    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
+    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual String column_name(int) const override;
-    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
-    virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
-    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
+    virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
+    virtual GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent = GUI::ModelIndex()) const override;
+    virtual GUI::ModelIndex parent_index(GUI::ModelIndex const&) const override;
     virtual int tree_column() const override { return Column::StackFrame; }
     virtual bool is_column_sortable(int) const override { return false; }
     virtual bool is_searchable() const override { return true; }

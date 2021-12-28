@@ -43,7 +43,7 @@ void Process::handle_thread_exit(pid_t tid, EventSerialNumber serial)
 
 HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
 
-static MappedObject* get_or_create_mapped_object(const String& path)
+static MappedObject* get_or_create_mapped_object(String const& path)
 {
     if (auto it = g_mapped_object_cache.find(path); it != g_mapped_object_cache.end())
         return it->value.ptr();
@@ -67,7 +67,7 @@ static MappedObject* get_or_create_mapped_object(const String& path)
     return ptr;
 }
 
-void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
+void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, String const& name)
 {
     StringView path;
     if (name.contains("Loader.so"sv))
@@ -107,7 +107,7 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
     }
 }
 
-const Debug::DebugInfo& LibraryMetadata::Library::load_debug_info(FlatPtr base_address) const
+Debug::DebugInfo const& LibraryMetadata::Library::load_debug_info(FlatPtr base_address) const
 {
     if (debug_info == nullptr)
         debug_info = make<Debug::DebugInfo>(object->elf, String::empty(), base_address);
@@ -122,7 +122,7 @@ String LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const
     return object->elf.symbolicate(ptr - base, offset);
 }
 
-const LibraryMetadata::Library* LibraryMetadata::library_containing(FlatPtr ptr) const
+LibraryMetadata::Library const* LibraryMetadata::library_containing(FlatPtr ptr) const
 {
     for (auto& it : m_libraries) {
         auto& library = *it.value;

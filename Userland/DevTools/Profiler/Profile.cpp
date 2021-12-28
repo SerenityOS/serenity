@@ -145,7 +145,7 @@ void Profile::rebuild_tree()
             ProfileNode* node = nullptr;
             auto& process_node = find_or_create_process_node(event.pid, event.serial);
             process_node.increment_event_count();
-            for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
+            for_each_frame([&](Frame const& frame, bool is_innermost_frame) {
                 auto const& object_name = frame.object_name;
                 auto const& symbol = frame.symbol;
                 auto const& address = frame.address;
@@ -538,7 +538,7 @@ void Profile::set_show_percentages(bool show_percentages)
     m_show_percentages = show_percentages;
 }
 
-void Profile::set_disassembly_index(const GUI::ModelIndex& index)
+void Profile::set_disassembly_index(GUI::ModelIndex const& index)
 {
     if (m_disassembly_index == index)
         return;

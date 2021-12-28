@@ -34,11 +34,11 @@ public:
         mutable OwnPtr<Debug::DebugInfo> debug_info;
 
         String symbolicate(FlatPtr, u32* offset) const;
-        const Debug::DebugInfo& load_debug_info(FlatPtr base_address) const;
+        Debug::DebugInfo const& load_debug_info(FlatPtr base_address) const;
     };
 
-    void handle_mmap(FlatPtr base, size_t size, const String& name);
-    const Library* library_containing(FlatPtr) const;
+    void handle_mmap(FlatPtr base, size_t size, String const& name);
+    Library const* library_containing(FlatPtr) const;
 
 private:
     mutable HashMap<String, NonnullOwnPtr<Library>> m_libraries;

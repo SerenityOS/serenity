@@ -52,8 +52,8 @@ public:
     bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
-    const FlyString& object_name() const { return m_object_name; }
-    const String& symbol() const { return m_symbol; }
+    FlyString const& object_name() const { return m_object_name; }
+    String const& symbol() const { return m_symbol; }
     FlatPtr address() const { return m_address; }
     u32 offset() const { return m_offset; }
     u64 timestamp() const { return m_timestamp; }
@@ -62,7 +62,7 @@ public:
     u32 self_count() const { return m_self_count; }
 
     int child_count() const { return m_children.size(); }
-    const Vector<NonnullRefPtr<ProfileNode>>& children() const { return m_children; }
+    Vector<NonnullRefPtr<ProfileNode>> const& children() const { return m_children; }
 
     void add_child(ProfileNode& child)
     {
@@ -87,14 +87,14 @@ public:
     };
 
     ProfileNode* parent() { return m_parent; }
-    const ProfileNode* parent() const { return m_parent; }
+    ProfileNode const* parent() const { return m_parent; }
 
     void increment_event_count() { ++m_event_count; }
     void increment_self_count() { ++m_self_count; }
 
     void sort_children();
 
-    const HashMap<FlatPtr, size_t>& events_per_address() const { return m_events_per_address; }
+    HashMap<FlatPtr, size_t> const& events_per_address() const { return m_events_per_address; }
     void add_event_address(FlatPtr address)
     {
         auto it = m_events_per_address.find(address);
@@ -150,7 +150,7 @@ public:
     GUI::Model* disassembly_model();
     GUI::Model* source_model();
 
-    const Process* find_process(pid_t pid, EventSerialNumber serial) const
+    Process const* find_process(pid_t pid, EventSerialNumber serial) const
     {
         auto it = m_processes.find_if([&pid, &serial](auto& entry) {
             return entry.pid == pid && entry.valid_at(serial);
@@ -158,10 +158,10 @@ public:
         return it.is_end() ? nullptr : &(*it);
     }
 
-    void set_disassembly_index(const GUI::ModelIndex&);
-    void set_source_index(const GUI::ModelIndex&);
+    void set_disassembly_index(GUI::ModelIndex const&);
+    void set_source_index(GUI::ModelIndex const&);
 
-    const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
+    Vector<NonnullRefPtr<ProfileNode>> const& roots() const { return m_roots; }
 
     struct Frame {
         FlyString object_name;
@@ -225,8 +225,8 @@ public:
     };
 
     Vector<Event> const& events() const { return m_events; }
-    const Vector<size_t>& filtered_event_indices() const { return m_filtered_event_indices; }
-    const Vector<size_t>& filtered_signpost_indices() const { return m_filtered_signpost_indices; }
+    Vector<size_t> const& filtered_event_indices() const { return m_filtered_event_indices; }
+    Vector<size_t> const& filtered_signpost_indices() const { return m_filtered_signpost_indices; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -250,7 +250,7 @@ public:
     bool show_percentages() const { return m_show_percentages; }
     void set_show_percentages(bool);
 
-    const Vector<Process>& processes() const { return m_processes; }
+    Vector<Process> const& processes() const { return m_processes; }
 
     template<typename Callback>
     void for_each_event_in_filter_range(Callback callback)

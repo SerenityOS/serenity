@@ -21,13 +21,13 @@ IndividualSampleModel::~IndividualSampleModel()
 {
 }
 
-int IndividualSampleModel::row_count(const GUI::ModelIndex&) const
+int IndividualSampleModel::row_count(GUI::ModelIndex const&) const
 {
     auto const& event = m_profile.events().at(m_event_index);
     return event.frames.size();
 }
 
-int IndividualSampleModel::column_count(const GUI::ModelIndex&) const
+int IndividualSampleModel::column_count(GUI::ModelIndex const&) const
 {
     return Column::__Count;
 }
@@ -46,7 +46,7 @@ String IndividualSampleModel::column_name(int column) const
     }
 }
 
-GUI::Variant IndividualSampleModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant IndividualSampleModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto const& event = m_profile.events().at(m_event_index);
     auto const& frame = event.frames[event.frames.size() - index.row() - 1];
