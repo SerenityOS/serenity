@@ -67,13 +67,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (path) {
         widget.set_path(path);
     }
-    widget.on_scale_change = [&](int scale) {
+    widget.on_scale_change = [&](float scale) {
         if (!widget.bitmap()) {
             window->set_title("Image Viewer");
             return;
         }
 
-        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget.path(), widget.bitmap()->size().to_string(), scale));
+        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget.path(), widget.bitmap()->size().to_string(), (int)(scale * 100)));
 
         if (scale == 100 && !widget.scaled_for_first_image()) {
             widget.set_scaled_for_first_image(true);
@@ -200,19 +200,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
-            widget.set_scale(widget.scale() + 10);
+            widget.set_scale(widget.scale() * 1.44f);
         },
         window);
 
     auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
-            widget.set_scale(100);
+            widget.set_scale(1.f);
         },
         window);
 
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
-            widget.set_scale(widget.scale() - 10);
+            widget.set_scale(widget.scale() / 1.44f);
         },
         window);
 

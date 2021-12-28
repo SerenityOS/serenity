@@ -29,8 +29,8 @@ public:
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
-    void set_scale(int);
-    int scale() { return m_scale; }
+    void set_scale(float);
+    float scale() { return m_scale; }
     void set_toolbar_height(int height) { m_toolbar_height = height; }
     int toolbar_height() { return m_toolbar_height; }
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
@@ -47,7 +47,7 @@ public:
     void navigate(Directions);
     void load_from_file(const String&);
 
-    Function<void(int)> on_scale_change;
+    Function<void(float)> on_scale_change;
     Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
     Function<void(const Gfx::Bitmap*)> on_image_change;
@@ -78,7 +78,7 @@ private:
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;
 
-    int m_scale { -1 };
+    float m_scale { -1 };
     int m_toolbar_height { 28 };
     bool m_scaled_for_first_image { false };
     Gfx::FloatPoint m_pan_origin;
