@@ -186,8 +186,6 @@ public:
     bool unref() const;
     ~Process();
 
-    static NonnullRefPtrVector<Process> all_processes();
-
     RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }

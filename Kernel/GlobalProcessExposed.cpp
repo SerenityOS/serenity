@@ -533,10 +533,11 @@ private:
         {
             {
                 auto array = json.add_array("processes");
-                auto processes = Process::all_processes();
                 build_process(array, *Scheduler::colonel());
-                for (auto& process : processes)
-                    build_process(array, process);
+                processes().with([&](auto& processes) {
+                    for (auto& process : processes)
+                        build_process(array, process);
+                });
             }
 
             auto total_time_scheduled = Scheduler::get_total_time_scheduled();
