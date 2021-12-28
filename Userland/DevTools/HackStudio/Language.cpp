@@ -22,7 +22,7 @@ Language language_from_file_extension(const String& extension)
         return Language::CSS;
     if (extension == "gml")
         return Language::GML;
-    if (extension == "ini")
+    if (extension == "ini" || extension == "af")
         return Language::Ini;
     if (extension == "sh" || extension == "bash")
         return Language::Shell;
