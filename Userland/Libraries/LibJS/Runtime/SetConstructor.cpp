@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> SetConstructor::construct(FunctionObject& new_target)
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of Set");
 
-    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         TRY(vm.call(adder.as_function(), Value(set), iterator_value));
         return {};
     }));

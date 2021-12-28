@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> MapConstructor::construct(FunctionObject& new_target)
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
 
-    TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 

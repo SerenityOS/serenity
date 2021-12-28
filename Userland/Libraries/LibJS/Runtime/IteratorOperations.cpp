@@ -180,7 +180,7 @@ ThrowCompletionOr<MarkedValueList> iterable_to_list(GlobalObject& global_object,
     auto& vm = global_object.vm();
     MarkedValueList values(vm.heap());
 
-    TRY(get_iterator_values(
+    (void)TRY(get_iterator_values(
         global_object, iterable, [&](auto value) -> Optional<Completion> {
             values.append(value);
             return {};

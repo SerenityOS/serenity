@@ -888,7 +888,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         interpreter.vm().running_execution_context().lexical_environment = old_environment;
     });
 
-    TRY_OR_DISCARD(get_iterator_values(global_object, rhs_result, [&](Value value) -> Optional<Completion> {
+    (void)TRY_OR_DISCARD(get_iterator_values(global_object, rhs_result, [&](Value value) -> Optional<Completion> {
         TRY(for_of_head_state.execute_head(interpreter, global_object, value));
         last_value = m_body->execute(interpreter, global_object).value_or(last_value);
         interpreter.vm().running_execution_context().lexical_environment = old_environment;
@@ -2973,7 +2973,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 return {};
 
             if (is<SpreadExpression>(*element)) {
-                TRY_OR_DISCARD(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
+                (void)TRY_OR_DISCARD(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
                     array->indexed_properties().put(index++, iterator_value, default_attributes);
                     return {};
                 }));
