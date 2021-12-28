@@ -642,7 +642,7 @@ void MainWidget::set_path(StringView path)
         m_js_highlight->activate();
     } else if (m_extension == "gml") {
         m_gml_highlight->activate();
-    } else if (m_extension == "ini") {
+    } else if (m_extension == "ini" || m_extension == "af") {
         m_ini_highlight->activate();
     } else if (m_extension == "sh" || m_extension == "bash") {
         m_shell_highlight->activate();
