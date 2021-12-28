@@ -18,6 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<char const*> command;
     Core::ArgsParser args_parser;
     uid_t as_user_uid = 0;
+    args_parser.set_stop_on_first_non_option(true);
     args_parser.add_option(as_user_uid, "User to execute as", nullptr, 'u', "UID");
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(arguments);
