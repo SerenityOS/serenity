@@ -497,9 +497,14 @@ String VM::join_arguments(size_t start_index) const
     return joined_arguments.build();
 }
 
+// 9.4.5 GetNewTarget ( ), https://tc39.es/ecma262/#sec-getnewtarget
 Value VM::get_new_target()
 {
+    // 1. Let envRec be GetThisEnvironment().
     auto& env = get_this_environment(*this);
+
+    // 2. Assert: envRec has a [[NewTarget]] field.
+    // 3. Return envRec.[[NewTarget]].
     return verify_cast<FunctionEnvironment>(env).new_target();
 }
 

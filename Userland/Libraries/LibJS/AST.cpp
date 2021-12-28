@@ -347,8 +347,6 @@ Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) 
 
     // 1. Let newTarget be GetNewTarget().
     auto new_target = vm.get_new_target();
-    if (vm.exception())
-        return {};
 
     // 2. Assert: Type(newTarget) is Object.
     VERIFY(new_target.is_function());
@@ -2873,7 +2871,7 @@ Value MetaProperty::execute(Interpreter& interpreter, GlobalObject& global_objec
     InterpreterNodeScope node_scope { interpreter, *this };
 
     if (m_type == MetaProperty::Type::NewTarget)
-        return interpreter.vm().get_new_target().value_or(js_undefined());
+        return interpreter.vm().get_new_target();
     if (m_type == MetaProperty::Type::ImportMeta) {
         interpreter.vm().throw_exception<InternalError>(global_object, ErrorType::NotImplemented, "'import.meta' in modules");
         return {};
