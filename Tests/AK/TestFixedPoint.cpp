@@ -72,3 +72,12 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).lceil(), -1);
     EXPECT_EQ(Type(-1.5).ltrunk(), -1);
 }
+
+TEST_CASE(formatter)
+{
+    EXPECT_EQ(String::formatted("{}", FixedPoint<16>(123.456)), "123.455993"sv);
+    EXPECT_EQ(String::formatted("{}", FixedPoint<16>(-123.456)), "-123.455994"sv);
+    EXPECT_EQ(String::formatted("{}", FixedPoint<4>(123.456)), "123.4375"sv);
+    EXPECT_EQ(String::formatted("{}", FixedPoint<4>(-123.456)), "-123.4375"sv);
+    EXPECT_EQ(String::formatted("{}", FixedPoint<16> {}), "0"sv);
+}
