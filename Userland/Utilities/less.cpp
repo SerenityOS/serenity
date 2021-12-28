@@ -75,9 +75,15 @@ static Vector<StringView> wrap_line(String const& string, size_t width)
         if (*it == '\e')
             in_ansi = true;
 
-        if (!in_ansi)
-            // FIXME: calculate the printed width of the character.
-            offset++;
+        if (!in_ansi) {
+            if (*it == '\t') {
+                // Tabs are a special case, because their width is variable.
+                offset += (8 - (offset % 8));
+            } else {
+                // FIXME: calculate the printed width of the character.
+                offset++;
+            }
+        }
 
         if (isalpha(*it))
             in_ansi = false;
