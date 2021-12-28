@@ -28,9 +28,9 @@ pci: enabled=1, chipset=i440fx, slot1=pcivga
 vga: extension=vbe, update_freq=60, realtime=0
 cpu: count=1, ips=4000000, model=bx_generic, reset_on_triple_fault=1, cpuid_limit_winnt=0, ignore_bad_msrs=1, mwait_is_nop=0
 cpuid: level=6, stepping=3, model=3, family=6, vendor_string="GenuineIntel", brand_string="              Intel(R) Pentium(R) 4 CPU        "
-cpuid: mmx=true, apic=xapic, simd=sse2, sse4a=false, misaligned_sse=false, sep=true
-cpuid: movbe=false, adx=false, aes=false, sha=false, xsave=false, xsaveopt=false, smep=false
-cpuid: smap=false, mwait=true
+cpuid: mmx=true, apic=xapic, simd=sse3, sse4a=false, misaligned_sse=false, sep=true
+cpuid: movbe=false, adx=false, aes=false, sha=false, xsave=false, xsaveopt=false, smep=true
+cpuid: smap=true, mwait=true
 print_timestamps: enabled=0
 port_e9_hack: enabled=1
 private_colormap: enabled=0
