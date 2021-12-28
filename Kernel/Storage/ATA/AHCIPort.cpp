@@ -77,7 +77,6 @@ void AHCIPort::handle_interrupt()
             m_connected_device->prepare_for_unplug();
             StorageManagement::the().remove_device(*m_connected_device);
             g_io_work->queue([this]() {
-                m_connected_device->before_removing();
                 m_connected_device.clear();
             });
         } else {

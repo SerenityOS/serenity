@@ -47,7 +47,7 @@ public:
     GroupID gid() const { return m_gid; }
 
     virtual bool is_device() const override { return true; }
-    virtual void before_removing() override;
+    virtual void will_be_destroyed() override;
     virtual void after_inserting();
     void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
 

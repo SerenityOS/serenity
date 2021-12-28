@@ -29,7 +29,7 @@ bool SlavePTY::unref() const
         return true;
     });
     if (did_hit_zero) {
-        const_cast<SlavePTY&>(*this).before_removing();
+        const_cast<SlavePTY&>(*this).will_be_destroyed();
         delete this;
     }
     return did_hit_zero;
