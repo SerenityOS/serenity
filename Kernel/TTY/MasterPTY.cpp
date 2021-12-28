@@ -18,8 +18,7 @@ namespace Kernel {
 
 ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
-    // FIXME: Don't make a temporary String here
-    auto pts_name = TRY(KString::try_create(String::formatted("/dev/pts/{}", index)));
+    auto pts_name = TRY(KString::formatted("/dev/pts/{}", index));
     auto tty_name = TRY(pts_name->try_clone());
 
     auto buffer = TRY(DoubleBuffer::try_create());
@@ -133,8 +132,7 @@ ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned reques
 
 ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
 {
-    // FIXME: Replace this and others of this pattern by KString::formatted()
-    return KString::try_create(String::formatted("ptm:{}", m_pts_name));
+    return KString::formatted("ptm:{}", m_pts_name);
 }
 
 }

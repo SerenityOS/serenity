@@ -17,11 +17,9 @@ NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& cont
 {
     // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
     size_t drive_index = minor / 16;
-    // FIXME: We need a way of formatting strings with KString!
-    auto device_name = String::formatted("ramdisk{}", drive_index);
-    auto device_name_kstring = KString::must_create(device_name.view());
+    auto device_name = MUST(KString::formatted("ramdisk{}", drive_index));
 
-    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor, move(device_name_kstring));
+    auto device_or_error = DeviceManagement::try_create_device<RamdiskDevice>(controller, move(region), major, minor, move(device_name));
     // FIXME: Find a way to propagate errors
     VERIFY(!device_or_error.is_error());
     return device_or_error.release_value();

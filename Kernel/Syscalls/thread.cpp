@@ -43,8 +43,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<con
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
-    // FIXME: Don't make a temporary String here
-    auto new_thread_name = TRY(KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value())));
+    auto new_thread_name = TRY(KString::formatted("{} [{}]", m_name, thread->tid().value()));
     thread->set_name(move(new_thread_name));
 
     if (!is_thread_joinable)

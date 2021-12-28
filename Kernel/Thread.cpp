@@ -65,12 +65,8 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_tid = Process::allocate_pid().value();
     }
 
-    {
-        // FIXME: Go directly to KString
-        auto string = String::formatted("Kernel stack (thread {})", m_tid.value());
-        // FIXME: Handle KString allocation failure.
-        m_kernel_stack_region->set_name(KString::try_create(string).release_value());
-    }
+    // FIXME: Handle KString allocation failure.
+    m_kernel_stack_region->set_name(MUST(KString::formatted("Kernel stack (thread {})", m_tid.value())));
 
     Thread::all_instances().with([&](auto& list) {
         list.append(*this);
