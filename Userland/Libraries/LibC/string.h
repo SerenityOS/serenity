@@ -38,6 +38,9 @@ char* strchrnul(const char*, int c);
 char* strstr(const char* haystack, const char* needle);
 char* strrchr(const char*, int c);
 
+char* index(const char* str, int ch);
+char* rindex(const char* str, int ch);
+
 char* strcat(char* dest, const char* src);
 char* strncat(char* dest, const char* src, size_t);
 
