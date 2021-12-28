@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sarah Taube <metalflakecobaltpaint@gmail.com>
+ * Copyright (c) 2021, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -286,8 +287,27 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& re
     Color dark_shade = palette.threed_shadow2();
     Color mid_shade = palette.threed_shadow1();
     Color light_shade = palette.threed_highlight();
+    auto border_thickness = palette.window_border_thickness();
+    auto border_radius = palette.window_border_radius();
 
-    painter.draw_line(rect.top_left(), rect.top_right(), base_color);
+    if (border_radius > 0) {
+        // FIXME: This will draw "useless" pixels that'll get drawn over by the window contents.
+        // preferrably we should just remove the corner pixels from the completely drawn window
+        // but I don't know how to do that yet. :^)
+        painter.fill_rect_with_rounded_corners({ rect.x() - border_radius / 2,
+                                                   rect.y() - border_radius / 2,
+                                                   rect.width() + border_radius,
+                                                   rect.height() + border_radius },
+            base_color, border_radius);
+        return;
+    }
+
+    painter.draw_rect_with_thickness({ rect.x() + border_thickness / 2,
+                                         rect.y() + border_thickness / 2,
+                                         rect.width() - border_thickness,
+                                         rect.height() - border_thickness },
+        base_color, border_thickness);
+
     painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left(), base_color);
     painter.draw_line(rect.top_left().translated(1, 1), rect.top_right().translated(-1, 1), light_shade);
     painter.draw_line(rect.top_left().translated(1, 1), rect.bottom_left().translated(1, -1), light_shade);

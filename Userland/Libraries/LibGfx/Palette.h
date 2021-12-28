@@ -126,7 +126,10 @@ public:
     Color syntax_preprocessor_value() const { return color(ColorRole::SyntaxPreprocessorValue); }
 
     bool is_dark() const { return flag(FlagRole::IsDark); }
+    bool is_title_center() const { return flag(FlagRole::IsTitleCenter); }
 
+    int window_border_thickness() const { return metric(MetricRole::BorderThickness); }
+    int window_border_radius() const { return metric(MetricRole::BorderRadius); }
     int window_title_height() const { return metric(MetricRole::TitleHeight); }
     int window_title_button_width() const { return metric(MetricRole::TitleButtonWidth); }
     int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
