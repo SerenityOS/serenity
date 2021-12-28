@@ -65,7 +65,7 @@ ErrorOr<void> Process::do_killall(int signal)
     ErrorOr<void> error;
 
     // Send the signal to all processes we have access to for.
-    processes().for_each([&](auto& process) {
+    Process::all_instances().for_each([&](auto& process) {
         ErrorOr<void> res;
         if (process.pid() == pid())
             res = do_killself(signal);

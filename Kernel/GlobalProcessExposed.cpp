@@ -534,7 +534,7 @@ private:
             {
                 auto array = json.add_array("processes");
                 build_process(array, *Scheduler::colonel());
-                processes().with([&](auto& processes) {
+                Process::all_instances().with([&](auto& processes) {
                     for (auto& process : processes)
                         build_process(array, process);
                 });
@@ -942,7 +942,7 @@ ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Func
         TRY(callback({ component.name(), identifier, 0 }));
     }
 
-    return processes().with([&](auto& list) -> ErrorOr<void> {
+    return Process::all_instances().with([&](auto& list) -> ErrorOr<void> {
         for (auto& process : list) {
             VERIFY(!(process.pid() < 0));
             u64 process_id = (u64)process.pid().value();

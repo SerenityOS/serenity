@@ -43,7 +43,7 @@ static void create_signal_trampoline();
 
 RecursiveSpinlock g_profiling_lock;
 static Atomic<pid_t> next_pid;
-static Singleton<SpinlockProtected<Process::List>> s_processes;
+static Singleton<SpinlockProtected<Process::List>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 static Singleton<MutexProtected<String>> s_hostname;
@@ -53,9 +53,9 @@ MutexProtected<String>& hostname()
     return *s_hostname;
 }
 
-SpinlockProtected<Process::List>& processes()
+SpinlockProtected<Process::List>& Process::all_instances()
 {
-    return *s_processes;
+    return *s_all_instances;
 }
 
 ProcessID Process::allocate_pid()
@@ -123,7 +123,7 @@ void Process::register_new(Process& process)
 {
     // Note: this is essentially the same like process->ref()
     RefPtr<Process> new_process = process;
-    processes().with([&](auto& list) {
+    all_instances().with([&](auto& list) {
         list.prepend(process);
     });
 }
@@ -268,26 +268,6 @@ Process::~Process()
     PerformanceManager::add_process_exit_event(*this);
 }
 
-bool Process::unref() const
-{
-    // NOTE: We need to obtain the process list lock before doing anything,
-    //       because otherwise someone might get in between us lowering the
-    //       refcount and acquiring the lock.
-    auto did_hit_zero = processes().with([&](auto& list) {
-        auto new_ref_count = deref_base();
-        if (new_ref_count > 0)
-            return false;
-
-        if (m_list_node.is_in_list())
-            list.remove(*const_cast<Process*>(this));
-        return true;
-    });
-
-    if (did_hit_zero)
-        delete this;
-    return did_hit_zero;
-}
-
 // Make sure the compiler doesn't "optimize away" this function:
 extern void signal_trampoline_dummy() __attribute__((used));
 void signal_trampoline_dummy()
@@ -390,7 +370,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
-    return processes().with([&](const auto& list) -> RefPtr<Process> {
+    return all_instances().with([&](const auto& list) -> RefPtr<Process> {
         for (auto const& process : list) {
             if (process.pid() == pid)
                 return &process;
@@ -690,7 +670,7 @@ void Process::die()
         m_threads_for_coredump.append(thread);
     });
 
-    processes().with([&](const auto& list) {
+    all_instances().with([&](const auto& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
