@@ -118,22 +118,21 @@ void ViewWidget::navigate(Directions direction)
     this->load_from_file(m_files_in_same_dir.at(index));
 }
 
-void ViewWidget::set_scale(int scale)
+void ViewWidget::set_scale(float scale)
 {
     if (m_bitmap.is_null())
         return;
 
-    if (scale < 10)
-        scale = 10;
-    if (scale > 1000)
-        scale = 1000;
+    if (scale < 0.1f)
+        scale = 0.1f;
+    if (scale > 10.f)
+        scale = 10.f;
 
     m_scale = scale;
-    float scale_factor = (float)m_scale / 100.0f;
 
     Gfx::IntSize new_size;
-    new_size.set_width(m_bitmap->width() * scale_factor);
-    new_size.set_height(m_bitmap->height() * scale_factor);
+    new_size.set_width(m_bitmap->width() * m_scale);
+    new_size.set_height(m_bitmap->height() * m_scale);
     m_bitmap_rect.set_size(new_size);
 
     if (on_scale_change)
@@ -207,18 +206,15 @@ void ViewWidget::mousemove_event(GUI::MouseEvent& event)
 
 void ViewWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    int new_scale = m_scale - event.wheel_delta() * 10;
-    if (new_scale < 10)
-        new_scale = 10;
-    if (new_scale > 1000)
-        new_scale = 1000;
+    float new_scale = m_scale / AK::exp2(event.wheel_delta() / 8.f);
+    if (new_scale < 0.1f)
+        new_scale = 0.1f;
+    if (new_scale > 10.f)
+        new_scale = 10.f;
 
     if (new_scale == m_scale) {
         return;
     }
-
-    auto old_scale_factor = (float)m_scale / 100.0f;
-    auto new_scale_factor = (float)new_scale / 100.0f;
 
     // focus_point is the window position the cursor is pointing to.
     // The pixel (in image space) the cursor points to is located at
@@ -232,7 +228,7 @@ void ViewWidget::mousewheel_event(GUI::MouseEvent& event)
     };
 
     // A little algebra shows that new m_pan_origin equals to:
-    m_pan_origin = (m_pan_origin + focus_point) * (new_scale_factor / old_scale_factor) - focus_point;
+    m_pan_origin = (m_pan_origin + focus_point) * (new_scale / m_scale) - focus_point;
 
     set_scale(new_scale);
 }
@@ -313,7 +309,7 @@ void ViewWidget::resize_window()
 void ViewWidget::reset_view()
 {
     m_pan_origin = { 0, 0 };
-    set_scale(100);
+    set_scale(1.f);
 }
 
 void ViewWidget::set_bitmap(const Gfx::Bitmap* bitmap)
