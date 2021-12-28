@@ -70,10 +70,11 @@ public:
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_type == Type::Throw; }
-    [[nodiscard]] Value release_value() { return m_value.release_value(); }
+    [[nodiscard]] Optional<Value> release_value() { return move(m_value); }
     Completion release_error()
     {
         VERIFY(is_error());
+        VERIFY(m_value.has_value());
         return { m_type, release_value(), move(m_target) };
     }
 

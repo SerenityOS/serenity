@@ -226,7 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
 
     auto* object = Object::create(global_object, global_object.object_prototype());
 
-    TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
+    (void)TRY(get_iterator_values(global_object, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
 
