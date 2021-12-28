@@ -186,6 +186,7 @@ struct KmallocGlobalData {
     void deallocate(void* ptr, size_t size)
     {
         VERIFY(!expansion_in_progress);
+        VERIFY(is_valid_kmalloc_address(VirtualAddress { ptr }));
 
         for (auto& slabheap : slabheaps) {
             if (size <= slabheap.slab_size())
@@ -297,6 +298,17 @@ struct KmallocGlobalData {
         VirtualAddress next_virtual_address;
     };
     Optional<ExpansionData> expansion_data;
+
+    bool is_valid_kmalloc_address(VirtualAddress vaddr) const
+    {
+        if (vaddr.as_ptr() >= initial_kmalloc_memory && vaddr.as_ptr() < (initial_kmalloc_memory + INITIAL_KMALLOC_MEMORY_SIZE))
+            return true;
+
+        if (!expansion_data.has_value())
+            return false;
+
+        return expansion_data->virtual_range.contains(vaddr);
+    }
 
     KmallocSubheap::List subheaps;
 
