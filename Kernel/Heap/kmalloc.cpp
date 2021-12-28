@@ -44,6 +44,7 @@ struct KmallocSubheap {
     }
 
     IntrusiveListNode<KmallocSubheap> list_node;
+    using List = IntrusiveList<&KmallocSubheap::list_node>;
     Heap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE> allocator;
 };
 
@@ -82,6 +83,7 @@ public:
     }
 
     IntrusiveListNode<KmallocSlabBlock> list_node;
+    using List = IntrusiveList<&KmallocSlabBlock::list_node>;
 
 private:
     struct FreelistEntry {
@@ -138,8 +140,8 @@ public:
 private:
     size_t m_slab_size { 0 };
 
-    IntrusiveList<&KmallocSlabBlock::list_node> m_usable_blocks;
-    IntrusiveList<&KmallocSlabBlock::list_node> m_full_blocks;
+    KmallocSlabBlock::List m_usable_blocks;
+    KmallocSlabBlock::List m_full_blocks;
 };
 
 struct KmallocGlobalData {
@@ -294,7 +296,7 @@ struct KmallocGlobalData {
     };
     Optional<ExpansionData> expansion_data;
 
-    IntrusiveList<&KmallocSubheap::list_node> subheaps;
+    KmallocSubheap::List subheaps;
 
     KmallocSlabheap slabheaps[6] = { 16, 32, 64, 128, 256, 512 };
 
