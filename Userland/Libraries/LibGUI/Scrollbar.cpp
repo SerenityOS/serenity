@@ -206,8 +206,7 @@ void Scrollbar::paint_event(PaintEvent& event)
         hovered_component_for_painting = Component::None;
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
-    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && hovered_component_for_painting == Component::Gutter) {
-        VERIFY(!scrubber_rect().is_null());
+    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && !scrubber_rect().is_null() && hovered_component_for_painting == Component::Gutter) {
         Gfx::IntRect rect_to_fill = rect();
         if (orientation() == Orientation::Vertical) {
             if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
