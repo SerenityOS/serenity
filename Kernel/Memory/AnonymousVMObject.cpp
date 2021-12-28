@@ -261,7 +261,7 @@ void AnonymousVMObject::ensure_or_reset_cow_map()
 
 bool AnonymousVMObject::should_cow(size_t page_index, bool is_shared) const
 {
-    auto& page = physical_pages()[page_index];
+    auto const& page = physical_pages()[page_index];
     if (page && (page->is_shared_zero_page() || page->is_lazy_committed_page()))
         return true;
     if (is_shared)
