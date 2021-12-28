@@ -881,6 +881,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column, bool skip_debug)
 {
     unsigned row = min(a_row, m_rows - 1u);
     unsigned column = min(a_column, m_columns - 1u);
+    m_stomp = false;
     if (row == cursor_row() && column == cursor_column())
         return;
     VERIFY(row < rows());
@@ -888,7 +889,6 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column, bool skip_debug)
     invalidate_cursor();
     m_current_state.cursor.row = row;
     m_current_state.cursor.column = column;
-    m_stomp = false;
     invalidate_cursor();
     if (!skip_debug)
         dbgln_if(TERMINAL_DEBUG, "Set cursor position: {},{}", cursor_row(), cursor_column());
