@@ -88,6 +88,7 @@
     E(EDIRINTOSELF, "Cannot make directory a subdirectory of itself") \
     E(EDQUOT, "Quota exceeded")                                       \
     E(ENOTRECOVERABLE, "State not recoverable")                       \
+    E(ECANCELED, "Operation cancelled")                               \
     E(EMAXERRNO, "The highest errno +1 :^)")
 
 enum ErrnoCode {
