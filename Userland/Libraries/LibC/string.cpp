@@ -227,6 +227,12 @@ char* strchr(const char* str, int c)
     }
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699959399/functions/index.html
+char* index(const char* str, int c)
+{
+    return strchr(str, c);
+}
+
 char* strchrnul(const char* str, int c)
 {
     char ch = c;
@@ -258,6 +264,12 @@ char* strrchr(const char* str, int ch)
             last = const_cast<char*>(str);
     }
     return last;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699959399/functions/rindex.html
+char* rindex(const char* str, int ch)
+{
+    return strrchr(str, ch);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcat.html
