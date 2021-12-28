@@ -23,7 +23,7 @@ ProfileModel::~ProfileModel()
 {
 }
 
-GUI::ModelIndex ProfileModel::index(int row, int column, const GUI::ModelIndex& parent) const
+GUI::ModelIndex ProfileModel::index(int row, int column, GUI::ModelIndex const& parent) const
 {
     if (!parent.is_valid()) {
         if (m_profile.roots().is_empty())
@@ -34,7 +34,7 @@ GUI::ModelIndex ProfileModel::index(int row, int column, const GUI::ModelIndex& 
     return create_index(row, column, remote_parent.children().at(row).ptr());
 }
 
-GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
+GUI::ModelIndex ProfileModel::parent_index(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -62,7 +62,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
     return {};
 }
 
-int ProfileModel::row_count(const GUI::ModelIndex& index) const
+int ProfileModel::row_count(GUI::ModelIndex const& index) const
 {
     if (!index.is_valid())
         return m_profile.roots().size();
@@ -70,7 +70,7 @@ int ProfileModel::row_count(const GUI::ModelIndex& index) const
     return node.children().size();
 }
 
-int ProfileModel::column_count(const GUI::ModelIndex&) const
+int ProfileModel::column_count(GUI::ModelIndex const&) const
 {
     return Column::__Count;
 }
@@ -94,7 +94,7 @@ String ProfileModel::column_name(int column) const
     }
 }
 
-GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant ProfileModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
     if (role == GUI::ModelRole::TextAlignment) {

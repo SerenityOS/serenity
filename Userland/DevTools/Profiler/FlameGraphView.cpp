@@ -123,7 +123,7 @@ void FlameGraphView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    for (const auto& bar : m_bars) {
+    for (auto const& bar : m_bars) {
         auto label = bar_label(bar);
 
         auto color = m_colors[label.hash() % m_colors.size()];

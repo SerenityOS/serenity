@@ -21,12 +21,12 @@ SamplesModel::~SamplesModel()
 {
 }
 
-int SamplesModel::row_count(const GUI::ModelIndex&) const
+int SamplesModel::row_count(GUI::ModelIndex const&) const
 {
     return m_profile.filtered_event_indices().size();
 }
 
-int SamplesModel::column_count(const GUI::ModelIndex&) const
+int SamplesModel::column_count(GUI::ModelIndex const&) const
 {
     return Column::__Count;
 }
@@ -53,7 +53,7 @@ String SamplesModel::column_name(int column) const
     }
 }
 
-GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant SamplesModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     u32 event_index = m_profile.filtered_event_indices()[index.row()];
     auto const& event = m_profile.events().at(event_index);
