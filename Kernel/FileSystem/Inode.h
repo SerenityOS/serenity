@@ -23,7 +23,7 @@
 
 namespace Kernel {
 
-class Inode : public ListedRefCounted<Inode>
+class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     , public Weakable<Inode> {
     friend class VirtualFileSystem;
     friend class FileSystem;
