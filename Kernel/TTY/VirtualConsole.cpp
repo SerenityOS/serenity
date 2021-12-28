@@ -103,10 +103,7 @@ void VirtualConsole::set_graphical(bool graphical)
 
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    // FIXME: Don't make a temporary String here
-    auto pts_name_or_error = KString::try_create(String::formatted("/dev/tty/{}", index));
-    VERIFY(!pts_name_or_error.is_error());
-    auto pts_name = pts_name_or_error.release_value();
+    auto pts_name = MUST(KString::formatted("/dev/tty/{}", index));
 
     auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, move(pts_name));
     // FIXME: Find a way to propagate errors

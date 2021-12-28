@@ -18,11 +18,9 @@ NonnullRefPtr<ATAPIDiscDevice> ATAPIDiscDevice::create(const ATAController& cont
 {
     auto minor_device_number = StorageManagement::generate_storage_minor_number();
 
-    // FIXME: We need a way of formatting strings with KString.
-    auto device_name = String::formatted("hd{:c}", 'a' + minor_device_number.value());
-    auto device_name_kstring = KString::must_create(device_name.view());
+    auto device_name = MUST(KString::formatted("hd{:c}", 'a' + minor_device_number.value()));
 
-    auto disc_device_or_error = DeviceManagement::try_create_device<ATAPIDiscDevice>(controller, ata_address, minor_device_number.value(), capabilities, max_addressable_block, move(device_name_kstring));
+    auto disc_device_or_error = DeviceManagement::try_create_device<ATAPIDiscDevice>(controller, ata_address, minor_device_number.value(), capabilities, max_addressable_block, move(device_name));
     // FIXME: Find a way to propagate errors
     VERIFY(!disc_device_or_error.is_error());
     return disc_device_or_error.release_value();
