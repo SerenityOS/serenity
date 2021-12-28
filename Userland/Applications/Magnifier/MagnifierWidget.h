@@ -8,6 +8,7 @@
 
 #include <AK/CircularQueue.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/Filters/ColorBlindnessFilter.h>
 
 class MagnifierWidget final : public GUI::Frame {
     C_OBJECT(MagnifierWidget);
@@ -15,6 +16,7 @@ class MagnifierWidget final : public GUI::Frame {
 public:
     virtual ~MagnifierWidget();
     void set_scale_factor(int scale_factor);
+    void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
     void pause_capture(bool pause)
     {
         m_pause_capture = pause;
@@ -28,10 +30,12 @@ private:
     MagnifierWidget();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void second_paint_event(GUI::PaintEvent&) override;
 
     void sync();
 
     int m_scale_factor { 2 };
+    OwnPtr<Gfx::ColorBlindnessFilter> m_color_filter;
     RefPtr<Gfx::Bitmap> m_grabbed_bitmap;
     CircularQueue<RefPtr<Gfx::Bitmap>, 512> m_grabbed_bitmaps {};
     ssize_t m_frame_offset_from_head { 0 };

@@ -27,6 +27,12 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
     update();
 }
 
+void MagnifierWidget::set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter> color_filter)
+{
+    m_color_filter = move(color_filter);
+    sync();
+}
+
 void MagnifierWidget::display_previous_frame()
 {
     --m_frame_offset_from_head;
@@ -63,4 +69,22 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
 
     if (m_grabbed_bitmap)
         painter.draw_scaled_bitmap(frame_inner_rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect());
+}
+
+void MagnifierWidget::second_paint_event(GUI::PaintEvent&)
+{
+    if (!m_color_filter)
+        return;
+
+    GUI::Painter painter(*this);
+
+    auto target = painter.target();
+    auto bitmap_clone_or_error = target->clone();
+    if (bitmap_clone_or_error.is_error())
+        return;
+
+    auto clone = bitmap_clone_or_error.release_value();
+    auto rect = target->rect();
+
+    m_color_filter->apply(*target, rect, *clone, rect);
 }
