@@ -146,7 +146,7 @@ struct ThreadRegisters {
 };
 
 class Thread
-    : public ListedRefCounted<Thread>
+    : public ListedRefCounted<Thread, LockType::Spinlock>
     , public Weakable<Thread> {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);

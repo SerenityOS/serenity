@@ -18,7 +18,7 @@
 namespace Kernel::Memory {
 
 class VMObject
-    : public ListedRefCounted<VMObject>
+    : public ListedRefCounted<VMObject, LockType::Spinlock>
     , public Weakable<VMObject> {
     friend class MemoryManager;
     friend class Region;
