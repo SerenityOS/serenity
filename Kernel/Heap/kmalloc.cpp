@@ -28,7 +28,10 @@ static constexpr size_t CHUNK_SIZE = 32;
 static constexpr size_t CHUNK_SIZE = 64;
 #endif
 
-#define POOL_SIZE (2 * MiB)
+static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 2 * MiB;
+
+// Treat the heap as logically separate from .bss
+__attribute__((section(".heap"))) static u8 initial_kmalloc_memory[INITIAL_KMALLOC_MEMORY_SIZE];
 
 namespace std {
 const nothrow_t nothrow;
@@ -305,9 +308,6 @@ struct KmallocGlobalData {
 READONLY_AFTER_INIT static KmallocGlobalData* g_kmalloc_global;
 alignas(KmallocGlobalData) static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalData)];
 
-// Treat the heap as logically separate from .bss
-__attribute__((section(".heap"))) static u8 kmalloc_pool_heap[POOL_SIZE];
-
 static size_t g_kmalloc_call_count;
 static size_t g_kfree_call_count;
 static size_t g_nested_kfree_calls;
@@ -329,8 +329,8 @@ static inline void kmalloc_verify_nospinlock_held()
 UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
-    memset(kmalloc_pool_heap, 0, sizeof(kmalloc_pool_heap));
-    g_kmalloc_global = new (g_kmalloc_global_heap) KmallocGlobalData(kmalloc_pool_heap, sizeof(kmalloc_pool_heap));
+    memset(initial_kmalloc_memory, 0, sizeof(initial_kmalloc_memory));
+    g_kmalloc_global = new (g_kmalloc_global_heap) KmallocGlobalData(initial_kmalloc_memory, sizeof(initial_kmalloc_memory));
 
     s_lock.initialize();
 }
