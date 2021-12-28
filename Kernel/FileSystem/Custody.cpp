@@ -10,20 +10,19 @@
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
 
-static Singleton<MutexProtected<Custody::AllCustodiesList>> s_all_custodies;
+static Singleton<MutexProtected<Custody::AllCustodiesList>> s_all_instances;
 
-static MutexProtected<Custody::AllCustodiesList>& all_custodies()
+MutexProtected<Custody::AllCustodiesList>& Custody::all_instances()
 {
-    return s_all_custodies;
+    return s_all_instances;
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
-    return all_custodies().with_exclusive([&](auto& all_custodies) -> ErrorOr<NonnullRefPtr<Custody>> {
+    return all_instances().with_exclusive([&](auto& all_custodies) -> ErrorOr<NonnullRefPtr<Custody>> {
         for (Custody& custody : all_custodies) {
             if (custody.parent() == parent
                 && custody.name() == name
@@ -38,20 +37,6 @@ ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView 
         all_custodies.prepend(*custody);
         return custody;
     });
-}
-
-bool Custody::unref() const
-{
-    bool should_destroy = all_custodies().with_exclusive([&](auto&) {
-        if (deref_base())
-            return false;
-        m_all_custodies_list_node.remove();
-        return true;
-    });
-
-    if (should_destroy)
-        delete this;
-    return should_destroy;
 }
 
 Custody::Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode& inode, int mount_flags)
