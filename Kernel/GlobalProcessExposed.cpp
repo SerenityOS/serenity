@@ -403,7 +403,6 @@ private:
         JsonObjectSerializer<KBufferBuilder> json { builder };
         json.add("kmalloc_allocated", stats.bytes_allocated);
         json.add("kmalloc_available", stats.bytes_free);
-        json.add("kmalloc_eternal_allocated", stats.bytes_eternal);
         json.add("user_physical_allocated", system_memory.user_physical_pages_used);
         json.add("user_physical_available", system_memory.user_physical_pages - system_memory.user_physical_pages_used);
         json.add("user_physical_committed", system_memory.user_physical_pages_committed);

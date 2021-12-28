@@ -38,17 +38,6 @@ inline size_t malloc_good_size(size_t size) { return size; }
 #    endif
 #endif
 
-#ifdef KERNEL
-#    define AK_MAKE_ETERNAL                                               \
-    public:                                                               \
-        void* operator new(size_t size) { return kmalloc_eternal(size); } \
-        void operator delete(void*, size_t) { VERIFY_NOT_REACHED(); }     \
-                                                                          \
-    private:
-#else
-#    define AK_MAKE_ETERNAL
-#endif
-
 using std::nothrow;
 
 inline void* kmalloc_array(Checked<size_t> a, Checked<size_t> b)

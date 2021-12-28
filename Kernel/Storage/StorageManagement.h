@@ -19,7 +19,6 @@ namespace Kernel {
 
 class PartitionTable;
 class StorageManagement {
-    AK_MAKE_ETERNAL;
 
 public:
     StorageManagement();

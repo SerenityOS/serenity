@@ -137,7 +137,6 @@ private:
 };
 
 class MemoryManager {
-    AK_MAKE_ETERNAL
     friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;

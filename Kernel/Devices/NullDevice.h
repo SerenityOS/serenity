@@ -11,7 +11,6 @@
 namespace Kernel {
 
 class NullDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:

@@ -12,7 +12,6 @@
 namespace Kernel {
 
 class SerialDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:

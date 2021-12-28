@@ -14,7 +14,6 @@
 namespace Kernel {
 
 class ConsoleManagement {
-    AK_MAKE_ETERNAL;
     friend class VirtualConsole;
 
 public:

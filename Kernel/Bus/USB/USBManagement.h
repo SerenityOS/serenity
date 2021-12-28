@@ -13,7 +13,6 @@
 namespace Kernel::USB {
 
 class USBManagement {
-    AK_MAKE_ETERNAL;
 
 public:
     USBManagement();

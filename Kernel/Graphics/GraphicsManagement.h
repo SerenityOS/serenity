@@ -27,7 +27,6 @@ class GraphicsManagement {
     friend class IntelNativeGraphicsAdapter;
     friend class VGACompatibleAdapter;
     friend class Graphics::VirtIOGPU::GraphicsAdapter;
-    AK_MAKE_ETERNAL
 
 public:
     static GraphicsManagement& the();

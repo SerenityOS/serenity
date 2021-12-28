@@ -19,7 +19,6 @@ class AsyncBlockDeviceRequest;
 
 class IDEController final : public ATAController
     , public PCI::Device {
-    AK_MAKE_ETERNAL
 public:
     static NonnullRefPtr<IDEController> initialize(PCI::DeviceIdentifier const&, bool force_pio);
     virtual ~IDEController() override;

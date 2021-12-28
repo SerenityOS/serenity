@@ -22,7 +22,6 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class StorageDevice;
 class StorageController : public RefCounted<StorageController> {
-    AK_MAKE_ETERNAL
 
 public:
     virtual ~StorageController() = default;

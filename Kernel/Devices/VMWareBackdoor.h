@@ -39,7 +39,6 @@ struct VMWareCommand {
 };
 
 class VMWareBackdoor {
-    AK_MAKE_ETERNAL;
 
 public:
     VMWareBackdoor();

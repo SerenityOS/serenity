@@ -29,7 +29,6 @@ static constexpr size_t CHUNK_SIZE = 64;
 #endif
 
 #define POOL_SIZE (2 * MiB)
-#define ETERNAL_RANGE_SIZE (4 * MiB)
 
 namespace std {
 const nothrow_t nothrow;
@@ -307,17 +306,12 @@ READONLY_AFTER_INIT static KmallocGlobalData* g_kmalloc_global;
 alignas(KmallocGlobalData) static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalData)];
 
 // Treat the heap as logically separate from .bss
-__attribute__((section(".heap"))) static u8 kmalloc_eternal_heap[ETERNAL_RANGE_SIZE];
 __attribute__((section(".heap"))) static u8 kmalloc_pool_heap[POOL_SIZE];
 
-static size_t g_kmalloc_bytes_eternal = 0;
 static size_t g_kmalloc_call_count;
 static size_t g_kfree_call_count;
 static size_t g_nested_kfree_calls;
 bool g_dump_kmalloc_stacks;
-
-static u8* s_next_eternal_ptr;
-READONLY_AFTER_INIT static u8* s_end_of_eternal_range;
 
 void kmalloc_enable_expand()
 {
@@ -335,28 +329,10 @@ static inline void kmalloc_verify_nospinlock_held()
 UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
-    memset(kmalloc_eternal_heap, 0, sizeof(kmalloc_eternal_heap));
     memset(kmalloc_pool_heap, 0, sizeof(kmalloc_pool_heap));
     g_kmalloc_global = new (g_kmalloc_global_heap) KmallocGlobalData(kmalloc_pool_heap, sizeof(kmalloc_pool_heap));
 
     s_lock.initialize();
-
-    s_next_eternal_ptr = kmalloc_eternal_heap;
-    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_eternal_heap);
-}
-
-void* kmalloc_eternal(size_t size)
-{
-    kmalloc_verify_nospinlock_held();
-
-    size = round_up_to_power_of_two(size, sizeof(void*));
-
-    SpinlockLocker lock(s_lock);
-    void* ptr = s_next_eternal_ptr;
-    s_next_eternal_ptr += size;
-    VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
-    g_kmalloc_bytes_eternal += size;
-    return ptr;
 }
 
 void* kmalloc(size_t size)
@@ -493,7 +469,6 @@ void get_kmalloc_stats(kmalloc_stats& stats)
     SpinlockLocker lock(s_lock);
     stats.bytes_allocated = g_kmalloc_global->allocated_bytes();
     stats.bytes_free = g_kmalloc_global->free_bytes();
-    stats.bytes_eternal = g_kmalloc_bytes_eternal;
     stats.kmalloc_call_count = g_kmalloc_call_count;
     stats.kfree_call_count = g_kfree_call_count;
 }

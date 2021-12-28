@@ -120,7 +120,6 @@ private:
 };
 
 class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {
-    AK_MAKE_ETERNAL;
 
 public:
     KernelRng();

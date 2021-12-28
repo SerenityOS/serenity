@@ -29,7 +29,6 @@ enum class TimePrecision {
 };
 
 class TimeManagement {
-    AK_MAKE_ETERNAL;
 
 public:
     TimeManagement();

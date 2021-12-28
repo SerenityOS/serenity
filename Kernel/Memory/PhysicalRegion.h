@@ -13,7 +13,6 @@
 namespace Kernel::Memory {
 
 class PhysicalRegion {
-    AK_MAKE_ETERNAL;
     AK_MAKE_NONCOPYABLE(PhysicalRegion);
     AK_MAKE_NONMOVABLE(PhysicalRegion);
 

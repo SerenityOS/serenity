@@ -24,7 +24,6 @@
 namespace Kernel {
 
 class DeviceManagement {
-    AK_MAKE_ETERNAL;
 
 public:
     DeviceManagement();

@@ -11,7 +11,6 @@
 namespace Kernel {
 
 class ZeroDevice final : public CharacterDevice {
-    AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:

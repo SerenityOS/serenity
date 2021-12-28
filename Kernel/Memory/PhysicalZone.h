@@ -17,7 +17,6 @@ namespace Kernel::Memory {
 // The allocator uses a buddy block scheme internally.
 
 class PhysicalZone {
-    AK_MAKE_ETERNAL;
     AK_MAKE_NONCOPYABLE(PhysicalZone);
     AK_MAKE_NONMOVABLE(PhysicalZone);
 

@@ -33,7 +33,6 @@ struct UidAndGid {
 };
 
 class VirtualFileSystem {
-    AK_MAKE_ETERNAL
 public:
     // Required to be at least 8 by POSIX
     // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/limits.h.html

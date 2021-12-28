@@ -42,7 +42,6 @@ enum class AHCIResetMode {
 };
 
 class CommandLine {
-    AK_MAKE_ETERNAL;
 
 public:
     static void early_initialize(const char* cmd_line);

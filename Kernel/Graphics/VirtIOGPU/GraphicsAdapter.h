@@ -35,7 +35,6 @@ class FramebufferDevice;
 class GraphicsAdapter final
     : public GenericGraphicsAdapter
     , public VirtIO::Device {
-    AK_MAKE_ETERNAL
     friend class FramebufferDevice;
 
 public:

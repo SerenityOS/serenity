@@ -65,7 +65,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
 
     for (size_t i = 0; i < 8; ++i)
         s_symbol_count = (s_symbol_count << 4) | parse_hex_digit(*(bufptr++));
-    s_symbols = static_cast<KernelSymbol*>(kmalloc_eternal(sizeof(KernelSymbol) * s_symbol_count));
+    s_symbols = static_cast<KernelSymbol*>(kmalloc(sizeof(KernelSymbol) * s_symbol_count));
     ++bufptr; // skip newline
 
     dmesgln("Loading kernel symbol table...");

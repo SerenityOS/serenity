@@ -17,7 +17,6 @@
 namespace Kernel {
 
 class FramebufferDevice final : public GenericFramebufferDevice {
-    AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:

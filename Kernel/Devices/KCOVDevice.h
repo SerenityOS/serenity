@@ -11,7 +11,6 @@
 
 namespace Kernel {
 class KCOVDevice final : public BlockDevice {
-    AK_MAKE_ETERNAL
     friend class DeviceManagement;
 
 public:

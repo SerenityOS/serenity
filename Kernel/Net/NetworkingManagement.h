@@ -20,7 +20,6 @@ namespace Kernel {
 class NetworkAdapter;
 class NetworkingManagement {
     friend class NetworkAdapter;
-    AK_MAKE_ETERNAL
 
 public:
     static NetworkingManagement& the();

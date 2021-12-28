@@ -30,7 +30,7 @@ UNMAP_AFTER_INIT void PCISerialDevice::detect()
                 // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
                 if (!is_available())
                     s_the = serial_device;
-                // NOTE: We intentionally leak the reference to serial_device here, as it is eternal
+                // NOTE: We intentionally leak the reference to serial_device here.
             }
 
             dmesgln("PCISerialDevice: Found {} @ {}", board_definition.name, device_identifier.address());
