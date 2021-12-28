@@ -837,7 +837,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             auto declaration_result = function_declaration_instantiation(ast_interpreter);
 
             // 3. If declResult is not an abrupt completion, then
-            if (!declaration_result.is_throw_completion() || !declaration_result.throw_completion().is_abrupt()) {
+            if (!declaration_result.is_throw_completion()) {
                 // a. Perform ! AsyncFunctionStart(promiseCapability, FunctionBody).
                 async_function_start(promise_capability);
             }
