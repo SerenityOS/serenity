@@ -14,11 +14,10 @@ SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core
 
 Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by us, for us, based on the things we like.
 
-I (Andreas) regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/c/AndreasKling/).
+You can watch videos of the system being developed on YouTube:
 
-Sometimes I write about the system on [my github.io blog](https://awesomekling.github.io/).
-
-I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](https://github.com/sponsors/awesomekling) if you would like to show some support that way.
+* [Andreas Kling's channel](https://youtube.com/andreaskling)
+* [Linus Groh's channel](https://youtube.com/linusgroh)
 
 ## Screenshot
 
