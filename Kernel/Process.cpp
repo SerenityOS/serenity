@@ -79,17 +79,6 @@ UNMAP_AFTER_INIT void Process::initialize()
     create_signal_trampoline();
 }
 
-NonnullRefPtrVector<Process> Process::all_processes()
-{
-    NonnullRefPtrVector<Process> output;
-    processes().with([&](const auto& list) {
-        output.ensure_capacity(list.size_slow());
-        for (const auto& process : list)
-            output.append(NonnullRefPtr<Process>(process));
-    });
-    return output;
-}
-
 bool Process::in_group(GroupID gid) const
 {
     return this->gid() == gid || extra_gids().contains_slow(gid);
