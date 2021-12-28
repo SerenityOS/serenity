@@ -4,11 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-/*
- * Really really *really* Q&D malloc() and free() implementations
- * just to get going. Don't ever let anyone see this shit. :^)
- */
-
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Debug.h>
