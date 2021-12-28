@@ -315,21 +315,6 @@ private:
     Underlying m_value;
 };
 
-template<size_t precision, Integral Underlying>
-struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
-    Formatter() = default;
-    explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
-    {
-    }
-
-    ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
-    {
-        Formatter<double> formatter { *this };
-        return formatter.format(builder, (double)value);
-    }
-};
-
 }
 
 using AK::FixedPoint;

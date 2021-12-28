@@ -356,6 +356,72 @@ ErrorOr<void> FormatBuilder::put_i64(
     return {};
 }
 
+ErrorOr<void> FormatBuilder::put_fixed_point(
+    i64 integer_value,
+    u64 fraction_value,
+    u64 fraction_one,
+    u8 base,
+    bool upper_case,
+    bool zero_pad,
+    Align align,
+    size_t min_width,
+    size_t precision,
+    char fill,
+    SignMode sign_mode)
+{
+    StringBuilder string_builder;
+    FormatBuilder format_builder { string_builder };
+
+    bool is_negative = integer_value < 0;
+    if (is_negative)
+        integer_value = -integer_value;
+
+    TRY(format_builder.put_u64(static_cast<u64>(integer_value), base, false, upper_case, false, Align::Right, 0, ' ', sign_mode, is_negative));
+
+    if (precision > 0) {
+        // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
+        // place to start would be the following video from CppCon 2019:
+        // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
+
+#ifdef KERNEL
+        // We don't have pow() in kernel land
+        u64 scale = 10;
+        for (size_t i = 0; i < precision - 1; i++) // TODO: not efficient
+            scale *= 10;
+#else
+        u64 scale = pow(10.0, (double)precision);
+#endif
+
+        auto fraction = (scale * fraction_value) / fraction_one; // TODO: overflows
+        if (is_negative)
+            fraction = scale - fraction;
+        while (fraction != 0 && fraction % 10 == 0)
+            fraction /= 10;
+
+        size_t visible_precision = 0;
+        {
+            auto fraction_tmp = fraction;
+            for (; visible_precision < precision; ++visible_precision) {
+                if (fraction_tmp == 0)
+                    break;
+                fraction_tmp /= 10;
+            }
+        }
+
+        if (zero_pad || visible_precision > 0)
+            TRY(string_builder.try_append('.'));
+
+        if (visible_precision > 0)
+            TRY(format_builder.put_u64(fraction, base, false, upper_case, true, Align::Right, visible_precision));
+
+        if (zero_pad && (precision - visible_precision) > 0)
+            TRY(format_builder.put_u64(0, base, false, false, true, Align::Right, precision - visible_precision));
+    }
+
+    TRY(put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill));
+    return {};
+}
+
 #ifndef KERNEL
 ErrorOr<void> FormatBuilder::put_f64(
     double value,
