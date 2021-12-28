@@ -217,7 +217,8 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
     const auto ahci_reset_mode = lookup("ahci_reset_mode"sv).value_or("controllers"sv);
     if (ahci_reset_mode == "controllers"sv) {
         return AHCIResetMode::ControllerOnly;
-    } else if (ahci_reset_mode == "aggressive"sv) {
+    }
+    if (ahci_reset_mode == "aggressive"sv) {
         return AHCIResetMode::Aggressive;
     }
     PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
@@ -233,7 +234,8 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     const auto panic_mode = lookup("panic"sv).value_or("halt"sv);
     if (panic_mode == "halt"sv) {
         return PanicMode::Halt;
-    } else if (panic_mode == "shutdown"sv) {
+    }
+    if (panic_mode == "shutdown"sv) {
         return PanicMode::Shutdown;
     }
 
