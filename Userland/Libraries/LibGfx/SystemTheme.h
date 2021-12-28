@@ -91,9 +91,12 @@ namespace Gfx {
     C(WindowText)
 
 #define ENUMERATE_FLAG_ROLES(C) \
-    C(IsDark)
+    C(IsDark)                   \
+    C(IsTitleCenter)
 
 #define ENUMERATE_METRIC_ROLES(C) \
+    C(BorderThickness)            \
+    C(BorderRadius)               \
     C(TitleHeight)                \
     C(TitleButtonWidth)           \
     C(TitleButtonHeight)

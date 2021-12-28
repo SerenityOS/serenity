@@ -49,6 +49,10 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
         int metric = file.read_num_entry("Metrics", name, -1);
         if (metric == -1) {
             switch (role) {
+            case (int)MetricRole::BorderThickness:
+                return 4;
+            case (int)MetricRole::BorderRadius:
+                return 0;
             case (int)MetricRole::TitleHeight:
                 return 19;
             case (int)MetricRole::TitleButtonHeight:
