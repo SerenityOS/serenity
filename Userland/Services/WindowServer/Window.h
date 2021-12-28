@@ -375,6 +375,9 @@ public:
     void remove_all_stealing() { m_stealable_by_client_ids.clear(); }
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
+    bool prevents_workspace_switching() const { return m_prevents_workspace_switching; }
+    void set_prevents_workspace_switching(bool);
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -465,6 +468,7 @@ private:
     bool m_should_show_menubar { true };
     WindowStack* m_window_stack { nullptr };
     RefPtr<Animation> m_animation;
+    bool m_prevents_workspace_switching { false };
 
 public:
     using List = IntrusiveList<&Window::m_list_node>;

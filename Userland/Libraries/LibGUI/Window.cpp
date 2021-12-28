@@ -86,6 +86,7 @@ Window::Window(Core::Object* parent)
     REGISTER_BOOL_PROPERTY("minimizable", is_minimizable, set_minimizable);
     REGISTER_BOOL_PROPERTY("resizable", is_resizable, set_resizable);
     REGISTER_BOOL_PROPERTY("fullscreen", is_fullscreen, set_fullscreen);
+    REGISTER_BOOL_PROPERTY("prevents_workspace_switching", prevents_workspace_switching, set_prevents_workspace_switching);
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
     REGISTER_SIZE_PROPERTY("base_size", base_size, set_base_size);
     REGISTER_SIZE_PROPERTY("size_increment", size_increment, set_size_increment);
@@ -148,6 +149,7 @@ void Window::show()
         m_frameless,
         m_forced_shadow,
         m_accessory,
+        m_prevents_workspace_switching,
         m_opacity_when_windowless,
         m_alpha_hit_threshold,
         m_base_size,
@@ -806,6 +808,14 @@ void Window::set_alpha_hit_threshold(float threshold)
     if (!is_visible())
         return;
     WindowServerConnection::the().async_set_window_alpha_hit_threshold(m_window_id, threshold);
+}
+
+void Window::set_prevents_workspace_switching(bool prevents)
+{
+    m_prevents_workspace_switching = prevents;
+    if (!is_visible())
+        return;
+    WindowServerConnection::the().async_set_prevents_workspace_switching(m_window_id, prevents);
 }
 
 void Window::set_hovered_widget(Widget* widget)

@@ -1399,6 +1399,13 @@ bool WindowManager::is_window_in_modal_stack(Window& window_in_modal_stack, Wind
 
 void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* carry_window, bool show_overlay)
 {
+    WindowStack& current_window_stack = WindowManager::the().current_window_stack();
+    for (auto& window : current_window_stack.windows()) {
+        if (window.prevents_workspace_switching()) {
+            return;
+        }
+    }
+
     m_carry_window_to_new_stack.clear();
     m_switching_to_window_stack = &window_stack;
     if (carry_window && !is_stationary_window_type(carry_window->type()) && &carry_window->window_stack() != &window_stack) {

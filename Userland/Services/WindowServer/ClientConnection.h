@@ -98,7 +98,7 @@ private:
     virtual void add_menu_separator(i32) override;
     virtual void update_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool, bool, bool,
-        bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
+        bool, bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
         Optional<Gfx::IntSize> const&, i32, String const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
     virtual void set_window_title(i32, String const&) override;
@@ -172,6 +172,7 @@ private:
     virtual void remove_window_stealing_for_client(i32, i32) override;
     virtual void remove_window_stealing(i32) override;
     virtual Messages::WindowServer::GetColorUnderCursorResponse get_color_under_cursor() override;
+    virtual void set_prevents_workspace_switching(i32, bool) override;
 
     Window* window_from_id(i32 window_id);
 

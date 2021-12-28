@@ -1282,4 +1282,9 @@ String Window::computed_title() const
     return title;
 }
 
+void Window::set_prevents_workspace_switching(bool prevents)
+{
+    m_prevents_workspace_switching = prevents;
+}
+
 }

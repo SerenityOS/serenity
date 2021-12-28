@@ -66,6 +66,9 @@ public:
     void set_alpha_hit_threshold(float);
     float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
 
+    bool prevents_workspace_switching() const { return m_prevents_workspace_switching; }
+    void set_prevents_workspace_switching(bool prevents);
+
     WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
 
@@ -286,6 +289,7 @@ private:
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
     bool m_closeable { true };
+    bool m_prevents_workspace_switching { false };
     bool m_maximized_when_windowless { false };
     bool m_fullscreen { false };
     bool m_frameless { false };

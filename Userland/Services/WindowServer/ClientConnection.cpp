@@ -256,6 +256,16 @@ void ClientConnection::set_window_opacity(i32 window_id, float opacity)
     it->value->set_opacity(opacity);
 }
 
+void ClientConnection::set_prevents_workspace_switching(i32 window_id, bool prevents)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetPreventsWorkspaceSwitching: Bad window ID");
+        return;
+    }
+    it->value->set_prevents_workspace_switching(prevents);
+}
+
 void ClientConnection::set_wallpaper(String const& path)
 {
     Compositor::the().set_wallpaper(path, [&](bool success) {
@@ -482,8 +492,8 @@ Window* ClientConnection::window_from_id(i32 window_id)
 
 void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool closeable, bool resizable,
-    bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
-    float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
+    bool fullscreen, bool frameless, bool forced_shadow, bool accessory, bool prevents_workspace_switching,
+    float opacity, float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
     Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type,
     String const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
@@ -537,6 +547,7 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     window->set_alpha_hit_threshold(alpha_hit_threshold);
     window->set_size_increment(size_increment);
     window->set_base_size(base_size);
+    window->set_prevents_workspace_switching(prevents_workspace_switching);
     if (resize_aspect_ratio.has_value() && !resize_aspect_ratio.value().is_null())
         window->set_resize_aspect_ratio(resize_aspect_ratio);
     window->invalidate(true, true);
