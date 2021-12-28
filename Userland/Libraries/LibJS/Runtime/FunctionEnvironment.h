@@ -25,9 +25,6 @@ public:
     explicit FunctionEnvironment(Environment* parent_scope);
     virtual ~FunctionEnvironment() override;
 
-    Value this_value() const { return m_this_value; }
-    void set_this_value(Value value) { m_this_value = value; }
-
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
     void set_this_binding_status(ThisBindingStatus status) { m_this_binding_status = status; }
 
