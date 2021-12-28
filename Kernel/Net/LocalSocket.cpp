@@ -386,6 +386,8 @@ ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int leve
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
 
+    MutexLocker locker(mutex());
+
     socklen_t size;
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 

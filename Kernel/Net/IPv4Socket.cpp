@@ -505,6 +505,8 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
     if (level != IPPROTO_IP)
         return Socket::setsockopt(level, option, user_value, user_value_size);
 
+    MutexLocker locker(mutex());
+
     switch (option) {
     case IP_TTL: {
         if (user_value_size < sizeof(int))
@@ -568,6 +570,8 @@ ErrorOr<void> IPv4Socket::getsockopt(OpenFileDescription& description, int level
 {
     if (level != IPPROTO_IP)
         return Socket::getsockopt(description, level, option, value, value_size);
+
+    MutexLocker locker(mutex());
 
     socklen_t size;
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));

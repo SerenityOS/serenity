@@ -130,16 +130,22 @@ protected:
 
     Role m_role { Role::None };
 
-    ErrorOr<void> so_error() const { return m_so_error; }
+    ErrorOr<void> so_error() const
+    {
+        VERIFY(m_mutex.is_locked_by_current_thread());
+        return m_so_error;
+    }
 
     Error set_so_error(ErrnoCode error_code)
     {
+        MutexLocker locker(mutex());
         auto error = Error::from_errno(error_code);
         m_so_error = error;
         return error;
     }
     Error set_so_error(Error error)
     {
+        MutexLocker locker(mutex());
         m_so_error = error;
         return error;
     }
