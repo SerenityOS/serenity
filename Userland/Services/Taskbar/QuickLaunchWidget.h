@@ -53,6 +53,20 @@ public:
 private:
     String m_path;
 };
+class QuickLaunchEntryFile : public QuickLaunchEntry {
+public:
+    explicit QuickLaunchEntryFile(String path)
+        : m_path(move(path))
+    {
+    }
+
+    virtual ErrorOr<void> launch() const override;
+    virtual GUI::Icon icon() const override;
+    virtual String name() const override;
+
+private:
+    String m_path;
+};
 
 class QuickLaunchWidget : public GUI::Frame
     , public Config::Listener {
