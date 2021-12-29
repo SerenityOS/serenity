@@ -5,6 +5,7 @@
  */
 
 #include "Client.h"
+
 #include <AK/ByteBuffer.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
@@ -16,13 +17,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-Client::Client(int id, Core::Stream::TCPSocket socket, int ptm_fd)
+Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
     , m_ptm_notifier(Core::Notifier::construct(ptm_fd, Core::Notifier::Read))
 {
-    m_socket.on_ready_to_read = [this] {
+    m_socket->on_ready_to_read = [this] {
         auto result = drain_socket();
         if (result.is_error()) {
             dbgln("Failed to drain the socket: {}", result.error());
@@ -50,7 +51,7 @@ Client::Client(int id, Core::Stream::TCPSocket socket, int ptm_fd)
     m_parser.on_error = [this]() { handle_error(); };
 }
 
-ErrorOr<NonnullRefPtr<Client>> Client::create(int id, Core::Stream::TCPSocket socket, int ptm_fd)
+ErrorOr<NonnullRefPtr<Client>> Client::create(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd)
 {
     auto client = adopt_ref(*new Client(id, move(socket), ptm_fd));
 
@@ -77,12 +78,12 @@ ErrorOr<void> Client::drain_socket()
         return ENOMEM;
     auto buffer = maybe_buffer.release_value();
 
-    while (TRY(m_socket.can_read_without_blocking())) {
-        auto nread = TRY(m_socket.read(buffer));
+    while (TRY(m_socket->can_read_without_blocking())) {
+        auto nread = TRY(m_socket->read(buffer));
 
         m_parser.write({ buffer.data(), nread });
 
-        if (m_socket.is_eof()) {
+        if (m_socket->is_eof()) {
             Core::deferred_invoke([this, strong_this = NonnullRefPtr(*this)] { quit(); });
             break;
         }
@@ -162,7 +163,7 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     if (fast) {
-        TRY(m_socket.write({ data.characters_without_null_termination(), data.length() }));
+        TRY(m_socket->write({ data.characters_without_null_termination(), data.length() }));
         return {};
     }
 
@@ -184,7 +185,7 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     auto builder_contents = builder.to_byte_buffer();
-    TRY(m_socket.write(builder_contents));
+    TRY(m_socket->write(builder_contents));
     return {};
 }
 
@@ -205,7 +206,7 @@ ErrorOr<void> Client::send_commands(Vector<Command> commands)
         stream << (u8)IAC << command.command << command.subcommand;
 
     VERIFY(stream.is_end());
-    TRY(m_socket.write({ buffer.data(), buffer.size() }));
+    TRY(m_socket->write({ buffer.data(), buffer.size() }));
     return {};
 }
 
@@ -213,7 +214,7 @@ void Client::quit()
 {
     m_ptm_notifier->set_enabled(false);
     close(m_ptm_fd);
-    m_socket.close();
+    m_socket->close();
     if (on_exit)
         on_exit();
 }

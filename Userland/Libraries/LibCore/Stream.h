@@ -166,8 +166,8 @@ class File final : public SeekableStream {
     AK_MAKE_NONCOPYABLE(File);
 
 public:
-    static ErrorOr<File> open(StringView const& filename, OpenMode, mode_t = 0644);
-    static ErrorOr<File> adopt_fd(int fd, OpenMode);
+    static ErrorOr<NonnullOwnPtr<File>> open(StringView const& filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
 
     File(File&& other) { operator=(move(other)); }
 
@@ -253,9 +253,9 @@ private:
 
 class TCPSocket final : public Socket {
 public:
-    static ErrorOr<TCPSocket> connect(String const& host, u16 port);
-    static ErrorOr<TCPSocket> connect(SocketAddress const& address);
-    static ErrorOr<TCPSocket> adopt_fd(int fd);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> connect(String const& host, u16 port);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> connect(SocketAddress const& address);
+    static ErrorOr<NonnullOwnPtr<TCPSocket>> adopt_fd(int fd);
 
     TCPSocket(TCPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -310,8 +310,8 @@ private:
 
 class UDPSocket final : public Socket {
 public:
-    static ErrorOr<UDPSocket> connect(String const& host, u16 port);
-    static ErrorOr<UDPSocket> connect(SocketAddress const& address);
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(String const& host, u16 port);
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address);
 
     UDPSocket(UDPSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -378,7 +378,7 @@ private:
 
 class LocalSocket final : public Socket {
 public:
-    static ErrorOr<LocalSocket> connect(String const& path);
+    static ErrorOr<NonnullOwnPtr<LocalSocket>> connect(String const& path);
 
     LocalSocket(LocalSocket&& other)
         : Socket(static_cast<Socket&&>(other))
@@ -444,7 +444,7 @@ class BufferedHelper {
 
 public:
     template<StreamLike U>
-    BufferedHelper(Badge<U>, T stream, ByteBuffer buffer)
+    BufferedHelper(Badge<U>, NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_stream(move(stream))
         , m_buffer(move(buffer))
     {
@@ -466,22 +466,22 @@ public:
     }
 
     template<template<typename> typename BufferedType>
-    static ErrorOr<BufferedType<T>> create_buffered(T&& stream, size_t buffer_size)
+    static ErrorOr<NonnullOwnPtr<BufferedType<T>>> create_buffered(NonnullOwnPtr<T> stream, size_t buffer_size)
     {
         if (!buffer_size)
             return EINVAL;
-        if (!stream.is_open())
+        if (!stream->is_open())
             return ENOTCONN;
 
         auto maybe_buffer = ByteBuffer::create_uninitialized(buffer_size);
         if (!maybe_buffer.has_value())
             return ENOMEM;
 
-        return BufferedType<T> { move(stream), maybe_buffer.release_value() };
+        return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), maybe_buffer.release_value()));
     }
 
-    T& stream() { return m_stream; }
-    T const& stream() const { return m_stream; }
+    T& stream() { return *m_stream; }
+    T const& stream() const { return *m_stream; }
 
     ErrorOr<size_t> read(Bytes buffer)
     {
@@ -515,7 +515,7 @@ public:
 
         // Otherwise, let's try an extra read just in case there's something
         // in our receive buffer.
-        auto stream_nread = TRY(m_stream.read(buffer.slice(buffer_nread)));
+        auto stream_nread = TRY(stream().read(buffer.slice(buffer_nread)));
         return buffer_nread + stream_nread;
     }
 
@@ -661,12 +661,12 @@ private:
             return ReadonlyBytes {};
 
         auto fillable_slice = m_buffer.span().slice(m_buffered_size);
-        auto nread = TRY(m_stream.read(fillable_slice));
+        auto nread = TRY(stream().read(fillable_slice));
         m_buffered_size += nread;
         return fillable_slice.slice(0, nread);
     }
 
-    T m_stream;
+    NonnullOwnPtr<T> m_stream;
     // FIXME: Replacing this with a circular buffer would be really nice and
     //        would avoid excessive copies; however, right now
     //        AK::CircularDuplexBuffer inlines its entire contents, and that
@@ -686,7 +686,7 @@ class BufferedSeekable final : public SeekableStream {
     friend BufferedHelper<T>;
 
 public:
-    static ErrorOr<BufferedSeekable<T>> create(T&& stream, size_t buffer_size = 16384)
+    static ErrorOr<NonnullOwnPtr<BufferedSeekable<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
     {
         return BufferedHelper<T>::template create_buffered<BufferedSeekable>(move(stream), buffer_size);
     }
@@ -719,7 +719,7 @@ public:
     virtual ~BufferedSeekable() override { }
 
 private:
-    BufferedSeekable(T stream, ByteBuffer buffer)
+    BufferedSeekable(NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_helper(Badge<BufferedSeekable<T>> {}, move(stream), buffer)
     {
     }
@@ -732,7 +732,7 @@ class BufferedSocket final : public Socket {
     friend BufferedHelper<T>;
 
 public:
-    static ErrorOr<BufferedSocket<T>> create(T&& stream, size_t buffer_size = 16384)
+    static ErrorOr<NonnullOwnPtr<BufferedSocket<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
     {
         return BufferedHelper<T>::template create_buffered<BufferedSocket>(move(stream), buffer_size);
     }
@@ -776,7 +776,7 @@ public:
     virtual ~BufferedSocket() override { }
 
 private:
-    BufferedSocket(T stream, ByteBuffer buffer)
+    BufferedSocket(NonnullOwnPtr<T> stream, ByteBuffer buffer)
         : m_helper(Badge<BufferedSocket<T>> {}, move(stream), buffer)
     {
         setup_notifier();
@@ -804,14 +804,14 @@ using BufferedLocalSocket = BufferedSocket<LocalSocket>;
 template<SocketLike T>
 class BasicReusableSocket final : public ReusableSocket {
 public:
-    static ErrorOr<BasicReusableSocket<T>> connect(String const& host, u16 port)
+    static ErrorOr<NonnullOwnPtr<BasicReusableSocket<T>>> connect(String const& host, u16 port)
     {
-        return BasicReusableSocket { TRY(T::connect(host, port)) };
+        return make<BasicReusableSocket<T>>(TRY(T::connect(host, port)));
     }
 
-    static ErrorOr<BasicReusableSocket<T>> connect(SocketAddress const& address)
+    static ErrorOr<NonnullOwnPtr<BasicReusableSocket<T>>> connect(SocketAddress const& address)
     {
-        return BasicReusableSocket { TRY(T::connect(address)) };
+        return make<BasicReusableSocket<T>>(TRY(T::connect(address)));
     }
 
     virtual bool is_connected() override
@@ -850,12 +850,12 @@ public:
     virtual ErrorOr<void> set_close_on_exec(bool enabled) override { return m_socket.set_close_on_exec(enabled); }
 
 private:
-    BasicReusableSocket(T&& socket)
+    BasicReusableSocket(NonnullOwnPtr<T> socket)
         : m_socket(move(socket))
     {
     }
 
-    T m_socket;
+    NonnullOwnPtr<T> m_socket;
 };
 
 using ReusableTCPSocket = BasicReusableSocket<TCPSocket>;

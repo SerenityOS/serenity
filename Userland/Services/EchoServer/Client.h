@@ -10,7 +10,7 @@
 
 class Client : public RefCounted<Client> {
 public:
-    static NonnullRefPtr<Client> create(int id, Core::Stream::TCPSocket socket)
+    static NonnullRefPtr<Client> create(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket)
     {
         return adopt_ref(*new Client(id, move(socket)));
     }
@@ -18,12 +18,12 @@ public:
     Function<void()> on_exit;
 
 protected:
-    Client(int id, Core::Stream::TCPSocket socket);
+    Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket);
 
     ErrorOr<void> drain_socket();
     void quit();
 
 private:
     int m_id { 0 };
-    Core::Stream::TCPSocket m_socket;
+    NonnullOwnPtr<Core::Stream::TCPSocket> m_socket;
 };

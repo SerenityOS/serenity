@@ -90,14 +90,14 @@ ErrorOr<off_t> SeekableStream::size()
     return seek_result.value();
 }
 
-ErrorOr<File> File::open(StringView const& filename, OpenMode mode, mode_t permissions)
+ErrorOr<NonnullOwnPtr<File>> File::open(StringView const& filename, OpenMode mode, mode_t permissions)
 {
-    File file { mode };
-    TRY(file.open_path(filename, permissions));
+    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
+    TRY(file->open_path(filename, permissions));
     return file;
 }
 
-ErrorOr<File> File::adopt_fd(int fd, OpenMode mode)
+ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
@@ -108,8 +108,8 @@ ErrorOr<File> File::adopt_fd(int fd, OpenMode mode)
         return Error::from_errno(EINVAL);
     }
 
-    File file { mode };
-    file.m_fd = fd;
+    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
+    file->m_fd = fd;
     return file;
 }
 
@@ -445,18 +445,18 @@ void PosixSocketHelper::setup_notifier()
         m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Read);
 }
 
-ErrorOr<TCPSocket> TCPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Stream));
     return connect(SocketAddress { ip_address, port });
 }
 
-ErrorOr<TCPSocket> TCPSocket::connect(SocketAddress const& address)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& address)
 {
-    TCPSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Stream));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_inet(fd, address);
     if (result.is_error()) {
@@ -464,19 +464,19 @@ ErrorOr<TCPSocket> TCPSocket::connect(SocketAddress const& address)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 
-ErrorOr<TCPSocket> TCPSocket::adopt_fd(int fd)
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::adopt_fd(int fd)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
     }
 
-    TCPSocket socket;
-    socket.m_helper.set_fd(fd);
-    socket.setup_notifier();
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
+    socket->m_helper.set_fd(fd);
+    socket->setup_notifier();
     return socket;
 }
 
@@ -495,18 +495,18 @@ ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
     return static_cast<size_t>(value);
 }
 
-ErrorOr<UDPSocket> UDPSocket::connect(String const& host, u16 port)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(String const& host, u16 port)
 {
     auto ip_address = TRY(resolve_host(host, SocketType::Datagram));
     return connect(SocketAddress { ip_address, port });
 }
 
-ErrorOr<UDPSocket> UDPSocket::connect(SocketAddress const& address)
+ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& address)
 {
-    UDPSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) UDPSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Datagram));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_inet(fd, address);
     if (result.is_error()) {
@@ -514,16 +514,16 @@ ErrorOr<UDPSocket> UDPSocket::connect(SocketAddress const& address)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 
-ErrorOr<LocalSocket> LocalSocket::connect(String const& path)
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
 {
-    LocalSocket socket;
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
 
     auto fd = TRY(create_fd(SocketDomain::Local, SocketType::Stream));
-    socket.m_helper.set_fd(fd);
+    socket->m_helper.set_fd(fd);
 
     auto result = connect_local(fd, path);
     if (result.is_error()) {
@@ -531,7 +531,7 @@ ErrorOr<LocalSocket> LocalSocket::connect(String const& path)
         return result.release_error();
     }
 
-    socket.setup_notifier();
+    socket->setup_notifier();
     return socket;
 }
 
