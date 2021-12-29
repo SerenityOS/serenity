@@ -937,7 +937,7 @@ ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Func
     TRY(callback({ ".", { fsid, component_index() }, 0 }));
     TRY(callback({ "..", { fsid, 0 }, 0 }));
 
-    for (auto& component : m_components) {
+    for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
         TRY(callback({ component.name(), identifier, 0 }));
     }

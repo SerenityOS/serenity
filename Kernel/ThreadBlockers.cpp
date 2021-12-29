@@ -270,9 +270,9 @@ Thread::WriteBlocker::WriteBlocker(OpenFileDescription& description, BlockFlags&
 
 auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
 {
-    auto& description = blocked_description();
+    auto const& description = blocked_description();
     if (description.is_socket()) {
-        auto& socket = *description.socket();
+        auto const& socket = *description.socket();
         if (socket.has_send_timeout()) {
             Time send_timeout = socket.send_timeout();
             m_timeout = BlockTimeout(false, &send_timeout, timeout.start_time(), timeout.clock_id());
@@ -290,9 +290,9 @@ Thread::ReadBlocker::ReadBlocker(OpenFileDescription& description, BlockFlags& u
 
 auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
 {
-    auto& description = blocked_description();
+    auto const& description = blocked_description();
     if (description.is_socket()) {
-        auto& socket = *description.socket();
+        auto const& socket = *description.socket();
         if (socket.has_receive_timeout()) {
             Time receive_timeout = socket.receive_timeout();
             m_timeout = BlockTimeout(false, &receive_timeout, timeout.start_time(), timeout.clock_id());

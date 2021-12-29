@@ -143,7 +143,7 @@ ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };
-    for (auto& unveiled_path : unveiled_paths()) {
+    for (auto const& unveiled_path : unveiled_paths()) {
         if (!unveiled_path.was_explicitly_unveiled())
             continue;
         auto obj = array.add_object();
@@ -222,7 +222,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
     JsonArraySerializer array { builder };
     {
         SpinlockLocker lock(address_space().get_lock());
-        for (auto& region : address_space().regions()) {
+        for (auto const& region : address_space().regions()) {
             if (!region->is_user() && !Process::current().is_superuser())
                 continue;
             auto region_object = array.add_object();
@@ -247,7 +247,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
 
             StringBuilder pagemap_builder;
             for (size_t i = 0; i < region->page_count(); ++i) {
-                auto* page = region->physical_page(i);
+                auto const* page = region->physical_page(i);
                 if (!page)
                     pagemap_builder.append('N');
                 else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
@@ -276,7 +276,7 @@ mode_t Process::binary_link_required_mode() const
 
 ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
 {
-    auto* custody = executable();
+    auto const* custody = executable();
     if (!custody)
         return Error::from_errno(ENOEXEC);
     return builder.append(custody->absolute_path().bytes());

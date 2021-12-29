@@ -105,7 +105,7 @@ static const HandlerMetadata s_syscall_table[] = {
 ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4)
 {
     VERIFY_INTERRUPTS_ENABLED();
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     auto& process = current_thread->process();
     current_thread->did_syscall();
 
@@ -168,7 +168,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     clac();
 
     auto& regs = *trap->regs;
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
     if (process.is_dying()) {
@@ -178,7 +178,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         return;
     }
 
-    if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
+    if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
         process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
     }
@@ -219,7 +219,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         regs.set_return_reg(result.value());
     }
 
-    if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
+    if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
         process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
     }

@@ -86,7 +86,7 @@ ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, Threa
     if ((g_profiling_event_mask & type) == 0)
         return EINVAL;
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
     u32 enter_count = 0;
     if (current_thread)
         enter_count = current_thread->enter_profiler();
@@ -191,7 +191,7 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
         auto strings = object.add_array("strings");
-        for (auto& it : m_strings) {
+        for (auto const& it : m_strings) {
             strings.add(it->view());
         }
     }
@@ -332,7 +332,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
             0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
     });
 
-    for (auto& region : process.address_space().regions()) {
+    for (auto const& region : process.address_space().regions()) {
         [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0,
             0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
     }
