@@ -291,59 +291,59 @@ NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
     return media_query_list;
 }
 
-RefPtr<CSS::StyleValue> Window::query_media_feature(FlyString const& name) const
+Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& name) const
 {
     // FIXME: Many of these should be dependent on the hardware
 
     // MEDIAQUERIES-4 properties - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
     if (name.equals_ignoring_case("any-hover"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
+        return CSS::MediaFeatureValue("hover");
     if (name.equals_ignoring_case("any-pointer"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fine);
+        return CSS::MediaFeatureValue("fine");
     // FIXME: aspect-ratio
     if (name.equals_ignoring_case("color"sv))
-        return CSS::NumericStyleValue::create_integer(32);
+        return CSS::MediaFeatureValue(32);
     if (name.equals_ignoring_case("color-gamut"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Srgb);
+        return CSS::MediaFeatureValue("srgb");
     if (name.equals_ignoring_case("color-index"sv))
-        return CSS::NumericStyleValue::create_integer(0);
+        return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
     // FIXME: device-height
     // FIXME: device-width
     if (name.equals_ignoring_case("grid"sv))
-        return CSS::NumericStyleValue::create_integer(0);
+        return CSS::MediaFeatureValue(0);
     if (name.equals_ignoring_case("height"sv))
-        return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_height()));
+        return CSS::MediaFeatureValue(CSS::Length::make_px(inner_height()));
     if (name.equals_ignoring_case("hover"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Hover);
+        return CSS::MediaFeatureValue("hover");
     if (name.equals_ignoring_case("monochrome"sv))
-        return CSS::NumericStyleValue::create_integer(0);
+        return CSS::MediaFeatureValue(0);
     if (name.equals_ignoring_case("hover"sv))
-        return CSS::IdentifierStyleValue::create(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
+        return CSS::MediaFeatureValue(inner_height() >= inner_width() ? "portrait" : "landscape");
     if (name.equals_ignoring_case("overflow-block"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Scroll);
+        return CSS::MediaFeatureValue("scroll");
     // FIXME: overflow-inline
     if (name.equals_ignoring_case("pointer"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fine);
+        return CSS::MediaFeatureValue("fine");
     // FIXME: resolution
     if (name.equals_ignoring_case("scan"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Progressive);
+        return CSS::MediaFeatureValue("progressive");
     if (name.equals_ignoring_case("update"sv))
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::Fast);
+        return CSS::MediaFeatureValue("fast");
     if (name.equals_ignoring_case("width"sv))
-        return CSS::LengthStyleValue::create(CSS::Length::make_px(inner_width()));
+        return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
 
     // MEDIAQUERIES-5 properties - https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
     if (name.equals_ignoring_case("prefers-color-scheme")) {
         if (auto* page = this->page()) {
             switch (page->preferred_color_scheme()) {
             case CSS::PreferredColorScheme::Light:
-                return CSS::IdentifierStyleValue::create(CSS::ValueID::Light);
+                return CSS::MediaFeatureValue("light");
             case CSS::PreferredColorScheme::Dark:
-                return CSS::IdentifierStyleValue::create(CSS::ValueID::Dark);
+                return CSS::MediaFeatureValue("dark");
             case CSS::PreferredColorScheme::Auto:
             default:
-                return CSS::IdentifierStyleValue::create(page->palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
+                return CSS::MediaFeatureValue(page->palette().is_dark() ? "dark" : "light");
             }
         }
     }

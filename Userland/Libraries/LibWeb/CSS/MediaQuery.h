@@ -17,6 +17,58 @@
 
 namespace Web::CSS {
 
+// https://www.w3.org/TR/mediaqueries-4/#typedef-mf-value
+class MediaFeatureValue {
+public:
+    explicit MediaFeatureValue(String ident)
+        : m_value(move(ident))
+    {
+    }
+
+    explicit MediaFeatureValue(Length length)
+        : m_value(move(length))
+    {
+    }
+
+    explicit MediaFeatureValue(double number)
+        : m_value(number)
+    {
+    }
+
+    String to_string() const;
+
+    bool is_ident() const { return m_value.has<String>(); }
+    bool is_length() const { return m_value.has<Length>(); }
+    bool is_number() const { return m_value.has<double>(); }
+    bool is_same_type(MediaFeatureValue const& other) const;
+
+    String const& ident() const
+    {
+        VERIFY(is_ident());
+        return m_value.get<String>();
+    }
+
+    Length const& length() const
+    {
+        VERIFY(is_length());
+        return m_value.get<Length>();
+    }
+
+    double number() const
+    {
+        VERIFY(is_number());
+        return m_value.get<double>();
+    }
+
+    bool operator==(MediaFeatureValue const& other) const { return equals(other); }
+    bool operator!=(MediaFeatureValue const& other) const { return !(*this == other); }
+    bool equals(MediaFeatureValue const& other) const;
+
+private:
+    // TODO: Support <ratio> once we have that.
+    Variant<String, Length, double> m_value;
+};
+
 class MediaQuery : public RefCounted<MediaQuery> {
     friend class Parser;
 
@@ -52,7 +104,7 @@ public:
 
         Type type;
         FlyString name;
-        RefPtr<StyleValue> value { nullptr };
+        Optional<MediaFeatureValue> value {};
 
         bool evaluate(DOM::Window const&) const;
         String to_string() const;

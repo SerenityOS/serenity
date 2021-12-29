@@ -895,8 +895,8 @@ Optional<MediaQuery::MediaFeature> Parser::consume_media_feature(TokenStream<Sty
             return invalid_feature();
         tokens.skip_whitespace();
 
-        auto value = parse_css_value(PropertyID::Custom, tokens);
-        if (value.is_error())
+        auto value = parse_media_feature_value(tokens);
+        if (!value.has_value())
             return invalid_feature();
 
         if (tokens.has_next_token())
@@ -961,6 +961,32 @@ Optional<MediaQuery::MediaType> Parser::consume_media_type(TokenStream<StyleComp
     }
 
     tokens.reconsume_current_input_token();
+    return {};
+}
+
+// `<mf-value>`, https://www.w3.org/TR/mediaqueries-4/#typedef-mf-value
+Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleComponentValueRule>& tokens)
+{
+    // `<number> | <dimension> | <ident> | <ratio>`
+    auto position = tokens.position();
+    tokens.skip_whitespace();
+    auto& first = tokens.next_token();
+
+    // `<number>`
+    if (first.is(Token::Type::Number))
+        return MediaFeatureValue(first.token().number_value());
+
+    // `<dimension>`
+    if (auto length = parse_length(first); length.has_value())
+        return MediaFeatureValue(length.release_value());
+
+    // `<ident>`
+    if (first.is(Token::Type::Ident))
+        return MediaFeatureValue(first.token().ident());
+
+    // FIXME: `<ratio>`, once we have ratios.
+
+    tokens.rewind_to_position(position);
     return {};
 }
 
