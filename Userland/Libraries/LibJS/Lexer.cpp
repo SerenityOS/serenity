@@ -194,7 +194,7 @@ void Lexer::consume()
     } else if (is_unicode_character()) {
         size_t char_size = 1;
         if ((m_current_char & 64) == 0) {
-            // invalid char
+            m_hit_invalid_unicode = m_position;
         } else if ((m_current_char & 32) == 0) {
             char_size = 2;
         } else if ((m_current_char & 16) == 0) {
@@ -206,7 +206,18 @@ void Lexer::consume()
         VERIFY(char_size >= 1);
         --char_size;
 
-        m_position += char_size;
+        for (size_t i = m_position; i < m_position + char_size; i++) {
+            if (i >= m_source.length() || (m_source[i] & 0b11000000) != 0b10000000) {
+                m_hit_invalid_unicode = m_position;
+                break;
+            }
+        }
+
+        if (m_hit_invalid_unicode.has_value())
+            m_position = m_source.length();
+        else
+            m_position += char_size;
+
         if (did_reach_eof())
             return;
 
@@ -813,15 +824,29 @@ Token Lexer::next()
         }
     }
 
-    m_current_token = Token(
-        token_type,
-        token_message,
-        m_source.substring_view(trivia_start - 1, value_start - trivia_start),
-        m_source.substring_view(value_start - 1, m_position - value_start),
-        m_filename,
-        value_start_line_number,
-        value_start_column_number,
-        m_position);
+    if (m_hit_invalid_unicode.has_value()) {
+        value_start = m_hit_invalid_unicode.value() - 1;
+        m_current_token = Token(TokenType::Invalid, "Invalid unicode codepoint in source",
+            "", // Since the invalid unicode can occur anywhere in the current token the trivia is not correct
+            m_source.substring_view(value_start + 1, min(4u, m_source.length() - value_start - 2)),
+            m_filename,
+            m_line_number,
+            m_line_column - 1,
+            m_position);
+        m_hit_invalid_unicode.clear();
+        // Do not produce any further tokens.
+        VERIFY(is_eof());
+    } else {
+        m_current_token = Token(
+            token_type,
+            token_message,
+            m_source.substring_view(trivia_start - 1, value_start - trivia_start),
+            m_source.substring_view(value_start - 1, m_position - value_start),
+            m_filename,
+            value_start_line_number,
+            value_start_column_number,
+            m_position);
+    }
 
     if (identifier.has_value())
         m_current_token.set_identifier_value(identifier.release_value());
