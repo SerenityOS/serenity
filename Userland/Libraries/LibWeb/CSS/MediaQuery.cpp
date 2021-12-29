@@ -59,30 +59,30 @@ bool MediaFeatureValue::equals(MediaFeatureValue const& other) const
     VERIFY_NOT_REACHED();
 }
 
-String MediaQuery::MediaFeature::to_string() const
+String MediaFeature::to_string() const
 {
-    switch (type) {
+    switch (m_type) {
     case Type::IsTrue:
-        return name;
+        return m_name;
     case Type::ExactValue:
-        return String::formatted("{}:{}", name, value->to_string());
+        return String::formatted("{}:{}", m_name, m_value->to_string());
     case Type::MinValue:
-        return String::formatted("min-{}:{}", name, value->to_string());
+        return String::formatted("min-{}:{}", m_name, m_value->to_string());
     case Type::MaxValue:
-        return String::formatted("max-{}:{}", name, value->to_string());
+        return String::formatted("max-{}:{}", m_name, m_value->to_string());
     }
 
     VERIFY_NOT_REACHED();
 }
 
-bool MediaQuery::MediaFeature::evaluate(DOM::Window const& window) const
+bool MediaFeature::evaluate(DOM::Window const& window) const
 {
-    auto maybe_queried_value = window.query_media_feature(name);
+    auto maybe_queried_value = window.query_media_feature(m_name);
     if (!maybe_queried_value.has_value())
         return false;
     auto queried_value = maybe_queried_value.release_value();
 
-    switch (type) {
+    switch (m_type) {
     case Type::IsTrue:
         if (queried_value.is_number())
             return queried_value.number() != 0;
@@ -93,18 +93,18 @@ bool MediaQuery::MediaFeature::evaluate(DOM::Window const& window) const
         return false;
 
     case Type::ExactValue:
-        return queried_value.equals(*value);
+        return queried_value.equals(*m_value);
 
     case Type::MinValue:
-        if (!value->is_same_type(queried_value))
+        if (!m_value->is_same_type(queried_value))
             return false;
 
-        if (value->is_number())
-            return queried_value.number() >= value->number();
+        if (m_value->is_number())
+            return queried_value.number() >= m_value->number();
 
-        if (value->is_length()) {
+        if (m_value->is_length()) {
             auto& queried_length = queried_value.length();
-            auto& value_length = value->length();
+            auto& value_length = m_value->length();
             // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
             if (!value_length.is_absolute()) {
                 dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
@@ -116,15 +116,15 @@ bool MediaQuery::MediaFeature::evaluate(DOM::Window const& window) const
         return false;
 
     case Type::MaxValue:
-        if (!value->is_same_type(queried_value))
+        if (!m_value->is_same_type(queried_value))
             return false;
 
-        if (value->is_number())
-            return queried_value.number() <= value->number();
+        if (m_value->is_number())
+            return queried_value.number() <= m_value->number();
 
-        if (value->is_length()) {
+        if (m_value->is_length()) {
             auto& queried_length = queried_value.length();
-            auto& value_length = value->length();
+            auto& value_length = m_value->length();
             // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
             if (!value_length.is_absolute()) {
                 dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
@@ -145,7 +145,7 @@ String MediaQuery::MediaCondition::to_string() const
     builder.append('(');
     switch (type) {
     case Type::Single:
-        builder.append(feature.to_string());
+        builder.append(feature->to_string());
         break;
     case Type::Not:
         builder.append("not ");
@@ -169,7 +169,7 @@ MatchResult MediaQuery::MediaCondition::evaluate(DOM::Window const& window) cons
 {
     switch (type) {
     case Type::Single:
-        return as_match_result(feature.evaluate(window));
+        return as_match_result(feature->evaluate(window));
     case Type::Not:
         return negate(conditions.first().evaluate(window));
     case Type::And:

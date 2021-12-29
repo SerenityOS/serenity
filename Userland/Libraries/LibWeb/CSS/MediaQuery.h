@@ -69,6 +69,49 @@ private:
     Variant<String, Length, double> m_value;
 };
 
+// https://www.w3.org/TR/mediaqueries-4/#mq-features
+class MediaFeature {
+public:
+    // Corresponds to `<mf-boolean>` grammar
+    static MediaFeature boolean(String const& name)
+    {
+        return MediaFeature(Type::IsTrue, name);
+    }
+
+    // Corresponds to `<mf-plain>` grammar
+    static MediaFeature plain(String const& name, MediaFeatureValue value)
+    {
+        if (name.starts_with("min-", CaseSensitivity::CaseInsensitive))
+            return MediaFeature(Type::MinValue, name.substring_view(4), move(value));
+        if (name.starts_with("max-", CaseSensitivity::CaseInsensitive))
+            return MediaFeature(Type::MaxValue, name.substring_view(4), move(value));
+        return MediaFeature(Type::ExactValue, move(name), move(value));
+    }
+
+    bool evaluate(DOM::Window const&) const;
+    String to_string() const;
+
+private:
+    // FIXME: Implement range syntax: https://www.w3.org/TR/mediaqueries-4/#mq-ranges
+    enum class Type {
+        IsTrue,
+        ExactValue,
+        MinValue,
+        MaxValue,
+    };
+
+    MediaFeature(Type type, FlyString name, Optional<MediaFeatureValue> value = {})
+        : m_type(type)
+        , m_name(move(name))
+        , m_value(move(value))
+    {
+    }
+
+    Type m_type;
+    FlyString m_name;
+    Optional<MediaFeatureValue> m_value {};
+};
+
 class MediaQuery : public RefCounted<MediaQuery> {
     friend class Parser;
 
@@ -92,24 +135,6 @@ public:
         Speech,
     };
 
-    // https://www.w3.org/TR/mediaqueries-4/#mq-features
-    struct MediaFeature {
-        // FIXME: Implement range syntax: https://www.w3.org/TR/mediaqueries-4/#mq-ranges
-        enum class Type {
-            IsTrue,
-            ExactValue,
-            MinValue,
-            MaxValue,
-        };
-
-        Type type;
-        FlyString name;
-        Optional<MediaFeatureValue> value {};
-
-        bool evaluate(DOM::Window const&) const;
-        String to_string() const;
-    };
-
     // https://www.w3.org/TR/mediaqueries-4/#media-conditions
     struct MediaCondition {
         enum class Type {
@@ -121,7 +146,7 @@ public:
         };
 
         Type type;
-        MediaFeature feature;
+        Optional<MediaFeature> feature;
         NonnullOwnPtrVector<MediaCondition> conditions;
         Optional<GeneralEnclosed> general_enclosed;
 
@@ -155,8 +180,8 @@ String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
 namespace AK {
 
 template<>
-struct Formatter<Web::CSS::MediaQuery::MediaFeature> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaFeature const& media_feature)
+struct Formatter<Web::CSS::MediaFeature> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaFeature const& media_feature)
     {
         return Formatter<StringView>::format(builder, media_feature.to_string());
     }
