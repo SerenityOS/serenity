@@ -197,21 +197,21 @@ ThrowCompletionOr<bool> GlobalEnvironment::has_restricted_global_property(FlyStr
 }
 
 // 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
-bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
+ThrowCompletionOr<bool> GlobalEnvironment::can_declare_global_var(FlyString const& name) const
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
 
     // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
-    bool has_property = TRY_OR_DISCARD(global_object.has_own_property(name));
+    bool has_property = TRY(global_object.has_own_property(name));
 
     // 4. If hasProperty is true, return true.
     if (has_property)
         return true;
 
     // 5. Return ? IsExtensible(globalObject).
-    return TRY_OR_DISCARD(global_object.is_extensible());
+    return global_object.is_extensible();
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction

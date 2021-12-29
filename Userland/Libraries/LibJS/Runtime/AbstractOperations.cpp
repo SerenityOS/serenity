@@ -660,9 +660,12 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             if (global_var_environment) {
                 if (global_var_environment->has_lexical_declaration(function_name))
                     return IterationDecision::Continue;
-                auto var_definable = global_var_environment->can_declare_global_var(function_name);
-                if (vm.exception())
+
+                auto var_definable_or_error = global_var_environment->can_declare_global_var(function_name);
+                if (var_definable_or_error.is_error())
                     return IterationDecision::Break;
+                auto var_definable = var_definable_or_error.release_value();
+
                 if (!var_definable)
                     return IterationDecision::Continue;
             }
@@ -697,9 +700,10 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
         declaration.for_each_bound_name([&](auto const& name) {
             if (!declared_function_names.contains(name)) {
                 if (global_var_environment) {
-                    auto variable_definable = global_var_environment->can_declare_global_var(name);
-                    if (vm.exception())
+                    auto variable_definable_or_error = global_var_environment->can_declare_global_var(name);
+                    if (variable_definable_or_error.is_error())
                         return IterationDecision::Break;
+                    auto variable_definable = variable_definable_or_error.release_value();
                     if (!variable_definable) {
                         vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
                         return IterationDecision::Break;

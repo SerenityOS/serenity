@@ -3650,9 +3650,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             if (declared_function_names.contains(name))
                 return IterationDecision::Continue;
 
-            auto var_definable = global_environment.can_declare_global_var(name);
-            if (interpreter.exception())
+            auto var_definable_or_error = global_environment.can_declare_global_var(name);
+            if (var_definable_or_error.is_error())
                 return IterationDecision::Break;
+            auto var_definable = var_definable_or_error.release_value();
 
             if (!var_definable) {
                 interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalVariable, name);
