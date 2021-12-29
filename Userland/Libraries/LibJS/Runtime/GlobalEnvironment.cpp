@@ -241,35 +241,25 @@ ThrowCompletionOr<bool> GlobalEnvironment::can_declare_global_function(FlyString
 }
 
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
-void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
+ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
 
     // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
-    auto has_property_or_error = global_object.has_own_property(name);
-    if (has_property_or_error.is_error())
-        return;
-    auto has_property = has_property_or_error.release_value();
+    auto has_property = TRY(global_object.has_own_property(name));
 
     // 4. Let extensible be ? IsExtensible(globalObject).
-    auto extensible_or_error = global_object.is_extensible();
-    if (extensible_or_error.is_error())
-        return;
-    auto extensible = extensible_or_error.release_value();
+    auto extensible = TRY(global_object.is_extensible());
 
     // 5. If hasProperty is false and extensible is true, then
     if (!has_property && extensible) {
         // a. Perform ? ObjRec.CreateMutableBinding(N, D).
-        auto result = m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
-        if (result.is_error())
-            return;
+        TRY(m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted));
 
         // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-        result = m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
-        if (result.is_error())
-            return;
+        TRY(m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined()));
     }
 
     // 6. Let varDeclaredNames be envRec.[[VarNames]].
@@ -280,6 +270,7 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
     }
 
     // 8. Return NormalCompletion(empty).
+    return {};
 }
 
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding

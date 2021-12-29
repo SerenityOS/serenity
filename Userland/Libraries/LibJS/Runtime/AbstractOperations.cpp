@@ -674,8 +674,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
             if (!declared_function_names.contains(function_name) && !hoisted_functions.contains(function_name)) {
                 if (global_var_environment) {
-                    global_var_environment->create_global_var_binding(function_name, true);
-                    if (vm.exception())
+                    auto result = global_var_environment->create_global_var_binding(function_name, true);
+                    if (result.is_error())
                         return IterationDecision::Break;
                 } else {
                     if (!MUST(variable_environment->has_binding(function_name))) {
@@ -763,9 +763,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
 
     for (auto& var_name : declared_var_names) {
         if (global_var_environment) {
-            global_var_environment->create_global_var_binding(var_name, true);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            TRY(global_var_environment->create_global_var_binding(var_name, true));
         } else {
             auto binding_exists = MUST(variable_environment->has_binding(var_name));
 

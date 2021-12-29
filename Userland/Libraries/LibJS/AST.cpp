@@ -3688,8 +3688,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             }
 
             if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
-                global_environment.create_global_var_binding(function_name, false);
-                if (interpreter.exception())
+                auto result = global_environment.create_global_var_binding(function_name, false);
+                if (result.is_error())
                     return IterationDecision::Break;
                 declared_function_names.set(function_name);
             }
@@ -3730,11 +3730,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             return throw_completion(exception->value());
     }
 
-    for (auto& var_name : declared_var_names) {
-        global_environment.create_global_var_binding(var_name, false);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
-    }
+    for (auto& var_name : declared_var_names)
+        TRY(global_environment.create_global_var_binding(var_name, false));
 
     return {};
 }
