@@ -1130,16 +1130,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<StyleCompon
 
     auto& first_token = tokens.next_token();
 
-    // `[ <function-token> <any-value> ) ]`
+    // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function())
         return GeneralEnclosed { first_token.to_string() };
 
-    // `( <ident> <any-value> )`
-    if (first_token.is_block() && first_token.block().is_paren()) {
-        auto& block = first_token.block();
-        if (!block.values().is_empty() && block.values().first().is(Token::Type::Ident))
-            return GeneralEnclosed { first_token.to_string() };
-    }
+    // `( <any-value>? )`
+    if (first_token.is_block() && first_token.block().is_paren())
+        return GeneralEnclosed { first_token.to_string() };
 
     tokens.rewind_to_position(start_position);
     return {};
