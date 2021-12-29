@@ -1425,14 +1425,18 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
     }
     case TokenType::Import: {
         auto lookahead_token = next_token();
-        VERIFY(lookahead_token.type() == TokenType::Period || lookahead_token.type() == TokenType::ParenOpen);
         if (lookahead_token.type() == TokenType::ParenOpen)
             return { parse_import_call() };
 
-        if (auto import_meta = try_parse_import_meta_expression()) {
-            if (m_program_type != Program::Type::Module)
-                syntax_error("import.meta is only allowed in modules");
-            return { import_meta.release_nonnull() };
+        if (lookahead_token.type() == TokenType::Period) {
+            if (auto import_meta = try_parse_import_meta_expression()) {
+                if (m_program_type != Program::Type::Module)
+                    syntax_error("import.meta is only allowed in modules");
+                return { import_meta.release_nonnull() };
+            }
+        } else {
+            consume();
+            expected("import.meta or import call");
         }
         break;
     }
