@@ -12,21 +12,21 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$getpid()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     return pid().value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getppid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     return m_protected_values.ppid.value();
 }
 
 ErrorOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     if (m_name->length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
@@ -37,7 +37,7 @@ ErrorOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t b
 ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(proc);
+    require_promise(Pledge::proc);
     if (user_name_length > 256)
         return ENAMETOOLONG;
     auto name = TRY(try_copy_kstring_from_user(user_name, user_name_length));

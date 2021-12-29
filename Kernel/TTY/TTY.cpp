@@ -474,8 +474,8 @@ ErrorOr<void> TTY::set_termios(const termios& t)
 
 ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    REQUIRE_PROMISE(tty);
     auto& current_process = Process::current();
+    current_process.require_promise(Pledge::tty);
 #if 0
     // FIXME: When should we block things?
     //        How do we make this work together with MasterPTY forwarding to us?

@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$map_time_page()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
 
     auto& vmobject = TimeManagement::the().time_page_vmobject();
 
@@ -25,7 +25,7 @@ ErrorOr<FlatPtr> Process::sys$map_time_page()
 ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
 
     if (!TimeManagement::is_valid_clock_id(clock_id))
         return EINVAL;
@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timesp
 ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    REQUIRE_PROMISE(settime);
+    require_promise(Pledge::settime);
 
     if (!is_superuser())
         return EPERM;
@@ -58,7 +58,7 @@ ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const 
 ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto requested_sleep = TRY(copy_time_from_user(params.requested_sleep));
@@ -105,7 +105,7 @@ ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, User
     }
 
     if (user_delta) {
-        REQUIRE_PROMISE(settime);
+        require_promise(Pledge::settime);
         if (!is_superuser())
             return EPERM;
         auto delta = TRY(copy_time_from_user(user_delta));

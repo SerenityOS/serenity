@@ -14,7 +14,7 @@ constexpr size_t map_name_max_size = 50;
 ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    REQUIRE_PROMISE(setkeymap);
+    require_promise(Pledge::setkeymap);
 
     if (!is_superuser())
         return EPERM;
@@ -40,7 +40,7 @@ ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_pa
 ErrorOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    REQUIRE_PROMISE(getkeymap);
+    require_promise(Pledge::getkeymap);
     auto params = TRY(copy_typed_from_user(user_params));
 
     String keymap_name = HIDManagement::the().keymap_name();

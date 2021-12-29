@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = TRY(fds().open_file_description(fd));
     // NOTE: The FD flags are not shared between OpenFileDescription objects.

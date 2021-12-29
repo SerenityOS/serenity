@@ -159,7 +159,7 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
 ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(ptrace);
+    require_promise(Pledge::ptrace);
     auto params = TRY(copy_typed_from_user(user_params));
 
     return handle_ptrace(params, *this);

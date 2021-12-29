@@ -74,7 +74,7 @@ struct [[gnu::packed]] Metadata {
     //
     // Well-known keys:
     // - "assertion": Used by LibC's __assertion_failed() to store assertion info
-    // - "pledge_violation": Used by the Kernel's REQUIRE_PROMISE() to store pledge violation info
+    // - "pledge_violation": Used by the Kernel's require_promise() to store pledge violation info
     char json_data[]; // Null terminated
 };
 
