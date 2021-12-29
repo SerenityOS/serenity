@@ -31,4 +31,4 @@ set(GENERATED_SOURCES
     )
 
 serenity_lib(LibSQL sql)
-target_link_libraries(LibSQL LibCore LibSyntax)
+target_link_libraries(LibSQL LibCore LibSyntax LibRegex)

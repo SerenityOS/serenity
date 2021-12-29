@@ -636,6 +636,7 @@ public:
 
     MatchOperator type() const { return m_type; }
     const RefPtr<Expression>& escape() const { return m_escape; }
+    virtual Value evaluate(ExecutionContext&) const override;
 
 private:
     MatchOperator m_type;
