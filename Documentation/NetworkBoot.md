@@ -1,34 +1,84 @@
-## SerenityOS network booting via TFTP and DHCP
+# SerenityOS network booting via PXE
 
-By network booting, this guide implies a target computer (physical or virtual) that tries to boot over the network through PXE. The setup presented here is also diskless, as the bootloader and the root file system are supplied over the network. This can be achieved using GRUB2 or PXELINUX although only GRUB2 provides a framebuffer to display the Serenity desktop.
+- [SerenityOS network booting via PXE](#serenityos-network-booting-via-pxe)
+  - [What's network booting?](#whats-network-booting)
+- [PXE firmwares](#pxe-firmwares)
+  - [Built-in network card PXE firmware](#built-in-network-card-pxe-firmware)
+  - [iPXE](#ipxe)
+- [DHCP/TFTP servers](#dhcptftp-servers)
+  - [QEMU's integrated DHCP/TFTP servers](#qemus-integrated-dhcptftp-servers)
+  - [dnsmasq](#dnsmasq)
+- [Bootloaders](#bootloaders)
+  - [GRUB2](#grub2)
+  - [iPXE](#ipxe-1)
+  - [PXELINUX](#pxelinux)
+- [Troubleshooting](#troubleshooting)
 
-Note: it is recommended to boot a mainstream operating system through PXE on the target at least once before attempting this, if only to make sure that your setup works.
+## What's network booting?
 
-### General notes
+Network booting is the process that a target computer (physical or virtual) follows in order to boot over the network through the preboot execution environment, or PXE.
+Network booting is composed of several stages:
+- The PXE firmware starts on the target computer and queries the network for a boot file,
+- The DHCP server gives a lease to the PXE firmware with options for the IP address of the TFTP server and the path of the boot file to load,
+- The TFTP server supplies the boot file and any additional files to the PXE firmware,
+- The bootloader eventually loads the operating system and boots into it.
 
-This guide assumes several things:
+You need to pick one of each in order to achieve network booting.
 
-- The TFTP server root is `/srv/tftp/`
-- Bootloaders are located inside `/srv/tftp/boot/`
+For simplicity, this guide assumes several things:
+- The bootloader, kernel and root file system are all supplied over the network instead of local media (diskless boot)
+- The TFTP server root is located at `/srv/tftp/`
+- Bootloaders are located inside `/srv/tftp/boot/${BOOTLOADER}/`:
+  - GRUB2 files are located inside `/srv/tftp/boot/grub`
+  - PXELINUX files are located inside `/srv/tftp/boot/pxelinux`
 - SerenityOS artifacts are located inside `/srv/tftp/serenity/`:
-    - The prekernel is located at `/srv/tftp/serenity/prekernel`
-        - You can find it at `Build/i686/Kernel/Prekernel/Prekernel`
-    - The kernel is located at `/srv/tftp/serenity/kernel`
-        - You can find it at `Build/i686/Kernel/Kernel`
-    - The ramdisk is located at `/srv/tftp/serenity/ramdisk`
-        - You can use the QEMU image at `Build/i686/_disk_image` as a ramdisk
-        
-`grub-pc-bin`, which contains the BIOS modules for PXE booting GRUB2, isn't available from the ARM repos of Debian and Ubuntu so if you are using an ARM machine for your TFTP server you will need to extract and copy across the contents of the `/usr/lib/grub/i386-pc/` directory from the x86 package or build the files manually.
+  - The prekernel is located at `/srv/tftp/serenity/prekernel`
+  - The kernel is located at `/srv/tftp/serenity/kernel`
+  - The ramdisk is located at `/srv/tftp/serenity/ramdisk`
 
-### GRUB2
+You can find the SerenityOS artifact at the following locations:
+  - The prekernel is located at `Build/${SERENITY_ARCH}/Kernel/Prekernel/Prekernel`
+  - The kernel is located at `Build/${SERENITY_ARCH}/Kernel/Kernel.drow`
+  - While the SerenityOS build system cannot generate a dedicated ramdisk yet, you can use the QEMU disk image at `Build/${SERENITY_ARCH}/_disk_image` as a ramdisk
 
-The easiest way to set up a DHCP and TFTP server is by using `dnsmasq`.
+# PXE firmwares
+
+## Built-in network card PXE firmware
+
+Virtual and physical network cards generally have built-in PXE capability, but by default they are likely to be the least prioritized boot option, if enabled at all.
+Make sure that the target computer will attempt to boot over the network instead of booting from local media.
+
+Unless you are dealing with very old hardware or buggy PXE stacks, this is generally the best option. Note that SerenityOS doesn't have to support your network card in order to boot from it.
+
+## iPXE
+
+iPXE can be used to provide PXE capability to a computer by booting it from local media.
+The prebuilt [ISO image](http://boot.ipxe.org/ipxe.iso), once written to a CD-ROM, hard drive or USB mass storage device, can be directly used as a drop-in replacement for a missing or broken network card PXE stack.
+
+# DHCP/TFTP servers
+
+There are many DHCP and TFTP server implementations and your local network probably already has a DHCP server running.
+Refer to the documentation of your network installation/operating system for more details on how to properly setup a network booting environment.
+
+## QEMU's integrated DHCP/TFTP servers
+
+QEMU can emulate a variety of network services in user mode networking, all provided through the built-in gateway, including the required services for achieving network boot.
+
+Sample command to start a QEMU virtual machine with built-in DHCP/TFTP services configured for network booting:
+
+```qemu-system-i386 -m 4096 -netdev user,tftp=/srv/tftp,bootfile=boot/${BOOTLOADER}/${BOOTFILE},id=network0 -device e1000,netdev=network0```
+
+## dnsmasq
+
+`dnsmasq` can act as both a DHCP and a TFTP server.
 
 1. Install the required packages on the TFTP server:
-    - Debian and Ubuntu: `sudo apt install grub-pc-bin dnsmasq`
-    - Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise the TFTP server won't serve files.
-        
-2. Configure `/etc/dnsmasq.conf` like so, adjusting it appropriately for your hardware and network:
+   - Debian and Ubuntu: `sudo apt install dnsmasq`
+2. Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise the TFTP server won't serve files
+3. Create a dnsmasq configuration file at `/etc/dnsmasq.conf`
+4. Start dnsmasq by running `sudo systemctl start dnsmasq`
+
+Sample `dnsmasq.conf` configuration file:
 
 ```
 # Interface to use to provide DHCP and TFTP
@@ -61,12 +111,17 @@ enable-tftp
 dhcp-boot=boot/grub2/i386-pc/core.0,,192.168.0.7
 ```
 
-After configuring dnsmasq, start it by running `sudo systemctl start dnsmasq`
+# Bootloaders
 
-3. Copy all of the GRUB module files from `/usr/lib/grub/i386-pc/` into both `/srv/tftp/boot/grub/i386-pc` and `/srv/tftp/boot/grub2/i386-pc`
+## GRUB2
 
-4. Create a GRUB2 configuration file at `/srv/tftp/boot/grub/grub.cfg` like this:
+1. Create a netbootable directory with `grub-mknetdir --net-directory=/srv/tftp --subdir=boot/grub`
+2. Create a GRUB2 configuration file at `/srv/tftp/boot/grub/grub.cfg`
+3. Configure your DHCP server to serve `boot/grub/i386-pc/core.0` as your boot file
 
+Note: the `grub-pc-bin` package, which contains the BIOS modules for PXE booting GRUB2, isn't available from the ARM repos of Debian and Ubuntu. If you are using an ARM machine for your TFTP server, you will need to extract and copy across the contents of the `/usr/lib/grub/i386-pc/` directory from the x86 package or build the files manually.
+
+Sample `grub.cfg` configuration file:
 ```
 set gfxmode=auto
 insmod all_video
@@ -95,33 +150,34 @@ menuentry 'SerenityOS - netboot diskless text mode' {
         echo 'Starting SerenityOS.'
 }
 ```
-5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/serenity/`
 
-You should now be able to PXE boot into Serenity if enough of your hardware is supported by the Serenity kernel.
+## iPXE
 
+Warning: the default build of iPXE cannot set up a framebuffer for Multiboot targets, unless your graphical card is supported by SerenityOS you will most likely have no graphics on real hardware.
 
+iPXE can directly boot SerenityOS with its `kernel` and `module` commands. This requires either setting the DHCP vendor-specific option `ipxe.scriptlet` to the script's URL, building a custom iPXE image with an embedded script or typing in commands through the interactive prompt (Ctrl-B). Refer to the official documentation at https://ipxe.org for more information.
 
-### PXELINUX
+Sample iPXE embedded script:
+```
+#!ipxe
+dhcp
+kernel serenity/prekernel root=/dev/ramdisk0
+module serenity/kernel
+module serenity/ramdisk
+boot
+```
 
-Warning: PXELINUX cannot set up a framebuffer for Multiboot targets, so you will most likely have no graphics on real hardware.
+## PXELINUX
+
+Warning: PXELINUX cannot set up a framebuffer for Multiboot targets, unless your graphical card is supported by SerenityOS you will most likely have no graphics on real hardware.
 
 1. Install required packages on the TFTP server
-    - Debian: `apt install pxelinux tftpd-hpa`
-    - Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise the TFTP server won't serve files
-2. Configure the DHCP server with the following options:
-    - Next server IP: `<static IP address of TFTP server>`
-    - Boot filename (for BIOS): `lpxelinux.0`
-3. Place all the required bootloader modules (located inside `/usr/lib/PXELINUX/` and `/usr/lib/syslinux/modules/bios/` on Debian) inside `/srv/tftp/`, which for the sample configuration file includes:
-    - lpxelinux.0
-    - ldlinux.c32
-    - vesamenu.c32
-    - libcom32.c32
-    - libutil.c32
-    - mboot.c32
-4. Put your `default` configuration file inside `/srv/tftp/pxelinux.cfg/`
-5. Place the SerenityOS prekernel, kernel and ramdisk inside `/srv/tftp/serenity/`
+   - Debian: `sudo apt install pxelinux`
+2. Copy all bootloader modules (located inside `/usr/lib/PXELINUX/` and `/usr/lib/syslinux/modules/bios/` on Debian) inside `/srv/tftp/boot/pxelinux`
+3. Put your `default` configuration file inside `/srv/tftp/boot/pxelinux/pxelinux.cfg/`
+4. Configure your DHCP server to serve `boot/pxelinux/lpxelinux.0` as your boot file
 
-Sample PXELINUX `default` configuration file:
+Sample `default` configuration file:
 
 ```
 UI vesamenu.c32
@@ -131,12 +187,15 @@ LABEL SerenityOS
         APPEND serenity/prekernel root=/dev/ramdisk0 --- serenity/kernel --- serenity/ramdisk
 ```
 
-### Troubleshooting
+# Troubleshooting
 
-- Issues with DHCP or TFTP usually require sniffing packets on the network to figure out.
-- TFTP is a slow protocol, transferring the QEMU disk image (~ 200 MiB) will take some time. Consider setting up a FTP or HTTP server for faster downloading of SerenityOS artifacts if your bootloader supports it.
-- Remember that SerenityOS has not been extensively tested on physical hardware.
-- Some BIOS implementations of PXE are buggy or some machines may not have a PXE boot option at all in which case you could try using [iPXE](https://ipxe.org/).
+It is recommended to netboot a mainstream operating system on the target at least once before attempting to netboot SerenityOS, otherwise it may be difficult to isolate an issue with SerenityOS from an issue with your network booting setup.
+
+- Ensure your paths on the TFTP server and the DHCP options are correct.
+- Check that your TFTP server is properly working with a TFTP client. Wrong file permissions or ownership on `/srv/tftp` can prevent the TFTP server from functioning properly.
+- TFTP is a slow protocol, big files can take tens of seconds or even minutes for the transfer to finish. Consider setting up a FTP or HTTP server for faster downloading of SerenityOS artifacts if your bootloader supports it.
+- Remember that SerenityOS has not been extensively tested on physical hardware, the kernel may fail to boot on your target computer for reasons unrelated to network booting.
+- Try using iPXE if you suspect your network card's built-in PXE firmware is buggy or if the target computer doesn't have a PXE boot option.
 - Virtual machines can also be booted over the network. Cheat notes for QEMU on Linux, assuming `br0` is already set up:
 
 ```
@@ -149,46 +208,3 @@ echo 0 > /sys/devices/virtual/net/br0/bridge/multicast_querier
 
 qemu-system-i386 -m 4096 -netdev tap,ifname=tap0,script=no,downscript=no,id=network0 -device e1000,netdev=network0 -boot n -debugcon stdio -s
 ```
-
-## SerenityOS network booting via USB (iPXE)
-
-It is possible to boot SerenityOS with the help of a USB drive. This option seems to be reliable if netbooting with TFTP fails due to bugs in firmware. For USB booting, you will need to ensure your BIOS supports such feature.
-
-You will need to have a USB drive you will be willing to wipe, so make sure to back up it first.
-You will also need to setup an HTTP server on your local network. Any HTTP server implementation
-will work, therefore we leave it to the reader to decide on which software to use
-and to figure out the right configuration for it.
-
-After that, do a `git clone` of the iPXE project. Then you will need to create an iPXE script.
-Add the following file in the root folder of the project:
-```
-#!ipxe
-console --x 1280 --y 1024
-dhcp
-kernel http://X.Y.Z.W/Kernel serial_debug root=/dev/ramdisk0
-imgfetch http://X.Y.Z.W/ramdisk
-boot
-```
-This file can be called in any name you'd want. For the sake of simplicity in this guide,
-this file is named `script.ipxe` from now on.
-Don't forget to replace `X.Y.Z.W` with your HTTP server IP address.
-
-For troubleshooting purposes, you can add the following command line arguments if you suspect our implementation fails to work with your hardware:
-- `disable_physical_storage`
-- `disable_ps2_controller`
-- `disable_uhci_controller`
-
-Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,
-you might not see any output, so add the `fbdev=off` argument as well to boot into VGA text mode.
-
-Afterwards you will need to enable the `console` iPXE command by uncommenting the following line in `src/config/general.h`:
-```c
-//#define CONSOLE_CMD		/* Console command */
-```
-
-Finally, in the `src` folder you should run:
-```sh
-make EMBED=../script.ipxe bin/ipxe.usb
-```
-
-After it compiled, you will need to `dd` the `bin/ipxe.usb` file to your USB drive.
