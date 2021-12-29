@@ -797,8 +797,8 @@ void AbstractView::on_automatic_scrolling_timer_fired()
     if (m_automatic_scroll_delta.is_null())
         return;
 
-    vertical_scrollbar().set_value(vertical_scrollbar().value() + m_automatic_scroll_delta.y());
-    horizontal_scrollbar().set_value(horizontal_scrollbar().value() + m_automatic_scroll_delta.x());
+    vertical_scrollbar().increase_slider_by(m_automatic_scroll_delta.y());
+    horizontal_scrollbar().increase_slider_by(m_automatic_scroll_delta.x());
 }
 
 }
