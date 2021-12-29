@@ -742,8 +742,10 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 break;
             }
 
-            // Mix texel with fog
-            fragment = mix(m_options.fog_color, fragment, factor);
+            // Mix texel's RGB with fog's RBG - leave alpha alone
+            fragment.set_x(mix(m_options.fog_color.x(), fragment.x(), factor));
+            fragment.set_y(mix(m_options.fog_color.y(), fragment.y(), factor));
+            fragment.set_z(mix(m_options.fog_color.z(), fragment.z(), factor));
         }
 
         return fragment;
