@@ -77,6 +77,8 @@ private:
 
     bool m_allow_html_comments { true };
 
+    Optional<size_t> m_hit_invalid_unicode;
+
     static HashMap<FlyString, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
     static HashMap<String, TokenType> s_two_char_tokens;
