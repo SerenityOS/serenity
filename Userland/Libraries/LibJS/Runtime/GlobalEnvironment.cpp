@@ -160,96 +160,172 @@ ThrowCompletionOr<bool> GlobalEnvironment::delete_binding(GlobalObject& global_o
 // 9.1.1.4.12 HasVarDeclaration ( N ), https://tc39.es/ecma262/#sec-hasvardeclaration
 bool GlobalEnvironment::has_var_declaration(FlyString const& name) const
 {
+    // 1. Let varDeclaredNames be envRec.[[VarNames]].
+    // 2. If varDeclaredNames contains N, return true.
+    // 3. Return false.
     return m_var_names.contains_slow(name);
 }
 
 // 9.1.1.4.13 HasLexicalDeclaration ( N ), https://tc39.es/ecma262/#sec-haslexicaldeclaration
 bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 {
+    // 1. Let DclRec be envRec.[[DeclarativeRecord]].
+    // 2. Return DclRec.HasBinding(N).
     return MUST(m_declarative_record->has_binding(name));
 }
 
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) const
 {
+    // 1. Let ObjRec be envRec.[[ObjectRecord]].
+    // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
+
+    // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
+
+    // 4. If existingProp is undefined, return false.
     if (!existing_prop.has_value())
         return false;
+
+    // 5. If existingProp.[[Configurable]] is true, return false.
     if (*existing_prop->configurable)
         return false;
+
+    // 6. Return true.
     return true;
 }
 
 // 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
 bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
 {
+    // 1. Let ObjRec be envRec.[[ObjectRecord]].
+    // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
+
+    // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
     bool has_property = TRY_OR_DISCARD(global_object.has_own_property(name));
+
+    // 4. If hasProperty is true, return true.
     if (has_property)
         return true;
+
+    // 5. Return ? IsExtensible(globalObject).
     return TRY_OR_DISCARD(global_object.is_extensible());
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
 bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 {
+    // 1. Let ObjRec be envRec.[[ObjectRecord]].
+    // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
+
+    // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
+
+    // 4. If existingProp is undefined, return ? IsExtensible(globalObject).
     if (!existing_prop.has_value())
         return TRY_OR_DISCARD(global_object.is_extensible());
+
+    // 5. If existingProp.[[Configurable]] is true, return true.
     if (*existing_prop->configurable)
         return true;
+
+    // 6. If IsDataDescriptor(existingProp) is true and existingProp has attribute values { [[Writable]]: true, [[Enumerable]]: true }, return true.
     if (existing_prop->is_data_descriptor() && *existing_prop->writable && *existing_prop->enumerable)
         return true;
+
+    // 7. Return false.
     return false;
 }
 
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
+    // 1. Let ObjRec be envRec.[[ObjectRecord]].
+    // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
+
+    // 3. Let hasProperty be ? HasOwnProperty(globalObject, N).
     auto has_property_or_error = global_object.has_own_property(name);
     if (has_property_or_error.is_error())
         return;
     auto has_property = has_property_or_error.release_value();
+
+    // 4. Let extensible be ? IsExtensible(globalObject).
     auto extensible_or_error = global_object.is_extensible();
     if (extensible_or_error.is_error())
         return;
     auto extensible = extensible_or_error.release_value();
+
+    // 5. If hasProperty is false and extensible is true, then
     if (!has_property && extensible) {
+        // a. Perform ? ObjRec.CreateMutableBinding(N, D).
         auto result = m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
         if (result.is_error())
             return;
+
+        // b. Perform ? ObjRec.InitializeBinding(N, undefined).
         result = m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
         if (result.is_error())
             return;
     }
-    if (!m_var_names.contains_slow(name))
+
+    // 6. Let varDeclaredNames be envRec.[[VarNames]].
+    // 7. If varDeclaredNames does not contain N, then
+    if (!m_var_names.contains_slow(name)) {
+        // a. Append N to varDeclaredNames.
         m_var_names.append(name);
+    }
+
+    // 8. Return NormalCompletion(empty).
 }
 
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
 void GlobalEnvironment::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
+    // 1. Let ObjRec be envRec.[[ObjectRecord]].
+    // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
+
+    // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     auto existing_prop_or_error = global_object.internal_get_own_property(name);
     if (existing_prop_or_error.is_error())
         return;
     auto existing_prop = existing_prop_or_error.release_value();
+
     PropertyDescriptor desc;
-    if (!existing_prop.has_value() || *existing_prop->configurable)
+
+    // 4. If existingProp is undefined or existingProp.[[Configurable]] is true, then
+    if (!existing_prop.has_value() || *existing_prop->configurable) {
+        //     a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
         desc = { .value = value, .writable = true, .enumerable = true, .configurable = can_be_deleted };
-    else
+    }
+    // 5. Else,
+    else {
+        // a. Let desc be the PropertyDescriptor { [[Value]]: V }.
         desc = { .value = value };
+    }
+
+    // 6. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
     auto result_or_error = global_object.define_property_or_throw(name, desc);
     if (result_or_error.is_error())
         return;
+
+    // 7. Perform ? Set(globalObject, N, V, false).
     result_or_error = global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
     if (result_or_error.is_error())
         return;
-    if (!m_var_names.contains_slow(name))
+
+    // 8. Let varDeclaredNames be envRec.[[VarNames]].
+    // 9. If varDeclaredNames does not contain N, then
+    if (!m_var_names.contains_slow(name)) {
+        // a. Append N to varDeclaredNames.
         m_var_names.append(name);
+    }
+
+    // 10. Return NormalCompletion(empty).
 }
 
 }
