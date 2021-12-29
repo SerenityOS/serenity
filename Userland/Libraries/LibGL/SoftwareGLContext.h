@@ -206,6 +206,7 @@ private:
     GLclampf m_alpha_test_ref_value = 0;
 
     bool m_dither_enabled { true };
+    bool m_normalize { false };
 
     // Stencil configuration
     bool m_stencil_test_enabled { false };

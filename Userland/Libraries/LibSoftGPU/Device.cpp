@@ -524,7 +524,8 @@ DeviceInfo Device::info() const
     };
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix3x3 const& normal_transform,
+    FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -675,8 +676,17 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 continue;
         }
 
-        if (area > 0) {
+        if (area > 0)
             swap(triangle.vertices[0], triangle.vertices[1]);
+
+        // Transform normals
+        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
+        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
+        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
+        if (m_options.normalization_enabled) {
+            triangle.vertices[0].normal.normalize();
+            triangle.vertices[1].normal.normalize();
+            triangle.vertices[2].normal.normalize();
         }
 
         submit_triangle(triangle, enabled_texture_units);

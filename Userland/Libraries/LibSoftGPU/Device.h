@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
@@ -47,6 +48,7 @@ struct RasterizerOptions {
     float fog_start { 0.0f };
     float fog_end { 1.0f };
     bool scissor_enabled { false };
+    bool normalization_enabled { false };
     Gfx::IntRect scissor_box;
     bool enable_color_write { true };
     float depth_offset_factor { 0 };
@@ -65,7 +67,7 @@ public:
 
     DeviceInfo info() const;
 
-    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& transform, FloatMatrix3x3 const& normal_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
