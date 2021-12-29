@@ -140,6 +140,7 @@ public:
 private:
     void sync_device_config();
     void sync_device_sampler_config();
+    void sync_device_texcoord_config();
 
 private:
     template<typename T>
@@ -242,6 +243,42 @@ private:
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
     Vector<TextureUnit, 32> m_texture_units;
     TextureUnit* m_active_texture_unit;
+
+    // Texture coordinate generation state
+    struct TextureCoordinateGeneration {
+        bool enabled { false };
+        GLenum generation_mode { GL_EYE_LINEAR };
+        FloatVector4 object_plane_coefficients;
+        FloatVector4 eye_plane_coefficients;
+    };
+    Array<TextureCoordinateGeneration, 4> m_texture_coordinate_generation {
+        // S
+        TextureCoordinateGeneration {
+            .object_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
+            .eye_plane_coefficients = { 1.0f, 0.0f, 0.0f, 0.0f },
+        },
+        // T
+        TextureCoordinateGeneration {
+            .object_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
+            .eye_plane_coefficients = { 0.0f, 1.0f, 0.0f, 0.0f },
+        },
+        // R
+        TextureCoordinateGeneration {
+            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
+            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
+        },
+        // Q
+        TextureCoordinateGeneration {
+            .object_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
+            .eye_plane_coefficients = { 0.0f, 0.0f, 0.0f, 0.0f },
+        },
+    };
+    bool m_texcoord_generation_dirty { true };
+
+    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(GLenum capability)
+    {
+        return m_texture_coordinate_generation[capability - GL_TEXTURE_GEN_S];
+    }
 
     SoftGPU::Device m_rasterizer;
     SoftGPU::DeviceInfo const m_device_info;
