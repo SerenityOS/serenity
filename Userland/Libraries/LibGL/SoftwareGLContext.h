@@ -321,7 +321,10 @@ private:
             decltype(&SoftwareGLContext::gl_copy_tex_image_2d),
             decltype(&SoftwareGLContext::gl_rect),
             decltype(&SoftwareGLContext::gl_tex_gen),
-            decltype(&SoftwareGLContext::gl_tex_gen_floatv)>;
+            decltype(&SoftwareGLContext::gl_tex_gen_floatv),
+            decltype(&SoftwareGLContext::gl_fogf),
+            decltype(&SoftwareGLContext::gl_fogfv),
+            decltype(&SoftwareGLContext::gl_fogi)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
