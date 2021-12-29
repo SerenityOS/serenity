@@ -2374,16 +2374,14 @@ void SoftwareGLContext::gl_polygon_offset(GLfloat factor, GLfloat units)
 
 void SoftwareGLContext::gl_fogfv(GLenum pname, GLfloat* params)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_fogfv, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto options = m_rasterizer.options();
 
     switch (pname) {
     case GL_FOG_COLOR:
-        // Set rasterizer options fog color
-        // NOTE: We purposefully don't check for `nullptr` here (as with other calls). The spec states nothing
-        // about us checking for such things. If the programmer does so and hits SIGSEGV, that's on them.
-        options.fog_color = FloatVector4 { params[0], params[1], params[2], params[3] };
+        options.fog_color = { params[0], params[1], params[2], params[3] };
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
@@ -2394,6 +2392,7 @@ void SoftwareGLContext::gl_fogfv(GLenum pname, GLfloat* params)
 
 void SoftwareGLContext::gl_fogf(GLenum pname, GLfloat param)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_fogf, pname, param);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(param < 0.0f, GL_INVALID_VALUE);
 
@@ -2402,6 +2401,12 @@ void SoftwareGLContext::gl_fogf(GLenum pname, GLfloat param)
     switch (pname) {
     case GL_FOG_DENSITY:
         options.fog_density = param;
+        break;
+    case GL_FOG_END:
+        options.fog_end = param;
+        break;
+    case GL_FOG_START:
+        options.fog_start = param;
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
@@ -2412,8 +2417,9 @@ void SoftwareGLContext::gl_fogf(GLenum pname, GLfloat param)
 
 void SoftwareGLContext::gl_fogi(GLenum pname, GLint param)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_fogi, pname, param);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(!(param == GL_EXP || param == GL_EXP2 || param != GL_LINEAR), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(param != GL_LINEAR && param != GL_EXP && param != GL_EXP2, GL_INVALID_ENUM);
 
     auto options = m_rasterizer.options();
 
