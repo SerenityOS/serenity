@@ -280,7 +280,16 @@ void SoftwareGLContext::gl_end()
         VERIFY_NOT_REACHED();
     }
 
-    m_rasterizer.draw_primitives(primitive_type, m_projection_matrix * m_model_view_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
+    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
+    // See section 2.11.3 of the OpenGL 1.5 spec
+    auto const& mv_elements = m_model_view_matrix.elements();
+    auto normal_transform = FloatMatrix3x3(
+        mv_elements[0][0], mv_elements[0][1], mv_elements[0][2],
+        mv_elements[1][0], mv_elements[1][1], mv_elements[1][2],
+        mv_elements[2][0], mv_elements[2][1], mv_elements[2][2]);
+    normal_transform = normal_transform.inverse();
+
+    m_rasterizer.draw_primitives(primitive_type, m_projection_matrix * m_model_view_matrix, normal_transform, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
@@ -619,6 +628,11 @@ void SoftwareGLContext::gl_enable(GLenum capability)
     case GL_LIGHTING:
         m_lighting_enabled = true;
         break;
+    case GL_NORMALIZE:
+        m_normalize = true;
+        rasterizer_options.normalization_enabled = true;
+        update_rasterizer_options = true;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = true;
         update_rasterizer_options = true;
@@ -690,6 +704,11 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_LIGHTING:
         m_lighting_enabled = false;
         break;
+    case GL_NORMALIZE:
+        m_normalize = false;
+        rasterizer_options.normalization_enabled = false;
+        update_rasterizer_options = true;
+        break;
     case GL_SCISSOR_TEST:
         rasterizer_options.scissor_enabled = false;
         update_rasterizer_options = true;
@@ -742,6 +761,8 @@ GLboolean SoftwareGLContext::gl_is_enabled(GLenum capability)
         return rasterizer_options.fog_enabled;
     case GL_LIGHTING:
         return m_lighting_enabled;
+    case GL_NORMALIZE:
+        return m_normalize;
     case GL_SCISSOR_TEST:
         return rasterizer_options.scissor_enabled;
     case GL_STENCIL_TEST:
