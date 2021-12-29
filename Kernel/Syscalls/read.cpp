@@ -86,6 +86,8 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     return TRY(description->read(user_buffer, size));
 }
 
+// NOTE: The offset is passed by pointer because off_t is 64bit,
+// hence it can't be passed by register on 32bit platforms.
 ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t const*> userspace_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
