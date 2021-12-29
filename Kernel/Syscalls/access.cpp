@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$access(Userspace<const char*> user_path, size_t path_length, int mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::rpath);
+    TRY(require_promise(Pledge::rpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
     TRY(VirtualFileSystem::the().access(path->view(), mode, current_directory()));
     return 0;

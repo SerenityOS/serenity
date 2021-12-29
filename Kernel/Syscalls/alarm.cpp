@@ -12,7 +12,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$alarm(unsigned seconds)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     unsigned previous_alarm_remaining = 0;
     if (m_alarm_timer) {
         bool was_in_use = false;

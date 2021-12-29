@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mode_t mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::fattr);
+    TRY(require_promise(Pledge::fattr));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
     TRY(VirtualFileSystem::the().chmod(path->view(), mode, current_directory()));
     return 0;
@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<const char*> user_path, size_t pat
 ErrorOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::fattr);
+    TRY(require_promise(Pledge::fattr));
     auto description = TRY(fds().open_file_description(fd));
     TRY(description->chmod(mode));
     return 0;

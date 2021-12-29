@@ -257,7 +257,7 @@ void FramebufferDevice::set_buffer(int buffer_index)
 
 ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
-    process.require_promise(Pledge::video);
+    TRY(process.require_promise(Pledge::video));
     if (!shared)
         return ENODEV;
     if (offset != 0 || !m_framebuffer)

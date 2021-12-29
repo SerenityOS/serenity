@@ -12,7 +12,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$sync()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     VirtualFileSystem::sync();
     return 0;
 }

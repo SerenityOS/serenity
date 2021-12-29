@@ -234,6 +234,10 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
 
+    // Crash any processes which have commited a promise violation during syscall handling.
+    if (result.is_error() && result.error().code() == EPROMISEVIOLATION)
+        process.crash(SIGABRT, 0);
+
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 }
 

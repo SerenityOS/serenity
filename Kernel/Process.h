@@ -508,8 +508,8 @@ public:
 
     VirtualAddress signal_trampoline() const { return m_protected_values.signal_trampoline; }
 
-    void require_promise(Pledge);
-    void require_no_promises() const;
+    ErrorOr<void> require_promise(Pledge);
+    ErrorOr<void> require_no_promises() const;
 
 private:
     friend class MemoryManager;

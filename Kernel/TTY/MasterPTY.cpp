@@ -122,7 +122,7 @@ ErrorOr<void> MasterPTY::close()
 
 ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
-    Process::current().require_promise(Pledge::tty);
+    TRY(Process::current().require_promise(Pledge::tty));
     if (!m_slave)
         return EIO;
     if (request == TIOCSWINSZ || request == TIOCGPGRP)

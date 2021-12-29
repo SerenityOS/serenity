@@ -11,7 +11,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
 
     utsname buf {};
     memcpy(buf.sysname, "SerenityOS", 11);

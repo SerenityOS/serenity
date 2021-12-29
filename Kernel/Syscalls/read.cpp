@@ -40,7 +40,7 @@ static ErrorOr<void> check_blocked_read(OpenFileDescription* description)
 ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     if (iov_count < 0)
         return EINVAL;
 
@@ -74,7 +74,7 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
 ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     if (size == 0)
         return 0;
     if (size > NumericLimits<ssize_t>::max())
@@ -89,7 +89,7 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t const*> userspace_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     if (size == 0)
         return 0;
     if (size > NumericLimits<ssize_t>::max())
