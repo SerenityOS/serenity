@@ -216,6 +216,11 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     FloatVector4 pixel_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
     float depth_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
+    // Fog depths
+    float const vertex0_eye_absz = fabs(vertex0.eye_coordinates.z());
+    float const vertex1_eye_absz = fabs(vertex1.eye_coordinates.z());
+    float const vertex2_eye_absz = fabs(vertex2.eye_coordinates.z());
+
     // FIXME: implement stencil testing
 
     // Iterate over all blocks within the bounds of the triangle
@@ -390,10 +395,13 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     auto uv = interpolate(vertex0.tex_coord, vertex1.tex_coord, vertex2.tex_coord, barycentric);
 
                     // Calculate depth of fragment for fog
-                    float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
-                    z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+                    //
+                    // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
+                    // eye-coordinate distance from the eye to each fragment center by |Ze|."
 
-                    *pixel = pixel_shader(uv, vertex_color, z);
+                    float fog_fragment_depth = interpolate(vertex0_eye_absz, vertex1_eye_absz, vertex2_eye_absz, barycentric);
+
+                    *pixel = pixel_shader(uv, vertex_color, fog_fragment_depth);
                 }
             }
 
@@ -707,7 +715,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
 void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& enabled_texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float fog_depth) -> FloatVector4 {
         FloatVector4 fragment = color;
 
         for (size_t i : enabled_texture_units) {
@@ -743,13 +751,13 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             float factor = 0.0f;
             switch (m_options.fog_mode) {
             case FogMode::Linear:
-                factor = (m_options.fog_end - z) / (m_options.fog_end - m_options.fog_start);
+                factor = (m_options.fog_end - fog_depth) / (m_options.fog_end - m_options.fog_start);
                 break;
             case FogMode::Exp:
-                factor = exp(-((m_options.fog_density * z)));
+                factor = expf(-m_options.fog_density * fog_depth);
                 break;
             case FogMode::Exp2:
-                factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
+                factor = expf(-((m_options.fog_density * fog_depth) * (m_options.fog_density * fog_depth)));
                 break;
             default:
                 VERIFY_NOT_REACHED();
