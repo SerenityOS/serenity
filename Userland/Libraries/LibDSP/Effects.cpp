@@ -55,7 +55,7 @@ Mastering::Mastering(NonnullRefPtr<Transport> transport)
 {
 }
 
-void Mastering::process([[maybe_unused]] Vector<Sample>& input_signal)
+void Mastering::process([[maybe_unused]] FixedArray<Sample>& input_signal)
 {
     TODO();
 }

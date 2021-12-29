@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "AK/Noncopyable.h"
 #include <AK/FixedArray.h>
+#include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
@@ -97,7 +97,7 @@ public:
     virtual void set_buffer_size(size_t samples) override
     {
         FixedArray<Sample> new_buffer(samples);
-        m_temporary_audio_buffer = new_buffer;
+        m_temporary_audio_buffer.swap(new_buffer);
     }
 
 protected:

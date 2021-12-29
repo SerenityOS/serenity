@@ -44,6 +44,7 @@ public:
     constexpr double current_measure() const { return looping_time() / samples_per_measure(); }
 
     constexpr u16 beats_per_minute() const { return m_beats_per_minute; }
+    constexpr u8 beats_per_measure() const { return m_beats_per_measure; }
     constexpr double samples_per_measure() const { return (1.0 / m_beats_per_minute) * 60.0 * m_sample_rate; }
     constexpr double sample_rate() const { return m_sample_rate; }
     constexpr double ms_sample_rate() const { return m_sample_rate / 1000.; }

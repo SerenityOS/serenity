@@ -40,7 +40,7 @@ AudioPlayerLoop::AudioPlayerLoop(NonnullRefPtr<LibDSP::TrackManager> track_manag
 
 void AudioPlayerLoop::enqueue_audio()
 {
-    m_track_manager->fill_buffer();
+    m_track_manager->fill_one_buffer();
     NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
     // FIXME: Handle OOM better.
     audio_buffer = MUST(Audio::resample_buffer(m_resampler.value(), *audio_buffer));
