@@ -20,6 +20,10 @@
 #include <termios.h>
 #include <unistd.h>
 
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
+
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
         return Error::from_syscall(syscall_name, rc);                \
@@ -124,6 +128,12 @@ ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
     if (rc < 0)
         return Error::from_syscall("ptrace"sv, -errno);
     return rc;
+}
+
+ErrorOr<void> disown(pid_t pid)
+{
+    int rc = ::disown(pid);
+    HANDLE_SYSCALL_RETURN_VALUE("disown", rc, {});
 }
 #endif
 
