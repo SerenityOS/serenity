@@ -2733,7 +2733,7 @@ void SoftwareGLContext::gl_rect(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble 
     gl_end();
 }
 
-void SoftwareGLContext::gl_tex_gen(GLenum coord, GLenum pname, GLdouble param)
+void SoftwareGLContext::gl_tex_gen(GLenum coord, GLenum pname, GLint param)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_gen, coord, pname, param);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
