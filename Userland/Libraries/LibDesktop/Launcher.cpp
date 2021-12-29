@@ -50,6 +50,11 @@ static LaunchServerConnection& connection()
     return connection;
 }
 
+void Launcher::ensure_connection()
+{
+    [[maybe_unused]] auto& conn = connection();
+}
+
 ErrorOr<void> Launcher::add_allowed_url(URL const& url)
 {
     auto response_or_error = connection().try_add_allowed_url(url);
