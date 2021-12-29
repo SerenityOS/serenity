@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibRegex/Regex.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
 
 namespace SQL::AST {
+
+static const String s_posix_basic_metacharacters = ".^$*[]+\\";
 
 Value Expression::evaluate(ExecutionContext&) const
 {
@@ -191,6 +194,60 @@ Value ColumnNameExpression::evaluate(ExecutionContext& context) const
     if (index_in_row.has_value())
         return (*context.current_row)[index_in_row.value()];
     context.result->set_error(SQLErrorCode::ColumnDoesNotExist, column_name());
+    return Value::null();
+}
+
+Value MatchExpression::evaluate(ExecutionContext& context) const
+{
+    if (context.result->has_error())
+        return Value::null();
+    switch (type()) {
+    case MatchOperator::Like: {
+        Value lhs_value = lhs()->evaluate(context);
+        Value rhs_value = rhs()->evaluate(context);
+        char escape_char = '\0';
+        if (escape()) {
+            auto escape_str = escape()->evaluate(context).to_string();
+            if (escape_str.length() != 1) {
+                context.result->set_error(SQLErrorCode::SyntaxError, "ESCAPE should be a single character");
+                return Value::null();
+            }
+            escape_char = escape_str[0];
+        }
+
+        // Compile the pattern into a simple regex.
+        // https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
+        bool escaped = false;
+        AK::StringBuilder builder;
+        builder.append('^');
+        for (auto c : rhs_value.to_string()) {
+            if (escape() && c == escape_char && !escaped) {
+                escaped = true;
+            } else if (s_posix_basic_metacharacters.contains(c)) {
+                escaped = false;
+                builder.append('\\');
+                builder.append(c);
+            } else if (c == '_' && !escaped) {
+                builder.append('.');
+            } else if (c == '%' && !escaped) {
+                builder.append(".*");
+            } else {
+                escaped = false;
+                builder.append(c);
+            }
+        }
+        builder.append('$');
+        // FIXME: We should probably cache this regex.
+        auto regex = Regex<PosixBasic>(builder.build());
+        auto result = regex.match(lhs_value.to_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
+        return Value(invert_expression() ? !result.success : result.success);
+    }
+    case MatchOperator::Glob:
+    case MatchOperator::Match:
+    case MatchOperator::Regexp:
+    default:
+        VERIFY_NOT_REACHED();
+    }
     return Value::null();
 }
 

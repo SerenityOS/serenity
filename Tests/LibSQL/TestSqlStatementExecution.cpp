@@ -337,4 +337,77 @@ TEST_CASE(select_inner_join)
     EXPECT_EQ(row[2].to_string(), "Test_12");
 }
 
+TEST_CASE(select_with_like)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+    auto result = execute(database,
+        "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES "
+        "( 'Test+1', 42 ), "
+        "( 'Test+2', 43 ), "
+        "( 'Test+3', 44 ), "
+        "( 'Test+4', 45 ), "
+        "( 'Test+5', 46 ), "
+        "( 'Another+Test_6', 47 );");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->inserted() == 6);
+
+    // Simple match
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE 'Test+1';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 1u);
+
+    // Use % to match most rows
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE 'T%';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 5u);
+
+    // Same as above but invert the match
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn NOT LIKE 'T%';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 1u);
+
+    // Use _ and % to match all rows
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%e_t%';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 6u);
+
+    // Use escape to match a single row. The escape character happens to be a
+    // Regex metacharacter, let's make sure we don't get confused by that.
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%Test^_%' ESCAPE '^';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 1u);
+
+    // Same as above but escape the escape character happens to be a SQL
+    // metacharacter - we want to make sure it's treated as an escape.
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%Test__%' ESCAPE '_';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 1u);
+
+    // (Unnecessarily) escaping a character that happens to be a Regex
+    // metacharacter should have no effect.
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE 'Test:+_' ESCAPE ':';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::NoError);
+    EXPECT(result->has_results());
+    EXPECT_EQ(result->results().size(), 5u);
+
+    // Make sure we error out if the ESCAPE is empty
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%' ESCAPE '';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::SyntaxError);
+    EXPECT(!result->has_results());
+
+    // Make sure we error out if the ESCAPE has more than a single character
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE TextColumn LIKE '%' ESCAPE 'whf';");
+    EXPECT(result->error().code == SQL::SQLErrorCode::SyntaxError);
+    EXPECT(!result->has_results());
+}
+
 }

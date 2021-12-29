@@ -409,6 +409,7 @@ if (BUILD_LAGOM)
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SQLClient.cpp")
     lagom_lib(SQL sql
         SOURCES ${LIBSQL_SOURCES}
+        LIBS LagomRegex
     )
 
     # TextCodec
