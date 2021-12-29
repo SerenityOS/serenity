@@ -436,8 +436,6 @@ void SoftwareGLContext::gl_push_matrix()
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    dbgln_if(GL_DEBUG, "glPushMatrix(): Pushing matrix to the matrix stack (matrix_mode {})", m_current_matrix_mode);
-
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
         RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() >= PROJECTION_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
@@ -461,8 +459,6 @@ void SoftwareGLContext::gl_pop_matrix()
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_pop_matrix);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
-    dbgln_if(GL_DEBUG, "glPopMatrix(): Popping matrix from matrix stack (matrix_mode = {})", m_current_matrix_mode);
 
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
