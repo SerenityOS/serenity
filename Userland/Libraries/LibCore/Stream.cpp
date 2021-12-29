@@ -164,7 +164,7 @@ ErrorOr<size_t> File::read(Bytes buffer)
         // NOTE: POSIX says that if the fd is not open for reading, the call
         //       will return EBADF. Since we already know whether we can or
         //       can't read the file, let's avoid a syscall.
-        return EBADF;
+        return Error::from_errno(EBADF);
     }
 
     ssize_t rc = ::read(m_fd, buffer.data(), buffer.size());
@@ -180,7 +180,7 @@ ErrorOr<size_t> File::write(ReadonlyBytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Write)) {
         // NOTE: Same deal as Read.
-        return EBADF;
+        return Error::from_errno(EBADF);
     }
 
     ssize_t rc = ::write(m_fd, buffer.data(), buffer.size());
@@ -343,7 +343,7 @@ ErrorOr<void> Socket::connect_inet(int fd, SocketAddress const& address)
 ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     ssize_t rc = ::recv(m_fd, buffer.data(), buffer.size(), 0);
@@ -364,7 +364,7 @@ ErrorOr<size_t> PosixSocketHelper::read(Bytes buffer)
 ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     ssize_t rc = ::send(m_fd, buffer.data(), buffer.size(), 0);
@@ -483,7 +483,7 @@ ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::adopt_fd(int fd)
 ErrorOr<size_t> PosixSocketHelper::pending_bytes() const
 {
     if (!is_open()) {
-        return ENOTCONN;
+        return Error::from_errno(ENOTCONN);
     }
 
     int value;
