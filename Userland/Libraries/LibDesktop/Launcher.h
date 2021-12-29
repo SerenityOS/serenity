@@ -31,6 +31,7 @@ public:
         static NonnullRefPtr<Details> from_details_str(const String&);
     };
 
+    static void ensure_connection();
     static ErrorOr<void> add_allowed_url(URL const&);
     static ErrorOr<void> add_allowed_handler_with_any_url(String const& handler);
     static ErrorOr<void> add_allowed_handler_with_only_specific_urls(String const& handler, Vector<URL> const&);
