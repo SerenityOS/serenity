@@ -20,7 +20,7 @@ For more details on known working hardware see the [SerenityOS Hardware Compatib
 
 ## Creating a Serenity GRUB disk image
 
-Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](BuildInstructions.md). Follow those instructions up to and including running **ninja install**. After the OS has built, run **ninja grub-image** to create a new file called **grub_disk_image** with GRUB2 installed that can be booted on a real PC.
+Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](BuildInstructions.md). Follow those instructions up to and including running **ninja install** (`Meta/serenity.sh image <arch>`). After the OS has built, run **ninja grub-image** to create a new file called **grub_disk_image** with GRUB2 installed that can be booted on a real PC. This command requires `parted` and `grub2` (Arch: `grub`) to be installed.
 
 The final step is copying **grub_disk_image** onto the disk you wish to use to boot Serenity using a command such as:
 
@@ -28,7 +28,7 @@ The final step is copying **grub_disk_image** onto the disk you wish to use to b
 $ sudo dd if=grub_disk_image of=/dev/sdx bs=64M && sync
 ```
 
-Replace **/dev/sdx** with the target device. The **bs=64M** argument is optional but will speed up the data transfer.
+Replace **/dev/sdx** with the target device. The **bs=64M** argument is optional but will speed up the data transfer. You can also use any other image flashing application. Flashing under Windows is possible; you can find the WSL files under `\\wsl$\<distro name>\<path to serenity directory>`.
 
 ## Troubleshooting Serenity boot issues with Linux using a null modem (serial) cable
 
@@ -58,3 +58,5 @@ adding **| MULTIBOOT_VIDEO_MODE** to the end of the **multiboot_flags** before b
 
 Setting a boot argument of `fbdev=off` will force the kernel to not initialize any framebuffer devices, hence allowing the system
 to boot into console-only mode as `SystemServer` will detect this condition and will not initialize `WindowServer`.
+
+If you do not see any output, it's possible that the Kernel panics before any video is initialized. In that case, you might try debugging the init sequence with the PC speaker to see where it gets stuck.
