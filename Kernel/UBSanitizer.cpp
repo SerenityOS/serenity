@@ -22,7 +22,7 @@ static void print_location(const SourceLocation& location)
         critical_dmesgln("KUBSAN: in unknown file");
     else
         critical_dmesgln("KUBSAN: at {}, line {}, column: {}", location.filename(), location.line(), location.column());
-    dump_backtrace();
+    dump_backtrace(g_ubsan_is_deadly ? PrintToScreen::Yes : PrintToScreen::No);
     if (g_ubsan_is_deadly) {
         critical_dmesgln("UB is configured to be deadly, halting the system.");
         Processor::halt();
