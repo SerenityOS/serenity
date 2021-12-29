@@ -7,12 +7,12 @@
 #include "Client.h"
 #include "LibCore/EventLoop.h"
 
-Client::Client(int id, Core::Stream::TCPSocket socket)
+Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket)
     : m_id(id)
     , m_socket(move(socket))
 {
-    m_socket.on_ready_to_read = [this] {
-        if (m_socket.is_eof())
+    m_socket->on_ready_to_read = [this] {
+        if (m_socket->is_eof())
             return;
 
         auto result = drain_socket();
@@ -32,17 +32,17 @@ ErrorOr<void> Client::drain_socket()
         return ENOMEM;
     auto buffer = maybe_buffer.release_value();
 
-    while (TRY(m_socket.can_read_without_blocking())) {
-        auto nread = TRY(m_socket.read(buffer));
+    while (TRY(m_socket->can_read_without_blocking())) {
+        auto nread = TRY(m_socket->read(buffer));
 
         dbgln("Read {} bytes.", nread);
 
-        if (m_socket.is_eof()) {
+        if (m_socket->is_eof()) {
             Core::deferred_invoke([this, strong_this = NonnullRefPtr(*this)] { quit(); });
             break;
         }
 
-        TRY(m_socket.write({ buffer.data(), nread }));
+        TRY(m_socket->write({ buffer.data(), nread }));
     }
 
     return {};
@@ -50,7 +50,7 @@ ErrorOr<void> Client::drain_socket()
 
 void Client::quit()
 {
-    m_socket.close();
+    m_socket->close();
     if (on_exit)
         on_exit();
 }

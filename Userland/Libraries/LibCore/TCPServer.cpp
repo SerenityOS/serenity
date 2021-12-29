@@ -69,7 +69,7 @@ ErrorOr<void> TCPServer::set_blocking(bool blocking)
     return {};
 }
 
-ErrorOr<Stream::TCPSocket> TCPServer::accept()
+ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
 {
     VERIFY(m_listening);
     sockaddr_in in;
@@ -86,8 +86,8 @@ ErrorOr<Stream::TCPSocket> TCPServer::accept()
     // FIXME: Ideally, we should let the caller decide whether it wants the
     //        socket to be nonblocking or not, but there are currently places
     //        which depend on this.
-    TRY(socket.set_blocking(false));
-    TRY(socket.set_close_on_exec(true));
+    TRY(socket->set_blocking(false));
+    TRY(socket->set_close_on_exec(true));
 #endif
 
     return socket;

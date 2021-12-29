@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     server->on_ready_to_accept = [&next_id, &clients, &server, command] {
         int id = next_id++;
 
-        ErrorOr<Core::Stream::TCPSocket> maybe_client_socket = server->accept();
+        auto maybe_client_socket = server->accept();
         if (maybe_client_socket.is_error()) {
             warnln("accept: {}", maybe_client_socket.error());
             return;
@@ -116,17 +116,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         int ptm_fd = posix_openpt(O_RDWR);
         if (ptm_fd < 0) {
             perror("posix_openpt");
-            client_socket.close();
+            client_socket->close();
             return;
         }
         if (grantpt(ptm_fd) < 0) {
             perror("grantpt");
-            client_socket.close();
+            client_socket->close();
             return;
         }
         if (unlockpt(ptm_fd) < 0) {
             perror("unlockpt");
-            client_socket.close();
+            client_socket->close();
             return;
         }
 
