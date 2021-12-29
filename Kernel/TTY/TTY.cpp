@@ -543,7 +543,7 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
     }
     case TIOCGWINSZ: {
         auto user_winsize = static_ptr_cast<winsize*>(arg);
-        winsize ws;
+        winsize ws {};
         ws.ws_row = m_rows;
         ws.ws_col = m_columns;
         ws.ws_xpixel = 0;
