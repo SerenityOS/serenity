@@ -29,8 +29,8 @@ NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GenericGraphics
 
 ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
+    process.require_promise(Pledge::video);
     SpinlockLocker lock(m_activation_lock);
-    REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
     if (offset != 0)

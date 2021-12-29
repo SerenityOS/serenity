@@ -14,7 +14,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(tty);
+    require_promise(Pledge::tty);
     auto description = TRY(fds().open_file_description(fd));
     if (!description->is_tty())
         return ENOTTY;
@@ -28,7 +28,7 @@ ErrorOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t si
 ErrorOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(tty);
+    require_promise(Pledge::tty);
     auto description = TRY(fds().open_file_description(fd));
     auto* master_pty = description->master_pty();
     if (!master_pty)

@@ -17,7 +17,8 @@ using BlockFlags = Thread::FileBlocker::BlockFlags;
 ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
+
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.nfds >= OpenFileDescriptions::max_open())

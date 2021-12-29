@@ -11,7 +11,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$yield()
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     Thread::current()->yield_without_releasing_big_lock();
     return 0;
 }
@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$yield()
 ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(proc);
+    require_promise(Pledge::proc);
     auto param = TRY(copy_typed_from_user(user_param));
 
     if (param.sched_priority < THREAD_PRIORITY_MIN || param.sched_priority > THREAD_PRIORITY_MAX)
@@ -43,7 +43,7 @@ ErrorOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sch
 ErrorOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(proc);
+    require_promise(Pledge::proc);
     int priority;
     {
         auto* peer = Thread::current();

@@ -99,9 +99,9 @@ ErrorOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (pid_or_pgid == pid().value())
-        REQUIRE_PROMISE(stdio);
+        require_promise(Pledge::stdio);
     else
-        REQUIRE_PROMISE(proc);
+        require_promise(Pledge::proc);
 
     if (signal < 0 || signal >= 32)
         return EINVAL;
@@ -130,7 +130,7 @@ ErrorOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
 ErrorOr<FlatPtr> Process::sys$killpg(pid_t pgrp, int signum)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(proc);
+    require_promise(Pledge::proc);
     if (signum < 1 || signum >= 32)
         return EINVAL;
     if (pgrp < 0)

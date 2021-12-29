@@ -14,7 +14,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(rpath);
+    require_promise(Pledge::rpath);
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));

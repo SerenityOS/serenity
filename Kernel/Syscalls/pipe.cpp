@@ -12,7 +12,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     if (fds().open_count() + 2 > OpenFileDescriptions::max_open())
         return EMFILE;
     // Reject flags other than O_CLOEXEC, O_NONBLOCK

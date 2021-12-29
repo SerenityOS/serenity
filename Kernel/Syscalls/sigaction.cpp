@@ -14,7 +14,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(sigaction);
+    require_promise(Pledge::sigaction);
     auto* current_thread = Thread::current();
     u32 previous_signal_mask;
     if (set) {
@@ -44,7 +44,7 @@ ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> se
 ErrorOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     auto pending_signals = Thread::current()->pending_signals();
     TRY(copy_to_user(set, &pending_signals));
     return 0;
@@ -53,7 +53,7 @@ ErrorOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(sigaction);
+    require_promise(Pledge::sigaction);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return EINVAL;
 
@@ -76,7 +76,7 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
 ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     SmapDisabler disabler;
 
 #if ARCH(I386)
@@ -258,7 +258,7 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
 ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> user_ss, Userspace<stack_t*> user_old_ss)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(sigaction);
+    require_promise(Pledge::sigaction);
 
     if (user_old_ss) {
         stack_t old_ss_value {};
@@ -307,7 +307,7 @@ ErrorOr<FlatPtr> Process::sys$sigaltstack(Userspace<const stack_t*> user_ss, Use
 ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<const sigset_t*> set, Userspace<siginfo_t*> info, Userspace<const timespec*> timeout)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(sigaction);
+    require_promise(Pledge::sigaction);
 
     sigset_t set_value;
     TRY(copy_from_user(&set_value, set));

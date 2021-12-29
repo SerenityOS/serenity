@@ -11,7 +11,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     return hostname().with_shared([&](const auto& name) -> ErrorOr<FlatPtr> {

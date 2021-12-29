@@ -120,7 +120,7 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
 ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto addr = (FlatPtr)params.addr;
@@ -132,11 +132,11 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     auto offset = params.offset;
 
     if (prot & PROT_EXEC) {
-        REQUIRE_PROMISE(prot_exec);
+        require_promise(Pledge::prot_exec);
     }
 
     if (prot & MAP_FIXED || prot & MAP_FIXED_NOREPLACE) {
-        REQUIRE_PROMISE(map_fixed);
+        require_promise(Pledge::map_fixed);
     }
 
     if (alignment & ~PAGE_MASK)
@@ -253,10 +253,10 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
 ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
 
     if (prot & PROT_EXEC) {
-        REQUIRE_PROMISE(prot_exec);
+        require_promise(Pledge::prot_exec);
     }
 
     auto range_to_mprotect = TRY(Memory::expand_range_to_page_boundaries(addr.ptr(), size));
@@ -395,7 +395,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
 
     auto range_to_madvise = TRY(Memory::expand_range_to_page_boundaries(address.ptr(), size));
 
@@ -426,7 +426,7 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
 ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (params.name.length > PATH_MAX)
@@ -450,7 +450,7 @@ ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap
 ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     TRY(address_space().unmap_mmap_range(addr.vaddr(), size));
     return 0;
 }
@@ -458,7 +458,7 @@ ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto old_range = TRY(Memory::expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size));
@@ -495,7 +495,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*>
 ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    REQUIRE_PROMISE(stdio);
+    require_promise(Pledge::stdio);
 
     if (!size || size % PAGE_SIZE != 0)
         return EINVAL;
