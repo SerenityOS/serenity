@@ -37,7 +37,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
     switch (request) {
     case FB_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<FBProperties*>(arg);
-        FBProperties properties;
+        FBProperties properties {};
         auto adapter = m_graphics_adapter.strong_ref();
         if (!adapter)
             return Error::from_errno(EIO);
@@ -49,7 +49,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
     }
     case FB_IOCTL_GET_HEAD_PROPERTIES: {
         auto user_head_properties = static_ptr_cast<FBHeadProperties*>(arg);
-        FBHeadProperties head_properties;
+        FBHeadProperties head_properties {};
         TRY(copy_from_user(&head_properties, user_head_properties));
         TRY(verify_head_index(head_properties.head_index));
 
@@ -86,7 +86,7 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
     }
     case FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
         auto user_head_vertical_buffer_offset = static_ptr_cast<FBHeadVerticalOffset*>(arg);
-        FBHeadVerticalOffset head_vertical_buffer_offset;
+        FBHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
         TRY(verify_head_index(head_vertical_buffer_offset.head_index));
 
