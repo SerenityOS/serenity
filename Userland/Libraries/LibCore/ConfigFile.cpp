@@ -76,6 +76,12 @@ void ConfigFile::reparse()
 
     while (m_file->can_read_line()) {
         auto line = m_file->read_line();
+
+        if (line.is_null()) {
+            m_groups.clear();
+            return;
+        }
+
         auto* cp = line.characters();
 
         while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
