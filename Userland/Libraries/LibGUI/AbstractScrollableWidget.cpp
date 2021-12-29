@@ -49,9 +49,9 @@ void AbstractScrollableWidget::handle_wheel_event(MouseEvent& event, Widget& eve
     }
     // FIXME: The wheel delta multiplier should probably come from... somewhere?
     if (event.shift() || &event_source == m_horizontal_scrollbar.ptr()) {
-        horizontal_scrollbar().set_value(horizontal_scrollbar().value() + event.wheel_delta() * 60);
+        horizontal_scrollbar().increase_slider_by(event.wheel_delta() * 60);
     } else {
-        vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
+        vertical_scrollbar().increase_slider_by(event.wheel_delta() * 20);
     }
 }
 

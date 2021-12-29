@@ -149,7 +149,7 @@ void Slider::mousewheel_event(MouseEvent& event)
     if (orientation() == Orientation::Horizontal)
         set_value(value() - wheel_delta * acceleration_modifier);
     else
-        set_value(value() + wheel_delta * acceleration_modifier);
+        increase_slider_by(wheel_delta * acceleration_modifier);
 
     Widget::mousewheel_event(event);
 }

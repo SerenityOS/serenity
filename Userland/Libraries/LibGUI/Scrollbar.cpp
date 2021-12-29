@@ -332,7 +332,7 @@ void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
         set_value(value() - page_increment);
     } else {
         gutter_click_state = GutterClickState::AfterScrubber;
-        set_value(value() + page_increment);
+        increase_slider_by(page_increment);
     }
 }
 
