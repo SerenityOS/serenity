@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath prot_exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath"));
 
     const char* specified_url = nullptr;
 
@@ -63,7 +63,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
-    TRY(Core::System::unveil("/usr/lib/libunicodedata.so.serenity", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser");

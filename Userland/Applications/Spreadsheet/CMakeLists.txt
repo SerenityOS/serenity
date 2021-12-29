@@ -42,6 +42,7 @@ set(GENERATED_SOURCES
 
 serenity_app(Spreadsheet ICON app-spreadsheet)
 target_link_libraries(Spreadsheet LibGUI LibJS LibWeb)
+link_with_unicode_data(Spreadsheet)
 
 serenity_test(Writers/Test/TestXSVWriter.cpp Spreadsheet)
 
