@@ -37,8 +37,8 @@ struct RasterizerOptions {
     BlendFactor blend_source_factor { BlendFactor::One };
     BlendFactor blend_destination_factor { BlendFactor::One };
     u32 color_mask { 0xffffffff };
-    float depth_min { 0 };
-    float depth_max { 1 };
+    float depth_min { 0.f };
+    float depth_max { 1.f };
     DepthTestFunction depth_func { DepthTestFunction::Less };
     PolygonMode polygon_mode { PolygonMode::Fill };
     FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
