@@ -178,6 +178,9 @@ ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<Bi
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
 ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment, GlobalObject& global_object)
 {
+    // 1. Let name be StringValue of Identifier.
+    // 2. Return ? InitializeBoundName(name, value, environment).
+    // TODO: Use the right AO here
     if (environment) {
         MUST(environment->initialize_binding(global_object, target, value));
         return {};
@@ -189,16 +192,30 @@ ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Valu
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
 ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment, GlobalObject& global_object)
 {
+    // BindingPattern : ObjectBindingPattern
     if (target->kind == BindingPattern::Kind::Object) {
+        // 1. Perform ? RequireObjectCoercible(value).
         TRY(require_object_coercible(global_object, value));
+
+        // 2. Return the result of performing BindingInitialization of ObjectBindingPattern using value and environment as arguments.
+
+        // BindingInitialization of ObjectBindingPattern
+        // 1. Perform ? PropertyBindingInitialization of BindingPropertyList using value and environment as the arguments.
         TRY(property_binding_initialization(*target, value, environment, global_object));
+
+        // 2. Return NormalCompletion(empty).
         return {};
-    } else {
+    }
+    // BindingPattern : ArrayBindingPattern
+    else {
+        // 1. Let iteratorRecord be ? GetIterator(value).
         auto* iterator = TRY(get_iterator(global_object, value));
         auto iterator_done = false;
 
+        // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
         auto result = iterator_binding_initialization(*target, iterator, iterator_done, environment, global_object);
 
+        // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
         if (!iterator_done) {
             // iterator_close() always returns a Completion, which ThrowCompletionOr will interpret as a throw
             // completion. So only return the result of iterator_close() if it is indeed a throw completion.
@@ -207,6 +224,7 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern>
                 return completion.release_error();
         }
 
+        // 4. Return result.
         return result;
     }
 }
