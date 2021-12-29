@@ -9,14 +9,13 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
 
 namespace SoftGPU {
 
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
-
-static constexpr int RASTERIZER_BLOCK_SIZE = 8;
 
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
 {
@@ -529,7 +528,7 @@ DeviceInfo Device::info() const
     return {
         .vendor_name = "SerenityOS",
         .device_name = "SoftGPU",
-        .num_texture_units = num_samplers
+        .num_texture_units = NUM_SAMPLERS
     };
 }
 
