@@ -1660,8 +1660,11 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
 
     fputs(eol_mark.characters(), stderr);
 
-    for (auto i = eol_mark_length; i < ws.ws_col; ++i)
-        putc(' ', stderr);
+    // We write a line's worth of whitespace to the terminal. This way, we ensure that
+    // the prompt ends up on a new line even if there is dangling output on the current line.
+    size_t fill_count = ws.ws_col - eol_mark_length;
+    auto fill_buffer = String::repeated(' ', fill_count);
+    fwrite(fill_buffer.characters(), 1, fill_count, stderr);
 
     putc('\r', stderr);
 }
