@@ -24,32 +24,21 @@ Parser::Parser(Decoder& decoder)
 Parser::~Parser()
 {
     cleanup_tile_allocations();
-    if (m_prev_segment_ids)
-        free(m_prev_segment_ids);
+    free(m_prev_segment_ids);
 }
 
 void Parser::cleanup_tile_allocations()
 {
-    if (m_skips)
-        free(m_skips);
-    if (m_tx_sizes)
-        free(m_tx_sizes);
-    if (m_mi_sizes)
-        free(m_mi_sizes);
-    if (m_y_modes)
-        free(m_y_modes);
-    if (m_segment_ids)
-        free(m_segment_ids);
-    if (m_ref_frames)
-        free(m_ref_frames);
-    if (m_interp_filters)
-        free(m_interp_filters);
-    if (m_mvs)
-        free(m_mvs);
-    if (m_sub_mvs)
-        free(m_sub_mvs);
-    if (m_sub_modes)
-        free(m_sub_modes);
+    free(m_skips);
+    free(m_tx_sizes);
+    free(m_mi_sizes);
+    free(m_y_modes);
+    free(m_segment_ids);
+    free(m_ref_frames);
+    free(m_interp_filters);
+    free(m_mvs);
+    free(m_sub_mvs);
+    free(m_sub_modes);
 }
 
 /* (6.1) */
