@@ -123,16 +123,21 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     if (options.enable_alpha_test && options.alpha_test_func == AlphaTestFunction::Never)
         return;
 
+    // Vertices
+    Vertex const vertex0 = triangle.vertices[0];
+    Vertex const vertex1 = triangle.vertices[1];
+    Vertex const vertex2 = triangle.vertices[2];
+
     // Calculate area of the triangle for later tests
-    IntVector2 v0 { (int)triangle.vertices[0].position.x(), (int)triangle.vertices[0].position.y() };
-    IntVector2 v1 { (int)triangle.vertices[1].position.x(), (int)triangle.vertices[1].position.y() };
-    IntVector2 v2 { (int)triangle.vertices[2].position.x(), (int)triangle.vertices[2].position.y() };
+    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x()), static_cast<int>(vertex0.window_coordinates.y()) };
+    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x()), static_cast<int>(vertex1.window_coordinates.y()) };
+    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x()), static_cast<int>(vertex2.window_coordinates.y()) };
 
     int area = edge_function(v0, v1, v2);
     if (area == 0)
         return;
 
-    float one_over_area = 1.0f / area;
+    auto const one_over_area = 1.0f / area;
 
     FloatVector4 src_constant {};
     float src_factor_src_alpha = 0;
@@ -282,9 +287,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
 
                         auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
-
-                        z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+                        float z = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), barycentric);
 
                         // FIXME: Also apply depth_offset_factor which depends on the depth gradient
                         z += options.depth_offset_constant * NumericLimits<float>::epsilon();
@@ -367,27 +370,24 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
                     // Perspective correct barycentric coordinates
                     auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                    float interpolated_reciprocal_w = interpolate(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w(), barycentric);
-                    float interpolated_w = 1 / interpolated_reciprocal_w;
-                    barycentric = barycentric * FloatVector3(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w()) * interpolated_w;
+                    auto const w_coordinates = FloatVector3 {
+                        vertex0.window_coordinates.w(),
+                        vertex1.window_coordinates.w(),
+                        vertex2.window_coordinates.w(),
+                    };
+                    float const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), barycentric);
+                    float const interpolated_w = 1 / interpolated_reciprocal_w;
+                    barycentric = barycentric * w_coordinates * interpolated_w;
 
                     // FIXME: make this more generic. We want to interpolate more than just color and uv
                     FloatVector4 vertex_color;
                     if (options.shade_smooth) {
-                        vertex_color = interpolate(
-                            triangle.vertices[0].color,
-                            triangle.vertices[1].color,
-                            triangle.vertices[2].color,
-                            barycentric);
+                        vertex_color = interpolate(vertex0.color, vertex1.color, vertex2.color, barycentric);
                     } else {
-                        vertex_color = triangle.vertices[0].color;
+                        vertex_color = vertex0.color;
                     }
 
-                    auto uv = interpolate(
-                        triangle.vertices[0].tex_coord,
-                        triangle.vertices[1].tex_coord,
-                        triangle.vertices[2].tex_coord,
-                        barycentric);
+                    auto uv = interpolate(vertex0.tex_coord, vertex1.tex_coord, vertex2.tex_coord, barycentric);
 
                     // Calculate depth of fragment for fog
                     float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
@@ -525,8 +525,9 @@ DeviceInfo Device::info() const
     };
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix3x3 const& normal_transform,
-    FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
+    FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices,
+    Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -598,19 +599,18 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 
     // Now let's transform each triangle and send that to the GPU
-    for (size_t i = 0; i < m_triangle_list.size(); i++) {
-        Triangle& triangle = m_triangle_list.at(i);
+    auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
+    auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
+    for (auto& triangle : m_triangle_list) {
+        // Transform vertices into eye coordinates using the model-view transform
+        triangle.vertices[0].eye_coordinates = model_view_transform * triangle.vertices[0].position;
+        triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
+        triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
 
-        // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
-        triangle.vertices[0].position = transform * triangle.vertices[0].position;
-        triangle.vertices[1].position = transform * triangle.vertices[1].position;
-        triangle.vertices[2].position = transform * triangle.vertices[2].position;
-
-        // Apply texture transformation
-        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
-        triangle.vertices[0].tex_coord = texture_matrix * triangle.vertices[0].tex_coord;
-        triangle.vertices[1].tex_coord = texture_matrix * triangle.vertices[1].tex_coord;
-        triangle.vertices[2].tex_coord = texture_matrix * triangle.vertices[2].tex_coord;
+        // Transform eye coordinates into clip coordinates using the projection transform
+        triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
+        triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
+        triangle.vertices[2].clip_coordinates = projection_transform * triangle.vertices[2].eye_coordinates;
 
         // At this point, we're in clip space
         // Here's where we do the clipping. This is a really crude implementation of the
@@ -632,16 +632,23 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             continue;
 
         for (auto& vec : m_clipped_vertices) {
-            // perspective divide
-            float w = vec.position.w();
-            vec.position.set_x(vec.position.x() / w);
-            vec.position.set_y(vec.position.y() / w);
-            vec.position.set_z(vec.position.z() / w);
-            vec.position.set_w(1 / w);
+            // To normalized device coordinates (NDC)
+            auto const one_over_w = 1 / vec.clip_coordinates.w();
+            auto const ndc_coordinates = FloatVector4 {
+                vec.clip_coordinates.x() * one_over_w,
+                vec.clip_coordinates.y() * one_over_w,
+                vec.clip_coordinates.z() * one_over_w,
+                one_over_w,
+            };
 
-            // to screen space
-            vec.position.set_x(scr_width / 2 + vec.position.x() * scr_width / 2);
-            vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
+            // To window coordinates
+            // FIXME: implement viewport functionality
+            vec.window_coordinates = {
+                scr_width / 2 + ndc_coordinates.x() * scr_width / 2,
+                scr_height / 2 - ndc_coordinates.y() * scr_height / 2,
+                depth_half_range * ndc_coordinates.z() + depth_halfway,
+                ndc_coordinates.w(),
+            };
         }
 
         Triangle tri;
@@ -653,15 +660,13 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
     }
 
-    for (size_t i = 0; i < m_processed_triangles.size(); i++) {
-        Triangle& triangle = m_processed_triangles.at(i);
-
+    for (auto& triangle : m_processed_triangles) {
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].position.x() - triangle.vertices[1].position.x(); // A.x - B.x
-        float dxBC = triangle.vertices[1].position.x() - triangle.vertices[2].position.x(); // B.X - C.x
-        float dyAB = triangle.vertices[0].position.y() - triangle.vertices[1].position.y();
-        float dyBC = triangle.vertices[1].position.y() - triangle.vertices[2].position.y();
+        float dxAB = triangle.vertices[0].window_coordinates.x() - triangle.vertices[1].window_coordinates.x(); // A.x - B.x
+        float dxBC = triangle.vertices[1].window_coordinates.x() - triangle.vertices[2].window_coordinates.x(); // B.X - C.x
+        float dyAB = triangle.vertices[0].window_coordinates.y() - triangle.vertices[1].window_coordinates.y();
+        float dyBC = triangle.vertices[1].window_coordinates.y() - triangle.vertices[2].window_coordinates.y();
         float area = (dxAB * dyBC) - (dxBC * dyAB);
 
         if (area == 0.0f)
@@ -689,6 +694,12 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             triangle.vertices[1].normal.normalize();
             triangle.vertices[2].normal.normalize();
         }
+
+        // Apply texture transformation
+        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
+        triangle.vertices[0].tex_coord = texture_transform * triangle.vertices[0].tex_coord;
+        triangle.vertices[1].tex_coord = texture_transform * triangle.vertices[1].tex_coord;
+        triangle.vertices[2].tex_coord = texture_transform * triangle.vertices[2].tex_coord;
 
         submit_triangle(triangle, enabled_texture_units);
     }
