@@ -746,9 +746,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), lexical_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object());
         if (global_var_environment) {
-            global_var_environment->create_global_function_binding(declaration.name(), function, true);
-            if (auto* exception = vm.exception())
-                return throw_completion(exception->value());
+            TRY(global_var_environment->create_global_function_binding(declaration.name(), function, true));
         } else {
             auto binding_exists = MUST(variable_environment->has_binding(declaration.name()));
 

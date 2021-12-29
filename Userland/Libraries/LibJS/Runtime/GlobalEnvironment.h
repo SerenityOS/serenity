@@ -37,7 +37,7 @@ public:
     ThrowCompletionOr<bool> can_declare_global_var(FlyString const& name) const;
     ThrowCompletionOr<bool> can_declare_global_function(FlyString const& name) const;
     ThrowCompletionOr<void> create_global_var_binding(FlyString const& name, bool can_be_deleted);
-    void create_global_function_binding(FlyString const& name, Value, bool can_be_deleted);
+    ThrowCompletionOr<void> create_global_function_binding(FlyString const& name, Value, bool can_be_deleted);
 
 private:
     virtual bool is_global_environment() const override { return true; }

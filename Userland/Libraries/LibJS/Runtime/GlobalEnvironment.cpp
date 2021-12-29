@@ -274,17 +274,14 @@ ThrowCompletionOr<void> GlobalEnvironment::create_global_var_binding(FlyString c
 }
 
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
-void GlobalEnvironment::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
+ThrowCompletionOr<void> GlobalEnvironment::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
 
     // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    auto existing_prop_or_error = global_object.internal_get_own_property(name);
-    if (existing_prop_or_error.is_error())
-        return;
-    auto existing_prop = existing_prop_or_error.release_value();
+    auto existing_prop = TRY(global_object.internal_get_own_property(name));
 
     PropertyDescriptor desc;
 
@@ -300,14 +297,10 @@ void GlobalEnvironment::create_global_function_binding(FlyString const& name, Va
     }
 
     // 6. Perform ? DefinePropertyOrThrow(globalObject, N, desc).
-    auto result_or_error = global_object.define_property_or_throw(name, desc);
-    if (result_or_error.is_error())
-        return;
+    TRY(global_object.define_property_or_throw(name, desc));
 
     // 7. Perform ? Set(globalObject, N, V, false).
-    result_or_error = global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
-    if (result_or_error.is_error())
-        return;
+    TRY(global_object.set(name, value, Object::ShouldThrowExceptions::Yes));
 
     // 8. Let varDeclaredNames be envRec.[[VarNames]].
     // 9. If varDeclaredNames does not contain N, then
@@ -317,6 +310,7 @@ void GlobalEnvironment::create_global_function_binding(FlyString const& name, Va
     }
 
     // 10. Return NormalCompletion(empty).
+    return {};
 }
 
 }

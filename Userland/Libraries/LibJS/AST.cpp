@@ -3725,9 +3725,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
 
     for (auto& declaration : functions_to_initialize) {
         auto* function = ECMAScriptFunctionObject::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
-        global_environment.create_global_function_binding(declaration.name(), function, false);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+        TRY(global_environment.create_global_function_binding(declaration.name(), function, false));
     }
 
     for (auto& var_name : declared_var_names)
