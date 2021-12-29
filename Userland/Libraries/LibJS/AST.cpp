@@ -1316,7 +1316,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
         return throw_completion(exception->value());
 
     auto& method_function = static_cast<ECMAScriptFunctionObject&>(method_value.as_function());
-    method_function.set_home_object(&target);
+    method_function.make_method(target);
 
     auto set_function_name = [&](String prefix = "") {
         auto property_name = property_key.visit(
@@ -1422,7 +1422,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
         initializer = ECMAScriptFunctionObject::create(interpreter.global_object(), String::empty(), *function_code, {}, 0, interpreter.lexical_environment(), interpreter.vm().running_execution_context().private_environment, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
-        initializer->set_home_object(&target);
+        initializer->make_method(target);
     }
 
     return ClassValue {
@@ -1458,7 +1458,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
 
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
     auto* body_function = ECMAScriptFunctionObject::create(global_object, "", *m_function_body, {}, 0, lexical_environment, private_scope, FunctionKind::Regular, true, false, m_contains_direct_call_to_eval, false);
-    body_function->set_home_object(&home_object);
+    body_function->make_method(home_object);
 
     return ClassValue { normal_completion(body_function) };
 }

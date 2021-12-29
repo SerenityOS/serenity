@@ -294,6 +294,15 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     }
 }
 
+// 10.2.7 MakeMethod ( F, homeObject ), https://tc39.es/ecma262/#sec-makemethod
+void ECMAScriptFunctionObject::make_method(Object& home_object)
+{
+    // 1. Set F.[[HomeObject]] to homeObject.
+    m_home_object = &home_object;
+
+    // 2. Return NormalCompletion(undefined).
+}
+
 // 10.2.11 FunctionDeclarationInstantiation ( func, argumentsList ), https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
 ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation(Interpreter* interpreter)
 {

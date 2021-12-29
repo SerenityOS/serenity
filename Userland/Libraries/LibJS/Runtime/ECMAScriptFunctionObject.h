@@ -37,6 +37,8 @@ public:
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedValueList arguments_list) override;
     virtual ThrowCompletionOr<Object*> internal_construct(MarkedValueList arguments_list, FunctionObject& new_target) override;
 
+    void make_method(Object& home_object);
+
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
     Vector<FunctionNode::Parameter> const& formal_parameters() const { return m_formal_parameters; };
 
