@@ -14,7 +14,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     auto description = TRY(fds().open_file_description(fd));
     auto buffer = TRY(description->stat());
     TRY(copy_to_user(user_statbuf, &buffer));
@@ -24,7 +24,7 @@ ErrorOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 ErrorOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::rpath);
+    TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));

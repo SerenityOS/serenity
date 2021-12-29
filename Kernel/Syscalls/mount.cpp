@@ -21,7 +21,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_no_promises();
+    TRY(require_no_promises());
     if (!is_superuser())
         return EPERM;
 
@@ -120,7 +120,7 @@ ErrorOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, siz
     if (!is_superuser())
         return EPERM;
 
-    require_no_promises();
+    TRY(require_no_promises());
 
     auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
     auto custody = TRY(VirtualFileSystem::the().resolve_path(mountpoint->view(), current_directory()));

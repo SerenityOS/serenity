@@ -13,7 +13,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::rpath);
+    TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));

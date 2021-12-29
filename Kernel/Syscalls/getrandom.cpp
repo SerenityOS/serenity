@@ -16,7 +16,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     if (buffer_size > NumericLimits<ssize_t>::max())
         return EINVAL;
 

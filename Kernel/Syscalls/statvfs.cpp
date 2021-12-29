@@ -40,7 +40,7 @@ ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custod
 ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::rpath);
+    TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
     auto path = TRY(get_syscall_path_argument(params.path));
@@ -55,7 +55,7 @@ ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params
 ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
 
     auto description = TRY(fds().open_file_description(fd));
     auto const* inode = description->inode();

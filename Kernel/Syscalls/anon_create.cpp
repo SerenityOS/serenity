@@ -14,7 +14,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
 
     if (!size)
         return EINVAL;

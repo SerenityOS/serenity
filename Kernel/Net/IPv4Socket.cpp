@@ -607,7 +607,7 @@ ErrorOr<void> IPv4Socket::getsockopt(OpenFileDescription& description, int level
 
 ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    Process::current().require_promise(Pledge::inet);
+    TRY(Process::current().require_promise(Pledge::inet));
 
     auto ioctl_route = [request, arg]() -> ErrorOr<void> {
         auto user_route = static_ptr_cast<rtentry*>(arg);

@@ -27,12 +27,12 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> use
         return EINVAL;
 
     if (options & O_WRONLY)
-        require_promise(Pledge::wpath);
+        TRY(require_promise(Pledge::wpath));
     else if (options & O_RDONLY)
-        require_promise(Pledge::rpath);
+        TRY(require_promise(Pledge::rpath));
 
     if (options & O_CREAT)
-        require_promise(Pledge::cpath);
+        TRY(require_promise(Pledge::cpath));
 
     // Ignore everything except permission bits.
     mode &= 0777;
@@ -67,7 +67,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> use
 ErrorOr<FlatPtr> Process::sys$close(int fd)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     auto description = TRY(fds().open_file_description(fd));
     auto result = description->close();
     m_fds[fd] = {};

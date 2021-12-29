@@ -33,7 +33,7 @@ ErrorOr<void> GenericFramebufferDevice::verify_head_index(int head_index) const
 
 ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    Process::current().require_promise(Pledge::video);
+    TRY(Process::current().require_promise(Pledge::video));
     switch (request) {
     case FB_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<FBProperties*>(arg);

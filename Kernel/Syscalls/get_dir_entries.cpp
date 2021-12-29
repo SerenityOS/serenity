@@ -12,7 +12,7 @@ namespace Kernel {
 ErrorOr<FlatPtr> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buffer, size_t user_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
-    require_promise(Pledge::stdio);
+    TRY(require_promise(Pledge::stdio));
     if (user_size > NumericLimits<ssize_t>::max())
         return EINVAL;
     auto description = TRY(fds().open_file_description(fd));

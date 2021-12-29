@@ -863,26 +863,25 @@ static constexpr StringView to_string(Pledge promise)
     VERIFY_NOT_REACHED();
 }
 
-void Process::require_no_promises() const
+ErrorOr<void> Process::require_no_promises() const
 {
     if (!has_promises())
-        return;
+        return {};
     dbgln("Has made a promise");
-    Process::current().crash(SIGABRT, 0);
-    VERIFY_NOT_REACHED();
+    return EPROMISEVIOLATION;
 }
 
-void Process::require_promise(Pledge promise)
+ErrorOr<void> Process::require_promise(Pledge promise)
 {
     if (!has_promises())
-        return;
+        return {};
 
     if (has_promised(promise))
-        return;
+        return {};
 
     dbgln("Has not pledged {}", to_string(promise));
     (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
-    crash(SIGABRT, 0);
+    return EPROMISEVIOLATION;
 }
 
 }
