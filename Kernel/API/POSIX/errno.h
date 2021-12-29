@@ -89,6 +89,7 @@
     E(EDQUOT, "Quota exceeded")                                       \
     E(ENOTRECOVERABLE, "State not recoverable")                       \
     E(ECANCELED, "Operation cancelled")                               \
+    E(EPROMISEVIOLATION, "The process has a promise violation")       \
     E(EMAXERRNO, "The highest errno +1 :^)")
 
 enum ErrnoCode {
