@@ -14,6 +14,9 @@ namespace SoftGPU {
 
 struct Vertex {
     FloatVector4 position;
+    FloatVector4 eye_coordinates;
+    FloatVector4 clip_coordinates;
+    FloatVector4 window_coordinates;
     FloatVector4 color;
     FloatVector4 tex_coord;
     FloatVector3 normal;

@@ -289,7 +289,7 @@ void SoftwareGLContext::gl_end()
         mv_elements[2][0], mv_elements[2][1], mv_elements[2][2]);
     normal_transform = normal_transform.inverse();
 
-    m_rasterizer.draw_primitives(primitive_type, m_projection_matrix * m_model_view_matrix, normal_transform, m_texture_matrix, m_vertex_list, enabled_texture_units);
+    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, normal_transform, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
