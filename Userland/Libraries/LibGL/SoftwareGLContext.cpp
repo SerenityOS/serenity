@@ -2625,7 +2625,7 @@ void SoftwareGLContext::gl_materialv(GLenum face, GLenum pname, GLfloat const* p
     }
 
     // FIXME: implement this method
-    dbgln_if(GL_DEBUG, "SoftwareGLContext FIXME: gl_materialv({}, {}, {}, {}, {}, {})", face, pname, x, y, z, w);
+    dbgln_if(GL_DEBUG, "gl_materialv({}, {}, {}, {}, {}, {}): unimplemented", face, pname, x, y, z, w);
 }
 
 void SoftwareGLContext::gl_line_width(GLfloat width)
