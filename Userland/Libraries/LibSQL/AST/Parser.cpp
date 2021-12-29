@@ -739,22 +739,35 @@ RefPtr<Expression> Parser::parse_match_expression(NonnullRefPtr<Expression> lhs,
 {
     auto parse_escape = [this]() {
         RefPtr<Expression> escape;
-        if (consume_if(TokenType::Escape))
+        if (consume_if(TokenType::Escape)) {
             escape = parse_expression();
+        }
         return escape;
     };
 
-    if (consume_if(TokenType::Like))
-        return create_ast_node<MatchExpression>(MatchOperator::Like, move(lhs), parse_expression(), parse_escape(), invert_expression);
+    if (consume_if(TokenType::Like)) {
+        NonnullRefPtr<Expression> rhs = parse_expression();
+        RefPtr<Expression> escape = parse_escape();
+        return create_ast_node<MatchExpression>(MatchOperator::Like, move(lhs), move(rhs), move(escape), invert_expression);
+    }
 
-    if (consume_if(TokenType::Glob))
-        return create_ast_node<MatchExpression>(MatchOperator::Glob, move(lhs), parse_expression(), parse_escape(), invert_expression);
+    if (consume_if(TokenType::Glob)) {
+        NonnullRefPtr<Expression> rhs = parse_expression();
+        RefPtr<Expression> escape = parse_escape();
+        return create_ast_node<MatchExpression>(MatchOperator::Glob, move(lhs), move(rhs), move(escape), invert_expression);
+    }
 
-    if (consume_if(TokenType::Match))
-        return create_ast_node<MatchExpression>(MatchOperator::Match, move(lhs), parse_expression(), parse_escape(), invert_expression);
+    if (consume_if(TokenType::Match)) {
+        NonnullRefPtr<Expression> rhs = parse_expression();
+        RefPtr<Expression> escape = parse_escape();
+        return create_ast_node<MatchExpression>(MatchOperator::Match, move(lhs), move(rhs), move(escape), invert_expression);
+    }
 
-    if (consume_if(TokenType::Regexp))
-        return create_ast_node<MatchExpression>(MatchOperator::Regexp, move(lhs), parse_expression(), parse_escape(), invert_expression);
+    if (consume_if(TokenType::Regexp)) {
+        NonnullRefPtr<Expression> rhs = parse_expression();
+        RefPtr<Expression> escape = parse_escape();
+        return create_ast_node<MatchExpression>(MatchOperator::Regexp, move(lhs), move(rhs), move(escape), invert_expression);
+    }
 
     return {};
 }
