@@ -1,6 +1,7 @@
 
 include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/unicode_data.cmake)
 
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
@@ -151,4 +152,10 @@ function(embed_resource target section file)
         COMMENT "Generating ${asm_file}"
     )
     target_sources("${target}" PRIVATE "${asm_file}")
+endfunction()
+
+function(link_with_unicode_data target)
+    if (DEFINED UNICODE_DATA_SOURCES)
+        target_link_libraries("${target}" LibUnicodeData)
+    endif()
 endfunction()
