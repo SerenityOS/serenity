@@ -6,6 +6,7 @@
 
 #include "QuickLaunchWidget.h"
 #include "LibCore/IODevice.h"
+#include "LibDesktop/Launcher.h"
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
 #include <LibCore/MimeData.h>
@@ -62,6 +63,26 @@ String QuickLaunchEntryExecutable::name() const
     return LexicalPath { m_path }.basename();
 }
 
+ErrorOr<void> QuickLaunchEntryFile::launch() const
+{
+    if (!Desktop::Launcher::open(URL::create_with_url_or_path(m_path))) {
+        // FIXME: LaunchServer doesn't inform us about errors
+        return Error::from_string_literal("Failed to open file");
+    }
+    return {};
+}
+
+GUI::Icon QuickLaunchEntryFile::icon() const
+{
+    return GUI::FileIconProvider::icon_for_path(m_path);
+}
+
+String QuickLaunchEntryFile::name() const
+{
+    // '=' is a special character in config files
+    return m_path;
+}
+
 QuickLaunchWidget::QuickLaunchWidget()
 {
     set_shrink_to_fit(true);
@@ -99,8 +120,8 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView v
     if (!value.starts_with("/") && value.ends_with(".af")) {
         auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, value);
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
-    } else
-        return create_from_path(value);
+    }
+    return create_from_path(value);
 }
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
@@ -113,10 +134,9 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
         return {};
     }
     auto stat = stat_or_error.release_value();
-    if (stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+    if (S_ISREG(stat.st_mode) && (stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         return make<QuickLaunchEntryExecutable>(path);
-    dbgln("Config value {} is not a valid quick launch entry", path);
-    return {};
+    return make<QuickLaunchEntryFile>(path);
 }
 
 void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
@@ -133,8 +153,10 @@ void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullO
     button->set_name(button_name);
     button->on_click = [entry = move(entry), this](auto) {
         auto result = entry->launch();
-        if (result.is_error())
+        if (result.is_error()) {
+            // FIXME: This message box is displayed in a weird position
             GUI::MessageBox::show_error(window(), String::formatted("Failed to open quick launch entry: {}", result.release_error()));
+        }
     };
     button->on_context_menu_request = [this, button_name](auto& context_menu_event) {
         m_context_menu_app_name = button_name;
@@ -170,7 +192,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
         for (auto& url : urls) {
             auto entry = QuickLaunchEntry::create_from_path(url.path());
             if (entry) {
-                auto item_name = entry->name().replace(" ", "", true);
+                auto item_name = entry->name().replace(" ", "", true).replace("=", "", true);
                 add_or_adjust_button(item_name, entry.release_nonnull());
                 Config::write_string("Taskbar", quick_launch, item_name, url.path());
             }
