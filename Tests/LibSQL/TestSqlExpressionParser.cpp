@@ -463,7 +463,7 @@ TEST_CASE(match_expression)
         EXPECT(parse(builder.build()).is_error());
     }
 
-    auto validate = [](StringView sql, SQL::AST::MatchOperator expected_operator, bool expected_invert_expression) {
+    auto validate = [](StringView sql, SQL::AST::MatchOperator expected_operator, bool expected_invert_expression, bool expect_escape) {
         auto result = parse(sql);
         EXPECT(!result.is_error());
 
@@ -475,6 +475,7 @@ TEST_CASE(match_expression)
         EXPECT(!is<SQL::AST::ErrorExpression>(*match.rhs()));
         EXPECT_EQ(match.type(), expected_operator);
         EXPECT_EQ(match.invert_expression(), expected_invert_expression);
+        EXPECT(match.escape() || !expect_escape);
     };
 
     for (auto op : operators) {
@@ -482,13 +483,19 @@ TEST_CASE(match_expression)
         builder.append("1 ");
         builder.append(op.key);
         builder.append(" 1");
-        validate(builder.build(), op.value, false);
+        validate(builder.build(), op.value, false, false);
 
         builder.clear();
         builder.append("1 NOT ");
         builder.append(op.key);
         builder.append(" 1");
-        validate(builder.build(), op.value, true);
+        validate(builder.build(), op.value, true, false);
+
+        builder.clear();
+        builder.append("1 NOT ");
+        builder.append(op.key);
+        builder.append(" 1 ESCAPE '+'");
+        validate(builder.build(), op.value, true, true);
     }
 }
 
