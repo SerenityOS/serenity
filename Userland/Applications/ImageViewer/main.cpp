@@ -131,10 +131,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (msgbox_result == GUI::MessageBox::ExecCancel)
                 return;
 
-            if (unlink(widget.path().characters()) < 0) {
-                int saved_errno = errno;
+            auto unlinked_or_error = Core::System::unlink(widget.path());
+            if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
-                    String::formatted("unlink({}) failed: {}", path, strerror(saved_errno)),
+                    String::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
                     "Delete failed",
                     GUI::MessageBox::Type::Error);
 

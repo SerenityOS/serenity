@@ -644,6 +644,22 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
 #endif
 }
 
+ErrorOr<void> unlink(StringView path)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+
+#ifdef __serenity__
+    int rc = syscall(SC_unlink, path.characters_without_null_termination(), path.length());
+    HANDLE_SYSCALL_RETURN_VALUE("unlink"sv, rc, {});
+#else
+    String path_string = path;
+    if (::unlink(path_string.characters()) < 0)
+        return Error::from_syscall("unlink"sv, -errno);
+    return {};
+#endif
+}
+
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
 {
     if (path.is_null())
