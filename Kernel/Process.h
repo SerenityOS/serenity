@@ -956,16 +956,6 @@ inline ProcessID Thread::pid() const
     return m_process->pid();
 }
 
-#define REQUIRE_PROMISE(promise)                             \
-    do {                                                     \
-        Process::current().require_promise(Pledge::promise); \
-    } while (0)
-
-#define REQUIRE_NO_PROMISES                       \
-    do {                                          \
-        Process::current().require_no_promises(); \
-    } while (0)
-
 }
 
 #define VERIFY_PROCESS_BIG_LOCK_ACQUIRED(process) \
