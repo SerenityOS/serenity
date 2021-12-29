@@ -38,6 +38,7 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
 ErrorOr<void> setgroups(Span<gid_t const>);
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
+ErrorOr<void> disown(pid_t pid);
 #endif
 
 #ifndef AK_OS_BSD_GENERIC
