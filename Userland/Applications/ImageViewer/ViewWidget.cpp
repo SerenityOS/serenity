@@ -14,7 +14,6 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
@@ -178,7 +177,7 @@ void ViewWidget::paint_event(GUI::PaintEvent& event)
     Gfx::StylePainter::paint_transparency_grid(painter, frame_inner_rect(), palette());
 
     if (!m_bitmap.is_null())
-        painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
+        painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect(), 1.0f, m_scaling_mode);
 }
 
 void ViewWidget::mousedown_event(GUI::MouseEvent& event)
@@ -341,6 +340,12 @@ void ViewWidget::animate()
             m_timer->stop();
         }
     }
+}
+
+void ViewWidget::set_scaling_mode(Gfx::Painter::ScalingMode scaling_mode)
+{
+    m_scaling_mode = scaling_mode;
+    update();
 }
 
 }
