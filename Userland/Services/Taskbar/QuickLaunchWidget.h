@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibConfig/Listener.h>
+#include <LibCore/FileWatcher.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
@@ -19,6 +20,7 @@ public:
     virtual ErrorOr<void> launch() const = 0;
     virtual GUI::Icon icon() const = 0;
     virtual String name() const = 0;
+    virtual String file_name_to_watch() const = 0;
 
     static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
     static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
@@ -34,6 +36,7 @@ public:
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override { return m_app_file->icon(); }
     virtual String name() const override { return m_app_file->name(); }
+    virtual String file_name_to_watch() const override { return {}; }
 
 private:
     NonnullRefPtr<Desktop::AppFile> m_app_file;
@@ -49,6 +52,7 @@ public:
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override;
     virtual String name() const override;
+    virtual String file_name_to_watch() const override { return m_path; }
 
 private:
     String m_path;
@@ -63,6 +67,7 @@ public:
     virtual ErrorOr<void> launch() const override;
     virtual GUI::Icon icon() const override;
     virtual String name() const override;
+    virtual String file_name_to_watch() const override { return m_path; }
 
 private:
     String m_path;
@@ -86,6 +91,7 @@ private:
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
     String m_context_menu_app_name;
+    RefPtr<Core::FileWatcher> m_watcher;
 };
 
 }
