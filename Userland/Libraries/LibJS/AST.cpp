@@ -3593,9 +3593,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             return IterationDecision::Break;
         }
 
-        auto restricted_global = global_environment.has_restricted_global_property(name);
-        if (interpreter.exception())
+        auto restricted_global_or_error = global_environment.has_restricted_global_property(name);
+        if (restricted_global_or_error.is_error())
             return IterationDecision::Break;
+        auto restricted_global = restricted_global_or_error.release_value();
 
         if (restricted_global)
             interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::RestrictedGlobalProperty, name);

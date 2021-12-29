@@ -33,7 +33,7 @@ public:
 
     bool has_var_declaration(FlyString const& name) const;
     bool has_lexical_declaration(FlyString const& name) const;
-    bool has_restricted_global_property(FlyString const& name) const;
+    ThrowCompletionOr<bool> has_restricted_global_property(FlyString const& name) const;
     bool can_declare_global_var(FlyString const& name) const;
     bool can_declare_global_function(FlyString const& name) const;
     void create_global_var_binding(FlyString const& name, bool can_be_deleted);

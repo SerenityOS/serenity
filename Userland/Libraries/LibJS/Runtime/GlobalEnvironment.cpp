@@ -175,14 +175,14 @@ bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 }
 
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
-bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) const
+ThrowCompletionOr<bool> GlobalEnvironment::has_restricted_global_property(FlyString const& name) const
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
 
     // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
+    auto existing_prop = TRY(global_object.internal_get_own_property(name));
 
     // 4. If existingProp is undefined, return false.
     if (!existing_prop.has_value())
