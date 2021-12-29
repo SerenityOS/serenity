@@ -4,15 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/Sampler.h>
 #include <math.h>
 
 namespace SoftGPU {
-
-// See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_edge_color_problem
-// FIXME: make this dynamically configurable through ConfigServer
-static constexpr bool CLAMP_DEPRECATED_BEHAVIOR = false;
 
 static constexpr float fracf(float value)
 {
