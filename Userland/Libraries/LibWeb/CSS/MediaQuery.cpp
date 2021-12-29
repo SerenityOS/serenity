@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/CSS/MediaQuery.h>
+#include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 
@@ -17,6 +18,45 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
     media_query->m_media_type = MediaType::All;
 
     return adopt_ref(*media_query);
+}
+
+String MediaFeatureValue::to_string() const
+{
+    return m_value.visit(
+        [](String& ident) { return serialize_an_identifier(ident); },
+        [](Length& length) { return length.to_string(); },
+        [](double number) { return String::number(number); });
+}
+
+bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
+{
+    return m_value.visit(
+        [&](String&) { return other.is_ident(); },
+        [&](Length&) { return other.is_length(); },
+        [&](double) { return other.is_number(); });
+}
+
+bool MediaFeatureValue::equals(MediaFeatureValue const& other) const
+{
+    if (!is_same_type(other))
+        return false;
+
+    if (is_ident() && other.is_ident())
+        return m_value.get<String>().equals_ignoring_case(other.m_value.get<String>());
+    if (is_length() && other.is_length()) {
+        // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
+        auto& my_length = m_value.get<Length>();
+        auto& other_length = other.m_value.get<Length>();
+        if (!my_length.is_absolute() || !other_length.is_absolute()) {
+            dbgln("TODO: Support relative lengths in media queries!");
+            return false;
+        }
+        return my_length.absolute_length_to_px() == other_length.absolute_length_to_px();
+    }
+    if (is_number() && other.is_number())
+        return m_value.get<double>() == other.m_value.get<double>();
+
+    VERIFY_NOT_REACHED();
 }
 
 String MediaQuery::MediaFeature::to_string() const
@@ -37,51 +77,62 @@ String MediaQuery::MediaFeature::to_string() const
 
 bool MediaQuery::MediaFeature::evaluate(DOM::Window const& window) const
 {
-    auto queried_value = window.query_media_feature(name);
-    if (!queried_value)
+    auto maybe_queried_value = window.query_media_feature(name);
+    if (!maybe_queried_value.has_value())
         return false;
+    auto queried_value = maybe_queried_value.release_value();
 
     switch (type) {
     case Type::IsTrue:
-        if (queried_value->has_number())
-            return queried_value->to_number() != 0;
-        if (queried_value->has_length())
-            return queried_value->to_length().raw_value() != 0;
-        if (queried_value->has_identifier())
-            return queried_value->to_identifier() != ValueID::None;
+        if (queried_value.is_number())
+            return queried_value.number() != 0;
+        if (queried_value.is_length())
+            return queried_value.length().raw_value() != 0;
+        if (queried_value.is_ident())
+            return queried_value.ident() != "none";
         return false;
 
     case Type::ExactValue:
-        return queried_value->equals(*value);
+        return queried_value.equals(*value);
 
     case Type::MinValue:
-        if (queried_value->has_number() && value->has_number())
-            return queried_value->to_number() >= value->to_number();
-        if (queried_value->has_length() && value->has_length()) {
-            auto queried_length = queried_value->to_length();
-            auto value_length = value->to_length();
-            // FIXME: We should be checking that lengths are valid during parsing
+        if (!value->is_same_type(queried_value))
+            return false;
+
+        if (value->is_number())
+            return queried_value.number() >= value->number();
+
+        if (value->is_length()) {
+            auto& queried_length = queried_value.length();
+            auto& value_length = value->length();
+            // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
             if (!value_length.is_absolute()) {
-                dbgln("Media feature was given a non-absolute length, which is invalid! {}", value_length.to_string());
+                dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
                 return false;
             }
             return queried_length.absolute_length_to_px() >= value_length.absolute_length_to_px();
         }
+
         return false;
 
     case Type::MaxValue:
-        if (queried_value->has_number() && value->has_number())
-            return queried_value->to_number() <= value->to_number();
-        if (queried_value->has_length() && value->has_length()) {
-            auto queried_length = queried_value->to_length();
-            auto value_length = value->to_length();
-            // FIXME: We should be checking that lengths are valid during parsing
+        if (!value->is_same_type(queried_value))
+            return false;
+
+        if (value->is_number())
+            return queried_value.number() <= value->number();
+
+        if (value->is_length()) {
+            auto& queried_length = queried_value.length();
+            auto& value_length = value->length();
+            // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
             if (!value_length.is_absolute()) {
-                dbgln("Media feature was given a non-absolute length, which is invalid! {}", value_length.to_string());
+                dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
                 return false;
             }
             return queried_length.absolute_length_to_px() <= value_length.absolute_length_to_px();
         }
+
         return false;
     }
 
