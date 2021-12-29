@@ -1241,6 +1241,9 @@ public:
     bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
     void set_profiling_suppressed() { m_is_profiling_suppressed = true; }
 
+    bool is_promise_violation_pending() const { return m_is_promise_violation_pending; }
+    void set_promise_violation_pending(bool value) { m_is_promise_violation_pending = value; }
+
     String backtrace();
 
 private:
@@ -1390,6 +1393,7 @@ private:
     bool m_in_block { false };
     bool m_is_idle_thread { false };
     bool m_is_crashing { false };
+    bool m_is_promise_violation_pending { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 

@@ -868,6 +868,7 @@ ErrorOr<void> Process::require_no_promises() const
     if (!has_promises())
         return {};
     dbgln("Has made a promise");
+    Thread::current()->set_promise_violation_pending(true);
     return EPROMISEVIOLATION;
 }
 
@@ -880,6 +881,7 @@ ErrorOr<void> Process::require_promise(Pledge promise)
         return {};
 
     dbgln("Has not pledged {}", to_string(promise));
+    Thread::current()->set_promise_violation_pending(true);
     (void)try_set_coredump_property("pledge_violation"sv, to_string(promise));
     return EPROMISEVIOLATION;
 }

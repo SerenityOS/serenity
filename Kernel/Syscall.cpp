@@ -235,8 +235,13 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     current_thread->die_if_needed();
 
     // Crash any processes which have commited a promise violation during syscall handling.
-    if (result.is_error() && result.error().code() == EPROMISEVIOLATION)
+    if (result.is_error() && result.error().code() == EPROMISEVIOLATION) {
+        VERIFY(current_thread->is_promise_violation_pending());
+        current_thread->set_promise_violation_pending(false);
         process.crash(SIGABRT, 0);
+    } else {
+        VERIFY(!current_thread->is_promise_violation_pending());
+    }
 
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 }
