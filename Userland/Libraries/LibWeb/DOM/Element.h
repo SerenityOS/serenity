@@ -57,6 +57,7 @@ public:
     void remove_attribute(const FlyString& name);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
+    Vector<String> get_attribute_names() const;
 
     RefPtr<DOMTokenList> const& class_list();
 

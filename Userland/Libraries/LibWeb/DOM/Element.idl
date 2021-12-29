@@ -10,6 +10,7 @@ interface Element : Node {
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
     [SameObject] readonly attribute NamedNodeMap attributes;
+    sequence<DOMString> getAttributeNames();
 
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);

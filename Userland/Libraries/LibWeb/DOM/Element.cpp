@@ -109,6 +109,18 @@ bool Element::has_attribute(const FlyString& name) const
     return m_attributes->get_attribute(name) != nullptr;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-getattributenames
+Vector<String> Element::get_attribute_names() const
+{
+    // The getAttributeNames() method steps are to return the qualified names of the attributes in this’s attribute list, in order; otherwise a new list.
+    Vector<String> names;
+    for (size_t i = 0; i < m_attributes->length(); ++i) {
+        auto const* attribute = m_attributes->item(i);
+        names.append(attribute->name());
+    }
+    return names;
+}
+
 bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
 {
     return any_of(m_classes, [&](auto& it) {
