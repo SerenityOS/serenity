@@ -11,6 +11,7 @@
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
@@ -225,6 +226,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (widget.bitmap())
             GUI::Clipboard::the().set_bitmap(*widget.bitmap());
     });
+
+    auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
+        widget.set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
+    });
+    nearest_neighbor_action->set_checked(true);
+
+    auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
+        widget.set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
+    });
+
     widget.on_image_change = [&](const Gfx::Bitmap* bitmap) {
         bool should_enable_image_actions = (bitmap != nullptr);
         bool should_enable_forward_actions = (widget.is_next_available() && should_enable_image_actions);
@@ -287,6 +298,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu.add_action(zoom_in_action);
     view_menu.add_action(reset_zoom_action);
     view_menu.add_action(zoom_out_action);
+    view_menu.add_separator();
+
+    auto& scaling_mode_menu = view_menu.add_submenu("&Scaling Mode");
+
+    auto scaling_mode_group = make<GUI::ActionGroup>();
+    scaling_mode_group->set_exclusive(true);
+    scaling_mode_group->add_action(*nearest_neighbor_action);
+    scaling_mode_group->add_action(*bilinear_action);
+
+    scaling_mode_menu.add_action(nearest_neighbor_action);
+    scaling_mode_menu.add_action(bilinear_action);
+
     view_menu.add_separator();
     view_menu.add_action(hide_show_toolbar_action);
 
