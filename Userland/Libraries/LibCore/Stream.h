@@ -340,7 +340,7 @@ public:
             // datagram to be discarded. That's not very nice, so let's bail
             // early, telling the caller that he should allocate a bigger
             // buffer.
-            return EMSGSIZE;
+            return Error::from_errno(EMSGSIZE);
         }
 
         return m_helper.read(buffer);
@@ -469,13 +469,13 @@ public:
     static ErrorOr<NonnullOwnPtr<BufferedType<T>>> create_buffered(NonnullOwnPtr<T> stream, size_t buffer_size)
     {
         if (!buffer_size)
-            return EINVAL;
+            return Error::from_errno(EINVAL);
         if (!stream->is_open())
-            return ENOTCONN;
+            return Error::from_errno(ENOTCONN);
 
         auto maybe_buffer = ByteBuffer::create_uninitialized(buffer_size);
         if (!maybe_buffer.has_value())
-            return ENOMEM;
+            return Error::from_errno(ENOMEM);
 
         return adopt_nonnull_own_or_enomem(new BufferedType<T>(move(stream), maybe_buffer.release_value()));
     }
@@ -486,9 +486,9 @@ public:
     ErrorOr<size_t> read(Bytes buffer)
     {
         if (!stream().is_open())
-            return ENOTCONN;
+            return Error::from_errno(ENOTCONN);
         if (!buffer.size())
-            return ENOBUFS;
+            return Error::from_errno(ENOBUFS);
 
         // Let's try to take all we can from the buffer first.
         size_t buffer_nread = 0;
@@ -536,10 +536,10 @@ public:
     ErrorOr<size_t> read_until_any_of(Bytes buffer, Array<StringView, N> candidates)
     {
         if (!stream().is_open())
-            return ENOTCONN;
+            return Error::from_errno(ENOTCONN);
 
         if (buffer.is_empty())
-            return ENOBUFS;
+            return Error::from_errno(ENOBUFS);
 
         // We fill the buffer through can_read_line.
         if (!TRY(can_read_line()))
@@ -557,7 +557,7 @@ public:
                 // violating the invariant twice the next time the user attempts
                 // to read, which is No Good. So let's give a descriptive error
                 // to the caller about why it can't read.
-                return EMSGSIZE;
+                return Error::from_errno(EMSGSIZE);
             }
 
             m_buffer.span().slice(0, m_buffered_size).copy_to(buffer);
