@@ -22,14 +22,14 @@ void __sanitizer_cov_trace_pc(void)
         return;
     }
 
-    auto thread = Thread::current();
+    auto const* thread = Thread::current();
     auto tid = thread->tid();
     auto maybe_kcov_instance = KCOVDevice::thread_instance->get(tid);
     if (!maybe_kcov_instance.has_value()) [[likely]] {
         // not traced
         return;
     }
-    auto kcov_instance = maybe_kcov_instance.value();
+    auto* kcov_instance = maybe_kcov_instance.value();
     if (kcov_instance->state() < KCOVInstance::TRACING) [[likely]]
         return;
     kcov_instance->buffer_add_pc((u64)__builtin_return_address(0));

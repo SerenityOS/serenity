@@ -241,7 +241,7 @@ ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(FileSystemID fsid, F
     TRY(callback({ ".", { fsid, component_index() }, DT_DIR }));
     TRY(callback({ "..", { fsid, parent_directory->component_index() }, DT_DIR }));
 
-    for (auto& component : m_components) {
+    for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
         TRY(callback({ component.name(), identifier, 0 }));
     }
