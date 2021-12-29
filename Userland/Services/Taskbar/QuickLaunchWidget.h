@@ -13,6 +13,32 @@
 
 namespace Taskbar {
 
+class QuickLaunchEntry {
+public:
+    virtual ~QuickLaunchEntry() = default;
+    virtual ErrorOr<void> launch() const = 0;
+    virtual GUI::Icon icon() const = 0;
+    virtual String name() const = 0;
+
+    static OwnPtr<QuickLaunchEntry> create_from_config_value(StringView path);
+    static OwnPtr<QuickLaunchEntry> create_from_path(StringView path);
+};
+
+class QuickLaunchEntryAppFile : public QuickLaunchEntry {
+public:
+    explicit QuickLaunchEntryAppFile(NonnullRefPtr<Desktop::AppFile> file)
+        : m_app_file(move(file))
+    {
+    }
+
+    virtual ErrorOr<void> launch() const override;
+    virtual GUI::Icon icon() const override { return m_app_file->icon(); }
+    virtual String name() const override { return m_app_file->name(); }
+
+private:
+    NonnullRefPtr<Desktop::AppFile> m_app_file;
+};
+
 class QuickLaunchWidget : public GUI::Frame
     , public Config::Listener {
     C_OBJECT(QuickLaunchWidget);
@@ -27,7 +53,7 @@ public:
 
 private:
     QuickLaunchWidget();
-    void add_or_adjust_button(String const&, NonnullRefPtr<Desktop::AppFile>);
+    void add_or_adjust_button(String const&, NonnullOwnPtr<QuickLaunchEntry>&&);
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
     String m_context_menu_app_name;
