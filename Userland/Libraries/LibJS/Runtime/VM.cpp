@@ -180,13 +180,7 @@ ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Valu
 {
     // 1. Let name be StringValue of Identifier.
     // 2. Return ? InitializeBoundName(name, value, environment).
-    // TODO: Use the right AO here
-    if (environment) {
-        MUST(environment->initialize_binding(global_object, target, value));
-        return {};
-    }
-    auto reference = resolve_binding(target);
-    return reference.put_value(global_object, value);
+    return initialize_bound_name(global_object, target, value, environment);
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization

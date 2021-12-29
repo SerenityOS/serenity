@@ -199,6 +199,31 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
     return vm.current_realm();
 }
 
+// 8.5.2.1 InitializeBoundName ( name, value, environment ), 8.5.2.1 InitializeBoundName ( name, value, environment )
+ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlyString const& name, Value value, Environment* environment)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If environment is not undefined, then
+    if (environment) {
+        // a. Perform environment.InitializeBinding(name, value).
+        MUST(environment->initialize_binding(global_object, name, value));
+
+        // b. Return NormalCompletion(undefined).
+        return {};
+    }
+    // 2. Else,
+    else {
+        // a. Let lhs be ResolveBinding(name).
+        auto lhs = vm.resolve_binding(name);
+
+        // b. Return ? PutValue(lhs, value).
+        return TRY(lhs.put_value(global_object, value));
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // 10.1.6.2 IsCompatiblePropertyDescriptor ( Extensible, Desc, Current ), https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const& descriptor, Optional<PropertyDescriptor> const& current)
 {

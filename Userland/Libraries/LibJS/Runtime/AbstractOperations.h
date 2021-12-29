@@ -30,6 +30,7 @@ ThrowCompletionOr<size_t> length_of_array_like(GlobalObject&, Object const&);
 ThrowCompletionOr<MarkedValueList> create_list_from_array_like(GlobalObject&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 ThrowCompletionOr<Realm*> get_function_realm(GlobalObject&, FunctionObject const&);
+ThrowCompletionOr<void> initialize_bound_name(GlobalObject&, FlyString const&, Value, Environment*);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 ThrowCompletionOr<Object*> get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());

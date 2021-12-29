@@ -1479,12 +1479,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     VERIFY(!name.is_empty());
     auto class_constructor = TRY_OR_DISCARD(m_class_expression->class_definition_evaluation(interpreter, global_object, name, name));
 
-    if (interpreter.lexical_environment()) {
-        MUST(interpreter.lexical_environment()->initialize_binding(global_object, name, class_constructor));
-    } else {
-        auto reference = interpreter.vm().resolve_binding(name);
-        TRY_OR_DISCARD(reference.put_value(global_object, class_constructor));
-    }
+    TRY_OR_DISCARD(initialize_bound_name(global_object, name, class_constructor, interpreter.lexical_environment()));
 
     return {};
 }
