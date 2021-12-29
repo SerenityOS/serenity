@@ -108,7 +108,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params
     VERIFY(accepted_socket);
 
     if (user_address) {
-        sockaddr_un address_buffer;
+        sockaddr_un address_buffer {};
         address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
         accepted_socket->get_peer_address((sockaddr*)&address_buffer, &address_size);
         TRY(copy_to_user(user_address, &address_buffer, address_size));
@@ -266,7 +266,7 @@ ErrorOr<void> Process::get_sock_or_peer_name(const Params& params)
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
-    sockaddr_un address_buffer;
+    sockaddr_un address_buffer {};
     addrlen_value = min(sizeof(sockaddr_un), static_cast<size_t>(addrlen_value));
     if constexpr (sockname)
         socket.get_local_address((sockaddr*)&address_buffer, &addrlen_value);
