@@ -5,13 +5,18 @@
  */
 
 #include "QuickLaunchWidget.h"
+#include "LibCore/IODevice.h"
+#include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <serenity.h>
+#include <sys/stat.h>
 
 namespace Taskbar {
 
@@ -37,6 +42,24 @@ ErrorOr<void> QuickLaunchEntryAppFile::launch() const
     } else
         TRY(Core::System::disown(pid));
     return {};
+}
+
+ErrorOr<void> QuickLaunchEntryExecutable::launch() const
+{
+    auto pid = Core::Process::spawn(m_path);
+    if (pid < 0)
+        return Error::from_syscall("Core::Process::spawn", -errno);
+    return {};
+}
+
+GUI::Icon QuickLaunchEntryExecutable::icon() const
+{
+    return GUI::FileIconProvider::icon_for_executable(m_path);
+}
+
+String QuickLaunchEntryExecutable::name() const
+{
+    return LexicalPath { m_path }.basename();
 }
 
 QuickLaunchWidget::QuickLaunchWidget()
@@ -73,17 +96,26 @@ QuickLaunchWidget::~QuickLaunchWidget()
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView value)
 {
-    if (value.ends_with(".af")) {
+    if (!value.starts_with("/") && value.ends_with(".af")) {
         auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, value);
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(af_path));
-    }
-    return {};
+    } else
+        return create_from_path(value);
 }
 
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
 {
     if (path.ends_with(".af"))
         return make<QuickLaunchEntryAppFile>(Desktop::AppFile::open(path));
+    auto stat_or_error = Core::System::stat(path);
+    if (stat_or_error.is_error()) {
+        dbgln("Failed to stat quick launch entry file: {}", stat_or_error.release_error());
+        return {};
+    }
+    auto stat = stat_or_error.release_value();
+    if (stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+        return make<QuickLaunchEntryExecutable>(path);
+    dbgln("Config value {} is not a valid quick launch entry", path);
     return {};
 }
 
@@ -140,7 +172,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
             if (entry) {
                 auto item_name = entry->name().replace(" ", "", true);
                 add_or_adjust_button(item_name, entry.release_nonnull());
-                Config::write_string("Taskbar", quick_launch, item_name, url.basename());
+                Config::write_string("Taskbar", quick_launch, item_name, url.path());
             }
         }
     }
