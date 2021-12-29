@@ -215,18 +215,18 @@ ThrowCompletionOr<bool> GlobalEnvironment::can_declare_global_var(FlyString cons
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
-bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
+ThrowCompletionOr<bool> GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 {
     // 1. Let ObjRec be envRec.[[ObjectRecord]].
     // 2. Let globalObject be ObjRec.[[BindingObject]].
     auto& global_object = m_object_record->binding_object();
 
     // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
-    auto existing_prop = TRY_OR_DISCARD(global_object.internal_get_own_property(name));
+    auto existing_prop = TRY(global_object.internal_get_own_property(name));
 
     // 4. If existingProp is undefined, return ? IsExtensible(globalObject).
     if (!existing_prop.has_value())
-        return TRY_OR_DISCARD(global_object.is_extensible());
+        return TRY(global_object.is_extensible());
 
     // 5. If existingProp.[[Configurable]] is true, return true.
     if (*existing_prop->configurable)

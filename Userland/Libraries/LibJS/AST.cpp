@@ -3626,10 +3626,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
         if (declared_function_names.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
             return IterationDecision::Continue;
 
-        auto function_definable = global_environment.can_declare_global_function(function.name());
-
-        if (interpreter.exception())
+        auto function_definable_or_error = global_environment.can_declare_global_function(function.name());
+        if (function_definable_or_error.is_error())
             return IterationDecision::Break;
+        auto function_definable = function_definable_or_error.release_value();
 
         if (!function_definable) {
             interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
@@ -3677,10 +3677,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
             if (global_environment.has_lexical_declaration(function_name))
                 return IterationDecision::Continue;
 
-            auto function_definable = global_environment.can_declare_global_function(function_name);
-
-            if (interpreter.exception())
+            auto function_definable_or_error = global_environment.can_declare_global_function(function_name);
+            if (function_definable_or_error.is_error())
                 return IterationDecision::Break;
+            auto function_definable = function_definable_or_error.release_value();
 
             if (!function_definable) {
                 interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function_name);

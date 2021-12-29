@@ -627,9 +627,11 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& glo
             return IterationDecision::Continue;
 
         if (global_var_environment) {
-            auto function_definable = global_var_environment->can_declare_global_function(function.name());
-            if (vm.exception())
+            auto function_definable_or_error = global_var_environment->can_declare_global_function(function.name());
+            if (function_definable_or_error.is_error())
                 return IterationDecision::Break;
+            auto function_definable = function_definable_or_error.release_value();
+
             if (!function_definable) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::CannotDeclareGlobalFunction, function.name());
                 return IterationDecision::Break;
