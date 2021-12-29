@@ -707,7 +707,6 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             // FIXME: Implement more blend modes
             switch (sampler.config().fixed_function_texture_env_mode) {
             case TextureEnvMode::Modulate:
-            default:
                 fragment = fragment * texel;
                 break;
             case TextureEnvMode::Replace:
@@ -721,6 +720,8 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 fragment.set_z(texel.z() * src_alpha + fragment.z() * one_minus_src_alpha);
                 break;
             }
+            default:
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -739,7 +740,7 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
                 break;
             default:
-                break;
+                VERIFY_NOT_REACHED();
             }
 
             // Mix texel's RGB with fog's RBG - leave alpha alone
