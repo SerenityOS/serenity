@@ -860,11 +860,11 @@ OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<S
     return {};
 }
 
-Optional<MediaQuery::MediaFeature> Parser::consume_media_feature(TokenStream<StyleComponentValueRule>& outer_tokens)
+Optional<MediaFeature> Parser::consume_media_feature(TokenStream<StyleComponentValueRule>& outer_tokens)
 {
     outer_tokens.skip_whitespace();
 
-    auto invalid_feature = [&]() -> Optional<MediaQuery::MediaFeature> {
+    auto invalid_feature = [&]() -> Optional<MediaFeature> {
         outer_tokens.reconsume_current_input_token();
         return {};
     };
@@ -884,12 +884,8 @@ Optional<MediaQuery::MediaFeature> Parser::consume_media_feature(TokenStream<Sty
         auto feature_name = name_token.token().ident();
         tokens.skip_whitespace();
 
-        if (!tokens.has_next_token()) {
-            return MediaQuery::MediaFeature {
-                .type = MediaQuery::MediaFeature::Type::IsTrue,
-                .name = feature_name,
-            };
-        }
+        if (!tokens.has_next_token())
+            return MediaFeature::boolean(feature_name);
 
         if (!tokens.next_token().is(Token::Type::Colon))
             return invalid_feature();
@@ -902,25 +898,7 @@ Optional<MediaQuery::MediaFeature> Parser::consume_media_feature(TokenStream<Sty
         if (tokens.has_next_token())
             return invalid_feature();
 
-        if (feature_name.starts_with("min-", CaseSensitivity::CaseInsensitive)) {
-            return MediaQuery::MediaFeature {
-                .type = MediaQuery::MediaFeature::Type::MinValue,
-                .name = feature_name.substring_view(4),
-                .value = value.release_value(),
-            };
-        } else if (feature_name.starts_with("max-", CaseSensitivity::CaseInsensitive)) {
-            return MediaQuery::MediaFeature {
-                .type = MediaQuery::MediaFeature::Type::MaxValue,
-                .name = feature_name.substring_view(4),
-                .value = value.release_value(),
-            };
-        }
-
-        return MediaQuery::MediaFeature {
-            .type = MediaQuery::MediaFeature::Type::ExactValue,
-            .name = feature_name,
-            .value = value.release_value(),
-        };
+        return MediaFeature::plain(feature_name, value.release_value());
     }
 
     return invalid_feature();
