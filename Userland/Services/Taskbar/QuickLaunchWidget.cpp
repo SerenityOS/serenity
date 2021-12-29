@@ -5,13 +5,14 @@
  */
 
 #include "QuickLaunchWidget.h"
-#include "LibCore/IODevice.h"
-#include "LibDesktop/Launcher.h"
 #include <AK/LexicalPath.h>
+#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibConfig/Client.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Menu.h>
@@ -133,14 +134,37 @@ OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_path(StringView path)
         dbgln("Failed to stat quick launch entry file: {}", stat_or_error.release_error());
         return {};
     }
+
     auto stat = stat_or_error.release_value();
     if (S_ISREG(stat.st_mode) && (stat.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         return make<QuickLaunchEntryExecutable>(path);
     return make<QuickLaunchEntryFile>(path);
 }
 
+static String sanitize_entry_name(String const& name)
+{
+    return name.replace(" ", "", true).replace("=", "", true);
+}
+
 void QuickLaunchWidget::add_or_adjust_button(String const& button_name, NonnullOwnPtr<QuickLaunchEntry>&& entry)
 {
+    auto file_name_to_watch = entry->file_name_to_watch();
+    if (!file_name_to_watch.is_null()) {
+        if (!m_watcher) {
+            // FIXME: Propagate errors
+            m_watcher = MUST(Core::FileWatcher::create());
+            m_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+                auto name = sanitize_entry_name(event.event_path);
+                dbgln("Removing QuickLaunch entry {}", name);
+                auto button = find_child_of_type_named<GUI::Button>(name);
+                if (button)
+                    remove_child(*button);
+            };
+        }
+        // FIXME: Propagate errors
+        MUST(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
+    }
+
     auto button = find_child_of_type_named<GUI::Button>(button_name);
     if (!button)
         button = &add<GUI::Button>();
@@ -192,7 +216,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
         for (auto& url : urls) {
             auto entry = QuickLaunchEntry::create_from_path(url.path());
             if (entry) {
-                auto item_name = entry->name().replace(" ", "", true).replace("=", "", true);
+                auto item_name = sanitize_entry_name(entry->name());
                 add_or_adjust_button(item_name, entry.release_nonnull());
                 Config::write_string("Taskbar", quick_launch, item_name, url.path());
             }
