@@ -336,9 +336,7 @@ private:
     ProcFSSelfProcessDirectory();
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        if (builder.appendff("{}", Process::current().pid().value()).is_error())
-            return false;
-        return true;
+        return !builder.appendff("{}", Process::current().pid().value()).is_error();
     }
 };
 

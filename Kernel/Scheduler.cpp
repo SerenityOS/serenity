@@ -517,7 +517,7 @@ void Scheduler::invoke_async()
 
 void Scheduler::notify_finalizer()
 {
-    if (g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel) == false)
+    if (!g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel))
         g_finalizer_wait_queue->wake_all();
 }
 
