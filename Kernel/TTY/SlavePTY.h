@@ -15,7 +15,7 @@ class MasterPTY;
 
 class SlavePTY final : public TTY {
 public:
-    bool unref() const;
+    virtual bool unref() const override;
     virtual ~SlavePTY() override;
 
     void on_master_write(const UserOrKernelBuffer&, size_t);

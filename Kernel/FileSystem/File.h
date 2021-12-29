@@ -74,6 +74,7 @@ class File
     : public RefCounted<File>
     , public Weakable<File> {
 public:
+    virtual bool unref() const { return RefCounted<File>::unref(); }
     virtual void will_be_destroyed() { }
     virtual ~File();
 
