@@ -26,6 +26,11 @@
 
 namespace SoftGPU {
 
+struct TexCoordGenerationConfig {
+    TexCoordGenerationMode mode { TexCoordGenerationMode::EyeLinear };
+    FloatVector4 coefficients {};
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
@@ -57,6 +62,8 @@ struct RasterizerOptions {
     WindingOrder front_face { WindingOrder::CounterClockwise };
     bool cull_back { true };
     bool cull_front { false };
+    u8 texcoord_generation_enabled_coordinates { TexCoordGenerationCoordinate::None };
+    Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
 };
 
 inline static constexpr size_t const num_samplers = 32;

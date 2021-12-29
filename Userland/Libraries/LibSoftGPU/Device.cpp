@@ -533,6 +533,72 @@ DeviceInfo Device::info() const
     };
 }
 
+static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
+{
+    auto generate_coordinate = [&](size_t config_index) -> float {
+        auto mode = options.texcoord_generation_config[config_index].mode;
+
+        switch (mode) {
+        case TexCoordGenerationMode::ObjectLinear: {
+            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            return coefficients.dot(vertex.position);
+        }
+        case TexCoordGenerationMode::EyeLinear: {
+            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            return coefficients.dot(vertex.eye_coordinates);
+        }
+        case TexCoordGenerationMode::SphereMap: {
+            auto const eye_unit = vertex.eye_coordinates.normalized();
+            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            auto const normal = vertex.normal;
+            auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
+            reflection.set_z(reflection.z() + 1);
+            auto const reflection_value = (config_index == 0) ? reflection.x() : reflection.y();
+            return reflection_value / (2 * reflection.length()) + 0.5f;
+        }
+        case TexCoordGenerationMode::ReflectionMap: {
+            auto const eye_unit = vertex.eye_coordinates.normalized();
+            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            auto const normal = vertex.normal;
+            auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
+            switch (config_index) {
+            case 0:
+                return reflection.x();
+            case 1:
+                return reflection.y();
+            case 2:
+                return reflection.z();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+        case TexCoordGenerationMode::NormalMap: {
+            auto const normal = vertex.normal;
+            switch (config_index) {
+            case 0:
+                return normal.x();
+            case 1:
+                return normal.y();
+            case 2:
+                return normal.z();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    auto const enabled_coords = options.texcoord_generation_enabled_coordinates;
+    vertex.tex_coord = {
+        ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(0) : vertex.tex_coord.x(),
+        ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(1) : vertex.tex_coord.y(),
+        ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(2) : vertex.tex_coord.z(),
+        ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(3) : vertex.tex_coord.w(),
+    };
+}
+
 void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
     FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices,
     Vector<size_t> const& enabled_texture_units)
@@ -701,6 +767,13 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             triangle.vertices[0].normal.normalize();
             triangle.vertices[1].normal.normalize();
             triangle.vertices[2].normal.normalize();
+        }
+
+        // Generate texture coordinates if at least one coordinate is enabled
+        if (m_options.texcoord_generation_enabled_coordinates != TexCoordGenerationCoordinate::None) {
+            generate_texture_coordinates(triangle.vertices[0], m_options);
+            generate_texture_coordinates(triangle.vertices[1], m_options);
+            generate_texture_coordinates(triangle.vertices[2], m_options);
         }
 
         // Apply texture transformation
