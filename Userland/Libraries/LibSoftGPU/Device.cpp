@@ -47,11 +47,12 @@ ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 
 static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
 {
+    auto constexpr one_over_255 = 1.0f / 255;
     return {
-        ((rgba >> 16) & 0xff) / 255.0f,
-        ((rgba >> 8) & 0xff) / 255.0f,
-        (rgba & 0xff) / 255.0f,
-        ((rgba >> 24) & 0xff) / 255.0f
+        ((rgba >> 16) & 0xff) * one_over_255,
+        ((rgba >> 8) & 0xff) * one_over_255,
+        (rgba & 0xff) * one_over_255,
+        ((rgba >> 24) & 0xff) * one_over_255,
     };
 }
 
