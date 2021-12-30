@@ -73,8 +73,14 @@
         }
     }
 
+    @GUI::Progressbar {
+        name: "progressbar"
+        text: "Generating crash report: "
+    }
+
     @GUI::TabWidget {
         name: "tab_widget"
+        visible: false
     }
 
     @GUI::Widget {
