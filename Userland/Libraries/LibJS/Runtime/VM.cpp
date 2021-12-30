@@ -503,10 +503,12 @@ void VM::throw_exception(Exception& exception)
 }
 
 // 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
-Value VM::resolve_this_binding(GlobalObject& global_object)
+ThrowCompletionOr<Value> VM::resolve_this_binding(GlobalObject& global_object)
 {
+    // 1. Let envRec be GetThisEnvironment().
     auto& environment = get_this_environment(*this);
-    return TRY_OR_DISCARD(environment.get_this_binding(global_object));
+    // 2. Return ? envRec.GetThisBinding().
+    return TRY(environment.get_this_binding(global_object));
 }
 
 String VM::join_arguments(size_t start_index) const

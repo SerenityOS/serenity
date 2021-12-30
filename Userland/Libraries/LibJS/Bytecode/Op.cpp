@@ -315,7 +315,13 @@ void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = interpreter.vm().resolve_this_binding(interpreter.global_object());
+    auto this_binding_or_error = interpreter.vm().resolve_this_binding(interpreter.global_object());
+    if (this_binding_or_error.is_throw_completion()) {
+        interpreter.vm().throw_exception(interpreter.global_object(), this_binding_or_error.release_error().value());
+        return;
+    }
+
+    interpreter.accumulator() = this_binding_or_error.release_value();
 }
 
 void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
