@@ -2252,7 +2252,7 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return interpreter.vm().resolve_this_binding(global_object);
+    return TRY_OR_DISCARD(interpreter.vm().resolve_this_binding(global_object));
 }
 
 void ThisExpression::dump(int indent) const
