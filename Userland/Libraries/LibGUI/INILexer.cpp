@@ -75,8 +75,8 @@ Vector<IniToken> IniLexer::lex()
             continue;
         }
 
-        // ;Comment
-        if (ch == ';') {
+        // ;Comment or #Comment
+        if (ch == ';' || ch == '#') {
             begin_token();
             while (peek() && peek() != '\n')
                 consume();
