@@ -131,7 +131,7 @@ private:
         JsonArraySerializer array { builder };
         LocalSocket::for_each([&array](auto& socket) {
             auto obj = array.add_object();
-            obj.add("path", String(socket.socket_path()));
+            obj.add("path", socket.socket_path());
             obj.add("origin_pid", socket.origin_pid().value());
             obj.add("origin_uid", socket.origin_uid().value());
             obj.add("origin_gid", socket.origin_gid().value());
@@ -463,7 +463,7 @@ private:
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
-                process_object.add("pledge", pledge_builder.to_string());
+                process_object.add("pledge", pledge_builder.string_view());
 
                 switch (process.veil_state()) {
                 case VeilState::None:
@@ -756,7 +756,7 @@ private:
     {
         if (!Process::current().is_superuser())
             return EPERM;
-        return builder.append(String::number(kernel_load_base));
+        return builder.appendff("{}", kernel_load_base);
     }
 };
 

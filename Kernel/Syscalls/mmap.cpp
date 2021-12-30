@@ -520,7 +520,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, 
         return EINVAL;
 
     auto range = TRY(address_space().try_allocate_range({}, size));
-    auto* region = TRY(address_space().allocate_region(range, String("Master TLS"), PROT_READ | PROT_WRITE));
+    auto* region = TRY(address_space().allocate_region(range, "Master TLS"sv, PROT_READ | PROT_WRITE));
 
     m_master_tls_region = region->make_weak_ptr();
     m_master_tls_size = size;

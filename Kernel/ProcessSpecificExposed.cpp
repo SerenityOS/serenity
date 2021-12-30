@@ -159,7 +159,7 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
             permissions_builder.append('c');
         if (unveiled_path.permissions() & UnveilAccess::Browse)
             permissions_builder.append('b');
-        obj.add("permissions", permissions_builder.to_string());
+        obj.add("permissions", permissions_builder.string_view());
     }
     array.finish();
     return {};
@@ -255,7 +255,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
                 else
                     pagemap_builder.append('P');
             }
-            region_object.add("pagemap", pagemap_builder.to_string());
+            region_object.add("pagemap", pagemap_builder.string_view());
         }
     }
     array.finish();

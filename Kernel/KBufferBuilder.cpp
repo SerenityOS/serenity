@@ -121,7 +121,7 @@ ErrorOr<void> KBufferBuilder::append_escaped_for_json(StringView string)
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)
-                TRY(append(String::formatted("\\u{:04x}", ch)));
+                TRY(appendff("\\u{:04x}", ch));
             else
                 TRY(append(ch));
         }
