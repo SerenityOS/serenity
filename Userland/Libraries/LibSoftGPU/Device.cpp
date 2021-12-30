@@ -130,10 +130,12 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     Vertex const vertex1 = triangle.vertices[1];
     Vertex const vertex2 = triangle.vertices[2];
 
+    constexpr int subpixel_factor = 1 << SUBPIXEL_BITS;
+
     // Calculate area of the triangle for later tests
-    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x()), static_cast<int>(vertex0.window_coordinates.y()) };
-    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x()), static_cast<int>(vertex1.window_coordinates.y()) };
-    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x()), static_cast<int>(vertex2.window_coordinates.y()) };
+    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex0.window_coordinates.y() * subpixel_factor) };
+    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex1.window_coordinates.y() * subpixel_factor) };
+    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex2.window_coordinates.y() * subpixel_factor) };
 
     int area = edge_function(v0, v1, v2);
     if (area == 0)
@@ -204,12 +206,12 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     auto render_bounds = render_target.rect();
     if (options.scissor_enabled)
         render_bounds.intersect(scissor_box_to_window_coordinates(options.scissor_box, render_target.rect()));
-    int const block_padding = RASTERIZER_BLOCK_SIZE - 1;
+
     // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()))                  / RASTERIZER_BLOCK_SIZE;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x())) + block_padding) / RASTERIZER_BLOCK_SIZE;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()))                  / RASTERIZER_BLOCK_SIZE;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) + block_padding) / RASTERIZER_BLOCK_SIZE;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
     // clang-format on
 
     u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
@@ -231,10 +233,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Edge values of the 4 block corners
             // clang-format off
-            auto b0 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE,                         by * RASTERIZER_BLOCK_SIZE });
-            auto b1 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE, by * RASTERIZER_BLOCK_SIZE });
-            auto b2 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE,                         by * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE });
-            auto b3 = calculate_edge_values({ bx * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE, by * RASTERIZER_BLOCK_SIZE + RASTERIZER_BLOCK_SIZE });
+            auto b0 = calculate_edge_values(IntVector2{ bx,     by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b1 = calculate_edge_values(IntVector2{ bx + 1, by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b2 = calculate_edge_values(IntVector2{ bx,     by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
+            auto b3 = calculate_edge_values(IntVector2{ bx + 1, by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
             // clang-format on
 
             // If the whole block is outside any of the triangle edges we can discard it completely
