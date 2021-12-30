@@ -45,6 +45,9 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_value_but_fixme_should_propagate_errors());
     m_unstaged_files->on_selection_change = [this] {
         const auto& index = m_unstaged_files->selection().first();
+        if (!index.is_valid())
+            return;
+
         const auto& selected = index.data().as_string();
         show_diff(LexicalPath(selected));
     };
