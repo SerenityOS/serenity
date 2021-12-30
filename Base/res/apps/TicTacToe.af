@@ -1,0 +1,4 @@
+[App]
+Name=Tic Tac Toe
+Executable=/bin/TicTacToe
+Category=Games
