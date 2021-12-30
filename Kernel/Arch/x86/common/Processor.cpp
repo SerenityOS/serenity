@@ -7,7 +7,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
