@@ -6,8 +6,15 @@
 
 #pragma once
 
+#define INCREASE_STATISTICS_COUNTER(stat, n)     \
+    do {                                         \
+        if constexpr (ENABLE_STATISTICS_OVERLAY) \
+            stat += (n);                         \
+    } while (0)
+
 namespace SoftGPU {
 
+static constexpr bool ENABLE_STATISTICS_OVERLAY = false;
 static constexpr int RASTERIZER_BLOCK_SIZE = 8;
 static constexpr int NUM_SAMPLERS = 32;
 
