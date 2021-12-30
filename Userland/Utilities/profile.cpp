@@ -102,7 +102,6 @@ int main(int argc, char** argv)
                 perror("profiling_disable");
                 return 1;
             }
-            outln("Profiling disabled.");
         }
 
         if (free && profiling_free_buffer(pid) < 0) {
