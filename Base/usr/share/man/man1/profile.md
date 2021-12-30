@@ -13,7 +13,7 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
 * `--help`: Display help message and exit
 * `--version`: Print version
 * `-p PID`: Target PID
-* `-a`: Profile all processes (super-user only)
+* `-a`: Profile all processes (super-user only), result at /proc/profile
 * `-e`: Enable
 * `-d`: Disable
 * `-f`: Free the profiling buffer for the associated process(es).
