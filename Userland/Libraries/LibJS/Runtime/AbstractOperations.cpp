@@ -199,7 +199,7 @@ ThrowCompletionOr<Realm*> get_function_realm(GlobalObject& global_object, Functi
     return vm.current_realm();
 }
 
-// 8.5.2.1 InitializeBoundName ( name, value, environment ), 8.5.2.1 InitializeBoundName ( name, value, environment )
+// 8.5.2.1 InitializeBoundName ( name, value, environment ), https://tc39.es/ecma262/#sec-initializeboundname
 ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlyString const& name, Value value, Environment* environment)
 {
     auto& vm = global_object.vm();
@@ -445,8 +445,11 @@ FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function
     return env;
 }
 
+// 9.2.1.1 NewPrivateEnvironment ( outerPrivEnv ), https://tc39.es/ecma262/#sec-newprivateenvironment
 PrivateEnvironment* new_private_environment(VM& vm, PrivateEnvironment* outer)
 {
+    // 1. Let names be a new empty List.
+    // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
     return vm.heap().allocate<PrivateEnvironment>(vm.current_realm()->global_object(), outer);
 }
 
