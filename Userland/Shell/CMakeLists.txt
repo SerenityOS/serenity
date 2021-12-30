@@ -1,12 +1,13 @@
 serenity_component(
-    Shell
-    REQUIRED
-    TARGETS Shell
+        Shell
+        REQUIRED
+        TARGETS Shell
 )
 
 set(SOURCES
         AST.cpp
         Builtin.cpp
+        EscapeFunctions.cpp
         Formatter.cpp
         ImmediateFunctions.cpp
         Job.cpp

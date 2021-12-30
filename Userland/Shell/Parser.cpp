@@ -5,6 +5,7 @@
  */
 
 #include "Parser.h"
+#include "EscapeFunctions.h"
 #include "Shell.h"
 #include <AK/AllOf.h>
 #include <AK/GenericLexer.h>
@@ -144,7 +145,7 @@ RefPtr<AST::Node> Parser::parse()
 
 RefPtr<AST::Node> Parser::parse_as_single_expression()
 {
-    auto input = Shell::escape_token_for_double_quotes(m_input);
+    auto input = escape_token_for_double_quotes(m_input);
     Parser parser { input };
     return parser.parse_expression();
 }
