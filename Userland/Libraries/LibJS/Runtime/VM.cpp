@@ -426,7 +426,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-Reference VM::get_identifier_reference(Environment* environment, FlyString name, bool strict, size_t hops)
+ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, FlyString name, bool strict, size_t hops)
 {
     // 1. If env is the value null, then
     if (!environment) {
@@ -434,17 +434,26 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
         return Reference { Reference::BaseType::Unresolvable, move(name), strict };
     }
 
+    // 2. Let exists be ? env.HasBinding(name).
     Optional<size_t> index;
-    auto exists = TRY_OR_DISCARD(environment->has_binding(name, &index));
+    auto exists = TRY(environment->has_binding(name, &index));
 
+    // Note: This is an optimization for looking up the same reference.
     Optional<EnvironmentCoordinate> environment_coordinate;
     if (index.has_value())
         environment_coordinate = EnvironmentCoordinate { .hops = hops, .index = index.value() };
 
-    if (exists)
+    // 3. If exists is true, then
+    if (exists) {
+        // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
         return Reference { *environment, move(name), strict, environment_coordinate };
-    else
+    }
+    // 4. Else,
+    else {
+        // a. Let outer be env.[[OuterEnv]].
+        // b. Return ? GetIdentifierReference(outer, name, strict).
         return get_identifier_reference(environment->outer_environment(), move(name), strict, hops + 1);
+    }
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
