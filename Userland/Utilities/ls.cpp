@@ -19,6 +19,7 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <Userland/Shell/EscapeFunctions.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -197,20 +198,38 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static int print_escaped(StringView name)
 {
-    int printed = 0;
+    auto const escaped_string = [name]() -> String {
+        bool general_escape = false;
+        bool contains_single_quotes = false;
+        bool contains_double_quotes = false;
+        for (auto const c : name) {
+            if (Shell::special_character_escape_mode(c) != Shell::SpecialCharacterEscapeMode::Untouched and c != '\'' and c != '"')
+                general_escape = true;
+            if (c == '\'')
+                contains_single_quotes = true;
+            if (c == '"')
+                contains_double_quotes = true;
+        }
+        if (contains_double_quotes and not contains_single_quotes)
+            return Shell::escape_token_for_single_quotes(name);
+        if (general_escape or contains_single_quotes or contains_double_quotes)
+            return Shell::escape_token_for_double_quotes(name);
 
-    Utf8View utf8_name(name);
-    if (utf8_name.validate()) {
-        out("{}", name);
+        return name;
+    }();
+
+    if (Utf8View utf8_name(escaped_string); utf8_name.validate()) {
+        out("{}", escaped_string);
         return utf8_name.length();
     }
 
-    for (int i = 0; name[i] != '\0'; i++) {
-        if (isprint(name[i])) {
-            putchar(name[i]);
+    int printed = 0;
+    for (int i = 0; escaped_string[i] != '\0'; i++) {
+        if (isprint(escaped_string[i])) {
+            putchar(escaped_string[i]);
             printed++;
         } else {
-            printed += printf("\\%03d", name[i]);
+            printed += printf("\\%03d", escaped_string[i]);
         }
     }
 
