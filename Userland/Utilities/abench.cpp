@@ -24,8 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Benchmark audio loading");
-    args_parser.add_positional_argument(path, "Path to audio file", "path");
-    args_parser.add_option(sample_count, "How many samples to load at maximum", "sample-count", 's', "samples");
+    TRY(args_parser.try_add_positional_argument(path, "Path to audio file", "path"));
+    TRY(args_parser.try_add_option(sample_count, "How many samples to load at maximum", "sample-count", 's', "samples"));
     args_parser.parse(args);
 
     TRY(Core::System::unveil(Core::File::absolute_path(path), "r"));
