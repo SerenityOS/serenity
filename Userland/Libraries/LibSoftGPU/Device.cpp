@@ -6,6 +6,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
@@ -13,6 +14,12 @@
 #include <LibSoftGPU/Device.h>
 
 namespace SoftGPU {
+
+static long long g_num_rasterized_triangles;
+static long long g_num_pixels;
+static long long g_num_pixels_shaded;
+static long long g_num_pixels_blended;
+static long long g_num_sampler_calls;
 
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
@@ -113,6 +120,8 @@ static constexpr void setup_blend_factors(BlendFactor mode, FloatVector4& consta
 template<typename PS>
 static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const Triangle& triangle, PS pixel_shader)
 {
+    INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
+
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
     VERIFY((render_target.width() % RASTERIZER_BLOCK_SIZE) == 0);
@@ -257,6 +266,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             // Generate the coverage mask
             if (!options.scissor_enabled && test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
+                INCREASE_STATISTICS_COUNTER(g_num_pixels, RASTERIZER_BLOCK_SIZE * RASTERIZER_BLOCK_SIZE);
                 // The block is fully contained within the triangle. Fill the mask with all 1s
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++)
                     pixel_mask[y] = -1;
@@ -268,8 +278,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     pixel_mask[y] = 0;
 
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx) {
-                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y)))
+                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y))) {
+                            INCREASE_STATISTICS_COUNTER(g_num_pixels, 1);
                             pixel_mask[y] |= 1 << x;
+                        }
                     }
                 }
             }
@@ -401,6 +413,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     float fog_fragment_depth = interpolate(vertex0_eye_absz, vertex1_eye_absz, vertex2_eye_absz, barycentric);
 
                     *pixel = pixel_shader(uv, vertex_color, fog_fragment_depth);
+                    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, 1);
                 }
             }
 
@@ -490,6 +503,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * dst_factor_dst_alpha;
 
                         *dst = (*dst & ~options.color_mask) | (to_rgba32(*src * src_factor + float_dst * dst_factor) & options.color_mask);
+                        INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, 1);
                     }
                 }
             } else {
@@ -795,6 +809,7 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             auto const& sampler = m_samplers[i];
 
             FloatVector4 texel = sampler.sample_2d({ uv.x(), uv.y() });
+            INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
             // FIXME: Implement more blend modes
             switch (sampler.config().fixed_function_texture_env_mode) {
@@ -890,6 +905,9 @@ void Device::blit(Gfx::Bitmap const& source, int x, int y)
 {
     wait_for_all_threads();
 
+    INCREASE_STATISTICS_COUNTER(g_num_pixels, source.width() * source.height());
+    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, source.width() * source.height());
+
     Gfx::Painter painter { *m_render_target };
     painter.blit({ x, y }, source, source.rect(), 1.0f, true);
 }
@@ -900,6 +918,65 @@ void Device::blit_to(Gfx::Bitmap& target)
 
     Gfx::Painter painter { target };
     painter.blit({ 0, 0 }, *m_render_target, m_render_target->rect(), 1.0f, false);
+
+    if constexpr (ENABLE_STATISTICS_OVERLAY)
+        draw_statistics_overlay(target);
+}
+
+void Device::draw_statistics_overlay(Gfx::Bitmap& target)
+{
+    static Core::ElapsedTimer timer;
+    static String debug_string;
+    static int frame_counter;
+
+    frame_counter++;
+    int milliseconds = 0;
+    if (timer.is_valid())
+        milliseconds = timer.elapsed();
+    else
+        timer.start();
+
+    Gfx::Painter painter { target };
+
+    if (milliseconds > 500) {
+
+        if (g_num_pixels == 0)
+            g_num_pixels = 1;
+
+        int num_rendertarget_pixels = m_render_target->width() * m_render_target->height();
+
+        StringBuilder builder;
+        builder.append(String::formatted("Timings      : {:.1}ms {:.1}FPS\n",
+            static_cast<double>(milliseconds) / frame_counter,
+            (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0));
+        builder.append(String::formatted("Triangles    : {}\n", g_num_rasterized_triangles));
+        builder.append(String::formatted("Pixels       : {}, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
+            g_num_pixels,
+            g_num_pixels_shaded * 100 / g_num_pixels,
+            g_num_pixels_blended * 100 / g_num_pixels_shaded,
+            g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100));
+        builder.append(String::formatted("Sampler calls: {}\n", g_num_sampler_calls));
+
+        debug_string = builder.to_string();
+
+        frame_counter = 0;
+        timer.start();
+    }
+
+    g_num_rasterized_triangles = 0;
+    g_num_pixels = 0;
+    g_num_pixels_shaded = 0;
+    g_num_pixels_blended = 0;
+    g_num_sampler_calls = 0;
+
+    auto& font = Gfx::FontDatabase::default_fixed_width_font();
+
+    for (int y = -1; y < 2; y++)
+        for (int x = -1; x < 2; x++)
+            if (x != 0 && y != 0)
+                painter.draw_text(target.rect().translated(x + 2, y + 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::Black);
+
+    painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
 void Device::wait_for_all_threads() const

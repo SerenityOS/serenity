@@ -91,6 +91,7 @@ public:
 
 private:
     void submit_triangle(Triangle const& triangle, Vector<size_t> const& enabled_texture_units);
+    void draw_statistics_overlay(Gfx::Bitmap&);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
