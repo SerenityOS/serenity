@@ -215,7 +215,8 @@ ThrowCompletionOr<void> initialize_bound_name(GlobalObject& global_object, FlySt
     // 2. Else,
     else {
         // a. Let lhs be ResolveBinding(name).
-        auto lhs = vm.resolve_binding(name);
+        // NOTE: Although the spec pretends resolve_binding cannot fail it can just not in this case.
+        auto lhs = MUST(vm.resolve_binding(name));
 
         // b. Return ? PutValue(lhs, value).
         return TRY(lhs.put_value(global_object, value));

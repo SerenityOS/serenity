@@ -63,7 +63,7 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     if (!outer_environment.has_value())
         return vm.throw_completion<JS::ReferenceError>(global_object, JS::ErrorType::UnknownIdentifier, variable_name.string());
 
-    auto reference = vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment);
+    auto reference = TRY(vm.resolve_binding(variable_name.string(), outer_environment.value()->lexical_environment));
 
     auto value = TRY(reference.get_value(global_object));
 

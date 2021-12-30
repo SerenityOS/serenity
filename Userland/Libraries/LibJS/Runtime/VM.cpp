@@ -237,7 +237,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         if (property.is_rest) {
             Reference assignment_target;
             if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>()) {
-                assignment_target = resolve_binding((*identifier_ptr)->string(), environment);
+                assignment_target = TRY(resolve_binding((*identifier_ptr)->string(), environment));
             } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression>>()) {
                 assignment_target = (*member_ptr)->to_reference(interpreter(), global_object);
             } else {
@@ -282,9 +282,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
         if (property.name.has<NonnullRefPtr<Identifier>>() && property.alias.has<Empty>()) {
             // FIXME: this branch and not taking this have a lot in common we might want to unify it more (like it was before).
             auto& identifier = *property.name.get<NonnullRefPtr<Identifier>>();
-            auto reference = resolve_binding(identifier.string(), environment);
-            if (auto* thrown_exception = exception())
-                return JS::throw_completion(thrown_exception->value());
+            auto reference = TRY(resolve_binding(identifier.string(), environment));
 
             auto value_to_assign = TRY(object->get(name));
             if (property.initializer && value_to_assign.is_undefined()) {
@@ -298,17 +296,15 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             continue;
         }
 
-        Optional<Reference> reference_to_assign_to;
-
-        property.alias.visit(
-            [&](Empty) {},
-            [&](NonnullRefPtr<Identifier> const& identifier) {
-                reference_to_assign_to = resolve_binding(identifier->string(), environment);
+        auto reference_to_assign_to = TRY(property.alias.visit(
+            [&](Empty) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
+                return TRY(resolve_binding(identifier->string(), environment));
             },
-            [&](NonnullRefPtr<BindingPattern> const&) {},
-            [&](NonnullRefPtr<MemberExpression> const& member_expression) {
-                reference_to_assign_to = member_expression->to_reference(interpreter(), global_object);
-            });
+            [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
+                return member_expression->to_reference(interpreter(), global_object);
+            }));
 
         if (auto* thrown_exception = exception())
             return JS::throw_completion(thrown_exception->value());
@@ -347,19 +343,15 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
         auto& entry = binding.entries[i];
         Value value;
 
-        Optional<Reference> assignment_target;
-        entry.alias.visit(
-            [&](Empty) {},
-            [&](NonnullRefPtr<Identifier> const& identifier) {
-                assignment_target = resolve_binding(identifier->string(), environment);
+        auto assignment_target = TRY(entry.alias.visit(
+            [&](Empty) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
+                return TRY(resolve_binding(identifier->string(), environment));
             },
-            [&](NonnullRefPtr<BindingPattern> const&) {},
-            [&](NonnullRefPtr<MemberExpression> const& member_expression) {
-                assignment_target = member_expression->to_reference(interpreter(), global_object);
-            });
-
-        if (auto* thrown_exception = exception())
-            return JS::throw_completion(thrown_exception->value());
+            [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
+                return member_expression->to_reference(interpreter(), global_object);
+            }));
 
         if (entry.is_rest) {
             VERIFY(i == binding.entries.size() - 1);
@@ -456,7 +448,7 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString name,
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-Reference VM::resolve_binding(FlyString const& name, Environment* environment)
+ThrowCompletionOr<Reference> VM::resolve_binding(FlyString const& name, Environment* environment)
 {
     // 1. If env is not present or if env is undefined, then
     if (!environment) {
@@ -472,6 +464,10 @@ Reference VM::resolve_binding(FlyString const& name, Environment* environment)
 
     // 4. Return ? GetIdentifierReference(env, name, strict).
     return get_identifier_reference(environment, name, strict);
+
+    // NOTE: The spec says:
+    //       Note: The result of ResolveBinding is always a Reference Record whose [[ReferencedName]] field is name.
+    //       But this is not actually correct as GetIdentifierReference (or really the methods it calls) can throw.
 }
 
 // 7.3.33 InitializeInstanceElements ( O, constructor ), https://tc39.es/ecma262/#sec-initializeinstanceelements

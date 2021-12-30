@@ -441,9 +441,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
                 if constexpr (IsSame<FlyString const&, decltype(param)>) {
-                    Reference reference = vm.resolve_binding(param, used_environment);
-                    if (auto* exception = vm.exception())
-                        return throw_completion(exception->value());
+                    Reference reference = TRY(vm.resolve_binding(param, used_environment));
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
                         return reference.put_value(global_object(), argument_value);
