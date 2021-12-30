@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -78,6 +79,10 @@ public:
     void add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
 
+    ErrorOr<void> try_add_option(Option&&);
+    ErrorOr<void> try_add_ignored(const char* long_name, char short_name);
+    ErrorOr<void> try_add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
+
     void add_positional_argument(Arg&&);
     void add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(String& value, const char* help_string, const char* name, Required required = Required::Yes);
@@ -87,6 +92,11 @@ public:
     void add_positional_argument(double& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(Vector<const char*>& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
+
+    ErrorOr<void> try_add_positional_argument(Arg&&);
+    ErrorOr<void> try_add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
+    ErrorOr<void> try_add_positional_argument(Vector<const char*>& value, const char* help_string, const char* name, Required required = Required::Yes);
+    ErrorOr<void> try_add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
     Vector<Option> m_options;

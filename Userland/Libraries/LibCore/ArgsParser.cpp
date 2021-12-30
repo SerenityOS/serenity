@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -333,10 +334,24 @@ void ArgsParser::print_version(FILE* file)
 
 void ArgsParser::add_option(Option&& option)
 {
-    m_options.append(move(option));
+    MUST(try_add_option(move(option)));
+}
+
+ErrorOr<void> ArgsParser::try_add_option(Option&& option)
+{
+    // NOTE: We grow the vector first, to get allocation failure handled immediately.
+    TRY(m_options.try_ensure_capacity(m_options.size() + 1));
+
+    m_options.unchecked_append(move(option));
+    return {};
 }
 
 void ArgsParser::add_ignored(const char* long_name, char short_name)
+{
+    MUST(try_add_ignored(long_name, short_name));
+}
+
+ErrorOr<void> ArgsParser::try_add_ignored(const char* long_name, char short_name)
 {
     Option option {
         false,
@@ -348,7 +363,9 @@ void ArgsParser::add_ignored(const char* long_name, char short_name)
             return true;
         }
     };
-    add_option(move(option));
+
+    TRY(try_add_option(move(option)));
+    return {};
 }
 
 void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
@@ -418,6 +435,11 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
 
 void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
+    MUST(try_add_option(value, help_string, long_name, short_name, value_name));
+}
+
+ErrorOr<void> ArgsParser::try_add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
     Option option {
         true,
         help_string,
@@ -430,7 +452,9 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
             return opt.has_value();
         }
     };
-    add_option(move(option));
+
+    TRY(try_add_option(move(option)));
+    return {};
 }
 
 void ArgsParser::add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
@@ -469,10 +493,24 @@ void ArgsParser::add_option(double& value, const char* help_string, const char* 
 
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
-    m_positional_args.append(move(arg));
+    MUST(try_add_positional_argument(move(arg)));
+}
+
+ErrorOr<void> ArgsParser::try_add_positional_argument(Arg&& arg)
+{
+    // NOTE: We grow the vector first, to get allocation failure handled immediately.
+    TRY(m_positional_args.try_ensure_capacity(m_positional_args.size() + 1));
+
+    m_positional_args.unchecked_append(move(arg));
+    return {};
 }
 
 void ArgsParser::add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
+{
+    MUST(try_add_positional_argument(value, help_string, name, required));
+}
+
+ErrorOr<void> ArgsParser::try_add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
         help_string,
@@ -484,7 +522,9 @@ void ArgsParser::add_positional_argument(const char*& value, const char* help_st
             return true;
         }
     };
-    add_positional_argument(move(arg));
+
+    TRY(try_add_positional_argument(move(arg)));
+    return {};
 }
 
 void ArgsParser::add_positional_argument(String& value, const char* help_string, const char* name, Required required)
@@ -567,6 +607,11 @@ void ArgsParser::add_positional_argument(double& value, const char* help_string,
 
 void ArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
 {
+    MUST(try_add_positional_argument(values, help_string, name, required));
+}
+
+ErrorOr<void> ArgsParser::try_add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
+{
     Arg arg {
         help_string,
         name,
@@ -577,10 +622,17 @@ void ArgsParser::add_positional_argument(Vector<const char*>& values, const char
             return true;
         }
     };
-    add_positional_argument(move(arg));
+
+    TRY(try_add_positional_argument(move(arg)));
+    return {};
 }
 
 void ArgsParser::add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
+{
+    MUST(try_add_positional_argument(values, help_string, name, required));
+}
+
+ErrorOr<void> ArgsParser::try_add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -592,7 +644,9 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
             return true;
         }
     };
-    add_positional_argument(move(arg));
+
+    TRY(try_add_positional_argument(move(arg)));
+    return {};
 }
 
 }
