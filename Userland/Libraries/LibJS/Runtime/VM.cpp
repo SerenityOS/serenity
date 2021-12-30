@@ -303,7 +303,10 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                return member_expression->to_reference(interpreter(), global_object);
+                auto reference = member_expression->to_reference(interpreter(), global_object);
+                if (auto* thrown_exception = exception())
+                    return JS::throw_completion(thrown_exception->value());
+                return reference;
             }));
 
         if (auto* thrown_exception = exception())
@@ -350,7 +353,10 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                return member_expression->to_reference(interpreter(), global_object);
+                auto reference = member_expression->to_reference(interpreter(), global_object);
+                if (auto* thrown_exception = exception())
+                    return JS::throw_completion(thrown_exception->value());
+                return reference;
             }));
 
         if (entry.is_rest) {
