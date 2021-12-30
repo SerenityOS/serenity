@@ -46,9 +46,9 @@ void ClassFileParser::parse_constant_pool()
 {
     u16 constant_pool_count = read_u16() - 1;
 
-    auto constant_pool = FixedArray<ConstantPool::Constant>(constant_pool_count);
-    m_classfile->constant_pool = constant_pool;
-    for (auto& constant : m_classfile->constant_pool)
+    auto constants = FixedArray<ConstantPool::Constant>(constant_pool_count);
+    m_classfile->constant_pool.set_constants(constants);
+    for (auto& constant : m_classfile->constant_pool.constants())
         constant = parse_constant_info();
 }
 
@@ -58,8 +58,7 @@ ConstantPool::Constant ClassFileParser::parse_constant_info()
     switch (tag) {
     case ConstantPool::Constant::Tag::Class: {
         ConstantPool::Class class_constant;
-        [[maybe_unused]] u16 name_index = read_u16() - 1;
-        //        class_constant.name = (Constant const*)(m_classfile->constant_pool.span().offset_pointer(name_index));
+        class_constant.name_index = read_u16() - 1;
         return ConstantPool::Constant(class_constant);
     }
     case ConstantPool::Constant::Tag::Utf8: {
@@ -93,22 +92,20 @@ ConstantPool::Constant ClassFileParser::parse_constant_info()
 
 void ClassFileParser::parse_class_references()
 {
-    m_classfile->this_class = (m_classfile->constant_pool.span().offset_pointer(read_u16() - 1))->as_class();
+    m_classfile->this_class = m_classfile->constant_pool.class_at(read_u16() - 1);
     u16 super_class_index = read_u16() - 1;
     if (super_class_index == 0)
         m_classfile->super_class = {};
     else
-        m_classfile->super_class = m_classfile->constant_pool.span().offset_pointer(super_class_index)->as_class();
+        m_classfile->super_class = m_classfile->constant_pool.class_at(super_class_index);
 }
 
 void ClassFileParser::parse_interfaces()
 {
     u16 interfaces_count = read_u16();
     auto interfaces = FixedArray<ConstantPool::Class>(interfaces_count);
-    for (auto& interface : interfaces) {
-        u16 interface_index = read_u16() - 1;
-        interface = m_classfile->constant_pool.span().offset_pointer(interface_index)->as_class();
-    }
+    for (auto& interface : interfaces)
+        interface = m_classfile->constant_pool.class_at(read_u16() - 1);
 
     m_classfile->interfaces = interfaces;
 }

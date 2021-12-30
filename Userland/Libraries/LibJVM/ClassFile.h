@@ -20,6 +20,8 @@ struct AttributeInfo {
     u16 attribute_name_index;
     u32 attribute_length;
     u8 const* info;
+
+    ConstantPool::Utf8 attribute_name(ConstantPool const& constant_pool) const { return constant_pool.utf8_at(attribute_name_index); }
 };
 
 struct FieldInfo {
@@ -27,6 +29,9 @@ struct FieldInfo {
     u16 name_index;
     u16 descriptor_index;
     AK::FixedArray<AttributeInfo> attributes;
+
+    ConstantPool::Utf8 name(ConstantPool const& constant_pool) const { return constant_pool.utf8_at(name_index); }
+    ConstantPool::Utf8 descriptor(ConstantPool const& constant_pool) const { return constant_pool.utf8_at(descriptor_index); }
 };
 
 struct MethodInfo {
@@ -34,13 +39,16 @@ struct MethodInfo {
     u16 name_index;
     u16 descriptor_index;
     AK::FixedArray<AttributeInfo> attributes;
+
+    ConstantPool::Utf8 name(ConstantPool const& constant_pool) const { return constant_pool.utf8_at(name_index); }
+    ConstantPool::Utf8 descriptor(ConstantPool const& constant_pool) const { return constant_pool.utf8_at(descriptor_index); }
 };
 
 // https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
 struct ClassFile {
     u16 minor_version;
     u16 major_version;
-    FixedArray<ConstantPool::Constant> constant_pool;
+    ConstantPool constant_pool;
     u16 access_flags;
     ConstantPool::Class this_class;
     AK::Optional<ConstantPool::Class> super_class;
