@@ -139,7 +139,52 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-String MediaQuery::MediaCondition::to_string() const
+NonnullOwnPtr<MediaCondition> MediaCondition::from_general_enclosed(GeneralEnclosed&& general_enclosed)
+{
+    auto result = new MediaCondition;
+    result->type = Type::GeneralEnclosed;
+    result->general_enclosed = move(general_enclosed);
+
+    return adopt_own(*result);
+}
+
+NonnullOwnPtr<MediaCondition> MediaCondition::from_feature(MediaFeature&& feature)
+{
+    auto result = new MediaCondition;
+    result->type = Type::Single;
+    result->feature = move(feature);
+
+    return adopt_own(*result);
+}
+
+NonnullOwnPtr<MediaCondition> MediaCondition::from_not(NonnullOwnPtr<MediaCondition>&& condition)
+{
+    auto result = new MediaCondition;
+    result->type = Type::Not;
+    result->conditions.append(move(condition));
+
+    return adopt_own(*result);
+}
+
+NonnullOwnPtr<MediaCondition> MediaCondition::from_and_list(NonnullOwnPtrVector<MediaCondition>&& conditions)
+{
+    auto result = new MediaCondition;
+    result->type = Type::And;
+    result->conditions = move(conditions);
+
+    return adopt_own(*result);
+}
+
+NonnullOwnPtr<MediaCondition> MediaCondition::from_or_list(NonnullOwnPtrVector<MediaCondition>&& conditions)
+{
+    auto result = new MediaCondition;
+    result->type = Type::Or;
+    result->conditions = move(conditions);
+
+    return adopt_own(*result);
+}
+
+String MediaCondition::to_string() const
 {
     StringBuilder builder;
     builder.append('(');
@@ -165,7 +210,7 @@ String MediaQuery::MediaCondition::to_string() const
     return builder.to_string();
 }
 
-MatchResult MediaQuery::MediaCondition::evaluate(DOM::Window const& window) const
+MatchResult MediaCondition::evaluate(DOM::Window const& window) const
 {
     switch (type) {
     case Type::Single:

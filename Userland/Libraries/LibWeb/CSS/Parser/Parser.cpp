@@ -749,7 +749,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
     return invalid_media_query();
 }
 
-OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<MediaCondition> Parser::consume_media_condition(TokenStream<StyleComponentValueRule>& tokens)
 {
     // "not <media-condition>"
     // ( `<media-not>` in the grammar )
@@ -758,13 +758,8 @@ OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<S
     if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_case("not"sv)) {
         tokens.next_token();
 
-        auto condition = new MediaQuery::MediaCondition;
-        condition->type = MediaQuery::MediaCondition::Type::Not;
-
-        if (auto child_condition = consume_media_condition(tokens)) {
-            condition->conditions.append(child_condition.release_nonnull());
-            return adopt_own(*condition);
-        }
+        if (auto child_condition = consume_media_condition(tokens))
+            return MediaCondition::from_not(child_condition.release_nonnull());
 
         tokens.rewind_to_position(position);
         return {};
@@ -772,16 +767,16 @@ OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<S
 
     // "<media-condition> ([and | or] <media-condition>)*"
     // ( `<media-in-parens> [ <media-and>* | <media-or>* ]` in the grammar )
-    NonnullOwnPtrVector<MediaQuery::MediaCondition> child_conditions;
-    Optional<MediaQuery::MediaCondition::Type> condition_type {};
-    auto as_condition_type = [](auto& token) -> Optional<MediaQuery::MediaCondition::Type> {
+    NonnullOwnPtrVector<MediaCondition> child_conditions;
+    Optional<MediaCondition::Type> condition_type {};
+    auto as_condition_type = [](auto& token) -> Optional<MediaCondition::Type> {
         if (!token.is(Token::Type::Ident))
             return {};
         auto ident = token.token().ident();
         if (ident.equals_ignoring_case("and"))
-            return MediaQuery::MediaCondition::Type::And;
+            return MediaCondition::Type::And;
         if (ident.equals_ignoring_case("or"))
-            return MediaQuery::MediaCondition::Type::Or;
+            return MediaCondition::Type::Or;
         return {};
     };
 
@@ -806,10 +801,7 @@ OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<S
         tokens.skip_whitespace();
 
         if (auto child_feature = consume_media_feature(tokens); child_feature.has_value()) {
-            auto child = new MediaQuery::MediaCondition;
-            child->type = MediaQuery::MediaCondition::Type::Single;
-            child->feature = child_feature.value();
-            child_conditions.append(adopt_own(*child));
+            child_conditions.append(MediaCondition::from_feature(child_feature.release_value()));
         } else {
             auto& token = tokens.next_token();
             if (!token.is_block() || !token.block().is_paren()) {
@@ -832,29 +824,20 @@ OwnPtr<MediaQuery::MediaCondition> Parser::consume_media_condition(TokenStream<S
         if (child_conditions.size() == 1)
             return move(child_conditions.ptr_at(0));
 
-        auto condition = new MediaQuery::MediaCondition;
-        condition->type = condition_type.value();
-        condition->conditions = move(child_conditions);
-        return adopt_own(*condition);
+        if (condition_type.value() == MediaCondition::Type::And)
+            return MediaCondition::from_and_list(move(child_conditions));
+        return MediaCondition::from_or_list(move(child_conditions));
     }
 
     // `<media-feature>`
     tokens.rewind_to_position(position);
-    if (auto feature = consume_media_feature(tokens); feature.has_value()) {
-        auto condition = new MediaQuery::MediaCondition;
-        condition->type = MediaQuery::MediaCondition::Type::Single;
-        condition->feature = feature.value();
-        return adopt_own(*condition);
-    }
+    if (auto feature = consume_media_feature(tokens); feature.has_value())
+        return MediaCondition::from_feature(feature.release_value());
 
     // `<general-enclosed>`
     tokens.rewind_to_position(position);
-    if (auto general_enclosed = parse_general_enclosed(tokens); general_enclosed.has_value()) {
-        auto condition = new MediaQuery::MediaCondition;
-        condition->type = MediaQuery::MediaCondition::Type::GeneralEnclosed;
-        condition->general_enclosed = general_enclosed.release_value();
-        return adopt_own(*condition);
-    }
+    if (auto general_enclosed = parse_general_enclosed(tokens); general_enclosed.has_value())
+        return MediaCondition::from_general_enclosed(general_enclosed.release_value());
 
     tokens.rewind_to_position(position);
     return {};

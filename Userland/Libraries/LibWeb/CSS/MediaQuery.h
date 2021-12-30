@@ -112,6 +112,33 @@ private:
     Optional<MediaFeatureValue> m_value {};
 };
 
+// https://www.w3.org/TR/mediaqueries-4/#media-conditions
+struct MediaCondition {
+    enum class Type {
+        Single,
+        And,
+        Or,
+        Not,
+        GeneralEnclosed,
+    };
+
+    static NonnullOwnPtr<MediaCondition> from_general_enclosed(GeneralEnclosed&&);
+    static NonnullOwnPtr<MediaCondition> from_feature(MediaFeature&&);
+    static NonnullOwnPtr<MediaCondition> from_not(NonnullOwnPtr<MediaCondition>&&);
+    static NonnullOwnPtr<MediaCondition> from_and_list(NonnullOwnPtrVector<MediaCondition>&&);
+    static NonnullOwnPtr<MediaCondition> from_or_list(NonnullOwnPtrVector<MediaCondition>&&);
+
+    MatchResult evaluate(DOM::Window const&) const;
+    String to_string() const;
+
+private:
+    MediaCondition() { }
+    Type type;
+    Optional<MediaFeature> feature;
+    NonnullOwnPtrVector<MediaCondition> conditions;
+    Optional<GeneralEnclosed> general_enclosed;
+};
+
 class MediaQuery : public RefCounted<MediaQuery> {
     friend class Parser;
 
@@ -133,25 +160,6 @@ public:
         Embossed,
         Aural,
         Speech,
-    };
-
-    // https://www.w3.org/TR/mediaqueries-4/#media-conditions
-    struct MediaCondition {
-        enum class Type {
-            Single,
-            And,
-            Or,
-            Not,
-            GeneralEnclosed,
-        };
-
-        Type type;
-        Optional<MediaFeature> feature;
-        NonnullOwnPtrVector<MediaCondition> conditions;
-        Optional<GeneralEnclosed> general_enclosed;
-
-        MatchResult evaluate(DOM::Window const&) const;
-        String to_string() const;
     };
 
     static NonnullRefPtr<MediaQuery> create_not_all();
@@ -188,8 +196,8 @@ struct Formatter<Web::CSS::MediaFeature> : Formatter<StringView> {
 };
 
 template<>
-struct Formatter<Web::CSS::MediaQuery::MediaCondition> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaQuery::MediaCondition const& media_condition)
+struct Formatter<Web::CSS::MediaCondition> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::MediaCondition const& media_condition)
     {
         return Formatter<StringView>::format(builder, media_condition.to_string());
     }
