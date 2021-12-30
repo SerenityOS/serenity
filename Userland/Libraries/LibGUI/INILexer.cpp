@@ -95,7 +95,7 @@ Vector<IniToken> IniLexer::lex()
             begin_token();
             while (peek() && !(peek() == ']' || peek() == '\n'))
                 consume();
-            commit_token(IniToken::Type::section);
+            commit_token(IniToken::Type::Section);
 
             // ] Token
             if (peek() && peek() == ']') {

@@ -15,7 +15,7 @@ static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, IniTo
     switch (type) {
     case IniToken::Type::LeftBracket:
     case IniToken::Type::RightBracket:
-    case IniToken::Type::section:
+    case IniToken::Type::Section:
         return { palette.syntax_keyword(), true };
     case IniToken::Type::Name:
         return { palette.syntax_identifier() };
