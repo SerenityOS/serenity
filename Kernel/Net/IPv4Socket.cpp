@@ -497,7 +497,7 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(const OpenFileDescriptio
         VERIFY_NOT_REACHED();
     }
 
-    return KString::try_create(builder.to_string());
+    return KString::try_create(builder.string_view());
 }
 
 ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)

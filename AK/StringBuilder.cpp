@@ -184,7 +184,7 @@ void StringBuilder::append_escaped_for_json(StringView string)
             break;
         default:
             if (ch >= 0 && ch <= 0x1f)
-                append(String::formatted("\\u{:04x}", ch));
+                appendff("\\u{:04x}", ch);
             else
                 append(ch);
         }
