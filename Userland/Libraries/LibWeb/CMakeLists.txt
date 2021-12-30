@@ -195,6 +195,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
+    HTML/TextMetrics.cpp
     HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
     ImageDecoding.cpp
@@ -485,6 +486,7 @@ libweb_js_wrapper(HTML/MessagePort)
 libweb_js_wrapper(HTML/PageTransitionEvent)
 libweb_js_wrapper(HTML/PromiseRejectionEvent)
 libweb_js_wrapper(HTML/SubmitEvent)
+libweb_js_wrapper(HTML/TextMetrics)
 libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HighResolutionTime/Performance)
 libweb_js_wrapper(IntersectionObserver/IntersectionObserver)

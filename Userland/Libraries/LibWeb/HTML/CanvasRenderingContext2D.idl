@@ -38,4 +38,5 @@ interface CanvasRenderingContext2D {
 
     readonly attribute HTMLCanvasElement canvas;
 
+    TextMetrics measureText(DOMString text);
 };

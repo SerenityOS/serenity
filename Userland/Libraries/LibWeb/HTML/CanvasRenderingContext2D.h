@@ -14,6 +14,8 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Layout/LineBox.h>
 
 namespace Web::HTML {
 
@@ -78,10 +80,24 @@ public:
 
     HTMLCanvasElement* canvas() { return m_element; }
 
+    RefPtr<TextMetrics> measure_text(String const& text);
+
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
+    struct PreparedTextGlyph {
+        unsigned int c;
+        Gfx::IntPoint position;
+    };
+
+    struct PreparedText {
+        Vector<PreparedTextGlyph> glyphs;
+        Gfx::TextAlignment physical_alignment;
+        Gfx::IntRect bounding_box;
+    };
+
     void did_draw(const Gfx::FloatRect&);
+    PreparedText prepare_text(String const& text, float max_width = INFINITY);
 
     OwnPtr<Gfx::Painter> painter();
 

@@ -937,6 +937,8 @@ static bool is_wrappable_type(IDL::Type const& type)
         return true;
     if (type.name == "NamedNodeMap")
         return true;
+    if (type.name == "TextMetrics")
+        return true;
     return false;
 }
 
@@ -1637,6 +1639,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/MessagePortWrapper.h>
 #include <LibWeb/Bindings/NamedNodeMapWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/TextMetricsWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
@@ -2808,6 +2811,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/StyleSheetListWrapper.h>
 #include <LibWeb/Bindings/SubtleCryptoWrapper.h>
+#include <LibWeb/Bindings/TextMetricsWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/URLSearchParamsWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
