@@ -235,7 +235,7 @@ private:
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<MediaQuery::MediaCondition> consume_media_condition(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<MediaCondition> consume_media_condition(TokenStream<StyleComponentValueRule>&);
     Optional<MediaFeature> consume_media_feature(TokenStream<StyleComponentValueRule>&);
     Optional<MediaQuery::MediaType> consume_media_type(TokenStream<StyleComponentValueRule>&);
     Optional<MediaFeatureValue> parse_media_feature_value(TokenStream<StyleComponentValueRule>&);
