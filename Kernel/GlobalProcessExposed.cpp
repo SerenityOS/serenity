@@ -372,7 +372,7 @@ private:
                     result = pseudo_path_or_error.release_error();
                     return IterationDecision::Break;
                 }
-                fs_object.add("source", pseudo_path_or_error.value()->characters());
+                fs_object.add("source", pseudo_path_or_error.value()->view());
             } else {
                 fs_object.add("source", "none");
             }

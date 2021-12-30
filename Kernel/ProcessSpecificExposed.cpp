@@ -286,7 +286,7 @@ ErrorOr<void> Process::procfs_get_tty_link(KBufferBuilder& builder) const
 {
     if (m_tty.is_null())
         return Error::from_errno(ENOENT);
-    return builder.append(m_tty->tty_name().characters());
+    return builder.append(m_tty->tty_name().view());
 }
 
 }
