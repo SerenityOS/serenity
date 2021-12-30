@@ -1092,7 +1092,7 @@ String Shell::get_history_path()
     return String::formatted("{}/.history", home);
 }
 
-String Shell::escape_token_for_single_quotes(const String& token)
+String Shell::escape_token_for_single_quotes(const StringView token)
 {
     // `foo bar \n '` -> `'foo bar \n '"'"`
 
@@ -1122,7 +1122,7 @@ String Shell::escape_token_for_single_quotes(const String& token)
     return builder.build();
 }
 
-String Shell::escape_token_for_double_quotes(const String& token)
+String Shell::escape_token_for_double_quotes(const StringView token)
 {
     // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
 
@@ -1178,7 +1178,7 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-String Shell::escape_token(const String& token)
+String Shell::escape_token(const StringView token)
 {
     auto do_escape = [](auto& token) {
         StringBuilder builder;
@@ -1228,7 +1228,7 @@ String Shell::escape_token(const String& token)
     return do_escape(token);
 }
 
-String Shell::unescape_token(const String& token)
+String Shell::unescape_token(const StringView token)
 {
     StringBuilder builder;
 

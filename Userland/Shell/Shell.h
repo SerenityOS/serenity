@@ -153,10 +153,10 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
-    static String escape_token_for_double_quotes(const String& token);
-    static String escape_token_for_single_quotes(const String& token);
-    static String escape_token(const String& token);
-    static String unescape_token(const String& token);
+    static String escape_token_for_double_quotes(StringView token);
+    static String escape_token_for_single_quotes(StringView token);
+    static String escape_token(StringView token);
+    static String unescape_token(StringView token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
         Escaped,
