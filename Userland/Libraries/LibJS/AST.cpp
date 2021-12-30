@@ -705,7 +705,7 @@ struct ForInOfHeadState {
 
             if (!destructuring) {
                 VERIFY(for_declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
-                lhs_reference = interpreter.vm().resolve_binding(for_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string());
+                lhs_reference = MUST(interpreter.vm().resolve_binding(for_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string()));
             }
         }
 
@@ -764,7 +764,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             if (variable.init()) {
                 VERIFY(variable.target().has<NonnullRefPtr<Identifier>>());
                 auto& binding_id = variable.target().get<NonnullRefPtr<Identifier>>()->string();
-                auto reference = interpreter.vm().resolve_binding(binding_id);
+                auto reference = TRY(interpreter.vm().resolve_binding(binding_id));
                 if (auto* exception = interpreter.exception())
                     return throw_completion(exception->value());
 
@@ -1142,7 +1142,7 @@ Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) cons
         m_cached_environment_coordinate = {};
     }
 
-    auto reference = interpreter.vm().resolve_binding(string());
+    auto reference = TRY_OR_DISCARD(interpreter.vm().resolve_binding(string()));
     if (reference.environment_coordinate().has_value())
         m_cached_environment_coordinate = reference.environment_coordinate();
     return reference;

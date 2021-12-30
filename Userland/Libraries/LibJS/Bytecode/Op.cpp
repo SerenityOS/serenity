@@ -252,7 +252,13 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
             m_cached_environment_coordinate = {};
         }
 
-        auto reference = interpreter.vm().resolve_binding(string);
+        auto reference_or_error = interpreter.vm().resolve_binding(string);
+        if (reference_or_error.is_throw_completion()) {
+            interpreter.vm().throw_exception(interpreter.global_object(), reference_or_error.release_error().value());
+            return Reference {};
+        }
+
+        auto reference = reference_or_error.release_value();
         if (reference.environment_coordinate().has_value())
             m_cached_environment_coordinate = reference.environment_coordinate();
         return reference;
@@ -270,10 +276,13 @@ void GetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 void SetVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto reference = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
-    if (vm.exception())
+    auto reference_or_error = vm.resolve_binding(interpreter.current_executable().get_identifier(m_identifier));
+    if (reference_or_error.is_throw_completion()) {
+        interpreter.vm().throw_exception(interpreter.global_object(), reference_or_error.release_error().value());
         return;
+    }
 
+    auto reference = reference_or_error.release_value();
     // TODO: ThrowCompletionOr<void> return
     (void)reference.put_value(interpreter.global_object(), interpreter.accumulator());
 }
