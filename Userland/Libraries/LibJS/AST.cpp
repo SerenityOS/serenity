@@ -312,9 +312,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
-    auto callee_reference = m_callee->to_reference(interpreter, global_object);
-    if (vm.exception())
-        return {};
+    auto callee_reference = TRY_OR_DISCARD(m_callee->to_reference(interpreter, global_object));
 
     auto [this_value, callee] = compute_this_and_callee(interpreter, global_object, callee_reference);
     if (vm.exception())
@@ -682,11 +680,11 @@ struct ForInOfHeadState {
                 if (is<VariableDeclaration>(*expression_lhs)) {
                     auto& declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
                     VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
-                    lhs_reference = declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter, global_object);
+                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter, global_object));
                 } else {
                     VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs));
                     auto& expression = static_cast<Expression const&>(*expression_lhs);
-                    lhs_reference = expression.to_reference(interpreter, global_object);
+                    lhs_reference = TRY(expression.to_reference(interpreter, global_object));
                 }
             }
         }
@@ -708,9 +706,6 @@ struct ForInOfHeadState {
                 lhs_reference = MUST(interpreter.vm().resolve_binding(for_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string()));
             }
         }
-
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
 
         // i. If destructuring is false, then
         if (!destructuring) {
@@ -1123,12 +1118,12 @@ Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_
     VERIFY_NOT_REACHED();
 }
 
-Reference Expression::to_reference(Interpreter&, GlobalObject&) const
+ThrowCompletionOr<Reference> Expression::to_reference(Interpreter&, GlobalObject&) const
 {
-    return {};
+    return Reference {};
 }
 
-Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
+ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
     if (m_cached_environment_coordinate.has_value()) {
         auto* environment = interpreter.vm().running_execution_context().lexical_environment;
@@ -1142,13 +1137,13 @@ Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) cons
         m_cached_environment_coordinate = {};
     }
 
-    auto reference = TRY_OR_DISCARD(interpreter.vm().resolve_binding(string()));
+    auto reference = TRY(interpreter.vm().resolve_binding(string()));
     if (reference.environment_coordinate().has_value())
         m_cached_environment_coordinate = reference.environment_coordinate();
     return reference;
 }
 
-Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
+ThrowCompletionOr<Reference> MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
 {
     // 13.3.7.1 Runtime Semantics: Evaluation
     // SuperProperty : super [ Expression ]
@@ -1158,7 +1153,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         // 1. Let env be GetThisEnvironment().
         auto& environment = get_this_environment(interpreter.vm());
         // 2. Let actualThis be ? env.GetThisBinding().
-        auto actual_this = TRY_OR_DISCARD(environment.get_this_binding(global_object));
+        auto actual_this = TRY(environment.get_this_binding(global_object));
 
         PropertyKey property_key;
 
@@ -1168,10 +1163,10 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
             // 3. Let propertyNameReference be the result of evaluating Expression.
             // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
             auto property_name_value = m_property->execute(interpreter, global_object);
-            if (interpreter.exception())
-                return {};
+            if (auto* exception = interpreter.exception())
+                return throw_completion(exception->value());
             // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-            property_key = TRY_OR_DISCARD(property_name_value.to_property_key(global_object));
+            property_key = TRY(property_name_value.to_property_key(global_object));
         } else {
             // SuperProperty : super . IdentifierName
 
@@ -1184,22 +1179,20 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
         bool strict = interpreter.vm().in_strict_mode();
 
         // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-        return TRY_OR_DISCARD(make_super_property_reference(global_object, actual_this, property_key, strict));
+        return TRY(make_super_property_reference(global_object, actual_this, property_key, strict));
     }
 
-    auto base_reference = m_object->to_reference(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+    auto base_reference = TRY(m_object->to_reference(interpreter, global_object));
 
     Value base_value;
 
     if (base_reference.is_valid_reference())
-        base_value = TRY_OR_DISCARD(base_reference.get_value(global_object));
+        base_value = TRY(base_reference.get_value(global_object));
     else
         base_value = m_object->execute(interpreter, global_object);
 
-    if (interpreter.exception())
-        return {};
+    if (auto* exception = interpreter.exception())
+        return throw_completion(exception->value());
     VERIFY(!base_value.is_empty());
 
     // From here on equivalent to
@@ -1208,21 +1201,21 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     if (is_computed()) {
         // Weird order which I can't quite find from the specs.
         auto value = m_property->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return Reference {};
+        if (auto* exception = interpreter.exception())
+            return throw_completion(exception->value());
 
-        TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
+        TRY(require_object_coercible(global_object, base_value));
 
         VERIFY(!value.is_empty());
         property_name = PropertyKey::from_value(global_object, value);
-        if (interpreter.exception())
-            return Reference {};
+        if (auto* exception = interpreter.exception())
+            return throw_completion(exception->value());
     } else if (is<PrivateIdentifier>(*m_property)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(*m_property);
         return make_private_reference(interpreter.vm(), base_value, private_identifier.string());
     } else {
         property_name = verify_cast<Identifier>(*m_property).string();
-        TRY_OR_DISCARD(require_object_coercible(global_object, base_value));
+        TRY(require_object_coercible(global_object, base_value));
     }
     if (!property_name.is_valid())
         return Reference {};
@@ -1237,17 +1230,13 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     auto& vm = interpreter.vm();
     if (m_op == UnaryOp::Delete) {
-        auto reference = m_lhs->to_reference(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        auto reference = TRY_OR_DISCARD(m_lhs->to_reference(interpreter, global_object));
         return Value(TRY_OR_DISCARD(reference.delete_(global_object)));
     }
 
     Value lhs_result;
     if (m_op == UnaryOp::Typeof && is<Identifier>(*m_lhs)) {
-        auto reference = m_lhs->to_reference(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        auto reference = TRY_OR_DISCARD(m_lhs->to_reference(interpreter, global_object));
 
         if (reference.is_unresolvable())
             lhs_result = js_undefined();
@@ -1528,9 +1517,7 @@ ThrowCompletionOr<Value> ClassExpression::class_definition_evaluation(Interprete
 
         Value super_class;
 
-        auto reference = m_super_class->to_reference(interpreter, global_object);
-        if (auto* exception = interpreter.exception())
-            return throw_completion(exception->value());
+        auto reference = TRY(m_super_class->to_reference(interpreter, global_object));
 
         if (reference.is_valid_reference()) {
             super_class = TRY(reference.get_value(global_object));
@@ -2211,9 +2198,7 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto reference = to_reference(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+    auto reference = TRY_OR_DISCARD(to_reference(interpreter, global_object));
 
     return TRY_OR_DISCARD(reference.get_value(global_object));
 }
@@ -2269,9 +2254,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
         return m_lhs.visit(
             [&](NonnullRefPtr<Expression>& lhs) -> JS::Value {
-                auto reference = lhs->to_reference(interpreter, global_object);
-                if (interpreter.exception())
-                    return {};
+                auto reference = TRY_OR_DISCARD(lhs->to_reference(interpreter, global_object));
 
                 Value rhs_result;
                 if (lhs->is_identifier()) {
@@ -2300,9 +2283,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     VERIFY(m_lhs.has<NonnullRefPtr<Expression>>());
 
     auto& lhs_expression = *m_lhs.get<NonnullRefPtr<Expression>>();
-    auto reference = lhs_expression.to_reference(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+    auto reference = TRY_OR_DISCARD(lhs_expression.to_reference(interpreter, global_object));
 
     auto lhs_result = TRY_OR_DISCARD(reference.get_value(global_object));
 
@@ -2399,10 +2380,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto reference = m_argument->to_reference(interpreter, global_object);
-
-    if (interpreter.exception())
-        return {};
+    auto reference = TRY_OR_DISCARD(m_argument->to_reference(interpreter, global_object));
     auto old_value = TRY_OR_DISCARD(reference.get_value(global_object));
     old_value = TRY_OR_DISCARD(old_value.to_numeric(global_object));
 
@@ -2521,9 +2499,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
         if (auto* init = declarator.init()) {
             TRY_OR_DISCARD(declarator.target().visit(
                 [&](NonnullRefPtr<Identifier> const& id) -> ThrowCompletionOr<void> {
-                    auto reference = id->to_reference(interpreter, global_object);
-                    if (auto* exception = interpreter.exception())
-                        return throw_completion(exception->value());
+                    auto reference = TRY(id->to_reference(interpreter, global_object));
                     auto initializer_result = TRY_OR_DISCARD(interpreter.vm().named_evaluation_if_anonymous_function(global_object, *init, id->string()));
                     VERIFY(!initializer_result.is_empty());
 
@@ -2544,7 +2520,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
         } else if (m_declaration_kind != DeclarationKind::Var) {
             VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
             auto& identifier = declarator.target().get<NonnullRefPtr<Identifier>>();
-            auto reference = identifier->to_reference(interpreter, global_object);
+            auto reference = TRY_OR_DISCARD(identifier->to_reference(interpreter, global_object));
             TRY_OR_DISCARD(reference.initialize_referenced_binding(global_object, js_undefined()));
         }
     }
@@ -2742,9 +2718,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto reference = to_reference(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+    auto reference = TRY_OR_DISCARD(to_reference(interpreter, global_object));
     return TRY_OR_DISCARD(reference.get_value(global_object));
 }
 
@@ -2793,7 +2767,7 @@ void OptionalChain::dump(int indent) const
 Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value(JS::Interpreter& interpreter, JS::GlobalObject& global_object) const
 {
     // Note: This is wrapped in an optional to allow base_reference = ...
-    Optional<JS::Reference> base_reference = m_base->to_reference(interpreter, global_object);
+    Optional<JS::Reference> base_reference = TRY_OR_DISCARD(m_base->to_reference(interpreter, global_object));
     auto base = base_reference->is_unresolvable() ? m_base->execute(interpreter, global_object) : TRY_OR_DISCARD(base_reference->get_value(global_object));
     if (interpreter.exception())
         return {};
@@ -2831,7 +2805,7 @@ Optional<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value
             base_reference = JS::Reference {};
             base = expression->execute(interpreter, global_object);
         } else {
-            base_reference = expression->to_reference(interpreter, global_object);
+            base_reference = TRY_OR_DISCARD(expression->to_reference(interpreter, global_object));
             base = TRY_OR_DISCARD(base_reference->get_value(global_object));
         }
         if (interpreter.exception())
@@ -2849,11 +2823,11 @@ Value OptionalChain::execute(Interpreter& interpreter, GlobalObject& global_obje
     return {};
 }
 
-JS::Reference OptionalChain::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
+ThrowCompletionOr<JS::Reference> OptionalChain::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
 {
     if (auto result = to_reference_and_value(interpreter, global_object); result.has_value())
         return result.release_value().reference;
-    return {};
+    return JS::Reference {};
 }
 
 void MetaProperty::dump(int indent) const

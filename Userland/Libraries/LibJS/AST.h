@@ -389,7 +389,7 @@ public:
         : ASTNode(source_range)
     {
     }
-    virtual Reference to_reference(Interpreter&, GlobalObject&) const;
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&, GlobalObject&) const;
 };
 
 class Declaration : public Statement {
@@ -1046,7 +1046,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual Reference to_reference(Interpreter&, GlobalObject&) const override;
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -1610,7 +1610,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual Reference to_reference(Interpreter&, GlobalObject&) const override;
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&, GlobalObject&) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
     bool is_computed() const { return m_computed; }
@@ -1663,7 +1663,7 @@ public:
     }
 
     virtual Value execute(Interpreter& interpreter, GlobalObject& global_object) const override;
-    virtual JS::Reference to_reference(Interpreter& interpreter, GlobalObject& global_object) const override;
+    virtual ThrowCompletionOr<JS::Reference> to_reference(Interpreter& interpreter, GlobalObject& global_object) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1895,7 +1895,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override { return m_value; }
-    virtual Reference to_reference(Interpreter&, GlobalObject&) const override { return m_reference; }
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&, GlobalObject&) const override { return m_reference; }
 
 private:
     Reference m_reference;

@@ -239,7 +239,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>()) {
                 assignment_target = TRY(resolve_binding((*identifier_ptr)->string(), environment));
             } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression>>()) {
-                assignment_target = (*member_ptr)->to_reference(interpreter(), global_object);
+                assignment_target = TRY((*member_ptr)->to_reference(interpreter(), global_object));
             } else {
                 VERIFY_NOT_REACHED();
             }
@@ -303,10 +303,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                auto reference = member_expression->to_reference(interpreter(), global_object);
-                if (auto* thrown_exception = exception())
-                    return JS::throw_completion(thrown_exception->value());
-                return reference;
+                return TRY(member_expression->to_reference(interpreter(), global_object));
             }));
 
         if (auto* thrown_exception = exception())
@@ -353,10 +350,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             },
             [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
             [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
-                auto reference = member_expression->to_reference(interpreter(), global_object);
-                if (auto* thrown_exception = exception())
-                    return JS::throw_completion(thrown_exception->value());
-                return reference;
+                return TRY(member_expression->to_reference(interpreter(), global_object));
             }));
 
         if (entry.is_rest) {
