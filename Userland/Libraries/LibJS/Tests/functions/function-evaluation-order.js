@@ -1,30 +1,65 @@
-test("callee is evaluated before arguments", () => {
-    function foo() {}
-    const values = [];
+describe("CallExpression", () => {
+    test("callee is evaluated before arguments", () => {
+        function foo() {}
+        const values = [];
 
-    [foo][(values.push("callee"), 0)](values.push("args"));
+        [foo][(values.push("callee"), 0)](values.push("args"));
 
-    expect(values).toEqual(["callee", "args"]);
+        expect(values).toEqual(["callee", "args"]);
+    });
+
+    test("arguments are evaluated in order", () => {
+        function foo() {}
+        const values = [];
+
+        foo(values.push("arg1"), values.push("arg2"), values.push("arg3"));
+
+        expect(values).toEqual(["arg1", "arg2", "arg3"]);
+    });
+
+    test("arguments are evaluated before callee is checked for its type", () => {
+        const values = [];
+
+        expect(() => {
+            "foo"(values.push("args"));
+        }).toThrowWithMessage(TypeError, "foo is not a function");
+        expect(values).toEqual(["args"]);
+
+        expect(() => {
+            "foo"(bar);
+        }).toThrowWithMessage(ReferenceError, "'bar' is not defined");
+    });
 });
 
-test("arguments are evaluated in order", () => {
-    function foo() {}
-    const values = [];
+describe("NewExpression", () => {
+    test("callee is evaluated before arguments", () => {
+        function Foo() {}
+        const values = [];
 
-    foo(values.push("arg1"), values.push("arg2"), values.push("arg3"));
+        new [Foo][(values.push("callee"), 0)](values.push("args"));
 
-    expect(values).toEqual(["arg1", "arg2", "arg3"]);
-});
+        expect(values).toEqual(["callee", "args"]);
+    });
 
-test("arguments are evaluated before callee is checked for its type", () => {
-    const values = [];
+    test("arguments are evaluated in order", () => {
+        function Foo() {}
+        const values = [];
 
-    expect(() => {
-        "foo"(values.push("args"));
-    }).toThrowWithMessage(TypeError, "foo is not a function");
-    expect(values).toEqual(["args"]);
+        new Foo(values.push("arg1"), values.push("arg2"), values.push("arg3"));
 
-    expect(() => {
-        "foo"(bar);
-    }).toThrowWithMessage(ReferenceError, "'bar' is not defined");
+        expect(values).toEqual(["arg1", "arg2", "arg3"]);
+    });
+
+    test("arguments are evaluated before callee is checked for its type", () => {
+        const values = [];
+
+        expect(() => {
+            new "Foo"(values.push("args"));
+        }).toThrowWithMessage(TypeError, "Foo is not a constructor");
+        expect(values).toEqual(["args"]);
+
+        expect(() => {
+            new "Foo"(bar);
+        }).toThrowWithMessage(ReferenceError, "'bar' is not defined");
+    });
 });

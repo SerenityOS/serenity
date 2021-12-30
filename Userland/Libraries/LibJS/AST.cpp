@@ -261,27 +261,35 @@ static void argument_list_evaluation(Interpreter& interpreter, GlobalObject& glo
     }
 }
 
+// 13.3.5.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation
+// 13.3.5.1.1 EvaluateNew ( constructExpr, arguments ), https://tc39.es/ecma262/#sec-evaluatenew
 Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
 
-    auto callee_value = m_callee->execute(interpreter, global_object);
+    // 1. Let ref be the result of evaluating constructExpr.
+    // 2. Let constructor be ? GetValue(ref).
+    auto constructor = m_callee->execute(interpreter, global_object);
     if (vm.exception())
         return {};
 
-    if (!callee_value.is_function() || !callee_value.as_function().has_constructor()) {
-        throw_type_error_for_callee(interpreter, global_object, callee_value, "constructor"sv);
-        return {};
-    }
-
+    // 3. If arguments is empty, let argList be a new empty List.
+    // 4. Else,
+    //    a. Let argList be ? ArgumentListEvaluation of arguments.
     MarkedValueList arg_list(vm.heap());
     argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
     if (interpreter.exception())
         return {};
 
-    auto& function = callee_value.as_function();
-    return TRY_OR_DISCARD(construct(global_object, function, move(arg_list)));
+    // 5. If IsConstructor(constructor) is false, throw a TypeError exception.
+    if (!constructor.is_constructor()) {
+        throw_type_error_for_callee(interpreter, global_object, constructor, "constructor"sv);
+        return {};
+    }
+
+    // 6. Return ? Construct(constructor, argList).
+    return TRY_OR_DISCARD(construct(global_object, constructor.as_function(), move(arg_list)));
 }
 
 void CallExpression::throw_type_error_for_callee(Interpreter& interpreter, GlobalObject& global_object, Value callee_value, StringView call_type) const
