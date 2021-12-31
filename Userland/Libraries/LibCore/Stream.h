@@ -627,7 +627,7 @@ public:
             // user buffer.
             StringView remaining_buffer { m_buffer.span().offset(offset), maximum_offset - offset };
             for (auto candidate : candidates) {
-                if (candidate.length() > offset)
+                if (candidate.length() > remaining_buffer.length())
                     continue;
                 if (remaining_buffer.starts_with(candidate))
                     longest_match = max(longest_match, candidate.length());
@@ -639,6 +639,8 @@ public:
 
                 buffer_to_take.copy_to(buffer);
                 m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+
+                m_buffered_size -= offset + longest_match;
 
                 return offset;
             }
@@ -653,6 +655,8 @@ public:
 
         buffer_to_take.copy_to(buffer);
         m_buffer.overwrite(0, buffer_to_shift.data(), buffer_to_shift.size());
+
+        m_buffered_size -= readable_size;
 
         return readable_size;
     }
