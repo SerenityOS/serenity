@@ -5,6 +5,7 @@
  */
 
 #include "GitWidget.h"
+#include "../Dialogs/Git/GitCommitDialog.h"
 #include "GitFilesModel.h"
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
@@ -134,13 +135,17 @@ void GitWidget::unstage_file(const LexicalPath& file)
 
 void GitWidget::commit()
 {
-    String message;
-    auto res = GUI::InputBox::show(window(), message, "Commit message:", "Commit");
-    if (res != GUI::InputBox::ExecOK || message.is_empty())
+    if (m_git_repo.is_null()) {
+        GUI::MessageBox::show(window(), "There is no git repository to commit to!", "Error", GUI::MessageBox::Type::Error);
         return;
-    dbgln("commit message: {}", message);
-    m_git_repo->commit(message);
-    refresh();
+    }
+
+    auto dialog = GitCommitDialog::construct(window());
+    dialog->on_commit = [this](auto& message) {
+        m_git_repo->commit(message);
+        refresh();
+    };
+    dialog->exec();
 }
 
 void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
