@@ -43,8 +43,8 @@ public:
     void set_filename(const String&);
     const String& filename() const { return m_filename; }
 
-    Optional<LexicalPath> const& project_root() const { return m_project_root; }
-    void set_project_root(LexicalPath const& project_root);
+    Optional<String> const& project_root() const { return m_project_root; }
+    void set_project_root(String const& project_root);
 
     GitRepo const* git_repo() const { return m_git_repo; }
 
@@ -64,7 +64,7 @@ private:
     RefPtr<GUI::Label> m_filename_label;
     RefPtr<Editor> m_editor;
 
-    Optional<LexicalPath> m_project_root;
+    Optional<String> m_project_root;
     RefPtr<GitRepo> m_git_repo;
     Vector<Diff::Hunk> m_hunks;
 };
