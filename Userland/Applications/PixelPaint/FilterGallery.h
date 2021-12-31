@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ImageEditor.h"
 #include <LibGUI/Dialog.h>
 
 namespace PixelPaint {
@@ -14,7 +15,7 @@ class FilterGallery final : public GUI::Dialog {
     C_OBJECT(FilterGallery);
 
 private:
-    FilterGallery(GUI::Window* parent_window);
+    FilterGallery(GUI::Window* parent_window, ImageEditor*);
 };
 
 }
