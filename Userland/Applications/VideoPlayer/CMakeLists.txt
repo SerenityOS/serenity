@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(VideoPlayer)
-target_link_libraries(VideoPlayer LibVideo LibAudio LibGUI)
+target_link_libraries(VideoPlayer LibVideo LibAudio LibGUI LibMain)
