@@ -216,6 +216,9 @@ struct KmallocGlobalData {
 
     bool try_expand(size_t allocation_request)
     {
+        if (!expansion_data.has_value()) {
+            return false;
+        }
         VERIFY(!expansion_in_progress);
         TemporaryChange change(expansion_in_progress, true);
 
