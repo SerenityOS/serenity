@@ -1080,8 +1080,11 @@ Messages::WindowServer::GetColorUnderCursorResponse ClientConnection::get_color_
     //        manual translation to avoid sampling the color on the actual cursor itself.
     auto cursor_location = ScreenInput::the().cursor_location().translated(-1, -1);
     auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();
-    auto color = Compositor::the().color_at_position({}, screen_with_cursor, cursor_location);
-    return color;
+
+    if (!screen_with_cursor.rect().contains(cursor_location))
+        return Optional<Color> {};
+
+    return { Compositor::the().color_at_position({}, screen_with_cursor, cursor_location) };
 }
 
 Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_modified(i32 window_id)
