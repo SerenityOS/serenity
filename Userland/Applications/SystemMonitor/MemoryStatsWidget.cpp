@@ -62,7 +62,7 @@ MemoryStatsWidget::~MemoryStatsWidget()
 {
 }
 
-static inline u64 page_count_to_bytes(size_t count)
+static inline u64 page_count_to_bytes(u64 count)
 {
     return count * 4096;
 }
