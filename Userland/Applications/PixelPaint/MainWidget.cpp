@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
- * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2021-2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -598,104 +598,8 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             return;
     }));
 
-    auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
-
-    auto& edge_detect_submenu = spatial_filters_menu.add_submenu("&Edge Detect");
-    edge_detect_submenu.add_action(GUI::Action::create("Laplacian (&Cardinal)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::LaplacianFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(false)) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    edge_detect_submenu.add_action(GUI::Action::create("Laplacian (&Diagonal)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::LaplacianFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(true)) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    auto& blur_submenu = spatial_filters_menu.add_submenu("&Blur and Sharpen");
-    blur_submenu.add_action(GUI::Action::create("&Gaussian Blur (3x3)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::SpatialGaussianBlurFilter<3> filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<3>>::get()) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    blur_submenu.add_action(GUI::Action::create("G&aussian Blur (5x5)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::SpatialGaussianBlurFilter<5> filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<5>>::get()) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    blur_submenu.add_action(GUI::Action::create("&Box Blur (3x3)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::BoxBlurFilter<3> filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<3>>::get()) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    blur_submenu.add_action(GUI::Action::create("B&ox Blur (5x5)", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::BoxBlurFilter<5> filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get()) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-    blur_submenu.add_action(GUI::Action::create("&Sharpen", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::SharpenFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<Gfx::SharpenFilter>::get()) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
-                layer->did_modify_bitmap(layer->rect());
-                editor->did_complete_action();
-            }
-        }
-    }));
-
-    spatial_filters_menu.add_separator();
-    spatial_filters_menu.add_action(GUI::Action::create("Generic 5x5 &Convolution", [&](auto&) {
+    filter_menu.add_separator();
+    filter_menu.add_action(GUI::Action::create("Generic 5x5 &Convolution", [&](auto&) {
         auto* editor = current_image_editor();
         if (!editor)
             return;
@@ -706,30 +610,6 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
-        }
-    }));
-
-    auto& color_filters_menu = filter_menu.add_submenu("&Color");
-    color_filters_menu.add_action(GUI::Action::create("Grayscale", [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::GrayscaleFilter filter;
-            filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
-            layer->did_modify_bitmap(layer->rect());
-            editor->did_complete_action();
-        }
-    }));
-    color_filters_menu.add_action(GUI::Action::create("Invert", { Mod_Ctrl, Key_I }, [&](auto&) {
-        auto* editor = current_image_editor();
-        if (!editor)
-            return;
-        if (auto* layer = editor->active_layer()) {
-            Gfx::InvertFilter filter;
-            filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect());
-            layer->did_modify_bitmap(layer->rect());
-            editor->did_complete_action();
         }
     }));
 
