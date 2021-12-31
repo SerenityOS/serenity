@@ -6,10 +6,13 @@
  */
 
 #include "FilterModel.h"
+#include "FilterParams.h"
+#include "Layer.h"
 #include <LibGUI/FileIconProvider.h>
+#include <LibGfx/Filters/LaplacianFilter.h>
 
 namespace PixelPaint {
-FilterModel::FilterModel()
+FilterModel::FilterModel(ImageEditor* editor)
 {
 
     auto filter_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/filter.png").release_value_but_fixme_should_propagate_errors();
