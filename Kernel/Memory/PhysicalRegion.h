@@ -31,6 +31,8 @@ public:
     unsigned size() const { return m_pages; }
     bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr < m_upper; }
 
+    bool was_initialized() const { return m_zones.size() != 0; }
+
     OwnPtr<PhysicalRegion> try_take_pages_from_beginning(unsigned);
 
     RefPtr<PhysicalPage> take_free_page();

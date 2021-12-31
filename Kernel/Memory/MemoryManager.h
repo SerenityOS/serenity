@@ -139,6 +139,7 @@ public:
     static bool is_initialized();
 
     static void initialize(u32 cpu);
+    void initialize_data();
 
     static inline MemoryManagerData& get_data()
     {
@@ -247,6 +248,11 @@ private:
 
     void protect_kernel_image();
     void parse_memory_map();
+
+    PhysicalRegion const* get_the_largest_user_available_physical_memory_region_under_four_gigabytes_barrier() const;
+    void initialize_physical_memory_regions_before_enabling_expansion();
+    void initialize_physical_memory_regions_after_enabling_expansion();
+
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 

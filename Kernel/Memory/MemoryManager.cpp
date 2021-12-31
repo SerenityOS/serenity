@@ -70,13 +70,15 @@ bool MemoryManager::is_initialized()
     return s_the != nullptr;
 }
 
-UNMAP_AFTER_INIT MemoryManager::MemoryManager()
+UNMAP_AFTER_INIT void MemoryManager::initialize_data()
 {
-    s_the = this;
-
     SpinlockLocker lock(s_mm_lock);
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());
+    initialize_physical_memory_regions_before_enabling_expansion();
+    kmalloc_enable_expand();
+    initialize_physical_memory_regions_after_enabling_expansion();
+
     protect_kernel_image();
 
     // We're temporarily "committing" to two pages that we need to allocate below
@@ -91,6 +93,11 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     // By using a tag we don't have to query the VMObject for every page
     // whether it was committed or not
     m_lazy_committed_page = committed_pages.take_one();
+}
+
+UNMAP_AFTER_INIT MemoryManager::MemoryManager()
+{
+    s_the = this;
 }
 
 UNMAP_AFTER_INIT MemoryManager::~MemoryManager()
@@ -357,14 +364,54 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     for (auto& used_range : m_used_memory_ranges) {
         dmesgln("MM: {} range @ {} - {} (size {:#x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
+}
 
-    dmesgln("MM: Super physical region: {} - {} (size {:#x})", m_super_physical_region->lower(), m_super_physical_region->upper().offset(-1), PAGE_SIZE * m_super_physical_region->size());
-    m_super_physical_region->initialize_zones();
+PhysicalRegion const* MemoryManager::get_the_largest_user_available_physical_memory_region_under_four_gigabytes_barrier() const
+{
+    size_t selected_index = 0;
+    size_t max_length = 0;
+    for (size_t region_index = 0; region_index < m_user_physical_regions.size(); region_index++) {
+        auto& region = m_user_physical_regions[region_index];
+        if (max_length < region.size() && region.lower() < PhysicalAddress(0x100000000)) {
+            selected_index = region_index;
+            max_length = region.size();
+        }
+    }
+    return &m_user_physical_regions[selected_index];
+}
 
+void MemoryManager::initialize_physical_memory_regions_after_enabling_expansion()
+{
     for (auto& region : m_user_physical_regions) {
+        if (region.was_initialized())
+            continue;
         dmesgln("MM: User physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
         region.initialize_zones();
     }
+}
+
+void MemoryManager::initialize_physical_memory_regions_before_enabling_expansion()
+{
+    dmesgln("MM: Super physical region: {} - {} (size {:#x})", m_super_physical_region->lower(), m_super_physical_region->upper().offset(-1), PAGE_SIZE * m_super_physical_region->size());
+    m_super_physical_region->initialize_zones();
+
+    // FIXME: Find out why we can't use a PhysicalRegion after the 4 GiB barrier...
+    auto* big_region = get_the_largest_user_available_physical_memory_region_under_four_gigabytes_barrier();
+    VERIFY(big_region);
+    {
+        auto& region = *big_region;
+        dmesgln("MM: Largest User physical region under 32 bit barrier: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+    }
+
+    auto sufficient_region = const_cast<PhysicalRegion*>(big_region)->try_take_pages_from_beginning((64 * MiB / PAGE_SIZE));
+    VERIFY(sufficient_region);
+    {
+        auto& region = *sufficient_region;
+        dmesgln("MM: Just the right amount before heap exapnsion, Found a user physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+        region.initialize_zones();
+    }
+
+    m_user_physical_regions.append(sufficient_region.release_nonnull());
 }
 
 UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
@@ -631,8 +678,8 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     ProcessorSpecific<MemoryManagerData>::initialize();
 
     if (cpu == 0) {
-        new MemoryManager;
-        kmalloc_enable_expand();
+        auto mm = new MemoryManager;
+        mm->initialize_data();
     }
 }
 
