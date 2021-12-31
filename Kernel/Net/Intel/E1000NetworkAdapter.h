@@ -27,7 +27,7 @@ public:
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual bool link_up() override;
+    virtual bool link_up() override { return m_link_up; };
     virtual i32 link_speed() override;
     virtual bool link_full_duplex() override;
 
@@ -93,6 +93,7 @@ protected:
     OwnPtr<Memory::Region> m_mmio_region;
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
+    bool m_link_up { false };
     EntropySource m_entropy_source;
 
     WaitQueue m_wait_queue;

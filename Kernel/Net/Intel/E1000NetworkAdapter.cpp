@@ -221,6 +221,9 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
 
     setup_link();
     setup_interrupts();
+
+    m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
+
     return true;
 }
 
@@ -249,6 +252,8 @@ bool E1000NetworkAdapter::handle_irq(const RegisterState&)
     if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
+
+        m_link_up = ((in32(REG_STATUS) & STATUS_LU) != 0);
     }
     if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
@@ -313,11 +318,6 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
     } else {
         VERIFY_NOT_REACHED();
     }
-}
-
-bool E1000NetworkAdapter::link_up()
-{
-    return (in32(REG_STATUS) & STATUS_LU);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
