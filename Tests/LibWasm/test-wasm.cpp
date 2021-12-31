@@ -38,22 +38,21 @@ public:
     Wasm::Module& module() { return *m_module; }
     Wasm::ModuleInstance& module_instance() { return *m_module_instance; }
 
-    static WebAssemblyModule* create(JS::GlobalObject& global_object, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
+    static JS::ThrowCompletionOr<WebAssemblyModule*> create(JS::GlobalObject& global_object, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
     {
-        auto instance = global_object.heap().allocate<WebAssemblyModule>(global_object, *global_object.object_prototype());
+        auto& vm = global_object.vm();
+        auto* instance = global_object.heap().allocate<WebAssemblyModule>(global_object, *global_object.object_prototype());
         instance->m_module = move(module);
         Wasm::Linker linker(*instance->m_module);
         linker.link(imports);
         linker.link(spec_test_namespace());
         auto link_result = linker.finish();
-        if (link_result.is_error()) {
-            global_object.vm().throw_exception<JS::TypeError>(global_object, "Link failed");
-        } else {
-            if (auto result = machine().instantiate(*instance->m_module, link_result.release_value()); result.is_error())
-                global_object.vm().throw_exception<JS::TypeError>(global_object, result.release_error().error);
-            else
-                instance->m_module_instance = result.release_value();
-        }
+        if (link_result.is_error())
+            return vm.throw_completion<JS::TypeError>(global_object, "Link failed");
+        auto result = machine().instantiate(*instance->m_module, link_result.release_value());
+        if (result.is_error())
+            return vm.throw_completion<JS::TypeError>(global_object, result.release_error().error);
+        instance->m_module_instance = result.release_value();
         return instance;
     }
     void initialize(JS::GlobalObject&) override;
@@ -125,7 +124,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
         }
     }
 
-    return JS::Value(WebAssemblyModule::create(global_object, result.release_value(), imports));
+    return JS::Value(TRY(WebAssemblyModule::create(global_object, result.release_value(), imports)));
 }
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
