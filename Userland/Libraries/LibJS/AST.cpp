@@ -424,20 +424,35 @@ Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     return value;
 }
 
+// 14.6.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation
 Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
+    // IfStatement : if ( Expression ) Statement else Statement
+    // 1. Let exprRef be the result of evaluating Expression.
+    // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
     auto predicate_result = m_predicate->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
-    if (predicate_result.to_boolean())
-        return m_consequent->execute(interpreter, global_object);
+    // 3. If exprValue is true, then
+    if (predicate_result.to_boolean()) {
+        // a. Let stmtCompletion be the result of evaluating the second Statement.
+        // 5. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
+        return m_consequent->execute(interpreter, global_object).value_or(js_undefined());
+    }
 
-    if (m_alternate)
-        return m_alternate->execute(interpreter, global_object);
+    // 4. Else,
+    if (m_alternate) {
+        // a. Let stmtCompletion be the result of evaluating the second Statement.
+        // 5. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
+        return m_alternate->execute(interpreter, global_object).value_or(js_undefined());
+    }
 
+    // IfStatement : if ( Expression ) Statement
+    // 3. If exprValue is false, then
+    //    a. Return NormalCompletion(undefined).
     return js_undefined();
 }
 
