@@ -21,7 +21,7 @@
 
 namespace HackStudio {
 
-GitWidget::GitWidget(const LexicalPath& repo_root)
+GitWidget::GitWidget(String const& repo_root)
     : m_repo_root(repo_root)
 {
     set_layout<GUI::HorizontalBoxLayout>();
@@ -42,7 +42,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
     unstaged_header.set_fixed_height(20);
     m_unstaged_files = unstaged.add<GitFilesView>(
-        [this](const auto& file) { stage_file(file); },
+        [this](auto const& file) { stage_file(file); },
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_value_but_fixme_should_propagate_errors());
     m_unstaged_files->on_selection_change = [this] {
         const auto& index = m_unstaged_files->selection().first();
@@ -50,7 +50,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
             return;
 
         const auto& selected = index.data().as_string();
-        show_diff(LexicalPath(selected));
+        show_diff(selected);
     };
 
     auto& staged = add<GUI::Widget>();
@@ -70,7 +70,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
     staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(
-        [this](const auto& file) { unstage_file(file); },
+        [this](auto const& file) { unstage_file(file); },
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png").release_value_but_fixme_should_propagate_errors());
 }
 
@@ -117,7 +117,7 @@ void GitWidget::refresh()
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
 }
 
-void GitWidget::stage_file(const LexicalPath& file)
+void GitWidget::stage_file(String const& file)
 {
     dbgln("staging: {}", file);
     bool rc = m_git_repo->stage(file);
@@ -125,7 +125,7 @@ void GitWidget::stage_file(const LexicalPath& file)
     refresh();
 }
 
-void GitWidget::unstage_file(const LexicalPath& file)
+void GitWidget::unstage_file(String const& file)
 {
     dbgln("unstaging: {}", file);
     bool rc = m_git_repo->unstage(file);
@@ -153,10 +153,10 @@ void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
     m_view_diff_callback = move(callback);
 }
 
-void GitWidget::show_diff(const LexicalPath& file_path)
+void GitWidget::show_diff(String const& file_path)
 {
     if (!m_git_repo->is_tracked(file_path)) {
-        auto file = Core::File::construct(file_path.string());
+        auto file = Core::File::construct(file_path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
             perror("open");
             VERIFY_NOT_REACHED();
@@ -173,7 +173,7 @@ void GitWidget::show_diff(const LexicalPath& file_path)
     m_view_diff_callback(original_content.value(), diff.value());
 }
 
-void GitWidget::change_repo(LexicalPath const& repo_root)
+void GitWidget::change_repo(String const& repo_root)
 {
     m_repo_root = repo_root;
     m_git_repo = nullptr;
