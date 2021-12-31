@@ -590,7 +590,10 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& filter_menu = window.add_menu("&Filter");
 
     filter_menu.add_action(GUI::Action::create("Filter &Gallery", [&](auto&) {
-        auto dialog = PixelPaint::FilterGallery::construct(&window);
+        auto* editor = current_image_editor();
+        if (!editor)
+            return;
+        auto dialog = PixelPaint::FilterGallery::construct(&window, editor);
         if (dialog->exec() != GUI::Dialog::ExecOK)
             return;
     }));

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ImageEditor.h"
 #include <AK/NonnullRefPtr.h>
 #include <LibGUI/Model.h>
 
@@ -53,9 +54,9 @@ public:
         }
     };
 
-    static NonnullRefPtr<FilterModel> create()
+    static NonnullRefPtr<FilterModel> create(ImageEditor* editor)
     {
-        return adopt_ref(*new FilterModel());
+        return adopt_ref(*new FilterModel(editor));
     }
 
     virtual ~FilterModel() override {};
@@ -67,7 +68,7 @@ public:
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
 
 private:
-    FilterModel();
+    FilterModel(ImageEditor* editor);
 
     NonnullRefPtrVector<FilterInfo> m_filters;
     GUI::Icon m_filter_icon;

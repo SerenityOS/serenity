@@ -13,7 +13,7 @@
 
 namespace PixelPaint {
 
-FilterGallery::FilterGallery(GUI::Window* parent_window)
+FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     : GUI::Dialog(parent_window)
 {
     set_title("Filter Gallery");
@@ -33,7 +33,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window)
     VERIFY(apply_button);
     VERIFY(cancel_button);
 
-    auto filter_model = FilterModel::create();
+    auto filter_model = FilterModel::create(editor);
     filter_tree->set_model(filter_model);
     filter_tree->expand_tree();
 
