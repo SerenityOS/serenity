@@ -368,19 +368,36 @@ ErrorOr<void> fchmod(int fd, mode_t mode)
     return {};
 }
 
-ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
+ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid)
 {
     if (!pathname.characters_without_null_termination())
         return Error::from_syscall("chown"sv, -EFAULT);
 
 #ifdef __serenity__
-    Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid };
+    Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid, AT_FDCWD, false };
     int rc = syscall(SC_chown, &params);
     HANDLE_SYSCALL_RETURN_VALUE("chown"sv, rc, {});
 #else
     String path = pathname;
     if (::chown(path.characters(), uid, gid) < 0)
         return Error::from_syscall("chown"sv, -errno);
+    return {};
+#endif
+}
+
+ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
+{
+    if (!pathname.characters_without_null_termination())
+        return Error::from_syscall("chown"sv, -EFAULT);
+
+#ifdef __serenity__
+    Syscall::SC_chown_params params = { { pathname.characters_without_null_termination(), pathname.length() }, uid, gid, AT_FDCWD, true };
+    int rc = syscall(SC_chown, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("chown"sv, rc, {});
+#else
+    String path = pathname;
+    if (::lchown(path.characters(), uid, gid) < 0)
+        return Error::from_syscall("lchown"sv, -errno);
     return {};
 #endif
 }

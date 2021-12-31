@@ -38,13 +38,24 @@ static __thread int s_cached_tid = 0;
 
 static int s_cached_pid = 0;
 
+int lchown(const char* pathname, uid_t uid, gid_t gid)
+{
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_chown_params params { { pathname, strlen(pathname) }, uid, gid, AT_FDCWD, false };
+    int rc = syscall(SC_chown, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!pathname) {
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_chown_params params { { pathname, strlen(pathname) }, uid, gid };
+    Syscall::SC_chown_params params { { pathname, strlen(pathname) }, uid, gid, AT_FDCWD, true };
     int rc = syscall(SC_chown, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -52,6 +63,17 @@ int chown(const char* pathname, uid_t uid, gid_t gid)
 int fchown(int fd, uid_t uid, gid_t gid)
 {
     int rc = syscall(SC_fchown, fd, uid, gid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int fchownat(int fd, const char* pathname, uid_t uid, gid_t gid, int flags)
+{
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_chown_params params { { pathname, strlen(pathname) }, uid, gid, fd, !(flags & AT_SYMLINK_NOFOLLOW) };
+    int rc = syscall(SC_chown, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
