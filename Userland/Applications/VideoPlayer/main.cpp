@@ -10,13 +10,14 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibMain/Main.h>
 #include <LibVideo/MatroskaReader.h>
 #include <LibVideo/VP9/Decoder.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = GUI::Application::construct(argc, argv);
-    auto window = GUI::Window::construct();
+    auto app = TRY(GUI::Application::try_create(arguments));
+    auto window = TRY(GUI::Window::try_create());
 
     auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm");
     auto const& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
@@ -32,7 +33,7 @@ int main(int argc, char** argv)
     auto& image_widget = main_widget.add<GUI::ImageWidget>();
     image_widget.set_bitmap(image);
     image_widget.set_fixed_size(video_track.pixel_height, video_track.pixel_width);
-    main_widget.add_child(image_widget);
+    TRY(main_widget.try_add_child(image_widget));
 
     Video::VP9::Decoder vp9_decoder;
     for (auto const& cluster : document->clusters()) {
