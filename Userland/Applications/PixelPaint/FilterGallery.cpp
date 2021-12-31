@@ -37,9 +37,16 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     filter_tree->set_model(filter_model);
     filter_tree->expand_tree();
 
-    apply_button->on_click = [this](auto) {
-        dbgln("Click!");
+    apply_button->on_click = [this, filter_tree](auto) {
+        auto selected_index = filter_tree->selection().first();
+        if (!selected_index.is_valid())
+            done(ExecResult::ExecAborted);
 
+        auto selected_filter = static_cast<const FilterModel::FilterInfo*>(selected_index.internal_data());
+        if (selected_filter->type != FilterModel::FilterInfo::Type::Filter)
+            done(ExecResult::ExecAborted);
+
+        selected_filter->apply_filter();
         done(ExecResult::ExecOK);
     };
 
