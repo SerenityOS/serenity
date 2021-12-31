@@ -10,6 +10,7 @@
 #include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "EditGuideDialog.h"
+#include "FilterGallery.h"
 #include "FilterParams.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
@@ -587,6 +588,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         }));
 
     auto& filter_menu = window.add_menu("&Filter");
+
+    filter_menu.add_action(GUI::Action::create("Filter &Gallery", [&](auto&) {
+        auto dialog = PixelPaint::FilterGallery::construct(&window);
+        if (dialog->exec() != GUI::Dialog::ExecOK)
+            return;
+    }));
+
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 
     auto& edge_detect_submenu = spatial_filters_menu.add_submenu("&Edge Detect");
