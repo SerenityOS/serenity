@@ -608,12 +608,19 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         // a. Let n be an implementation- and locale-dependent (ILD) String value indicating the NaN value.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::NaN).value_or("NaN"sv);
     }
-    // 3. Else if x is a non-finite Number, then
-    else if (!Value(number).is_finite_number()) {
-        // a. Let n be an ILD String value indicating infinity.
+    // 3. Else if x is +∞, then
+    else if (Value(number).is_positive_infinity()) {
+        // a. Let n be an ILD String value indicating positive infinity.
         formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
     }
-    // 4. Else,
+    // 4. Else if x is -∞, then
+    else if (Value(number).is_negative_infinity()) {
+        // a. Let n be an ILD String value indicating negative infinity.
+        // NOTE: The CLDR does not contain unique strings for negative infinity. The negative sign will
+        //       be inserted by the pattern returned from GetNumberFormatPattern.
+        formatted_string = Unicode::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), Unicode::NumericSymbol::Infinity).value_or("infinity"sv);
+    }
+    // 5. Else,
     else {
         // a. If numberFormat.[[Style]] is "percent", let x be 100 × x.
         if (number_format.style() == NumberFormat::Style::Percent)
@@ -637,18 +644,18 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
 
     Unicode::NumberFormat found_pattern {};
 
-    // 5. Let pattern be GetNumberFormatPattern(numberFormat, x).
+    // 6. Let pattern be GetNumberFormatPattern(numberFormat, x).
     auto pattern = get_number_format_pattern(number_format, number, found_pattern);
     if (!pattern.has_value())
         return {};
 
-    // 6. Let result be a new empty List.
+    // 7. Let result be a new empty List.
     Vector<PatternPartition> result;
 
-    // 7. Let patternParts be PartitionPattern(pattern).
+    // 8. Let patternParts be PartitionPattern(pattern).
     auto pattern_parts = pattern->visit([](auto const& p) { return partition_pattern(p); });
 
-    // 8. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
+    // 9. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
         // a. Let p be patternPart.[[Type]].
         auto part = pattern_part.type;
@@ -729,7 +736,7 @@ Vector<PatternPartition> partition_number_pattern(NumberFormat& number_format, d
         }
     }
 
-    // 9. Return result.
+    // 10. Return result.
     return result;
 }
 
