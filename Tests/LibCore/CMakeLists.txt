@@ -13,4 +13,4 @@ endforeach()
 # NOTE: Required because of the LocalServer tests
 target_link_libraries(TestLibCoreStream LibThreading)
 
-install(FILES long_lines.txt 10kb.txt DESTINATION usr/Tests/LibCore)
+install(FILES long_lines.txt 10kb.txt small.txt DESTINATION usr/Tests/LibCore)
