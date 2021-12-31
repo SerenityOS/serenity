@@ -59,7 +59,7 @@ public:
     ErrorOr<void> rmdir(StringView path, Custody& base);
     ErrorOr<void> chmod(StringView path, mode_t, Custody& base);
     ErrorOr<void> chmod(Custody&, mode_t);
-    ErrorOr<void> chown(StringView path, UserID, GroupID, Custody& base);
+    ErrorOr<void> chown(StringView path, UserID, GroupID, Custody& base, int options);
     ErrorOr<void> chown(Custody&, UserID, GroupID);
     ErrorOr<void> access(StringView path, int mode, Custody& base);
     ErrorOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);

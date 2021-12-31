@@ -66,6 +66,7 @@ ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
 ErrorOr<void> chmod(StringView pathname, mode_t mode);
+ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<Optional<struct passwd>> getpwnam(StringView name);
 ErrorOr<Optional<struct group>> getgrnam(StringView name);
