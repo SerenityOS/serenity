@@ -9,6 +9,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/System.h>
+#include <LibCore/UmaskScope.h>
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
@@ -260,6 +261,8 @@ ErrorOr<String> Account::generate_shadow_file() const
 
 ErrorOr<void> Account::sync()
 {
+    Core::UmaskScope umask_scope(0777);
+
     auto new_passwd_file_content = TRY(generate_passwd_file());
 #ifndef AK_OS_BSD_GENERIC
     auto new_shadow_file_content = TRY(generate_shadow_file());
@@ -273,12 +276,13 @@ ErrorOr<void> Account::sync()
     {
         auto new_passwd_fd = TRY(Core::System::mkstemp(new_passwd_name));
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
+        TRY(Core::System::fchmod(new_passwd_fd, 0644));
+
 #ifndef AK_OS_BSD_GENERIC
         auto new_shadow_fd = TRY(Core::System::mkstemp(new_shadow_name));
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
+        TRY(Core::System::fchmod(new_shadow_fd, 0600));
 #endif
-
-        TRY(Core::System::fchmod(new_passwd_fd, 0644));
 
         auto nwritten = TRY(Core::System::write(new_passwd_fd, new_passwd_file_content.bytes()));
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
