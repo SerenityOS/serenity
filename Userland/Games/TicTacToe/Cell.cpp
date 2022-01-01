@@ -26,15 +26,17 @@ void Cell::initialize_highlight_fade_timer() {
     m_highlight_timer = Core::Timer::construct();
     m_highlight_timer->on_timeout = [this, highlight_color]() {
         auto final_color = m_backgroud_color.interpolate(highlight_color, m_highlight_step);
-        m_highlight_step += 0.1f;
+        m_highlight_step += 0.1f * (m_highlight_steps_count % 2 ? 1 : -1);
 
         auto __palette = palette();
         __palette.set_color(background_role(), final_color);
         set_palette(__palette);
         update();
 
-        if(m_highlight_step >= 1)
-            m_highlight_timer->stop();
+        if(m_highlight_step < 0 || m_highlight_step >= 1) {
+            if(m_highlight_steps_count++ > 2)
+                m_highlight_timer->stop();
+        }
     };
 }
 
@@ -48,6 +50,7 @@ void Cell::set_content(Content content) {
 }
 
 void Cell::highlight() {
+    m_highlight_steps_count = 0;
     m_highlight_step = 0.0f;
     if(m_highlight_timer->is_active())
         m_highlight_timer->stop();
