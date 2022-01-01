@@ -404,6 +404,8 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 
 ErrorOr<Optional<struct passwd>> getpwnam(StringView name)
 {
+    errno = 0;
+
     ::setpwent();
     if (errno)
         return Error::from_syscall("getpwnam"sv, -errno);
@@ -422,6 +424,8 @@ ErrorOr<Optional<struct passwd>> getpwnam(StringView name)
 
 ErrorOr<Optional<struct group>> getgrnam(StringView name)
 {
+    errno = 0;
+
     ::setgrent();
     if (errno)
         return Error::from_syscall("getgrnam"sv, -errno);
