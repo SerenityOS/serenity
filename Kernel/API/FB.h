@@ -41,6 +41,11 @@ ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
     return ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, info);
 }
 
+ALWAYS_INLINE int fb_get_head_edid(int fd, FBHeadEDID* info)
+{
+    return ioctl(fd, FB_IOCTL_GET_HEAD_EDID, info);
+}
+
 ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);

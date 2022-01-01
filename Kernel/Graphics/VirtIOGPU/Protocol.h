@@ -156,4 +156,19 @@ struct ResourceFlush {
     u32 padding;
 };
 
+// Specification equivalent: struct virtio_gpu_get_edid
+struct GetEDID {
+    ControlHeader header;
+    u32 scanout_id;
+    u32 padding;
+};
+
+// Specification equivalent: struct virtio_gpu_resp_edid
+struct GetEDIDResponse {
+    ControlHeader header;
+    u32 size;
+    u32 padding;
+    u8 edid[1024];
+};
+
 }

@@ -40,6 +40,8 @@ public:
     virtual ErrorOr<size_t> vertical_offset(size_t head) const override;
     virtual ErrorOr<bool> vertical_offsetted(size_t head) const override;
 
+    virtual ErrorOr<ByteBuffer> get_edid(size_t head) const override;
+
 private:
     virtual ErrorOr<void> set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
     virtual ErrorOr<void> set_head_buffer(size_t head, bool second_buffer) override;

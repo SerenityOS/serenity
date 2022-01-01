@@ -12,6 +12,7 @@
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/PhysicalAddress.h>
+#include <LibEDID/EDID.h>
 
 namespace Kernel {
 
@@ -113,6 +114,7 @@ private:
 
     // ^GenericGraphicsAdapter
     virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
 
     bool pipe_a_enabled() const;
     bool pipe_b_enabled() const;
@@ -162,7 +164,8 @@ private:
     Spinlock m_modeset_lock;
     mutable Spinlock m_registers_lock;
 
-    Graphics::VideoInfoBlock m_crt_edid;
+    EDID::Parser::RawBytes m_crt_edid_bytes {};
+    Optional<EDID::Parser> m_crt_edid;
     const PhysicalAddress m_registers;
     const PhysicalAddress m_framebuffer_addr;
     OwnPtr<Memory::Region> m_registers_region;

@@ -80,4 +80,9 @@ bool VGACompatibleAdapter::set_y_offset(size_t, size_t)
     return false;
 }
 
+ErrorOr<ByteBuffer> VGACompatibleAdapter::get_edid(size_t) const
+{
+    return Error::from_errno(ENOTSUP);
+}
+
 }
