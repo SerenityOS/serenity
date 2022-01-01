@@ -44,6 +44,7 @@ private:
     Gfx::Color m_backgroud_color;
     RefPtr<Core::Timer> m_highlight_timer;
     float m_highlight_step = 0;
+    uint8_t m_highlight_steps_count = 0;
 };
 
 }
