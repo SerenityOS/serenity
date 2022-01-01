@@ -1228,15 +1228,17 @@ int vscanf(const char* fmt, va_list ap)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/flockfile.html
-void flockfile([[maybe_unused]] FILE* filehandle)
+void flockfile(FILE* filehandle)
 {
-    dbgln("FIXME: Implement flockfile()");
+    VERIFY(filehandle);
+    filehandle->lock();
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/funlockfile.html
-void funlockfile([[maybe_unused]] FILE* filehandle)
+void funlockfile(FILE* filehandle)
 {
-    dbgln("FIXME: Implement funlockfile()");
+    VERIFY(filehandle);
+    filehandle->unlock();
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/tmpfile.html
