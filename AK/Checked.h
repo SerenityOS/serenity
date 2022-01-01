@@ -469,7 +469,22 @@ constexpr Checked<T> make_checked(T value)
     return Checked<T>(value);
 }
 
+template<typename T>
+constexpr Checked<T> pow(Checked<T> base, Checked<T> exponent)
+{
+    if (exponent == T { 0 })
+        return { 1 };
+    VERIFY(exponent > T { 0 });
+
+    auto res = base;
+    for (T i = 0; i < (exponent - T { 1 }); i++)
+        res *= base;
+
+    return res;
+}
+
 }
 
 using AK::Checked;
 using AK::make_checked;
+using AK::pow;
