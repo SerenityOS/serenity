@@ -12,8 +12,8 @@ namespace TicTacToe {
 
 class Game final {
 public:
-    static constexpr int width = 340;
-    static constexpr int height = 340;
+    static constexpr int width = 342;
+    static constexpr int height = 342;
 
     static Game& the();
 
@@ -25,11 +25,12 @@ public:
 
     void start_new_game();
     void reset();
+    Player get_current_player() { return m_current_player; };
 
     Function<void()> on_new_game;
     Function<void(uint8_t const cell_index, Player const)> on_move;
-    Function<void(uint8_t* const winner_cells, Player const)> on_win;
-    Function<void()> on_tae;
+    Function<void(uint8_t* const winner_cells, Player const, uint16_t num_victories)> on_win;
+    Function<void(uint16_t num_ties)> on_tie;
 
 private:
     struct WinnerCheckResult  {
@@ -43,6 +44,9 @@ private:
     Player m_current_player = { Player::X };
     uint8_t m_board[9];
     uint8_t m_moves_remaining = 0;
+    uint16_t m_x_victories = 0;
+    uint16_t m_o_victories = 0;
+    uint16_t m_ties = 0;
 };
 
 }
