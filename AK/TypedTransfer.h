@@ -36,7 +36,7 @@ private:
     }
 
 public:
-    static void copy(T* destination, auto const* source, size_t count)
+    static void uninitialized_copy(T* destination, auto const* source, size_t count)
     {
         move_impl(destination, source, count, [](T* destination, auto const* source) { ::new (destination) T(*source); });
     }

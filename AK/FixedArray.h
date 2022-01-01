@@ -38,7 +38,7 @@ public:
     {
         if (m_size != 0) {
             m_elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
-            Transfer::copy(data(), other.data(), other.size());
+            Transfer::uninitialized_copy(data(), other.data(), other.size());
         }
     }
 
