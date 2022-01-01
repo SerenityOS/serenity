@@ -19,6 +19,8 @@ public:
     String text(size_t index) const;
     void set_text(String);
     void set_text(size_t index, String);
+    void set_width(int width);
+    void set_width(size_t index, int width);
     void set_override_text(String);
     void set_override_text(size_t index, String);
 
