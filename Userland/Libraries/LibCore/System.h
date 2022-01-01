@@ -27,7 +27,6 @@ namespace Core::System {
 #ifdef __serenity__
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
-ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
@@ -77,6 +76,7 @@ ErrorOr<void> setuid(uid_t);
 ErrorOr<void> seteuid(uid_t);
 ErrorOr<void> setgid(gid_t);
 ErrorOr<void> setegid(gid_t);
+ErrorOr<void> setpgid(pid_t pid, pid_t pgid);
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);
@@ -85,6 +85,7 @@ ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
 ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
+ErrorOr<Array<int, 2>> pipe2(int flags);
 
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);

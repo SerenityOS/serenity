@@ -14,7 +14,7 @@ namespace GUI {
     __TOKEN(Unknown)        \
     __TOKEN(Comment)        \
     __TOKEN(Whitespace)     \
-    __TOKEN(section)        \
+    __TOKEN(Section)        \
     __TOKEN(LeftBracket)    \
     __TOKEN(RightBracket)   \
     __TOKEN(Name)           \

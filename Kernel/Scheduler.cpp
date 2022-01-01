@@ -247,7 +247,7 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
 
-    auto current_thread = Thread::current();
+    auto const* current_thread = Thread::current();
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", Processor::current_id(), *current_thread, Processor::current_in_irq());
     VERIFY(current_thread != nullptr);
     if (Processor::current_in_irq() || Processor::in_critical()) {
@@ -274,7 +274,7 @@ bool Scheduler::context_switch(Thread* thread)
 
     thread->did_schedule();
 
-    auto from_thread = Thread::current();
+    auto* from_thread = Thread::current();
     if (from_thread == thread)
         return false;
 
@@ -457,7 +457,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::current_in_irq());
 
-    auto current_thread = Processor::current_thread();
+    auto* current_thread = Processor::current_thread();
     if (!current_thread)
         return;
 
@@ -517,7 +517,7 @@ void Scheduler::invoke_async()
 
 void Scheduler::notify_finalizer()
 {
-    if (g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel) == false)
+    if (!g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel))
         g_finalizer_wait_queue->wake_all();
 }
 

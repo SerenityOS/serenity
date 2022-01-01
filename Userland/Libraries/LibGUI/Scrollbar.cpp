@@ -228,11 +228,11 @@ void Scrollbar::paint_event(PaintEvent& event)
 void Scrollbar::on_automatic_scrolling_timer_fired()
 {
     if (m_pressed_component == Component::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
-        set_value(value() - step());
+        decrease_slider_by_steps(1);
         return;
     }
     if (m_pressed_component == Component::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
-        set_value(value() + step());
+        increase_slider_by_steps(1);
         return;
     }
     if (m_pressed_component == Component::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
@@ -299,7 +299,7 @@ void Scrollbar::mousewheel_event(MouseEvent& event)
 {
     if (!is_scrollable())
         return;
-    set_value(value() + event.wheel_delta() * step());
+    increase_slider_by_steps(event.wheel_delta());
     Widget::mousewheel_event(event);
 }
 
@@ -329,10 +329,10 @@ void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
 
     if (click_position.primary_offset_for_orientation(orientation()) < scrubber_rect().primary_offset_for_orientation(orientation())) {
         gutter_click_state = GutterClickState::BeforeScrubber;
-        set_value(value() - page_increment);
+        decrease_slider_by(page_increment);
     } else {
         gutter_click_state = GutterClickState::AfterScrubber;
-        set_value(value() + page_increment);
+        increase_slider_by(page_increment);
     }
 }
 

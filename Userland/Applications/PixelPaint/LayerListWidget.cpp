@@ -248,7 +248,7 @@ void LayerListWidget::on_automatic_scrolling_timer_fired()
     if (vertical_scrollbar().is_max() && m_automatic_scroll_delta.y() > 0)
         return;
 
-    vertical_scrollbar().set_value(vertical_scrollbar().value() + m_automatic_scroll_delta.y());
+    vertical_scrollbar().increase_slider_by(m_automatic_scroll_delta.y());
     gadget.movement_delta.set_y(gadget.movement_delta.y() + m_automatic_scroll_delta.y());
 
     auto inner_rect_max_height = widget_inner_rect().height() - 2 + vertical_scrollbar().max();

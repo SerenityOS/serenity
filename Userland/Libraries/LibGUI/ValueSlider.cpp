@@ -46,13 +46,13 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
 
     m_textbox->on_up_pressed = [&]() {
         if (value() < max())
-            AbstractSlider::set_value(value() + 1);
+            AbstractSlider::increase_slider_by(1);
         m_textbox->set_text(formatted_value());
     };
 
     m_textbox->on_down_pressed = [&]() {
         if (value() > min())
-            AbstractSlider::set_value(value() - 1);
+            AbstractSlider::decrease_slider_by(1);
         m_textbox->set_text(formatted_value());
     };
 
@@ -159,9 +159,9 @@ void ValueSlider::leave_event(Core::Event&)
 void ValueSlider::mousewheel_event(MouseEvent& event)
 {
     if (event.wheel_delta() < 0)
-        set_value(value() + 1);
+        increase_slider_by(1);
     else
-        set_value(value() - 1);
+        decrease_slider_by(1);
 }
 
 void ValueSlider::mousemove_event(MouseEvent& event)

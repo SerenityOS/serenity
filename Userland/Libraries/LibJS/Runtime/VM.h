@@ -155,7 +155,7 @@ public:
         return running_execution_context().this_value;
     }
 
-    Value resolve_this_binding(GlobalObject&);
+    ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
 
     Value last_value() const { return m_last_value; }
     void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
@@ -192,8 +192,8 @@ public:
     ScopeType unwind_until() const { return m_unwind_until; }
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
-    Reference resolve_binding(FlyString const&, Environment* = nullptr);
-    Reference get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
+    ThrowCompletionOr<Reference> resolve_binding(FlyString const&, Environment* = nullptr);
+    ThrowCompletionOr<Reference> get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
 
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, Args&&... args)

@@ -51,4 +51,5 @@ set(SOURCES
 
 serenity_app(HackStudio ICON app-hack-studio)
 target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibCpp LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell LibSymbolication LibRegex LibSQL LibCoredump LibMain)
+link_with_unicode_data(HackStudio)
 add_dependencies(HackStudio CppLanguageServer)

@@ -107,7 +107,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     m_auto_scroll_timer->on_timeout = [this] {
         if (m_auto_scroll_direction != AutoScrollDirection::None) {
             int scroll_amount = m_auto_scroll_direction == AutoScrollDirection::Up ? -1 : 1;
-            m_scrollbar->set_value(m_scrollbar->value() + scroll_amount);
+            m_scrollbar->increase_slider_by(scroll_amount);
         }
     };
     m_auto_scroll_timer->start();
@@ -215,11 +215,11 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     m_cursor_blink_timer->start();
 
     if (event.key() == KeyCode::Key_PageUp && event.modifiers() == Mod_Shift) {
-        m_scrollbar->set_value(m_scrollbar->value() - m_terminal.rows());
+        m_scrollbar->decrease_slider_by(m_terminal.rows());
         return;
     }
     if (event.key() == KeyCode::Key_PageDown && event.modifiers() == Mod_Shift) {
-        m_scrollbar->set_value(m_scrollbar->value() + m_terminal.rows());
+        m_scrollbar->increase_slider_by(m_terminal.rows());
         return;
     }
     if (event.key() == KeyCode::Key_Alt) {
@@ -916,7 +916,7 @@ void TerminalWidget::mousewheel_event(GUI::MouseEvent& event)
     if (!is_scrollable())
         return;
     set_auto_scroll_direction(AutoScrollDirection::None);
-    m_scrollbar->set_value(m_scrollbar->value() + event.wheel_delta() * scroll_length());
+    m_scrollbar->increase_slider_by(event.wheel_delta() * scroll_length());
     GUI::Frame::mousewheel_event(event);
 }
 

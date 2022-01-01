@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread prot_exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -65,11 +65,6 @@ int main(int argc, char* argv[])
     }
 
     if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/usr/lib/libunicodedata.so.serenity", "r") < 0) {
         perror("unveil");
         return 1;
     }

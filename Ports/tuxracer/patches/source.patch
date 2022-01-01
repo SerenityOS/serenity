@@ -190,7 +190,7 @@ diff -ur tuxracer-0.61-original/src/keyboard.c tuxracer-0.61/src/keyboard.c
  void init_keyboard()
 diff -ur tuxracer-0.61-original/src/winsys.c tuxracer-0.61/src/winsys.c
 --- tuxracer-0.61-original/src/winsys.c	2001-01-13 22:09:51.000000000 +0000
-+++ tuxracer-0.61/src/winsys.c	2021-12-26 13:48:57.590964343 +0000
++++ tuxracer-0.61/src/winsys.c	2021-12-27 23:10:37.344295969 +0000
 @@ -36,7 +36,8 @@
  /*---------------------------------------------------------------------------*/
  /*---------------------------------------------------------------------------*/
@@ -296,7 +296,7 @@ diff -ur tuxracer-0.61-original/src/winsys.c tuxracer-0.61/src/winsys.c
  	while ( SDL_PollEvent( &event ) ) {
  	    
  	    switch ( event.type ) {
-@@ -384,18 +380,15 @@
+@@ -384,18 +380,19 @@
  		}
  		break;
  
@@ -311,10 +311,14 @@ diff -ur tuxracer-0.61-original/src/winsys.c tuxracer-0.61/src/winsys.c
  		}
  		
  		break;
- 	    }
--
+-	    }
+ 
 -	    SDL_LockAudio();
 -	    SDL_UnlockAudio();
++        case SDL_QUIT:
++        winsys_exit(0);
++        break;
++	    }
  	}
  
  	if ( redisplay && display_func ) {

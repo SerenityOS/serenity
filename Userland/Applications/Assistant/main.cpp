@@ -188,7 +188,7 @@ static constexpr size_t MAX_SEARCH_RESULTS = 6;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath cpath unix proc exec thread prot_exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath cpath unix proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

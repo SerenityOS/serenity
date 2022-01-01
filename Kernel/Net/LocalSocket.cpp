@@ -378,7 +378,7 @@ ErrorOr<NonnullOwnPtr<KString>> LocalSocket::pseudo_path(const OpenFileDescripti
         break;
     }
 
-    return KString::try_create(builder.to_string());
+    return KString::try_create(builder.string_view());
 }
 
 ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)

@@ -45,14 +45,6 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
     HANDLE_SYSCALL_RETURN_VALUE("unveil"sv, rc, {});
 }
 
-ErrorOr<Array<int, 2>> pipe2(int flags)
-{
-    Array<int, 2> fds;
-    if (::pipe2(fds.data(), flags) < 0)
-        return Error::from_syscall("pipe2"sv, -errno);
-    return fds;
-}
-
 ErrorOr<void> sendfd(int sockfd, int fd)
 {
     if (::sendfd(sockfd, fd) < 0)
@@ -485,6 +477,13 @@ ErrorOr<void> setegid(gid_t gid)
     return {};
 }
 
+ErrorOr<void> setpgid(pid_t pid, pid_t pgid)
+{
+    if (::setpgid(pid, pgid) < 0)
+        return Error::from_syscall("setpgid"sv, -errno);
+    return {};
+}
+
 ErrorOr<bool> isatty(int fd)
 {
     int rc = ::isatty(fd);
@@ -707,6 +706,19 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2])
     if (::socketpair(domain, type, protocol, sv) < 0)
         return Error::from_syscall("socketpair"sv, -errno);
     return {};
+}
+
+ErrorOr<Array<int, 2>> pipe2([[maybe_unused]] int flags)
+{
+    Array<int, 2> fds;
+#if defined(__unix__)
+    if (::pipe2(fds.data(), flags) < 0)
+        return Error::from_syscall("pipe2"sv, -errno);
+#else
+    if (::pipe(fds.data()) < 0)
+        return Error::from_syscall("pipe2"sv, -errno);
+#endif
+    return fds;
 }
 
 }

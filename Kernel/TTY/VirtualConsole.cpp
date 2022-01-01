@@ -7,7 +7,6 @@
  */
 
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>

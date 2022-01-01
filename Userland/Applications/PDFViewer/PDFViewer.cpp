@@ -95,7 +95,7 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                     scrollbar.set_value(0);
                 }
             } else {
-                scrollbar.set_value(scrollbar.value() + 20);
+                scrollbar.increase_slider_by(20);
             }
         } else {
             if (scrollbar.value() == 0) {
@@ -106,7 +106,7 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                     scrollbar.set_value(scrollbar.max());
                 }
             } else {
-                scrollbar.set_value(scrollbar.value() - 20);
+                scrollbar.decrease_slider_by(20);
             }
         }
     }

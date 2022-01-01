@@ -68,4 +68,21 @@ enum class PrimitiveType {
     Quads,
 };
 
+enum TexCoordGenerationCoordinate {
+    None = 0x0,
+    S = 0x1,
+    T = 0x2,
+    R = 0x4,
+    Q = 0x8,
+    All = 0xF,
+};
+
+enum class TexCoordGenerationMode {
+    ObjectLinear,
+    EyeLinear,
+    SphereMap,
+    ReflectionMap,
+    NormalMap,
+};
+
 }

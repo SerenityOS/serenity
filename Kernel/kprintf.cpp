@@ -61,10 +61,7 @@ static void serial_putch(char ch)
 
     IO::out8(0x3F8, ch);
 
-    if (ch == '\r')
-        was_cr = true;
-    else
-        was_cr = false;
+    was_cr = ch == '\r';
 }
 
 static void critical_console_out(char ch)

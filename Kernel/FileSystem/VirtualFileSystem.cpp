@@ -931,10 +931,10 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Str
             // We prepend a "." to it to ensure that it's not empty and that
             // any initial slashes it might have get interpreted properly.
             StringBuilder remaining_path;
-            remaining_path.append('.');
-            remaining_path.append(path.substring_view_starting_after_substring(part));
+            TRY(remaining_path.try_append('.'));
+            TRY(remaining_path.try_append(path.substring_view_starting_after_substring(part)));
 
-            return resolve_path_without_veil(remaining_path.to_string(), symlink_target, out_parent, options, symlink_recursion_level + 1);
+            return resolve_path_without_veil(remaining_path.string_view(), symlink_target, out_parent, options, symlink_recursion_level + 1);
         }
     }
 

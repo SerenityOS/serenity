@@ -70,7 +70,12 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     }
     auto data = file.value()->read_all();
 
-    auto json = JsonValue::from_string(data).release_value_but_fixme_should_propagate_errors();
+    auto json_or_error = JsonValue::from_string(data);
+    if (json_or_error.is_error()) {
+        outln("lsof: {}", json_or_error.error());
+        return Vector<OpenFile>();
+    }
+    auto json = json_or_error.release_value();
 
     Vector<OpenFile> files;
     json.as_array().for_each([pid, &files](const JsonValue& object) {

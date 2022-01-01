@@ -190,7 +190,7 @@ ErrorOr<void> Coredump::write_regions()
         region->remap();
 
         for (size_t i = 0; i < region->page_count(); i++) {
-            auto* page = region->physical_page(i);
+            auto const* page = region->physical_page(i);
             auto src_buffer = [&]() -> ErrorOr<UserOrKernelBuffer> {
                 if (page)
                     return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
@@ -223,13 +223,13 @@ ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
 
         {
             auto arguments_array = process_obj.add_array("arguments"sv);
-            for (auto& argument : m_process->arguments())
+            for (auto const& argument : m_process->arguments())
                 arguments_array.add(argument.view());
         }
 
         {
             auto environment_array = process_obj.add_array("environment"sv);
-            for (auto& variable : m_process->environment())
+            for (auto const& variable : m_process->environment())
                 environment_array.add(variable.view());
         }
     }
@@ -240,7 +240,7 @@ ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
 
 ErrorOr<void> Coredump::create_notes_threads_data(auto& builder) const
 {
-    for (auto& thread : m_process->threads_for_coredump({})) {
+    for (auto const& thread : m_process->threads_for_coredump({})) {
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
@@ -256,7 +256,7 @@ ErrorOr<void> Coredump::create_notes_threads_data(auto& builder) const
 ErrorOr<void> Coredump::create_notes_regions_data(auto& builder) const
 {
     size_t region_index = 0;
-    for (auto& region : m_process->address_space().regions()) {
+    for (auto const& region : m_process->address_space().regions()) {
 
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
         if (looks_like_userspace_heap_region(*region))

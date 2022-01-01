@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
 #include <LibC/sys/arch/i386/regs.h>
 

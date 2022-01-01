@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
@@ -25,6 +26,11 @@
 
 namespace SoftGPU {
 
+struct TexCoordGenerationConfig {
+    TexCoordGenerationMode mode { TexCoordGenerationMode::EyeLinear };
+    FloatVector4 coefficients {};
+};
+
 struct RasterizerOptions {
     bool shade_smooth { true };
     bool enable_depth_test { false };
@@ -36,8 +42,8 @@ struct RasterizerOptions {
     BlendFactor blend_source_factor { BlendFactor::One };
     BlendFactor blend_destination_factor { BlendFactor::One };
     u32 color_mask { 0xffffffff };
-    float depth_min { 0 };
-    float depth_max { 1 };
+    float depth_min { 0.f };
+    float depth_max { 1.f };
     DepthTestFunction depth_func { DepthTestFunction::Less };
     PolygonMode polygon_mode { PolygonMode::Fill };
     FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -47,6 +53,7 @@ struct RasterizerOptions {
     float fog_start { 0.0f };
     float fog_end { 1.0f };
     bool scissor_enabled { false };
+    bool normalization_enabled { false };
     Gfx::IntRect scissor_box;
     bool enable_color_write { true };
     float depth_offset_factor { 0 };
@@ -55,6 +62,8 @@ struct RasterizerOptions {
     WindingOrder front_face { WindingOrder::CounterClockwise };
     bool cull_back { true };
     bool cull_front { false };
+    u8 texcoord_generation_enabled_coordinates { TexCoordGenerationCoordinate::None };
+    Array<TexCoordGenerationConfig, 4> texcoord_generation_config {};
 };
 
 inline static constexpr size_t const num_samplers = 32;
@@ -65,7 +74,7 @@ public:
 
     DeviceInfo info() const;
 
-    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);

@@ -131,7 +131,7 @@ private:
         JsonArraySerializer array { builder };
         LocalSocket::for_each([&array](auto& socket) {
             auto obj = array.add_object();
-            obj.add("path", String(socket.socket_path()));
+            obj.add("path", socket.socket_path());
             obj.add("origin_pid", socket.origin_pid().value());
             obj.add("origin_uid", socket.origin_uid().value());
             obj.add("origin_gid", socket.origin_gid().value());
@@ -336,9 +336,7 @@ private:
     ProcFSSelfProcessDirectory();
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        if (builder.appendff("{}", Process::current().pid().value()).is_error())
-            return false;
-        return true;
+        return !builder.appendff("{}", Process::current().pid().value()).is_error();
     }
 };
 
@@ -372,7 +370,7 @@ private:
                     result = pseudo_path_or_error.release_error();
                     return IterationDecision::Break;
                 }
-                fs_object.add("source", pseudo_path_or_error.value()->characters());
+                fs_object.add("source", pseudo_path_or_error.value()->view());
             } else {
                 fs_object.add("source", "none");
             }
@@ -463,7 +461,7 @@ private:
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
-                process_object.add("pledge", pledge_builder.to_string());
+                process_object.add("pledge", pledge_builder.string_view());
 
                 switch (process.veil_state()) {
                 case VeilState::None:
@@ -756,7 +754,7 @@ private:
     {
         if (!Process::current().is_superuser())
             return EPERM;
-        return builder.append(String::number(kernel_load_base));
+        return builder.appendff("{}", kernel_load_base);
     }
 };
 
@@ -937,7 +935,7 @@ ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Func
     TRY(callback({ ".", { fsid, component_index() }, 0 }));
     TRY(callback({ "..", { fsid, 0 }, 0 }));
 
-    for (auto& component : m_components) {
+    for (auto const& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
         TRY(callback({ component.name(), identifier, 0 }));
     }

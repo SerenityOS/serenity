@@ -653,12 +653,10 @@ void TextEditor::paint_event(PaintEvent& event)
                     painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
                 }
             }
-
             if (m_visualize_leading_whitespace && line.leading_spaces() > 0) {
                 size_t physical_column = line.leading_spaces();
-                size_t end_of_leading_whitespace = (start_of_visual_line + physical_column);
-                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
-                if (end_of_leading_whitespace < end_of_visual_line) {
+                if (start_of_visual_line < physical_column) {
+                    size_t end_of_leading_whitespace = min(physical_column - start_of_visual_line, visual_line_text.length());
                     Gfx::IntRect whitespace_rect {
                         content_x_for_position({ line_index, start_of_visual_line }),
                         visual_line_rect.y(),

@@ -38,6 +38,13 @@ public:
     void set_page_step(int page_step);
     void set_jump_to_cursor(bool b) { m_jump_to_cursor = b; }
 
+    void increase_slider_by(int delta) { set_value(value() + delta); }
+    void decrease_slider_by(int delta) { set_value(value() - delta); }
+    void increase_slider_by_page_steps(int page_steps) { set_value(value() + page_step() * page_steps); }
+    void decrease_slider_by_page_steps(int page_steps) { set_value(value() - page_step() * page_steps); }
+    void increase_slider_by_steps(int steps) { set_value(value() + step() * steps); }
+    void decrease_slider_by_steps(int steps) { set_value(value() - step() * steps); }
+
     Function<void(int)> on_change;
 
 protected:

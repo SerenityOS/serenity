@@ -70,9 +70,9 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
         VERIFY(pair.size() == 2 || pair.size() == 1);
 
         if (pair.size() == 1) {
-            m_params.set(move(pair[0]), ""sv);
+            m_params.set(pair[0], ""sv);
         } else {
-            m_params.set(move(pair[0]), move(pair[1]));
+            m_params.set(pair[0], pair[1]);
         }
     }
 }
@@ -217,7 +217,8 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
     const auto ahci_reset_mode = lookup("ahci_reset_mode"sv).value_or("controllers"sv);
     if (ahci_reset_mode == "controllers"sv) {
         return AHCIResetMode::ControllerOnly;
-    } else if (ahci_reset_mode == "aggressive"sv) {
+    }
+    if (ahci_reset_mode == "aggressive"sv) {
         return AHCIResetMode::Aggressive;
     }
     PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
@@ -233,7 +234,8 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     const auto panic_mode = lookup("panic"sv).value_or("halt"sv);
     if (panic_mode == "halt"sv) {
         return PanicMode::Halt;
-    } else if (panic_mode == "shutdown"sv) {
+    }
+    if (panic_mode == "shutdown"sv) {
         return PanicMode::Shutdown;
     }
 

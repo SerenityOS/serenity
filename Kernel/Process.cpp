@@ -6,7 +6,6 @@
 
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
-#include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>

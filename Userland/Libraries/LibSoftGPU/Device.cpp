@@ -47,11 +47,12 @@ ALWAYS_INLINE constexpr static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 
 static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
 {
+    auto constexpr one_over_255 = 1.0f / 255;
     return {
-        ((rgba >> 16) & 0xff) / 255.0f,
-        ((rgba >> 8) & 0xff) / 255.0f,
-        (rgba & 0xff) / 255.0f,
-        ((rgba >> 24) & 0xff) / 255.0f
+        ((rgba >> 16) & 0xff) * one_over_255,
+        ((rgba >> 8) & 0xff) * one_over_255,
+        (rgba & 0xff) * one_over_255,
+        ((rgba >> 24) & 0xff) * one_over_255,
     };
 }
 
@@ -118,16 +119,25 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     VERIFY((render_target.width() % RASTERIZER_BLOCK_SIZE) == 0);
     VERIFY((render_target.height() % RASTERIZER_BLOCK_SIZE) == 0);
 
+    // Return if alpha testing is a no-op
+    if (options.enable_alpha_test && options.alpha_test_func == AlphaTestFunction::Never)
+        return;
+
+    // Vertices
+    Vertex const vertex0 = triangle.vertices[0];
+    Vertex const vertex1 = triangle.vertices[1];
+    Vertex const vertex2 = triangle.vertices[2];
+
     // Calculate area of the triangle for later tests
-    IntVector2 v0 { (int)triangle.vertices[0].position.x(), (int)triangle.vertices[0].position.y() };
-    IntVector2 v1 { (int)triangle.vertices[1].position.x(), (int)triangle.vertices[1].position.y() };
-    IntVector2 v2 { (int)triangle.vertices[2].position.x(), (int)triangle.vertices[2].position.y() };
+    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x()), static_cast<int>(vertex0.window_coordinates.y()) };
+    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x()), static_cast<int>(vertex1.window_coordinates.y()) };
+    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x()), static_cast<int>(vertex2.window_coordinates.y()) };
 
     int area = edge_function(v0, v1, v2);
     if (area == 0)
         return;
 
-    float one_over_area = 1.0f / area;
+    auto const one_over_area = 1.0f / area;
 
     FloatVector4 src_constant {};
     float src_factor_src_alpha = 0;
@@ -203,7 +213,13 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
     static_assert(RASTERIZER_BLOCK_SIZE <= sizeof(decltype(*pixel_mask)) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
 
-    FloatVector4 pixel_buffer[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
+    FloatVector4 pixel_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
+    float depth_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
+
+    // Fog depths
+    float const vertex0_eye_absz = fabs(vertex0.eye_coordinates.z());
+    float const vertex1_eye_absz = fabs(vertex1.eye_coordinates.z());
+    float const vertex2_eye_absz = fabs(vertex2.eye_coordinates.z());
 
     // FIXME: implement stencil testing
 
@@ -276,9 +292,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
 
                         auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
-
-                        z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+                        float z = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), barycentric);
 
                         // FIXME: Also apply depth_offset_factor which depends on the depth gradient
                         z += options.depth_offset_constant * NumericLimits<float>::epsilon();
@@ -335,8 +349,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
                         }
 
-                        if (options.enable_depth_write)
-                            *depth = z;
+                        depth_staging[y][x] = z;
 
                         z_pass_count++;
                     }
@@ -347,10 +360,6 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
             }
 
-            // We will not update the color buffer at all
-            if (!options.color_mask || !options.enable_color_write)
-                continue;
-
             // Draw the pixels according to the previously generated mask
             auto coords = b0;
             for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
@@ -359,52 +368,49 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
                 }
 
-                auto* pixel = pixel_buffer[y];
+                auto* pixel = pixel_staging[y];
                 for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, pixel++) {
                     if (~pixel_mask[y] & (1 << x))
                         continue;
 
                     // Perspective correct barycentric coordinates
                     auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                    float interpolated_reciprocal_w = interpolate(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w(), barycentric);
-                    float interpolated_w = 1 / interpolated_reciprocal_w;
-                    barycentric = barycentric * FloatVector3(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w()) * interpolated_w;
+                    auto const w_coordinates = FloatVector3 {
+                        vertex0.window_coordinates.w(),
+                        vertex1.window_coordinates.w(),
+                        vertex2.window_coordinates.w(),
+                    };
+                    float const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), barycentric);
+                    float const interpolated_w = 1 / interpolated_reciprocal_w;
+                    barycentric = barycentric * w_coordinates * interpolated_w;
 
                     // FIXME: make this more generic. We want to interpolate more than just color and uv
                     FloatVector4 vertex_color;
                     if (options.shade_smooth) {
-                        vertex_color = interpolate(
-                            triangle.vertices[0].color,
-                            triangle.vertices[1].color,
-                            triangle.vertices[2].color,
-                            barycentric);
+                        vertex_color = interpolate(vertex0.color, vertex1.color, vertex2.color, barycentric);
                     } else {
-                        vertex_color = triangle.vertices[0].color;
+                        vertex_color = vertex0.color;
                     }
 
-                    auto uv = interpolate(
-                        triangle.vertices[0].tex_coord,
-                        triangle.vertices[1].tex_coord,
-                        triangle.vertices[2].tex_coord,
-                        barycentric);
+                    auto uv = interpolate(vertex0.tex_coord, vertex1.tex_coord, vertex2.tex_coord, barycentric);
 
                     // Calculate depth of fragment for fog
-                    float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
-                    z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+                    //
+                    // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
+                    // eye-coordinate distance from the eye to each fragment center by |Ze|."
 
-                    *pixel = pixel_shader(uv, vertex_color, z);
+                    float fog_fragment_depth = interpolate(vertex0_eye_absz, vertex1_eye_absz, vertex2_eye_absz, barycentric);
+
+                    *pixel = pixel_shader(uv, vertex_color, fog_fragment_depth);
                 }
             }
 
             if (options.enable_alpha_test && options.alpha_test_func != AlphaTestFunction::Always) {
-                // FIXME: I'm not sure if this is the right place to test this.
-                // If we tested this right at the beginning of our rasterizer routine
-                // we could skip a lot of work but the GL spec might disagree.
-                if (options.alpha_test_func == AlphaTestFunction::Never)
-                    continue;
-
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
+                    if (pixel_mask[y] == 0)
+                        continue;
+
+                    auto src = pixel_staging[y];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++) {
                         if (~pixel_mask[y] & (1 << x))
                             continue;
@@ -441,11 +447,31 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 }
             }
 
-            if (options.enable_blending) {
-                // Blend color values from pixel_buffer into render_target
+            // Write to depth buffer
+            if (options.enable_depth_test && options.enable_depth_write) {
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
-                    auto dst = &render_target.scanline(y + y0)[x0];
+                    if (pixel_mask[y] == 0)
+                        continue;
+
+                    auto* depth = &depth_buffer.scanline(y0 + y)[x0];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, depth++) {
+                        if (~pixel_mask[y] & (1 << x))
+                            continue;
+
+                        *depth = depth_staging[y][x];
+                    }
+                }
+            }
+
+            // We will not update the color buffer at all
+            if (!options.color_mask || !options.enable_color_write)
+                continue;
+
+            if (options.enable_blending) {
+                // Blend color values from pixel_staging into render_target
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    auto src = pixel_staging[y];
+                    auto dst = &render_target.scanline(y0 + y)[x0];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
                         if (~pixel_mask[y] & (1 << x))
                             continue;
@@ -468,9 +494,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     }
                 }
             } else {
-                // Copy color values from pixel_buffer into render_target
+                // Copy color values from pixel_staging into render_target
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_buffer[y];
+                    auto src = pixel_staging[y];
                     auto dst = &render_target.scanline(y + y0)[x0];
                     for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
                         if (~pixel_mask[y] & (1 << x))
@@ -507,7 +533,75 @@ DeviceInfo Device::info() const
     };
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& transform, FloatMatrix4x4 const& texture_matrix, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
+{
+    auto generate_coordinate = [&](size_t config_index) -> float {
+        auto mode = options.texcoord_generation_config[config_index].mode;
+
+        switch (mode) {
+        case TexCoordGenerationMode::ObjectLinear: {
+            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            return coefficients.dot(vertex.position);
+        }
+        case TexCoordGenerationMode::EyeLinear: {
+            auto coefficients = options.texcoord_generation_config[config_index].coefficients;
+            return coefficients.dot(vertex.eye_coordinates);
+        }
+        case TexCoordGenerationMode::SphereMap: {
+            auto const eye_unit = vertex.eye_coordinates.normalized();
+            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            auto const normal = vertex.normal;
+            auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
+            reflection.set_z(reflection.z() + 1);
+            auto const reflection_value = (config_index == 0) ? reflection.x() : reflection.y();
+            return reflection_value / (2 * reflection.length()) + 0.5f;
+        }
+        case TexCoordGenerationMode::ReflectionMap: {
+            auto const eye_unit = vertex.eye_coordinates.normalized();
+            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            auto const normal = vertex.normal;
+            auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
+            switch (config_index) {
+            case 0:
+                return reflection.x();
+            case 1:
+                return reflection.y();
+            case 2:
+                return reflection.z();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+        case TexCoordGenerationMode::NormalMap: {
+            auto const normal = vertex.normal;
+            switch (config_index) {
+            case 0:
+                return normal.x();
+            case 1:
+                return normal.y();
+            case 2:
+                return normal.z();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    auto const enabled_coords = options.texcoord_generation_enabled_coordinates;
+    vertex.tex_coord = {
+        ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(0) : vertex.tex_coord.x(),
+        ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(1) : vertex.tex_coord.y(),
+        ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(2) : vertex.tex_coord.z(),
+        ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(3) : vertex.tex_coord.w(),
+    };
+}
+
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
+    FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices,
+    Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -579,19 +673,18 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 
     // Now let's transform each triangle and send that to the GPU
-    for (size_t i = 0; i < m_triangle_list.size(); i++) {
-        Triangle& triangle = m_triangle_list.at(i);
+    auto const depth_half_range = (m_options.depth_max - m_options.depth_min) / 2;
+    auto const depth_halfway = (m_options.depth_min + m_options.depth_max) / 2;
+    for (auto& triangle : m_triangle_list) {
+        // Transform vertices into eye coordinates using the model-view transform
+        triangle.vertices[0].eye_coordinates = model_view_transform * triangle.vertices[0].position;
+        triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
+        triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
 
-        // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
-        triangle.vertices[0].position = transform * triangle.vertices[0].position;
-        triangle.vertices[1].position = transform * triangle.vertices[1].position;
-        triangle.vertices[2].position = transform * triangle.vertices[2].position;
-
-        // Apply texture transformation
-        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
-        triangle.vertices[0].tex_coord = texture_matrix * triangle.vertices[0].tex_coord;
-        triangle.vertices[1].tex_coord = texture_matrix * triangle.vertices[1].tex_coord;
-        triangle.vertices[2].tex_coord = texture_matrix * triangle.vertices[2].tex_coord;
+        // Transform eye coordinates into clip coordinates using the projection transform
+        triangle.vertices[0].clip_coordinates = projection_transform * triangle.vertices[0].eye_coordinates;
+        triangle.vertices[1].clip_coordinates = projection_transform * triangle.vertices[1].eye_coordinates;
+        triangle.vertices[2].clip_coordinates = projection_transform * triangle.vertices[2].eye_coordinates;
 
         // At this point, we're in clip space
         // Here's where we do the clipping. This is a really crude implementation of the
@@ -613,16 +706,23 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             continue;
 
         for (auto& vec : m_clipped_vertices) {
-            // perspective divide
-            float w = vec.position.w();
-            vec.position.set_x(vec.position.x() / w);
-            vec.position.set_y(vec.position.y() / w);
-            vec.position.set_z(vec.position.z() / w);
-            vec.position.set_w(1 / w);
+            // To normalized device coordinates (NDC)
+            auto const one_over_w = 1 / vec.clip_coordinates.w();
+            auto const ndc_coordinates = FloatVector4 {
+                vec.clip_coordinates.x() * one_over_w,
+                vec.clip_coordinates.y() * one_over_w,
+                vec.clip_coordinates.z() * one_over_w,
+                one_over_w,
+            };
 
-            // to screen space
-            vec.position.set_x(scr_width / 2 + vec.position.x() * scr_width / 2);
-            vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
+            // To window coordinates
+            // FIXME: implement viewport functionality
+            vec.window_coordinates = {
+                scr_width / 2 + ndc_coordinates.x() * scr_width / 2,
+                scr_height / 2 - ndc_coordinates.y() * scr_height / 2,
+                depth_half_range * ndc_coordinates.z() + depth_halfway,
+                ndc_coordinates.w(),
+            };
         }
 
         Triangle tri;
@@ -634,15 +734,13 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
     }
 
-    for (size_t i = 0; i < m_processed_triangles.size(); i++) {
-        Triangle& triangle = m_processed_triangles.at(i);
-
+    for (auto& triangle : m_processed_triangles) {
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].position.x() - triangle.vertices[1].position.x(); // A.x - B.x
-        float dxBC = triangle.vertices[1].position.x() - triangle.vertices[2].position.x(); // B.X - C.x
-        float dyAB = triangle.vertices[0].position.y() - triangle.vertices[1].position.y();
-        float dyBC = triangle.vertices[1].position.y() - triangle.vertices[2].position.y();
+        float dxAB = triangle.vertices[0].window_coordinates.x() - triangle.vertices[1].window_coordinates.x(); // A.x - B.x
+        float dxBC = triangle.vertices[1].window_coordinates.x() - triangle.vertices[2].window_coordinates.x(); // B.X - C.x
+        float dyAB = triangle.vertices[0].window_coordinates.y() - triangle.vertices[1].window_coordinates.y();
+        float dyBC = triangle.vertices[1].window_coordinates.y() - triangle.vertices[2].window_coordinates.y();
         float area = (dxAB * dyBC) - (dxBC * dyAB);
 
         if (area == 0.0f)
@@ -658,9 +756,31 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 continue;
         }
 
-        if (area > 0) {
+        if (area > 0)
             swap(triangle.vertices[0], triangle.vertices[1]);
+
+        // Transform normals
+        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
+        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
+        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
+        if (m_options.normalization_enabled) {
+            triangle.vertices[0].normal.normalize();
+            triangle.vertices[1].normal.normalize();
+            triangle.vertices[2].normal.normalize();
         }
+
+        // Generate texture coordinates if at least one coordinate is enabled
+        if (m_options.texcoord_generation_enabled_coordinates != TexCoordGenerationCoordinate::None) {
+            generate_texture_coordinates(triangle.vertices[0], m_options);
+            generate_texture_coordinates(triangle.vertices[1], m_options);
+            generate_texture_coordinates(triangle.vertices[2], m_options);
+        }
+
+        // Apply texture transformation
+        // FIXME: implement multi-texturing: texcoords should be stored per texture unit
+        triangle.vertices[0].tex_coord = texture_transform * triangle.vertices[0].tex_coord;
+        triangle.vertices[1].tex_coord = texture_transform * triangle.vertices[1].tex_coord;
+        triangle.vertices[2].tex_coord = texture_transform * triangle.vertices[2].tex_coord;
 
         submit_triangle(triangle, enabled_texture_units);
     }
@@ -668,7 +788,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
 void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& enabled_texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float z) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [this, &enabled_texture_units](FloatVector4 const& uv, FloatVector4 const& color, float fog_depth) -> FloatVector4 {
         FloatVector4 fragment = color;
 
         for (size_t i : enabled_texture_units) {
@@ -680,7 +800,6 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             // FIXME: Implement more blend modes
             switch (sampler.config().fixed_function_texture_env_mode) {
             case TextureEnvMode::Modulate:
-            default:
                 fragment = fragment * texel;
                 break;
             case TextureEnvMode::Replace:
@@ -694,6 +813,8 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
                 fragment.set_z(texel.z() * src_alpha + fragment.z() * one_minus_src_alpha);
                 break;
             }
+            default:
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -703,20 +824,22 @@ void Device::submit_triangle(const Triangle& triangle, Vector<size_t> const& ena
             float factor = 0.0f;
             switch (m_options.fog_mode) {
             case FogMode::Linear:
-                factor = (m_options.fog_end - z) / (m_options.fog_end - m_options.fog_start);
+                factor = (m_options.fog_end - fog_depth) / (m_options.fog_end - m_options.fog_start);
                 break;
             case FogMode::Exp:
-                factor = exp(-((m_options.fog_density * z)));
+                factor = expf(-m_options.fog_density * fog_depth);
                 break;
             case FogMode::Exp2:
-                factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
+                factor = expf(-((m_options.fog_density * fog_depth) * (m_options.fog_density * fog_depth)));
                 break;
             default:
-                break;
+                VERIFY_NOT_REACHED();
             }
 
-            // Mix texel with fog
-            fragment = mix(m_options.fog_color, fragment, factor);
+            // Mix texel's RGB with fog's RBG - leave alpha alone
+            fragment.set_x(mix(m_options.fog_color.x(), fragment.x(), factor));
+            fragment.set_y(mix(m_options.fog_color.y(), fragment.y(), factor));
+            fragment.set_z(mix(m_options.fog_color.z(), fragment.z(), factor));
         }
 
         return fragment;

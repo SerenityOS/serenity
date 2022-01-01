@@ -7,7 +7,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
@@ -223,7 +223,7 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     }
 
 #if ARCH(X86_64)
-    // x86_64 processors must have the syscall feature.
+    // x86_64 processors must support the syscall feature.
     VERIFY(has_feature(CPUFeature::SYSCALL));
     MSR efer_msr(MSR_EFER);
     efer_msr.set(efer_msr.get() | 1u);
@@ -236,12 +236,16 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     MSR star_msr(MSR_STAR);
     star_msr.set(star);
 
-    // Write the syscall entry point to the LSTAR MSR, and write the SFMASK MSR to clear rflags upon entry.
-    // The userspace rflags will be preserved in r11.
+    // Write the syscall entry point to the LSTAR MSR.
     MSR lstar_msr(MSR_LSTAR);
-    MSR sfmask_msr(MSR_SFMASK);
     lstar_msr.set(reinterpret_cast<u64>(&syscall_entry));
-    sfmask_msr.set(~0x2);
+
+    // Write the SFMASK MSR. This MSR controls which bits of rflags are masked when a syscall instruction is executed -
+    // if a bit is set in sfmask, the corresponding bit in rflags is cleared. The value set here clears most of rflags,
+    // but keeps the reserved and virtualization bits intact. The userspace rflags value is saved in r11 by syscall.
+    constexpr u64 rflags_mask = 0x257fd5u;
+    MSR sfmask_msr(MSR_SFMASK);
+    sfmask_msr.set(rflags_mask);
 #endif
 }
 

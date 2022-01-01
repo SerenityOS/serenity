@@ -139,7 +139,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
+        auto json_or_error = JsonValue::from_string(file_contents);
+        if (json_or_error.is_error()) {
+            warnln("Error: {}", json_or_error.error());
+            return 1;
+        }
+        auto json = json_or_error.release_value();
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {

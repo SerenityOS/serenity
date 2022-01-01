@@ -181,7 +181,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
 
     reset();
     set_mac_address(m_mac_address);
-    dmesgln("NE2000: MAC address: {}", m_mac_address.to_string().characters());
+    dmesgln("NE2000: MAC address: {}", m_mac_address.to_string());
     enable_irq();
 }
 
