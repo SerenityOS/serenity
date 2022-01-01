@@ -423,6 +423,42 @@ constexpr bool operator!=(T a, const Checked<T>& b)
 }
 
 template<typename T>
+constexpr bool operator<(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() < b.value();
+}
+
+template<typename T>
+constexpr bool operator>(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() > b.value();
+}
+
+template<typename T>
+constexpr bool operator>=(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() >= b.value();
+}
+
+template<typename T>
+constexpr bool operator<=(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() <= b.value();
+}
+
+template<typename T>
+constexpr bool operator==(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() == b.value();
+}
+
+template<typename T>
+constexpr bool operator!=(const Checked<T>& a, const Checked<T>& b)
+{
+    return a.value() != b.value();
+}
+
+template<typename T>
 constexpr Checked<T> make_checked(T value)
 {
     return Checked<T>(value);
