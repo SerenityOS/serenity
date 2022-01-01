@@ -30,6 +30,24 @@
             margins: [4, 4, 4, 4]
         }
         shrink_to_fit: true
+        title: "Alignments"
+
+        @GUI::ComboBox {
+            name: "alignment_combo_box"
+            model_only: true
+            fixed_width: 230
+        }
+
+        @GUI::ComboBox {
+            name: "alignment_input"
+        }
+    }
+
+    @GUI::GroupBox {
+        layout: @GUI::HorizontalBoxLayout {
+            margins: [4, 4, 4, 4]
+        }
+        shrink_to_fit: true
         title: "Flags"
 
         @GUI::ComboBox {
