@@ -61,15 +61,36 @@ bool MediaFeatureValue::equals(MediaFeatureValue const& other) const
 
 String MediaFeature::to_string() const
 {
+    auto comparison_string = [](Comparison comparison) -> StringView {
+        switch (comparison) {
+        case Comparison::Equal:
+            return "="sv;
+        case Comparison::LessThan:
+            return "<"sv;
+        case Comparison::LessThanOrEqual:
+            return "<="sv;
+        case Comparison::GreaterThan:
+            return ">"sv;
+        case Comparison::GreaterThanOrEqual:
+            return ">="sv;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
     switch (m_type) {
     case Type::IsTrue:
-        return m_name;
+        return serialize_an_identifier(m_name);
     case Type::ExactValue:
-        return String::formatted("{}:{}", m_name, m_value->to_string());
+        return String::formatted("{}:{}", serialize_an_identifier(m_name), m_value->to_string());
     case Type::MinValue:
-        return String::formatted("min-{}:{}", m_name, m_value->to_string());
+        return String::formatted("min-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
     case Type::MaxValue:
-        return String::formatted("max-{}:{}", m_name, m_value->to_string());
+        return String::formatted("max-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+    case Type::Range:
+        if (!m_range->right_comparison.has_value())
+            return String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name));
+
+        return String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
     }
 
     VERIFY_NOT_REACHED();
@@ -93,47 +114,79 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
         return false;
 
     case Type::ExactValue:
-        return queried_value.equals(*m_value);
+        return compare(*m_value, Comparison::Equal, queried_value);
 
     case Type::MinValue:
-        if (!m_value->is_same_type(queried_value))
-            return false;
-
-        if (m_value->is_number())
-            return queried_value.number() >= m_value->number();
-
-        if (m_value->is_length()) {
-            auto& queried_length = queried_value.length();
-            auto& value_length = m_value->length();
-            // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
-            if (!value_length.is_absolute()) {
-                dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
-                return false;
-            }
-            return queried_length.absolute_length_to_px() >= value_length.absolute_length_to_px();
-        }
-
-        return false;
+        return compare(queried_value, Comparison::GreaterThanOrEqual, *m_value);
 
     case Type::MaxValue:
-        if (!m_value->is_same_type(queried_value))
+        return compare(queried_value, Comparison::LessThanOrEqual, *m_value);
+
+    case Type::Range:
+        if (!compare(m_range->left_value, m_range->left_comparison, queried_value))
             return false;
 
-        if (m_value->is_number())
-            return queried_value.number() <= m_value->number();
-
-        if (m_value->is_length()) {
-            auto& queried_length = queried_value.length();
-            auto& value_length = m_value->length();
-            // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
-            if (!value_length.is_absolute()) {
-                dbgln("Media feature was given a non-absolute length! {}", value_length.to_string());
+        if (m_range->right_comparison.has_value())
+            if (!compare(queried_value, *m_range->right_comparison, *m_range->right_value))
                 return false;
-            }
-            return queried_length.absolute_length_to_px() <= value_length.absolute_length_to_px();
+
+        return true;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+bool MediaFeature::compare(MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
+{
+    if (!left.is_same_type(right))
+        return false;
+
+    if (left.is_ident()) {
+        if (comparison == Comparison::Equal)
+            return left.ident().equals_ignoring_case(right.ident());
+        return false;
+    }
+
+    if (left.is_number()) {
+        switch (comparison) {
+        case Comparison::Equal:
+            return left.number() == right.number();
+        case Comparison::LessThan:
+            return left.number() < right.number();
+        case Comparison::LessThanOrEqual:
+            return left.number() <= right.number();
+        case Comparison::GreaterThan:
+            return left.number() > right.number();
+        case Comparison::GreaterThanOrEqual:
+            return left.number() >= right.number();
+        }
+        VERIFY_NOT_REACHED();
+    }
+
+    if (left.is_length()) {
+        // FIXME: Handle relative lengths. https://www.w3.org/TR/mediaqueries-4/#ref-for-relative-length
+        if (!left.length().is_absolute() || !right.length().is_absolute()) {
+            dbgln("TODO: Support relative lengths in media queries!");
+            return false;
         }
 
-        return false;
+        auto left_px = left.length().absolute_length_to_px();
+        auto right_px = right.length().absolute_length_to_px();
+
+        switch (comparison) {
+        case Comparison::Equal:
+            return left_px == right_px;
+        case Comparison::LessThan:
+            return left_px < right_px;
+        case Comparison::LessThanOrEqual:
+            return left_px <= right_px;
+        case Comparison::GreaterThan:
+            return left_px > right_px;
+        case Comparison::GreaterThanOrEqual:
+            return left_px >= right_px;
+        }
+
+        VERIFY_NOT_REACHED();
     }
 
     VERIFY_NOT_REACHED();
@@ -331,6 +384,60 @@ String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media
     StringBuilder builder;
     builder.join(", ", media_queries);
     return builder.to_string();
+}
+
+bool is_media_feature_name(StringView name)
+{
+    // MEDIAQUERIES-4 - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
+    if (name.equals_ignoring_case("any-hover"sv))
+        return true;
+    if (name.equals_ignoring_case("any-pointer"sv))
+        return true;
+    if (name.equals_ignoring_case("aspect-ratio"sv))
+        return true;
+    if (name.equals_ignoring_case("color"sv))
+        return true;
+    if (name.equals_ignoring_case("color-gamut"sv))
+        return true;
+    if (name.equals_ignoring_case("color-index"sv))
+        return true;
+    if (name.equals_ignoring_case("device-aspect-ratio"sv))
+        return true;
+    if (name.equals_ignoring_case("device-height"sv))
+        return true;
+    if (name.equals_ignoring_case("device-width"sv))
+        return true;
+    if (name.equals_ignoring_case("grid"sv))
+        return true;
+    if (name.equals_ignoring_case("height"sv))
+        return true;
+    if (name.equals_ignoring_case("hover"sv))
+        return true;
+    if (name.equals_ignoring_case("monochrome"sv))
+        return true;
+    if (name.equals_ignoring_case("orientation"sv))
+        return true;
+    if (name.equals_ignoring_case("overflow-block"sv))
+        return true;
+    if (name.equals_ignoring_case("overflow-inline"sv))
+        return true;
+    if (name.equals_ignoring_case("pointer"sv))
+        return true;
+    if (name.equals_ignoring_case("resolution"sv))
+        return true;
+    if (name.equals_ignoring_case("scan"sv))
+        return true;
+    if (name.equals_ignoring_case("update"sv))
+        return true;
+    if (name.equals_ignoring_case("width"sv))
+        return true;
+
+    // MEDIAQUERIES-5 - https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
+    if (name.equals_ignoring_case("prefers-color-scheme"sv))
+        return true;
+    // FIXME: Add other level 5 feature names
+
+    return false;
 }
 
 }

@@ -72,6 +72,14 @@ private:
 // https://www.w3.org/TR/mediaqueries-4/#mq-features
 class MediaFeature {
 public:
+    enum class Comparison {
+        Equal,
+        LessThan,
+        LessThanOrEqual,
+        GreaterThan,
+        GreaterThanOrEqual,
+    };
+
     // Corresponds to `<mf-boolean>` grammar
     static MediaFeature boolean(String const& name)
     {
@@ -88,16 +96,40 @@ public:
         return MediaFeature(Type::ExactValue, move(name), move(value));
     }
 
+    // Corresponds to `<mf-range>` grammar, with a single comparison
+    static MediaFeature half_range(MediaFeatureValue value, Comparison comparison, String const& name)
+    {
+        MediaFeature feature { Type::Range, name };
+        feature.m_range = Range {
+            .left_value = value,
+            .left_comparison = comparison,
+        };
+        return feature;
+    }
+
+    // Corresponds to `<mf-range>` grammar, with two comparisons
+    static MediaFeature range(MediaFeatureValue left_value, Comparison left_comparison, String const& name, Comparison right_comparison, MediaFeatureValue right_value)
+    {
+        MediaFeature feature { Type::Range, name };
+        feature.m_range = Range {
+            .left_value = left_value,
+            .left_comparison = left_comparison,
+            .right_comparison = right_comparison,
+            .right_value = right_value,
+        };
+        return feature;
+    }
+
     bool evaluate(DOM::Window const&) const;
     String to_string() const;
 
 private:
-    // FIXME: Implement range syntax: https://www.w3.org/TR/mediaqueries-4/#mq-ranges
     enum class Type {
         IsTrue,
         ExactValue,
         MinValue,
         MaxValue,
+        Range,
     };
 
     MediaFeature(Type type, FlyString name, Optional<MediaFeatureValue> value = {})
@@ -107,9 +139,19 @@ private:
     {
     }
 
+    static bool compare(MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
+
+    struct Range {
+        MediaFeatureValue left_value;
+        Comparison left_comparison;
+        Optional<Comparison> right_comparison {};
+        Optional<MediaFeatureValue> right_value {};
+    };
+
     Type m_type;
     FlyString m_name;
     Optional<MediaFeatureValue> m_value {};
+    Optional<Range> m_range {};
 };
 
 // https://www.w3.org/TR/mediaqueries-4/#media-conditions
@@ -188,6 +230,8 @@ private:
 };
 
 String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
+
+bool is_media_feature_name(StringView name);
 
 }
 

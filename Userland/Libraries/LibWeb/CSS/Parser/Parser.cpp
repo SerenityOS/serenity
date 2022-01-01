@@ -869,9 +869,23 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
     tokens.skip_whitespace();
 
     // `<mf-name> = <ident>`
-    auto parse_mf_name = [](StyleComponentValueRule const& token) -> Optional<String> {
-        if (token.is(Token::Type::Ident))
-            return token.token().ident();
+    auto parse_mf_name = [](auto& tokens, bool allow_min_max_prefix) -> Optional<String> {
+        auto& token = tokens.peek_token();
+        if (token.is(Token::Type::Ident)) {
+            auto name = token.token().ident();
+            if (is_media_feature_name(name)) {
+                tokens.next_token();
+                return name;
+            }
+
+            if (allow_min_max_prefix && (name.starts_with("min-", CaseSensitivity::CaseInsensitive) || name.starts_with("max-", CaseSensitivity::CaseInsensitive))) {
+                auto adjusted_name = name.substring_view(4);
+                if (is_media_feature_name(adjusted_name)) {
+                    tokens.next_token();
+                    return name;
+                }
+            }
+        }
         return {};
     };
 
@@ -880,7 +894,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         auto position = tokens.position();
         tokens.skip_whitespace();
 
-        auto maybe_name = parse_mf_name(tokens.next_token());
+        auto maybe_name = parse_mf_name(tokens, false);
         if (maybe_name.has_value()) {
             tokens.skip_whitespace();
             if (!tokens.has_next_token())
@@ -896,7 +910,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         auto position = tokens.position();
         tokens.skip_whitespace();
 
-        if (auto maybe_name = parse_mf_name(tokens.next_token()); maybe_name.has_value()) {
+        if (auto maybe_name = parse_mf_name(tokens, true); maybe_name.has_value()) {
             tokens.skip_whitespace();
             if (tokens.next_token().is(Token::Type::Colon)) {
                 tokens.skip_whitespace();
@@ -912,13 +926,141 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         return {};
     };
 
+    // `<mf-lt> = '<' '='?
+    //  <mf-gt> = '>' '='?
+    //  <mf-eq> = '='
+    //  <mf-comparison> = <mf-lt> | <mf-gt> | <mf-eq>`
+    auto parse_comparison = [](auto& tokens) -> Optional<MediaFeature::Comparison> {
+        auto position = tokens.position();
+        tokens.skip_whitespace();
+
+        auto& first = tokens.next_token();
+        if (first.is(Token::Type::Delim)) {
+            auto first_delim = first.token().delim();
+            if (first_delim == "="sv)
+                return MediaFeature::Comparison::Equal;
+            if (first_delim == "<"sv) {
+                auto& second = tokens.peek_token();
+                if (second.is(Token::Type::Delim) && second.token().delim() == "="sv) {
+                    tokens.next_token();
+                    return MediaFeature::Comparison::LessThanOrEqual;
+                }
+                return MediaFeature::Comparison::LessThan;
+            }
+            if (first_delim == ">"sv) {
+                auto& second = tokens.peek_token();
+                if (second.is(Token::Type::Delim) && second.token().delim() == "="sv) {
+                    tokens.next_token();
+                    return MediaFeature::Comparison::GreaterThanOrEqual;
+                }
+                return MediaFeature::Comparison::GreaterThan;
+            }
+        }
+
+        tokens.rewind_to_position(position);
+        return {};
+    };
+
+    auto flip = [](MediaFeature::Comparison comparison) {
+        switch (comparison) {
+        case MediaFeature::Comparison::Equal:
+            return MediaFeature::Comparison::Equal;
+        case MediaFeature::Comparison::LessThan:
+            return MediaFeature::Comparison::GreaterThan;
+        case MediaFeature::Comparison::LessThanOrEqual:
+            return MediaFeature::Comparison::GreaterThanOrEqual;
+        case MediaFeature::Comparison::GreaterThan:
+            return MediaFeature::Comparison::LessThan;
+        case MediaFeature::Comparison::GreaterThanOrEqual:
+            return MediaFeature::Comparison::LessThanOrEqual;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    auto comparisons_match = [](MediaFeature::Comparison a, MediaFeature::Comparison b) -> bool {
+        switch (a) {
+        case MediaFeature::Comparison::Equal:
+            return b == MediaFeature::Comparison::Equal;
+        case MediaFeature::Comparison::LessThan:
+        case MediaFeature::Comparison::LessThanOrEqual:
+            return b == MediaFeature::Comparison::LessThan || b == MediaFeature::Comparison::LessThanOrEqual;
+        case MediaFeature::Comparison::GreaterThan:
+        case MediaFeature::Comparison::GreaterThanOrEqual:
+            return b == MediaFeature::Comparison::GreaterThan || b == MediaFeature::Comparison::GreaterThanOrEqual;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    // `<mf-range> = <mf-name> <mf-comparison> <mf-value>
+    //             | <mf-value> <mf-comparison> <mf-name>
+    //             | <mf-value> <mf-lt> <mf-name> <mf-lt> <mf-value>
+    //             | <mf-value> <mf-gt> <mf-name> <mf-gt> <mf-value>`
+    auto parse_mf_range = [&](auto& tokens) -> Optional<MediaFeature> {
+        auto position = tokens.position();
+        tokens.skip_whitespace();
+
+        // `<mf-name> <mf-comparison> <mf-value>`
+        // NOTE: We have to check for <mf-name> first, since all <mf-name>s will also parse as <mf-value>.
+        if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value()) {
+            tokens.skip_whitespace();
+            if (auto maybe_comparison = parse_comparison(tokens); maybe_comparison.has_value()) {
+                tokens.skip_whitespace();
+                if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
+                    tokens.skip_whitespace();
+                    if (!tokens.has_next_token() && !maybe_value->is_ident())
+                        return MediaFeature::half_range(maybe_value.release_value(), flip(maybe_comparison.release_value()), maybe_name.release_value());
+                }
+            }
+        }
+
+        //  `<mf-value> <mf-comparison> <mf-name>
+        // | <mf-value> <mf-lt> <mf-name> <mf-lt> <mf-value>
+        // | <mf-value> <mf-gt> <mf-name> <mf-gt> <mf-value>`
+        if (auto maybe_left_value = parse_media_feature_value(tokens); maybe_left_value.has_value()) {
+            tokens.skip_whitespace();
+            if (auto maybe_left_comparison = parse_comparison(tokens); maybe_left_comparison.has_value()) {
+                tokens.skip_whitespace();
+                if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value()) {
+                    tokens.skip_whitespace();
+
+                    if (!tokens.has_next_token())
+                        return MediaFeature::half_range(maybe_left_value.release_value(), maybe_left_comparison.release_value(), maybe_name.release_value());
+
+                    if (auto maybe_right_comparison = parse_comparison(tokens); maybe_right_comparison.has_value()) {
+                        tokens.skip_whitespace();
+                        if (auto maybe_right_value = parse_media_feature_value(tokens); maybe_right_value.has_value()) {
+                            tokens.skip_whitespace();
+                            // For this to be valid, the following must be true:
+                            // - Comparisons must either both be >/>= or both be </<=.
+                            // - Neither comparison can be `=`.
+                            // - Neither value can be an ident.
+                            auto left_comparison = maybe_left_comparison.release_value();
+                            auto right_comparison = maybe_right_comparison.release_value();
+
+                            if (!tokens.has_next_token()
+                                && comparisons_match(left_comparison, right_comparison)
+                                && left_comparison != MediaFeature::Comparison::Equal
+                                && !maybe_left_value->is_ident() && !maybe_right_value->is_ident()) {
+                                return MediaFeature::range(maybe_left_value.release_value(), left_comparison, maybe_name.release_value(), right_comparison, maybe_right_value.release_value());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        tokens.rewind_to_position(position);
+        return {};
+    };
+
     if (auto maybe_mf_boolean = parse_mf_boolean(tokens); maybe_mf_boolean.has_value())
         return maybe_mf_boolean.release_value();
 
     if (auto maybe_mf_plain = parse_mf_plain(tokens); maybe_mf_plain.has_value())
         return maybe_mf_plain.release_value();
 
-    // FIXME: Implement range syntax
+    if (auto maybe_mf_range = parse_mf_range(tokens); maybe_mf_range.has_value())
+        return maybe_mf_range.release_value();
 
     tokens.rewind_to_position(position);
     return {};
