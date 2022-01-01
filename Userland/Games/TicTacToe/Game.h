@@ -10,11 +10,6 @@
 
 namespace TicTacToe {
 
-struct WinnerCheckResult  {
-    bool has_won = false;
-    uint8_t cells[3];
-};
-
 class Game final {
 public:
     static constexpr int width = 340;
@@ -37,6 +32,11 @@ public:
     Function<void()> on_tae;
 
 private:
+    struct WinnerCheckResult  {
+        bool has_won = false;
+        uint8_t cells[3];
+    };
+
     WinnerCheckResult check_if_current_player_won();
     uint8_t row_col_to_cell_index(uint8_t row, uint8_t col);
 

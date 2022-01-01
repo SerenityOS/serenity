@@ -58,7 +58,7 @@ void Game::reset()
 {
 }
 
-WinnerCheckResult Game::check_if_current_player_won() {
+Game::WinnerCheckResult Game::check_if_current_player_won() {
     WinnerCheckResult check_result;
 
     uint8_t winner_cells_1[3];
