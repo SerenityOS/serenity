@@ -105,5 +105,5 @@ ErrorOr<void> setsockopt(int sockfd, int level, int option, void const* value, s
 ErrorOr<void> getsockname(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> getpeername(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
-
+ErrorOr<Vector<gid_t>> getgroups();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -7,6 +7,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
 #include <stdarg.h>
@@ -740,6 +741,20 @@ ErrorOr<Array<int, 2>> pipe2([[maybe_unused]] int flags)
         return Error::from_syscall("pipe2"sv, -errno);
 #endif
     return fds;
+}
+
+ErrorOr<Vector<gid_t>> getgroups()
+{
+    int count = ::getgroups(0, nullptr);
+    if (count < 0)
+        return Error::from_syscall("getgroups"sv, -errno);
+    if (count == 0)
+        return Vector<gid_t> {};
+    Vector<gid_t> groups;
+    TRY(groups.try_resize(count));
+    if (::getgroups(count, groups.data()) < 0)
+        return Error::from_syscall("getgroups"sv, -errno);
+    return groups;
 }
 
 }
