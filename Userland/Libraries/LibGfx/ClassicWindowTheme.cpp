@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2021-2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,16 +74,12 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
+    auto title_alignment = palette.title_alignment();
+
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripes_color.alpha() > 0) {
-        if (palette.is_title_center()) {
-            auto stripe_width = (leftmost_button_rect.left() / 2 - titlebar_title_rect.width() / 2) - titlebar_icon_rect.width() - 3;
-
-            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-                painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { titlebar_inner_rect.left() + stripe_width, titlebar_inner_rect.y() + i }, stripes_color);
-                painter.draw_line({ stripe_right - stripe_width, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
-            }
-        } else {
+        switch (title_alignment) {
+        case Gfx::TextAlignment::CenterLeft: {
             int stripe_left = titlebar_title_rect.right() + 5;
 
             if (stripe_left && stripe_right && stripe_left < stripe_right) {
@@ -91,19 +87,34 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
                     painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
                 }
             }
+            break;
+        }
+        case Gfx::TextAlignment::CenterRight: {
+            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { stripe_right - titlebar_title_rect.width() - 3, titlebar_inner_rect.y() + i }, stripes_color);
+            }
+            break;
+        }
+        case Gfx::TextAlignment::Center: {
+            auto stripe_width = (leftmost_button_rect.left() / 2 - titlebar_title_rect.width() / 2) - titlebar_icon_rect.width() - 3;
+
+            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                painter.draw_line({ titlebar_inner_rect.left(), titlebar_inner_rect.y() + i }, { titlebar_inner_rect.left() + stripe_width, titlebar_inner_rect.y() + i }, stripes_color);
+                painter.draw_line({ stripe_right - stripe_width, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+            }
+            break;
+        }
+        default:
+            dbgln("Unhandled title alignment!");
         }
     }
 
     auto clipped_title_rect = titlebar_title_rect;
     clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
-        auto align = Gfx::TextAlignment::CenterLeft;
-        if (palette.is_title_center())
-            align = Gfx::TextAlignment::Center;
-
-        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, align, shadow_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, title_alignment, shadow_color, Gfx::TextElision::Right);
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, align, title_color, Gfx::TextElision::Right);
+        painter.draw_text(clipped_title_rect.translated(0, 1), window_title, title_font, title_alignment, title_color, Gfx::TextElision::Right);
     }
 
     painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
