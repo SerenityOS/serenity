@@ -14,8 +14,8 @@ REGISTER_WIDGET(TicTacToe, Board);
 
 namespace TicTacToe {
 
-bool Board::make_move(int cell_index, Game::Player player) {
-    if(cell_index < 0 || cell_index > 8)
+bool Board::make_move(uint8_t cell_index, Game::Player player) {
+    if(cell_index > 8)
         return false;
 
     auto cell = get_cell(cell_index);
@@ -31,13 +31,19 @@ bool Board::make_move(int cell_index, Game::Player player) {
     return true;
 }
 
+void Board::highlight_cell(uint8_t cell_index) {
+    get_cell(cell_index)->highlight();
+}
+
 void Board::clear() {
-    for(int i = 0; i < 9; i++) {
-        get_cell(i)->set_content(Cell::Content::Empty);
+    for(uint8_t i = 0; i < 9; i++) {
+        auto cell = get_cell(i);
+        cell->set_content(Cell::Content::Empty);
+        cell->reset_background();
     }
 }
 
-RefPtr<Cell> Board::get_cell(int cell_index) {
+RefPtr<Cell> Board::get_cell(uint8_t cell_index) {
     auto cell_name = String::formatted("cell_{}", cell_index);
     return find_descendant_of_type_named<Cell>(cell_name);
 }

@@ -17,8 +17,10 @@
 #include <LibMain/Main.h>
 #include <stdio.h>
 
+TicTacToe::Board* initialize_and_get_board(GUI::Widget* widget);
+void initialize_game(TicTacToe::Board* board);
 ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window();
-ErrorOr<void> try_create_menu(GUI::Application&, GUI::Window&);
+ErrorOr<void> try_create_menu(GUI::Application*, GUI::Window*);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -29,16 +31,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(try_create_window());
     auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
     widget->load_from_gml(tictactoe_gml);
-
-    auto board = widget->find_descendant_of_type_named<TicTacToe::Board>("board");
-    TicTacToe::Game::the().on_move = [board](int cell_index, TicTacToe::Game::Player player) {
-        board->make_move(cell_index, player);
-    };;
+    auto board = initialize_and_get_board(widget);
+    initialize_game(board);
 
     //Config::pledge_domains("tictactoe");
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
-
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -60,11 +58,39 @@ ErrorOr<NonnullRefPtr<GUI::Window>> try_create_window() {
     return window;
 }
 
-ErrorOr<void> try_create_menu(GUI::Application& app, GUI::Window& window) {
-    auto game_menu = TRY(window.try_add_menu("&Game"));
+ErrorOr<void> try_create_menu(GUI::Application* app, GUI::Window* window) {
+    auto game_menu = TRY(window->try_add_menu("&Game"));
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+        TicTacToe::Game::the().start_new_game();
     })));
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app.quit(); })));
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
     return {};
+}
+
+TicTacToe::Board* initialize_and_get_board(GUI::Widget* widget) {
+    auto board = widget->find_descendant_of_type_named<TicTacToe::Board>("board");
+    TicTacToe::Game::Player player = TicTacToe::Game::Player::X;
+    for(uint8_t cell_index = 0; cell_index < 9; cell_index++) {
+        board->make_move(cell_index, player);
+        player = player == TicTacToe::Game::Player::X
+            ? TicTacToe::Game::Player::O
+            : TicTacToe::Game::Player::X;
+    }
+    return board;
+}
+
+void initialize_game(TicTacToe::Board* board) {
+    TicTacToe::Game::the().on_move = [board](int const cell_index, TicTacToe::Game::Player const player) {
+        board->make_move(cell_index, player);
+    };
+    TicTacToe::Game::the().on_new_game = [board]() {
+        board->clear();
+    };
+    TicTacToe::Game::the().on_win = [board](uint8_t* const winner_cells, TicTacToe::Game::Player const player) {
+        for(uint8_t i = 0; i < 3; i++) {
+            board->highlight_cell(winner_cells[i]);
+        }
+        dbgln("Winner: {}", player == TicTacToe::Game::Player::X ? 'X' : 'O');
+    };
 }

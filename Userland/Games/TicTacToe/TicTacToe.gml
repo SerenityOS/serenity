@@ -1,5 +1,4 @@
 @GUI::Frame {
-
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
@@ -27,7 +26,7 @@
                 name: "cell_0"
                 index: 0
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -36,7 +35,7 @@
                 name: "cell_1"
                 index: 1
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -45,7 +44,7 @@
                 name: "cell_2"
                 index: 2
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -61,7 +60,7 @@
                 name: "cell_3"
                 index: 3
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -70,7 +69,7 @@
                 name: "cell_4"
                 index: 4
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -79,7 +78,7 @@
                 name: "cell_5"
                 index: 5
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -95,7 +94,7 @@
                 name: "cell_6"
                 index: 6
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -104,7 +103,7 @@
                 name: "cell_7"
                 index: 7
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
@@ -113,7 +112,7 @@
                 name: "cell_8"
                 index: 8
                 fill_with_background_color: true
-                background_color: "#fff"
+
                 fixed_height: 100
                 fixed_width: 100
             }
