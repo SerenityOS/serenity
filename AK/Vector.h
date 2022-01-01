@@ -181,7 +181,7 @@ public:
     {
         if (m_size != other.size())
             return false;
-        return Transfer::compare(data(), other.data(), size());
+        return Transfer::equals(data(), other.data(), size());
     }
 
     bool contains_slow(T const& value) const

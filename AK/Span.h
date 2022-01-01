@@ -185,7 +185,7 @@ public:
         if (size() < other.size())
             return false;
 
-        return Transfer::compare(data(), other.data(), other.size());
+        return Transfer::equals(data(), other.data(), other.size());
     }
 
     [[nodiscard]] ALWAYS_INLINE constexpr T const& at(size_t index) const
@@ -215,7 +215,7 @@ public:
         if (size() != other.size())
             return false;
 
-        return Transfer::compare(data(), other.data(), size());
+        return Transfer::equals(data(), other.data(), size());
     }
 
     ALWAYS_INLINE constexpr operator Span<T const>() const

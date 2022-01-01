@@ -46,7 +46,7 @@ public:
         move_impl(destination, source, count, [](T* destination, auto* source) { ::new (destination) T(std::move(*source)); });
     }
 
-    static bool compare(const T* a, const T* b, size_t count)
+    static bool equals(const T* a, const T* b, size_t count)
     {
         if (count == 0)
             return true;
