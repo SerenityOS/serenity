@@ -107,6 +107,31 @@ ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data)
 }
 #endif
 
+#ifndef AK_OS_BSD_GENERIC
+ErrorOr<Optional<struct spwd>> getspent()
+{
+    errno = 0;
+    if (auto* spwd = ::getspent())
+        return *spwd;
+    if (errno)
+        return Error::from_syscall("getspent"sv, -errno);
+    return Optional<struct spwd> {};
+}
+
+ErrorOr<Optional<struct spwd>> getspnam(StringView name)
+{
+    errno = 0;
+    ::setspent();
+    while (auto* spwd = ::getspent()) {
+        if (spwd->sp_namp == name)
+            return *spwd;
+    }
+    if (errno)
+        return Error::from_syscall("getspnam"sv, -errno);
+    return Optional<struct spwd> {};
+}
+#endif
+
 #ifndef AK_OS_MACOS
 ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, int flags)
 {

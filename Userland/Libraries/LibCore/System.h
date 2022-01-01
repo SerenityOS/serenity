@@ -22,6 +22,10 @@
 #include <time.h>
 #include <utime.h>
 
+#ifndef AK_OS_BSD_GENERIC
+#    include <shadow.h>
+#endif
+
 namespace Core::System {
 
 #ifdef __serenity__
@@ -33,6 +37,11 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
 ErrorOr<void> setgroups(Span<gid_t const>);
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
+#endif
+
+#ifndef AK_OS_BSD_GENERIC
+ErrorOr<Optional<struct spwd>> getspent();
+ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 #endif
 
 #ifndef AK_OS_MACOS
