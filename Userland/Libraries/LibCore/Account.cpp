@@ -64,96 +64,61 @@ ErrorOr<Account> Account::from_passwd(const passwd& pwd, const spwd& spwd)
     return account;
 }
 
-Account Account::self(Read options)
+ErrorOr<Account> Account::self(Read options)
 {
-    struct passwd fallback;
-    fallback.pw_name = const_cast<char*>("(unknown)");
-    fallback.pw_uid = getuid();
-    fallback.pw_gid = getgid();
-    fallback.pw_gecos = const_cast<char*>("");
-    fallback.pw_dir = const_cast<char*>("(unknown)");
-    fallback.pw_shell = const_cast<char*>("(unknown)");
+    Vector<gid_t> extra_gids = TRY(Core::System::getgroups());
 
-    Vector<gid_t> extra_gids;
-    int extra_gid_count = getgroups(0, nullptr);
-    if (extra_gid_count) {
-        extra_gids.resize(extra_gid_count);
-        int rc = getgroups(extra_gid_count, extra_gids.data());
-        if (rc < 0)
-            extra_gids.resize(0);
-    }
+    auto pwd = TRY(Core::System::getpwuid(getuid()));
+    if (!pwd.has_value())
+        return Error::from_string_literal("No such user"sv);
 
-    struct passwd* pwd = getpwuid(fallback.pw_uid);
-    if (!pwd)
-        pwd = &fallback;
-    else
-        pwd->pw_gid = fallback.pw_gid;
-
-    spwd spwd_dummy = {};
-    spwd_dummy.sp_namp = pwd->pw_name;
-    spwd_dummy.sp_pwdp = const_cast<char*>("");
+    spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
-    spwd* spwd = nullptr;
-    if (options != Read::PasswdOnly)
-        spwd = getspnam(pwd->pw_name);
-    if (!spwd)
-        spwd = &spwd_dummy;
-#else
-    (void)options;
-    auto* spwd = &spwd_dummy;
+    if (options != Read::PasswdOnly) {
+        auto maybe_spwd = TRY(Core::System::getspnam(pwd->pw_name));
+        if (!maybe_spwd.has_value())
+            return Error::from_string_literal("No shadow entry for user"sv);
+        spwd = maybe_spwd.release_value();
+    }
 #endif
 
-    return Account(*pwd, *spwd, extra_gids);
+    return Account(*pwd, spwd, extra_gids);
 }
 
 ErrorOr<Account> Account::from_name(const char* username, Read options)
 {
-    errno = 0;
-    auto* pwd = getpwnam(username);
-    if (!pwd) {
-        if (errno == 0)
-            return Error::from_string_literal("No such user"sv);
-        return Error::from_errno(errno);
-    }
-    spwd spwd_dummy = {};
-    spwd_dummy.sp_namp = const_cast<char*>(username);
-    spwd_dummy.sp_pwdp = const_cast<char*>("");
+    auto pwd = TRY(Core::System::getpwnam(username));
+    if (!pwd.has_value())
+        return Error::from_string_literal("No such user"sv);
+
+    spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
-    spwd* spwd = nullptr;
-    if (options != Read::PasswdOnly)
-        spwd = getspnam(pwd->pw_name);
-    if (!spwd)
-        spwd = &spwd_dummy;
-#else
-    (void)options;
-    auto* spwd = &spwd_dummy;
+    if (options != Read::PasswdOnly) {
+        auto maybe_spwd = TRY(Core::System::getspnam(pwd->pw_name));
+        if (!maybe_spwd.has_value())
+            return Error::from_string_literal("No shadow entry for user"sv);
+        spwd = maybe_spwd.release_value();
+    }
 #endif
-    return from_passwd(*pwd, *spwd);
+    return from_passwd(*pwd, spwd);
 }
 
 ErrorOr<Account> Account::from_uid(uid_t uid, Read options)
 {
-    errno = 0;
-    auto* pwd = getpwuid(uid);
-    if (!pwd) {
-        if (errno == 0)
-            return Error::from_string_literal("No such user"sv);
-        return Error::from_errno(errno);
-    }
-    spwd spwd_dummy = {};
-    spwd_dummy.sp_namp = pwd->pw_name;
-    spwd_dummy.sp_pwdp = const_cast<char*>("");
+    auto pwd = TRY(Core::System::getpwuid(uid));
+    if (!pwd.has_value())
+        return Error::from_string_literal("No such user"sv);
+
+    spwd spwd = {};
 #ifndef AK_OS_BSD_GENERIC
-    spwd* spwd = nullptr;
-    if (options != Read::PasswdOnly)
-        spwd = getspnam(pwd->pw_name);
-    if (!spwd)
-        spwd = &spwd_dummy;
-#else
-    (void)options;
-    auto* spwd = &spwd_dummy;
+    if (options != Read::PasswdOnly) {
+        auto maybe_spwd = TRY(Core::System::getspnam(pwd->pw_name));
+        if (!maybe_spwd.has_value())
+            return Error::from_string_literal("No shadow entry for user"sv);
+        spwd = maybe_spwd.release_value();
+    }
 #endif
-    return from_passwd(*pwd, *spwd);
+    return from_passwd(*pwd, spwd);
 }
 
 bool Account::authenticate(SecretString const& password) const
