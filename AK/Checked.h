@@ -183,6 +183,15 @@ public:
         m_overflow |= __builtin_mul_overflow(m_value, other, &m_value);
     }
 
+    constexpr void mod(T other)
+    {
+        if (other == 0) {
+            m_overflow = true;
+            return;
+        }
+        m_value %= other;
+    }
+
     constexpr void div(T other)
     {
         if constexpr (IsSigned<T>) {
@@ -352,6 +361,94 @@ constexpr Checked<T> operator/(const Checked<T>& a, const Checked<T>& b)
 {
     Checked<T> c { a };
     c.div(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator%(const Checked<T>& a, const Checked<T>& b)
+{
+    Checked<T> c { a.value() };
+    c.mod(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator+(T a, const Checked<T>& b)
+{
+    Checked<T> c { a };
+    c.add(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator-(T a, const Checked<T>& b)
+{
+    Checked<T> c { a };
+    c.sub(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator*(T a, const Checked<T>& b)
+{
+    Checked<T> c { a };
+    c.mul(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator/(T a, const Checked<T>& b)
+{
+    Checked<T> c { a };
+    c.div(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator%(T a, const Checked<T>& b)
+{
+    Checked<T> c { a };
+    c.mod(b.value());
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator+(const Checked<T>& a, T b)
+{
+    Checked<T> c { a };
+    c.add(b);
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator-(const Checked<T>& a, T b)
+{
+    Checked<T> c { a };
+    c.sub(b);
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator*(const Checked<T>& a, T b)
+{
+    Checked<T> c { a };
+    c.mul(b);
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator/(const Checked<T>& a, T b)
+{
+    Checked<T> c { a };
+    c.div(b);
+    return c;
+}
+
+template<typename T>
+constexpr Checked<T> operator%(const Checked<T>& a, T b)
+{
+    Checked<T> c { a };
+    c.mod(b);
     return c;
 }
 
