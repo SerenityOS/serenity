@@ -13,14 +13,14 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister> db_regs)
+ErrorOr<NonnullRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
 {
     auto queue = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NVMeQueue(qid, irq, q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
     TRY(queue->create());
     return queue;
 }
 
-NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<DoorbellRegister> db_regs)
+NVMeQueue::NVMeQueue(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
     : IRQHandler(irq)
     , m_qid(qid)
     , m_admin_queue(qid == 0)
