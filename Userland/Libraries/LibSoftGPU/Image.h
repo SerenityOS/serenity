@@ -28,6 +28,9 @@ public:
     unsigned level_depth(unsigned level) const { return m_mipmap_sizes[level].z(); }
     unsigned num_levels() const { return m_num_levels; }
     unsigned num_layers() const { return m_num_layers; }
+    bool width_is_power_of_two() const { return m_width_is_power_of_two; }
+    bool height_is_power_of_two() const { return m_height_is_power_of_two; }
+    bool depth_is_power_of_two() const { return m_depth_is_power_of_two; }
 
     FloatVector4 texel(unsigned layer, unsigned level, unsigned x, unsigned y, unsigned z) const
     {
@@ -68,6 +71,9 @@ private:
     Vector<size_t, 16> m_mipmap_offsets;
     Vector<Vector3<unsigned>, 16> m_mipmap_sizes;
     Vector<u8> m_data;
+    bool m_width_is_power_of_two { false };
+    bool m_height_is_power_of_two { false };
+    bool m_depth_is_power_of_two { false };
 };
 
 }

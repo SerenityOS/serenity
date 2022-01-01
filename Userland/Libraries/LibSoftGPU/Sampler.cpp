@@ -128,6 +128,9 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
         image.level_height(level[3]),
     };
 
+    u32x4 width_mask = width - 1;
+    u32x4 height_mask = height - 1;
+
     f32x4 s = wrap(uv.x(), m_config.texture_wrap_u, width);
     f32x4 t = wrap(uv.y(), m_config.texture_wrap_v, height);
 
@@ -135,9 +138,12 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     f32x4 v = t * to_f32x4(height);
 
     if (m_config.texture_mag_filter == TextureFilter::Nearest) {
-        u32x4 i = to_i32x4(u) % width;
-        u32x4 j = to_i32x4(v) % height;
+        u32x4 i = to_u32x4(u);
+        u32x4 j = to_u32x4(v);
         u32x4 k = expand4(0u);
+
+        i = image.width_is_power_of_two() ? i & width_mask : i % width;
+        j = image.height_is_power_of_two() ? j & height_mask : j % height;
 
         return texel4(image, layer, level, i, j, k);
     }
@@ -145,11 +151,30 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     u -= 0.5f;
     v -= 0.5f;
 
-    i32x4 i0 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? to_i32x4(to_u32x4(floor_int_range(u)) % width) : to_i32x4(floor_int_range(u));
-    i32x4 j0 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? to_i32x4(to_u32x4(floor_int_range(v)) % height) : to_i32x4(floor_int_range(v));
+    i32x4 i0 = to_i32x4(floor_int_range(u));
+    i32x4 i1 = i0 + 1;
+    i32x4 j0 = to_i32x4(floor_int_range(v));
+    i32x4 j1 = j0 + 1;
 
-    i32x4 i1 = m_config.texture_wrap_u == TextureWrapMode::Repeat ? to_i32x4((i0 + 1) % width) : i0 + 1;
-    i32x4 j1 = m_config.texture_wrap_v == TextureWrapMode::Repeat ? to_i32x4((j0 + 1) % height) : j0 + 1;
+    if (m_config.texture_wrap_u == TextureWrapMode::Repeat) {
+        if (image.width_is_power_of_two()) {
+            i0 = (i32x4)(i0 & width_mask);
+            i1 = (i32x4)(i1 & width_mask);
+        } else {
+            i0 = (i32x4)(i0 % width);
+            i1 = (i32x4)(i1 % width);
+        }
+    }
+
+    if (m_config.texture_wrap_v == TextureWrapMode::Repeat) {
+        if (image.height_is_power_of_two()) {
+            j0 = (i32x4)(j0 & height_mask);
+            j1 = (i32x4)(j1 & height_mask);
+        } else {
+            j0 = (i32x4)(j0 % height);
+            j1 = (i32x4)(j1 % height);
+        }
+    }
 
     u32x4 k = expand4(0u);
 
