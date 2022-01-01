@@ -403,6 +403,26 @@ ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid)
 #endif
 }
 
+ErrorOr<Optional<struct passwd>> getpwuid(uid_t uid)
+{
+    errno = 0;
+    if (auto* pwd = ::getpwuid(uid))
+        return *pwd;
+    if (errno)
+        return Error::from_syscall("getpwuid"sv, -errno);
+    return Optional<struct passwd> {};
+}
+
+ErrorOr<Optional<struct group>> getgrgid(gid_t gid)
+{
+    errno = 0;
+    if (auto* grp = ::getgrgid(gid))
+        return *grp;
+    if (errno)
+        return Error::from_syscall("getgrgid"sv, -errno);
+    return Optional<struct group> {};
+}
+
 ErrorOr<Optional<struct passwd>> getpwnam(StringView name)
 {
     errno = 0;
