@@ -29,8 +29,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/Concepts.h>
+// #include <AK/Error.h> // FIXME
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
+//#include <AK/StringView.h> // FIXME
 
 namespace AK {
 
@@ -165,6 +167,17 @@ public:
     ALWAYS_INLINE constexpr T value() const
     {
         VERIFY(!m_overflow);
+        return m_value;
+    }
+
+    // FIXME Use ErrorOr
+    // constexpr ErrorOr<T> try_value() const
+    constexpr T try_value() const
+    {
+        if (m_overflow)
+            // return Error::from_string_literals("Overflow Occurred");
+            return NumericLimits<T>::max();
+
         return m_value;
     }
 
