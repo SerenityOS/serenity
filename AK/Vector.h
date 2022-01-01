@@ -460,7 +460,7 @@ public:
         TRY(try_grow_capacity(size() + 1));
         ++m_size;
         if constexpr (Traits<StorageType>::is_trivial()) {
-            Transfer::move(slot(index + 1), slot(index), m_size - index - 1);
+            Transfer::uninitialized_move(slot(index + 1), slot(index), m_size - index - 1);
         } else {
             for (size_t i = size() - 1; i > index; --i) {
                 new (slot(i)) StorageType(move(at(i - 1)));
@@ -500,7 +500,7 @@ public:
         auto other_size = other.size();
         Vector tmp = move(other);
         TRY(try_grow_capacity(size() + other_size));
-        Transfer::move(data() + m_size, tmp.data(), other_size);
+        Transfer::uninitialized_move(data() + m_size, tmp.data(), other_size);
         m_size += other_size;
         return {};
     }
@@ -573,7 +573,7 @@ public:
         }
 
         Vector tmp = move(other);
-        Transfer::move(slot(0), tmp.data(), tmp.size());
+        Transfer::uninitialized_move(slot(0), tmp.data(), tmp.size());
         m_size += other_size;
         return {};
     }
@@ -583,7 +583,7 @@ public:
         if (count == 0)
             return {};
         TRY(try_grow_capacity(size() + count));
-        Transfer::move(slot(count), slot(0), m_size);
+        Transfer::uninitialized_move(slot(count), slot(0), m_size);
         Transfer::uninitialized_copy(slot(0), values, count);
         m_size += count;
         return {};

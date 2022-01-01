@@ -315,7 +315,7 @@ public:
                 ChunkType new_chunk;
                 if constexpr (IsTriviallyConstructible<T>) {
                     new_chunk.resize(wanted_slice.size());
-                    Transfer::move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
+                    Transfer::uninitialized_move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
                 } else {
                     new_chunk.ensure_capacity(wanted_slice.size());
                     for (auto& entry : wanted_slice)
