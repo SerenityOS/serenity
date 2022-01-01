@@ -122,6 +122,12 @@ struct MediaCondition {
         GeneralEnclosed,
     };
 
+    // Only used in parsing
+    enum class AllowOr {
+        No = 0,
+        Yes = 1,
+    };
+
     static NonnullOwnPtr<MediaCondition> from_general_enclosed(GeneralEnclosed&&);
     static NonnullOwnPtr<MediaCondition> from_feature(MediaFeature&&);
     static NonnullOwnPtr<MediaCondition> from_not(NonnullOwnPtr<MediaCondition>&&);

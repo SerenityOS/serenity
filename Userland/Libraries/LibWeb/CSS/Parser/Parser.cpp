@@ -674,14 +674,22 @@ RefPtr<MediaQuery> Parser::parse_as_media_query()
     return nullptr;
 }
 
+// `<media-query>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-query
 NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentValueRule>& tokens)
 {
-    // Returns whether to negate the query
-    auto consume_initial_modifier = [](auto& tokens) -> Optional<bool> {
+    // `<media-query> = <media-condition>
+    //                | [ not | only ]? <media-type> [ and <media-condition-without-or> ]?`
+    auto position = tokens.position();
+    tokens.skip_whitespace();
+
+    // `[ not | only ]?`, Returns whether to negate the query
+    auto parse_initial_modifier = [](auto& tokens) -> Optional<bool> {
+        auto position = tokens.position();
+        tokens.skip_whitespace();
         auto& token = tokens.next_token();
 
         if (!token.is(Token::Type::Ident)) {
-            tokens.reconsume_current_input_token();
+            tokens.rewind_to_position(position);
             return {};
         }
 
@@ -691,7 +699,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
         } else if (ident.equals_ignoring_case("only")) {
             return false;
         }
-        tokens.reconsume_current_input_token();
+        tokens.rewind_to_position(position);
         return {};
     };
 
@@ -702,14 +710,15 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
             dbgln("Invalid media query:");
             tokens.dump_all_tokens();
         }
+        tokens.rewind_to_position(position);
         return MediaQuery::create_not_all();
     };
 
     auto media_query = MediaQuery::create();
     tokens.skip_whitespace();
 
-    // Only `<media-condition>`
-    if (auto media_condition = consume_media_condition(tokens)) {
+    // `<media-condition>`
+    if (auto media_condition = parse_media_condition(tokens, MediaCondition::AllowOr::Yes)) {
         tokens.skip_whitespace();
         if (tokens.has_next_token())
             return invalid_media_query();
@@ -717,14 +726,14 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
         return media_query;
     }
 
-    // Optional `"only" | "not"`
-    if (auto modifier = consume_initial_modifier(tokens); modifier.has_value()) {
+    // `[ not | only ]?`
+    if (auto modifier = parse_initial_modifier(tokens); modifier.has_value()) {
         media_query->m_negated = modifier.value();
         tokens.skip_whitespace();
     }
 
     // `<media-type>`
-    if (auto media_type = consume_media_type(tokens); media_type.has_value()) {
+    if (auto media_type = parse_media_type(tokens); media_type.has_value()) {
         media_query->m_media_type = media_type.value();
         tokens.skip_whitespace();
     } else {
@@ -734,9 +743,9 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
     if (!tokens.has_next_token())
         return media_query;
 
-    // Optional "and <media-condition>"
+    // `[ and <media-condition-without-or> ]?`
     if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_case("and")) {
-        if (auto media_condition = consume_media_condition(tokens)) {
+        if (auto media_condition = parse_media_condition(tokens, MediaCondition::AllowOr::No)) {
             tokens.skip_whitespace();
             if (tokens.has_next_token())
                 return invalid_media_query();
@@ -749,150 +758,180 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
     return invalid_media_query();
 }
 
-OwnPtr<MediaCondition> Parser::consume_media_condition(TokenStream<StyleComponentValueRule>& tokens)
+// `<media-condition>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-condition
+// `<media-condition-widthout-or>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-condition-without-or
+// (We distinguish between these two with the `allow_or` parameter.)
+OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<StyleComponentValueRule>& tokens, MediaCondition::AllowOr allow_or)
 {
-    // "not <media-condition>"
-    // ( `<media-not>` in the grammar )
+    // `<media-not> | <media-in-parens> [ <media-and>* | <media-or>* ]`
     auto position = tokens.position();
-    auto& first_token = tokens.peek_token();
-    if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_case("not"sv)) {
-        tokens.next_token();
+    tokens.skip_whitespace();
 
-        if (auto child_condition = consume_media_condition(tokens))
-            return MediaCondition::from_not(child_condition.release_nonnull());
+    // `<media-not> = not <media-in-parens>`
+    auto parse_media_not = [&](auto& tokens) -> OwnPtr<MediaCondition> {
+        auto position = tokens.position();
+        tokens.skip_whitespace();
+
+        auto& first_token = tokens.next_token();
+        if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_case("not"sv)) {
+            if (auto child_condition = parse_media_condition(tokens, MediaCondition::AllowOr::Yes))
+                return MediaCondition::from_not(child_condition.release_nonnull());
+        }
 
         tokens.rewind_to_position(position);
         return {};
-    }
+    };
 
-    // "<media-condition> ([and | or] <media-condition>)*"
-    // ( `<media-in-parens> [ <media-and>* | <media-or>* ]` in the grammar )
-    NonnullOwnPtrVector<MediaCondition> child_conditions;
-    Optional<MediaCondition::Type> condition_type {};
-    auto as_condition_type = [](auto& token) -> Optional<MediaCondition::Type> {
-        if (!token.is(Token::Type::Ident))
-            return {};
-        auto ident = token.token().ident();
-        if (ident.equals_ignoring_case("and"))
-            return MediaCondition::Type::And;
-        if (ident.equals_ignoring_case("or"))
-            return MediaCondition::Type::Or;
+    auto parse_media_with_combinator = [&](auto& tokens, StringView combinator) -> OwnPtr<MediaCondition> {
+        auto position = tokens.position();
+        tokens.skip_whitespace();
+
+        auto& first = tokens.next_token();
+        if (first.is(Token::Type::Ident) && first.token().ident().equals_ignoring_case(combinator)) {
+            tokens.skip_whitespace();
+            if (auto media_in_parens = parse_media_in_parens(tokens))
+                return media_in_parens;
+        }
+
+        tokens.rewind_to_position(position);
         return {};
     };
 
-    bool is_invalid = false;
-    tokens.skip_whitespace();
-    while (tokens.has_next_token()) {
-        if (!child_conditions.is_empty()) {
-            // Expect an "and" or "or" here
-            auto maybe_combination = as_condition_type(tokens.next_token());
-            if (!maybe_combination.has_value()) {
-                is_invalid = true;
-                break;
-            }
-            if (!condition_type.has_value()) {
-                condition_type = maybe_combination.value();
-            } else if (maybe_combination != condition_type) {
-                is_invalid = true;
-                break;
-            }
-        }
+    // `<media-and> = and <media-in-parens>`
+    auto parse_media_and = [&](auto& tokens) { return parse_media_with_combinator(tokens, "and"sv); };
+    // `<media-or> = or <media-in-parens>`
+    auto parse_media_or = [&](auto& tokens) { return parse_media_with_combinator(tokens, "or"sv); };
 
+    // `<media-not>`
+    if (auto maybe_media_not = parse_media_not(tokens))
+        return maybe_media_not.release_nonnull();
+
+    // `<media-in-parens> [ <media-and>* | <media-or>* ]`
+    if (auto maybe_media_in_parens = parse_media_in_parens(tokens)) {
         tokens.skip_whitespace();
+        // Only `<media-in-parens>`
+        if (!tokens.has_next_token())
+            return maybe_media_in_parens.release_nonnull();
 
-        if (auto child_feature = consume_media_feature(tokens); child_feature.has_value()) {
-            child_conditions.append(MediaCondition::from_feature(child_feature.release_value()));
-        } else {
-            auto& token = tokens.next_token();
-            if (!token.is_block() || !token.block().is_paren()) {
-                is_invalid = true;
-                break;
+        NonnullOwnPtrVector<MediaCondition> child_conditions;
+        child_conditions.append(maybe_media_in_parens.release_nonnull());
+
+        // `<media-and>*`
+        if (auto media_and = parse_media_and(tokens)) {
+            child_conditions.append(media_and.release_nonnull());
+
+            tokens.skip_whitespace();
+            while (tokens.has_next_token()) {
+                if (auto next_media_and = parse_media_and(tokens)) {
+                    child_conditions.append(next_media_and.release_nonnull());
+                    tokens.skip_whitespace();
+                    continue;
+                }
+                // We failed - invalid syntax!
+                tokens.rewind_to_position(position);
+                return {};
             }
-            auto block_tokens = TokenStream { token.block().values() };
-            if (auto child = consume_media_condition(block_tokens)) {
-                child_conditions.append(child.release_nonnull());
-            } else {
-                is_invalid = true;
-                break;
-            }
-        }
 
-        tokens.skip_whitespace();
-    }
-
-    if (!is_invalid && !child_conditions.is_empty()) {
-        if (child_conditions.size() == 1)
-            return move(child_conditions.ptr_at(0));
-
-        if (condition_type.value() == MediaCondition::Type::And)
             return MediaCondition::from_and_list(move(child_conditions));
-        return MediaCondition::from_or_list(move(child_conditions));
+        }
+
+        // `<media-or>*`
+        if (allow_or == MediaCondition::AllowOr::Yes) {
+            if (auto media_or = parse_media_or(tokens)) {
+                child_conditions.append(media_or.release_nonnull());
+
+                tokens.skip_whitespace();
+                while (tokens.has_next_token()) {
+                    if (auto next_media_or = parse_media_or(tokens)) {
+                        child_conditions.append(next_media_or.release_nonnull());
+                        tokens.skip_whitespace();
+                        continue;
+                    }
+                    // We failed - invalid syntax!
+                    tokens.rewind_to_position(position);
+                    return {};
+                }
+
+                return MediaCondition::from_or_list(move(child_conditions));
+            }
+        }
     }
-
-    // `<media-feature>`
-    tokens.rewind_to_position(position);
-    if (auto feature = consume_media_feature(tokens); feature.has_value())
-        return MediaCondition::from_feature(feature.release_value());
-
-    // `<general-enclosed>`
-    tokens.rewind_to_position(position);
-    if (auto general_enclosed = parse_general_enclosed(tokens); general_enclosed.has_value())
-        return MediaCondition::from_general_enclosed(general_enclosed.release_value());
 
     tokens.rewind_to_position(position);
     return {};
 }
 
-Optional<MediaFeature> Parser::consume_media_feature(TokenStream<StyleComponentValueRule>& outer_tokens)
+// `<media-feature>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-feature
+Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentValueRule>& tokens)
 {
-    outer_tokens.skip_whitespace();
+    // `[ <mf-plain> | <mf-boolean> | <mf-range> ]`
+    auto position = tokens.position();
+    tokens.skip_whitespace();
 
-    auto invalid_feature = [&]() -> Optional<MediaFeature> {
-        outer_tokens.reconsume_current_input_token();
+    // `<mf-name> = <ident>`
+    auto parse_mf_name = [](StyleComponentValueRule const& token) -> Optional<String> {
+        if (token.is(Token::Type::Ident))
+            return token.token().ident();
         return {};
     };
 
-    auto& block_token = outer_tokens.next_token();
-    if (block_token.is_block() && block_token.block().is_paren()) {
-        TokenStream tokens { block_token.block().values() };
-
-        tokens.skip_whitespace();
-        auto& name_token = tokens.next_token();
-
-        // FIXME: Range syntax allows a value to come before the name
-        //        https://www.w3.org/TR/mediaqueries-4/#mq-range-context
-        if (!name_token.is(Token::Type::Ident))
-            return invalid_feature();
-
-        auto feature_name = name_token.token().ident();
+    // `<mf-boolean> = <mf-name>`
+    auto parse_mf_boolean = [&](auto& tokens) -> Optional<MediaFeature> {
+        auto position = tokens.position();
         tokens.skip_whitespace();
 
-        if (!tokens.has_next_token())
-            return MediaFeature::boolean(feature_name);
+        auto maybe_name = parse_mf_name(tokens.next_token());
+        if (maybe_name.has_value()) {
+            tokens.skip_whitespace();
+            if (!tokens.has_next_token())
+                return MediaFeature::boolean(maybe_name.release_value());
+        }
 
-        if (!tokens.next_token().is(Token::Type::Colon))
-            return invalid_feature();
+        tokens.rewind_to_position(position);
+        return {};
+    };
+
+    // `<mf-plain> = <mf-name> : <mf-value>`
+    auto parse_mf_plain = [&](auto& tokens) -> Optional<MediaFeature> {
+        auto position = tokens.position();
         tokens.skip_whitespace();
 
-        auto value = parse_media_feature_value(tokens);
-        if (!value.has_value())
-            return invalid_feature();
+        if (auto maybe_name = parse_mf_name(tokens.next_token()); maybe_name.has_value()) {
+            tokens.skip_whitespace();
+            if (tokens.next_token().is(Token::Type::Colon)) {
+                tokens.skip_whitespace();
+                if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
+                    tokens.skip_whitespace();
+                    if (!tokens.has_next_token())
+                        return MediaFeature::plain(maybe_name.release_value(), maybe_value.release_value());
+                }
+            }
+        }
 
-        if (tokens.has_next_token())
-            return invalid_feature();
+        tokens.rewind_to_position(position);
+        return {};
+    };
 
-        return MediaFeature::plain(feature_name, value.release_value());
-    }
+    if (auto maybe_mf_boolean = parse_mf_boolean(tokens); maybe_mf_boolean.has_value())
+        return maybe_mf_boolean.release_value();
 
-    return invalid_feature();
+    if (auto maybe_mf_plain = parse_mf_plain(tokens); maybe_mf_plain.has_value())
+        return maybe_mf_plain.release_value();
+
+    // FIXME: Implement range syntax
+
+    tokens.rewind_to_position(position);
+    return {};
 }
 
-Optional<MediaQuery::MediaType> Parser::consume_media_type(TokenStream<StyleComponentValueRule>& tokens)
+Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<StyleComponentValueRule>& tokens)
 {
+    auto position = tokens.position();
+    tokens.skip_whitespace();
     auto& token = tokens.next_token();
 
     if (!token.is(Token::Type::Ident)) {
-        tokens.reconsume_current_input_token();
+        tokens.rewind_to_position(position);
         return {};
     }
 
@@ -921,7 +960,36 @@ Optional<MediaQuery::MediaType> Parser::consume_media_type(TokenStream<StyleComp
         return MediaQuery::MediaType::TV;
     }
 
-    tokens.reconsume_current_input_token();
+    tokens.rewind_to_position(position);
+    return {};
+}
+
+// `<media-in-parens>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-in-parens
+OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentValueRule>& tokens)
+{
+    // `<media-in-parens> = ( <media-condition> ) | ( <media-feature> ) | <general-enclosed>`
+    auto position = tokens.position();
+    tokens.skip_whitespace();
+
+    // `( <media-condition> ) | ( <media-feature> )`
+    auto& first_token = tokens.peek_token();
+    if (first_token.is_block() && first_token.block().is_paren()) {
+        TokenStream inner_token_stream { first_token.block().values() };
+        if (auto maybe_media_condition = parse_media_condition(inner_token_stream, MediaCondition::AllowOr::Yes)) {
+            tokens.next_token();
+            return maybe_media_condition.release_nonnull();
+        }
+        if (auto maybe_media_feature = parse_media_feature(inner_token_stream); maybe_media_feature.has_value()) {
+            tokens.next_token();
+            return MediaCondition::from_feature(maybe_media_feature.release_value());
+        }
+    }
+
+    // `<general-enclosed>`
+    if (auto maybe_general_enclosed = parse_general_enclosed(tokens); maybe_general_enclosed.has_value())
+        return MediaCondition::from_general_enclosed(maybe_general_enclosed.release_value());
+
+    tokens.rewind_to_position(position);
     return {};
 }
 
