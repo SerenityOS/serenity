@@ -12,6 +12,7 @@
 
 class KeypadValue {
     friend class Keypad;
+    friend class Calculator;
 
 public:
     KeypadValue(i64, u8);
