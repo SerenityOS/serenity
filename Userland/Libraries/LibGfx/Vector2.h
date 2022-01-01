@@ -60,12 +60,14 @@ public:
         return Vector2(m_x / other.m_x, m_y / other.m_y);
     }
 
-    constexpr Vector2 operator*(T f) const
+    template<typename U>
+    constexpr Vector2 operator*(U f) const
     {
         return Vector2(m_x * f, m_y * f);
     }
 
-    constexpr Vector2 operator/(T f) const
+    template<typename U>
+    constexpr Vector2 operator/(U f) const
     {
         return Vector2(m_x / f, m_y / f);
     }
