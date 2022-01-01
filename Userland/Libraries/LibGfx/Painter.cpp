@@ -593,8 +593,6 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
 
 void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thickness)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
 
