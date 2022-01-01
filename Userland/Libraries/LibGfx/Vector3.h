@@ -65,12 +65,14 @@ public:
         return Vector3(m_x / other.m_x, m_y / other.m_y, m_z / other.m_z);
     }
 
-    constexpr Vector3 operator*(T f) const
+    template<typename U>
+    constexpr Vector3 operator*(U f) const
     {
         return Vector3(m_x * f, m_y * f, m_z * f);
     }
 
-    constexpr Vector3 operator/(T f) const
+    template<typename U>
+    constexpr Vector3 operator/(U f) const
     {
         return Vector3(m_x / f, m_y / f, m_z / f);
     }
