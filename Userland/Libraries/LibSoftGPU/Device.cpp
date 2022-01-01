@@ -31,8 +31,20 @@ using IntVector3 = Gfx::Vector3<int>;
 using AK::SIMD::exp;
 using AK::SIMD::expand4;
 using AK::SIMD::f32x4;
+using AK::SIMD::i32x4;
+using AK::SIMD::load4_masked;
+using AK::SIMD::maskbits;
+using AK::SIMD::maskcount;
+using AK::SIMD::none;
+using AK::SIMD::store4_masked;
+using AK::SIMD::to_f32x4;
 
 constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
+{
+    return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
+}
+
+constexpr static i32x4 edge_function4(const IntVector2& a, const IntVector2& b, const Vector2<i32x4>& c)
 {
     return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
 }
@@ -126,8 +138,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
-    VERIFY((render_target.width() % RASTERIZER_BLOCK_SIZE) == 0);
-    VERIFY((render_target.height() % RASTERIZER_BLOCK_SIZE) == 0);
+    VERIFY((render_target.width() % 2) == 0);
+    VERIFY((render_target.height() % 2) == 0);
 
     // Return if alpha testing is a no-op
     if (options.enable_alpha_test && options.alpha_test_func == AlphaTestFunction::Never)
@@ -181,6 +193,11 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             dst_factor_dst_color);
     }
 
+    auto render_bounds = render_target.rect();
+    auto window_scissor_rect = scissor_box_to_window_coordinates(options.scissor_box, render_target.rect());
+    if (options.scissor_enabled)
+        render_bounds.intersect(window_scissor_rect);
+
     // Obey top-left rule:
     // This sets up "zero" for later pixel coverage tests.
     // Depending on where on the triangle the edge is located
@@ -195,38 +212,35 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
         zero.set_y(0);
 
     // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values = [v0, v1, v2](const IntVector2& p) -> IntVector3 {
+    auto calculate_edge_values4 = [v0, v1, v2](const Vector2<i32x4>& p) -> Vector3<i32x4> {
         return {
-            edge_function(v1, v2, p),
-            edge_function(v2, v0, p),
-            edge_function(v0, v1, p),
+            edge_function4(v1, v2, p),
+            edge_function4(v2, v0, p),
+            edge_function4(v0, v1, p),
         };
     };
 
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point = [zero](const IntVector3& edges) -> bool {
+    auto test_point4 = [zero](const Vector3<i32x4>& edges) -> i32x4 {
         return edges.x() >= zero.x()
             && edges.y() >= zero.y()
             && edges.z() >= zero.z();
     };
 
+    auto test_scissor4 = [window_scissor_rect](const Vector2<i32x4>& screen_coordinates) -> i32x4 {
+        return screen_coordinates.x() >= window_scissor_rect.x()
+            && screen_coordinates.x() < window_scissor_rect.x() + window_scissor_rect.width()
+            && screen_coordinates.y() >= window_scissor_rect.y()
+            && screen_coordinates.y() < window_scissor_rect.y() + window_scissor_rect.height();
+    };
+
     // Calculate block-based bounds
-    auto render_bounds = render_target.rect();
-    if (options.scissor_enabled)
-        render_bounds.intersect(scissor_box_to_window_coordinates(options.scissor_box, render_target.rect()));
-
     // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor)  / RASTERIZER_BLOCK_SIZE;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor)) / RASTERIZER_BLOCK_SIZE + 1;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1) + 2;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1) + 2;
     // clang-format on
-
-    u8 pixel_mask[RASTERIZER_BLOCK_SIZE];
-    static_assert(RASTERIZER_BLOCK_SIZE <= sizeof(decltype(*pixel_mask)) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
-
-    FloatVector4 pixel_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
-    float depth_staging[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
     // Fog depths
     float const vertex0_eye_absz = fabs(vertex0.eye_coordinates.z());
@@ -236,302 +250,224 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     // FIXME: implement stencil testing
 
     // Iterate over all blocks within the bounds of the triangle
-    for (int by = by0; by < by1; by++) {
-        for (int bx = bx0; bx < bx1; bx++) {
+    for (int by = by0; by < by1; by += 2) {
+        for (int bx = bx0; bx < bx1; bx += 2) {
 
-            // Edge values of the 4 block corners
-            // clang-format off
-            auto b0 = calculate_edge_values(IntVector2{ bx,     by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
-            auto b1 = calculate_edge_values(IntVector2{ bx + 1, by     } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
-            auto b2 = calculate_edge_values(IntVector2{ bx,     by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
-            auto b3 = calculate_edge_values(IntVector2{ bx + 1, by + 1 } * RASTERIZER_BLOCK_SIZE * subpixel_factor);
-            // clang-format on
+            PixelQuad quad;
 
-            // If the whole block is outside any of the triangle edges we can discard it completely
-            // We test this by and'ing the relevant edge function values together for all block corners
-            // and checking if the negative sign bit is set for all of them
-            if ((b0.x() & b1.x() & b2.x() & b3.x()) & 0x80000000)
-                continue;
+            quad.screen_coordinates = {
+                i32x4 { bx, bx + 1, bx, bx + 1 },
+                i32x4 { by, by, by + 1, by + 1 },
+            };
 
-            if ((b0.y() & b1.y() & b2.y() & b3.y()) & 0x80000000)
-                continue;
+            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor);
 
-            if ((b0.z() & b1.z() & b2.z() & b3.z()) & 0x80000000)
-                continue;
-
-            // edge value derivatives
-            auto dbdx = (b1 - b0) / RASTERIZER_BLOCK_SIZE;
-            auto dbdy = (b2 - b0) / RASTERIZER_BLOCK_SIZE;
-            // step edge value after each horizontal span: 1 down, BLOCK_SIZE left
-            auto step_y = dbdy - dbdx * RASTERIZER_BLOCK_SIZE;
-
-            int x0 = bx * RASTERIZER_BLOCK_SIZE;
-            int y0 = by * RASTERIZER_BLOCK_SIZE;
-
-            // Generate the coverage mask
-            if (!options.scissor_enabled && test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
-                INCREASE_STATISTICS_COUNTER(g_num_pixels, RASTERIZER_BLOCK_SIZE * RASTERIZER_BLOCK_SIZE);
-                // The block is fully contained within the triangle. Fill the mask with all 1s
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++)
-                    pixel_mask[y] = -1;
-            } else {
-                // The block overlaps at least one triangle edge.
-                // We need to test coverage of every pixel within the block.
-                auto coords = b0;
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
-                    pixel_mask[y] = 0;
-
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx) {
-                        if (test_point(coords) && (!options.scissor_enabled || render_bounds.contains(x0 + x, y0 + y))) {
-                            INCREASE_STATISTICS_COUNTER(g_num_pixels, 1);
-                            pixel_mask[y] |= 1 << x;
-                        }
-                    }
-                }
+            // Generate triangle coverage mask
+            quad.mask = test_point4(edge_values);
+            if (options.scissor_enabled) {
+                quad.mask &= test_scissor4(quad.screen_coordinates);
             }
+
+            if (none(quad.mask))
+                continue;
+
+            INCREASE_STATISTICS_COUNTER(g_num_pixels, maskcount(quad.mask));
+
+            // Calculate barycentric coordinates from previously calculated edge values
+            quad.barycentrics = Vector3<f32x4> {
+                to_f32x4(edge_values.x()),
+                to_f32x4(edge_values.y()),
+                to_f32x4(edge_values.z()),
+            } * one_over_area;
+
+            float* depth_ptrs[4] = {
+                &depth_buffer.scanline(by)[bx],
+                &depth_buffer.scanline(by)[bx + 1],
+                &depth_buffer.scanline(by + 1)[bx],
+                &depth_buffer.scanline(by + 1)[bx + 1],
+            };
 
             // AND the depth mask onto the coverage mask
             if (options.enable_depth_test) {
-                int z_pass_count = 0;
-                auto coords = b0;
+                auto depth = load4_masked(depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
 
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
-                    if (pixel_mask[y] == 0) {
-                        coords += dbdx * RASTERIZER_BLOCK_SIZE;
-                        continue;
-                    }
+                quad.depth = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), quad.barycentrics);
+                // FIXME: Also apply depth_offset_factor which depends on the depth gradient
+                quad.depth += options.depth_offset_constant * NumericLimits<float>::epsilon();
 
-                    auto* depth = &depth_buffer.scanline(y0 + y)[x0];
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, depth++) {
-                        if (~pixel_mask[y] & (1 << x))
-                            continue;
-
-                        auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        float z = interpolate(vertex0.window_coordinates.z(), vertex1.window_coordinates.z(), vertex2.window_coordinates.z(), barycentric);
-
-                        // FIXME: Also apply depth_offset_factor which depends on the depth gradient
-                        z += options.depth_offset_constant * NumericLimits<float>::epsilon();
-
-                        bool pass = false;
-                        switch (options.depth_func) {
-                        case DepthTestFunction::Always:
-                            pass = true;
-                            break;
-                        case DepthTestFunction::Never:
-                            pass = false;
-                            break;
-                        case DepthTestFunction::Greater:
-                            pass = z > *depth;
-                            break;
-                        case DepthTestFunction::GreaterOrEqual:
-                            pass = z >= *depth;
-                            break;
-                        case DepthTestFunction::NotEqual:
+                switch (options.depth_func) {
+                case DepthTestFunction::Always:
+                    break;
+                case DepthTestFunction::Never:
+                    quad.mask ^= quad.mask;
+                    break;
+                case DepthTestFunction::Greater:
+                    quad.mask &= quad.depth > depth;
+                    break;
+                case DepthTestFunction::GreaterOrEqual:
+                    quad.mask &= quad.depth >= depth;
+                    break;
+                case DepthTestFunction::NotEqual:
 #ifdef __SSE__
-                            pass = z != *depth;
+                    quad.mask &= quad.depth != depth;
 #else
-                            pass = bit_cast<u32>(z) != bit_cast<u32>(*depth);
+                    quad.mask[0] = bit_cast<u32>(quad.depth[0]) != bit_cast<u32>(depth[0]) ? -1 : 0;
+                    quad.mask[1] = bit_cast<u32>(quad.depth[1]) != bit_cast<u32>(depth[1]) ? -1 : 0;
+                    quad.mask[2] = bit_cast<u32>(quad.depth[2]) != bit_cast<u32>(depth[2]) ? -1 : 0;
+                    quad.mask[3] = bit_cast<u32>(quad.depth[3]) != bit_cast<u32>(depth[3]) ? -1 : 0;
 #endif
-                            break;
-                        case DepthTestFunction::Equal:
+                    break;
+                case DepthTestFunction::Equal:
 #ifdef __SSE__
-                            pass = z == *depth;
+                    quad.mask &= quad.depth == depth;
 #else
-                            //
-                            // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
-                            // compiled for the i386 target. When we calculate our depth value to be stored in the buffer,
-                            // it is an 80-bit x87 floating point number, however, when stored into the DepthBuffer, this is
-                            // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
-                            // used here the comparison fails.
-                            // This could be solved by using a `long double` for the depth buffer, however this would take
-                            // up significantly more space and is completely overkill for a depth buffer. As such, comparing
-                            // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
-                            // equal, we can pretty much guarantee that it's actually equal.
-                            //
-                            pass = bit_cast<u32>(z) == bit_cast<u32>(*depth);
+                    //
+                    // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
+                    // compiled for the i386 target. When we calculate our depth value to be stored in the buffer,
+                    // it is an 80-bit x87 floating point number, however, when stored into the DepthBuffer, this is
+                    // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
+                    // used here the comparison fails.
+                    // This could be solved by using a `long double` for the depth buffer, however this would take
+                    // up significantly more space and is completely overkill for a depth buffer. As such, comparing
+                    // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
+                    // equal, we can pretty much guarantee that it's actually equal.
+                    //
+                    quad.mask[0] = bit_cast<u32>(quad.depth[0]) == bit_cast<u32>(depth[0]) ? -1 : 0;
+                    quad.mask[1] = bit_cast<u32>(quad.depth[1]) == bit_cast<u32>(depth[1]) ? -1 : 0;
+                    quad.mask[2] = bit_cast<u32>(quad.depth[2]) == bit_cast<u32>(depth[2]) ? -1 : 0;
+                    quad.mask[3] = bit_cast<u32>(quad.depth[3]) == bit_cast<u32>(depth[3]) ? -1 : 0;
 #endif
-                            break;
-                        case DepthTestFunction::LessOrEqual:
-                            pass = z <= *depth;
-                            break;
-                        case DepthTestFunction::Less:
-                            pass = z < *depth;
-                            break;
-                        }
-
-                        if (!pass) {
-                            pixel_mask[y] ^= 1 << x;
-                            continue;
-                        }
-
-                        depth_staging[y][x] = z;
-
-                        z_pass_count++;
-                    }
+                    break;
+                case DepthTestFunction::LessOrEqual:
+                    quad.mask &= quad.depth <= depth;
+                    break;
+                case DepthTestFunction::Less:
+                    quad.mask &= quad.depth < depth;
+                    break;
                 }
 
                 // Nice, no pixels passed the depth test -> block rejected by early z
-                if (z_pass_count == 0)
+                if (none(quad.mask))
                     continue;
             }
 
+            INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, maskcount(quad.mask));
+
             // Draw the pixels according to the previously generated mask
-            auto coords = b0;
-            for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y += 2, coords += step_y + dbdy) {
-                for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x += 2, coords += dbdx + dbdx) {
+            auto const w_coordinates = Vector3<f32x4> {
+                expand4(vertex0.window_coordinates.w()),
+                expand4(vertex1.window_coordinates.w()),
+                expand4(vertex2.window_coordinates.w()),
+            };
 
-                    PixelQuad quad;
+            auto const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), quad.barycentrics);
+            auto const interpolated_w = 1.0f / interpolated_reciprocal_w;
+            quad.barycentrics = quad.barycentrics * w_coordinates * interpolated_w;
 
-                    auto a = coords;
-                    auto b = coords + dbdx;
-                    auto c = coords + dbdy;
-                    auto d = coords + dbdx + dbdy;
-
-                    // Perspective correct barycentric coordinates
-                    auto barycentric = Vector3<f32x4> {
-                        f32x4 { float(a.x()), float(b.x()), float(c.x()), float(d.x()) },
-                        f32x4 { float(a.y()), float(b.y()), float(c.y()), float(d.y()) },
-                        f32x4 { float(a.z()), float(b.z()), float(c.z()), float(d.z()) },
-                    } * one_over_area;
-
-                    auto const w_coordinates = Vector3<f32x4> {
-                        expand4(vertex0.window_coordinates.w()),
-                        expand4(vertex1.window_coordinates.w()),
-                        expand4(vertex2.window_coordinates.w()),
-                    };
-
-                    auto const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), barycentric);
-                    auto const interpolated_w = 1.0f / interpolated_reciprocal_w;
-                    barycentric = barycentric * w_coordinates * interpolated_w;
-
-                    // FIXME: make this more generic. We want to interpolate more than just color and uv
-                    if (options.shade_smooth) {
-                        quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), barycentric);
-                    } else {
-                        quad.vertex_color = expand4(vertex0.color);
-                    }
-
-                    quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), barycentric);
-
-                    // Calculate depth of fragment for fog
-                    //
-                    // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
-                    // eye-coordinate distance from the eye to each fragment center by |Ze|."
-
-                    quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), barycentric);
-
-                    pixel_shader(quad);
-
-                    INCREASE_STATISTICS_COUNTER(g_num_pixels_shaded, 1);
-                    pixel_staging[y][x] = { quad.out_color.x()[0], quad.out_color.y()[0], quad.out_color.z()[0], quad.out_color.w()[0] };
-                    pixel_staging[y][x + 1] = { quad.out_color.x()[1], quad.out_color.y()[1], quad.out_color.z()[1], quad.out_color.w()[1] };
-                    pixel_staging[y + 1][x] = { quad.out_color.x()[2], quad.out_color.y()[2], quad.out_color.z()[2], quad.out_color.w()[2] };
-                    pixel_staging[y + 1][x + 1] = { quad.out_color.x()[3], quad.out_color.y()[3], quad.out_color.z()[3], quad.out_color.w()[3] };
-                }
+            // FIXME: make this more generic. We want to interpolate more than just color and uv
+            if (options.shade_smooth) {
+                quad.vertex_color = interpolate(expand4(vertex0.color), expand4(vertex1.color), expand4(vertex2.color), quad.barycentrics);
+            } else {
+                quad.vertex_color = expand4(vertex0.color);
             }
 
+            quad.uv = interpolate(expand4(vertex0.tex_coord), expand4(vertex1.tex_coord), expand4(vertex2.tex_coord), quad.barycentrics);
+
+            // Calculate depth of fragment for fog
+            //
+            // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
+            // eye-coordinate distance from the eye to each fragment center by |Ze|."
+
+            quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), quad.barycentrics);
+
+            pixel_shader(quad);
+
             if (options.enable_alpha_test && options.alpha_test_func != AlphaTestFunction::Always) {
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    if (pixel_mask[y] == 0)
-                        continue;
-
-                    auto src = pixel_staging[y];
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++) {
-                        if (~pixel_mask[y] & (1 << x))
-                            continue;
-
-                        bool passed = true;
-
-                        switch (options.alpha_test_func) {
-                        case AlphaTestFunction::Less:
-                            passed = src->w() < options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::Equal:
-                            passed = src->w() == options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::LessOrEqual:
-                            passed = src->w() <= options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::Greater:
-                            passed = src->w() > options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::NotEqual:
-                            passed = src->w() != options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::GreaterOrEqual:
-                            passed = src->w() >= options.alpha_test_ref_value;
-                            break;
-                        case AlphaTestFunction::Never:
-                        case AlphaTestFunction::Always:
-                            VERIFY_NOT_REACHED();
-                        }
-
-                        if (!passed)
-                            pixel_mask[y] ^= (1 << x);
-                    }
+                switch (options.alpha_test_func) {
+                case AlphaTestFunction::Less:
+                    quad.mask &= quad.out_color.w() < options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::Equal:
+                    quad.mask &= quad.out_color.w() == options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::LessOrEqual:
+                    quad.mask &= quad.out_color.w() <= options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::Greater:
+                    quad.mask &= quad.out_color.w() > options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::NotEqual:
+                    quad.mask &= quad.out_color.w() != options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::GreaterOrEqual:
+                    quad.mask &= quad.out_color.w() >= options.alpha_test_ref_value;
+                    break;
+                case AlphaTestFunction::Never:
+                case AlphaTestFunction::Always:
+                    VERIFY_NOT_REACHED();
                 }
             }
 
             // Write to depth buffer
             if (options.enable_depth_test && options.enable_depth_write) {
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    if (pixel_mask[y] == 0)
-                        continue;
-
-                    auto* depth = &depth_buffer.scanline(y0 + y)[x0];
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, depth++) {
-                        if (~pixel_mask[y] & (1 << x))
-                            continue;
-
-                        *depth = depth_staging[y][x];
-                    }
-                }
+                store4_masked(quad.depth, depth_ptrs[0], depth_ptrs[1], depth_ptrs[2], depth_ptrs[3], quad.mask);
             }
 
             // We will not update the color buffer at all
             if (!options.color_mask || !options.enable_color_write)
                 continue;
 
+            Gfx::RGBA32* color_ptrs[4] = {
+                &render_target.scanline(by)[bx],
+                &render_target.scanline(by)[bx + 1],
+                &render_target.scanline(by + 1)[bx],
+                &render_target.scanline(by + 1)[bx + 1],
+            };
+
+            int bits = maskbits(quad.mask);
+
             if (options.enable_blending) {
+                INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, maskcount(quad.mask));
+
                 // Blend color values from pixel_staging into render_target
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_staging[y];
-                    auto dst = &render_target.scanline(y0 + y)[x0];
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
-                        if (~pixel_mask[y] & (1 << x))
-                            continue;
+                FloatVector4 dst_aos[4] {
+                    bits & 1 ? to_vec4(*color_ptrs[0]) : FloatVector4 { 0, 0, 0, 0 },
+                    bits & 2 ? to_vec4(*color_ptrs[1]) : FloatVector4 { 0, 0, 0, 0 },
+                    bits & 4 ? to_vec4(*color_ptrs[2]) : FloatVector4 { 0, 0, 0, 0 },
+                    bits & 8 ? to_vec4(*color_ptrs[3]) : FloatVector4 { 0, 0, 0, 0 },
+                };
 
-                        auto float_dst = to_vec4(*dst);
+                auto dst = Vector4<f32x4> {
+                    f32x4 { dst_aos[0].x(), dst_aos[1].x(), dst_aos[2].x(), dst_aos[3].x() },
+                    f32x4 { dst_aos[0].y(), dst_aos[1].y(), dst_aos[2].y(), dst_aos[3].y() },
+                    f32x4 { dst_aos[0].z(), dst_aos[1].z(), dst_aos[2].z(), dst_aos[3].z() },
+                    f32x4 { dst_aos[0].w(), dst_aos[1].w(), dst_aos[2].w(), dst_aos[3].w() },
+                };
+                Vector4<f32x4> const& src = quad.out_color;
 
-                        auto src_factor = src_constant
-                            + *src * src_factor_src_color
-                            + FloatVector4(src->w(), src->w(), src->w(), src->w()) * src_factor_src_alpha
-                            + float_dst * src_factor_dst_color
-                            + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * src_factor_dst_alpha;
+                auto src_factor = expand4(src_constant)
+                    + src * src_factor_src_color
+                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * src_factor_src_alpha
+                    + dst * src_factor_dst_color
+                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * src_factor_dst_alpha;
 
-                        auto dst_factor = dst_constant
-                            + *src * dst_factor_src_color
-                            + FloatVector4(src->w(), src->w(), src->w(), src->w()) * dst_factor_src_alpha
-                            + float_dst * dst_factor_dst_color
-                            + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * dst_factor_dst_alpha;
+                auto dst_factor = expand4(dst_constant)
+                    + src * dst_factor_src_color
+                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * dst_factor_src_alpha
+                    + dst * dst_factor_dst_color
+                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * dst_factor_dst_alpha;
 
-                        *dst = (*dst & ~options.color_mask) | (to_rgba32(*src * src_factor + float_dst * dst_factor) & options.color_mask);
-                        INCREASE_STATISTICS_COUNTER(g_num_pixels_blended, 1);
-                    }
-                }
-            } else {
-                // Copy color values from pixel_staging into render_target
-                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
-                    auto src = pixel_staging[y];
-                    auto dst = &render_target.scanline(y + y0)[x0];
-                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
-                        if (~pixel_mask[y] & (1 << x))
-                            continue;
-
-                        *dst = (*dst & ~options.color_mask) | (to_rgba32(*src) & options.color_mask);
-                    }
-                }
+                quad.out_color = src * src_factor + dst * dst_factor;
             }
+
+            if (bits & 1)
+                *color_ptrs[0] = to_rgba32(FloatVector4 { quad.out_color.x()[0], quad.out_color.y()[0], quad.out_color.z()[0], quad.out_color.w()[0] });
+            if (bits & 2)
+                *color_ptrs[1] = to_rgba32(FloatVector4 { quad.out_color.x()[1], quad.out_color.y()[1], quad.out_color.z()[1], quad.out_color.w()[1] });
+            if (bits & 4)
+                *color_ptrs[2] = to_rgba32(FloatVector4 { quad.out_color.x()[2], quad.out_color.y()[2], quad.out_color.z()[2], quad.out_color.w()[2] });
+            if (bits & 8)
+                *color_ptrs[3] = to_rgba32(FloatVector4 { quad.out_color.x()[3], quad.out_color.y()[3], quad.out_color.z()[3], quad.out_color.w()[3] });
         }
     }
 }
@@ -544,8 +480,8 @@ static Gfx::IntSize closest_multiple(const Gfx::IntSize& min_size, size_t step)
 }
 
 Device::Device(const Gfx::IntSize& min_size)
-    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors() }
-    , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, RASTERIZER_BLOCK_SIZE))) }
+    : m_render_target { Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, 2)).release_value_but_fixme_should_propagate_errors() }
+    , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, 2))) }
 {
     m_options.scissor_box = m_render_target->rect();
 }
@@ -880,7 +816,7 @@ void Device::resize(const Gfx::IntSize& min_size)
 {
     wait_for_all_threads();
 
-    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)).release_value_but_fixme_should_propagate_errors();
+    m_render_target = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, 2)).release_value_but_fixme_should_propagate_errors();
     m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
 }
 
