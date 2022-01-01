@@ -12,7 +12,6 @@ namespace TicTacToe {
 
 static Game* s_the;
 
-
 Game& Game::the()
 {
     if(!s_the)
@@ -33,12 +32,13 @@ bool Game::make_move(uint8_t cell_index) {
     WinnerCheckResult winner_check_result = check_if_current_player_won();
     if(winner_check_result.has_won) {
         m_moves_remaining = 0;
+        uint16_t victories = m_current_player == Player::X ? ++m_x_victories : ++m_o_victories;
         if(on_win)
-            on_win(winner_check_result.cells, m_current_player);
+            on_win(winner_check_result.cells, m_current_player, victories);
 
     } else if(!m_moves_remaining) {
-        if(on_tae)
-            on_tae();
+        if(on_tie)
+            on_tie(++m_ties);
     }
 
     m_current_player = m_current_player == Player::X ? Player::O : Player::X;
