@@ -15,6 +15,7 @@
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
+#include <LibEDID/EDID.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
@@ -46,6 +47,8 @@ public:
     virtual bool vga_compatible() const override { return false; }
 
     virtual void initialize() override;
+
+    ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
 
 private:
     void flush_dirty_rectangle(ScanoutID, ResourceID, Protocol::Rect const& dirty_rect);
@@ -98,6 +101,7 @@ private:
         RefPtr<Graphics::VirtIOGPU::FramebufferDevice> framebuffer;
         RefPtr<Console> console;
         Protocol::DisplayInfoResponse::Display display_info {};
+        Optional<EDID::Parser> edid;
     };
 
     virtual bool handle_device_config_change() override;
@@ -117,6 +121,7 @@ private:
     void populate_virtio_gpu_request_header(Protocol::ControlHeader& header, Protocol::CommandType ctrl_type, u32 flags = 0);
 
     void query_display_information();
+    void query_display_edid(Optional<ScanoutID>);
     ResourceID create_2d_resource(Protocol::Rect rect);
     void delete_resource(ResourceID resource_id);
     void ensure_backing_storage(ResourceID resource_id, Memory::Region const& region, size_t buffer_offset, size_t buffer_length);
@@ -124,6 +129,7 @@ private:
     void set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect);
     void transfer_framebuffer_data_to_host(ScanoutID scanout, ResourceID resource_id, Protocol::Rect const& rect);
     void flush_displayed_image(ResourceID resource_id, Protocol::Rect const& dirty_rect);
+    ErrorOr<Optional<EDID::Parser>> query_edid(u32 scanout_id);
 
     bool m_created_framebuffer_devices { false };
     Optional<ScanoutID> m_default_scanout;

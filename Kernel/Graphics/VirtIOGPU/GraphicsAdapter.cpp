@@ -78,7 +78,7 @@ void GraphicsAdapter::initialize()
             if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL))
                 dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: VIRGL is not yet supported!");
             if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
-                dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: EDID is not yet supported!");
+                negotiated |= VIRTIO_GPU_F_EDID;
             return negotiated;
         });
         if (success) {
@@ -93,6 +93,7 @@ void GraphicsAdapter::initialize()
         MutexLocker locker(m_operation_lock);
         // Get display information using VIRTIO_GPU_CMD_GET_DISPLAY_INFO
         query_display_information();
+        query_display_edid({});
     } else {
         VERIFY_NOT_REACHED();
     }
@@ -160,8 +161,94 @@ void GraphicsAdapter::query_display_information()
         dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
         if (scanout.enabled && !m_default_scanout.has_value())
             m_default_scanout = i;
+
+        m_scanouts[i].edid = {};
     }
     VERIFY(m_default_scanout.has_value());
+}
+
+void GraphicsAdapter::query_display_edid(Optional<ScanoutID> scanout_id)
+{
+    VERIFY(m_operation_lock.is_locked());
+
+    if (!is_feature_accepted(VIRTIO_GPU_F_EDID))
+        return;
+
+    for (size_t i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
+        if (scanout_id.has_value() && scanout_id.value() != i)
+            continue;
+
+        // scanout.display_info.enabled doesn't seem to reflect the actual state,
+        // even if we were to call query_display_information prior to calling
+        // this function. So, just ignore, we seem to get EDID information regardless.
+
+        auto query_edid_result = query_edid(i);
+        if (query_edid_result.is_error()) {
+            dbgln("VirtIO::GraphicsAdapater: Scanout {}: Failed to parse EDID: {}", i, query_edid_result.error());
+            m_scanouts[i].edid = {};
+        } else {
+            m_scanouts[i].edid = query_edid_result.release_value();
+            if (m_scanouts[i].edid.has_value()) {
+                auto& parsed_edid = m_scanouts[i].edid.value();
+                dbgln("VirtIO::GraphicsAdapater: Scanout {}: EDID {}: Manufacturer: {} Product: {} Serial #{}", i,
+                    parsed_edid.version(), parsed_edid.legacy_manufacturer_id(), parsed_edid.product_code(), parsed_edid.serial_number());
+                if (auto screen_size = parsed_edid.screen_size(); screen_size.has_value()) {
+                    auto& size = screen_size.value();
+                    dbgln("VirtIO::GraphicsAdapater: Scanout {}:           Screen size: {}cm x {}cm", i,
+                        size.horizontal_cm(), size.vertical_cm());
+                } else if (auto aspect_ratio = parsed_edid.aspect_ratio(); aspect_ratio.has_value()) {
+                    auto& ratio = aspect_ratio.value();
+                    dbgln("VirtIO::GraphicsAdapater: Scanout {}:           Aspect ratio: {} : 1", i, ratio.ratio());
+                } else {
+                    dbgln("VirtIO::GraphicsAdapater: Scanout {}:           Unknown screen size or aspect ratio", i);
+                }
+            } else {
+                dbgln("VirtIO::GraphicsAdapater: Scanout {}: No EDID", i);
+            }
+        }
+    }
+}
+
+ErrorOr<ByteBuffer> GraphicsAdapter::get_edid(size_t output_port_index) const
+{
+    if (output_port_index >= VIRTIO_GPU_MAX_SCANOUTS)
+        return Error::from_errno(ENODEV);
+    auto& edid = m_scanouts[output_port_index].edid;
+    if (edid.has_value()) {
+        auto bytes = ByteBuffer::copy(edid.value().bytes());
+        if (!bytes.has_value())
+            return Error::from_errno(ENOMEM);
+        return bytes.release_value();
+    }
+    return ByteBuffer {};
+}
+
+auto GraphicsAdapter::query_edid(u32 scanout_id) -> ErrorOr<Optional<EDID::Parser>>
+{
+    VERIFY(m_operation_lock.is_locked());
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::GetEDID>();
+    auto& response = writer.append_structure<Protocol::GetEDIDResponse>();
+
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_GET_EDID, VIRTIO_GPU_FLAG_FENCE);
+
+    request.scanout_id = scanout_id;
+    request.padding = 0;
+
+    synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
+
+    if (response.header.type != static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_EDID))
+        return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID");
+
+    if (response.size == 0)
+        return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID, empty buffer");
+
+    auto edid_buffer = ByteBuffer::copy(response.edid, response.size);
+    if (!edid_buffer.has_value())
+        return Error::from_errno(ENOMEM);
+
+    auto edid = TRY(EDID::Parser::from_bytes(edid_buffer.release_value()));
+    return edid;
 }
 
 ResourceID GraphicsAdapter::create_2d_resource(Protocol::Rect rect)
@@ -235,19 +322,25 @@ void GraphicsAdapter::detach_backing_storage(ResourceID resource_id)
 void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto writer = create_scratchspace_writer();
-    auto& request = writer.append_structure<Protocol::SetScanOut>();
-    auto& response = writer.append_structure<Protocol::ControlHeader>();
+    {
+        // We need to scope the request/response here so that we can query display information later on
+        auto writer = create_scratchspace_writer();
+        auto& request = writer.append_structure<Protocol::SetScanOut>();
+        auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
-    request.resource_id = resource_id.value();
-    request.scanout_id = scanout.value();
-    request.rect = rect;
+        populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
+        request.resource_id = resource_id.value();
+        request.scanout_id = scanout.value();
+        request.rect = rect;
 
-    synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
+        synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Set backing scanout");
+        VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Set backing scanout");
+    }
+
+    // Now that the Scanout should be enabled, update the EDID
+    query_display_edid(scanout);
 }
 
 void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, ResourceID resource_id, Protocol::Rect const& dirty_rect)

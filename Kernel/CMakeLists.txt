@@ -343,6 +343,12 @@ set(AK_SOURCES
     ../AK/Utf16View.cpp
 )
 
+set(EDID_SOURCES
+    ../Userland/Libraries/LibEDID/DMT.cpp
+    ../Userland/Libraries/LibEDID/EDID.cpp
+    ../Userland/Libraries/LibEDID/VIC.cpp
+)
+
 set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Image.cpp
     ../Userland/Libraries/LibELF/Validation.cpp
@@ -368,6 +374,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     set(SOURCES
         ${KERNEL_SOURCES}
         ${SOURCES}
+        ${EDID_SOURCES}
         ${ELF_SOURCES}
         ${VT_SOURCES}
         ${CRYPTO_SOURCES}

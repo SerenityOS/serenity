@@ -57,6 +57,8 @@ protected:
     // FIXME: This method is too much specific to the VirtIO implementation (especially the buffer_index parameter)
     virtual ErrorOr<void> flush_rectangle(size_t buffer_index, FBRect const&) = 0;
 
+    virtual ErrorOr<ByteBuffer> get_edid(size_t head) const = 0;
+
     ErrorOr<void> verify_head_index(int head_index) const;
 
     GenericFramebufferDevice(const GenericGraphicsAdapter&);

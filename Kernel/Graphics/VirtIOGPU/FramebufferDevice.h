@@ -62,6 +62,8 @@ private:
     virtual ErrorOr<void> flush_head_buffer(size_t head) override;
     virtual ErrorOr<void> flush_rectangle(size_t head, FBRect const&) override;
 
+    virtual ErrorOr<ByteBuffer> get_edid(size_t head) const override;
+
     void flush_dirty_window(Protocol::Rect const&, Buffer&);
     void transfer_framebuffer_data_to_host(Protocol::Rect const&, Buffer&);
     void flush_displayed_image(Protocol::Rect const&, Buffer&);

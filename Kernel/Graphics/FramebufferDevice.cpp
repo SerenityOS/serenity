@@ -243,4 +243,12 @@ ErrorOr<void> FramebufferDevice::flush_rectangle(size_t, FBRect const&)
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<ByteBuffer> FramebufferDevice::get_edid(size_t head) const
+{
+    auto adapter = m_graphics_adapter.strong_ref();
+    if (!adapter)
+        return Error::from_errno(EIO);
+    return adapter->get_edid(head);
+}
+
 }

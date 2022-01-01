@@ -33,7 +33,11 @@ ErrorOr<void> GenericFramebufferDevice::verify_head_index(int head_index) const
 
 ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    TRY(Process::current().require_promise(Pledge::video));
+    if (request != FB_IOCTL_GET_HEAD_EDID) {
+        // Allow anyone to query the EDID. Eventually we'll publish the current EDID on /sys
+        // so it doesn't really make sense to require the video pledge to query it.
+        TRY(Process::current().require_promise(Pledge::video));
+    }
     switch (request) {
     case FB_IOCTL_GET_PROPERTIES: {
         auto user_properties = static_ptr_cast<FBProperties*>(arg);
@@ -59,6 +63,26 @@ ErrorOr<void> GenericFramebufferDevice::ioctl(OpenFileDescription&, unsigned req
         head_properties.buffer_length = TRY(buffer_length(head_properties.head_index));
         head_properties.offset = TRY(vertical_offset(head_properties.head_index));
         return copy_to_user(user_head_properties, &head_properties);
+    }
+    case FB_IOCTL_GET_HEAD_EDID: {
+        auto user_head_edid = static_ptr_cast<FBHeadEDID*>(arg);
+        FBHeadEDID head_edid {};
+        TRY(copy_from_user(&head_edid, user_head_edid));
+        TRY(verify_head_index(head_edid.head_index));
+
+        auto edid_bytes = TRY(get_edid(head_edid.head_index));
+        if (head_edid.bytes != nullptr) {
+            // Only return the EDID if a buffer was provided. Either way,
+            // we'll write back the bytes_size with the actual size
+            if (head_edid.bytes_size < edid_bytes.size()) {
+                head_edid.bytes_size = edid_bytes.size();
+                TRY(copy_to_user(user_head_edid, &head_edid));
+                return Error::from_errno(EOVERFLOW);
+            }
+            TRY(copy_to_user(head_edid.bytes, (void const*)edid_bytes.data(), edid_bytes.size()));
+        }
+        head_edid.bytes_size = edid_bytes.size();
+        return copy_to_user(user_head_edid, &head_edid);
     }
     case FB_IOCTL_SET_HEAD_RESOLUTION: {
         auto user_head_resolution = static_ptr_cast<FBHeadResolution const*>(arg);
