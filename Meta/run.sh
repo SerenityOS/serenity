@@ -190,10 +190,10 @@ else
 fi
 
 # Check if SERENITY_NVME_ENABLE is unset
-if [ -z ${SERINITY_NVME_ENABLE+x} ]; then
+if [ -z ${SERENITY_NVME_ENABLE+x} ]; then
     SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk"
 else
-    if [ "$SERINITY_NVME_ENABLE" -eq 1 ]; then
+    if [ "$SERENITY_NVME_ENABLE" -eq 1 ]; then
         SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,if=none,id=disk"
         SERENITY_BOOT_DRIVE="$SERENITY_BOOT_DRIVE -device i82801b11-bridge,id=bridge4 -device sdhci-pci,bus=bridge4"
         SERENITY_BOOT_DRIVE="$SERENITY_BOOT_DRIVE -device nvme,serial=deadbeef,drive=disk,bus=bridge4"
