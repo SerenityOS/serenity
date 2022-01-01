@@ -277,6 +277,11 @@ public:
         return old;
     }
 
+    constexpr Checked operator-() const
+    {
+        return Checked { -m_value };
+    }
+
     template<typename U, typename V>
     [[nodiscard]] static constexpr bool addition_would_overflow(U u, V v)
     {
