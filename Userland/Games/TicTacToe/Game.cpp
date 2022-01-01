@@ -21,7 +21,7 @@ Game& Game::the()
 }
 
 bool Game::make_move(uint8_t cell_index) {
-    if(!m_moves_remaining || cell_index > 8)
+    if(!m_moves_remaining || cell_index > 8 || m_board[cell_index])
         return false;
 
     m_moves_remaining--;
