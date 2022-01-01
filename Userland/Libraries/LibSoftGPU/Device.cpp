@@ -24,6 +24,7 @@ static long long g_num_pixels;
 static long long g_num_pixels_shaded;
 static long long g_num_pixels_blended;
 static long long g_num_sampler_calls;
+static long long g_num_quads;
 
 using IntVector2 = Gfx::Vector2<int>;
 using IntVector3 = Gfx::Vector3<int>;
@@ -271,6 +272,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             if (none(quad.mask))
                 continue;
 
+            INCREASE_STATISTICS_COUNTER(g_num_quads, 1);
             INCREASE_STATISTICS_COUNTER(g_num_pixels, maskcount(quad.mask));
 
             // Calculate barycentric coordinates from previously calculated edge values
@@ -902,6 +904,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
             static_cast<double>(milliseconds) / frame_counter,
             (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0));
         builder.append(String::formatted("Triangles    : {}\n", g_num_rasterized_triangles));
+        builder.append(String::formatted("SIMD usage   : {}%\n", g_num_quads > 0 ? g_num_pixels_shaded * 25 / g_num_quads : 0));
         builder.append(String::formatted("Pixels       : {}, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
             g_num_pixels,
             g_num_pixels_shaded * 100 / g_num_pixels,
@@ -920,6 +923,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     g_num_pixels_shaded = 0;
     g_num_pixels_blended = 0;
     g_num_sampler_calls = 0;
+    g_num_quads = 0;
 
     auto& font = Gfx::FontDatabase::default_fixed_width_font();
 
