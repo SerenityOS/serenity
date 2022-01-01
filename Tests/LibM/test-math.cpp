@@ -267,3 +267,25 @@ TEST_CASE(acos)
     EXPECT_APPROXIMATE(acos(1), 0);
     EXPECT(isnan(acos(1.1)));
 }
+
+TEST_CASE(floor)
+{
+    EXPECT_EQ(floor(0.125), 0);
+    EXPECT_EQ(floor(-0.125), -1.0);
+    EXPECT_EQ(floor(0.5), 0);
+    EXPECT_EQ(floor(-0.5), -1.0);
+    EXPECT_EQ(floor(0.25), 0);
+    EXPECT_EQ(floor(-0.25), -1.0);
+    EXPECT_EQ(floor(-3.0 / 2.0), -2.0);
+}
+
+TEST_CASE(ceil)
+{
+    EXPECT_EQ(ceil(0.125), 1.0);
+    EXPECT_EQ(ceil(-0.125), 0);
+    EXPECT_EQ(ceil(0.5), 1.0);
+    EXPECT_EQ(ceil(-0.5), 0);
+    EXPECT_EQ(ceil(0.25), 1.0);
+    EXPECT_EQ(ceil(-0.25), 0);
+    EXPECT_EQ(ceil(-3.0 / 2.0), -1.0);
+}
