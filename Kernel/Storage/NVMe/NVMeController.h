@@ -69,7 +69,7 @@ private:
     RefPtr<NVMeQueue> m_admin_queue;
     NonnullRefPtrVector<NVMeQueue> m_queues;
     NonnullRefPtrVector<NVMeNameSpace> m_namespaces;
-    Memory::TypedMapping<ControllerRegister> m_controller_regs;
+    Memory::TypedMapping<volatile ControllerRegister> m_controller_regs;
     bool m_admin_queue_ready { false };
     size_t m_device_count {};
     u32 m_bar;
