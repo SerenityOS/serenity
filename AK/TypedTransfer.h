@@ -12,26 +12,9 @@ namespace AK {
 
 template<typename T>
 class TypedTransfer {
-public:
-    static void move(T* destination, T* source, size_t count)
-    {
-        if (count == 0)
-            return;
-
-        if constexpr (Traits<T>::is_trivial()) {
-            __builtin_memmove(destination, source, count * sizeof(T));
-            return;
-        }
-
-        for (size_t i = 0; i < count; ++i) {
-            if (destination <= source)
-                new (&destination[i]) T(std::move(source[i]));
-            else
-                new (&destination[count - i - 1]) T(std::move(source[count - i - 1]));
-        }
-    }
-
-    static void copy(T* destination, const T* source, size_t count)
+private:
+    template<typename U>
+    static void move_impl(T* destination, U* source, size_t count, auto move_function)
     {
         if (count == 0)
             return;
@@ -46,10 +29,21 @@ public:
 
         for (size_t i = 0; i < count; ++i) {
             if (destination <= source)
-                new (&destination[i]) T(source[i]);
+                move_function(&destination[i], &source[i]);
             else
-                new (&destination[count - i - 1]) T(source[count - i - 1]);
+                move_function(&destination[count - i - 1], &source[count - i - 1]);
         }
+    }
+
+public:
+    static void copy(T* destination, auto const* source, size_t count)
+    {
+        move_impl(destination, source, count, [](T* destination, auto const* source) { ::new (destination) T(*source); });
+    }
+
+    static void move(T* destination, auto* source, size_t count)
+    {
+        move_impl(destination, source, count, [](T* destination, auto* source) { ::new (destination) T(std::move(*source)); });
     }
 
     static bool compare(const T* a, const T* b, size_t count)
