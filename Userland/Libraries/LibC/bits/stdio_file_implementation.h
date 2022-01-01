@@ -19,7 +19,8 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
-        __pthread_mutex_init(&m_mutex, nullptr);
+        pthread_mutexattr_t attr = { __PTHREAD_MUTEX_RECURSIVE };
+        __pthread_mutex_init(&m_mutex, &attr);
     }
     ~FILE();
 
@@ -30,6 +31,9 @@ public:
     bool flush();
     void purge();
     bool close();
+
+    void lock();
+    void unlock();
 
     int fileno() const { return m_fd; }
     bool eof() const { return m_eof; }
@@ -115,9 +119,6 @@ private:
     // Flush *some* data from the buffer.
     bool write_from_buffer();
 
-    void lock();
-    void unlock();
-
     int m_fd { -1 };
     int m_mode { 0 };
     u8 m_flags { Flags::None };
@@ -126,8 +127,6 @@ private:
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
     __pthread_mutex_t m_mutex;
-
-    friend class ScopedFileLock;
 };
 
 class ScopedFileLock {
