@@ -142,9 +142,20 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
                 m_boot_block_device = storage_device;
                 break;
             }
-            auto start_storage_name = storage_name.substring_view(0, min(storage_device.early_storage_name().length(), storage_name.length()));
 
-            if (storage_device.early_storage_name().starts_with(start_storage_name)) {
+            // If the early storage name's last character is a digit (e.g. in the case of NVMe where the last
+            // number in the device name indicates the node, e.g. /dev/nvme0n1 we need to append a "p" character
+            // so that we can properly distinguish the partition index from the device itself
+            char storage_name_last_char = *(storage_device.early_storage_name().end() - 1);
+            String early_storage_name;
+            if (storage_name_last_char >= '0' && storage_name_last_char <= '9')
+                early_storage_name = String::formatted("{}p", storage_device.early_storage_name());
+            else
+                early_storage_name = storage_device.early_storage_name();
+
+            auto start_storage_name = storage_name.substring_view(0, min(early_storage_name.length(), storage_name.length()));
+
+            if (early_storage_name.starts_with(start_storage_name)) {
                 StringView partition_sign = storage_name.substring_view(start_storage_name.length());
                 auto possible_partition_number = partition_sign.to_uint<size_t>();
                 if (!possible_partition_number.has_value())
