@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,6 +49,8 @@ const char* to_string(Variant::Type type)
         return "TextAlignment";
     case Variant::Type::ColorRole:
         return "ColorRole";
+    case Variant::Type::AlignmentRole:
+        return "AlignmentRole";
     case Variant::Type::FlagRole:
         return "FlagRole";
     case Variant::Type::MetricRole:
@@ -97,6 +100,12 @@ Variant::Variant(Gfx::ColorRole value)
     : m_type(Type::ColorRole)
 {
     m_value.as_color_role = value;
+}
+
+Variant::Variant(Gfx::AlignmentRole value)
+    : m_type(Type::AlignmentRole)
+{
+    m_value.as_alignment_role = value;
 }
 
 Variant::Variant(Gfx::FlagRole value)
@@ -355,6 +364,9 @@ void Variant::copy_from(const Variant& other)
     case Type::ColorRole:
         m_value.as_color_role = other.m_value.as_color_role;
         break;
+    case Type::AlignmentRole:
+        m_value.as_alignment_role = other.m_value.as_alignment_role;
+        break;
     case Type::FlagRole:
         m_value.as_flag_role = other.m_value.as_flag_role;
         break;
@@ -406,6 +418,8 @@ bool Variant::operator==(const Variant& other) const
         return m_value.as_text_alignment == other.m_value.as_text_alignment;
     case Type::ColorRole:
         return m_value.as_color_role == other.m_value.as_color_role;
+    case Type::AlignmentRole:
+        return m_value.as_alignment_role == other.m_value.as_alignment_role;
     case Type::FlagRole:
         return m_value.as_flag_role == other.m_value.as_flag_role;
     case Type::MetricRole:
@@ -451,6 +465,7 @@ bool Variant::operator<(const Variant& other) const
     case Type::Font:
     case Type::TextAlignment:
     case Type::ColorRole:
+    case Type::AlignmentRole:
     case Type::FlagRole:
     case Type::MetricRole:
     case Type::PathRole:
@@ -512,6 +527,8 @@ String Variant::to_string() const
     }
     case Type::ColorRole:
         return String::formatted("Gfx::ColorRole::{}", Gfx::to_string(m_value.as_color_role));
+    case Type::AlignmentRole:
+        return String::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(m_value.as_alignment_role));
     case Type::FlagRole:
         return String::formatted("Gfx::FlagRole::{}", Gfx::to_string(m_value.as_flag_role));
     case Type::MetricRole:

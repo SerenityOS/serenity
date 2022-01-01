@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,6 +36,7 @@ public:
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
     Variant(const Gfx::ColorRole);
+    Variant(const Gfx::AlignmentRole);
     Variant(const Gfx::FlagRole);
     Variant(const Gfx::MetricRole);
     Variant(const Gfx::PathRole);
@@ -68,6 +70,7 @@ public:
         Font,
         TextAlignment,
         ColorRole,
+        AlignmentRole,
         FlagRole,
         MetricRole,
         PathRole,
@@ -90,6 +93,7 @@ public:
     bool is_font() const { return m_type == Type::Font; }
     bool is_text_alignment() const { return m_type == Type::TextAlignment; }
     bool is_color_role() const { return m_type == Type::ColorRole; }
+    bool is_alignment_role() const { return m_type == Type::AlignmentRole; }
     bool is_flag_role() const { return m_type == Type::FlagRole; }
     bool is_metric_role() const { return m_type == Type::MetricRole; }
     bool is_path_role() const { return m_type == Type::PathRole; }
@@ -254,6 +258,13 @@ public:
         return m_value.as_color_role;
     }
 
+    Gfx::AlignmentRole to_alignment_role() const
+    {
+        if (type() != Type::AlignmentRole)
+            return Gfx::AlignmentRole::NoRole;
+        return m_value.as_alignment_role;
+    }
+
     Gfx::FlagRole to_flag_role() const
     {
         if (type() != Type::FlagRole)
@@ -325,6 +336,7 @@ private:
         Gfx::RGBA32 as_color;
         Gfx::TextAlignment as_text_alignment;
         Gfx::ColorRole as_color_role;
+        Gfx::AlignmentRole as_alignment_role;
         Gfx::FlagRole as_flag_role;
         Gfx::MetricRole as_metric_role;
         Gfx::PathRole as_path_role;
