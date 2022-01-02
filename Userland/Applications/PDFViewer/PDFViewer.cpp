@@ -113,6 +113,29 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
     }
 }
 
+void PDFViewer::mousedown_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Middle) {
+        m_pan_starting_position = to_content_position(event.position());
+        set_override_cursor(Gfx::StandardCursor::Drag);
+    }
+}
+
+void PDFViewer::mouseup_event(GUI::MouseEvent&)
+{
+    set_override_cursor(Gfx::StandardCursor::None);
+}
+
+void PDFViewer::mousemove_event(GUI::MouseEvent& event)
+{
+    if (event.buttons() & GUI::MouseButton::Middle) {
+        auto delta = to_content_position(event.position()) - m_pan_starting_position;
+        horizontal_scrollbar().decrease_slider_by(delta.x());
+        vertical_scrollbar().decrease_slider_by(delta.y());
+        update();
+    }
+}
+
 void PDFViewer::timer_event(Core::TimerEvent&)
 {
     // Clear the bitmap vector of all pages except the current page

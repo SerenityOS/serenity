@@ -58,6 +58,9 @@ protected:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
 private:
@@ -69,4 +72,6 @@ private:
     Vector<HashMap<u32, RefPtr<Gfx::Bitmap>>> m_rendered_page_list;
 
     u8 m_zoom_level { initial_zoom_level };
+
+    Gfx::IntPoint m_pan_starting_position;
 };
