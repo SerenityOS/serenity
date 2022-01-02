@@ -19,19 +19,19 @@
 struct Option {
     String title;
     Vector<char const*> cmd;
-    bool enabled;
     bool default_action;
+    ShutdownDialog::ActionCode action_code;
 };
 
 static const Vector<Option> options = {
-    { "Power off computer", { "/bin/shutdown", "--now", nullptr }, true, true },
-    { "Reboot", { "/bin/reboot", nullptr }, true, false },
-    { "Log out", { "/bin/logout", nullptr }, true, false },
+    { "Power off computer", { "/bin/shutdown", "--now", nullptr }, true, ShutdownDialog::ActionCode::Shutdown },
+    { "Reboot", { "/bin/reboot", nullptr }, false, ShutdownDialog::ActionCode::Reboot },
+    { "Log out", { "/bin/logout", nullptr }, false, ShutdownDialog::ActionCode::Logout },
 };
 
-Vector<char const*> ShutdownDialog::show()
+Vector<char const*> ShutdownDialog::show(int disabled_actions)
 {
-    auto dialog = ShutdownDialog::construct();
+    auto dialog = ShutdownDialog::construct(disabled_actions);
     auto rc = dialog->exec();
     if (rc == ExecResult::ExecOK && dialog->m_selected_option != -1)
         return options[dialog->m_selected_option].cmd;
@@ -39,7 +39,7 @@ Vector<char const*> ShutdownDialog::show()
     return {};
 }
 
-ShutdownDialog::ShutdownDialog()
+ShutdownDialog::ShutdownDialog(int disabled_actions)
     : Dialog(nullptr)
 {
     auto& widget = set_main_widget<GUI::Widget>();
@@ -77,7 +77,7 @@ ShutdownDialog::ShutdownDialog()
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
         auto& radio = right_container.add<GUI::RadioButton>();
-        radio.set_enabled(action.enabled);
+        radio.set_enabled((static_cast<int>(action.action_code) & disabled_actions) == 0);
         radio.set_text(action.title);
 
         radio.on_checked = [this, i](auto) {
