@@ -17,7 +17,9 @@ class Cell final : public GUI::Widget {
 
 public:
     enum Content {
-        X, O, Empty
+        X,
+        O,
+        Empty
     };
 
     int index() const { return m_index; }

@@ -18,35 +18,58 @@ public:
     static Game& the();
 
     enum Player {
-        X = 1, O = 2
+        X = 1,
+        O = 2
     };
 
-    bool make_move(uint8_t);
+    enum SecondPlayer {
+        Human,
+        Machine
+    };
 
+    bool do_move(uint8_t);
+    void do_machine_move();
     void start_new_game();
-    void reset();
-    Player get_current_player() { return m_current_player; };
+    Player current_player() { return m_current_player; };
+    SecondPlayer second_player() { return m_second_plater; }
+    void set_second_player(SecondPlayer second_plater) { m_second_plater = second_plater; }
+    uint16_t moves_remaining() { return m_moves_remaining; }
 
     Function<void()> on_new_game;
-    Function<void(uint8_t const cell_index, Player const)> on_move;
-    Function<void(uint8_t* const winner_cells, Player const, uint16_t num_victories)> on_win;
+    Function<void(uint8_t const cell_index, Player const current_player, const Player next_player)> on_move;
+    Function<void(uint8_t const* winner_cells, Player const, uint16_t const num_victories)> on_win;
     Function<void(uint16_t num_ties)> on_tie;
 
 private:
-    struct WinnerCheckResult  {
+    static const uint8_t s_max_moves { 9 };
+
+    struct WinnerCheckResult {
         bool has_won = false;
         uint8_t cells[3];
     };
 
-    WinnerCheckResult check_if_current_player_won();
-    uint8_t row_col_to_cell_index(uint8_t row, uint8_t col);
+    struct BestMove {
+        int score { 0 };
+        uint8_t cell_index { 0 };
+    };
 
-    Player m_current_player = { Player::X };
-    uint8_t m_board[9];
-    uint8_t m_moves_remaining = 0;
-    uint16_t m_x_victories = 0;
-    uint16_t m_o_victories = 0;
-    uint16_t m_ties = 0;
+    enum Maximize {
+        Yes,
+        No
+    };
+
+    WinnerCheckResult check_if_current_player_won();
+    WinnerCheckResult check_if_player_won(uint8_t const board[], Game::Player const);
+    uint8_t row_col_to_cell_index(uint8_t row, uint8_t col);
+    BestMove minimax(uint8_t board[], Maximize, uint8_t max_depth, uint8_t depth);
+
+    Player m_current_player { Player::O };
+    uint8_t m_board[s_max_moves];
+    uint8_t m_moves_remaining { 0 };
+    uint16_t m_x_victories { 0 };
+    uint16_t m_o_victories { 0 };
+    uint16_t m_ties { 0 };
+    SecondPlayer m_second_plater { SecondPlayer::Machine };
 };
 
 }
