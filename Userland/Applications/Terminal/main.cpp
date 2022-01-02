@@ -277,6 +277,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
+    // Resizing the terminal to a very small size will provoke a crash in LibLine, this a safeguard.
+    // This set the minimal viewable size to 16x2.
+    window->set_minimum_size(136, 36);
+
     auto terminal = TRY(window->try_set_main_widget<VT::TerminalWidget>(ptm_fd, true));
     terminal->on_command_exit = [&] {
         app->quit(0);
