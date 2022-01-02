@@ -13,6 +13,12 @@ namespace AK {
 template<typename T>
 class TypedTransfer {
 private:
+    static void for_each(T* elements, size_t count, auto unary_function)
+    {
+        for (; count > 0; ++elements, --count)
+            unary_function(elements);
+    }
+
     template<typename U>
     static void move_impl(T* destination, U* source, size_t count, auto move_function)
     {
@@ -36,14 +42,26 @@ private:
     }
 
 public:
+    template<typename... Args>
+    static void construct(T* destination, size_t count, Args&&... args)
+    {
+        for_each(destination, count, [&](T* destination) { construct_at(destination, forward(args)...); });
+    }
+
+    template<typename... Args>
+    static void construct_at(T* destination, Args&&... args)
+    {
+        ::new (destination) T { forward<Args>(args)... };
+    }
+
     static void uninitialized_copy(T* destination, auto const* source, size_t count)
     {
-        move_impl(destination, source, count, [](T* destination, auto const* source) { ::new (destination) T(*source); });
+        move_impl(destination, source, count, [](T* destination, auto const* source) { construct_at(destination, *source); });
     }
 
     static void uninitialized_move(T* destination, auto* source, size_t count)
     {
-        move_impl(destination, source, count, [](T* destination, auto* source) { ::new (destination) T(std::move(*source)); });
+        move_impl(destination, source, count, [](T* destination, auto* source) { construct_at(destination, std::move(*source)); });
     }
 
     static bool equals(const T* a, const T* b, size_t count)

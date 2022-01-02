@@ -24,8 +24,7 @@ public:
     {
         if (m_size != 0) {
             m_elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
-            for (size_t i = 0; i < m_size; ++i)
-                new (&m_elements[i]) T();
+            Transfer::construct(m_elements, m_size);
         }
     }
     ~FixedArray()
