@@ -66,6 +66,23 @@ static thread_local Vector<EventLoop&>* s_event_loop_stack;
 static thread_local HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static thread_local HashTable<Notifier*>* s_notifiers;
 thread_local int EventLoop::s_wake_pipe_fds[2];
+thread_local bool EventLoop::s_wake_pipe_initialized { false };
+
+void EventLoop::initialize_wake_pipes()
+{
+    if (!s_wake_pipe_initialized) {
+#if defined(SOCK_NONBLOCK)
+        int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
+#else
+        int rc = pipe(s_wake_pipe_fds);
+        fcntl(s_wake_pipe_fds[0], F_SETFD, FD_CLOEXEC);
+        fcntl(s_wake_pipe_fds[1], F_SETFD, FD_CLOEXEC);
+
+#endif
+        VERIFY(rc == 0);
+        s_wake_pipe_initialized = true;
+    }
+}
 
 bool EventLoop::has_been_instantiated()
 {
@@ -273,19 +290,8 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
     }
     s_main_event_loop.with_locked([&, this](auto*& main_event_loop) {
         if (main_event_loop == nullptr) {
-            // FIXME: The compiler complains that we don't use main_event_loop although we set it.
             main_event_loop = this;
             s_pid = getpid();
-            // FIXME: We only create the wake pipe for the main thread
-#if defined(SOCK_NONBLOCK)
-            int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
-#else
-            int rc = pipe(s_wake_pipe_fds);
-            fcntl(s_wake_pipe_fds[0], F_SETFD, FD_CLOEXEC);
-            fcntl(s_wake_pipe_fds[1], F_SETFD, FD_CLOEXEC);
-
-#endif
-            VERIFY(rc == 0);
             s_event_loop_stack->append(*this);
 
 #ifdef __serenity__
@@ -299,6 +305,8 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
 #endif
         }
     });
+
+    initialize_wake_pipes();
 
     dbgln_if(EVENTLOOP_DEBUG, "{} Core::EventLoop constructed :)", getpid());
 }
@@ -587,6 +595,8 @@ void EventLoop::notify_forked(ForkEvent event)
         s_event_loop_stack->clear();
         s_timers->clear();
         s_notifiers->clear();
+        s_wake_pipe_initialized = false;
+        initialize_wake_pipes();
         if (auto* info = signals_info<false>()) {
             info->signal_handlers.clear();
             info->next_signal_id = 0;
