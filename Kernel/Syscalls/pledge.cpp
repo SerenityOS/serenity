@@ -42,8 +42,6 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
         return true;
     };
 
-    ProtectedDataMutationScope scope { *this };
-
     u32 new_promises = 0;
     if (promises) {
         if (!parse_pledge(promises->view(), new_promises))
@@ -64,6 +62,8 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
     // we don't introduce logic bugs like applying the promises, and then
     // erroring out when parsing the exec promises later. Such bugs silently
     // leave the caller in an unexpected state.
+
+    ProtectedDataMutationScope scope { *this };
 
     if (promises) {
         m_protected_values.has_promises = true;
